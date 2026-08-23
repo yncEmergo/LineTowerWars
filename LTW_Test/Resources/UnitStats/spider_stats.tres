@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3 uid="uid://bhbl2kr7xd1rc"]
+
+[ext_resource type="Script" uid="uid://4w1bsw7kant1" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/carapace.tres" id="3_carapace"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+unit_type_id = 23
+gold_cost = 50
+income_gain = 6
+body_radius = 0.19
+bounty = 4
+move_speed = 2.2
+turn_speed = 8.0
+arrive_threshold = 0.05
+display_name = "Spider"
+max_health = 40
+armor_type = 2
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_carapace")])
+scene_path = "res://Scenes/Units/spider.tscn"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DeathHealPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/DeathHealPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 62
+display_name = "Last Rites"
+targeting = 0
+radius = 1.5
+heal_amount = 20

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://2jhqfi476qqg"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_building_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_attack_stats"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="4_2pban"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_projectile_delivery"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="7_sell"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="8_cancel_build"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="9_cancel_sell"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="20_attack"]
+
+[sub_resource type="Resource" id="Resource_sniper_delivery"]
+script = ExtResource("4_projectile_delivery")
+projectile_scene_path = "res://Scenes/Effects/arrow.tscn"
+speed = 26.0
+
+[sub_resource type="Resource" id="Resource_sniper_attack"]
+script = ExtResource("3_attack_stats")
+damage_min = 2
+damage_max = 3
+damage_type = 3
+attacks_per_second = 2.0
+attack_range = 7.0
+delivery = SubResource("Resource_sniper_delivery")
+
+[resource]
+script = ExtResource("1_building_stats")
+unit_type_id = 10
+model_scene_path = "res://Scenes/Units/Models/sniper_tower_model.tscn"
+construction_abilities = Array[ExtResource("2_ability")]([ExtResource("8_cancel_build")])
+selling_abilities = Array[ExtResource("2_ability")]([ExtResource("9_cancel_sell")])
+gold_cost = 10
+display_name = "Sniper Tower"
+max_health = 200
+armor_type = 1
+attack = SubResource("Resource_sniper_attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("20_attack"), ExtResource("7_sell")])
+scene_path = "res://Scenes/Units/sniper_tower.tscn"

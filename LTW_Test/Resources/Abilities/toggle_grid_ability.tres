@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ToggleGridAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/ToggleGridAbility.gd" id="1_toggle_grid"]
+
+[resource]
+script = ExtResource("1_toggle_grid")
+ability_id = 8
+display_name = "Build Grid"
+description = "Show or hide the grid over your build zone."
+slot = 9

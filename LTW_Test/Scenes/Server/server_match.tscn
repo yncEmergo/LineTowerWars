@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Script" path="res://Scripts/Game/PlayerManager.gd" id="3_players"]
+[ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="4_session"]
+[ext_resource type="PackedScene" path="res://Scenes/Game/player_area.tscn" id="5_area"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/builder.tscn" id="6_builder"]
+[ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="7_gcfg"]
+[ext_resource type="Resource" path="res://Resources/Config/damage_table.tres" id="8_dmgt"]
+[ext_resource type="Resource" path="res://Resources/Config/content_config.tres" id="9_content"]
+
+[node name="ServerMatch" type="Node3D" node_paths=PackedStringArray("_areas_root")]
+script = ExtResource("1_main")
+_dedicated_server = true
+_areas_root = NodePath("Areas")
+_area_scene = ExtResource("5_area")
+_builder_scene = ExtResource("6_builder")
+
+[node name="Areas" type="Node3D" parent="."]
+
+[node name="Units" type="Node3D" parent="."]
+
+[node name="Projectiles" type="Node3D" parent="."]
+
+[node name="PlayerManager" type="Node" parent="."]
+script = ExtResource("3_players")
+
+[node name="MatchSession" type="Node" parent="."]
+script = ExtResource("4_session")
+
+[node name="References" type="Node" parent="." node_paths=PackedStringArray("_units_root", "_player_manager", "_match_session", "_projectiles_root")]
+script = ExtResource("2_references")
+_units_root = NodePath("../Units")
+_player_manager = NodePath("../PlayerManager")
+_match_session = NodePath("../MatchSession")
+_projectiles_root = NodePath("../Projectiles")
+_game_config = ExtResource("7_gcfg")
+_damage_table = ExtResource("8_dmgt")
+_content_config = ExtResource("9_content")

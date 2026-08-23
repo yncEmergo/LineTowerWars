@@ -1,0 +1,127 @@
+[gd_scene format=3 uid="uid://cwqd7vnbibdj2"]
+
+[ext_resource type="Script" uid="uid://duwex5ppd0yci" path="res://Scripts/UI/AbilityTooltip.gd" id="1_ability_tooltip"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
+bg_color = Color(0.05, 0.06, 0.09, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.83, 0.66, 0.24, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="AbilityTooltip" type="PanelContainer" unique_id=79665417 node_paths=PackedStringArray("_title_label", "_price_label", "_separator", "_income_label", "_stats_row", "_stats_left", "_stats_right", "_specials_label", "_description_label")]
+custom_minimum_size = Vector2(320, 0)
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tooltip")
+script = ExtResource("1_ability_tooltip")
+_title_label = NodePath("Margin/Column/TitleLabel")
+_price_label = NodePath("Margin/Column/PriceLabel")
+_separator = NodePath("Margin/Column/Separator")
+_income_label = NodePath("Margin/Column/IncomeLabel")
+_stats_row = NodePath("Margin/Column/StatsRow")
+_stats_left = NodePath("Margin/Column/StatsRow/StatsLeft")
+_stats_right = NodePath("Margin/Column/StatsRow/StatsRight")
+_specials_label = NodePath("Margin/Column/SpecialsLabel")
+_description_label = NodePath("Margin/Column/DescriptionLabel")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=87648225]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="Column" type="VBoxContainer" parent="Margin" unique_id=168742985]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="RichTextLabel" parent="Margin/Column" unique_id=128912346]
+custom_minimum_size = Vector2(296, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 18
+bbcode_enabled = true
+text = "Basic Creep (Q)"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="PriceLabel" type="RichTextLabel" parent="Margin/Column" unique_id=816641942]
+custom_minimum_size = Vector2(296, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Cost: 10    Population: 1"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Separator" type="HSeparator" parent="Margin/Column" unique_id=1850779465]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="IncomeLabel" type="RichTextLabel" parent="Margin/Column" unique_id=2008698152]
+custom_minimum_size = Vector2(296, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Income: +2"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="StatsRow" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="StatsLeft" type="RichTextLabel" parent="Margin/Column/StatsRow"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Health: 60
+Speed: 2.0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="StatsRight" type="RichTextLabel" parent="Margin/Column/StatsRow"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Armor: Normal
+Bounty: 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="SpecialsLabel" type="RichTextLabel" parent="Margin/Column" unique_id=1479285160]
+custom_minimum_size = Vector2(296, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Fast Producing"
+fit_content = true
+scroll_active = false
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="Margin/Column" unique_id=829534703]
+custom_minimum_size = Vector2(296, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "Description"
+fit_content = true
+scroll_active = false

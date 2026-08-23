@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://muinh6gekpwf"]
+
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="1_34cgs"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="2_sa5yc"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="3_um3wc"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/basic_tower_model.tscn" id="4_model"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="5_cancel"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="6_cancel_sell"]
+
+[resource]
+script = ExtResource("3_um3wc")
+unit_type_id = 14
+model_scene = ExtResource("4_model")
+construction_abilities = Array[ExtResource("1_34cgs")]([ExtResource("5_cancel")])
+selling_abilities = Array[ExtResource("1_34cgs")]([ExtResource("6_cancel_sell")])
+gold_cost = 10
+display_name = "Basic Tower"
+max_health = 200
+armor_type = 1
+abilities = Array[ExtResource("1_34cgs")]([ExtResource("2_sa5yc")])

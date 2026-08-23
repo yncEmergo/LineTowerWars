@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Boot/Boot.gd" id="1_boot"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/boot_config.tres" id="3_boot_config"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="4_menu_config"]
+
+[node name="Boot" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_boot")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_boot_config = ExtResource("3_boot_config")
+_menu_config = ExtResource("4_menu_config")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.062, 0.082, 1)

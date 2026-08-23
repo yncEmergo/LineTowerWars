@@ -1,0 +1,174 @@
+class_name DamageTable
+extends Resource
+
+## Everything that stands between an attack's raw roll and the health a unit
+## actually loses.
+##
+## Two separate questions, and keeping them apart is the point:
+##   - armour TYPE indexes the damage matrix. Every attack carries a damage
+##     type and every damageable unit an armour type, and the pair decides what
+##     SHARE of the attack lands: 1.25 is a quarter more, 0.66 a third less.
+##   - armour POINTS are a number on the unit that reduces whatever the matrix
+##     left, on a curve with diminishing returns. Negative points amplify it.
+## A creep can therefore be resistant to a damage type and thinly armoured at
+## the same time, which is what auras and armour buffs act on.
+##
+## Stored as Resources/Config/damage_table.tres, and written out in
+## game_rules.md so the table can be read without opening the editor.
+##
+## The matrix rows live in the .tres and deliberately not as script defaults. A
+## default that matched the file would be stripped from that file the next time
+## the editor saved it, which would quietly move the balancing numbers into
+## here. The armour curve constants are not a table, so they keep their
+## defaults.
+
+## What an attack deals. Chaos currently reads 1.0 against every armour type,
+## but that is a balancing value like any other and not a rule, so nothing may
+## shortcut it as "ignores armour".
+##
+## Order matters. Every row of the table lists its multipliers in this order.
+enum DamageType {
+	MAGIC,
+	CHAOS,
+	NORMAL,
+	PIERCING,
+	SIEGE,
+}
+
+## Used when a row has not been filled in, so a half configured table deals
+## plain damage rather than none. validate() is what reports the gap.
+const DEFAULT_MULTIPLIER: float = 1.0
+
+@export_group("Armor Rows")
+## One multiplier per damage type, in DamageType order. Empty means unset.
+@export var unarmored: PackedFloat32Array = PackedFloat32Array()
+@export var light: PackedFloat32Array = PackedFloat32Array()
+@export var medium: PackedFloat32Array = PackedFloat32Array()
+@export var heavy: PackedFloat32Array = PackedFloat32Array()
+@export var fortified: PackedFloat32Array = PackedFloat32Array()
+@export var hero: PackedFloat32Array = PackedFloat32Array()
+
+@export_group("Armor Points")
+## What one point of positive armour is worth before diminishing returns.
+## 0.06 is the WC3 figure, so 1 point is 5.7% and 10 points 37.5%.
+@export var armor_reduction_per_point: float = 0.06
+## Base of the amplification curve for negative armour. 0.94 makes -1 armour
+## take 6% more and -10 armour 46% more, never quite reaching double.
+@export var negative_armor_base: float = 0.94
+
+
+## Share of an attack's damage that lands, e.g. 1.5 for siege into fortified.
+func multiplier(damage_type: DamageType, armor_type: UnitStats.ArmorType) -> float:
+	# Invulnerable is not a row in the matrix, it is the absence of damage.
+	# take_damage() already stops before this, so this is only a second line.
+	if armor_type == UnitStats.ArmorType.INVULNERABLE:
+		return 0.0
+
+	var row: PackedFloat32Array = _row_for(armor_type)
+	var index: int = int(damage_type)
+	if index < 0 || index >= row.size():
+		return DEFAULT_MULTIPLIER
+	return row[index]
+
+
+## Share of the damage that survives a unit's armour POINTS.
+##
+##   positive: 1 - (armor * 0.06) / (1 + 0.06 * armor)
+##   negative: 2 - 0.94 ^ -armor
+##
+## The positive half has diminishing returns built in, so armour never reaches
+## immunity however much of it is stacked. The negative half is the mirror: it
+## amplifies without ever quite doubling. Both read exactly 1.0 at zero, which
+## is where the two halves meet.
+func armor_multiplier(armor: int) -> float:
+	if armor == 0:
+		return 1.0
+
+	if armor > 0:
+		var points: float = float(armor) * armor_reduction_per_point
+		return 1.0 - points / (1.0 + armor_reduction_per_point * float(armor))
+
+	return 2.0 - pow(negative_armor_base, float(-armor))
+
+
+## Damage actually dealt, run through the whole pipeline in the order
+## game_rules.md sets out:
+##   roll -> damage matrix -> the target's own resistances -> armour points
+##        -> flat block
+##
+## Percentages resolve before flat points on purpose. A flat block is meant to
+## blunt many small hits rather than one big one, and putting it last is what
+## makes that true.
+##
+## Rounded to whole points because health is whole points. An attack that lands
+## at all always does at least 1, so even a fully blocked hit is weak rather
+## than free.
+func apply(amount: int, damage_type: DamageType, armor_type: UnitStats.ArmorType,
+		armor: int = 0, taken_ratio: float = 1.0, block: int = 0) -> int:
+	if amount <= 0 || armor_type == UnitStats.ArmorType.INVULNERABLE:
+		return 0
+
+	var scaled: float = float(amount) * multiplier(damage_type, armor_type)
+	if scaled <= 0.0:
+		return 0
+
+	scaled *= maxf(0.0, taken_ratio)
+	scaled *= armor_multiplier(armor)
+	scaled -= float(maxi(0, block))
+
+	return maxi(1, roundi(scaled))
+
+
+## Name of a damage type as shown in the UI, e.g. "Piercing".
+## Static, because naming a type needs no table: an attack can say what it deals
+## without anything having been wired up yet.
+## Lowercased before capitalising, because capitalize() would otherwise split an
+## all caps enum name on every letter.
+static func damage_type_text(damage_type: DamageType) -> String:
+	return String(DamageType.keys()[damage_type]).to_lower().capitalize()
+
+
+## Logs every row that is missing or the wrong length, and answers whether the
+## table is complete. Meant to be called once at boot rather than per hit, so a
+## broken table is reported without flooding the log during a fight.
+func validate() -> bool:
+	var expected: int = DamageType.size()
+	var complete: bool = true
+
+	for armor_type: int in UnitStats.ArmorType.values():
+		if armor_type == UnitStats.ArmorType.INVULNERABLE:
+			continue
+		var row: PackedFloat32Array = _row_for(armor_type)
+		if row.size() == expected:
+			continue
+
+		Log.err("Damage table row is missing entries", {
+			"armor": String(UnitStats.ArmorType.keys()[armor_type]),
+			"found": row.size(),
+			"expected": expected,
+		})
+		complete = false
+
+	return complete
+
+
+## Named per armour type rather than indexed by the enum's value, so reordering
+## ArmorType can never silently shift every row by one.
+func _row_for(armor_type: UnitStats.ArmorType) -> PackedFloat32Array:
+	var row: PackedFloat32Array = PackedFloat32Array()
+
+	match armor_type:
+		UnitStats.ArmorType.UNARMORED:
+			row = unarmored
+		UnitStats.ArmorType.LIGHT:
+			row = light
+		UnitStats.ArmorType.MEDIUM:
+			row = medium
+		UnitStats.ArmorType.HEAVY:
+			row = heavy
+		UnitStats.ArmorType.FORTIFIED:
+			row = fortified
+		UnitStats.ArmorType.HERO:
+			row = hero
+
+	return row

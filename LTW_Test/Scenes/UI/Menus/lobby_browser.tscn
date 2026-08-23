@@ -1,0 +1,307 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/LobbyBrowser.gd" id="1_browser"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="5_network_config"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_list_entry.tscn" id="5_entry"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+content_margin_left = 26.0
+content_margin_top = 22.0
+content_margin_right = 26.0
+content_margin_bottom = 22.0
+bg_color = Color(0.1, 0.11, 0.145, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.35, 0.7)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="LobbyBrowser" type="Control" node_paths=PackedStringArray("_lobby_list", "_empty_label", "_status_label", "_join_button", "_create_button", "_refresh_button", "_back_button", "_create_panel", "_lobby_name_input", "_player_count_spin", "_create_confirm_button", "_create_cancel_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_menu_theme")
+script = ExtResource("1_browser")
+_lobby_list = NodePath("Margin/Column/ListArea/ListMargin/Scroll/LobbyList")
+_empty_label = NodePath("Margin/Column/ListArea/ListMargin/EmptyBox/EmptyLabel")
+_status_label = NodePath("Margin/Column/StatusLabel")
+_join_button = NodePath("Margin/Column/Footer/JoinButton")
+_create_button = NodePath("Margin/Column/Footer/CreateButton")
+_refresh_button = NodePath("Margin/Column/Footer/RefreshButton")
+_back_button = NodePath("Margin/Column/Header/BackButton")
+_create_panel = NodePath("CreatePanel")
+_lobby_name_input = NodePath("CreatePanel/Center/Dialog/DialogColumn/NameRow/NameInput")
+_player_count_spin = NodePath("CreatePanel/Center/Dialog/DialogColumn/PlayersRow/PlayersSpin")
+_create_confirm_button = NodePath("CreatePanel/Center/Dialog/DialogColumn/DialogButtons/ConfirmButton")
+_create_cancel_button = NodePath("CreatePanel/Center/Dialog/DialogColumn/DialogButtons/CancelButton")
+_entry_scene = ExtResource("5_entry")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_menu_config = ExtResource("3_menu_config")
+_network_config = ExtResource("5_network_config")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.062, 0.082, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 28
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="Margin/Column/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 30
+text = "CUSTOM GAMES"
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="Margin/Column/Header"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Back"
+
+[node name="ColumnHeaderMargin" type="MarginContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+
+[node name="ColumnHeaders" type="HBoxContainer" parent="Margin/Column/ColumnHeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameHeader" type="Label" parent="Margin/Column/ColumnHeaderMargin/ColumnHeaders"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "LOBBY"
+
+[node name="HostHeader" type="Label" parent="Margin/Column/ColumnHeaderMargin/ColumnHeaders"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "HOST"
+
+[node name="PlayersHeader" type="Label" parent="Margin/Column/ColumnHeaderMargin/ColumnHeaders"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "PLAYERS"
+horizontal_alignment = 1
+
+[node name="StatusHeader" type="Label" parent="Margin/Column/ColumnHeaderMargin/ColumnHeaders"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "STATUS"
+horizontal_alignment = 1
+
+[node name="PingHeader" type="Label" parent="Margin/Column/ColumnHeaderMargin/ColumnHeaders"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "PING"
+horizontal_alignment = 2
+
+[node name="ListArea" type="PanelContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListMargin" type="MarginContainer" parent="Margin/Column/ListArea"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column/ListArea/ListMargin"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_scroll")
+horizontal_scroll_mode = 0
+
+[node name="LobbyList" type="VBoxContainer" parent="Margin/Column/ListArea/ListMargin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="EmptyBox" type="CenterContainer" parent="Margin/Column/ListArea/ListMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="EmptyLabel" type="Label" parent="Margin/Column/ListArea/ListMargin/EmptyBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 17
+text = "No open lobbies."
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 14
+text = "No lobby backend connected yet."
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RefreshButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Refresh"
+
+[node name="FooterSpacer" type="Control" parent="Margin/Column/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="JoinButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+disabled = true
+text = "Join Lobby"
+
+[node name="CreateButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+text = "Create Lobby"
+
+[node name="CreatePanel" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="CreatePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="CreatePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dialog" type="PanelContainer" parent="CreatePanel/Center"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialog")
+
+[node name="DialogColumn" type="VBoxContainer" parent="CreatePanel/Center/Dialog"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="DialogTitle" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 22
+text = "Create Lobby"
+
+[node name="NameRow" type="HBoxContainer" parent="CreatePanel/Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn/NameRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_vertical = 1
+text = "Lobby name"
+vertical_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="CreatePanel/Center/Dialog/DialogColumn/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 32
+
+[node name="PlayersRow" type="HBoxContainer" parent="CreatePanel/Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PlayersLabel" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn/PlayersRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_vertical = 1
+text = "Players"
+vertical_alignment = 1
+
+[node name="PlayersSpin" type="SpinBox" parent="CreatePanel/Center/Dialog/DialogColumn/PlayersRow"]
+layout_mode = 2
+min_value = 2.0
+max_value = 15.0
+value = 2.0
+
+[node name="ModeLabel" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "Free for all. No team modes - see game_rules.md."
+
+[node name="DialogButtons" type="HBoxContainer" parent="CreatePanel/Center/Dialog/DialogColumn"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="CancelButton" type="Button" parent="CreatePanel/Center/Dialog/DialogColumn/DialogButtons"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+text = "Cancel"
+
+[node name="ConfirmButton" type="Button" parent="CreatePanel/Center/Dialog/DialogColumn/DialogButtons"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Create"

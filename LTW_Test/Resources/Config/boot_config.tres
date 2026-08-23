@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BootConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BootConfig.gd" id="1_boot_config"]
+
+[resource]
+script = ExtResource("1_boot_config")
+server_scene_path = "res://Scenes/Server/server_main.tscn"
+server_match_scene_path = "res://Scenes/Server/server_match.tscn"
+server_argument = "--server"

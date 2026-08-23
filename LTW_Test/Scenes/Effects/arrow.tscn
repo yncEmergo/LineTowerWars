@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_projectile"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shaft"]
+shading_mode = 0
+albedo_color = Color(0.85, 0.72, 0.45, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_shaft"]
+material = SubResource("StandardMaterial3D_shaft")
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.34
+radial_segments = 6
+rings = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+shading_mode = 0
+albedo_color = Color(0.95, 0.97, 1, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_head"]
+material = SubResource("StandardMaterial3D_head")
+top_radius = 0.0
+bottom_radius = 0.058
+height = 0.13
+radial_segments = 8
+rings = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fletching"]
+shading_mode = 0
+albedo_color = Color(0.82, 0.28, 0.24, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fletching"]
+material = SubResource("StandardMaterial3D_fletching")
+size = Vector3(0.14, 0.012, 0.11)
+
+[node name="Arrow" type="Node3D"]
+script = ExtResource("1_projectile")
+
+[node name="Shaft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_shaft")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.235)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_head")
+
+[node name="Fletching" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.13)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_fletching")

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3 uid="uid://d30t3ne00qr3"]
+
+[ext_resource type="Script" uid="uid://4w1bsw7kant1" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" uid="uid://cq1ynxca2mpat" path="res://Resources/Abilities/Passives/undying.tres" id="3_undying"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+unit_type_id = 21
+gold_cost = 25
+income_gain = 4
+body_radius = 0.16
+bounty = 2
+move_speed = 2.0
+turn_speed = 8.0
+arrive_threshold = 0.05
+display_name = "Skeleton"
+max_health = 20
+armor_type = 2
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_undying")])
+scene_path = "res://Scenes/Units/skeleton.tscn"

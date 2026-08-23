@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SendCreepAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/basic_creep.tscn" id="2_basic_creep"]
+
+[resource]
+script = ExtResource("1_send_creep")
+ability_id = 40
+creep_scene = ExtResource("2_basic_creep")
+display_name = "Basic Creep"
+description = "Sends a pack into the enemy maze and raises your income permanently."
+targeting = 1
+repeat_on_hold = true

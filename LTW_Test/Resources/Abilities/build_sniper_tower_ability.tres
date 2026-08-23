@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3 uid="uid://b0l6b7l3dbyci"]
+
+[ext_resource type="Script" uid="uid://vwhllnr2eapp" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_build_tower"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/sniper_tower_stats.tres" id="2_stats"]
+
+[resource]
+script = ExtResource("1_build_tower")
+ability_id = 21
+tower_stats = ExtResource("2_stats")
+display_name = "Sniper Tower"
+description = "Long ranged single target tower. Fires quickly for piercing damage."
+targeting = 5
+slot = 0

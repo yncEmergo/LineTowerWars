@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://bv7osqma5ooi8"]
+
+[ext_resource type="Script" uid="uid://bbwxabq1acmn4" path="res://Scripts/Units/Building.gd" id="1_building"]
+[ext_resource type="Script" uid="uid://b1s7ewmnvmg34" path="res://Scripts/Combat/AttackComponent.gd" id="2_attack"]
+[ext_resource type="Resource" uid="uid://2jhqfi476qqg" path="res://Resources/UnitStats/sniper_tower_stats.tres" id="3_stats"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/sniper_tower_model.tscn" id="4_model"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
+shading_mode = 0
+albedo_color = Color(0.3, 0.95, 0.35, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = SubResource("StandardMaterial3D_ring")
+inner_radius = 0.56
+outer_radius = 0.62
+
+[node name="SniperTower" type="Node3D" unique_id=1847915536 node_paths=PackedStringArray("_visual_root", "_selection_ring")]
+script = ExtResource("1_building")
+_visual_root = NodePath("Visual")
+stats = ExtResource("3_stats")
+_selection_ring = NodePath("SelectionRing")
+health_bar_height = 1.65
+select_radius = 0.6
+select_height = 0.6
+
+[node name="Visual" parent="." unique_id=453629768 instance=ExtResource("4_model")]
+
+[node name="SelectionRing" type="MeshInstance3D" parent="." unique_id=673102020]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")
+
+[node name="Attack" type="Node" parent="." unique_id=338538047 node_paths=PackedStringArray("_unit", "_muzzle", "_turret_head")]
+script = ExtResource("2_attack")
+_unit = NodePath("..")
+_muzzle = NodePath("../Visual/Turret/Muzzle")
+_turret_head = NodePath("../Visual/Turret")

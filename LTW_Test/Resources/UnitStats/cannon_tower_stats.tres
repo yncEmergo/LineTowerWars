@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://84weuecarw7i"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_building_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_attack_stats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_projectile_delivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_effect"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_splash"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="20_attack"]
+
+[sub_resource type="Resource" id="Resource_cannon_delivery"]
+script = ExtResource("4_projectile_delivery")
+projectile_scene_path = "res://Scenes/Effects/orb.tscn"
+speed = 11.0
+arc_height = 2.0
+
+[sub_resource type="Resource" id="Resource_cannon_splash"]
+script = ExtResource("6_splash")
+edge_damage_ratio = 0.5
+
+[sub_resource type="Resource" id="Resource_cannon_attack"]
+script = ExtResource("3_attack_stats")
+damage_min = 3
+damage_max = 5
+damage_type = 4
+is_aoe_damage = true
+attacks_per_second = 0.75
+attack_range = 5.0
+delivery = SubResource("Resource_cannon_delivery")
+effects = Array[ExtResource("5_effect")]([SubResource("Resource_cannon_splash")])
+
+[resource]
+script = ExtResource("1_building_stats")
+unit_type_id = 11
+model_scene_path = "res://Scenes/Units/Models/cannon_tower_model.tscn"
+construction_abilities = Array[ExtResource("2_ability")]([ExtResource("10_cancel_build")])
+selling_abilities = Array[ExtResource("2_ability")]([ExtResource("11_cancel_sell")])
+gold_cost = 10
+display_name = "Cannon Tower"
+max_health = 200
+armor_type = 1
+attack = SubResource("Resource_cannon_attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("20_attack"), ExtResource("9_sell")])
+scene_path = "res://Scenes/Units/cannon_tower.tscn"

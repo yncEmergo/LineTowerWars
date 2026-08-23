@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GameConfig" format=3 uid="uid://cj8d776kvb2yv"]
+
+[ext_resource type="Script" uid="uid://dh7jup7ble5uy" path="res://Scripts/Config/GameConfig.gd" id="1_game_config"]
+
+[resource]
+script = ExtResource("1_game_config")
+starting_gold = 2000

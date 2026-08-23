@@ -1,0 +1,25 @@
+class_name AoeResistancePassive
+extends CreepPassive
+
+## Takes less from attacks that cover ground than from attacks aimed at it.
+##
+## Which attacks those are is the ATTACK's answer, not this one's: see
+## AttackStats.is_aoe_damage, and note that any splash counts whatever its
+## attack says. Multishot is deliberately not area damage - it picks several
+## single targets rather than covering ground.
+##
+## Applied after the damage matrix and before the creep's armour points, so it
+## and the armour compound rather than one hiding the other.
+
+@export_group("Settings")
+## Share of area damage the creep takes. 0.5 is half.
+@export_range(0.0, 1.0, 0.05) var damage_ratio: float = 0.5
+
+
+func damage_taken_ratio(is_aoe: bool) -> float:
+	return damage_ratio if is_aoe else 1.0
+
+
+func effect_text() -> String:
+	return "Takes %d%% less damage from attacks that hit an area." \
+		% roundi((1.0 - damage_ratio) * 100.0)

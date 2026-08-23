@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ControlsConfig" format=3 uid="uid://dntbwmi5dakuc"]
+
+[ext_resource type="Script" uid="uid://bnwriq031fxgx" path="res://Scripts/Config/ControlsConfig.gd" id="1_controls"]
+
+[resource]
+script = ExtResource("1_controls")
+hold_repeat_delay = 0.1
+hold_repeat_start_interval = 0.25
+hold_repeat_min_interval = 0.025
+hold_repeat_ramp_seconds = 0.5

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://drj7y2o2np8hn"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_building_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_attack_stats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_instant_delivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_effect"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_splash"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="8_sell"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="20_attack"]
+
+[sub_resource type="Resource" id="Resource_stomper_delivery"]
+script = ExtResource("4_instant_delivery")
+
+[sub_resource type="Resource" id="Resource_stomper_splash"]
+script = ExtResource("6_splash")
+radius = 1.5
+edge_damage_ratio = 0.6
+
+[sub_resource type="Resource" id="Resource_stomper_attack"]
+script = ExtResource("3_attack_stats")
+damage_min = 8
+damage_max = 10
+is_aoe_damage = true
+attacks_per_second = 0.33
+attack_range = 1.5
+delivery = SubResource("Resource_stomper_delivery")
+effects = Array[ExtResource("5_effect")]([SubResource("Resource_stomper_splash")])
+
+[resource]
+script = ExtResource("1_building_stats")
+unit_type_id = 13
+model_scene_path = "res://Scenes/Units/Models/stomper_tower_model.tscn"
+construction_abilities = Array[ExtResource("2_ability")]([ExtResource("9_cancel_build")])
+selling_abilities = Array[ExtResource("2_ability")]([ExtResource("10_cancel_sell")])
+gold_cost = 10
+display_name = "Stomper Tower"
+max_health = 200
+armor_type = 1
+attack = SubResource("Resource_stomper_attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("20_attack"), ExtResource("8_sell")])
+scene_path = "res://Scenes/Units/stomper_tower.tscn"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SendCreepAbility" format=3 uid="uid://bfbit8ajojscp"]
+
+[ext_resource type="Script" uid="uid://deghcuvkphaad" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/knight_stats.tres" id="2_stats"]
+
+[resource]
+script = ExtResource("1_send_creep")
+ability_id = 46
+creep_stats = ExtResource("2_stats")
+display_name = "Knight"
+description = "Sends a pack into the enemy maze and raises your income permanently."
+slot = 4
+repeat_on_hold = true

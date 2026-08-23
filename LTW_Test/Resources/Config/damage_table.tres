@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DamageTable" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/DamageTable.gd" id="1_table"]
+
+[resource]
+script = ExtResource("1_table")
+unarmored = PackedFloat32Array(1, 1, 1, 1.25, 1.25)
+light = PackedFloat32Array(1.25, 1, 0.8, 1.5, 1)
+medium = PackedFloat32Array(0.8, 1, 1.5, 1, 0.8)
+heavy = PackedFloat32Array(1.5, 1, 1, 0.8, 0.8)
+fortified = PackedFloat32Array(0.66, 1, 0.8, 0.66, 1.5)
+hero = PackedFloat32Array(0.66, 1, 0.8, 0.66, 0.8)

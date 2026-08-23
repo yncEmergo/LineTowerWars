@@ -1,0 +1,131 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/LobbyRoom.gd" id="1_room"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="5_network_config"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_slot.tscn" id="5_slot"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
+
+[node name="LobbyRoom" type="Control" node_paths=PackedStringArray("_title_label", "_subtitle_label", "_slot_list", "_status_label", "_start_button", "_leave_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_menu_theme")
+script = ExtResource("1_room")
+_title_label = NodePath("Margin/Column/Header/HeaderText/TitleLabel")
+_subtitle_label = NodePath("Margin/Column/Header/HeaderText/SubtitleLabel")
+_slot_list = NodePath("Margin/Column/SlotArea/SlotMargin/Scroll/SlotList")
+_status_label = NodePath("Margin/Column/StatusLabel")
+_start_button = NodePath("Margin/Column/Footer/StartButton")
+_leave_button = NodePath("Margin/Column/Footer/LeaveButton")
+_slot_scene = ExtResource("5_slot")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_menu_config = ExtResource("3_menu_config")
+_network_config = ExtResource("5_network_config")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.062, 0.082, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 28
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="HeaderText" type="VBoxContainer" parent="Margin/Column/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="Margin/Column/Header/HeaderText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 30
+text = "Lobby"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/Column/Header/HeaderText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 15
+text = "Free for all"
+
+[node name="SlotsHeader" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "PLAYERS"
+
+[node name="SlotArea" type="PanelContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SlotMargin" type="MarginContainer" parent="Margin/Column/SlotArea"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column/SlotArea/SlotMargin"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_scroll")
+horizontal_scroll_mode = 0
+
+[node name="SlotList" type="VBoxContainer" parent="Margin/Column/SlotArea/SlotMargin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="StatusLabel" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 14
+text = "Not connected."
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LeaveButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+text = "Leave Lobby"
+
+[node name="FooterSpacer" type="Control" parent="Margin/Column/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="StartButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+text = "Start Game"

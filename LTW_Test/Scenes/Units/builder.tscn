@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://8udcoqni0pb8"]
+
+[ext_resource type="Script" uid="uid://bk5plku5t5tev" path="res://Scripts/Units/Builder.gd" id="1_builder"]
+[ext_resource type="Resource" uid="uid://bi645f4vtxego" path="res://Resources/UnitStats/builder_stats.tres" id="2_builder_stats"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.3, 0.55, 0.85, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+material = SubResource("StandardMaterial3D_body")
+radius = 0.3
+height = 1.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nose"]
+albedo_color = Color(0.545, 0.708, 0.903, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nose"]
+material = SubResource("StandardMaterial3D_nose")
+size = Vector3(0.12, 0.12, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
+shading_mode = 0
+albedo_color = Color(0.3, 0.95, 0.35, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = SubResource("StandardMaterial3D_ring")
+inner_radius = 0.49
+outer_radius = 0.55
+
+[node name="Builder" type="Node3D" unique_id=1408798706 node_paths=PackedStringArray("_selection_ring")]
+script = ExtResource("1_builder")
+stats = ExtResource("2_builder_stats")
+_selection_ring = NodePath("Visuals/SelectionRing")
+
+[node name="Visuals" type="Node3D" parent="." unique_id=664626015]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+
+[node name="Body" type="MeshInstance3D" parent="Visuals" unique_id=778793880]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Nose" type="MeshInstance3D" parent="Visuals" unique_id=1172371141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.715, -0.4)
+mesh = SubResource("BoxMesh_nose")
+
+[node name="SelectionRing" type="MeshInstance3D" parent="Visuals" unique_id=569806800]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")

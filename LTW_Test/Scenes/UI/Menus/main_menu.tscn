@@ -1,0 +1,101 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/MainMenu.gd" id="1_main_menu"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+
+[node name="MainMenu" type="Control" node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_quit_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_menu_theme")
+script = ExtResource("1_main_menu")
+_title_label = NodePath("Layout/TitleLabel")
+_version_label = NodePath("VersionLabel")
+_play_button = NodePath("Layout/Buttons/PlayButton")
+_multiplayer_button = NodePath("Layout/Buttons/MultiplayerButton")
+_quit_button = NodePath("Layout/Buttons/QuitButton")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_menu_config = ExtResource("3_menu_config")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.062, 0.082, 1)
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 54
+text = "LINE TOWER WARS"
+horizontal_alignment = 1
+
+[node name="TaglineLabel" type="Label" parent="Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 16
+text = "Build the maze. Send the flood."
+horizontal_alignment = 1
+
+[node name="TitleSpacer" type="Control" parent="Layout"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Buttons" type="VBoxContainer" parent="Layout"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="PlayButton" type="Button" parent="Layout/Buttons"]
+layout_mode = 2
+text = "Play Prototype"
+
+[node name="MultiplayerButton" type="Button" parent="Layout/Buttons"]
+layout_mode = 2
+text = "Multiplayer"
+
+[node name="QuitButton" type="Button" parent="Layout/Buttons"]
+layout_mode = 2
+text = "Quit"
+
+[node name="VersionLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -34.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.44, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "prototype"
+horizontal_alignment = 2

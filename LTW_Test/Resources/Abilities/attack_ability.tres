@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AttackAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/AttackAbility.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+ability_id = 3
+display_name = "Attack"
+description = "Order this tower onto one creep. Towers pick their own targets without it."
+targeting = 3
+slot = 4

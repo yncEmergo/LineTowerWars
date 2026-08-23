@@ -1,0 +1,195 @@
+class_name RTSCamera
+extends Camera3D
+
+## Top-down RTS camera.
+##
+## Per game_rules.md the camera never follows a unit. It is driven only by the
+## player via edge panning, plus a center_on() call used by the
+## center-on-target function.
+##
+## The camera is described by a ground focus point, a fixed pitch and a fixed
+## distance. Panning moves the focus point, the transform is derived from it.
+##
+## Its config comes from References, which is where every shared config lives.
+
+# Arrow keys pan the camera. WASD is deliberately left free, it is reserved
+# for builder hotkeys. Routed through input actions rather than raw keycodes
+# so they stay rebindable and can take a gamepad stick later.
+const ACTION_PAN_LEFT: StringName = &"camera_pan_left"
+const ACTION_PAN_RIGHT: StringName = &"camera_pan_right"
+const ACTION_PAN_UP: StringName = &"camera_pan_up"
+const ACTION_PAN_DOWN: StringName = &"camera_pan_down"
+
+## Read throughout, so it comes through a getter onto References.
+var _config: CameraConfig:
+	get:
+		return References.camera_config
+
+var _focus: Vector3 = Vector3.ZERO
+## xz rectangle the focus point is clamped to.
+var _focus_bounds: Rect2 = Rect2()
+var _has_bounds: bool = false
+
+var _grabbing: bool = false
+## World point that was under the cursor when the middle drag started. The pan
+## keeps putting this point back under the cursor, which makes the drag
+## independent of resolution, pitch and any future zoom.
+var _grab_world_point: Vector3 = Vector3.ZERO
+
+
+func _ready() -> void:
+	if _config == null:
+		Log.err("RTSCamera found no CameraConfig on References, panning is disabled")
+		return
+	fov = _config.field_of_view
+	_apply_transform()
+
+
+## Limits panning to a world-space xz rectangle, usually the whole map
+## plus a margin.
+func set_focus_bounds(bounds: Rect2) -> void:
+	_focus_bounds = bounds
+	_has_bounds = true
+	_set_focus(_focus)
+
+
+## Snaps the camera to a world position. This is the center-on-target hook
+## for the builder or any other unit or building.
+func center_on(world_position: Vector3) -> void:
+	_set_focus(world_position)
+
+
+## Where a screen point lands on the ground plane at y = 0, or null when the
+## ray runs parallel to or away from the ground.
+## Public because ability targeting needs the same projection.
+func ground_point_at(screen_pos: Vector2) -> Variant:
+	var from: Vector3 = project_ray_origin(screen_pos)
+	var direction: Vector3 = project_ray_normal(screen_pos)
+	return Plane(Vector3.UP, 0.0).intersects_ray(from, direction)
+
+
+# --- Middle mouse drag --------------------------------------------------
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _config == null || !_config.allow_middle_drag_pan:
+		return
+
+	if event is InputEventMouseButton:
+		var button: InputEventMouseButton = event as InputEventMouseButton
+		if button.button_index != MOUSE_BUTTON_MIDDLE:
+			return
+		if button.pressed:
+			_begin_grab(button.position)
+		else:
+			_grabbing = false
+		get_viewport().set_input_as_handled()
+
+	elif event is InputEventMouseMotion && _grabbing:
+		_update_grab((event as InputEventMouseMotion).position)
+
+
+func _begin_grab(screen_pos: Vector2) -> void:
+	var point: Variant = ground_point_at(screen_pos)
+	if point == null:
+		return
+	_grab_world_point = point
+	_grabbing = true
+
+
+## Moving the camera by D shifts every ground intersection by D, so putting the
+## grabbed point back under the cursor is a single subtraction rather than any
+## pixels-to-world conversion.
+func _update_grab(screen_pos: Vector2) -> void:
+	var point: Variant = ground_point_at(screen_pos)
+	if point == null:
+		return
+
+	var delta: Vector3 = _grab_world_point - (point as Vector3)
+	if !_config.middle_drag_grabs_world:
+		delta = -delta
+	_set_focus(_focus + delta)
+
+
+func _process(delta: float) -> void:
+	if _config == null:
+		return
+	var pan: Vector2 = _read_pan_input()
+	if pan != Vector2.ZERO:
+		_set_focus(_focus + Vector3(pan.x, 0.0, pan.y) * _config.pan_speed * delta)
+
+
+func _read_pan_input() -> Vector2:
+	var pan: Vector2 = _read_edge_pan()
+
+	if _config.allow_key_panning:
+		# get_vector applies the action deadzone and handles analog input, so
+		# binding a stick to these actions gives controller panning for free.
+		pan += Input.get_vector(
+			ACTION_PAN_LEFT,
+			ACTION_PAN_RIGHT,
+			ACTION_PAN_UP,
+			ACTION_PAN_DOWN
+		)
+
+	# Edge and key panning can stack, so cap the combined speed.
+	return pan.limit_length(1.0)
+
+
+func _read_edge_pan() -> Vector2:
+	if !_config.allow_edge_panning:
+		return Vector2.ZERO
+
+	# A middle drag routinely takes the cursor to a screen edge, and edge
+	# panning fighting the drag feels broken.
+	if _grabbing:
+		return Vector2.ZERO
+
+	var viewport: Viewport = get_viewport()
+	if viewport == null:
+		return Vector2.ZERO
+
+	# Only pan for a focused window. Without this the camera creeps whenever
+	# the cursor happens to rest near an edge while the player is working in
+	# another window.
+	if !get_window().has_focus():
+		return Vector2.ZERO
+
+	var screen: Vector2 = viewport.get_visible_rect().size
+	var mouse: Vector2 = viewport.get_mouse_position()
+
+	# Ignore edge panning while the cursor is outside the window, otherwise
+	# the camera drifts whenever the player alt-tabs away.
+	if mouse.x < 0.0 || mouse.y < 0.0 || mouse.x > screen.x || mouse.y > screen.y:
+		return Vector2.ZERO
+
+	var margin: float = float(_config.edge_margin_px)
+	var pan: Vector2 = Vector2.ZERO
+
+	if mouse.x <= margin:
+		pan.x -= 1.0
+	elif mouse.x >= screen.x - margin:
+		pan.x += 1.0
+
+	if mouse.y <= margin:
+		pan.y -= 1.0
+	elif mouse.y >= screen.y - margin:
+		pan.y += 1.0
+
+	return pan
+
+
+func _set_focus(value: Vector3) -> void:
+	_focus = Vector3(value.x, 0.0, value.z)
+	if _has_bounds:
+		_focus.x = clampf(_focus.x, _focus_bounds.position.x, _focus_bounds.end.x)
+		_focus.z = clampf(_focus.z, _focus_bounds.position.y, _focus_bounds.end.y)
+	_apply_transform()
+
+
+func _apply_transform() -> void:
+	if _config == null:
+		return
+	rotation_degrees = Vector3(_config.pitch_degrees, 0.0, 0.0)
+	# Pull the camera back along its own view direction from the focus point.
+	var forward: Vector3 = -transform.basis.z
+	global_position = _focus - forward * _config.distance

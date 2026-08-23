@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitStats" format=3 uid="uid://de1l67456p30w"]
+
+[ext_resource type="Script" uid="uid://bd7dgorq33rgt" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_sheep_ability.tres" id="3_sheep"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_skeleton_ability.tres" id="4_skeleton"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_acolyte_ability.tres" id="5_acolyte"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_spider_ability.tres" id="6_spider"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_knight_ability.tres" id="7_knight"]
+[ext_resource type="Resource" path="res://Resources/Abilities/send_grunt_ability.tres" id="8_grunt"]
+
+[resource]
+script = ExtResource("1_send_stats")
+unit_type_id = 2
+display_name = "Send Building"
+max_health = 1
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_sheep"), ExtResource("4_skeleton"), ExtResource("5_acolyte"), ExtResource("6_spider"), ExtResource("7_knight"), ExtResource("8_grunt")])

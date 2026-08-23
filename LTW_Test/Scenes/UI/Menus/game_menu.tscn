@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/GameMenu.gd" id="1_game_menu"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="2_menu_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
+content_margin_left = 30.0
+content_margin_top = 26.0
+content_margin_right = 30.0
+content_margin_bottom = 26.0
+bg_color = Color(0.08, 0.09, 0.12, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="GameMenu" type="Control" node_paths=PackedStringArray("_resume_button", "_options_button", "_leave_button", "_quit_button")]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_menu_theme")
+script = ExtResource("1_game_menu")
+_resume_button = NodePath("Center/Panel/Column/ResumeButton")
+_options_button = NodePath("Center/Panel/Column/OptionsButton")
+_leave_button = NodePath("Center/Panel/Column/LeaveButton")
+_quit_button = NodePath("Center/Panel/Column/QuitButton")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="Column" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 24
+text = "Game Menu"
+horizontal_alignment = 1
+
+[node name="TitleSpacer" type="Control" parent="Center/Panel/Column"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ResumeButton" type="Button" parent="Center/Panel/Column"]
+layout_mode = 2
+text = "Resume"
+
+[node name="OptionsButton" type="Button" parent="Center/Panel/Column"]
+layout_mode = 2
+disabled = true
+text = "Options"
+
+[node name="LeaveButton" type="Button" parent="Center/Panel/Column"]
+layout_mode = 2
+text = "Leave Match"
+
+[node name="QuitButton" type="Button" parent="Center/Panel/Column"]
+layout_mode = 2
+text = "Quit Game"
+
+[node name="HintLabel" type="Label" parent="Center/Panel/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 12
+text = "Esc or F10"
+horizontal_alignment = 1

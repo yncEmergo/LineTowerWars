@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MoveAbility" format=3 uid="uid://s0vmh3n3pptf"]
+
+[ext_resource type="Script" uid="uid://rhhyk7aq22rx" path="res://Scripts/Abilities/MoveAbility.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+ability_id = 1
+display_name = "Move"
+description = "Walk to the selected point."
+targeting = 2
+slot = 0

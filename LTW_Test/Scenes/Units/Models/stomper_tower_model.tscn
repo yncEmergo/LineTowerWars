@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="1_model"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
+albedo_color = Color(0.22, 0.23, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_base"]
+material = SubResource("StandardMaterial3D_base")
+size = Vector3(0.92, 0.22, 0.92)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_frame"]
+albedo_color = Color(0.36, 0.37, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_frame"]
+material = SubResource("StandardMaterial3D_frame")
+size = Vector3(0.2, 0.62, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_piston"]
+albedo_color = Color(0.68, 0.7, 0.74, 1)
+metallic = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_piston"]
+material = SubResource("StandardMaterial3D_piston")
+top_radius = 0.11
+bottom_radius = 0.11
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_plate"]
+albedo_color = Color(0.76, 0.62, 0.16, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plate"]
+material = SubResource("StandardMaterial3D_plate")
+size = Vector3(0.78, 0.2, 0.78)
+
+[node name="StomperTowerModel" type="Node3D"]
+script = ExtResource("1_model")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("BoxMesh_base")
+
+[node name="FrameLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.53, 0)
+mesh = SubResource("BoxMesh_frame")
+
+[node name="FrameRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.53, 0)
+mesh = SubResource("BoxMesh_frame")
+
+[node name="Piston" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.51, 0)
+mesh = SubResource("CylinderMesh_piston")
+
+[node name="Plate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0)
+mesh = SubResource("BoxMesh_plate")

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="NetworkConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/NetworkConfig.gd" id="1_network_config"]
+
+[resource]
+script = ExtResource("1_network_config")
+port = 7777
+max_peers = 32
+server_address = "127.0.0.1"
+connect_timeout_seconds = 5.0
+address_argument = "--address"
+port_argument = "--port"

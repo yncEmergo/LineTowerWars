@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CancelBuildAbility" format=3 uid="uid://b6fcgbq4oy2qe"]
+
+[ext_resource type="Script" uid="uid://dbktpdmm8i36j" path="res://Scripts/Abilities/CancelBuildAbility.gd" id="1_cancel"]
+
+[resource]
+script = ExtResource("1_cancel")
+ability_id = 5
+display_name = "Cancel"
+description = "Stop building and refund the full cost."
+slot = 10

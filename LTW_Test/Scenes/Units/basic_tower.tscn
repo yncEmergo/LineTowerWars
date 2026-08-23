@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://bijgob6bhesmm"]
+
+[ext_resource type="Script" uid="uid://bbwxabq1acmn4" path="res://Scripts/Units/Building.gd" id="1_building"]
+[ext_resource type="Resource" uid="uid://muinh6gekpwf" path="res://Scenes/basic_tower_stats.tres" id="2_tower_stats"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/basic_tower_model.tscn" id="3_model"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
+shading_mode = 0
+albedo_color = Color(0.3, 0.95, 0.35, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = SubResource("StandardMaterial3D_ring")
+inner_radius = 0.56
+outer_radius = 0.62
+
+[node name="BasicTower" type="Node3D" unique_id=1852303623 node_paths=PackedStringArray("_visual_root", "_selection_ring")]
+script = ExtResource("1_building")
+_visual_root = NodePath("Visual")
+stats = ExtResource("2_tower_stats")
+_selection_ring = NodePath("SelectionRing")
+health_bar_height = 1.35
+select_radius = 0.6
+select_height = 0.5
+
+[node name="Visual" parent="." unique_id=1387314591 instance=ExtResource("3_model")]
+
+[node name="SelectionRing" type="MeshInstance3D" parent="." unique_id=1393483269]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")

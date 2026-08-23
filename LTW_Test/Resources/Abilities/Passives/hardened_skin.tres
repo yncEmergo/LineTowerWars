@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="DamageBlockPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/DamageBlockPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 64
+display_name = "Hardened Skin"
+targeting = 0
+block_amount = 10

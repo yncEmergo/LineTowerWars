@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SellAbility" format=3 uid="uid://dvy6fqltn05m0"]
+
+[ext_resource type="Script" uid="uid://cc83518smqr6h" path="res://Scripts/Abilities/SellAbility.gd" id="1_sell"]
+
+[resource]
+script = ExtResource("1_sell")
+ability_id = 4
+display_name = "Sell"
+description = "Remove this building and refund part of its cost."
+slot = 5

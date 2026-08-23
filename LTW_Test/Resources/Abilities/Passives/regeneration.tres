@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="HealthRegenPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/HealthRegenPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 65
+display_name = "Regeneration"
+targeting = 0
+health_per_second = 5.0

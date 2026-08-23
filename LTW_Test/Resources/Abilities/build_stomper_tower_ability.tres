@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3 uid="uid://dx6bi3u7b81lr"]
+
+[ext_resource type="Script" uid="uid://vwhllnr2eapp" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_build_tower"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/stomper_tower_stats.tres" id="2_stats"]
+
+[resource]
+script = ExtResource("1_build_tower")
+ability_id = 24
+tower_stats = ExtResource("2_stats")
+display_name = "Stomper Tower"
+description = "Slams the ground rarely, but hits everything in a wide area around it."
+targeting = 5
+slot = 3

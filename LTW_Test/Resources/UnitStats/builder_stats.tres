@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuilderStats" format=3 uid="uid://bi645f4vtxego"]
+
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="1_65tat"]
+[ext_resource type="Script" uid="uid://cj3mpijsmgeeg" path="res://Scripts/Config/BuilderStats.gd" id="1_builder_stats"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="2_move"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="3_stop"]
+[ext_resource type="Resource" path="res://Resources/Abilities/build_menu_ability.tres" id="4_build"]
+[ext_resource type="Resource" path="res://Resources/Abilities/toggle_grid_ability.tres" id="5_grid"]
+
+[resource]
+script = ExtResource("1_builder_stats")
+unit_type_id = 1
+display_name = "Builder"
+abilities = Array[ExtResource("1_65tat")]([ExtResource("2_move"), ExtResource("3_stop"), ExtResource("4_build"), ExtResource("5_grid")])
+default_ability = ExtResource("2_move")

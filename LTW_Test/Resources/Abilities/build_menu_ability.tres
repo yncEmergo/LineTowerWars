@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildMenuAbility" format=3 uid="uid://bla1duml4qd2q"]
+
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="1_5y1sk"]
+[ext_resource type="Script" uid="uid://cxjhom7cn5uah" path="res://Scripts/Abilities/BuildMenuAbility.gd" id="1_build_menu"]
+[ext_resource type="Resource" uid="uid://b0l6b7l3dbyci" path="res://Resources/Abilities/build_sniper_tower_ability.tres" id="2_sniper"]
+[ext_resource type="Resource" uid="uid://d1b1bqnj1xwcd" path="res://Resources/Abilities/build_cannon_tower_ability.tres" id="3_cannon"]
+[ext_resource type="Resource" uid="uid://b3lo0d3jul6x" path="res://Resources/Abilities/build_grinder_tower_ability.tres" id="4_grinder"]
+[ext_resource type="Resource" uid="uid://dx6bi3u7b81lr" path="res://Resources/Abilities/build_stomper_tower_ability.tres" id="5_stomper"]
+
+[resource]
+script = ExtResource("1_build_menu")
+ability_id = 7
+buildable = Array[ExtResource("1_5y1sk")]([ExtResource("2_sniper"), ExtResource("3_cannon"), ExtResource("4_grinder"), ExtResource("5_stomper")])
+display_name = "Build"
+description = "Open the build menu."
+targeting = 4
+slot = 7
