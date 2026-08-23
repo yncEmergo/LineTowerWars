@@ -66,7 +66,7 @@ ReferenceFilesFromOtherProjects/   read-only reference material, not part of the
 Boot scene is `Scenes/Boot/boot.tscn`. It decides whether this process is a client or a
 dedicated server and then gets out of the way — see multiplayer.md §2.
 
-Five autoloads, in this order: `Net`, `MatchStart`, `Lobby`, `Commands`, `Replication`.
+The autoloads, in this order: `Net`, `MatchStart`, `Lobby`, `Commands`, `Replication`.
 They are autoloads rather than scene nodes because Godot routes an `@rpc` by node path, and
 a client and a server do not share one.
 

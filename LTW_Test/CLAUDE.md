@@ -75,7 +75,7 @@
   - only visual reference values stay in scripts as constants: placeholder mesh sizes,
     UI positions and offsets, placeholder colors
   - exception: a setting the engine reads before the game starts stays in
-    project.godot. Two so far:
+    project.godot. So far:
     - gui/timers/tooltip_delay_sec, which the Viewport reads in its
       constructor. Pushing it from a .tres at runtime is silently ignored,
       verified both ways
@@ -245,17 +245,30 @@
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
 - claude_notes.md is a stale duplicate of the conventions above. Ignore it.
+- NEVER write a COUNT or a live value into a .md file. No "26 abilities", no
+  "13 unit types", no "29 public methods", no stat quoted out of a .tres. They
+  are true for a day and misleading afterwards, and keeping them current is
+  tedious work that buys nothing
+  - the code is the authority on how many of a thing there are, and a reader who
+    needs the number can boot the game or read the folder
+  - write what is DURABLE instead: the mechanism, the rule, the id. An authored
+    id (ability_id, unit_type_id) is stable by design and may be named freely
+  - game_rules.md is the one exception, and only for values it DECIDES: the creep
+    roster, the damage table, starting lives. Those numbers are the design, not a
+    restatement of the code. Nothing else may copy them
+  - a game design document may take that job over later. Until then no other .md
+    grows a stats table
 
 # Known weaknesses
 Real, none blocking. Recorded so they are not rediscovered as surprises.
-- PlayerArea.gd is at 29 public methods against gdlint's ceiling of 20, and
-  Unit.gd at 21. Intended fix for the first: extract the grid half - occupancy,
+- PlayerArea.gd and Unit.gd are both over gdlint's public-method ceiling,
+  PlayerArea.gd by a lot. Intended fix for it: extract the grid half - occupancy,
   cell maths, flow field - into an AreaGrid it owns. Touches Building, Builder,
   BuildGrid, CommandController. Not started
 - Three naive linear scans over an area's creeps: creep separation, TargetFinder,
   and Creep._refresh_aura. One spatial hash fixes all three
-- Replication sends the whole world every tick, roughly 36 bytes per unit at
-  20 Hz. Fine for a 1v1 on a LAN, nowhere near 15 players. That is multiplayer.md
+- Replication sends the whole world every tick, every unit in it. Fine for a
+  1v1 on a LAN, nowhere near 15 players. That is multiplayer.md
   3.3, deliberately deferred until there was something to measure
 - Dead content, safe to delete on the user's word: Scenes/basic_tower.tscn,
   Scenes/basic_tower_stats.tres, Resources/Abilities/build_basic_tower_ability.tres,

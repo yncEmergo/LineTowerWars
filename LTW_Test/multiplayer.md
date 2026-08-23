@@ -4,7 +4,7 @@ Working reference for the multiplayer build. Rules live in `game_rules.md`, conv
 `CLAUDE.md`. This file holds the **decisions**, the architecture they imply, and the order
 of work. Read it before writing networking code.
 
-**Status, 2026-08-23.** 26 decisions, all made, §1. **Phase 0 and Milestones 1-3 are
+**Status, 2026-08-23.** Every decision is made, §1. **Phase 0 and Milestones 1-3 are
 complete**, apart from two steps the roadmap itself defers: 3.3 (spawn-and-extrapolate) and
 3.7 (latency feel). Both are optimisations, and both now have something real to be measured
 against rather than guessed at.
@@ -109,7 +109,7 @@ Every item verifiable by playing the prototype in single player.
 | 0.4 | Stable unit ids and registry | ☑ | `Unit.unit_id`, claimed in `setup()`, released in `_exit_tree()`. Registry on `MatchSession`, with `claim_unit_id()` ready for server-assigned ids. |
 | 0.5 | Fixed simulation tick + render interpolation | ☑ | 20 Hz. The engine's physics tick IS the simulation tick; `Engine.get_physics_frames()` is the tick counter. Interpolation confirmed working and required. Exposed a latent creep-pathing bug — §5.6. |
 | 0.6 | One shared match RNG | ☑ | Seeded from `MatchSetup`. All three unseeded lines gone. Generator passed explicitly, fetched via `MatchSession.match_rng()`. |
-| 0.7 | Ability ids (`AbilityRegistry`) | ☑ | Id authored on the ability (D12). Registry = the content walk PLUS a scan of the abilities folder, so it holds all 26 including orphans. Both halves proven by falsification. |
+| 0.7 | Ability ids (`AbilityRegistry`) | ☑ | Id authored on the ability (D12). Registry = the content walk PLUS a scan of the abilities folder, so it holds every authored ability, orphans included. Both halves proven by falsification. |
 | 0.8 | Split simulation from presentation | ☑ | Partial, as planned. A match now builds and runs with every presentation reference null, proven by `Scenes/Server/server_match.tscn`. Found and fixed one real coupling: projectiles. |
 
 ### Milestone 1 — lobbies work
@@ -183,9 +183,6 @@ Wanted, decided to be wanted, but not part of any milestone above.
 | L1 | Player colours in the lobby | Needed before a minimap can tell players apart, and before the anonymous mode game_rules.md wants. Shape and consequences in §8.1. |
 | L2 | An end screen | The match decides itself and stops; players then leave through the in-game menu. Deliberately the smallest thing that works. |
 | L3 | Game mode selection | Where anonymity, and anything else chosen before a match, would be picked. Nothing depends on it yet. |
-
---- | --- | --- |
-| L1 | Player colours in the lobby | Needed before a minimap can tell players apart. Shape and consequences in §8.1. |
 
 ---
 
@@ -333,7 +330,7 @@ effects root. Built as the proof for 0.8; it is the scene a server should load f
 Every signature below was read off the code, not remembered. Trust this list over a
 recollection; if something here is wrong, the code changed and this section did not.
 
-**Two autoloads, in this order in `project.godot`** - `Net` before `Lobby`, because `Lobby`
+**`Net` comes before `Lobby` in `project.godot`**, because `Lobby`
 subscribes to `Net`'s signals in its `_ready`. Both are named differently from their classes
 because Godot refuses an autoload that collides with a global class name.
 
@@ -420,8 +417,8 @@ References.boot_config / References.network_config
 
 Read off the code, like the section above it. There is one new autoload and one new screen.
 
-**Three autoloads now, in this order in `project.godot`** - `Net`, then `MatchStart`, then
-`Lobby`. `MatchStart` sits in the middle because `Lobby` subscribes to its `match_abandoned`
+**`MatchStart` joins them in `project.godot`**, between `Net` and
+`Lobby`. It sits in the middle because `Lobby` subscribes to its `match_abandoned`
 in `_ready`, and it subscribes to `Net`'s signals in its own.
 
 **`MatchStart`** (`Scripts/Multiplayer/MatchStartService.gd`) - everything between "the
@@ -491,7 +488,7 @@ one bug the first end-to-end run found.
 
 ### What Milestone 3 left you to build on
 
-**Five autoloads now, in this order** - `Net`, `MatchStart`, `Lobby`, `Commands`,
+**The autoloads, in this order** - `Net`, `MatchStart`, `Lobby`, `Commands`,
 `Replication`. Every one of them is an autoload for the same forced reason: an `@rpc` routes
 by NODE PATH, and the two match scenes have different roots (`/root/Main/...` against
 `/root/ServerMatch/...`), so nothing inside a match scene can be an rpc endpoint.
@@ -565,8 +562,8 @@ and the server holds the full grace period for a player who was being polite.
 - **No client-side prediction** (D17). An order takes a round trip before anything moves.
 - **No interest management, no quantisation, no spawn-and-extrapolate.** All of §5.4, all of
   3.3, all of it deliberately measured-against rather than guessed at.
-- **No win condition.** Lives reach zero and the ring skips that player; `game_rules.md` says
-  a match never ends, and it still does not.
+- **No end screen** (L2). The match decides itself and stops, and players then leave
+  through the in-game menu.
 - **Projectiles are not replicated.** They are re-simulated locally as presentation, and only
   the server applies their damage.
 
@@ -576,10 +573,10 @@ and the server holds the full grace period for a player who was being polite.
 
 Not multiplayer, but it will confuse anyone reading the numbers cold:
 
-- `SEPARATION_LIMIT` in `Creep.gd` is **0.0** — creep separation is switched off by the
-  user's choice. Creeps may stand inside each other. Worth revisiting now that the waypoint
-  bug it was masking is gone (§5.6), but that is a design call.
-- `game_config.tres` has `starting_gold = 2000` against a script default of 20. A deliberate
+- `SEPARATION_LIMIT` in `Creep.gd` is switched off by the user's choice, so creeps may
+  stand inside each other. Worth revisiting now that the waypoint bug it was masking is
+  gone (§5.6), but that is a design call.
+- `game_config.tres` carries a `starting_gold` far above its script default. A deliberate
   test value, kept on purpose so building is quick to try. The user knows; it is a one-line
   change whenever it stops being useful. Do not keep flagging it.
 
@@ -970,8 +967,9 @@ Under D2 this need not be bit-exact, only close, since the server corrects drift
 
 ### The ability registry missed four ids, and two of them mattered
 
-Measured, not inferred: at boot the registry held **22** ids -
-`1 2 3 4 7 · 21 22 23 24 · 41-46 · 60-66` - while **26** were authored. The four it never saw:
+Measured, not inferred: at boot the registry held fewer ids than were authored, and counting
+the two sets against each other is what turned "probably fine" into a list. The four it never
+saw:
 
 | Id | Ability | Why it was missed |
 | --- | --- | --- |
@@ -1004,13 +1002,14 @@ the walk finds any ability defined INSIDE another resource, and anything living 
 folder. Neither covers the other. The walk runs first, because both mark what they have seen
 and a scan that reached a build menu first would stop the walk recursing through it.
 
-**Both halves proven by falsification**, which is the only way a count means anything:
+**Both halves proven by falsification**, by building the registry three ways and seeing
+exactly which ids each one recovers:
 
-| Registry built from | Ids held |
+| Registry built from | What it adds |
 | --- | --- |
-| The walk as it was | 22 |
-| The walk, fixed (`card_abilities`) | 24 — recovers exactly 5 and 6 |
-| Walk + folder scan | **26** — the scan adds exactly 20 and 40 |
+| The walk as it was | the baseline, missing all four |
+| The walk, fixed (`card_abilities`) | recovers exactly 5 and 6 |
+| Walk + folder scan | recovers exactly 20 and 40 as well — every authored ability |
 
 Pointing `abilities_folder` at a folder that does not exist produced two errors at boot and a
 visibly shorter registry, rather than a quietly shorter one - which was the thing to check,
@@ -1595,7 +1594,7 @@ optimising" in as many words. Both now have something to be measured against.
 
 - **An order takes a round trip.** Nothing moves until the server answers (D17). On localhost
   that is invisible; at 80 ms it is what 3.7 exists to judge.
-- **Bandwidth is ugly and known.** Roughly 36 bytes per unit per tick, whole world, 20 Hz.
+- **Bandwidth is ugly and known.** The whole world, every unit in it, every tick.
   Fine for a 1v1 on a LAN, and nowhere near fifteen players. That is 3.3.
 - **A client sees no unit it has no content for.** A snapshot naming an unknown
   `unit_type_id` is reported and skipped rather than guessed at, which is what a mismatched

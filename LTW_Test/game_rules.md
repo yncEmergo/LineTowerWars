@@ -520,9 +520,7 @@ Every number here is current, not final.
 - Send costs, income and bounty are decided for all six creeps, see the roster
 
 # Life steal and recycling
-NOT BUILT, all of it. Lives do not exist yet and nothing tracks them.
-
-BUILT, except the win condition below.
+BUILT.
 
 - Lives are stolen, not just lost
 - When a creep reaches the end of a maze, its owner steals 1 life from the defending player
