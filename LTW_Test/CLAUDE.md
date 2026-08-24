@@ -241,6 +241,11 @@
   what. Keep its Status section honest - it is the first thing a new reader trusts.
 - Refer to game_rules.md for the rules. It says which rules are BUILT and which
   are only written down; keep that marking correct when you implement one.
+- unit_data.md holds every tower, creep, disc and technology of Warcraft III Line
+  Tower Wars 12.4a, whose design the prototype copies wholesale. It is the second
+  and last .md allowed to carry stat tables, on the same grounds as game_rules.md:
+  those numbers ARE the design being copied. Once a unit is implemented its .tres
+  is the authority and unit_data.md is the mirror - change both in the same commit.
 - multiplayer.md holds the multiplayer working notes and its open questions.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
@@ -253,8 +258,9 @@
     needs the number can boot the game or read the folder
   - write what is DURABLE instead: the mechanism, the rule, the id. An authored
     id (ability_id, unit_type_id) is stable by design and may be named freely
-  - game_rules.md is the one exception, and only for values it DECIDES: the creep
-    roster, the damage table, starting lives. Those numbers are the design, not a
+  - game_rules.md and unit_data.md are the only exceptions, and only for values
+    they DECIDE or COPY FROM THE SOURCE GAME: the creep roster, the damage table,
+    starting lives, the LTW 12.4a stat tables. Those numbers are the design, not a
     restatement of the code. Nothing else may copy them
   - a game design document may take that job over later. Until then no other .md
     grows a stats table

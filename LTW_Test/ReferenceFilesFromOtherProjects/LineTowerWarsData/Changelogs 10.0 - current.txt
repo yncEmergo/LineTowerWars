@@ -1,0 +1,6319 @@
+Changelogs
+
+Version 12.4a | 2026-08-04
+
+GAMEPLAY
+Game Modes
+
+Game Mode Setting: Fog of War
+Fixed an issue causing the map not to be revealed for all players on game end.
+Game Mode Setting: Start Tech
+Added four new options that enables “Ban Mode”:
+All Random (Ban)
+Mirror Random (Ban)
+All Draft (Ban)
+Mirror Draft (Ban)
+Ban Mode allows every player to select one technology and ban this technology from being picked as an option for Random or Draft.
+The technology can be purchased as normal during the game.
+Players have 12 seconds to ban a technology or else a random technology is selected for them.
+Only available in Custom Game Mode.
+
+
+TOWERS
+Basic Technology​
+Rocketeers
+
+Attack Speed changed from 0.75 to 0.8 (-6% damage per second).
+
+Barrager
+
+Attack Speed changed from 0.75 to 0.8 (-6% damage per second).
+
+Turret
+
+Attack Speed changed from 0.75 to 0.8 (-6% damage per second).
+
+Ultimate Turret
+
+Attack Speed changed from 0.75 to 0.8 (-6% damage per second).
+Arcane Technology​
+Archmage, Grand Archmage & Ultimate Spellslinger
+
+Ability tooltips clarified (removed the mention of “Arcane Orb” effect for example as it conflicted with the tower).
+Earth Technology​
+Nettle
+
+Damage changed from 178-188 to 196-206 (+10%).
+
+Thorns
+
+Damage changed from 466-476 to 498-508 (+7%).
+
+Ultimate Scorpion
+
+Damage changed from 1187-1215 to 1246-1273 (+5%).
+Fire Technology​
+Lava Serpent
+
+Damage changed from 342-350 to 325-333 (-5%).
+Volcanic Eruption (1):
+Armor reduction changed from 10% to 7%.
+
+Living Flame
+
+Damage changed from 566-574 to 549-557 (-3%).
+Volcanic Eruption (1):
+Armor reduction changed from 12% to 9%.
+
+Ultimate Firelord
+
+Damage changed from 1010-1018 to 980-988 (-3%).
+Magma Blast:
+Armor reduction changed from 15% to 12%.
+Primal Technology
+Primal Technology Discs
+
+Fixed an issue that caused cancelled tower morph/upgrade to reset bonus attack range.
+
+Druid
+
+Ancient Bloom (1):
+Nearby Basic Primal towers no longer reduce gold gain.
+
+Keeper
+
+Ancient Bloom (2):
+Nearby Basic Primal towers no longer reduce gold gain.
+CREEPS
+Tier 3
+Shaman
+
+Elemental Warding:
+Damage resistance changed from 50% to 70%.
+Tier 4
+Tier 4 Income Threshold
+
+Players above 4m income now have a 75% reduction in income gained. The creep tooltips are updated to display the value.
+
+With the change above, the income of all Tier 4 creeps have been increased by 100%. This means that players are able to catch up in income faster below 4m, but players above this threshold now gain income at a 50% reduction compared to before.
+
+
+Huntress
+
+Income changed from 5,000 to 10,000 (+2,500 above 4m income).
+
+Obsidian Destroyer
+
+Income changed from 6,000 to 12,000 (+3,000 above 4m income).
+
+Harpy Windwitch
+
+Income changed from 7,000 to 14,000 (+3,500 above 4m income).
+
+Naga Siren
+
+Income changed from 8,000 to 16,000 (+4,000 above 4m income).
+
+Mountain Giant
+
+Attack Damage changed from 202-206 to 208-212 (+3%).
+
+Kodo Beast
+
+Income changed from 8,000 to 16,000 (+4,000 above 4m income).
+
+Goblin Shredder
+
+Income changed from 10,000 to 20,000 (+5,000 above 4m income).
+
+Frost Wyrm
+
+Income changed from 15,000 to 30,000 (+7,500 above 4m income).
+
+Phoenix
+
+Health changed from 759,905 to 782,700 (+3%).
+
+
+
+
+Version 12.3a | 2026-07-04
+
+GAMEPLAY
+Game Modes
+
+The starting lives have been adjusted as follows:
+Ranked:
+3 players from 50 to 60 lives
+5 players from 40 to 45 lives
+9 players from 30 to 35 lives
+11 players from 25 to 30 lives
+12 players from 25 to 30 lives
+Unranked:
+2 players from 50 to 80 lives
+3 players from 50 to 60 lives
+5 players from 40 to 45 lives
+9 players from 30 to 35 lives
+11 players from 25 to 30 lives
+12 players from 25 to 30 lives
+Casual:
+2 players from 50 to 100 lives
+3 players from 50 to 75 lives
+4 players from 50 to 60 lives
+5 players from 45 to 55 lives
+6 players from 45 to 50 lives
+7 players from 40 to 45 lives
+8 players from 40 to 45 lives
+
+Game Mode Setting: Gold
+Selectable options have been adjusted (was 0 to 100 with increments of 5):
+0
+10
+20
+30
+40 (default)
+50
+60
+70
+80
+90
+100
+200
+500
+1000
+5000
+10000
+99999
+
+Allows for some more “for fun” options and a higher starter gold value is now necessary as Tower Availability option is implemented, details below.
+
+
+New Game Mode Setting: Food Cap
+Defaults to 100
+Only editable in Custom Game Mode
+Selectable options:
+50
+80
+100 (default)
+110
+120
+130
+140
+150
+200
+250
+300
+500
+999
+
+Selecting a food cap above 100 may have unintended side effects, cause severe performance issues or crash the game. Please do not report bugs in games with an increased food cap, I don’t intend to update the map around it. Have fun!
+
+
+New Game Mode Setting: Anonymous Players
+Defaults to Disabled
+Only editable in Custom Game Mode
+Selectable options:
+Disabled
+Enabled
+
+This option used to be enabled through the Modifier game mode setting, but is now standalone.
+
+
+New Game Mode Setting: Fog of War
+Defaults to Disabled
+Only editable in Custom Game Mode
+Selectable options:
+Disabled
+Enabled
+
+This option used to be enabled through the Modifier game mode setting, but is now standalone.
+
+
+Game Mode Setting: Tower Availability
+Can now be edited in Custom Game Mode
+Selectable options:
+Towers: All Enabled (default)
+Towers: Basic Disabled
+Cannot build: Archer, Cutter or Sentry
+Towers: Tech Disabled
+Cannot build: Elemental Core
+
+Technology Discs remain as an option for all tower availability settings.
+
+
+Game Mode Setting: Creep Availability
+Renamed the options to be clearer:
+“All Creeps Enabled” to “Creeps: All Enabled”
+“Air Creeps Disabled” to “Creeps: Air Disabled”
+“Attacking Creeps Disabled” to “Creeps: Attack Disabled”
+“Air & Attacking Creeps Disabled” to “Creeps: Air & Attack Disabled”
+The Summon Creeps command card now shows disabled creeps. This allows tooltips to be read, but not summon the disabled creep.
+
+
+
+Game Mode Setting: Player Rating
+Adjusted positioning on the panel under a new category (where Modifier used to be).
+
+Game Mode Setting: Modifier
+Adjusted positioning on the panel under adjusted Player Rating.
+Removed the following options (as they’re now standalone):
+Anonymous
+Anonymous Fog of War
+Fog of War
+New modifier:
+Madness
+When this modifier is active, computer controlled players become frenzied with unique buffs, and even more difficult compared to Insane.
+
+The new look with all Game Mode Settings:
+
+
+
+
+
+Piercing Attack Type
+
+Fixed an issue causing the damage type to deal less damage against Skittering creeps (was 125% and is now 150% as intended).
+
+Skittering creeps: Forest Spider, Forest Troll, Crypt Fiend & Huntress
+
+TOWERS
+Fire Technology​
+Meteor Attractor
+
+Splash changed from 250 to 275.
+Projectile speed changed from 1200 to 1500 (hits target faster).
+
+Armageddon
+
+Damage changed from 255-258 to 268-271 (+5%).
+Projectile speed changed from 1200 to 1500 (hits target faster).
+
+Ultimate Doom Guard
+
+Damage changed from 810-813 to 871-874 (+7.5%).
+Frenzied Flames:
+Spell Damage per sec changed from 1,400 to 1,575 (+12.5%).
+No longer increases creep Spell Damage taken by 15% within AoE.
+
+Removed the support effect in favor of buffing its own damage potential. This effect was also in a weird place as Titan Vault also increases Spell Damage.
+
+-2% overall Spell Damage, but higher physical damage.
+
+
+Lava Serpent
+
+Damage changed from 353-361 to 342-350 (-3%).
+Volcanic Eruption (1):
+Removed 70% additional damage against Hero armor type.
+
+Living Flame
+
+Volcanic Eruption (2):
+Removed 100% additional damage against Hero armor type.
+
+Ultimate Firelord
+
+Damage changed from 1041-1049 to 1010-1018 (-3%).
+Magma Blast:
+Removed 150% additional damage against Hero armor type.
+
+Holy Technology​
+Glowshroom
+
+Damage changed from 221-222 to 232-233 (+5%).
+
+Lightshroom
+
+Damage changed from 422-423 to 443-444 (+5%).
+
+Sunray Tower
+
+Damage changed from 108-109 to 114-115 (+6%).
+
+Radiant Spire
+
+Damage changed from 297-298 to 315-316 (+6%).
+
+Ultimate Titan Vault
+
+Damage changed from 849-850 to 900-901 (+6%).
+
+Ice Technology​
+Ultimate Lich
+
+Chilling Death:
+Frostbite damage changed from 3% to 2% of maximum health.
+
+Icicle
+
+Damage changed from 199-201 to 205-207 (+3%).
+
+Tricicle
+
+Damage changed from 475-477 to 489-491 (+3%).
+
+Ultimate Crystal
+
+Damage changed from 1297-1299 to 1333-1335 (+2%).
+Crystalized Light:
+Mana regeneration reduction changed from 0.33 to 0.35 per sec.
+
+Lightning Technology​
+Lightning Beacon
+
+Damage changed from 480-492 to 499-511 (+4%).
+
+Thunder Conductor
+
+Damage changed from 1095-1107 to 1122-1134 (+2.5%).
+
+Primal Technology
+Primal Technology Discs
+
+Fixed an issue that could cause weaker primal discs to override the attack range value of nearby stronger primal discs.
+
+Quarry
+
+Damage changed from 21-27 to 23-29 (+10%).
+
+Coreway
+
+Damage changed from 87-93 to 92-98 (+6%).
+
+Druid
+
+Damage changed from 241-255 to 255-269 (+6%).
+Ancient Bloom (1):
+Blast damage AoE changed from 180 to 200.
+Tooltip shortened slightly for simplicity.
+
+Keeper
+
+Damage changed from 617-631 to 637-651 (+3%).
+Ancient Bloom (2):
+Blast damage AoE changed from 180 to 200.
+Tooltip shortened slightly for simplicity.
+
+Ultimate Primalist
+
+Primordial Bond:
+Blast damage AoE changed from 180 to 200.
+Tooltip shortened slightly for simplicity.
+
+Void Technology​
+Lasher
+
+Feasting Void (1):
+Bonus damage gained consuming armor changed from 1.3 to 1.5.
+
+Ravager
+
+Feasting Void (2):
+Bonus damage gained consuming armor changed from 2.5 to 3.
+
+Ultimate Leviathan
+
+Hungering Void:
+Bonus damage gained consuming armor changed from 7 to 8.
+Water Technology​
+Tidecaller
+
+Damage changed from 45-46 to 44-45 (-2%).
+Crushing Wave (2):
+Spell Damage dealt changed from 45 to 44 (-2%).
+
+CREEPS
+Tier 3
+Shaman
+
+Elemental Warding:
+Fixed a bug that caused damage resistance not to update.
+
+Chaos Warden
+
+Maximum Health changed from 236880 to 246,355 (+4%).
+Tier 4
+Mountain Giant
+
+Armor changed from 14 to 15.
+Move Speed changed from 270 to 290.
+Blocked:
+Maximum attack damage reduction changed from 60% to 50%.
+
+Goblin Shredder
+
+Maximum Health changed from 819,100 to 802,720 (-2%).
+
+Treasure Goblin
+
+Income changed from 12,500 to 15,625 (0,0375 to 0,0468 ratio).
+
++25% income gain. Sending 8 Treasure Goblins now results in +125,000 income, up from 100,000. The increase is intended to fasten up the build-up phase during lower income Sudden Death games.
+
+
+
+
+
+Version 12.2a | 2026-04-18
+
+GENERAL
+Map Name
+
+Removed the colon “:” from the map name. This mitigates the issue of having the map name line break in the lobby.
+
+OLD
+
+
+
+
+NEW
+
+
+
+GAMEPLAY
+Sudden Death
+
+Creep damage taken modifier reduction changed from 1.6%/min to 1%/min.
+
+Computer Players
+
+Corrected sending behaviour to match updated creep timers from previous versions.
+TOWERS
+Arcane Technology​
+Archmage
+
+Damage changed from 49-52 to 51-54 (+5%).
+Spellcaster (1):
+Frostfire spell damage changed from 70 to 90 (+29%).
+Arcane Orb bonus damage changed from 100 to 110 (+10%).
+
+Grand Archmage
+
+Damage changed from 215-218 to 225-228 (+5%).
+Spellcaster (2):
+Frostfire spell damage changed from 210 to 250 (+19%).
+Arcane Orb bonus damage changed from 300 to 315 (+5%).
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Frostfire spell damage changed from 500 to 600 (+20%).
+Arcane Orb next Frostfire spell damage bonus per target hit changed from 10% to 15%.
+
+Arcane Pylon
+
+Shifting Power (1):
+Bonus damage dealt to flying creeps changed from 25% to 15%.
+
+Runeforged Sentry
+
+Shifting Power (2):
+Bounce range changed from 225 to 220.
+Bonus damage dealt to flying creeps changed from 30% to 20%.
+
+Ultimate Arcane Orb
+
+Arcane Surge:
+Bounce range changed from 250 to 240.
+Bonus damage dealt to flying creeps changed from 50% to 33%.
+Earth Technology​
+Nettle
+
+Damage changed from 161-171 to 178-188 (+10%).
+
+Thorns
+
+Damage changed from 432-442 to 466-476 (+8%).
+
+Ultimate Scorpion
+
+Damage changed from 1109-1136 to 1187-1215 (+7%).
+Lethal Strike:
+Mana gained per hit changed from 3 to 5.
+Clarified tooltip.
+Fire Technology​
+Ultimate Doom Guard
+
+Damage changed from 773-776 to 810-813 (+5%).
+Frenzied Flames:
+Spell damage changed from up to 1,200 to 1,400 (+16%).
+Spell damage taken bonus changed from 20% to 15%.
+
+Overall a ~12% spell damage increase for this ability.
+
+Holy Technology​
+Sunray Tower
+
+Damage changed from 100-101 to 108-109 (+8%).
+
+Radiant Spire
+
+Damage changed from 278-279 to 297-298 (+7%).
+
+Ultimate Titan Vault
+
+Damage changed from 794-795 to 849-850 (+7%).
+Ice Technology​
+Icicle
+
+Damage changed from 189-191 to 199-201 (+5%).
+
+Tricicle
+
+Damage changed from 461-463 to 475-477 (+3%).
+
+Ultimate Crystal
+
+Damage changed from 1260-1262 to 1297-1299 (+3%).
+Lightning Technology​
+Lightning Beacon
+
+Damage changed from 428-440 to 480-492 (+12%).
+
+Thunder Conductor
+
+Damage changed from 995-1007 to 1095-1107 (+10%).
+Primal Technology
+Quarry
+
+Damage changed from 30-36 to 21-27.
+Attack Speed changed from 3.0 to 2.0.
+Maximum Mana changed from 3 to 4.
+Break (1):
+Stun duration changed from 1.0 to 0.8 sec.
+
+Coreway
+
+Damage changed from 121-127 to 87-93.
+Attack Speed changed from 3.0 to 2.0.
+Maximum Mana changed from 3 to 4.
+Break (2):
+Stun duration changed from 1.2 to 1.0 sec.
+
+Druid
+
+Ancient Bloom (1):
+Primal blast AoE changed from 150 to 180.
+
+Keeper
+
+Ancient Bloom (2):
+Primal blast AoE changed from 150 to 180.
+
+Ultimate Primalist
+
+Primordial Bond:
+Primal blast AoE changed from 150 to 180.
+
+Savage
+
+Bloodthirst (1):
+Stampede beast damage changed from 200 to 240.
+Stampede beast stun duration changed from 0.6 to 0.5 sec.
+
+Trapper
+
+Bloodthirst (2):
+Stampede beast damage changed from 500 to 570.
+Stampede beast stun duration changed from 0.8 to 0.7 sec.
+
+Ultimate Beastmaster
+
+Stampede beast damage changed from 1,600 to 1,865.
+Stampede beast stun duration changed from 1.4 to 1.2 sec.
+Unholy Technology​
+Poison Bloom
+
+Damage changed from 141-145 to 148-152 (+5%).
+
+Fanatic
+
+Damage changed from 234-238 to 246-250 (+5%).
+
+Reaper
+
+Damage changed from 247-253 to 254-260 (+3%).
+
+Soul Forge
+
+Devour Essence (2):
+Permanent bonus damage gained on kills changed from 2 to 3.
+
+Ultimate Alchemist
+
+Unholy Concoction:
+Permanent bonus damage gained on kills changed from 4 to 5.
+Void Technology​
+Riftweaver
+
+Damage changed from 322-324 to 353-355 (+10%).
+
+Lasher
+
+Feasting Void (1):
+Attack damage gained when consuming armor changed from 1 to 1.3.
+Maximum bonus attack damage changed from 70 to 90.
+
+Ravager
+
+Feasting Void (2):
+Attack damage gained when consuming armor changed from 2 to 2.5.
+
+Ultimate Leviathan
+
+Hungering Void:
+Attack damage gained when consuming armor changed from 5 to 7.
+Water Technology​
+Water Elemental
+
+Damage changed from 265-267 to 286-288 (+8%).
+
+Seabound Wrath
+
+Damage changed from 710-712 to 753-755 (+6%).
+
+Ultimate Hurricane Elemental
+
+Damage changed from 2254-2256 to 2322-2324 (+3%).
+Raging Tempest:
+Forked lightning chaos physical damage changed from 1,750 to 2,000 (+14%).
+CREEPS
+Tier 3
+Spirit Walker
+
+Health changed from 90,950 to 93,675 (+3%).
+
+Abomination
+
+Armor changed from 9 to 10.
+
+Gryphon Rider
+
+Armor changed from 7 to 8.
+
+Ogre Magi
+
+Armor changed from 9 to 10.
+
+Chaos Warden
+
+Armor changed from 11 to 12.
+Speed changed from 430 to 440.
+Mana Drain:
+The maximum amount of mana drained changed from 60 to 75.
+Tier 4
+Obsidian Statue
+
+Health changed from 1,169,500 to 1,111,025 (-5%).
+
+Naga Siren
+
+Health changed from 339,140 to 328,965 (-3%).
+
+Phoenix
+
+Move Speed changed from 250 to 220.
+
+
+
+Version 12.1b | 2026-04-04
+
+TOWERS
+Arcane Technology​
+Ultimate Spellslinger
+
+Spell Mastery:
+Fixed initial Frostfire damage dealing less damage than intended.
+Fixed Frostfire bonus damage not resetting properly after Arcane Orb attacks.
+Unholy Technology​
+Poison Bloom
+
+Poison (1):
+Fixed an issue causing stacks not resetting on creep death.
+
+Fanatic
+
+Poison (2):
+Fixed an issue causing stacks not resetting on creep death.
+
+Ultimate Gravedigger
+
+Pestilence:
+Fixed an issue causing stacks not resetting on creep death.
+Void Technology​
+Lasher
+
+Feasting Void (1):
+Fixed an issue causing the bonus attack damage not resetting as intended after being idle.
+
+Ravager
+
+Feasting Void (2):
+Fixed an issue causing the bonus attack damage not resetting as intended after being idle.
+
+Ultimate Leviathan
+
+Hungering Void:
+Fixed an issue causing the bonus attack damage not resetting as intended after being idle.
+CREEPS
+Tier 4
+Treasure Goblin
+
+Initial stock changed from 4 to 8.
+Maximum stock changed from 8 to 16.
+Stock Replenish Interval changed from 4 to 2.
+Income changed from 12,000 to 12,500 (0,0360 to 0,0375 ratio).
+
+Sending 8 Treasure Goblins now results in +100,000 income, up from 96,000.
+
+The increase in stock and income should make it a bit easier for players to catch up in income during Sudden Death, but not intended to be able to overtake the advantage other players have gained beforehand.
+
+
+
+Version 12.1a | 2026-03-28
+
+GENERAL
+End of Season 11 Rewards
+
+Implemented the chosen rewards for winning Season 11 players.
+TOWERS
+Basic Technology​
+Defender
+
+Splash changed from 75 to 100.
+
+Bulwark
+
+Splash changed from 100 to 125.
+
+Construct
+
+Splash changed from 150 to 175.
+
+Ultimate Construct
+
+Splash changed from 200 to 225.
+CREEPS
+Tier 4
+Income
+
+Tier 4 creeps income ratio changed from 0,02 to 0,01.
+Tier 4 attacking and boss creeps income ratio changed from 0,02 to 0.
+
+Timers
+
+Corrected Stock Start Delay timers to match with Sudden Death start.
+
+Huntress
+
+Income changed from 10,000 to 5,000.
+
+Obsidian Statue
+
+Income changed from 12,000 to 6,000.
+
+Harpy Windwitch
+
+Income changed from 14,000 to 7,000.
+
+Naga Siren
+
+Income changed from 16,000 to 8,000.
+
+Mountain Giant
+
+Income changed from 12,000 to 0.
+
+Kodo Beast
+
+Income changed from 16,000 to 8,000.
+
+Goblin Shredder
+
+Income changed from 20,000 to 10,000.
+
+Frost Wyrm
+
+Income changed from 30,000 to 15,000.
+
+Phoenix
+
+Income changed from 60,000 to 0.
+
+Demon
+
+Income changed from 84,000 to 0.
+
+Treasure Goblin
+
+Initial stock changed from 0 to 4.
+Maximum stock changed from 4 to 8.
+New unique effect:
+This creep cannot be used when above 4,000,000 income. You'll not gain any income from it and gold spent will be refunded.
+
+
+
+Version 12.0a | 2026-03-22
+
+GENERAL
+New Season!
+
+With this version Season 12 begins.
+The top 100 Players from the Season 11 Leaderboard have been added to the in-game Hall of Champions and Discord channel.
+
+Player Data is not compatible from previous Seasons and your settings have to be reapplied in-game. Unfortunately a technical limitation as of now.
+
+
+NBA Command (Notify Being Attacked, “-nba”)
+
+This command state is now saved between games (enabled by default).
+GAMEPLAY
+Game Modes
+
+Ranked:
+The number of players required changed from 4 to 3.
+
+The end game has been redesigned with the goal of separating the early to late game from Sudden Death (“end game”) with the focus on reducing complexity.
+
+
+We now have two distinct sessions in the game:
+
+Early to Late Game: Tier 1 to Tier 3 (00:00 to 24:59 game time)
+This session the main focus is to prepare the maze, gaining income and to steal lives from other players
+Sudden Death: Tier 4 (25:00+ game time)
+This session the main focus is to use any advantage gained from previous session together with game knowledge and skill in order to win the game
+Everything necessary to win the game should be available in Tier 4 only
+
+Income Cap & Convert Lives into Income Cap
+
+This mechanic has been removed.
+
+The income cap mechanic was complex and the UI didn’t support it well enough.
+
+
+
+Sudden Death
+
+Starting time changed from 26:30 to 25:00 game time.
+Creep damage taken modifier changed from 90% to 100%.
+Creep damage taken modifier reduction changed from 0.5%/min to 1.6%/min.
+Tier 4 now unlocks with Sudden Death.
+Tier 1, 2 and 3 can no longer be used during Sudden Death.
+Players with less than 1,000,000 income have their income increased to 1,000,000 when Sudden Death begins.
+TOWERS
+Every tower has been looked into and viewed from a complexity stand point. Towers deemed unnecessary complex with massive tooltips have been simplified.
+
+
+Tooltips
+
+Shortened “Damage Type” text into “Type”.
+“Speed” (attack speed) has been removed and instead added with “Damage”.
+Basic Technology​
+Defender
+
+Damage changed from 13-18 to 8-11.
+Attack Speed changed from 2.5 to 1.2.
+Range changed from 900 to 800.
+Splash changed from 225 to 75.
+
+Bulwark
+
+Damage changed from 71-76 to 41-44.
+Attack Speed changed from 2.5 to 1.2.
+Range changed from 900 to 800.
+Splash changed from 250 to 100.
+
+Construct
+
+Damage changed from 275-280 to 160-163.
+Attack Speed changed from 2.5 to 1.2.
+Range changed from 1000 to 900.
+Splash changed from 300 to 150.
+
+Ultimate Construct
+
+Damage changed from 1004-1009 to 585-588.
+Attack Speed changed from 2.5 to 1.2.
+Range changed from 1000 to 900.
+Splash changed from 350 to 200.
+
+Rocketeers
+
+Range changed from 1000 to 900.
+
+Barrager
+
+Range changed from 1000 to 900.
+
+Turret
+
+Range changed from 1200 to 1000.
+
+Ultimate Turret
+
+Range changed from 1200 to 1000.
+
+Bombard Tower
+
+Damage changed from 74-78 to 77-81 (+4%).
+Range changed from 550 to 500.
+
+Ultimate Artillery Tower
+
+Damage changed from 1103-1109 to 1147-1153 (+4%).
+Range changed from 650 to 600.
+Arcane Technology​
+The 4k and 10k Archmages had a lot going on for them at their stage of the game, so Aether Attunement has been removed from these towers and is now a fitting Ultimate exclusive for the Spellslinger.
+
+
+Archmage
+
+Maximum Mana changed from 30 to 50 (to allow some buffer).
+Spellcaster (1):
+Removed: Aether Attunement effect.
+Frostfire damage changed from 50 to 70.
+Arcane Orb damage changed from 75 to 100.
+
+Grand Archmage
+
+Maximum Mana changed from 30 to 50 (to allow some buffer).
+Spellcaster (2):
+Removed: Aether Attunement effect.
+Frostfire damage changed from 150 to 210.
+Arcane Orb damage changed from 225 to 300.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Removed: Bonus mana gained from attacking slowed targets.
+Aether Attunement damage interval changed from every 0.667 sec to every 0.5 sec.
+Earth Technology​
+Earth 2 has been adjusted to be pure Single Target. The AoE ability effect has been given to Unholy 1 instead as it’s more fitting thematically.
+
+
+Nettle
+
+Germinate (1):
+Removed: Target stacking AoE damage.
+New: Attacks can Critical Strike for 50% additional damage. The lower the target's current health percentage, the higher chance, up to 50%.
+
+Thorns
+
+Germinate (2):
+Removed: Target stacking AoE damage.
+New: Attacks can Critical Strike for 50% additional damage. The lower the target's current health percentage, the higher chance, up to 60%.
+
+Ultimate Scorpion
+
+Maximum Mana changed from 0 to 999.
+Lethal Strike:
+Removed: Target stacking AoE damage.
+New Effect: Gains 3 mana with every attack and Critical Strike damage percentage is equal to current mana.
+Killing a target resets mana back to 100.
+Holy Technology​
+Glowshroom
+
+Damage Type changed from Magic to Normal.
+
+Lightshroom
+
+Damage Type changed from Magic to Normal.
+
+Ultimate Divineshroom
+
+Damage Type changed from Magic to Normal.
+Primal Technology
+Basic Primal has been adjusted in order to make the technology simpler to play as a starter. The gold gain mechanic is now entirely locked behind the Primal 1 upgrade.
+
+
+Primal 2 has also been simplified by changing how their abilities behave, but keeping its core identity.
+
+
+Quarry
+
+Damage changed from 23-37 to 30-36 (+10%).
+Maximum Mana changed from 0 to 3.
+Prospect (1) reworked into Break (1):
+Gains 1 mana with every attack. Uses all mana at 100% to stun the target for 1 sec.
+
+Coreway
+
+Damage changed from 106-120 to 121-127 (+10%).
+Maximum Mana changed from 0 to 3.
+Prospect (2) reworked into Break (2):
+Gains 1 mana with every attack. Uses all mana at 100% to stun the target for 1.2 sec.
+
+Druid
+
+Damage Type changed from Siege to Magic.
+Ancient Bloom (1):
+AoE damage type changed from Siege Physical Damage to Magic Physical Damage.
+
+Keeper
+
+Damage Type changed from Siege to Magic.
+Ancient Bloom (2):
+AoE damage type changed from Siege Physical Damage to Magic Physical Damage.
+
+Ultimate Primalist
+
+Damage Type changed from Siege to Magic.
+Primordial Bond:
+AoE damage type changed from Siege Physical Damage to Magic Physical Damage.
+Removed: Aura effect (return damage and armor reduction against attacking creeps)
+
+Savage
+
+Damage Type changed from Normal to Siege.
+Maximum Mana changed from 1200 to 100.
+Can now be targeted by mana altering abilities.
+Bloodthirst (1) reworked:
+Attacks hit 1 additional target within 400 AoE and gains 5 mana per target hit.
+
+Uses all mana at 100% to unleash a beast towards target hit or set point, up to 700 range. The beast deals 200 Siege Physical Damage to ground creeps in its path and stuns them for 0.6 sec. Can only stun the same creep once every 8 sec.
+
+New Ability: Stampede Target
+Manually set stampede target direction. Hotkey: R
+
+Trapper
+
+Damage Type changed from Normal to Siege.
+Maximum Mana changed from 1200 to 100.
+Can now be targeted by mana altering abilities.
+Bloodthirst (2) reworked:
+Attacks hit 1 additional target within 400 AoE and gains 5 mana per target hit.
+
+Uses all mana at 100% to unleash a beast towards target hit or set point, up to 700 range. The beast deals 500 Siege Physical Damage to ground creeps in its path and stuns them for 0.8 sec. Can only stun the same creep once every 8 sec.
+
+New Ability: Stampede Target
+Manually set stampede target direction. Hotkey: R
+
+Ultimate Beastmaster
+
+Damage Type changed from Normal to Siege.
+Maximum Mana changed from 1200 to 100.
+Can now be targeted by mana altering abilities.
+Stampede reworked:
+Attacks hit 1 additional target within 500 AoE, gains 5 mana per target hit and damage dealt is increased based on how far away the target is. 10% increased damage for every 100 range, up to 100%.
+
+Uses all mana at 100% to unleash a beast towards target hit or set point, up to 1200 range. The beast deals 1,600 Siege Physical Damage to ground creeps in its path and stuns them for 1.4 sec. Can only stun the same creep once every 8 sec.
+
+
+Stampede Target Ability
+
+Can now target any tower to set Stampede target direction.
+If target self, then target direction is reset to default (target hit).
+Unholy Technology​
+Plague Well
+
+Damage Type changed from Piercing to Normal.
+Corruption (1):
+Duration changed from 3 to 4 sec.
+
+Defiled Fountain
+
+Damage Type changed from Piercing to Normal.
+Corruption (2):
+Duration changed from 3 to 4 sec.
+
+Poison Bloom
+
+Damage Type changed from Piercing to Normal.
+Maximum Mana changed from 10 to 0.
+Mana Regeneration changed from 9.35 to 0.
+Poison (1) reworked:
+Attacks hit 1 additional target and applies a stack of poison damage equal to 20% of damage dealt, up to 10 stacks. The target explodes at 10 stacks, dealing stored damage as Spell Damage to itself.
+
+Targets can only explode once every 3 sec and stacks are reset on explosion.
+
+
+Fanatic
+
+Damage Type changed from Piercing to Normal.
+Maximum Mana changed from 10 to 0.
+Mana Regeneration changed from 9.35 to 0.
+Poison (2) reworked:
+Attacks hit 2 additional targets and apply a stack of poison damage equal to 25% of damage dealt, up to 10 stacks. The target explodes at 10 stacks, dealing stored damage as Spell Damage to itself.
+
+Targets can only explode once every 3 sec and stacks are reset on explosion.
+
+
+Ultimate Gravedigger
+
+Damage Type changed from Piercing to Normal.
+Maximum Mana changed from 10 to 0.
+Mana Regeneration changed from 9.35 to 0.
+Pestilence reworked:
+Attacks hit 2 additional targets and apply a stack of poison damage equal to 35% of damage dealt, up to 10 stacks. The target explodes at 10 stacks or when killed, dealing stored damage as Spell Damage to creeps within 200 AoE.
+
+Targets can only explode once every 3 sec and stacks are reset on explosion.
+
+Void Technology​
+Void 2 has been simplified with the removal of self-damage and heal swap effect. Instead, the damage bonus is reset after being idle for 3 sec.
+
+
+Lasher
+
+Feasting Void (1) semi-reworked:
+Attacks consume the armor of targets hit, reducing their armor by 0.17 down to 0 and gains 1 attack damage, up to 70.
+
+The damage bonus resets when not attacking for 3 sec.
+
+
+Ravager
+
+Feasting Void (2) semi-reworked:
+Attacks consume the armor of targets hit, reducing their armor by 0.20 down to 0 and gains 2 attack damage, up to 200.
+
+The damage bonus resets when not attacking for 3 sec.
+
+
+Ultimate Leviathan
+
+Hungering Void semi-reworked:
+Attacks consume the armor of targets hit, reducing their armor by 0.27 down to 0 and gains 5 attack damage, up to 600. Gains 10% life-steal against the primary target at maximum damage bonus.
+
+The damage bonus resets when not attacking for 3 sec.
+
+Water Technology​
+Water Basic and Water 1 has been changed into Piercing damage type as a splash piercing tower was missing and it fit the towers thematically.
+
+
+Splasher
+
+Damage Type changed from Normal to Piercing.
+
+Tidecaller
+
+Damage Type changed from Normal to Piercing.
+
+Water Elemental
+
+Damage Type changed from Normal to Piercing.
+
+Seabound Wrath
+
+Damage Type changed from Normal to Piercing.
+
+Ultimate Hurricane Elemental
+
+Damage Type changed from Normal to Piercing.
+CREEPS
+Creep Timers
+
+Creeps now unlock one after another in 30 second intervals instead of two every minute.
+
+Creep Abilities
+
+The following creep abilities have been removed from the game:
+Dash:
+The turn rate bonus was difficult to grasp and for simplicity it’s better if all ground creeps behave in the same way with their movement. The Speed value for creeps stays the same.
+Geomancy Aura:
+A complex aura that was difficult to determine its actual strength and see its effect during gameplay. To compensate, armor values of some creeps have been increased instead.
+Necrotic Transfusion:
+This ability was only present on the Death Revenant and felt a bit out of place. It relied heavily on RNG and is better off removed.
+Shadowdance:
+This ability was only present on the Satyr Shadowdancer and is another ability that felt a bit out of place. It’s difficult to determine its strength and during gameplay it's visually difficult to follow along its effect.
+The amount of abilities present on early game creeps have been evaluated and adjusted as follows to reduce complexity:
+Tier 1: maximum of 1 ability
+Tier 2: maximum of 1 ability, with introduction of 2 on later creeps
+Tier 3: maximum of 2 abilities, with introduction of 3 on later creeps
+Tier 4: maximum of 3 abilities
+Tier 1
+Forest Spider
+
+Availability time changed from 01:00 to 01:30 game time.
+
+Fel Orc Grunt
+
+Availability time changed from 02:00 to 02:30 game time.
+
+Shade
+
+Availability time changed from 03:00 to 03:30 game time.
+
+Priest
+
+Availability time changed from 04:00 to 04:30 game time.
+
+Rot Golem
+
+Availability time changed from 05:00 to 05:30 game time.
+Maximum Health changed from 1,205 to 1,325 (+10%).
+Removed: Spell Resistance
+Tier 2
+Vengeful Spirit
+
+Availability time changed from 07:00 to 07:30 game time.
+Armor Type changed from Unarmored to Light.
+Removed Ability: Skittering
+
+Forest Troll (Troll Berserker)
+
+Name changed from “Troll Berserker” to “Forest Troll”.
+Health changed from 2,200 to 2,050 (-7%).
+Armor Type changed from Light to Unarmored.
+Turn Rate changed from 0.8 to 0.6 (default for all creeps).
+Removed Ability: Dash (1)
+Added Ability: Skittering
+This creep won't draw attention from towers and will always be attacked as a last priority.
+
+Wyvern
+
+Availability time changed from 08:00 to 08:30 game time.
+
+Voidwalker
+
+Removed Ability: Regen Aura (2)
+
+Faceless One
+
+Availability time changed from 09:00 to 09:30 game time.
+
+Dragonspawn
+
+Turn Rate changed from 0.8 to 0.6 (default for all creeps).
+Removed Ability: Dash (2)
+
+Sea Turtle
+
+Availability time changed from 10:00 to 10:30 game time.
+
+Kobold Geomancer
+
+Tier 2 position swapped with Siege Engines.
+Availability time: 11:30
+Hotkey changed from C to X.
+Cost changed from 75,000 to 60,000 gold.
+Income changed from 5,000 to 4,200.
+Bounty changed from 3,375 to 2,700.
+Health changed from 39,285 to 31,430.
+Removed Ability: Geomancy Aura (1)
+Added Ability: Regen Aura (2)
+Increases health regeneration of creeps within 700 AoE by 10.
+
+Siege Engines
+
+Tier 2 position swapped with Kobold Geomancer.
+Availability time: 12:00
+Hotkey changed from X to C.
+Cost changed from 50,000 to 75,000 gold.
+Income changed from 2,500 to 3,750.
+Bounty changed from 4,875 to 7,312.
+Health changed from 19,200 to 28,800.
+
+Infernal
+
+Availability time changed from 12:00 to 12:30 game time.
+Tier 3
+Death Revenant
+
+Removed Ability: Necrotic Transfusion
+
+Satyr Shadowdancer
+
+Availability time changed from 14:00 to 14:30 game time.
+Removed Ability: Shadowdance
+Added Ability: Armored 2)
+Physical Damage taken from splash is reduced by 20%
+
+Crypt Fiend
+
+Turn Rate changed from 0.8 to 0.6 (default for all creeps).
+Removed Ability: Dash (3)
+
+Necromancer
+
+Availability time changed from 15:00 to 15:30 game time.
+
+Spirit Walker
+
+Health changed from 87,450 to 90,950 (+4%).
+Removed Ability: Armored (2)
+
+Ancient Wendigo
+
+Availability time changed from 16:00 to 16:30 game time.
+
+Shaman
+
+Armor changed from 7 to 8.
+
+Abomination
+
+Availability time changed from 17:00 to 17:30 game time.
+Armor changed from 8 to 9.
+Turn Rate changed from 0.8 to 0.6 (default for all creeps).
+Removed Ability: Dash (4)
+
+Gryphon Rider
+
+Armor changed from 6 to 7.
+
+Ogre Magi
+
+Availability time changed from 18:00 to 18:30 game time.
+Armor changed from 8 to 9.
+Removed Ability: Geomancy Aura (2)
+
+Chaos Warden
+
+Armor changed from 10 to 11.
+
+Behemoth
+
+Availability time changed from 19:00 to 19:30 game time.
+Armor changed from 15 to 16.
+Tier 4
+Income
+
+All Tier 4 creeps now increase income at a 0,02 ratio of their cost.
+
+Huntress
+
+Availability time changed from 21:00 to 25:00 game time.
+Cost changed from 600,000 to 500,000.
+Income changed from 0 to 10,000.
+Bounty changed from 18,000 to 15,000.
+Health changed from 268,895 to 246,500 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 12 to 13.
+
+Obsidian Statue
+
+Availability time changed from 21:00 to 25:00 game time.
+Cost changed from 750,000 to 600,000.
+Income changed from 0 to 12,000.
+Bounty changed from 67,500 to 54,000.
+Health changed from 1,329,010 to 1,169,500. (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 18 to 20.
+
+Harpy Windwitch
+
+Availability time changed from 22:00 to 25:00 game time.
+Hotkey changed from R to E.
+Cost changed from 1,000,000 to 700,000.
+Income changed from 0 to 14,000.
+Bounty changed from 30,000 to 21,000.
+Health changed from 206,125 to 158,715 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 8 to 9.
+
+Mountain Giant
+
+Availability time changed from 23:00 to 25:00 game time.
+Income changed from 0 to 12,000.
+Health changed from 256,790 to 282,470 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 12 to 14.
+
+Kodo Beast
+
+Availability time changed from 23:00 to 25:00 game time.
+Cost changed from 1,000,000 to 800,000.
+Income changed from 0 to 16,000.
+Bounty changed from 30,000 to 24,000.
+Health changed from 325,325 to 286,285 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 13 to 14.
+
+Goblin Shredder
+
+Availability time changed from 24:00 to 25:00 game time.
+Cost changed from 1,100,000 to 1,000,000.
+Income changed from 0 to 20,000.
+Armor changed from 14 to 16.
+
+Naga Siren
+
+Availability time changed from 24:00 to 25:00 game time.
+Hotkey changed from F to R.
+Cost changed from 1,300,000 to 800,000.
+Income changed from 0 to 16,000.
+Bounty changed from 39,000 to 24,000.
+Health changed from 501,005 to 339,140 (+10% to compensate for sudden death damage taken modifier adjustment).
+Siren's Song:
+Self heal amount changed from 20% to 15% of maximum health.
+The armor amount recovered changed from 1 to 1.6.
+Creeps can now only be affected by Siren’s Song once every 5 sec.
+
+Frost Wyrm
+
+Income changed from 0 to 30,000.
+Health changed from 442,100 to 486,310 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 14 to 16.
+
+Phoenix
+
+Hotkey changed from X to C.
+Income changed from 0 to 60,000.
+Health changed from 690,825 to 759,905 (+10% to compensate for sudden death damage taken modifier adjustment).
+Armor changed from 18 to 20.
+
+Demon
+
+Tier 4 position changed to most bottom right.
+Income changed from 0 to 84,000.
+Availability time changed from 26:00 to 25:00 game time.
+
+Treasure Goblin (returning creep)
+
+Available at 25:00 game time and has a max stock of 4.
+Hotkey: V
+Cost: 333,333
+Income: 12,000 (0,036 ratio)
+Bounty: 30,000
+Escape Portal:
+This creep cannot steal any lives and is removed once damaged. It gives a bounty to its attacker.
+
+The purpose of this creep is to provide a faster way to gain income during Tier 4, at the cost of not applying any pressure to the defending player.
+
+
+
+
+Version 11.7a | 2025-11-23
+
+TOWERS
+Technology Discs
+
+Time to morph back to an inactive disc changed from 3 to 5 sec.
+
+To further disincentive the action of swapping on the fly to counter sends.
+
+Holy Technology​
+Sunray Tower
+
+Luminous Grasp (1):
+Slow amount changed from 12% to 14%.
+
+Radiant Spire
+
+Luminous Grasp (2):
+Slow amount changed from 15% to 18%.
+
+Ultimate Titan Vault
+
+Titan Defense Mechanism:
+Slow amount changed from 20% to 24%.
+Unholy Technology​
+Technology Disc: Unholy
+
+Active: Unholy Technology:
+Armor reduction amount changed from 0.03 to 0.05.
+
+Technology Disc: Advanced Unholy
+
+Active: Advanced Unholy Technology:
+Armor reduction amount changed from 0.04 to 0.067.
+
+Technology Disc: Ultimate Unholy
+
+Active: Ultimate Unholy Technology:
+Armor reduction amount changed from 0.07 to 0.1.
+CREEPS
+Tier 3
+Chaos Warden
+
+Health changed from 219,335 to 236,880 (+8%).
+Secret Technique:
+This ability has been removed (50% chance to dodge the attacks from towers with 600 or less attack range).
+Chaos Barrier:
+Simplified tooltip and split into Mana Drain ability once again.
+Mana Drain:
+At 0 mana, Chaos Warden drains 33% of a tower's mana within 180 AoE and gains 500% of the amount. Maximum of 60 mana.
+
+This effect can only trigger on the same tower once every 7 sec.
+
+
+Health increased to compensate for the loss of dodge ability. The added Mana Drain cooldown on towers should make it less penalizing.
+
+Tier 4
+Obsidian Statue
+
+Exhume Ghouls (Aphotic Chant):
+Ability renamed to: “Exhume Ghouls”.
+Spawned Essence of Blight creep changed into Ghoul (no stat changes).
+No longer prevents death and revives the Obsidian Statue if any spawned creep is alive after 15 sec.
+Spawned creeps are no longer removed after 15 sec.
+
+Simplification of ability and redesigning the Essence of Blight creep into a Ghoul makes it more familiar by Warcraft 3 standards and also saves more than ~500kB on file size due to removal of imported model file.
+
+
+Kodo Beast
+
+Health changed from 342,450 to 325,325 (-5%).
+
+Goblin Shredder
+
+Health changed from 843,675 to 819,100 to (-3%).
+
+11.6a change reverted
+
+
+
+
+
+Version 11.6a | 2025-11-15
+
+GENERAL
+Commands
+
+Graphics Toggle (“-gt”):
+Recent Wc3 patch broke current code handling the graphics of certain tower ability missile effects. Code has been reverted to how it worked in earlier versions which means that only if the owning player building the tower has “-gt” enabled, then the missile graphics are hidden.
+TOWERS
+Fire Technology​
+Fire Pit
+
+Ignite (1):
+Tooltip adjusted to mention Spell Damage dealt every sec, instead of total (5/sec).
+Duration changed from 5 to 8 sec.
+
+Magma Well
+
+Ignite (2):
+Tooltip adjusted to mention Spell Damage dealt every sec, instead of total (13/sec).
+Duration changed from 5 to 8 sec.
+
+Living Flame
+
+Volcanic Eruption (2):
+The armor reduction amount changed from 10% to 12%.
+
+Ultimate Firelord
+
+Damage changed from 991-999 to 1041-1049 (+5%).
+Magma Blast:
+The armor reduction amount changed from 12% to 15%.
+Holy Technology​
+Sunray Tower
+
+Luminous Grasp (1):
+Slow amount changed from 8% to 12%.
+Fixed an issue that caused this effect to unintentionally increase the slow duration of the target by an additional 2 sec.
+
+Radiant Spire
+
+Luminous Grasp (2):
+Slow amount changed from 10% to 15%.
+Fixed an issue that caused this effect to unintentionally increase the slow duration of the target by an additional 2 sec.
+
+Ultimate Titan Vault
+
+Damage changed from 827-828 to 794-795 (-4%).
+Titan Defense Mechanism:
+Bonus attack target count changed from 9 to 10.
+Aura increased Spell Damage taken changed from 16% to 15%.
+Slow amount changed from 15% to 20%.
+Aura AoE changed from 500 to 700.
+
+Aura AoE increased to make it easier with tower placement, reducing complexity.
+
+Ice Technology​
+Obelisk
+
+Damage changed from 13-16 to 14-17 (+6%).
+
+Runic Monolith
+
+Damage changed from 42-46 to 45-48 (+7%).
+
+Frozen Watcher
+
+Damage changed from 154-158 to 162-166 (+5%).
+
+Icebound Core
+
+Damage changed from 470-474 to 494-498 (+5%).
+
+Ultimate Lich
+
+Damage changed from 901-951 to 946-950 (+5%).
+Chilling Death:
+Aura AoE changed from 500 to 700.
+Aura attack speed reduction changed from 20% to 15%.
+
+The damage output of some attacking creeps (details below) have been reduced slightly to mitigate the loss of 5%. Should also make it slightly easier for other technologies without having Lich to defend.
+
+Aura AoE increased to make it easier with tower placement, reducing complexity.
+
+Lightning Technology​
+Lightning Beacon
+
+Damage changed from 400-414 to 428-440 (+7%).
+Focused Lightning (1):
+Air creep slow aura removed.
+
+Thunder Conductor
+
+Damage changed from 930-944 to 995-1007 (+7%).
+Focused Lightning (2):
+Air creep slow aura removed.
+
+Ultimate Annihilation Glyph
+
+Damage changed from 2258-2270 to 2416-2428 (+7%).
+Annihilation:
+Target chain AoE changed from 300 to 500.
+Air creep slow aura removed.
+
+Voltage
+
+Damage changed from 230-230 to 240-240 (+5%).
+Crash Lightning (1):
+Stun duration changed from 0.5 to 0.67 sec.
+
+Storm Commander
+
+Damage changed from 563-563 to 590-590 (+5%).
+Crash Lightning (2):
+Stun duration changed from 0.5 to 0.67 sec.
+
+Ultimate Orb Keeper
+
+Damage changed from 811-811 to 850-850 (+5%).
+Arc Lightning:
+Stun duration changed from 0.5 to 0.67 sec.
+Primal Technology
+Ultimate Primalist
+
+Primordial Bond:
+Aura AoE changed from 500 to 700.
+
+Aura AoE increased to make it easier with tower placement, reducing complexity.
+
+Void Technology​
+Ultimate Harbinger
+
+Whispers of the Void:
+Updated incorrect tooltip for creep debuff.
+
+Lasher
+
+Feasting Void (1):
+The armor reduction amount changed from 0.24 to 0.25.
+Ravager
+
+Feasting Void (2):
+The armor reduction amount changed from 0.27 to 0.30.
+
+Ultimate Leviathan
+
+Hungering Void:
+The armor reduction amount changed from 0.35 to 0.4.
+
+Water Technology​
+Water Elemental
+
+Damage changed from 257-259 to 265-267 (+3%).
+
+Seabound Wrath
+
+Damage changed from 690-692 to 710-712 (+3%).
+CREEPS
+Tier 2
+Siege Engine
+
+Damage changed from 44-56 to 44-52 (-4%).
+Tier 3
+Shaman
+
+Elemental Warding semi-reworked:
+Gains 50% damage resistance against the damage type that has dealt the most damage to the Shaman.
+Can only swap resistances once every 3 sec.
+
+
+The ability effect has been reported too complex and this rework is intended as a simplification. The reason for a cooldown when swapping resistances is to mitigate constant resistance swap spamming.
+
+
+Chaos Warden
+
+Maximum Mana changed from 80 to 100.
+Chaos Barrier:
+The amount of mana drained from a tower changed from 100% to 33% of current mana.
+The amount of mana gained from draining changed from 200% to 500%.
+Drain amount is now capped at 60% of maximum mana.
+Drain cooldown changed from 3 to 7 sec.
+
+This change aims to reduce the effect this creep has on mana using technologies. With 100 maximum mana it’ll be easier to see exact damage reduction percentage and with the new cap at 60% the higher end damage reduction is removed from specific mana using towers.
+
+Tier 4
+Obsidian Destroyer
+
+Annihilation Aura:
+Fixed an issue causing the aura to affect Spell Damage unintentionally. This effect was removed in a previous version.
+
+Kodo Beast
+
+Hotkey changed from “E” to “S”.
+Stock Start Delay changed from 1335 to 1395 (from 22:00 to 23:00 game time).
+Health changed from 323,055 to 342,450 (+6%).
+Devotion Aura (4):
+Armor bonus changed from 6 to 5.
+
+Kodo Beast reported to be very strong in sends during T3. Delaying its timer and nerfing armor value given to other creeps should greatly mitigate this issue. Its health increased equal to its own loss in armor to keep its strength equal.
+
+
+Mountain Giant
+
+Damage changed from 211-215 to 202-206 (-4%).
+
+Goblin Shredder
+
+Health changed from 819,100 to 843,675 (+3%).
+
+Slight increase due to Kodo Beast -1 armor on Aura.
+
+
+Naga Siren
+
+Maximum Mana changed from 32 to 50.
+Regen Aura (4):
+Health regeneration bonus changed from 144 to 120.
+Siren's Song:
+Maximum Mana gained changed from 32 to 50.
+
+Frost Wyrm
+
+Health changed from 425,095 to 442,100 (+4%).
+Speed changed from 330 to 320.
+Unholy Sacrifice (4):
+Fixed an issue causing this ability to spawn a visual effect on every healed creep, instead of only the Frost Wyrm (performance improvement).
+Enduring Chill
+This ability has been removed (Physical Damage taken reduces current Slow value by 0.5%).
+
+Less focus on required slow spread throughout the maze and more on damage.
+
+
+
+
+
+Version 11.5a | 2025-10-19
+
+GENERAL
+Map Bug Fixes & Improvements
+
+Fixed a very rare bug that could cause some performance issues with certain mana using towers and creeps.
+GAMEPLAY
+Piercing Attack Type
+
+Damage against Unarmored armor type changed from 125% to 150%.
+
+This change reverts a change made many versions ago when Piercing damage type was dominating. Given the current state of the damage type, it should be safe to buff it up once again.
+
+TOWERS
+Arcane Technology​
+Apprentice
+
+Damage changed from 11-12 to 11-13 (+5%).
+
+Sorcerer
+
+Damage changed from 28-29 to 29-31 (+5%).
+
+Archmage
+
+Spellcaster (1):
+Frostfire Spell Damage changed from 40 to 50 (+25%).
+Arcane Orb bonus splash damage changed from 50 to 75 (+50%).
+Aether Attunement damage changed from 90% to 100%.
+
+Grand  Archmage
+
+Spellcaster (2):
+Frostfire Spell Damage changed from 140 to 150 (+7%).
+Arcane Orb bonus splash damage changed from 175 to 225 (+29%).
+Aether Attunement damage changed from 90% to 100%.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Arcane Orb bonus splash damage changed from 625 to 750 (+20%).
+Aether Attunement damage changed from 90% to 100%.
+
+Ultimate Arcane Orb
+
+Arcane Surge:
+Clarified tooltip a bit.
+Earth Technology​
+Ultimate Ancient Warden
+
+Nature's Guidance:
+Removed tooltip text  “Increases base armor by 1.” as this is not the case. The effect was not intended and was reverted in a previous version.
+
+Nettle
+
+Damage changed from 152-162 to 161-171 (+6%).
+
+Thorns
+
+Damage changed from 408-418 to 432-442 (+6%).
+
+Ultimate Scorpion
+
+Damage changed from 1047-1073 to 1109-1136 (+6%).
+Fire Technology​
+Ultimate Doom Guard
+
+Damage changed from 714-717 to 773-776 (+8.5%).
+Frenzied Flames:
+Removed creep armor reduction aura effect (-1 armor within AoE).
+
+Armor reduction effect removed from Doom Guard in order to reduce late game complexity. The tower is buffed in order to still carry its weight. Damage dealt greatly increased to compensate for the loss of -1 armor aura. As the negative armor also benefited other towers, the damage was increased even further.
+
+
+Ultimate Firelord
+
+Damage changed from 918-926 to 991-999 (+8%).
+Holy Technology​
+Light Flies
+
+Damage changed from 10-11 to 11-12 (+10%).
+
+Holy Lantern
+
+Damage changed from 33-35 to 35-36 (+8%).
+
+Sunray Tower
+
+Damage changed from 94-95 to 100-101 (+6%).
+
+Radiant Spire
+
+Damage changed from 263-264 to 278-279 (+6%).
+
+Ultimate Titan Vault
+
+Damage changed from 781-782 to 827-828 (+6%).
+Ice Technology​
+Icicle
+
+Damage changed from 178-180 to 189-191 (+6%).
+
+Tricicle
+
+Damage changed from 435-437 to 461-463 (+6%).
+
+Ultimate Crystal
+
+Damage changed from 1189-1191 to 1260-1262 (+6%).
+Crystalized Light:
+Mana drained per sec changed from 0.25 to 0.33.
+Lightning Technology​
+Lightning Beacon
+
+Focused Lightning (1):
+Slow amount changed from 25% to 15%.
+AoE changed from 300 to 700.
+
+Thunder Conductor
+
+Focused Lightning (2):
+Slow amount changed from 25% to 15%.
+AoE changed from 400 to 800.
+
+Ultimate Annihilation Glyph
+
+Annihilation:
+Slow amount changed from 25% to 15%.
+AoE changed from 500 to 1,000.
+
+The slow amount is reduced, but AoE is increased for the air only slow aura. With the larger AoE it should be easier to set up these towers to cover the lane, instead of having a min-max position for the towers. The decrease in slow amount is compensated by a minor nerf to air creep move speed (details below). The idea is to have the slow aura be considered optional and “nice to have”, not mandatory in late game.
+
+Primal Technology
+
+Ultimate Beastmaster
+
+Stampede:
+Mana gained per cast changed from 33 to 50 (~+6/sec).
+The stampede beast no longer stops at its target.
+The stampede beast range is now always a constant 1,200 (was equal to target distance).
+Stampede beast run speed changed from 700 to 800.
+Stampede beast damage changed from 2,000 to 1,400 (changes from 5,000 to 3,500 maximum damage with distance bonus).
+Stun duration changed from 1.5 to 1.4 sec.
+
+With a constant beast run distance and not having it stop at its target, it should now be much easier to set up the Beastmaster tower. Given these new values are initially much stronger compared to its previous dynamic iteration, the strength had to be nerfed.
+
+Unholy Technology​
+
+Poison Bloom
+
+Damage changed from 133-137 to 141-145 (+6%).
+
+Fanatic
+
+Damage changed from 221-225 to 234-238 (+6%).
+
+Ultimate Gravedigger
+
+Damage changed from 1028-1032 to 1089-1093 (+6%).
+Void Technology​
+Ultimate Harbinger
+
+Whispers of the Void:
+Removed ignore friendly aura effect on the teleported target.
+Teleport delay changed from 3.5 to 3.6 sec.
+
+The tower has multiple new effects once upgraded (spread, aura ignore and slow), which is a bit excessive compared to other Ultimates. In order to reduce complexity, the aura ignore effect has been removed.
+
+
+Ultimate Leviathan
+
+Damage changed from 1399-1401 to 1637-1639 (+17%).
+Hungering Void:
+Removed creep armor reduction aura effect (-2 armor within 400 AoE).
+
+Aura removed from Leviathan in order to reduce late game complexity. The tower is heavily buffed in order to still carry its weight. Damage dealt greatly increased to compensate for the loss of -2 armor aura. As the negative armor also benefited other towers, the damage was increased even further.
+
+CREEPS
+Tier 1
+Corrupted Treant
+
+Stock Replenish Interval changed from 8 to 16.
+Health changed from 250 to 265 (+6%).
+Lingering Void Aura:
+This ability has been removed (was “The attack speed of towers within 300 AoE is reduced by 10%.”).
+
+This kind of aura effect felt a bit out of place for an early game Tier 1 creep. Health value increased slightly to compensate for the loss of attack speed reduction aura.
+
+Tier 2
+Knight
+
+Health changed from 657 to 690 (+5%).
+Armored (1):
+Splash damage taken reduction changed from 20% to 10%.
+
+Siege Engine
+
+Stock Replenish Interval changed from 8 to 16.
+Tier 3
+Spirit Walker
+
+Health changed from 85,320 to 87,450 (+2.5%).
+Maximum Mana changed from 7 to 6.
+Armored (2):
+Splash damage taken reduction changed from 25% to 20%.
+Spiritual Aid:
+Fixed an issue that could cause the ability to activate before reaching full mana (was activating around ~4 mana).
+Fixed an issue that caused the heal to always be for maximum value and not based on the creep’s actual health.
+Maximum target armor amount changed from 15 to 12.
+Corrected maximum heal amount to match tooltip value: 2,000 (was 1,500).
+
+Maximum Mana reduced by 1 in order not to over nerf after the bug fixes. Instead of having the ability activate at 4 mana, it now activates at 6.
+
+
+Ancient Wendigo
+
+Health changed from 214,340 to 222,915 (+4%).
+
+Shaman
+
+Health changed from 177,970 to 185,085 (+4%).
+Maximum Mana changed from 15 to 14.
+Initial Mana changed from 9 to 10.
+Primordial Flux:
+This ability has been removed (was “Gains 20% mana when its current Slow percentage increases.”).
+
+The Primordial Flux ability has been removed in favor of reducing complexity. The effect itself could be confusing as of what it meant and it had limited value as it didn’t give mana at max slow. Instead maximum and initial mana values have been adjusted slightly to compensate, with the goal to not affect the strength of the creep.
+
+
+Abomination
+
+Health changed from 222,925 to 231,850 (+4%).
+
+Gryphon Rider
+
+Health changed from 87,215 to 92,450 (+6%).
+Speed changed from 260 to 250.
+Devotion Aura (3):
+Armor increase changed from 5 to 4.
+
++-0 health change as -1 armor (6% ehp).
+
+Chaos Warden
+
+Health changed from 212,950 to 219,335 (+3%).
+Mana Drain:
+AoE changed from 200 to 180.
+Can now only trigger once every 3 sec.
+Fixed an issue that could cause the ability not to trigger properly.
+Merged “Mana Drain” ability description with “Chaos Barrier”.
+
+Cooldown starts when mana is drained from a tower.
+
+The idea of the cooldown is to prevent spam-draining mana using towers down to 0 constantly and it should also be a slight performance benefit.
+
+
+Ogre Magi
+
+Health changed from 233,770 to 240,785 (+3%).
+
+Behemoth
+
+Health changed from 530,935 to 546,865 (+3%).
+Tier 4
+Huntress
+
+Health changed from 278,165 to 268,895 (-3%).
+Quickness:
+No longer increases Spell Damage taken by 10%.
+
+The increased Spell Damage taken effect was obscure and seemingly random, so it’s removed in favor of reduced complexity. Health is reduced to compensate.
+
+
+Kodo Beast (War Beast)
+
+Name changed from “War Beast” to “Kodo Beast”.
+Armor changed from 15 to 13.
+War Stance:
+Armor gained changed from 10 to 7.
+
+The reason for the name change is that mostly everyone already says “Kodo”.
+
+
+Harpy Windwitch
+
+Health changed from 212,500 to 206,125 (-3%).
+Speed changed from 470 to 460.
+Wicked Curse:
+Duration changed from 8 to 10 sec.
+Attack speed reduction changed from 35% to 30%.
+Removed: Dash (5)
+
+Harpies are not intended to overshadow wyrms in terms of stealing lives, they’re intended as fodder to weaken defender maze with Wicked Curse debuffs. Dash (5) ability removed for the sake of cleanup. The ability was mostly for flavor, giving a reason for the faster move speed. Turn rate has no effect on flying creeps as they only fly downwards.
+
+
+Frost Wyrm
+
+Health changed from 404,850 to 425,095 (+5%).
+Speed changed from 340 to 330.
+
+Phoenix
+
+Merged “Flying” and “Attacker” ability descriptions in order to reduce tooltip length.
+
+
+Version 11.4a | 2025-09-28
+
+GENERAL
+Map Bug Fixes & Improvements
+
+Fixed Tower Information ability present on towers after recent WC3 patches.
+
+Commands
+
+"-nba" (Notify Being Attacked):
+This command is now enabled by default (it’ll notify you when you’re attacked with a game message and mini-map ping).
+Known issue: Command state is not saved between games, to be fixed for next season so it can be turned on or off as wanted.
+GAMEPLAY
+Catch-up Gold
+
+The amount of gold given when a player receives a new attacker with higher income compared to the previous attacker changed from x1 to x1.5.
+
+Example:
+
+Your old attacker had 100,000 income and your new attacker has 500,000 income. The difference between these two is 400,000 income, which means your old attacker was most likely not sending much to you and spending most of their gold defensively. In order for you to catch-up on gold from lost bounty you’re given a one-time gold bonus equal to their income difference multiplied, in this case 400,000 x 1.5 = 600,000 gold.
+
+TOWERS
+Arcane Technology​
+Archmage
+
+Spellcaster (1):
+Frostfire slow per tick changed from 6.67% to 8%.
+Frostfire duration changed from 12 to 15 sec.
+
+Grand Archmage
+
+Spellcaster (2):
+Frostfire slow per tick changed from 8% to 10%.
+Frostfire duration changed from 12 to 15 sec.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Frostfire slow per tick changed from 10% to 12.5%.
+Frostfire duration changed from 12 to 15 sec.
+
+Ultimate Arcane Orb
+
+Damage changed from 620-622 to 602-604 (-3%).
+Arcane Surge:
+Removed 10% Spell Damage bonus above threshold.
+Holy Technology​
+Sunray Tower
+
+Luminous Grasp (1):
+Slow amount changed from 5% to 8%.
+The Spell Damage taken bonus duration changed from 3 to 5 sec.
+
+Radiant Spire
+
+Luminous Grasp (2):
+Slow amount changed from 7% to 10%.
+
+Ultimate Titan Vault
+
+Titan Defense Mechanism:
+Slow amount changed from 10% to 15%.
+Ice Technology​
+Ice 2 has been reworked to fully ignore armor value across its towers to have a more defined identity and Water 1 has lost this trait, see details below. This means Ice 2 is now the only tech path that ignores creep armor value. Damage dealt has been reduced to compensate for this effect.
+
+
+As this was the unique effect of Ultimate Crystal, an additional new effect has been added for this tower.
+
+
+Icicle
+
+Damage changed from 196-198 to 178-180 (-9%).
+Ice Lance (1):
+New: Ignores creep armor value.
+Projectile distance changed from constant 700 to current attack range.
+
+The new damage is calculated as if an average of ~1.5 armor value is ignored with every attack.
+
+
+Tricicle
+
+Damage changed from 494-496 to 435-437 (-12%).
+Ice Lance (2):
+New: Ignores creep armor value.
+Projectile distance changed from constant 700 to current attack range.
+
+The new damage is calculated as if an average of ~2 armor value is ignored with every attack.
+
+
+Ultimate Crystal
+
+Crystalized Light:
+New: Creeps hit using mana for their abilities have their mana regeneration crystalized, causing them to lose 0.25 mana per sec for 12 sec.
+Projectile distance changed from constant 800 to current attack range.
+
+The Ultimate Crystal already had armor value ignored accounted for, no need to alter damage in this case.
+
+
+The mana regeneration reduction is given a rather large duration to counteract the need for microing the tower towards mana using creeps.
+
+For every 4 sec 1 total mana is lost in regen (3 in total over the duration).
+
+
+Creeps using mana as a visual tool are not affected by this.
+
+List of creeps that can be affected:
+
+Voidwalker
+Satyr Shadowdancer
+Spirit Walker
+Shaman
+Ogre Magi
+Chaos Warden
+Naga Siren
+
+As an example:
+
+A shaman with the debuff will cast Wind Rush on a creep every 18 sec, instead of every 15 sec.
+
+Primal Technology
+Druid
+
+Ancient Bloom (1):
+AoE Siege damage changed from 320 to 350 (+9%).
+Armor reduction duration changed from 6 to 7 sec.
+
+Keeper
+
+Ancient Bloom (2):
+AoE Siege damage changed from 720 to 775 (+8%).
+Armor reduction amount changed from 1 to 2.
+Armor reduction duration changed from 6 to 7 sec.
+
+Ultimate Primalist
+
+Primordial Bond:
+Armor reduction amount changed from 2 to 3.
+Attacking creep return damage changed from 1% of their maximum health to 3% of their maximum health.
+Aura AoE changed from 400 to 500.
+Water Technology​
+Water 1 has been reworked to no longer ignore armor value to allow for better synergy with armor reduction towers (such as Void 2 (Leviathan)). The towers also gain a new unique attack modifier, similar to Arcane 2 (Arcane Orb), which alters the damage type for some attacks (Normal -> Chaos). This is an overall buff against most creep armor types and a slight nerf against Medium armor type.
+
+
+Additional note: In a future version (TBD) The Water 1 towers are intended to be reworked into a Piercing damage type tower, with the reasoning that these towers have a similar attack behaviour as Fire 2 (Ultimate Firelord) and no Piercing splash tower currently exists.
+
+
+Water Elemental
+
+Pressuring Water (1):
+No longer ignores creep armor value.
+New: Every 3rd attack is dealt as Chaos Physical Damage with a 25% damage bonus.
+
+The new damage bonus is calculated as if an average of ~1.5 armor value was ignored with every attack.
+
+
+Seabound Wrath
+
+Pressuring Water (2):
+No longer ignores creep armor value.
+New: Every 3rd attack is dealt as Chaos Physical Damage with a 33% damage bonus.
+
+The new damage bonus is calculated as if an average of ~2 armor value was ignored with every attack.
+
+
+Ultimate Hurricane Elemental
+
+Raging Tempest:
+Corrected tooltip regarding mana gained per hit from 1 to 3.
+No longer ignores creep armor value.
+Forked lightning damage changed from 400 to 1,750.
+
+The new damage bonus is calculated as if an average of ~3.33 armor value was ignored with every attack. The damage lost is merged with the forked lightning effect, instead of buffing base damage by 20%.
+
+CREEPS
+Tier 1
+Sheep
+
+Fast Producing:
+Tooltip updated to mention how much faster stock replenishes.
+
+Corrupted Treant
+
+Bounty changed from 80 to 90.
+Tier 2
+Siege Engine
+
+Bounty changed from 4,750 to 4,875.
+Tier 4
+Mountain Giant
+
+Bounty changed from 30,000 to 36,000.
+Collision size reduced by ~20%. This means that for the length of a tower (128) ~10 Mountain Giants now fit, up from ~8.
+Model and selection size reduced by ~20%.
+Blocked:
+Damage reduction cap changed from 50% to 60%.
+
+Naga Siren
+
+Corrected initial stock from 1 to 32.
+Corrected maximum stock from 32 to 64.
+Corrected stock replenish interval from 5 to 4.
+
+This is the intended stock values for a regular Tier 4 creep and was missed to be updated when Naga Siren was re-introduced.
+
+
+Demon
+
+Gold cost changed from 4,000,000 to 4,200,000.
+Speed changed from 250 to 260.
+Initial stock changed from 8 to 2.
+Maximum stock changed from 16 to 4.
+Stock replenish interval changed from 8 to 32.
+Unfathomable Power:
+Tooltip updated to mention altered stock behaviour.
+
+This change is an attempt to mitigate “Demon spamming” and instead reward good late game sends. The Demon is intended as a last resort type of creep in order to prevent stalemate or having the session drag out a very long time. It’s not intended to be stronger and more rewarding compared to a regular send.
+
+
+
+
+
+Version 11.3a | 2025-09-13
+
+GENERAL
+Commands
+
+Export Object Data (“-exportobjectdata”)
+Updated to now support tower splash data.
+GAMEPLAY
+Sudden Death
+
+Start time changed from 26:00 to 26:30.
+Fixed an issue that caused lives lost not to visually update on the Scoreboard with every tick.
+TOWERS
+New Ability: Prioritize
+
+This ability has been added to all towers that can attack both ground and air creeps (except Elemental Core due to lack of space). The ability allows one to toggle if the tower should prioritize attacking nearby air creeps or use its default attack behaviour.
+Hotkey: F
+
+This is the ability present on Gargoyles in Melee. Instead of manually targeting air creeps, this could be used as an option for preferred towers and have them prioritize air creeps when they come within range.
+
+
+Technology Discs
+
+Corrected and shortened tooltips of some Technology Disc effects.
+Basic Technology​
+Defender
+
+Damage changed from 12-17 to 13-18 (+7%).
+
+Bulwark
+
+Damage changed from 67-72 to 71-76 (+6%).
+
+Construct
+
+Damage changed from 262-267 to 275-280 (+5%).
+
+Ultimate Construct
+
+Damage changed from 966-971 to 1004-1009 (+4%).
+Arcane Technology​
+Sorcerer
+
+Damage changed from 27-28 to 28-29 (+3%).
+
+Ultimate Arcane Orb
+
+Damage changed from 642-644 to 620-622 (-3%).
+Fire Technology​
+Ultimate Firelord
+
+Damage changed from 891-899 to 918-926 (+3%).
+Holy Technology​
+Sunray Tower
+
+Damage changed from 90-91 to 95-96 (+~6%).
+
+Radiant Spire
+
+Damage changed from 248-249 to 263-264 (+6%).
+
+Ultimate Titan Vault
+
+Damage changed from 711-712 to 781-782 (+10%).
+Ice Technology​
+Obelisk
+
+Damage changed from 12-15 to 13-16 (+5%).
+
+Runic Monolith
+
+Damage changed from 40-44 to 42-46 (+5%).
+
+Frozen Watcher
+
+Damage changed from 98-103 to 154-158 (+57%).
+
+This tower was intended to have 148-152 attack damage (resulting in a +4% buff), but unfortunately this change was not implemented. The attack damage has now been corrected to the new value.
+
+
+Icebound Core
+
+Damage changed from 452-454 to 470-474 (+4%).
+
+Ultimate Lich
+
+Damage changed from 875-879 to 901-905 (+3%).
+Lightning Technology​
+The attack damage and maximum number of attacks for damage bonus have been adjusted for Lightning 1 towers. This is to prevent rewarding micro by swapping to priority targets as soon as possible to gain very high damage over 10 attacks. In most scenarios, having a tower reaching an attack count on the same target this high is unlikely outside of micro (or Phoenix targeting).
+
+
+These changes result in higher damage dealt the first 5 attacks, the 6th attack is equal and for every attack after the 7th the changes result in a damage loss compared to before.
+
+
+Lightning Beacon
+
+Damage changed from 348-362 to 400-414 (+15%).
+Focused Lightning (1):
+Maximum number of attacks for damage cap changed from 10 to 5.
+
+Max base damage changes from ~2082 to ~1400 (-33%)
+
+
+Thunder Conductor
+
+Damage changed from 810-824 to 930-944 (+15%).
+Focused Lightning (2):
+Maximum number of attacks for damage cap changed from 10 to 5.
+
+Max base damage changes from ~6876 to ~4418 (-35%)
+
+
+Ultimate Annihilation Glyph
+
+Damage changed from 1964-1976 to 2258-2270 (+15%).
+Annihilation:
+Maximum number of attacks for damage cap changed from 10 to 5.
+
+Max base damage changes from ~21593 to ~13542 (-37%)
+
+Primal Technology
+Druid
+
+Damage changed from 226-240 to 241-255.
+Ancient Bloom (1):
+Gold generated per hit changed from 135 to 120.
+Gold reduction per nearby Primal tower changed from 54 to 48.
+Minimum gold generated changed from 14 to 12.
+AoE Siege damage changed from 300 to 320.
+New: Refunds 50% mana if hitting 3 or less targets with AoE Siege.
+
+Keeper
+
+Ancient Bloom (2):
+New: Refunds 50% mana if hitting 3 or less targets with AoE Siege.
+
+Ultimate Primalist
+
+Primordial Bond:
+Gold generated per hit changed from 540 to 750.
+New: Refunds 50% mana if hitting 3 or less targets with AoE Siege.
+
+Unholy Technology​
+
+Ultimate Gravedigger
+
+Damage changed from 970-974 to 1028-1032 (+6%).
+Void Technology​
+The teleport target for Void 1 targets have been adjusted to no longer prefer/prioritize the primary attack target. It’s now random within AoE of the target.
+
+
+This change is to mitigate micro and prevent rewarding manual targeting.
+
+
+Riftweaver
+
+Temporal Rift (1):
+No longer prefers the primary target for selection.
+AoE changed from 200 to 300.
+
+Zealot
+
+Temporal Rift (2):
+No longer prefers the primary target for selection.
+AoE changed from 200 to 300.
+
+Ultimate Harbinger
+
+Whispers of the Void:
+No longer prefers the primary target for selection.
+AoE changed from 200 to 300.
+Teleport delay changed from 3.6 sec to 3.5 sec.
+
+Lasher
+
+Feasting Void (1):
+Armor reduction changed from 0.2 to 0.24.
+
+Ravager
+
+Feasting Void (2):
+Armor reduction changed from 0.2 to 0.27.
+
+Ultimate Leviathan
+
+Hungering Void:
+Armor reduction changed from 0.3 to 0.35.
+
+Water Technology​
+Paralyze targets for Water 1 towers have been adjusted to no longer affect the attack targets. It’s now random within AoE of the tower itself.
+
+
+This change is to mitigate micro and prevent rewarding manual targeting.
+
+
+Water Elemental
+
+Pressuring Water (1):
+Paralyze chance changed from 30% to 50%.
+The paralyze target changed to be a random valid air creep within 400 AoE.
+Creep immunity duration changed from 12 to 9 sec.
+
+Seabound Wrath
+
+Pressuring Water (2):
+Paralyze chance changed from 30% to 50%.
+The paralyze target changed to be a random valid air creep within 400 AoE.
+Creep immunity duration changed from 10 to 9 sec.
+
+Ultimate Hurricane Elemental
+
+Raging Tempest:
+Paralyze chance changed from 50% to 75%.
+The paralyze target changed to be a random valid air creep within 400 AoE.
+Creep immunity duration changed from 8 to 9 sec.
+
+Lurker
+
+Fixed issue that caused this tower not to be treated as a tower with splash attack.
+
+Abyss Stalker
+
+Fixed issue that caused this tower not to be treated as a tower with splash attack.
+
+Ultimate Sludge Monstrosity
+
+Fixed issue that caused this tower not to be treated as a tower with splash attack.
+
+CREEPS
+Tier 1
+Sheep
+
+Corrected tooltip to reflect a previous update.
+
+Swordsmen
+
+Health changed from 74 to 77 (+4%).
+
+Fel Orc Grunt
+
+Health changed from 68 to 70 (+3%).
+
+Vile Temptress
+
+Health changed from 115 to 118 (+3%).
+Tier 2
+Knight
+
+Speed changed from 300 to 310.
+
+Voidwalker
+
+Maximum Mana changed from 25 to 26.
+
+Banshee
+
+Speed changed from 175 to 180.
+Tier 3
+Death Revenant
+
+Health changed from 36,420 to 39,400 (+8%).
+
+Satyr Shadowdancer
+
+Health changed from 59,450 to 62,250 (+5%).
+
+Ancient Wendigo
+
+Health changed from 204,135 to 214,340 (+5%).
+Hardened Skin:
+Base armor changed from 100 to 80.
+Physical damage required to reduce armor changed from 75 to 50.
+Regen Aura (3):
+Health regeneration changed from 25 to 30.
+
+Adjusting the armor and damage requirements should open up for more technologies to be able to somewhat handle this creep.
+
+
+Shaman
+
+Health changed from 164,790 to 177,970 (+8%).
+Elemental Warding:
+Maximum damage reduction changed from 90% to 75%.
+
+These changes are intended to lessen the ultra punishing nature of Shamans, but still have them be strong.
+
+
+Abomination
+
+Regenerative Flesh:
+Slow duration reduction changed from 50% to 65%.
+Health regeneration per missing health percentage changed from 2 to 2.4.
+New: When at 50% health, the current Slow percentage is reduced by 50%. Can only trigger once.
+
+Maximum slow duration for this creep is now at 1.4 sec, down from 1.8 sec.
+
+Health regeneration cap is now at 240 per sec (at 0% health), up from 200.
+
+Tier 4
+Obsidian Statue
+
+Aphotic Chant:
+Corrected a data issue with spawned Essence of Blight (might be related to reported food issue, but if that keeps happening please report).
+
+War Beast
+
+Health changed from 333,050 to 323,055 (-3%).
+Speed changed from 280 to 270.
+Endurance Aura (4):
+Movement speed bonus changed from 30% to 25% (attack speed bonus remains at 30%).
+Devotion Aura (4):
+Armor bonus changed from 7 to 6.
+
+These changes should hopefully lessen the concerns of having to force micro targeting the War Beast.
+
+
+Harpy Windwitch
+
+Wicked Curse:
+No longer increases attack damage.
+Attack speed reduction changed from 50% to 35%.
+
+Goblin Shredder
+
+Health changed from 780,095 to 819,100 (+5%).
+
+Naga Siren
+
+Gold cost changed from 1,250,000 to 1,300,000.
+Bounty changed from 37,500 to 39,000.
+Siren’s Song:
+AoE changed from 350 to 300.
+
+Frost Wyrm
+
+Health changed from 385,575 to 404,850 (+5%).
+Enduring Chill:
+Fixed an issue that caused this trait to stop working if at maximum slow.
+Fixed an issue that could cause Slow percentage to go negative.
+
+Demon
+
+Hotkey changed from “C” to “N”.
+Gold cost changed from 4,500,000 to 4,000,000.
+Boss (5):
+Lives stolen changed from 3 to 2.
+
+Convert Lives into Income Cap
+
+Lives required to convert changed from 5 to 4.
+Cooldown changed from 30 to 20 sec.
+
+In total it changes from +200,000 Income Cap for 10 lives every min to +300,000 Income Cap for 12 lives every min.
+
+
+
+Version 11.2a | 2025-08-31
+
+GENERAL
+Map Bug Fixes & Improvements
+
+Food Used:
+Updated how food is handled between computer controller and player, which will hopefully fix an issue that could cause food used to be incorrect.
+Fixed an issue of being able to get 4 million+ food used.
+TOWERS
+Arcane Technology​
+Apprentice
+
+Damage changed from 9-11 to 11-12 (+15%).
+
+Sorcerer
+
+Damage changed from 25-27 to 27-28 (+5%).
+
+Archmage
+
+Spellcaster (1):
+Frostfire Slow amount changed from 5% to 6.67%.
+Frostfire Spell Damage changed from 30 to 40.
+Arcane Orb bonus damage changed from 35 to 50.
+Aether Attunement damage changed from 85% to 90%.
+Frostfire buff tooltip and effect updated.
+
+Grand Archmage
+
+Spellcaster (2):
+Frostfire Slow amount changed from 6.67% to 8%.
+Frostfire Spell Damage changed from 120 to 140.
+Arcane Orb bonus damage changed from 150 to 175.
+Aether Attunement damage changed from 85% to 90%.
+Frostfire buff tooltip and effect updated.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Frostfire Spell Damage changed from 450 to 500.
+Arcane Orb bonus damage changed from 350 to 625.
+Aether Attunement damage changed from 85% to 90%.
+Frostfire buff tooltip and effect updated.
+
+Ultimate Arcane Orb
+
+Arcane Surge:
+Bonus Spell Damage dealt above threshold changed from 12% to 10%.
+Mana drained per sec above threshold changed from 14 to 15.
+
+Fire Technology​
+Ultimate Doom Guard
+
+Model size reduced by an additional ~13%.
+
+Ultimate Firelord
+
+Damage changed from 866-874 to 891-899 (+3%).
+Ice Technology​
+Icicle
+
+Damage changed from 187-189 to 196-198 (+5%).
+Ice Lance (1):
+Maximum number of targets changed from 12 to 15.
+
+Tricicle
+
+Damage changed from 470-472 to 494-496 (+5%).
+Ice Lance (2):
+Bonus damage per target hit changed from 6% to 7.5%.
+
+Ultimate Crystal
+
+Damage changed from 1132-1134 to 1189-1191 (+5%).
+Crystalized Light:
+Bonus damage per target hit changed from 8% to 10%.
+
+Primal Technology​
+Quarry
+
+Damage changed from 23-39 to 23-37 (-3%).
+
+Coreway
+
+Damage changed from 106-122 to 106-120 (-1%).
+
+Druid
+
+Ancient Bloom (1):
+AoE Siege damage changed from 320 to 300.
+
+Keeper
+
+Ancient Bloom (2):
+Armor reduction amount changed from 2 to 1.
+AoE Siege damage changed from 750 to 720.
+
+Ultimate Primalist
+
+Primordial Bond:
+Fixed an issue causing the AoE Siege damage value to be incorrect (750 instead of intended amount).
+AoE Siege damage changed from 2,000 to 1,800.
+Void Technology​
+Riftweaver
+
+Damage changed from 313-315 to 322-324 (+3%).
+Temporal Rift (1):
+Spell Damage dealt changed from (3% of max health + 200) to (2% of max health + 300).
+
+Zealot
+
+Attack Range changed from 600 to 700.
+Temporal Rift (2):
+Spell Damage dealt changed from (5% of max health + 500) to (3% of max health + 800).
+
+Ultimate Harbinger
+
+Whispers of the Void:
+Spell Damage dealt changed from (7.5% of max health + 2,500) to (5% of max health + 4,250).
+Water Technology​
+Splasher
+
+Crushing Wave (1):
+Spell Damage changed from 14 to 12.
+
+Tidecaller
+
+Damage changed from 47-48 to 45-46 (-5%).
+
+Lurker
+
+Damage changed from 216-219 to 209-212 (-3%).
+
+Abyss Stalker
+
+Damage changed from 578-581 to 561-564 (-3%).
+
+Ultimate Sludge Monstrosity
+
+Damage changed from 1672-1675 to 1622-1625 (-3%).
+
+CREEPS
+Tooltips
+
+The keyword “Move Speed” changed to “Speed” for all creeps.
+Tier 3
+Death Revenant
+
+Health changed from 36,420 to 37,150 (+2%).
+Movement Speed changed from 335 to 340.
+
+Satyr Shadowdancer
+
+Health changed from 58,580 to 59,450 (+1.5%).
+Movement Speed changed from 345 to 350.
+
+Abomination
+
+Regenerative Flesh:
+New: Gains 2 health regeneration per missing health percentage.
+
+Ogre Magi
+
+Earth Shield:
+Fixed an issue causing the heal amount to be a lot less than intended (~-70%). As a precaution in case the effect is now too strong, the healing amount has been changed from 15% to 10%.
+Healing duration changed from 15 to 12 sec.
+
+This means that the healing per sec changes from 0.3% to 0.83% health per sec (previous iteration had an intended 1.5% health per sec).
+
+Tier 4
+Harpy Windwitch
+
+Health changed from 200,000 to 212,500.
+Movement Speed changed from 520 to 470.
+
+Naga Siren
+
+Health changed from 516,500 to 501,005 (-3%).
+Siren's Song:
+Spell Damage taken mana increase changed from 2 to 1 and the tooltip updated to simply mention “Any damage taken”.
+Heal amount changed from 25% to 20%.
+
+
+
+
+
+Version 11.1a | 2025-08-20
+
+GENERAL
+Commands
+
+Game Statistics Text (“-s”):
+Fixed an issue causing the text to disappear once opening any interface window.
+TOWERS
+Arcane Technology​
+Apprentice
+
+Damage changed from 8-11 to 9-11.
+Range changed from 1000 to 900.
+
+Sorcerer
+
+Damage changed from 23-25 to 25-27.
+Range changed from 1000 to 900.
+
+Runeforged Sentry
+
+Range changed from 950 to 900.
+
+Ultimate Arcane Orb
+
+Range changed from 1000 to 900.
+Arcane Surge:
+Fixed a bug causing mana gained per hit to be higher than intended (10 instead of 4).
+Bonus Spell Damage above threshold changed from 20% to 12%.
+Fire Technology​
+Ultimate Doom Guard
+
+Model size reduced by ~15%.
+Holy Technology​
+Sunray Tower
+
+Damage changed from 86-87 to 90-91 (+5%).
+
+Radiant Spire
+
+Damage changed from 238-239 to 248-249 (+4%).
+
+Ultimate Titan Vault
+
+Damage changed from 679-703 to 711-712 (+3%).
+Lightning Technology​
+Ultimate Orb Keeper
+
+Arc Lightning:
+Current health percentage damage changed from 3% to 2.5%.
+Mana gained per attack changed from 25 to 20.
+Minimum Mana threshold changed from 25 to 20.
+Maximum Mana reduction for nearby Orb Keepers changed from 25 to 20.
+Primal Technology​
+Ultimate Beastmaster
+
+Stampede:
+Stun duration changed from 1.8 to 1.5 sec.
+Water Technology​
+Seabound Wrath
+
+Pressuring Water (2):
+Air creep paralysis duration changed from 2 to 1.8 sec.
+
+Ultimate Hurricane Elemental
+
+Splash changed from 100 to 125.
+Maximum Mana changed from 225 to 100.
+Raging Tempest:
+No longer alters Splash based on current mana value.
+Mana gained per hit changed from 5 to 3.
+New Effect: Uses all mana every 3rd attack to unleash a forked lightning, which deals 400 Chaos Physical Damage up to 1 target per 10 mana used.
+Air creep paralysis duration changed from 3 to 2.5 sec.
+
+Lurker
+
+Torrent (1):
+Stun duration changed from 1.2 to 1 sec.
+
+Abyss Stalker
+
+Torrent (2):
+Stun duration changed from 1.4 to 1.2 sec.
+
+Ultimate Sludge Monstrosity
+
+Crippling Decay:
+Stun duration changed from 2 to 1.8 sec.
+CREEPS
+Tier 4
+War Beast
+
+Maximum Health changed from 314,200 to 333,050 (+6%).
+Armor amount changed from 16 to 15.
+Move Speed changed from 270 to 280.
+
+Harpy Windwitch
+
+Armor Type changed from Medium to Light.
+Wicked Curse:
+AoE changed from 250 to 200.
+The number of targets changed from 1 to 3.
+Duration changed from 14 to 8 sec.
+
+Goblin Shredder
+
+Maximum Health changed from 729,060 to 780,095 (+7%).
+
+Naga Siren
+
+Armor Type changed from Light to Unarmored.
+Move Speed changed from 310 to 320.
+Regen Aura (4):
+Health regeneration bonus changed from 48 to 144 per sec.
+
+Frost Wyrm
+
+Maximum Health changed from 363,750 to 385,575 (+6%).
+Armor amount changed from 15 to 14.
+Move Speed changed from 330 to 340.
+Unholy Sacrifice (4):
+Heal Amount changed from 11,925 to 12,750.
+
+Version 11.0a | 2025-08-17
+
+GENERAL
+Warcraft 3 Patch 2.0.3 Known Map Issues
+
+Tower Information ability present on every tower displays incorrect tower tooltips (shows most recent built/upgraded).
+
+These issues are directly related to bugs introduced by Blizzard with patch 2.0.3, nothing I can or will do to fix at the moment.
+
+
+New Season!
+
+With this version Season 11 begins.
+The top 99 Players from the Season 10 Leaderboard have been added to the in-game Hall of Champions and Discord channel.
+
+Player Data is not compatible from previous Seasons and your settings have to be reapplied in-game. Unfortunately a technical limitation as of now.
+
+
+Due to an unfortunate bug with the Season 10 Leaderboard, a player entry had to be removed.
+
+
+Map Adjustments
+
+Players:
+The number of supported players has been changed from 15 to 12.
+Every player is now assigned a computer player that controls their creeps (except for attacking creeps). This is to mitigate issues with input delay and lag.
+Terrain:
+The map layout has been adjusted for 12 players.
+Creep spawn area has been reduced in length by one square (128).
+The lane has been reduced in length by one square (128).
+In grid length this means it has been changed from 31 to 30.
+
+This change equals to ~3% less towers on the map overall, which will result in better gameplay performance during late game.
+
+
+Map Bug Fixes & Improvements
+
+Slow Duration:
+Fixed an issue that could cause slow duration not to refresh with a higher duration (e.g. with Ultimate Titan Vault aura).
+Tower Upgrade:
+Fixed an issue causing towers to stop attacking if manually ordered to attack a creep before being upgraded.
+On Game End:
+Once a player is victorious, the towers present in all player mazes will be revealed.
+Commands
+
+Graphics Toggle (“-gt”):
+Warcraft 3 patch 2.0.3 fixed some issues, now allowing “-gt” to adjust:
+Attack projectile of multi-target towers.
+Missile effects of abilities (still some exceptions to be fixed).
+
+“-gt” used to only affect towers of which their owners had “-gt” command enabled.
+
+Game Statistics Text (“-s”):
+The “Your Average Rating” has been removed as it opens up for abuse.
+Command has been updated to support 4 different settings and the command can now take an integer input as follows:
+“-s 0”: Disables the Game Statistics Text.
+“-s 1”: Enables the Game Statistics Text and displays basic information.
+“-s 2”: Enables the Game Statistics Text and displays basic and advanced information.
+“-s 3”: Enables the Game Statistics Text and displays basic, advanced and debug information.
+This option is always enabled in replays.
+“-s”: Typing the command without an integer toggles it between “0” and “3”.
+GAMEPLAY
+Game Modes
+
+Ranked:
+The number of players required changed from 5 to 4.
+Starting lives adjusted:
+4 players from 40 to 50 lives
+5 players from 35 to 40 lives
+6 players from 35 to 40 lives
+7 players from 30 to 35 lives
+8 players from 30 to 35 lives
+Unranked:
+Starting lives adjusted:
+3 players from 40 to 50 lives
+4 players from 40 to 50 lives
+5 players from 35 to 40 lives
+6 players from 35 to 40 lives
+7 players from 30 to 35 lives
+8 players from 30 to 35 lives
+
+Damage Types
+
+Magic:
+Damage dealt against Light armor type changed from 125% to 150%.
+
+Builder Skins
+
+Keeper of the Grove skin has been replaced with Shadow Hunter.
+Beastmaster skin has been replaced with Far Seer.
+Requirements:
+Lowered the amount of games required for “games played” skins by ~50-66%.
+“Rating” skins now unlock for every 100 rating.
+Pit Lord and Illidan (Evil) skins now require 3000 rating, down from 3500.
+
+Computer Players
+
+Updated for new changes.
+Fixed an issue causing bots being unable to send War Beasts.
+TOWERS
+Technology Discs
+
+Every technology is now limited to one (1) Ultimate Technology Disc of its type.
+Ultimate Technology Disc cost changed from 1,500,000 to 1,000,000.
+
+This change is to allow for more strategic upgrades and lessen the burden of upgrading the maze to completion.
+
+
+Attack Speed Performance
+
+The attack speed of many towers have been altered in order to boost late game performance as follows:
+Any pure single target tower set to minimum 0.50 attack speed.
+Any less than 5 multi-target set to minimum 0.67 attack speed.
+Any splash tower set to minimum 1.0 attack speed.
+Basic towers are unaffected given they have no ability performance cost.
+Details for affected towers below.
+
+It’s understandable that fast attacking towers feels good and are fun, but at the cost of performance, it isn’t worth it. The end goal is to massively decrease the burden on the game engine due to the damage engine having to play catch-up with damage events.
+
+Basic Technology​
+No changes.
+
+Arcane Technology​
+Apprentice
+
+Damage changed from 5-7 to 8-11.
+Attack Speed changed from 0.5 to 0.8.
+Maximum Mana changed from 50 to 32.
+Attack Projectile speed increased by 25%.
+
+Sorcerer
+
+Damage changed from 14-16 to 23-25.
+Attack Speed changed from 0.5 to 0.8.
+Maximum Mana changed from 100 to 64.
+Attack Projectile speed increased by 25%.
+
+Arcane Pylon
+
+Damage changed from 67-69 to 71-73.
+Attack Speed changed from 0.75 to 0.8.
+Volatile Arcane (1) semi-reworked into Shifting Power (1):
+No longer increases attack speed, instead damage dealt is increased equal to current mana percentage, up to 50%.
+No longer deals 33% of the damage dealt as Spell Damage, instead every other attack is dealt as Spell Damage.
+Mana gained per target hit changed from 1.6 to 2.0.
+Flying creep damage bonus damage changed from 20% to 25%.
+
+Runeforged Sentry
+
+Damage changed from 204-206 to 216-218.
+Attack Speed changed from 0.75 to 0.8.
+Volatile Arcane (2) semi-reworked into Shifting Power (2):
+No longer increases attack speed, instead damage dealt is increased equal to current mana percentage, up to 50%.
+No longer deals 33% of the damage dealt as Spell Damage, instead every other attack is dealt as Spell Damage.
+Mana gained per target hit changed from 1.8 to 2.25.
+
+Ultimate Arcane Orb
+
+Damage changed from 401-403 to 642-644.
+Attack Speed changed from 0.5 to 0.8.
+Overwhelming Arcane semi-reworked into Arcane Surge:
+No longer deals 50% bonus damage as Spell Damage within thresholds, instead every other attack is dealt as Spell Damage.
+New Effect: While above 80% mana, attacks bounce to 2 additional targets and Spell Damage dealt is increased by 20%.
+When above this threshold, mana lost per sec increases from 8 to 14.
+Mana gained per target hit changed from 2.5 to 4.
+
+Archmage, Grand Archmage & Ultimate Spellslinger
+
+Aether Attunement:
+Fixed a minor memory leak with manual target ability.
+Earth Technology​
+Technology Disc: Earth
+
+Active: Earth Technology:
+Attack Speed bonus changed from 10% to 8%.
+
+Technology Disc: Advanced Earth
+
+Active: Advanced Earth Technology:
+Attack Speed bonus changed from 14% to 12%.
+
+Technology Disc: Ultimate Earth
+
+Active: Ultimate Earth Technology:
+Attack Speed bonus changed from 17% to 15%.
+
+Rockfall
+
+Shatter Armor (1):
+Armor reduction is no longer temporary and instead permanently reduces target armor by 0.1, down to 1 minimum.
+
+Avalanche
+
+Shatter Armor (2):
+Armor reduction is no longer temporary and instead permanently reduces target armor by 0.1, down to 0 minimum.
+
+Nettle
+
+Damage Type changed from Normal to Piercing.
+
+Thorns
+
+Damage Type changed from Normal to Piercing.
+
+Ultimate Scorpion
+
+Damage Type changed from Normal to Piercing.
+Damage changed from 834-861 to 1047-1073.
+Attack Speed changed from 0.4 to 0.5.
+Fire Technology​
+Fire Pit
+
+Damage changed from 22-24 to 17-20.
+Attack Speed changed from 2.5 to 2.0.
+
+Magma Well
+
+Damage changed from 73-75 to 58-60.
+Attack Speed changed from 2.5 to 2.0.
+
+Meteor Attractor
+
+Blazing Inferno (1):
+AoE changed from 250 to 200.
+AoE damage changed from 50% to 66%.
+
+Armageddon
+
+Icon changed.
+Blazing Inferno (2):
+AoE changed from 325 to 250.
+AoE damage changed from 66% to 80%.
+
+Ultimate Doom Guard (Ultimate Moonbeam Projector)
+
+The tower theme has been reworked.
+The name changed from “Ultimate Moonbeam Projector” to “Ultimate Doom Guard”.
+The model and icon have been adjusted.
+Void Flare semi-reworked into Frenzied Flames:
+Attacks use mana to spew forth flames for 3 sec at the target location with 300 AoE and based on the mana amount used, the flames deal up to 1,200 Spell Damage per sec. Ground creeps within the AoE temporarily have their armor reduced by 1 and take 20% additional Spell Damage.
+
+Regenerates 10 mana per sec.
+
+
+
+Lava Serpent
+
+Damage changed from 268-276 to 353-361.
+Attack Speed changed from 0.8 to 1.0.
+Volcanic Eruption (1):
+Target count changed from 1 to 3.
+Armor reduction changed from 12% to 10%.
+
+Living Flame
+
+Damage changed from 439-447 to 566-574.
+Attack Speed changed from 0.8 to 1.0.
+Volcanic Eruption (2):
+Target count changed from 3 to 5.
+Armor reduction changed from 12% to 10%.
+
+Ultimate Firelord
+
+Damage changed from 672–680 to 866-874.
+Attack Speed changed from 0.8 to 1.0.
+Magma Blast:
+Target count changed from 5 to 8.
+
+Holy Technology​
+Damage Types have been adjusted between Holy Technology paths as the types were inconsistent with its basic tower damage type. Light Flies and Holy Lantern have Piercing damage type with multi-target attack and its thematically upgraded path, Sunray Tower, Radiant Spire and Ultimate Titan Vault had Normal damage type.
+
+
+Glowshroom
+
+Damage Type changed from Piercing to Magic.
+
+Lightshroom
+
+Damage Type changed from Piercing to Magic.
+
+Ultimate Divineshroom
+
+Damage Type changed from Piercing to Magic.
+
+Sunray Tower
+
+Damage Type changed from Normal to Piercing.
+
+Radiant Spire
+
+Damage Type changed from Normal to Piercing.
+
+Ultimate Titan Vault
+
+Damage Type changed from Normal to Piercing.
+Ice Technology
+Frozen Watcher
+
+Frost Blast (1):
+New Effect: Slow duration increased by 1 sec.
+
+Icebound Core
+
+Frost Blast (2):
+New Effect: Slow duration increased by 1.5 sec.
+
+Ultimate Lich
+
+Chilling Death:
+New Effect: Slow duration increased by 3 sec.
+Frostbite effect reworked:
+Applies Frostbite to targets that are Slowed by 45%; causing them to take 3% of maximum health as Spell Damage. Targets can only be Frostbitten once every 15 sec.
+Aura AoE changed from 600 to 500.
+
+Icicle
+
+Damage changed from 138-140 to 187-189.
+Attack Speed changed from 1.25 to 1.4.
+Ice Lance (1):
+No longer reduces armor.
+New Effect: Increases damage dealt with every target hit by 5%. Hits a maximum of 12 targets before the Ice Lance breaks.
+
+Tricicle
+
+Damage changed from 347-349 to 470-472.
+Attack Speed changed from 1.25 to 1.4.
+Ice Lance (2):
+No longer reduces armor.
+New Effect: Increases damage dealt with every target hit by 6%. Hits a maximum of 15 targets before the Ice Lance breaks.
+
+Ultimate Crystal
+
+Damage changed from 874-880 to 1132-1134.
+Attack Speed changed from 1.25 to 1.4.
+Crystalized Light:
+No longer reduces armor.
+New Effect: Increases damage dealt with every target hit by 8%. Hits a maximum of 20 targets before the light shatters.
+New Effect: Ignores armor value.
+Lightning Technology​
+
+Lightning 2 towers have been redesigned to be focused on strong single target damage with stun utility. The previous iteration of lightning damage against air creeps felt out of place. Game performance should hopefully be improved as well with the reworks.
+
+
+Voltage
+
+Damage changed from 301-307 to 230-230.
+Attack Speed changed from 0.66 to 0.5.
+Maximum Mana adjusted to 100.
+Static Charge (1) reworked into Crash Lightning (1):
+Attacks increase mana by 10 and deal additional damage equal to 1.2% of the target's current health.
+
+Uses all mana at 100% to stun the target for 0.5 sec and deal 300 bonus Spell Damage.
+
+
+Storm Commander
+
+Damage changed from 752-758 to 563-563.
+Attack Speed changed from 0.66 to 0.5.
+Maximum Mana adjusted to 100.
+Static Charge (2) reworked into Crash Lightning (2):
+Attacks increase mana by 15 and deal additional damage equal to 1.8% of the target's current health.
+
+Uses all mana at 100% to stun the target for 0.5 sec and deal 800 bonus Spell Damage.
+
+
+Ultimate Orb Keeper
+
+Damage changed from 1067-1073 to 811-811.
+Attack Speed changed from 0.66 to 0.5.
+Maximum Mana adjusted to 100.
+Radiance reworked into Arc Lightning:
+Attacks increase mana by 25 and deal additional damage equal to 3% of the target's current health.
+
+Uses all mana at 100% to stun the target for 0.5 sec and deal 2,500 bonus Spell Damage. This effect lowers maximum mana by 5.
+
+
+When below 25 maximum mana, it resets back to 100 and lowers the maximum mana of other Ultimate Orb Keepers within 150 AoE by 25.
+
+
+
+Primal Technology
+Damage Types have been swapped between Primal Technology paths as the types were inconsistent with its basic damage type. Quarry and Corewayn have Siege damage type and its thematically upgraded path, Druid, Keeper, Ultimate Primalist had Piercing damage type.
+
+
+Druid
+
+Damage Type changed from Piercing to Siege.
+Damage changed from 209-223 to 226-240.
+Maximum Mana changed from 0 to 90.
+Symbiosis (1) semi-reworked into Ancient Bloom (1):
+Generates up to 135 gold with every attack. The amount of gold generated is reduced by 54 for every nearby Primal Technology tower within 250 AoE, down to 14.
+
+Generates 13 mana every sec. Uses all mana at 100% to blast the earth with primal energy, dealing 320 Siege Physical Damage to creeps within 150 AoE of the primary target and temporarily reducing their armor by 1 for 6 sec.
+
+
+Keeper
+
+Damage Type changed from Piercing to Siege.
+Damage changed from 587-601 to 617-631.
+Maximum Mana changed from 0 to 90.
+Symbiosis (2) semi-reworked into Ancient Bloom (2):
+Generates up to 300 gold with every attack. The amount of gold generated is reduced by 120 for every nearby Primal Technology tower within 250 AoE, down to 30.
+
+Generates 13 mana every sec. Uses all mana at 100% to blast the earth with primal energy, dealing 750 Siege Physical Damage to creeps within 150 AoE of the primary target and temporarily reducing their armor by 2 for 6 sec.
+
+
+Ultimate Primalist
+
+Damage Type changed from Piercing to Siege.
+Damage changed from 1625-1639 to 1674-1688.
+Maximum Mana changed from 0 to 90.
+Primordial Bond semi-reworked:
+Generates 540 gold with every attack.
+
+Generates 13 mana every sec. Uses all mana at 100% to blast the earth with primal energy, dealing 2,000 Siege Physical Damage to creeps within 150 AoE of the primary target and temporarily reducing their armor by 2 for 7 sec.
+
+
+Attacking creeps within 400 AoE takes 1% of their maximum health as damage whenever they attack a tower and have their armor reduced by 2 for 3 sec. Can only trigger once every 3 sec.
+
+
+Trapper
+
+Damage Type changed from Siege to Normal.
+
+Savage
+
+Damage Type changed from Siege to Normal.
+
+Ultimate Beastmaster
+
+Damage Type changed from Siege to Normal.
+Stampede:
+Damage type changed from Siege to Normal.
+Stun duration changed from 2 to 1.8 sec.
+Unholy Technology​
+Technology Disc: Unholy
+
+Active: Unholy Technology reworked:
+Towers within 300 AoE have their attacks modified to erode the armor of creeps hit; permanently reducing armor by 0.03, down to 0 armor.
+Ignores Geomancer Aura.
+
+Creeps are able to walk on the Technology Disc.
+
+
+Technology Disc: Advanced Unholy
+
+Active: Advanced Unholy Technology reworked:
+Towers within 300 AoE have their attacks modified to erode the armor of creeps hit; permanently reducing armor by 0.04, down to 0 armor.
+Ignores Geomancer Aura.
+
+Creeps are able to walk on the Technology Disc.
+
+
+Technology Disc: Ultimate Unholy
+
+Active: Ultimate Unholy Technology reworked:
+Towers within 300 AoE have their attacks modified to erode the armor of creeps hit; permanently reducing armor by 0.07, down to 0 armor.
+Ignores Geomancer Aura.
+
+Creeps are able to walk on the Technology Disc.
+
+
+
+Poison Bloom
+
+Damage changed from 94-98 to 133-137.
+Attack Speed changed from 0.5 to 0.7.
+Poison (1):
+Spell Damage applied changed from 28 to 42.
+Mana Regeneration changed from 12.5 to 9.35.
+
+Fanatic
+
+Damage changed from 158-162 to 221-225.
+Attack Speed changed from 0.5 to 0.7.
+Poison (2):
+Spell Damage applied changed from 69 to 103.
+Mana Regeneration changed from 12.5 to 9.35.
+
+Ultimate Gravedigger
+
+Damage changed from 692-696 to 970-974.
+Attack Speed changed from 0.5 to 0.7.
+Pestilence:
+Spell Damage applied changed from 190 to 285.
+Mana Regeneration changed from 12.5 to 9.35.
+
+Unholy 2 towers adjusted to be stronger without its attack damage bonus, but end up in roughly the same power level as previously. The higher attack damage should make it easier to snipe low health targets to gain damage bonus and the slower attack speed is also intended to improve performance given their high splash.
+
+
+Reaper
+
+Damage changed from 161-166 to 247-253.
+Attack Speed changed from 1.5 to 2.0.
+
+DPS changes as follows (with ability included):
+
+Min: 109 to 125
+Max: 176 to 175
+
+Soul Forge
+
+Damage changed from 431-436 to 649-655.
+Attack Speed changed from 1.5 to 2.0.
+
+DPS changes as follows (with ability included):
+
+Min: 289 to 326
+Max: 422 to 426
+
+Ultimate Alchemist
+
+Damage changed from 1063-1068 to 1678-1686.
+Attack Speed changed from 1.5 to 2.0.
+
+DPS changes as follows (with ability included):
+
+Min: 710 to 841
+Max: 1044 to 1091 ~5% buff
+Void Technology​
+Riftweaver
+
+Attack Speed changed from 2.0 to 1.8.
+Temporal Rift (1):
+Fixed an issue that could cause the Phoenix creep to be targeted by teleport effect.
+
+Zealot
+
+Attack Speed changed from 2.0 to 1.8.
+Temporal Rift (2):
+Fixed an issue that could cause the Phoenix creep to be targeted by teleport effect.
+
+Ultimate Harbinger
+
+Attack Speed changed from 2.0 to 1.8.
+Whispers of the Void:
+Fixed an issue that could cause the Phoenix creep to be targeted by teleport effect.
+
+Lasher
+
+Damage changed from 84-86 to 242-244.
+Attack Speed changed from 0.7 to 1.6.
+Void Lashing (1) reworked into Feasting Void (1):
+Attacks consume armor of targets hit; permanently reducing their armor by 0.2 and gaining 1 attack damage.
+
+
+While above 50% health, 30% of the damage dealt against the primary target is dealt to self. At 50% health or below, the attack damage bonus is reset and damage dealt instead heals for 25% of the damage dealt until fully healed. While healing, damage dealt doesn’t consume armor.
+
+
+Ravager
+
+Damage changed from 211-213 to 561-563.
+Attack Speed changed from 0.7 to 1.6.
+Void Lashing (2) reworked into Feasting Void (2):
+Attacks consume armor of targets hit; permanently reducing their armor by 0.2 and gaining 2 attack damage.
+
+
+While above 50% health, 25% of the damage dealt against the primary target is dealt to self. At 50% health or below, the attack damage bonus is reset and damage dealt instead heals for 30% of the damage dealt until fully healed. While healing, damage dealt doesn’t consume armor.
+
+
+Ultimate Leviathan
+
+Damage changed from 382-384 to 1399-1401.
+Attack Speed changed from 0.7 to 1.6.
+Hungering Void reworked:
+Attacks consume armor of targets hit; permanently reducing their armor by 0.3 down to 0 and gaining 5 attack damage.
+
+While above 50% health, 25% of the damage dealt against the primary target is dealt to self. At 50% health or below, attack speed increases by 40% for 4 sec, the attack damage bonus is reset and damage dealt instead heals for 30% of the damage dealt until fully healed. While healing, damage dealt doesn’t consume armor.
+
+
+Creeps within 400 AoE have their armor reduced by 2.
+
+Water Technology​
+Splasher
+
+Damage changed from 8-9 to 12-13.
+Attack Speed changed from 0.66 to 1.0.
+Crushing Wave (1):
+Spell Damage dealt changed from 5 to 14.
+
+Tidecaller
+
+Damage changed from 31-32 to 47-48.
+Attack Speed changed from 0.66 to 1.0.
+Crushing Wave (2):
+Spell Damage dealt changed from 16 to 45.
+
+Water Elemental
+
+Damage Type changed from Magic to Normal.
+Damage changed from 129-131 to 257-259.
+Attack Speed changed from 0.66 to 1.2.
+Pressuring Water (1):
+Paralyze chance changed from 15% to 30%.
+
+Seabound Wrath
+
+Damage Type changed from Magic to Normal.
+Damage changed from 351-353 to 690-692.
+Attack Speed changed from 0.66 to 1.2.
+Pressuring Water (2):
+Paralyze chance changed from 15% to 30%.
+
+Ultimate Hurricane Elemental
+
+Damage Type changed from Magic to Normal.
+Damage changed from 1240-1242 to 2254-2256.
+Attack Speed changed from 0.66 to 1.2.
+Splash changed from 125 to 100.
+Mana changed from 0 to 225.
+Raging Tempest:
+Removed: 3 sec armor value ignore effect
+New: Physical Damage dealt ignore target armor value.
+New: Splash is equal to current mana. Gains 5 mana per target hit, resets with every attack. 100 minimum.
+Paralyze chance changed from 25% to 40%.
+
+While armor value ignored initially is a strong effect, the effect doesn't benefit from negative armor values, causing less physical damage dealt by all towers if below 0 armor value.
+
+
+With only the tower having this effect, it’s now a tower identity and a choice.
+
+
+The new effect of splash bonus is an added buff, which should make the tower stronger on its own.
+
+
+Lurker
+
+Damage changed from 330-333 to 216-219.
+Splash changed from 0 to 75.
+Torrent (1):
+New Effect: Stuns its primary target for 1.2 sec every 3rd attack.
+
+Abyss Stalker
+
+Damage changed from 803-806 to 578-581.
+Splash changed from 0 to 75.
+Torrent (2):
+New Effect: Stuns its primary target for 1.4 sec every 3rd attack.
+
+Ultimate Sludge Monstrosity
+
+Damage changed from 2385-2435 to 1672-1675.
+Splash changed from 0 to 100.
+Crippling Decay:
+Stun duration changed from 1 to 2 sec.
+CREEPS
+Health Scaling
+
+As a result of shortening the lanes, late game creeps have had their maximum health adjusted slightly. Details for affected creeps below.
+
+Unholy Sacrifice
+
+No longer triggers a visual effect for every healed creep, only for the killed target.
+The visual effect model changed.
+Tier 1
+Corrupted Treant (Void Sapling)
+
+Changed name from “Void Sapling” to the default unit name, “Corrupted Treant”.
+Maximum Stock changed from 16 to 8.
+Fixed issue causing this creep not to create Rubble when destroying a tower.
+Tier 2
+Voidwalker
+
+Chaotic Void:
+Tooltip updated to mention the healing amount, alongside the percentage.
+
+Siege Engine
+
+Maximum Stock changed from 16 to 8.
+Tier 3
+Satyr Shadowdancer
+
+Shadowdance:
+Duration changed from 2 to 3 sec.
+The damage taken requirement changed from 300 to 100.
+
+Spirit Walker
+
+Spiritual Aid:
+Heal amount changed from 0.7% of target’s maximum health to 1%.
+The healing amount now caps at 1,500 health.
+The maximum armor amount changed from 25 to 15.
+
+Abomination
+
+Maximum Health changed from 227,475 to 222,925.
+
+Gryphon Rider
+
+Maximum Health changed from 88,995 to 87,215.
+
+Ogre Magi
+
+Maximum Health changed from 238,540 to 233,770.
+
+Chaos Warden
+
+Maximum Health changed from 218,410 to 212,950.
+
+Behemoth
+
+Maximum Health changed from 547,355 to 530,935
+Tier 4
+Huntress
+
+Maximum Health changed from 286,765 to 278,165
+
+Obsidian Statue
+
+Maximum Health changed from 1,370,115 to 1,329,010.
+Fixed an issue causing this creep to count as a Boss creep for end game statistics.
+Annihilation Aura:
+No longer reduces Spell Damage dealt.
+Merged Replenish with Aphotic Chant.
+
+Essence of Blight  (spawns from Obsidian Statue)
+
+Maximum Health changed from 122,755 to 119,075.
+
+War Beast
+
+Maximum Health changed from 374,050 to 314,200.
+Movement Speed changed from 320 to 270.
+Removed: Hypothermia
+
+NEW: Harpy Windwitch
+
+Hotkey: R
+Cost: 1,000,000
+Income: 0
+Bounty: 30,000
+Stats:
+Maximum Health: 200,000
+Armor: 8 Medium
+Move Speed: 520
+Flying:
+Can fly over towers and avoid ground attacks.
+Dash (5):
+Increased base movement speed and turn rate.
+Wicked Curse:
+Curses a tower within 250 AoE upon death for 14 sec; causing the tower to gain 100% attack damage, but 50% reduced attack speed.
+
+Mountain Giant
+
+Maximum Stock changed from 32 to 16.
+
+Goblin Shredder
+
+Maximum Health changed from 722,700 to 729,060.
+Removed: Engine Overload
+Goblin Engineering:
+Removed: Duration of harmful spell effects reduced by 50%.
+
+The attack speed slow is now part of the new Harpy Windwitch creep.
+
+
+NEW: Naga Siren (returning creep reworked)
+
+Hotkey: F
+Cost: 1,250,000
+Income: 0
+Bounty: 37,500
+Stats:
+Maximum Health: 516,500
+Armor: 12 Light
+Move Speed: 310
+Regen Aura (4):
+Increases health regeneration of creeps within 700 AoE by 48.
+Siren's Song:
+Physical Damage taken increases mana by 1.
+Spell Damage taken increases mana by 2.
+
+
+Uses all mana at 100% to gain 32 maximum mana and heal for 25% maximum health. Additionally, creeps within 350 AoE recover 1 armor if below their base armor.
+
+
+
+Frost Wyrm
+
+Hotkey changed from F to Z.
+Stock Start Delay changed from 1455 to 1515.
+Cost changed from 1,250,000 to 1,500,000.
+Maximum Health changed from 321,965 to 363,750.
+Bounty changed from 37,500 to 45,000.
+
+Version 10.7a | 2025-06-03
+
+GENERAL
+Game Modes
+
+Custom:
+Random Lanes setting is now Enabled by default.
+New Game Mode Modifier: No Creep Recycling
+Any creep that leaks is permanently removed.
+GAMEPLAY
+Sudden Death
+
+Creep damage taken modifier now starts at 90%, down from 100%.
+
+The health of all Tier 4 creeps have been reduced by 10% to compensate. This change weakens the impact of T4 creeps before Sudden Death and also buffs T3 creeps during Sudden Death.
+
+TOWERS
+Arcane Technology​
+Archmage
+
+Damage changed from 45-48 to 49-52.
+Spellcaster (1):
+Frostfire cast interval changed from every 6.67 sec to every 3.34 sec.
+Frostfire Spell Damage per sec changed from 60 to 30.
+
+Grand Archmage
+
+Damage changed from 196-198 to 215-218.
+Spellcaster (2):
+Frostfire cast interval changed from every 6.67 sec to every 3.34 sec.
+Frostfire Spell Damage per sec changed from 240 to 120.
+
+Ultimate Spellslinger
+
+Damage changed from 812-815 to 852-855.
+Spell Mastery:
+Frostfire cast interval changed from every 6.67 sec to every 3.34 sec.
+Frostfire Spell Damage per sec changed from 900 to 450.
+Earth Technology​
+Earth Guardian
+
+Damage changed from 216-234 to 230-248.
+
+Ancient Protector
+
+Damage changed from 485-504 to 518-536.
+
+Ultimate Ancient Warden
+
+Damage changed from 1377-1444 to 1492-1510.
+Nature's Guidance:
+Heal amount changed from 2.5% to 2.35%.
+
+Nettle
+
+Damage changed from 148-158 to 152-162.
+
+Thorns
+
+Damage changed from 397-405 to 408-418.
+
+Ultimate Scorpion
+
+Damage changed from 843-870 to 834-861.
+Lethal Strike:
+Critical Strike chance now caps at 75%.
+
+This means hitting a target with or below 25% health caps chance at 75%, as chance is equal to 100% - target health %, reducing the burst damage and damage stacking on low health targets.
+
+The “always critical strike” from being idle is still a 100% chance.
+
+Fire Technology​
+Fire Pit
+
+Damage changed from 20-22 to 22-24.
+
+Magma Well
+
+Damage changed from 70-72 to 73-75.
+
+Meteor Attractor
+
+Blazing Inferno (1):
+Mana lost per sec changed from 1.11% to 0.83%.
+
+Armageddon
+
+Blazing Inferno (2):
+Mana lost per sec changed from 1.11% to 0.83%.
+
+Ultimate Moonbeam Projector
+
+Damage changed from 662-665 to 714-717.
+Maximum Mana changed from 30 to 45.
+Mana Regeneration changed from 5 to 10.
+
+Ultimate Firelord
+
+Damage changed from 641-649 to 672–680.
+Holy Technology​
+Ultimate Divineshroom
+
+Damage changed from 1042-1043 to 1124-1126.
+
+Sunray Tower
+
+Luminous Grasp (1):
+Increased slow duration removed.
+New: Slows creeps hit by 5%.
+
+Radiant Spire
+
+Luminous Grasp (2):
+Increased slow duration removed.
+New: Slows creeps hit by 7%.
+Ice Technology​
+Obelisk
+
+Frost Attack (1):
+Maximum slow amount changed from 25% to 20%.
+
+Runic Monolith
+
+Frost Attack (2):
+Maximum slow amount changed from 30% to 25%.
+
+Frozen Watcher
+
+Frost Blast (1):
+Maximum slow amount changed from 36% to 30%.
+
+Icebound Core
+
+Frost Blast (2):
+Maximum slow amount changed from 42% to 36%.
+
+Ultimate Lich
+
+Chilling Death:
+Maximum slow amount changed from 50% to 45%.
+The Frostbite threshold changed from 50% to 45%.
+Lightning Technology​
+Voltage
+
+Damage changed from 287-293 to 301-307.
+Static Charge (1):
+Spell Damage changed from 1,000 to 1,500.
+
+Storm Commander
+
+Damage changed from 717-723 to 752-758.
+Static Charge (2):
+Spell Damage changed from 3,333 to 5,000.
+Unholy Technology​
+Poison Bloom
+
+Damage changed from 90-94 to 94-98.
+Poison (1):
+Maximum stack damage per hit changed from 26 to 28.
+
+Fanatic
+
+Damage changed from 150-154 to 158-162.
+Poison (2):
+Maximum stack damage per hit changed from 64 to 69.
+
+Ultimate Gravedigger
+
+Damage changed from 660-664 to 692-696.
+Pestilence:
+Maximum stack damage per hit changed from 180 to 190.
+
+Ultimate Alchemist
+
+Damage changed from 1004-1009 to 1063-1068.
+Void Technology​
+Voidling
+
+Damage changed from 38-42 to 40-44.
+
+Voidalisk
+
+Damage changed from 144-148 to 148-152.
+
+Riftweaver
+
+Damage changed from 286-288 to 313-315.
+Temporal Rift (1):
+Tooltip updated to mention the AoE. Primary target is always preferred if applicable.
+Fixed an issue that prevented the ability from being used if the primary target was a Phoenix creep.
+Fixed an issue that could allow Phoenix creep to be targeted if it wasn’t the primary target.
+New Effect: Refunds 50% of mana if the creep dies during the delay.
+
+Zealot
+
+Damage changed from 849-850 to 933-935.
+Temporal Rift (2):
+Tooltip updated to mention the AoE. Primary target is always preferred if applicable.
+Fixed an issue that prevented the ability from being used if the primary target was a Phoenix creep.
+Fixed an issue that could allow Phoenix creep to be targeted if it wasn’t the primary target.
+New Effect: Refunds 50% of mana if the creep dies during the delay.
+
+Ultimate Harbinger
+
+Damage changed from 2472-2478 to 2670-2672.
+Whispers of the Void:
+Tooltip updated to mention the AoE. Primary target is always preferred if applicable.
+Fixed an issue that prevented the ability from being used if the primary target was a Phoenix creep.
+Fixed an issue that could allow Phoenix creep to be targeted if it wasn’t the primary target.
+New Effect: Refunds 50% of mana if the creep dies during the delay.
+CREEPS
+General
+Attacking Creeps
+
+The duration of the rubble left behind by a destroyed tower changed from 6 to 7 seconds.
+Tier 1
+Void Sapling
+
+Bounty changed from 40 to 80.
+Tier 2
+Vengeful Spirit
+
+Maximum Health changed from 1,140 to 1,080.
+
+Troll Berserker
+
+Maximum Health changed from 2,080 to 2,200.
+
+Voidwalker
+
+Maximum Health changed from 4,090 to 4,130.
+Maximum Mana changed from 26 to 25.
+
+Siege Engine
+
+Bounty changed from 2,375 to 4,750.
+Tier 3
+Necromancer
+
+Maximum Health changed from 128,255 to 121,800 (153,906 to 146,160 with Bone Shield armor conversion).
+Unholy Sacrifice (3):
+Healing amount changed from 5,250 to 4,875.
+
+Spirit Walker
+
+Maximum Health changed from 87,960 to 85,320.
+Armored (2):
+Physical splash damage reduction changed from 30% to 25%.
+
+Ancient Wendigo
+
+Maximum Health changed from 210,450 to 204,135.
+
+Chaos Warden
+
+Maximum Health changed from 225,165 to 218,410.
+Maximum Mana changed from 100 to 80.
+Tier 4
+Huntress
+
+Maximum Health changed from 318,630 to 286,765.
+
+Obsidian Statue
+
+Maximum Health changed from 1,522,350 to 1,370,115.
+Aphotic Chant:
+Essence of Blight health changed from 136,395 to 122,755.
+
+War Beast
+
+Maximum Health changed from 415,608 to 374,050.
+
+Mountain Giant
+
+Maximum Health changed from 285,320 to 256,790.
+Bounty changed from 15,000 to 30,000.
+
+Goblin Shredder
+
+Maximum Health changed from 803,000 to 722,700.
+
+Frost Wyrm
+
+Maximum Health changed from 357,740 to 321,965.
+
+Phoenix
+
+Maximum Health changed from 767,585 to 690,825.
+Movement Speed changed from 250 to 230.
+Bounty changed from 147,270 to 150,000.
+Legendary Spell Resistance:
+Tooltip clarified that immunity is only against durational spell effects (this means that any instant spell effect with no spell duration does have an effect on Phoenix, e.g. on-hit armor reduction).
+Removed hidden spell exceptions and fixed several unintended spell effects that could target the Phoenix regardless of its immunity:
+(exception) Water Elemental’s Pressuring Water (1) paralyze spell effect
+(exception) Seabound Wrath’s Pressuring Water (2) paralyze spell effect
+(exception) Ultimate Hurricane Elemental’s Raging Tempest paralyze spell effect
+(exception) Ultimate Alchemist’s Unholy Concoction armor altering spell effect
+(unintended) Archmage’s Spellcaster (1) Frostfire spell effect
+(unintended) Grand Archmage’s Spellcaster (2) Frostfire spell effect
+(unintended) Ultimate Spellslinger’s Spell Mastery Frostfire spell effect
+(unintended) Riftweaver’s Temporal Rift (1) teleport spell effect
+(unintended) Zealot’s Temporal Rift (2) teleport spell effect
+(unintended) Ultimate Harbinger’s Whispers of the Void teleport spell effect
+(unintended) Poison Bloom’s Poison (1) stacking spell damage effect
+(unintended) Fanatic’s Poison (2) stacking spell damage effect
+(unintended) Ultimate Gravedigger’s Pestilence stacking spell damage effect
+
+These changes are a buff to Phoenix, and most importantly it will remove inconsistencies with its performance throughput. Movement Speed nerf is intended to compensate for Paralyze immunity.
+
+
+Demon
+
+Movement Speed changed from 220 to 250.
+
+
+
+Version 10.6b | 2025-04-21
+
+GENERAL
+Bug Fixes
+
+Fixed issue causing builder attack not working as intended.
+
+Version 10.6a | 2025-04-21
+
+GENERAL
+Improvements & Bug Fixes
+
+Updated the Damage Engine with some micro-optimizations, resulting in ~117% faster event processing per unit.
+
+Unable to benchmark actual performance (fps) gain, hopefully some improvements. Given its smaller micro-optimizations, don’t expect too much.
+
+
+Decay time of missiles reduced by 33%.
+
+This is the time a missile remains in-game after hitting its target and less time might cause some slight cut-off in some (if any) missile's hit/death animation.
+
+
+Not sure if it’ll have any impact on performance.
+
+
+User Interface
+
+On-Screen Buttons:
+Size reduced by ~16%.
+Leaderboard:
+Added scroll wheel support.
+TOWERS
+Earth Technology​
+Nettle
+
+Germinate (1):
+Bonus damage gained per interval when not attacking changed from 15% to 10% (maximum changes from 75% to 50%).
+
+Thorns
+
+Germinate (2):
+Bonus damage gained per interval when not attacking changed from 20% to 15% (maximum changes from 100% to 75%).
+
+Ultimate Scorpion
+
+Damage changed from 860-887 to 843-870.
+Lethal Strike:
+Bonus damage gained per interval when not attacking changed from 30% to 20% (maximum changes from 150% to 100%).
+Primal Technology
+Trapper
+
+Initial mana changed from 300 to 400.
+
+Ultimate Beastmaster
+
+Stampede:
+Beast damage changed from 2,600 to 2,000.
+Manual target can now be set within maximum range at all times and will automatically be swapped to once sufficient mana has been gained.
+
+The tower already has strong utility and the damage on top of that was too high.
+
+Void Technology​
+Ultimate Harbinger
+
+Whispers of the Void:
+Zealot convert cooldown changed from 70 to 60 sec.
+CREEPS
+Tier 3
+Death Revenant
+
+Necrotic Transfusion (1) renamed to “Necrotic Transfusion”.
+
+Ogre Magi
+
+Geomancer Aura (2):
+Armor reduction changed from 60% to 50%.
+Tier 4
+Frost Wyrm
+
+Removed: Necrotic Transfusion (2)
+
+        No replacement ability as of now, perhaps later on.
+
+
+Phoenix
+
+Armor changed from 20 to 18.
+Maximum Health changed from 697,805 to 767,585.
+
+-2% EHP overall, but should be a slight buff as health is more potent compared to armor late game.
+
+
+Version 10.5a | 2025-03-30
+
+TOWERS
+Basic Technology​
+Bulwark
+
+Damage changed from 61-66 to 67-72.
+
+Construct
+
+Damage changed from 244-249 to 262-267.
+
+Ultimate Construct
+
+Damage changed from 920-925 to 966-971.
+Arcane Technology​
+Sorcerer
+
+Fixed an issue causing this tower to have two morph options available on the command card.
+Arcanize (2):
+Fixed an issue causing the ability to use Arcanize (1) data.
+
+Archmage
+
+Spellcaster (1):
+Frostfire spell damage per sec changed from 50 to 60.
+Aether Attunement target can once again be set manually, but with a shared 30 sec cooldown. If the target dies, cooldown resets.
+
+Grand Archmage
+
+Spellcaster (2):
+Frostfire spell damage per sec changed from 215 to 240.
+Aether Attunement target can once again be set manually, but with a shared 30 sec cooldown. If the target dies, cooldown resets.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Aether Attunement target can once again be set manually, but with a shared 30 sec cooldown. If the target dies, cooldown resets.
+
+Arcane Pylon
+
+Volatile Arcane (1):
+Mana gained per hit changed from 1.5 to 1.6.
+New effect: Deals 20% additional damage to flying creeps.
+
+Runeforged Sentry
+
+Volatile Arcane (2):
+Mana gained per hit changed from 1.5 to 1.8.
+New effect: Deals 30% additional damage to flying creeps.
+
+Ultimate Arcane Orb
+
+Overwhelming Arcane:
+Health threshold changed from above 75% to above 80% health.
+New effect: An additional health threshold added at below 20% health with the same effect as above threshold.
+New effect: Deals 50% additional damage to flying creeps.
+
+Given the tower has Chaos damage, this change will make it so as if its damage type is always strong vs the flying creeps armor type.
+
+Earth Technology​
+Nettle
+
+Germinate (1):
+AoE changed from 200 to 180.
+
+Thorns
+
+Germinate (2):
+AoE changed from 200 to 180.
+
+Ultimate Scorpion
+
+Damage changed from 905-932 to 860-887.
+Lethal Strike:
+Stored target damage changed from 25% to 20%.
+Fire Technology​
+The Fire (2) proc effects have had their Spell Damage massively increased vs Hero armor type. As most Boss creeps have Spell Resistance, this will make the damage dealt roughly the same as against normal creeps.
+
+
+Lava Serpent
+
+Damage changed from 272-280 to 268-276.
+Volcanic Eruption (1):
+New effect: The proc effect deals 70% additional damage against Hero armor type.
+
+Living Flame
+
+Damage changed from 418-426 to 439-447.
+Volcanic Eruption (2):
+New effect: The proc effect deals 100% additional damage against Hero armor type.
+
+Ultimate Firelord
+
+Damage changed from 648-656 to 641-649.
+Splash changed from 180 to 200.
+Magma Blast:
+Bonus damage per 10% missing armor changed from 5% to 6%.
+New effect: The proc effect deals 150% additional damage against Hero armor type.
+
+Ultimate Moonbeam Projector
+
+Damage changed from 641-644 to 662-665.
+Holy Technology​
+Light Flies
+
+Damage changed from 13-14 to 10-11.
+Bursting Light (1):
+Additional attack target count changed from 3 to 4.
+
+Holy Lantern
+
+Damage changed from 33-35 to 28-29.
+Bursting Light (2):
+Additional attack target count changed from 4 to 5.
+
+Sunray Tower
+
+Damage changed from 99-100 to 86-87.
+Luminous Grasp (1):
+Additional attack target count changed from 5 to 6.
+
+Ultimate Titan Vault
+
+Titan Defense Mechanism:
+Slow amount changed from 8% to 10%.
+Primal Technology
+Primal Technology Discs
+
+Fixed an issue that could cause the bonus attack range to reset on towers.
+
+Druid
+
+Damage changed from 191-205 to 209-223.
+
+Keeper
+
+Damage changed from 554-568 to 587-601.
+
+Ultimate Primalist
+
+Damage changed from 1587-1601 to 1625-1639.
+Primordial Bond:
+Rooting a creep about to steal no longer reduces damage dealt by 70%.
+Fixed a visual issue causing gold gain text to appear while not generating gold with life saver debuff.
+
+Ultimate Beastmaster
+
+Stampede:
+Mana gained per cast changed from 25 to 33.
+Creep immunity duration changed from 7 to 8 sec.
+Manual target now checks if the tower has been morphed and resets.
+Manual targeting self or a non-Beastmaster tower for target reset now sets cooldown to only 1 sec and not 60 sec.
+Void Technology​
+Ultimate Leviathan
+
+Hungering Void:
+Armor reduction changed from 1 to 2.
+Water Technology​
+The Water (2) towers unintentionally ignored slow resistances, which have now been fixed. As this is a major nerf, slow per hit has been increased to compensate.
+
+
+Lurker
+
+Torrent (1):
+Slow per hit changed from 4% to 4.8%.
+Fixed an issue causing the slow to ignore slow resistances.
+
+Abyss Stalker
+
+Torrent (2):
+Slow per hit changed from 5.6% to 7%.
+Fixed an issue causing the slow to ignore slow resistances.
+
+Ultimate Sludge Monstrosity
+
+Crippling Decay:
+Slow per hit changed from 7.2% to 9%.
+Fixed an issue causing the slow to ignore slow resistances.
+CREEPS
+Tier 4
+Huntress
+
+Cost changed from 500,000 to 600,000.
+Bounty changed from 15,000 to 18,000.
+Elune's Grace:
+Health now resets back to initial value on proc, if for some reason lost health with invulnerability shield (e.g. Orb Keeper AoE).
+
+Frost Wyrm
+
+Movement Speed changed from 350 to 330.
+
+Demon
+
+Movement Speed changed from 200 to 220.
+Can no longer be slowed unintentionally. Updated tooltip to clarify as well.
+
+Version 10.4a | 2025-03-23
+
+GENERAL
+Observers & Replay
+
+Tooltip of unit information when hovering any unit no longer overlaps with the default in-game tooltip.
+
+Research Center
+
+Fixed flickering tooltip when hovering Ultimate Tower buttons.
+GAMEPLAY
+Projectile Speed Adjustments
+
+Increased the projectile speed for several towers (everything below 1200). This is to mitigate and reduce the amount of projectiles flying across the map towards leaked creeps.
+Towers adjusted are detailed below.
+
+This is a minor buff towards towers built near the bottom as they’ll have a slightly higher chance to get in an additional source of damage before the creep leaks.
+
+TOWERS
+Basic Technology​
+Defender
+
+Damage changed from 10-14 to 12-17.
+
+Bulwark
+
+Damage changed from 48-52 to 61-66.
+
+Construct
+
+Damage changed from 189-193 to 244-249.
+
+Ultimate Construct
+
+Damage changed from 711-715 to 920-925.
+
+Rocketeers
+
+Attack Speed changed from 0.67 to 0.75.
+Range changed from 1,100 to 1,000.
+
+Barrager
+
+Attack Speed changed from 0.67 to 0.75.
+Range changed from 1,100 to 1,000.
+Turret
+
+Attack Speed changed from 0.67 to 0.75.
+Range changed from 1,400 to 1,200.
+
+Ultimate Turret
+
+Attack Speed changed from 0.67 to 0.75.
+Range changed from 1,400 to 1,200.
+
+Cannon Tower
+
+Projectile Speed changed from 1000 to 1200.
+
+Bombard Tower
+
+Projectile Speed changed from 1000 to 1200.
+Arcane Technology​
+Grand Archmage
+
+Projectile Speed changed from 900 to 1200.
+Earth Technology​
+Earth Guardian
+
+Projectile speed changed from 900 to 1200.
+
+Ancient Protector
+
+Projectile speed changed from 900 to 1200.
+
+Ultimate Ancient Warden
+
+Projectile speed changed from 900 to 1200.
+Fire Technology​
+Fire Pit
+
+Projectile speed changed from 2000 (not a typo) to 1200.
+
+Magma Well
+
+Projectile speed changed from 1000 to 1200.
+
+Lava Serpent
+
+Projectile speed changed from 1000 to 1200.
+
+Living Flame
+
+Projectile speed changed from 1000 to 1200.
+
+Ultimate Firelord
+
+Projectile speed changed from 1000 to 1200.
+
+Meteor Attractor
+
+Projectile Speed changed from 1100 to 1200.
+Blazing Inferno (1)
+Explosion damage changed from 33% to 50%.
+
+Armageddon
+
+Projectile Speed changed from 1100 to 1200.
+Blazing Inferno (2)
+Explosion damage changed from 50% to 66%.
+
+Ultimate Moonbeam Projector
+
+Void Flare:
+Spell Damage changed from 1,000 to 930.
+Spell Damage taken increase changed from 15% to 24%.
+
+DPS remains the same from the tower, but the effect will buff other Spell Damage dealing towers.
+
+
+Holy Technology​
+Light Flies
+
+Projectile speed changed from 900 to 1200.
+
+Holy Lantern
+
+Projectile speed changed from 900 to 1200.
+
+Glowshroom
+
+Damage changed from 211-212 to 221-222.
+Projectile speed changed from 900 to 1200.
+Light Burst (1):
+Armor reduction per hit changed from 0.1 to 0.12.
+Maximum slow amount changed from 50% to 40%.
+
+Slow per hit not adjusted for the new value, so hits required to reach maximum slow changes from 15 to 12 (buff).
+
+
+Lightshroom
+
+Projectile speed changed from 900 to 1200.
+Light Burst (2):
+Armor reduction per hit changed from 0.14 to 0.15.
+Slow per hit changed from 4.8% to 4.16%.
+Maximum slow amount changed from 60% to 50%.
+
+Slow per hit slightly adjusted for the new value. Hits required to reach maximum slow changes from 12.5 to 12 (buff).
+
+
+Ultimate Divineshroom
+
+Projectile speed changed from 900 to 1200.
+Divine Spores:
+Slow per hit changed from 6.8% to 6%.
+Maximum slow amount changed from 75% to 66%.
+
+Hits required to reach maximum slow unchanged at 11.
+
+Ice Technology​
+Obelisk
+
+Projectile speed changed from 1100 to 1200.
+
+Runic Monolith
+
+Projectile speed changed from 1100 to 1200.
+
+Frozen Watcher
+
+Projectile speed changed from 1100 to 1200.
+
+Icebound Core
+
+Projectile speed changed from 1100 to 1200.
+
+Ultimate Lich
+
+Projectile speed changed from 1100 to 1200.
+Chilling Death:
+Attack Speed reduction changed from 30% to 20%.
+
+Icicle
+
+Attack Speed changed from 1.2 to 1.25.
+Ice Lance (1):
+Improved performance of ability slightly.
+
+Tricicle
+
+Attack Speed changed from 1.2 to 1.25.
+Ice Lance (2):
+Improved performance of ability slightly.
+
+Ultimate Crystal
+
+Attack Speed changed from 1.2 to 1.25.
+Crystalized Light:
+Improved performance of ability slightly.
+Lightning Technology​
+Shock Particle
+
+Overcharge (1):
+Bonus damage per 10% health changed from 1 to 2.
+
+Power Generator
+
+Overcharge (2):
+Bonus damage per 10% health changed from 5 to 7.
+
+Ultimate Annihilation Glyph
+
+Projectile speed changed from 3000 to 5000.
+Primal Technology
+Druid
+
+Projectile speed changed from 1100 to 1200.
+
+Keeper
+
+Projectile speed changed from 1100 to 1200.
+
+Ultimate Primalist
+
+Projectile speed changed from 1100 to 1200.
+
+Ultimate Beastmaster
+
+Stampede:
+Beast damage changed from 3,000 to 2,600.
+New: Gains 25 mana with every Stampede cast.
+Fixed potential issue that might’ve reset the range when cancelling a morph on the tower.
+Improved ability performance slightly.
+Unholy Technology​
+Plague Well
+
+Projectile speed changed from 1000 to 1200.
+
+Ultimate Alchemist
+
+Projectile speed changed from 1000 to 1200.
+Void Technology​
+Riftweaver
+
+Temporal Rift (1):
+Constant damage changed from 150 to 200.
+Creep immunity duration changed from 12 to 9 sec (same as Zealot & Ultimate Harbinger).
+Tooltip now mentions immunity duration.
+
+Zealot
+
+Temporal Rift (2):
+Teleport delay changed from 3 to 3.2 sec.
+Constant damage changed from 400 to 500.
+Tooltip now mentions immunity duration.
+
+Ultimate Harbinger
+
+Whispers of the Void:
+Teleport delay changed from 3 to 3.6 sec.
+Maximum Health damage changed from 8% to 7.5%.
+Constant damage changed from 1,200 to 2,500.
+The duration the target ignores friendly auras changed from 12 to 15 sec.
+Tooltip now mentions immunity duration.
+Water Technology​
+Splasher
+
+Projectile speed changed from 800 to 1200.
+
+Tidecaller
+
+Projectile speed changed from 800 to 1200.
+
+Lurker
+
+Projectile speed changed from 1000 to 1200.
+
+Abyss Stalker
+
+Projectile speed changed from 1000 to 1200.
+
+Ultimate Sludge Monstrosity
+
+Projectile speed changed from 1000 to 1200.
+CREEPS
+Tier 1
+Acolyte
+
+Movement Speed changed from 250 to 240.
+
+Shade
+
+Maximum Health changed from 113 to 110.
+Tier 2
+Troll Berserker
+
+Maximum Health changed from 1,980 to 2,080.
+
+Wyvern (Wind Rider)
+
+Name changed from “Wind Rider” to “Wyvern”.
+Maximum Health changed from 2,237 to 2,195.
+
+Infernal
+
+Income changed from 5,500 to 5,000.
+Tier 3
+Death Revenant
+
+Necrotic Transfusion (1):
+AoE changed from 500 to 300.
+
+The effect had the same strength as Frost Wyrm Necrotic Transfusion (2), but is intended to be a weaker version.
+
+
+Gryphon Rider
+
+Maximum Health changed from 90,350 to 88,995.
+Movement Speed changed from 250 to 260.
+
+Chaos Warden
+
+Mana Drain:
+Fixed an issue that caused mana to be drained from invalid towers.
+
+These towers only use mana as a display and their current mana have no impact on their performance.
+
+Tier 4
+Huntress
+
+Quickness:
+New: Increases spell damage taken by 10%.
+
+Mountain Giant
+
+Damage changed from 241-245 to 211-215.
+
+Frost Wyrm
+
+Maximum Health changed from 368,800 to 357,740
+Movement Speed changed from 360 to 350.
+Unholy Sacrifice (4):
+AoE changed from 500 to 400.
+Heal amount changed from 11,800 to 11,925.
+Necrotic Transfusion (2):
+AoE changed from 500 to 400.
+
+AoE lowered for slight performance gains.
+
+
+Phoenix
+
+Dive:
+No longer spawns fire in the abyss.
+Stop Dive:
+No longer cancels current order if used outside of an active dive.
+
+
+
+
+
+Version 10.3b | 2025-03-03
+
+TOWERS
+Fire Technology​
+Meteor Attractor
+
+Blazing Inferno (1):
+Fixed an issue that could cause the tower to be stuck with no mana on upgrade.
+Fixed an issue that caused the Spell Damage dealt to be higher than intended.
+Fixed an issue that could cause some issues with performance.
+
+Armageddon
+
+Blazing Inferno (2):
+Fixed an issue that could cause the tower to be stuck with no mana on upgrade.
+Fixed an issue that caused the Spell Damage dealt to be higher than intended.
+Fixed an issue that could cause some issues with performance.
+
+Version 10.3a | 2025-03-02
+
+GAMEPLAY
+Sudden Death
+
+Damage taken modifier changed from 0.16% to 0.083% per tick (1%/min to 0.5%/min).
+TOWERS
+General Changes
+Selling & Morphing
+
+Basic Towers:
+Sell time adjusted from 6 to 3 sec.
+Sell refund amount changed from 70% to 60%.
+Technology Towers:
+Sell refund amount changed from 60% to 50%.
+Morph refund amount changed from 60% to 50%.
+Basic Technology​
+Defender
+
+Damage changed from 8-12 to 10-14.
+
+Bulwark
+
+Damage changed from 39-43 to 48-52.
+
+Construct
+
+Damage changed from 158-162 to 189-193.
+
+Ultimate Construct
+
+Damage changed from 593-597 to 711-715.
+Arcane Technology​
+Archmage, Grand Archmage & Ultimate Spellslinger
+
+Aether Attunement:
+Damage dealt changed from 100% to 85%.
+Damage interval changed from every 1 sec to every 0.67 sec.
+Removed manually select an Aether Attunement Target.
+
+The option is too abusable when you can manually put a key target to be nuked. Adding a cooldown would make it cumbersome to keep track of.
+
+
+Ultimate Arcane Orb
+
+Overwhelming Arcane:
+Health threshold for bonus damage changed from 70% to 75%.
+Bonus damage dealt changed from 35% to 50%.
+Bonus mana gained against targets above threshold changed from 20% to 25%.
+Fixed issue that caused mana to drain faster if a morph was cancelled on the tower.
+
+More focus on initial burst and slightly easier to recover mana against higher health targets.
+
+Earth Technology​
+Earth Guardian
+
+Devastating Attack (1):
+Armor reduction changed from 0.1 to 0.12.
+No longer ignores Geomancy Aura.
+New Effect: Deals full damage within the splash radius (Attack Splash AoE changes from 225/270/300 to 300/300/300).
+
+Ancient Protector
+
+Devastating Attack (2):
+No longer ignores Geomancy Aura.
+New Effect: Deals full damage within the splash radius (Attack Splash AoE changes from 265/315/350 to 350/350/350).
+
+Ultimate Ancient Warden
+
+Nature's Guidance:
+Heal amount changed from 2.7% to 2.5%.
+No longer ignores Geomancy Aura.
+New Effect: Deals full damage within the splash radius (Attack Splash AoE changes from 300/360/400 to 400/400/400)
+New Effect: Increases base armor by 1.
+
+This change increases overall damage dealt, but will result in less healing vs low target amount. The increased base armor is effectively +6% EHP, allowing one to perhaps put the tower in key strategic positions to defend weak spots.
+
+Fire Technology​
+Meteor Attractor
+
+Damage changed from 164-167 to 131-134.
+Maximum Mana changed from 0 to 100.
+Mana Regeneration changed from 0 to -1.11.
+Overwhelming Impact (1) reworked into Blazing Inferno (1):
+Attacks deal up to 300% additional damage based on current mana percentage. While mana is above 0% attacks also cause the tower to explode, dealing 33% of the damage dealt to creeps within 250 AoE as Spell Damage around it.
+
+
+Has 100% mana on upgrade, loses 1.11% mana per sec and cannot gain mana.
+
+
+Armageddon
+
+Damage changed from 319-322 to 255-258.
+Maximum Mana changed from 0 to 100.
+Mana Regeneration changed from 0 to -1.11.
+Overwhelming Impact (2) reworked into Blazing Inferno (2):
+Attacks deal up to 300% additional damage based on current mana percentage. While mana is above 0% attacks also cause the tower to explode, dealing 50% of the damage dealt to creeps within 325 AoE as Spell Damage around it.
+
+Has 100% mana on upgrade, loses 1.11% mana per sec and cannot gain mana.
+
+
+
+Most towers are consistent or become stronger in strength with time - this time around we have towers that start at their strongest at upgrade, but declines in strength over time.
+
+
+The maximum mana and regeneration gives the towers a 90 sec window.
+
+
+Ultimate Moonbeam’s ability fits this theme as well and can be seen as an evolution that can target the Spell Damage explosion effect at will, using mana for damage increase.
+
+
+Additionally, the old effect was based on Burning Oil which is known to cause performance issues when multiple Burning Oil effects are overlapping. It’s about time this is reworked into something else.
+
+
+Ultimate Moonbeam Projector
+
+Attack Range changed from 1150 to 1200.
+Void Flare:
+Spell Damage changed from 950 to 1,000.
+
+Ultimate Firelord
+
+Magma Blast:
+Bonus damage per missing 10% armor changed from 4% to 5%.
+Ice Technology​
+Tricicle
+
+Ice Lance (2):
+Armor reduction changed from 0.325 to 0.32.
+
+Ultimate Crystal
+
+Damage changed from 901-907 to 874-880.
+Crystalized Light:
+Armor reduction changed from 0.65 to 0.6.
+Primal Technology
+Ultimate Beastmaster
+
+Stampede:
+Attacks required changed from 10 to 12.
+Undisclosed beast AoE (hitbox) changed from 150 to 128.
+
+This results in ~16% damage nerf and stun duration. Instead of directly adjusting these values, this change also addresses some performance concerns by having the ability proc less frequent.
+
+
+Manual target switching cooldown changed from 0 to 60 sec (per tower).
+Fixed issue that caused the manual target to still be active if it was destroyed by an attacker.
+
+It shouldn’t feel required to constantly switch targets for optimal play.
+
+Void Technology​
+Riftweaver
+
+Maximum Mana changed from 70 to 60.
+
+Zealot
+
+Maximum Mana changed from 70 to 60.
+
+Ultimate Harbinger
+
+Maximum Mana changed from 70 to 60.
+CREEPS
+General Changes
+Stock Changes
+
+Attacking Creeps
+Initial stock changed to 1.
+Phoenix is excluded as it's considered a Boss creep.
+Tier 4
+Infinite stock removed and adjusted to function as Tier 1 to 3, but with the following changes:
+Stock replenishes 50% faster.
+Maximum stock increased by 100%.
+
+This results in e.g. Huntress having 32 initial stock, 64 max stock and replenishes 1 stock every 4 sec.
+
+
+Mountain Giant changes to 1 initial stock, 16 max stock and replenishes 1 stock every 4 sec.
+
+
+Frost Wyrm changes to 16 initial stock, 32 max stock and replenishes 1 stock every 4 sec.
+
+
+Phoenix and Demon changes to 8 initial stock, 16 max stock and replenishes 1 stock every 8 sec.
+
+Tier 1
+Skeleton Warriors
+
+Maximum Health changed from 15 to 12.
+Death Pact (1):
+Health when returned changed from 25% to 33%.
+
+Total health changes from ~18,75 to 16 (14.6% nerf in health).
+
+Tier 4
+Huntress
+
+Elune’s Grace:
+Now gains another invulnerability shield at 50% health for 5 sec.
+
+Goblin Shredder
+
+Movement Speed changed from 420 to 400.
+
+Frost Wyrm
+
+Maximum Health changed from 372,525 to 368,800.
+
+Demon
+
+Cost changed from 5,000,000 to 4,500,000.
+
+
+Version 10.2a | 2025-02-22
+
+GENERAL
+Map Performance
+
+Added new values for game statistics performance debugging.
+
+Game Mode Selection
+
+Research Points Setting:
+It’s now possible to select up to 30 (was 27).
+GAMEPLAY
+Life to Income Cap Conversion
+
+No longer affects lives lost statistics.
+New Income Cap Game Message is no longer a public announcement.
+Cooldown changed from 10 to 30 sec to better reward proactive players.
+
+Status Display Panel
+
+Fixed and restored functionality. Any selected creep now shows their current slow percentage and duration.
+
+Slows
+
+Fixed issue that caused slow application effects that ignored slow resistances to ignore set slow caps (e.g. Goblin Shredders 25%).
+
+Research Center
+
+Temporarily disabled the ESC-key to close the window functionality.
+
+This is to check if it’s the cause for reported desyncs since Season 10 launch.
+
+TOWERS
+Arcane Technology
+Arcane Technology Discs
+
+Updated effect present on creep (pink rune/glyph on head).
+
+Archmage, Grand Archmage & Ultimate Spellslinger
+
+Aether Attunement:
+Damage dealt now accumulates up to one sec before it’s dealt on the target, instead of every single damage instance causing another damage instance. This will greatly improve performance.
+Earth Technology
+Nettle (Noxious Weed)
+
+Name changed from “Noxious Weed” to “Nettle”.
+
+Name changed to simplify.
+
+
+Thorns (Virulent Thorn)
+
+Name changed from “Virulent Thorn” to “Thorns”.
+
+Name changed to simplify.
+
+Primal Technology
+Ultimate Beastmaster
+
+Stampede:
+Fixed projectile distance being incorrect with automatic target.
+
+The beast is supposed to stop once reaching the Beastmaster target, not go further beyond.
+
+Void Technology
+Riftweaver
+
+Updated attack projectile (purple slicing effect).
+
+Zealot (Rift Lord)
+
+Name changed from “Rift Lord” to “Zealot”.
+Sound Set updated from “Draenei” to "Pit Lord".
+Updated attack projectile (purple slicing effect).
+
+Name changed not to clash with Riftweaver tower.
+
+
+Ultimate Harbinger
+
+Updated attack projectile (purple slicing effect).
+Water Technology
+Lurker (Tide Lurker)
+
+Name changed from “Tide Lurker” to “Lurker”.
+
+Name changed not to clash with Tidecaller tower.
+
+CREEPS
+Tier 1
+Sheep
+
+Corrected tooltip with updated Timber Wolf stats from version 10.1a.
+
+Skeleton Warriors
+
+Stock Start Delay changed from 25 to 45 (00:30 game time).
+
+The one exception to the new tier timers, given the nature of early game.
+
+Tier 3
+Chaos Warden
+
+Mana Drain:
+Fixed missing excluded towers (Savage & Trapper).
+Tier 4
+Huntress
+
+Movement Speed changed from 445 to 460.
+
+Phoenix
+
+Maximum Health changed from 632,930 to 697,805.
+Armor changed from 20 to 18.
+Movement Speed changed from 260 to 250.
+Legendary Spell Resistance:
+Now causes full slow immunity (slow cap at 0%).
+
+
+Version 10.1a | 2025-02-12
+
+GENERAL
+Startup Logging (Experimental)
+
+Should now be more precise.
+Added additional log data.
+File format changed to “.txt”.
+GAMEPLAY
+Builder
+
+Attack Damage changed from 10-10 to 5-5.
+CREEPS
+Tier 1
+Sheep
+
+Movement Speed changed from 220 to 210.
+
+Timber Wolf
+
+Movement Speed changed from 240 to 230.
+
+Skeleton Warrior
+
+Maximum Health changed from 16 to 15.
+
+Acolyte
+
+Maximum Health changed from 27 to 26.
+Movement Speed changed from 270 to 250.
+
+Forest Spider
+
+Movement Speed changed from 275 to 270.
+
+Swordsman
+
+Movement Speed changed from 255 to 240.
+
+Fel Orc Grunt
+
+Movement Speed changed from 275 to 270.
+
+Vile Temptress
+
+Movement Speed changed from 290 to 280.
+
+Priest
+
+Regen Aura (1):
+Health regeneration bonus changed from 2.5 to 2 per sec.
+
+
+
+
+
+
+
+Version 10.0b | 2025-02-09
+
+GENERAL
+Startup Logging (Experimental)
+
+Added logging for map startup to track down early disconnect issues.
+If you disconnect during map startup (up until shortly after the Builder has spawned), please provide the log file in the Debug folder within LTWR Custom Map Data.
+
+Game Statistics Text (“-s” command)
+
+Added income cap value.
+
+Sudden Death
+
+Fixed text message warning being wrong.
+
+Control Groups
+
+Adjusted selection priority for towers (affects which order they appear when multiple are selected) as follows (highest to lowest):
+Archmage/Grand Archmage/Ultimate Spellslinger
+Ultimate Alchemist
+Ultimate Annihilation Glyph
+Ultimate Lich
+Ultimate Sludge
+Ultimate Hurricane Elemental
+All other
+
+Creep Slow Display
+
+Due to unforeseen issues, the display has been disabled until fixed.
+
+
+Version 10.0a | 2025-02-08
+
+GENERAL
+New Season!
+
+With this version Season 10 begins.
+The top 100 Players from the Season 9 Leaderboard have been added to the in-game Hall of Champions and Discord channel.
+
+Player Data is not compatible from previous Seasons and your settings have to be reapplied in-game. Unfortunately a technical limitation as of now.
+
+
+Bug Fixes & Improvements
+
+Fixed various issues introduced with latest Warcraft 3 patches.
+
+Game Modes
+
+Custom Game Mode:
+Timer no longer counts down while the Custom Game Mode menu is selected. Press the “Lock In”-button once done to resume the timer.
+Start Tech Setting: Draft
+Selecting a technology now shows research as a game message for the player.
+Increased spacing for technology buttons to avoid text overlaps.
+UI
+Research Center
+
+The window can now be closed with the ESC-key.
+Increased transparency of purchase checkmark slightly.
+
+GAMEPLAY
+Builder
+
+Attack Range Buffer increased to allow further attack distance from moving target (prevents chase misses).
+Updated icon for Player Settings.
+Fixed HD icon for Analyzer being displayed as SD.
+
+Health Regeneration
+
+Base health regeneration is set to 0 for all creeps and their maximum health has been (in most cases) increased to compensate. The amount depends on which tier the creeps belong in, as mazes vary in length and strength during different stages.
+Tier 1: Health Regeneration * 10
+Tier 2: Health Regeneration * 20
+Tier 3: Health Regeneration * 30
+Tier 4: Health Regeneration * 60
+
+The health regeneration of creeps was a hidden mechanic, but has never been fully considered and had semi-random values.
+
+
+(Health Regeneration of towers is unchanged at 1.5% of max hp/sec.)
+
+
+
+Auras
+
+Known to cause stuttering performance issues when many units are affected by auras at the same time. As an attempt to improve this issue the AoE of auras above 700 AoE has been lowered to 700 AoE.
+Towers and Creeps affected are detailed in their changes below.
+
+
+(War Beasts War Stance attack damage bonus aura being the one exception, keeping its 2,000 AoE.)
+
+
+Ancient Aura has been removed and is replaced with Regen Aura:
+The ancient aura had very little to no use after a creep was fully slowed and was pretty much a limited Endurance Aura.
+Regen Aura increases the health regeneration of affected creeps by x per sec, countering low damage sources, such as non-upgraded towers, splash, etc. The more creeps affected by the aura, the more value given with the total health regeneration contributed. The aura is allowed to be strong as creeps now lack health regeneration by default and given its limited AoE.
+Creeps affected are detailed in creep changes below.
+
+
+With health regeneration removed from creeps, Regen Aura allows for new strategic sends and counters.
+
+
+Slow Mechanic
+
+The base duration of slow changed from 3 to 4 seconds.
+Slow resistant duration changes from 1.5 to 2 seconds.
+Slow amount is now visible on a new info panel when a creep is selected.
+
+These changes should make slow feel a bit more reliable and consistent.
+
+The info panel can be expanded in the future.
+
+
+Income
+
+Player income is now capped at 4,000,000.
+Can be extended with a new purchase option in Tier 4, details below.
+
+Sudden Death
+
+Now begins at 26:00 game time (up from 25:30 game time).
+No longer freezes income.
+Damage taken modifier no longer adjusts based on player income.
+Damage taken modifier changed to a constant 0.16% per tick (=1%/minute).
+
+Income and Sudden Death changes force players to better balance their sends for income and stealing lives in order to get the late game advantage. With previous versions income had greatly more value compared to player lives and hopefully these changes make it closer to 50/50.
+
+
+The goal is still to maximize income, but up to the new cap and then focus on maze or attempt to maximize lives, instead of passive income spam up to Sudden Death start.
+
+
+Computer Bots (AI)
+
+Updated behaviour to support new changes.
+Fixed an issue that prevented bots from buying additional technology after initial purchase.
+
+TOWERS
+Basic Technology​
+Basic Tower Sell
+
+Gold refund for selling a basic tower changed from 80% to 70%.
+Selling time changed from 5 to 6 seconds.
+
+Rocketeers
+
+Damage changed from 26-34 to 19-27.
+Range changed from 1200 to 1100.
+
+Barrager
+
+Damage changed from 171-179 to 162-170.
+Range changed from 1200 to 1100.
+
+Turret
+
+Damage changed from 582-590 to 553-561.
+Range changed from 1500 to 1400.
+
+Ultimate Turret
+
+Damage changed from 2128-2136 to 2022-2030.
+Range changed from 1500 to 1400.
+
+Sentry
+
+Model changed to “Snow Owl”.
+
+Sentinel
+
+Model changed to the previous Sentry model.
+Arcane Technology​
+Technology Disc: Arcane
+
+Active: Arcane Technology reworked:
+Triggers an arcane surge whenever a ground creep steps on this Technology Disc; causing the creep to take 10% increased Spell Damage and cannot benefit from friendly auras for 12 sec.
+
+Can only trigger once every 1 sec.
+
+
+Creeps are able to walk on the Technology Disc.
+
+
+Technology Disc: Advanced Arcane
+
+Active: Advanced Arcane Technology reworked:
+Triggers an arcane surge whenever a ground creep steps on this Technology Disc; causing the creep to take 10% increased Spell Damage and cannot benefit from friendly auras for 20 sec.
+
+Can only trigger once every 1 sec.
+
+
+Creeps are able to walk on the Technology Disc.
+
+
+Technology Disc: Ultimate Arcane
+
+Active: Ultimate Arcane Technology reworked:
+Triggers an arcane surge whenever a ground creep steps on this Technology Disc; causing the creep to take 10% increased Spell Damage and cannot benefit from friendly auras for 25 sec.
+
+Can only trigger once every 1 sec.
+
+
+Creeps are able to walk on the Technology Disc.
+
+
+Apprentice
+
+Damage changed from 4-5 to 5-7.
+Attack Speed changed from 0.33 to 0.5.
+Arcanize (1):
+Bonus damage at full mana changed from 85% to 100%.
+
+Sorcerer
+
+Damage changed from 11-12 to 14-16.
+Attack Speed changed from 0.33 to 0.5.
+Arcanize (2):
+No longer reduces current mana on upgrade.
+Bonus damage at full mana changed from 200% to 150%.
+
+Arcane Pylon
+
+Volatile Arcane (1):
+Mana gained per hit changed from 1.2 to 1.5.
+
+Runeforged Sentry
+
+Volatile Arcane (2):
+Mana gained per hit changed from 1.2 to 1.5.
+
+Ultimate Arcane Orb
+
+Technology requirements changed from Fire (2): Lava Serpent to Water (2): Tide Lurker.
+
+Archmage
+
+Spellcaster (1):
+Fireball effect renamed to Frostfire and now slows targets by 5% every sec, up to 40%.
+Arcane Orb damage no longer increases Spell Damage dealt by Fireball.
+Aether Attunement damage changed from 15% to 100%.
+
+Grand Archmage
+
+Spellcaster (2):
+Fireball effect renamed to Frostfire and now slows targets by 6.67% every sec, up to 40%
+Arcane Orb damage no longer increases Spell Damage dealt by Fireball.
+Aether Attunement damage changed from 20% to 100%.
+
+Ultimate Spellslinger
+
+Spell Mastery:
+Frostfire's slow amount changed from 6% to 10%.
+Frostfire's maximum slow amount changed from 30% to 50%.
+Arcane Orb damage no longer increases Spell Damage dealt by Fireball.
+Aether Attunement damage changed from 30% to 100%.
+Earth Technology​
+Technology Disc: Advanced Earth
+
+Active: Advanced Earth Technology:
+Attack Speed bonus changed from 15% to 14%.
+
+Technology Disc: Ultimate Earth
+
+Active: Ultimate Earth Technology:
+Attack Speed bonus changed from 20% to 17%.
+
+Ultimate Ancient Warden
+
+Technology requirements changed from Water (2): Tide Lurker to Arcane (2): Arcane Pylon.
+
+Noxious Weed
+
+Attack Type changed from Piercing to Normal.
+Germinate (1):
+No longer deals bonus damage to Hero armor type.
+New Effect: 10% of damage dealt is stored on the target. Switching to a new target causes the old target to explode, dealing its stored damage to creeps within 200 AoE as Spell Damage.
+
+Virulent Thorn
+
+Attack Type changed from Piercing to Normal.
+Germinate (2):
+No longer deals bonus damage to Hero armor type.
+New Effect: 15% of damage dealt is stored on the target. Switching to a new target causes the old target to explode, dealing its stored damage to creeps within 200 AoE as Spell Damage.
+
+Ultimate Scorpion
+
+Technology requirements changed from Ice (1): Frozen Watcher to Lightning (2): Voltage.
+Attack Type changed from Piercing to Normal.
+Lethal Strike:
+No longer deals bonus damage to Hero armor type.
+New Effect: 25% of damage dealt is stored on the target. Switching to a new target causes the old target to explode, dealing its stored damage to creeps within 200 AoE as Spell Damage.
+Fire Technology​
+Technology Disc: Fire
+
+Color tint changed from red to orange.
+
+Technology Disc: Advanced Fire
+
+Color tint changed from red to orange.
+
+Technology Disc: Ultimate Fire
+
+Color tint changed from red to orange.
+
+Ultimate Firelord
+
+Damage changed from 584-592 to 648-656.
+Magma Blast:
+No longer increases attack speed.
+Special effect on trigger now shows on the Firelord and not the target.
+100% trigger chance effect:
+Attack count changed from 3 to 5.
+New effect: Deals 4% additional bonus Spell Damage for every 10% base armor missing from targets.
+Holy Technology​
+Holy Technology Discs
+
+Icon changed to follow the same theme as the other technologies by not using the basic technology icon.
+
+Ultimate Divineshroom
+
+Technology requirements changed from Water (1): Water Elemental to Primal (2): Savage.
+
+Sunray Tower
+
+Blinding Light (1) reworked into Luminous Grasp (1):
+Removed attack damage reduction effect.
+Spell Damage taken modifier changed from 16% to 12%.
+New Effect: Increases Slow duration by an additional 2 sec on targets.
+
+Radiant Spire
+
+Blinding Light (2) reworked into Luminous Grasp (2):
+Duration changed from 3 to 7 sec.
+Removed attack damage reduction effect.
+Spell Damage taken modifier changed from 16% to 12%.
+New Effect: Increases Slow duration by an additional 2 sec on targets.
+
+Ultimate Titan Vault
+
+Titan Defense Mechanism:
+AoE changed from 700 to 500.
+Slow effect changed from 10% to 8% and no longer ignores Slow resistances.
+Spell Damage taken modifier changed from 20% to 16%.
+New Effect: Increases slow duration of targets within AoE by 2 sec.
+Ice Technology​
+Obelisk
+
+Damage changed from 14-17 to 12-15.
+Splash changed from 50 to 100.
+Frost Attack (1):
+Slow amount changed from 5% to 3.75%.
+
+Runic Monolith
+
+Damage changed from 42-46 to 40-44.
+Splash changed from 75 to 100.
+Frost Attack (2):
+Slow amount changed from 6% to 4.5%.
+
+Frozen Watcher
+
+Damage changed from 104-108 to 148-152.
+Attack Speed changed from 1.0 to 1.5.
+Splash changed from 100 to 150.
+Attack projectile updated.
+Frost Blast (1):
+Slow amount changed from 7.5% to 5.5%.
+Maximum slow amount changed from 37.5% to 36%.
+
+Icebound Core
+
+Damage changed from 307-311 to 452-454.
+Attack Speed changed from 1.0 to 1.5.
+Splash changed from 125 to 150.
+Frost Blast (2):
+Slow amount changed from 8.5% to 6.35%.
+Maximum slow amount changed from 42.5% to 42%.
+
+Ultimate Lich
+
+Damage changed from 581-585 to 875-879.
+Attack Speed changed from 1.0 to 1.5.
+Splash changed from 200 to 225.
+Chilling Death:
+Slow amount changed from 10% to 7.5%.
+Lightning Technology​
+Voltage
+
+Damage changed from 272-278 to 287-293.
+
+Ultimate Orb Keeper
+
+Radiance:
+Current health %-damage changed from 2.5% to 3%.
+
+Ultimate Annihilation Glyph
+
+Annihilation:
+The chain damage no longer deals reduced damage.
+Primal Technology​ (NEW!)
+Technology Disc: Primal
+
+Active: Primal Technology:
+Towers within 300 AoE have their attack range increased by 100. Creeps are able to walk on the Technology Disc.
+
+Technology Disc: Advanced Primal
+
+Active: Advanced Primal Technology:
+Towers within 300 AoE have their attack range increased by 200. Creeps are able to walk on the Technology Disc.
+
+Technology Disc: Ultimate Primal
+
+Active: Ultimate Primal Technology:
+Towers within 300 AoE have their attack range increased by 250. Creeps are able to walk on the Technology Disc.
+
+Quarry
+
+Upgrades from Elemental Core.
+Cost: 0
+Damage Type: Siege
+Damage: 23-39
+Range: 700
+Speed: 3.0s
+Splash: None
+Targets: Air, Ground
+Prospect (1):
+Generates up to 8 gold with every attack. The amount of gold generated is reduced by 3 for every nearby Primal Technology tower within 250 AoE, down to 1.
+
+Coreway
+
+Upgrades from Quarry.
+Cost: 800
+Damage Type: Siege
+Damage: 106-122
+Range: 700
+Speed: 3.0s
+Splash: None
+Targets: Air, Ground
+Prospect (2):
+Generates up to 30 gold with every attack. The amount of gold generated is reduced by 12 for every nearby Primal Technology tower within 250 AoE, down to 3.
+
+Druid
+
+Upgrades from Coreway.
+Cost: 4000
+Damage Type: Piercing
+Damage: 174-188
+Range: 900
+Speed: 3.0s
+Splash: None
+Targets: Air, Ground
+Symbiosis (1):
+Generates up to 135 gold with every attack. The amount of gold generated is reduced by 54 for every nearby Primal Technology tower within 250 AoE, down to 14.
+
+
+Increases the attack damage of the Builder by 90 every sec, stacking up to 30 times. Additionally, its attack range is increased by 25 and modifies its attack to entangle the target for x sec equal to its current mana. When the Builder attacks, its bonus damage and mana resets.
+
+
+
+Keeper
+
+Upgrades from Druid.
+Cost: 10000
+Damage Type: Piercing
+Damage: 515-529
+Range: 900
+Speed: 3.0s
+Splash: None
+Targets: Air, Ground
+Symbiosis (2):
+Generates up to 300 gold with every attack. The amount of gold generated is reduced by 120 for every nearby Primal Technology tower within 250 AoE, down to 30.
+
+
+Increases the attack damage of the Builder by 250 every sec, stacking up to 30 times. Additionally, its attack range is increased by 35 and modifies its attack to entangle the target for x sec equal to its current mana. When the Builder attacks, its bonus damage and mana resets.
+
+
+
+Ultimate Primalist
+
+Upgrades from Keeper.
+Requires Technology: Fire (2): Lava Serpent
+Cost: 30000
+Damage Type: Piercing
+Damage: 1511-1525
+Range: 900
+Speed: 3.0s
+Splash: None
+Targets: Air, Ground
+Mana: 300
+Mana Initial: 0
+Mana Regeneration: 7.5
+Primordial Bond:
+Generates 540 gold with every attack and uses all mana at 100% to root a creep that is about to steal a life for 5 sec, at the cost of dealing 70% reduced damage and not generating gold for 15 sec. Can only root the same creep once every 20 sec.
+
+
+Regenerates 7.5 mana per sec.
+
+
+Increases the attack damage of the Builder by 800 every sec, stacking up to 30 times. Additionally, its attack range is increased by 50 and modifies its attack to entangle the target for x sec equal to its current mana and hit all rooted creeps. When the Builder attacks, its bonus damage and mana resets.
+
+
+If multiple Primalists are at full mana, only one is affected. Prioritizes lower built ones.
+
+
+Savage
+
+Upgrades from Coreway.
+Cost: 4000
+Damage Type: Siege
+Damage: 130-136
+Range: 700
+Speed: 0.7s
+Splash: None
+Targets: Air, Ground
+Mana: 1200
+Mana Initial: 300
+Mana Regeneration: 0
+Bloodthirst (1):
+Attacks hit 1 additional target within AoE equal to current mana and deal additional damage based on how far away the target is. 10% increased damage for every 100 range, up to 100%. Gains 2 mana with every attack and a bonus 3 mana for targets hit beyond 500 range.
+
+
+Upgrading the tower retains the current mana, but morphing it resets.
+
+
+Trapper
+
+Upgrades from Savage.
+Cost: 10000
+Damage Type: Siege
+Damage: 348-354
+Range: 700
+Speed: 0.7s
+Splash: None
+Targets: Air, Ground
+Mana: 1200
+Mana Regeneration: 0
+Bloodthirst (2):
+Attacks hit 1 additional target within AoE equal to current mana and deal additional damage based on how far away the target is. 10% increased damage for every 100 range, up to 120%. Gains 4 mana with every attack and a bonus 6 mana for targets hit beyond 500 range.
+
+
+Upgrading the tower retains the current mana, but morphing it resets.
+
+
+Ultimate Beastmaster
+
+Upgrades from Trapper.
+Requires Technology: Earth (2): Noxious Weed
+Cost: 30000
+Damage Type: Siege
+Damage: 974-980
+Range: 700
+Speed: 0.7s
+Splash: None
+Targets: Air, Ground
+Mana: 1200
+Mana Regeneration: 0
+Stampede:
+Attacks hit 1 additional target within AoE equal to current mana and deal additional damage based on how far away the target is. 15% increased damage for every 100 range, up to 150%. Unable to gain mana.
+
+
+Every 10th attack sends out a beast towards the furthest Ultimate Beastmaster within AoE equal to current mana. The beast deals 3,000 Siege Physical Damage to ground creeps in its path and stuns for 2 sec. Can only stun the same creep once every 7 sec.
+
+
+Beast damage also increases with distance, up to 5,000 damage.
+
+Upgrading the tower retains the current mana, but morphing it resets.
+
+Beast target can manually be set with an ability present on the tower (hotkey R).
+
+
+Unholy Technology​
+Technology Icon
+
+Icon changed from OrbOfCorruption to OrbOfVenom.
+
+Poison Bloom (Septic Tank)
+
+Name changed from “Septic Tank” to “Poison Bloom”.
+Model and icon adjusted.
+Mana changed from 2 to 10.
+Mana Regeneration changed from 2.5 to 10.
+Rapid Infection (1) reworked into Poison (1):
+Attacks hit 1 additional target and infect targets with poison for 15 sec that deals Spell Damage every 3 sec. The damage stacks with new hits, but duration is not refreshed.
+
+Applies up to 26 damage per hit, based on current mana percentage.
+
+Regenerates 10 mana per sec.
+
+
+
+Fanatic (Plague Fanatic)
+
+Name changed from Plague Fanatic to Fanatic.
+Mana changed from 3 to 10.
+Mana Regeneration changed from 5 to 12.5.
+Rapid Infection (2) reworked into Poison (2):
+Attacks hit 1 additional target and infect targets with poison for 15 sec that deals Spell Damage every 3 sec. The damage stacks with new hits, but duration is not refreshed.
+
+Applies up to 64 damage per hit, based on current mana percentage.
+
+Regenerates 12.5 mana per sec.
+
+
+Ultimate Gravedigger
+
+Technology requirements changed from Earth (1): Earth Guardian to Void (2): Savage.
+Mana changed from 5 to 10.
+Mana Regeneration changed from 7.5 to 12.5.
+Pestilence reworked:
+Attacks hit 2 additional targets and infect targets with poison for 15 sec that deals Spell Damage every 3 sec. The damage stacks with new hits, but duration is not refreshed.
+
+
+Applies up to 180 damage per hit, based on current mana percentage and causes poisoned targets to explode on death, spreading their poison damage to other creeps within 200 AoE.
+
+
+Regenerates 12.5 mana per sec.
+
+
+Reaper
+
+Damage changed from 152-157 to 161-166.
+
+Soul Forge
+
+Damage changed from 407-412 to 431-436.
+
+Ultimate Alchemist
+
+Maximum Mana changed from 250 to 125.
+Unholy Concoction:
+Bonus damage per kill changed from 2 to 4.
+Void Technology​
+Void Technology Discs
+
+Icon changed to follow the same theme as the other technologies by not using the basic technology icon.
+
+Voidling
+
+Range changed from 350 to 400.
+
+Voidalisk
+
+Range changed from 350 to 400.
+
+Ultimate Leviathan
+
+Technology requirements changed from Earth (2): Noxious Weed to Water (1): Water Elemental.
+Hungering Void:
+Attack damage reduction aura replaced with -1 armor aura.
+
+Ultimate Harbinger
+
+Technology requirements changed from Arcane (2): Archmage to Earth (1): Earth Guardian.
+Water Technology​
+Water Technology Discs
+
+Icon changed to be unique from other water towers.
+
+Ultimate Sludge Monstrosity
+
+Technology requirements changed from Void (2): Lasher to Primal (1): Druid.
+
+Water Elemental
+
+Damage changed from 119-121 to 129-131.
+Pressuring Water (1) :
+Distance damage removed.
+New Effect: 15% chance to paralyze air creep for 1.5 sec. 12 sec immunity.
+
+Seabound Wrath
+
+Damage changed from 269-271 to 351-353.
+Splash changed from 125 to 100.
+Pressuring Water (2):
+Distance damage removed.
+New Effect: 15% chance to paralyze air creep for 2 sec. 10 sec immunity.
+
+Ultimate Hurricane Elemental
+
+Damage changed from 810-812 to 1240-1242.
+Splash changed from 150 to 125.
+Raging Tempest:
+Distance damage removed.
+New Effect: Attacks cause Physical Damage dealt against the target to ignore its armor value for 3 sec.
+
+
+CREEPS
+General Changes
+
+Timers have been adjusted for all creeps and now follows a pattern:
+All creeps in a tier unlocks over a 5 minute timer.
+Creeps are unlocked in pairs every 1 minute.
+Tiers have a set start time:
+Tier 1: 00:00 game time
+Tier 2: 07:00 game time
+Tier 3: 14:00 game time
+Tier 4: 21:00 game time
+Initial stock once unlocked changed from 1 to half of maximum.
+Note: Tier 4 unchanged as they are infinite stock.
+Stock replenish interval changed from 5 to 8 seconds for regular creeps and from 10 to 16 for boss creeps.
+
+The goal with the timer changes is to provide a clear gameflow structure and slightly reduce the focus on income spamming weaker creeps.
+
+
+Income:
+Ratios have been adjusted for early game creeps and to better suit the new Tier timers.
+
+The blue line is the new income ratio and the red line is the old ratio.
+
+
+
+
+Bounty:
+Ratios have been adjusted for new Tier timers and fixed outliers.
+
+The blue line is the new bounty ratio and the red line is the old ratio.
+
+
+
+
+
+Tier 1
+Sheep
+
+Stock Start Delay timer unchanged.
+Cost changed from 5 to 10.
+Income changed from 1 to 2.
+Movement Speed changed from 210 to 220.
+Fast Producing reworked:
+Spawns as 2 Sheep and 1 Timber Wolf.
+Timber Wolf has 6 Health, 240 Move Speed, 0 Light armor and provides 2 bounty when killed.
+
+
+Additionally, stock replenishes slightly faster than other creep-types.
+
+
+
+Timber Wolf (Frost Wolf)
+
+Removed as a send option.
+Name changed from “Frost Wolf” to “Timber Wolf”.
+Model changed from Frost Wolf to Timber Wolf.
+Maximum Health changed from 5 to 6.
+Movement Speed changed from 250 to 240.
+
+The Timber Wolf model is more gray in appearance, which should make it easier to differentiate them from Sheep in a swarm.
+
+
+Skeleton Warrior
+
+Stock Start Delay timer changed from 65 to 25.
+Cost changed from 20 to 25.
+Income changed from 3 to 4.
+Bounty changed from 3 to 2.
+Maximum Health changed from 12 to 16.
+Movement Speed changed from 250 to 210.
+
+Acolyte
+
+Stock Start Delay timer changed from 85 to 75.
+Cost changed from 35 to 40.
+Maximum Health changed from 24 to 27.
+
+Forest Spider
+
+Stock Start Delay timer changed from 105 to 75.
+Bounty changed from 5 to 4.
+Health Regeneration changed from 0.5 to 0.
+Maximum Health changed from 43 to 48.
+
+Swordsman
+
+Stock Start Delay timer changed from 125 to 135.
+Bounty changed from 6 to 5.
+Health Regeneration changed from 0.5 to 0.
+Maximum Health changed from 63 to 68.
+Devotion Aura (1):
+AoE changed from 900 to 700.
+
+Fel Orc Grunt
+
+Stock Start Delay timer changed from 145 to 135.
+Bounty changed from 8 to 7.
+Health Regeneration unchanged.
+Fel Blood:
+Health Regeneration bonus changed from 2 to 3.
+
+Vile Temptress
+
+Stock Start Delay timer changed from 165 to 195.
+Bounty changed from 11 to 10.
+Health Regeneration changed from 1.0 to 0.
+Maximum Health changed from 105 to 115.
+Movement Speed changed from 280 to 290.
+Endurance Aura (1):
+AoE changed from 900 to 700.
+
+Shade
+
+Stock Start Delay timer unchanged (195).
+Cost changed from 220 to 225.
+Income changed from 22 to 23.
+Bounty changed from 16 to 14.
+Health Regeneration unchanged (was at 0).
+Maximum Health changed from 111 to 113.
+
+Mud Golem
+
+Stock Start Delay timer changed from 225 to 255.
+Cost changed from 350 to 400.
+Income changed from 34 to 40.
+Health Regeneration changed from 1.5 to 0.
+Maximum Health changed from 177 to 238.
+Movement Speed changed from 275 to 280.
+
+Priest (NEW!)
+
+Cost: 600
+Income: 58
+Bounty: 35
+Command Card position: 1,2
+Hotkey: C
+Stock Start Delay: 255 (04:30 game time)
+Stats:
+Maximum Health: 290
+Armor: 2 Light
+Move Speed: 270
+Regen Aura (1):
+Increases health regeneration of creeps within 700 AoE by 2.5.
+
+Considered for a long time to remove the Tier 1 attack creep and with the new Regen Aura there’s a reason to replace. Having attack creeps in Tier 1 is rough as they hurt both the sender (lower income ratio) and the defender in such early stages of the game.
+
+
+Void Sapling
+
+Stock Start Delay timer changed from 255 to 315.
+Income changed from 27 to 50.
+Bounty changed from 42 to 40.
+Health Regeneration unchanged (was at 0).
+
+Rot Golem
+
+Stock Start Delay timer changed from 285 to 315.
+Income changed from 90 to 92.
+Bounty changed from 130 to 150.
+Health Regeneration changed from 3.0 to 0.0.
+Maximum Health changed from 1,185 to 1,205.
+Tier 2
+Knight
+
+Stock Start Delay timer changed from 345 to 435.
+Income changed from 93 to 95.
+Health Regeneration changed from 2.0 to 0.
+Maximum Health changed from 610 to 657.
+Armored (1):
+Physical Damage taken from splash changed from 30% to 20%.
+
+Vengeful Spirit
+
+Stock Start Delay timer changed from 375 to 435.
+Income changed from 202 to 208.
+Health Regeneration changed from 2.0 to 0.
+Maximum Health changed from 1,100 to 1,140.
+
+Troll Berserker
+
+Stock Start Delay timer changed from 405 to 495.
+Income changed from 350 to 360.
+Health Regeneration changed from 2.5 to 0.
+Maximum Health changed from 1,930 to 1,980.
+
+Wind Rider
+
+Stock Start Delay timer changed from 405 to 495.
+Income changed from 656 to 657.
+Health Regeneration changed from 2.5 to 0.
+Maximum Health changed from 2,187 to 2,237.
+
+Voidwalker
+
+Stock Start Delay timer changed from 495 to 555.
+Health Regeneration changed from 3.5 to 0.
+Maximum Health changed from 4,140 to 4,090.
+Ancient Aura (1) replaced with Regen Aura (1):
+Increases health regeneration of creeps within 700 AoE by 6.
+
+Maximum Health reduced as Regen Aura is present at all times with a stronger regen effect compared to previous base health regeneration.
+
+
+Faceless One
+
+Stock Start Delay timer changed from 535 to 555.
+Health Regeneration changed from 5.0 to 0.
+Maximum Health changed from 6,145 to 6,435.
+Endurance Aura (2):
+AoE changed from 900 to 700.
+
+Dragonspawn
+
+Stock Start Delay timer changed from 575 to 615.
+Health Regeneration changed from 6.25 to 0.
+Maximum Health changed from 7,570 to 7,695.
+
+Sea Turtle
+
+Stock Start Delay timer unchanged.
+Health Regeneration changed from 7.5 to 0.
+Maximum Health changed from 9,935 to 10,085.
+Devotion Aura (2):
+AoE changed from 900 to 700.
+
+Banshee
+
+Stock Start Delay timer unchanged.
+Health Regeneration changed from 8.0 to 0.
+Maximum Health changed from 7,700 to 7,860.
+
+Siege Engine
+
+Stock Start Delay timer changed from 715 to 675.
+Income changed from 1,625 to 2,500.
+Health Regeneration unchanged (was at 0).
+
+Kobold Geomancer
+
+Stock Start Delay timer changed from 755 to 735.
+Income changed from 4,687 to 5,000.
+Bounty changed from 3,562 to 3,375.
+Health Regeneration changed from 10.0 to 0.
+Maximum Health changed from 39,085 to 39,285.
+
+Infernal
+
+Stock Start Delay timer changed from 795 to 735.
+Income changed from 5,000 to 5,500.
+Bounty changed from 9,500 to 13,500.
+Health Regeneration changed from 25.0 to 0.
+Maximum Health changed from 73,755 to 74,255.
+
+Tier 3
+Death Revenant
+
+Stock Start Delay timer unchanged (855).
+Income changed from 5,250 to 5,000.
+Health Regeneration changed from 12.5 to 0.
+Maximum Health changed from 36,045 to 36,420.
+
+Satyr Shadowdancer
+
+Stock Start Delay timer changed from 895 to 855.
+Income changed from 6,562 to 6,250.
+Armor Type changed from Light to Medium.
+Health Regeneration changed from 15.0 to 0.
+Maximum Health changed from 58,130 to 58,580.
+Endurance Aura (3):
+AoE changed from 900 to 700.
+
+Crypt Fiend
+
+Stock Start Delay timer changed from 935 to 915.
+Income changed from 7,500 to 7,125.
+Health Regeneration changed from 17.5 to 0.
+Maximum Health changed from 82,880 to 83,405.
+
+Necromancer
+
+Tier 3 position swapped with Spirit Walker with following changes:
+Hotkey changed from A to R.
+Stock Start Delay timer changed from 1015 to 915.
+Cost changed from 200,000 to 175,000.
+Income changed from 9,500 to 8,312.
+Bounty changed from 7,500 to 7,000.
+Health Regeneration changed from 20.0 to 0.
+Maximum Health changed from 145,890 to 128,255.
+Armor Type changed from Unarmored to Light.
+Armor changed from 6 to 5.
+Move Speed changed from 360 to 320.
+Bone Shield (Necrotic Spell Resistance):
+Renamed from Necrotic Spell Resistance to Bone Shield.
+Slow Resistance changed from 75% to 100%.
+New Effect: Converts base armor into 4% maximum health per point.
+
+It means the Necromancer will start with 0 base armor, but gain +20% maximum health. The stats in this case is:
+
+Maximum Health: 153,906
+
+Armor: 0
+
+
+
+Spirit Walker
+
+Tier 3 position swapped with Necromancer with following changes:
+Hotkey changed from R to A.
+Stock Start Delay timer unchanged (975).
+Cost changed from 175,000 to 200,000.
+Income changed from 8,750 to 9,000.
+Bounty changed from 7,000 to 7,500.
+Health Regeneration changed from 22.5 to 0.
+Maximum Health changed from 80,395 to 87,960.
+Armor changed from 5 to 6.
+Armored (2):
+Physical Damage taken from splash changed from 33% to 30%.
+
+
+Ancient Wendigo
+
+Stock Start Delay timer changed from 1045 to 975.
+Income changed from 10,687 to 10,125.
+Health Regeneration changed from 25.0 to 0.
+Ancient Aura (2) replaced with Regen Aura (2):
+Increases health regeneration of creeps within 700 AoE by 25.
+
+Maximum Health unchanged as Regen Aura is present at all times.
+
+
+Shaman
+
+Tier 3 position swapped with Gryphon Rider with following changes:
+Hotkey changed from F to D.
+Stock Start Delay timer changed from 1105 to 1035.
+Cost changed from 275,000 to 250,000.
+Income changed from 12,375 to 10,625.
+Bounty changed from 9,625 to 8,750.
+Health Regeneration changed from 27.5 to 0.
+Maximum Health changed from 175,080 to 164,790.
+Elemental Warding:
+Resistance lost per attack changed from 1.5% to 1%.
+Initial resistances for all damage types changed from 0% to 30%.
+
+Abomination
+
+Tier 3 position swapped with Shaman with following changes:
+Hotkey changed from Z to F.
+Stock Start Delay timer changed from 1165 to 1035.
+Cost changed from 300,000 to 275,000.
+Income changed from 12,750 to 11,687.
+Bounty changed from 9,750 to 9,625.
+Health Regeneration changed from 27.5 to 0.
+Maximum Health changed from 247,255 to 227,475.
+
+Gryphon Rider
+
+Tier 3 position swapped with Abomination with following changes:
+Hotkey changed from D to Z.
+Stock Start Delay timer changed from 1075 to 1095.
+Cost changed from 250,000 to 300,000.
+Income changed from 11,250 to 12,000.
+Bounty changed from 8,750 to 9,750.
+Health Regeneration changed from 30.0 to 0.
+Maximum Health changed from 74,540 to 90,350.
+Armor changed from 5 to 6.
+Devotion Aura (3):
+AoE changed from 900 to 700.
+
+Ogre Magi
+
+Stock Start Delay timer changed from 1195 to 1095.
+Income changed from 14,875 to 14,000.
+Health Regeneration changed from 35.0 to 0.
+Maximum Health changed from 237,490 to 238,540.
+Earth Shield:
+Now removes the Frostbitten effect from Ultimate Lich.
+
+Chaos Warden
+
+Stock Start Delay timer changed from 1225 to 1155.
+Health Regeneration changed from 35.0 to 0.
+Maximum Health changed from 224,115 to 225,165.
+Chaos Barrier:
+Mana lost per second changed from 2% to 5%.
+Secret Technique:
+Tower attack range dodge changed from 500 to 600.
+New Ability: Mana Drain
+Once reaching 0 mana, the Chaos Warden drains all mana from a tower within 200 AoE, gaining twice the amount of it for herself.
+
+Behemoth
+
+Stock Start Delay timer changed from 1225 to 1155.
+Health Regeneration unchanged (was at 0).
+
+Tier 4
+Huntress
+
+Cost changed from 600,000 to 500,000.
+Bounty changed from 19,500 to 15,000.
+Stock Start Delay timer unchanged.
+Health Regeneration changed from 40.0 to 0.
+Maximum Health changed from 316,230 to 318,630.
+
+Obsidian Statue
+
+Cost changed from 800,000 to 750,000.
+Bounty changed from 78,000 to 67,500.
+Stock Start Delay timer unchanged.
+Health Regeneration unchanged (was at 0).
+Maximum Health changed from 1,623,845 to 1,522,350.
+
+Essence of Blight (spawn from Obsidian Statue)
+
+Health Regeneration unchanged (was at 0).
+
+War Beast
+
+Stock Start Delay timer changed from 1275 to 1335.
+Health Regeneration changed from 50.0 to 0.
+Maximum Health changed from 412,608 to 415,608.
+Endurance Aura (4):
+AoE changed from 1,100 to 700.
+Attack and Movement Speed bonus changed from 25% to 30%.
+Devotion Aura (4):
+AoE changed from 1,100 to 700.
+Armor bonus changed from 6 to 7.
+
+Mountain Giant
+
+Stock Start Delay timer changed from 1425 to 1395.
+Health Regeneration unchanged (was at 0).
+Bounty changed from 15,000 to 18,000.
+
+Goblin Shredder
+
+Tier 4 position changed from 3,0 to 2,1.
+Hotkey changed from A to D.
+Stock Start Delay timer changed from 1335 to 1455.
+Health Regeneration changed from 50.0 to 0.
+Maximum Health changed from 800,000 to 803,000.
+Bounty changed from 36,000 to 33,000.
+
+Frost Wyrm
+
+Tier 4 position changed from 1,1 to 3,1.
+Hotkey changed from S to F.
+Stock Start Delay timer changed from 1425 to 1455.
+Health Regeneration changed from 60.0 to 0.
+Maximum Health changed from 368,925 to 372,525.
+New Ability: Enduring Chill
+Physical Damage taken reduces current Slow value by 0.5%.
+
+Phoenix
+
+Cost changed from 2,750,000 to 3,000,000.
+Bounty changed from 135,000 to 270,000.
+Hotkey changed from F to X.
+Maximum Health changed from 604,360 to 632,930.
+Health Regeneration unchanged (was at 0).
+Stock Start Delay timer changed from 1545 to 1515.
+Movement Speed changed from 270 to 260.
+Volatile Death:
+Damage dealt changed from 750 to 1,000.
+AoE changed from 300 to 250.
+Dive:
+Cooldown changed from 15 to 16 seconds.
+
+Demon (NEW!)
+
+Cost: 5,000,000
+Income: 0
+Bounty: 0
+Hotkey: C
+Stock Start Delay: 1575 (26:00 game time)
+Stats:
+Maximum Health: 1,098,835
+Armor: 50 Hero
+Move Speed: 250
+Boss (5):
+Sent as 1 strong creep with higher base stats and steals 3 lives.
+Unfathomable Power:
+Invulnerable and ignore friendly auras. Food cost increased to 5.
+
+Unlocks 1 min after the start of Sudden Death. This creep is intended as a last resort gamble in case a player is unable to steal any lives from opponents. It cannot be attacked and tank damage, moves at a slow pace and has a high food cost. So potential lives stolen over time are low.
+
+
+
+Convert Lives into Income Cap (NEW!)
+
+Purchase from Tier 4.
+Available at 21:00 game time.
+10 seconds recharge time.
+Hotkey: V
+Convert 5 of your lives into +100,000 income cap.
+Unable to purchase if lost a life within 15 seconds.
+
+Treasure Goblin
+
+Removed from the game.

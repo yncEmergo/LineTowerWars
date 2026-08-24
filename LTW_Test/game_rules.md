@@ -334,12 +334,21 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 
 | Armour \ Damage | Magic | Chaos | Normal | Piercing | Siege |
 | --------------- | ----- | ----- | ------ | -------- | ----- |
-| Light           | 125%  | 100%  | 80%    | 150%     | 100%  |
+| Light           | 150%  | 100%  | 80%    | 150%     | 100%  |
 | Medium          | 80%   | 100%  | 150%   | 100%     | 80%   |
 | Heavy           | 150%  | 100%  | 100%   | 80%      | 80%   |
 | Fortified       | 66%   | 100%  | 80%    | 66%      | 150%  |
 | Hero            | 66%   | 100%  | 80%    | 66%      | 80%   |
-| Unarmored       | 100%  | 100%  | 100%   | 125%     | 125%  |
+| Unarmored       | 100%  | 100%  | 100%   | 150%     | 125%  |
+
+- This is the Line Tower Wars 12.4a matrix. An older one was in use here until
+  the source data was extracted; Magic vs Light and Piercing vs Unarmored were
+  both 125% and are now 150%. See unit_data.md
+- Magic is a PHYSICAL damage type and goes through this table like any other.
+  The damage that ignores the table entirely is SPELL DAMAGE, which is not a
+  row here: it ignores armour type and armour points both, and is resisted only
+  by explicit creep traits. Nearly every tower ABILITY deals it; no tower's
+  basic attack does
 
 - Armour POINTS are a separate number every unit carries, and are 0 on
   everything so far. The knight's aura is currently the only source of any
@@ -409,6 +418,11 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 - NOT BUILT: flyers, attackers and bosses
   - Attacker creeps can attack buildings and are the only actively controllable
     creep type
+  - An attacker creep can only ever target a TOWER. The builder and technology
+    discs cannot be attacked at all - not "are tough", not "are ignored while a
+    tower is in range": they are not valid targets, ever. A maze wall made of
+    discs is a wall an attacker cannot chew through, and that is deliberate.
+    See unit_data.md
 - TBD: unlock order
 
 # The creep roster

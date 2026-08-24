@@ -1,0 +1,1408 @@
+# Line Tower Wars - Unit, Tower and Technology Data
+
+**What this is.** A full extract of the *Warcraft III Line Tower Wars* design as of
+version **12.4a** (2026-08-04), reconstructed from the reference files in
+`ReferenceFilesFromOtherProjects/LineTowerWarsData/` and completed with the project
+owner's own knowledge of the game. It exists so the prototype can copy that design
+directly, and so there is one place to look up a number before it is authored into a
+resource.
+
+**Status of the numbers here.** This document is a RECORD OF A DESIGN DECISION, in the
+same way `game_rules.md` is, and is therefore the one other `.md` allowed to hold stat
+tables (see the "no live values in markdown" rule in CLAUDE.md). Once a unit is
+implemented, its `.tres` resource becomes the authority and this file is the human-readable
+mirror of it. Where the two disagree, the `.tres` wins and this file is wrong and must be
+fixed. See "Keeping this document current" at the bottom.
+
+**This is not a copy of the source game's names.** Section 2.4 defines a deliberate renaming
+of every tower upgrade chain for this project, elemental and Basic alike. The old Warcraft III
+names are recorded there and nowhere else.
+
+## How this was reconstructed, and how much to trust it
+
+Four source files:
+
+| File | Covers |
+| ---- | ------ |
+| `LTW 9.4 - Tower Data.tsv` | every tower, version 9.4 |
+| `LTW 9.4 - Creep Data.tsv` | every creep, version 9.4 |
+| `LTW 9.4 - Disc Data.tsv` | disc effects, version 9.4, base + Advanced only |
+| `Changelogs 10.0 - current.txt` | every patch note from 10.0a to 12.4a |
+
+The 9.4 tables are the baseline; every patch note from 10.0a forward was replayed onto them
+in order. **There is a two-version gap: 9.5 and 9.6 sit between the sheets and the first
+changelog, and their patch notes no longer exist anywhere.** The gap is visible whenever a
+patch note's "changed from X" does not match the 9.4 value - for example 10.0a changes
+the anti-air branch's 150g tower from 26-34 while the 9.4 sheet says 21-27. In those cases the patch note's
+*result* is still correct and is what this document carries.
+
+Confidence markers used below:
+
+- **(no marker)** - the value was set or confirmed by a patch note between 10.0a and 12.4a,
+  or supplied directly by the project owner.
+- **`~`** - the value comes from the 9.4 sheet and was never touched by a patch note. It is
+  probably still current but could have been changed in 9.5 or 9.6.
+- **`?`** - genuinely unknown or contradictory in the sources. Every one of these is
+  collected in "Open questions" at the end.
+
+---
+
+# 1. Core systems
+
+## 1.1 Damage types and the armour matrix
+
+Every attack carries a damage type, every damageable unit an armour type, and the pair
+decides how much of the attack lands. There are five **physical** damage types.
+
+| Armour \ Damage | Magic | Chaos | Normal | Piercing | Siege |
+| --------------- | ----- | ----- | ------ | -------- | ----- |
+| Light           | 150%  | 100%  | 80%    | 150%     | 100%  |
+| Medium          | 80%   | 100%  | 150%   | 100%     | 80%   |
+| Heavy           | 150%  | 100%  | 100%   | 80%      | 80%   |
+| Fortified       | 66%   | 100%  | 80%    | 66%      | 150%  |
+| Hero            | 66%   | 100%  | 80%    | 66%      | 80%   |
+| Unarmored       | 100%  | 100%  | 100%   | 150%     | 125%  |
+
+This is the 12.4a matrix and it is now also the one in `game_rules.md`. Two cells were
+raised during the changelog period: **Magic vs Light** 125% -> 150% (11.0a) and **Piercing
+vs Unarmored** 125% -> 150% (11.5a). 12.3a additionally fixed a bug where Piercing dealt
+only 125% to Skittering creeps.
+
+**Magic is a physical damage type.** It goes through the matrix above like any other - the
+changelog writes phrases like "Magic Physical Damage". The damage that ignores the armour
+matrix entirely is **Spell Damage**, a separate category:
+
+- Spell Damage ignores armour type and armour value completely.
+- Creeps resist it through explicit traits (Lesser Spell Resistance -33%, Spell Resistance
+  -50%, Major Spell Resistance -66%, Bone Shield / Legendary Spell Resistance -75%).
+- Towers and discs amplify it explicitly (Technology Disc: Arcane, Ultimate Titan Vault).
+- Almost every tower *ability* deals Spell Damage; almost every tower *attack* is physical.
+  No tower's basic attack is Spell Damage.
+
+**Chaos** currently reads 100% against every armour type, which is a balancing value and not
+a rule.
+
+## 1.2 Attack speed
+
+Attack speed in every table below is the **cooldown in seconds between attacks**, matching
+how the source data and the in-game tooltip state it ("Speed: 3.0s"). Higher is slower.
+DPS is `average damage / attack speed`.
+
+## 1.3 Slow, stun and armour reduction
+
+- Base slow duration is **4 seconds**; against a slow-resistant creep it is **2 seconds**.
+- Slow amounts stack additively up to each effect's own cap, and creeps carry slow
+  resistances that reduce the *application*, not the cap.
+- Armour reduction comes in two flavours: **temporary** (a debuff with a duration) and
+  **permanent erosion** (Shatter Armor, Devastating Attack, Ice Lance, Feasting Void,
+  Unholy discs), which reduces the creep's armour for the rest of its life, usually down to
+  a floor of 0.
+- A few effects push armour **below zero**, down to -3 (the Divineshroom line's Light Burst).
+
+## 1.4 Tower survivability
+
+- Every tower has armour type **Fortified**, whatever its damage type.
+- Health and armour depend **only on the tower's price tier**, never on its element. Every
+  tower that costs the same has the same body.
+- Towers regenerate **1.5% of maximum health per second**.
+- Build time and upgrade time are **the same for every tower at every tier**.
+
+**Basic towers**
+
+| Tier | Health | Armour |
+| ---- | ------ | ------ |
+| 10g | 25 | 0 |
+| 30g | 35 | 1 |
+| 150g | 75 | 3 |
+| 1,000g | 175 | 5 |
+| 5,000g | 575 | 5 |
+| 25,000g | 2,275 | 5 |
+
+**Elemental towers** - armour 5 at every tier.
+
+| Tier | Health | Armour |
+| ---- | ------ | ------ |
+| 200g | 100 | 5 |
+| 800g | 150 | 5 |
+| 4,000g | 750 | 5 |
+| 10,000g | 1,500 | 5 |
+| 30,000g | 3,000 | 5 |
+
+## 1.5 What an attacking creep can target
+
+Only creeps with the **Attacker** trait attack buildings at all, and when they do they can
+only ever target a **tower**. Two things are not valid targets, ever:
+
+- **Technology discs.** Armour type `Invulnerable`.
+- **The builder.**
+
+This is not "hard to kill" or "deprioritised" - they cannot be attacked, so no amount of
+attacker pressure touches them. It is a load-bearing piece of maze design, because it makes a
+disc a wall an attacker cannot open, and it means the builder is never a target that has to be
+protected or kited.
+
+A destroyed tower leaves **rubble for 7 seconds**, during which no new tower can be built on
+that cell.
+
+## 1.6 Creep health regeneration
+
+Creeps have **0 base health regeneration** (10.0a removed it and raised maximum health to
+compensate). Regeneration on a creep now comes only from an ability or an aura.
+
+## 1.7 Income, lives, sudden death
+
+- **Income cap: 4,000,000.** Above that, Tier 4 income gain is reduced by 75% (12.4a).
+- Sudden Death starts at **25:00 game time** and *is* Tier 4: tiers 1-3 can no longer be
+  used from that point, and every Tier 4 creep unlocks at once.
+- On entering Sudden Death, any player below 1,000,000 income is raised to 1,000,000.
+- The creep damage-taken modifier starts at 100% and falls by **1% per minute** during
+  Sudden Death, making creeps progressively tankier.
+- Starting lives depend on player count and ruleset; for the 1v1 prototype the relevant
+  figure is the 2-player value: **80 lives (Unranked)** / **100 lives (Casual)**.
+- Catch-up gold: when a player gets a new attacker with higher income than the previous one,
+  they receive `(income difference) x 1.5` once.
+
+## 1.8 Selling and morphing
+
+| Action | Refund | Time |
+| ------ | ------ | ---- |
+| Sell a Basic tower | 60% | 3 sec |
+| Sell a Technology tower | 50% | 3 sec |
+| Morph a Technology tower back down | 50% | - |
+| Morph a disc back to inactive | - | 5 sec |
+
+Sell time is the same for every building; only the refund percentage differs.
+---
+
+# 2. The technology system
+
+## 2.1 Ten elements, three techs each
+
+There are **ten elements**: Arcane, Earth, Fire, Holy, Ice, Lightning, **Primal**, Unholy,
+Void, Water. (Primal did not exist in 9.4 - it was added whole in 10.0a, so every Primal
+number in this document comes from the changelog rather than the 9.4 sheet.)
+
+Each element sells three separate technologies:
+
+1. **Element Technology: Basic** - unlocks the free morph from the generic Elemental Core
+   into that element's 200g base tower, and unlocks its 800g upgrade. Required before either
+   of the other two.
+2. **Element Technology (1): name** - unlocks path 1 of that element: the Lesser (4,000g) and
+   Greater (10,000g) towers.
+3. **Element Technology (2): name** - unlocks path 2 of that element: the Lesser (4,000g) and
+   Greater (10,000g) towers.
+
+Under the naming scheme in 2.4 each path has a single name across all three of its tiers, so
+the technology is simply named after that: **Fire Technology (1): Doom Guard**,
+**Fire Technology (2): Firelord**.
+
+## 2.2 Tech cost
+
+- Every player starts with **4 free technologies**.
+- After that, each technology costs **50,000 x (number already bought beyond the free 4)**:
+  the 1st paid tech costs 50,000, the 2nd 100,000, the 3rd 150,000, and so on.
+
+## 2.3 The Ultimate towers and their cross-element requirement
+
+An Ultimate tower is the 30,000g upgrade of a Greater tower. To unlock one you need **four
+technologies**:
+
+- its own element's Basic tech,
+- its own element's path tech (1) or (2),
+- and one **specific other element's** Basic + path tech.
+
+The cross-requirement is a **bijection**: there are 20 Ultimate towers and 20 element-path
+pairs, and each pair is the requirement of exactly one Ultimate. An Ultimate never requires
+the other path of its own element. This means the four techs that unlock one Ultimate also
+fully unlock the Greater tower of the required path, and leave you two techs away from that
+path's own Ultimate - which is the chain the design is built around, and why the standard
+opening is to spend all four free techs on a single Ultimate.
+
+| Ultimate tower | Its path | Also requires |
+| -------------- | -------- | ------------- |
+| Ultimate Spellslinger | Arcane (1) | Ice (2): Crystal |
+| Ultimate Arcane Orb | Arcane (2) | Water (2): Sludge Monstrosity |
+| Ultimate Ancient Warden | Earth (1) | Arcane (2): Arcane Orb |
+| Ultimate Scorpion | Earth (2) | Ice (1): Lich |
+| Ultimate Doom Guard | Fire (1) | Void (1): Harbinger |
+| Ultimate Firelord | Fire (2) | Lightning (1): Annihilation Glyph |
+| Ultimate Divineshroom | Holy (1) | Primal (2): Beastmaster |
+| Ultimate Titan Vault | Holy (2) | Fire (1): Doom Guard |
+| Ultimate Lich | Ice (1) | Unholy (1): Gravedigger |
+| Ultimate Crystal | Ice (2) | Holy (1): Divineshroom |
+| Ultimate Annihilation Glyph | Lightning (1) | Unholy (2): Alchemist |
+| Ultimate Orb Keeper | Lightning (2) | Holy (2): Titan Vault |
+| Ultimate Primalist | Primal (1) | Fire (2): Firelord |
+| Ultimate Beastmaster | Primal (2) | Earth (2): Scorpion |
+| Ultimate Gravedigger | Unholy (1) | Void (2): Leviathan |
+| Ultimate Alchemist | Unholy (2) | Arcane (1): Spellslinger |
+| Ultimate Harbinger | Void (1) | Earth (1): Ancient Warden |
+| Ultimate Leviathan | Void (2) | Water (1): Hurricane Elemental |
+| Ultimate Hurricane Elemental | Water (1) | Lightning (2): Orb Keeper |
+| Ultimate Sludge Monstrosity | Water (2) | Primal (1): Primalist |
+
+Every one of the twenty element-path pairs appears exactly once in the right-hand column,
+which is the check that this table is complete and correct.
+
+Note that Ultimate Scorpion's requirement is **Ice (1)** even though the 10.0a patch note reads
+"Technology requirements changed from Ice (1): Frozen Watcher to Lightning (2): Voltage". It
+was moved back at some point after that without a note, and Ice (1) is the current value.
+
+## 2.4 Tower naming - the project's own scheme
+
+**The source game renames a tower at every upgrade, which makes the tech tree hard to read.
+This project does not.** Every upgrade chain carries **one name**, and the tier is a prefix:
+
+| Position in the chain | Name |
+| --------------------- | ---- |
+| first tier | **Lesser** *Name* |
+| second tier | *Name* |
+| third tier | **Greater** *Name* |
+| fourth tier | **Ultimate** *Name* |
+
+An elemental path has three tiers, so it uses Lesser / Greater / Ultimate and has no
+unprefixed tier: Lesser Firelord -> Greater Firelord -> Ultimate Firelord. A Basic branch has
+four, so it uses all of them: Lesser Cannon -> Cannon -> Greater Cannon -> Ultimate Cannon.
+
+The Basic 10g/30g stub is a two-tier chain of its own and is named the same way:
+Lesser Archer -> Archer. The element 200g and 800g towers keep their own individual names,
+because they are shared by both of an element's paths and belong to neither.
+
+### Elemental towers
+
+| Element | Path | 4,000g | 10,000g | 30,000g | Old WC3 names (4k / 10k / 30k) |
+| ------- | ---- | ------ | ------- | ------- | ------------------------------ |
+| Arcane | 1 | Lesser Spellslinger | Greater Spellslinger | Ultimate Spellslinger | Archmage / Grand Archmage / Ultimate Spellslinger |
+| Arcane | 2 | Lesser Arcane Orb | Greater Arcane Orb | Ultimate Arcane Orb | Arcane Pylon / Runeforged Sentry / Ultimate Arcane Orb |
+| Earth | 1 | Lesser Ancient Warden | Greater Ancient Warden | Ultimate Ancient Warden | Earth Guardian / Ancient Protector / Ultimate Ancient Warden |
+| Earth | 2 | Lesser Scorpion | Greater Scorpion | Ultimate Scorpion | Nettle / Thorns / Ultimate Scorpion |
+| Fire | 1 | Lesser Doom Guard | Greater Doom Guard | Ultimate Doom Guard | Meteor Attractor / Armageddon / Ultimate Doom Guard |
+| Fire | 2 | Lesser Firelord | Greater Firelord | Ultimate Firelord | Lava Serpent / Living Flame / Ultimate Firelord |
+| Holy | 1 | Lesser Divineshroom | Greater Divineshroom | Ultimate Divineshroom | Glowshroom / Lightshroom / Ultimate Divineshroom |
+| Holy | 2 | Lesser Titan Vault | Greater Titan Vault | Ultimate Titan Vault | Sunray Tower / Radiant Spire / Ultimate Titan Vault |
+| Ice | 1 | Lesser Lich | Greater Lich | Ultimate Lich | Frozen Watcher / Icebound Core / Ultimate Lich |
+| Ice | 2 | Lesser Crystal | Greater Crystal | Ultimate Crystal | Icicle / Tricicle / Ultimate Crystal |
+| Lightning | 1 | Lesser Annihilation Glyph | Greater Annihilation Glyph | Ultimate Annihilation Glyph | Lightning Beacon / Thunder Conductor / Ultimate Annihilation Glyph |
+| Lightning | 2 | Lesser Orb Keeper | Greater Orb Keeper | Ultimate Orb Keeper | Voltage / Storm Commander / Ultimate Orb Keeper |
+| Primal | 1 | Lesser Primalist | Greater Primalist | Ultimate Primalist | Druid / Keeper / Ultimate Primalist |
+| Primal | 2 | Lesser Beastmaster | Greater Beastmaster | Ultimate Beastmaster | Savage / Trapper / Ultimate Beastmaster |
+| Unholy | 1 | Lesser Gravedigger | Greater Gravedigger | Ultimate Gravedigger | Poison Bloom / Fanatic / Ultimate Gravedigger |
+| Unholy | 2 | Lesser Alchemist | Greater Alchemist | Ultimate Alchemist | Reaper / Soul Forge / Ultimate Alchemist |
+| Void | 1 | Lesser Harbinger | Greater Harbinger | Ultimate Harbinger | Riftweaver / Zealot / Ultimate Harbinger |
+| Void | 2 | Lesser Leviathan | Greater Leviathan | Ultimate Leviathan | Lasher / Ravager / Ultimate Leviathan |
+| Water | 1 | Lesser Hurricane Elemental | Greater Hurricane Elemental | Ultimate Hurricane Elemental | Water Elemental / Seabound Wrath / Ultimate Hurricane Elemental |
+| Water | 2 | Lesser Sludge Monstrosity | Greater Sludge Monstrosity | Ultimate Sludge Monstrosity | Lurker / Abyss Stalker / Ultimate Sludge Monstrosity |
+
+### Basic towers
+
+| Line / branch | 10g | 30g | 150g | 1,000g | 5,000g | 25,000g |
+| ------------- | --- | --- | ---- | ------ | ------ | ------- |
+| Archer | Lesser Archer | Archer | | | | |
+| - sniper | | | Lesser Watch Tower | Watch Tower | Greater Watch Tower | Ultimate Watch Tower |
+| - cannon | | | Lesser Cannon | Cannon | Greater Cannon | Ultimate Cannon |
+| Cutter | Lesser Cutter | Cutter | | | | |
+| - grinder | | | Lesser Carver | Carver | Greater Carver | Ultimate Carver |
+| - stomper | | | Lesser Crusher | Crusher | Greater Crusher | Ultimate Crusher |
+| Sentry | Lesser Sentry | Sentry | | | | |
+| - magic | | | Lesser Defender | Defender | Greater Defender | Ultimate Defender |
+| - anti-air | | | Lesser Turret | Turret | Greater Turret | Ultimate Turret |
+
+Old WC3 names for the same towers, in the same order:
+
+| Branch | 150g | 1,000g | 5,000g | 25,000g |
+| ------ | ---- | ------ | ------ | ------- |
+| sniper | Watch Tower | Guard Tower | Ward Tower | Ultimate Ward Tower |
+| cannon | Cannon Tower | Bombard Tower | Artillery Tower | Ultimate Artillery Tower |
+| grinder | Carver | Executioner | Mauler | Ultimate Mauler |
+| stomper | Crusher | Wrecker | Mangler | Ultimate Mangler |
+| magic | Defender | Bulwark | Construct | Ultimate Construct |
+| anti-air | Rocketeers | Barrager | Turret | Ultimate Turret |
+
+The 30g towers were Gunner, Grinder and Sentinel.
+
+`?` **The six Basic branch names are a proposal.** The rule used was "take the clearest name
+already in that branch": five come from the 150g tower, and the anti-air branch takes **Turret**
+from its 5,000g tower because "Rocketeers" is a plural unit name rather than a tower name. Any
+of the six is trivial to change - they only exist here and in section 3.
+
+### Renames inside the source game
+
+Only worth knowing when cross-checking against the 9.4 sheet, since none of these names survive
+into this project: Ice Obelisk -> Obelisk, Runic Obelisk -> Runic Monolith, Frozen Core ->
+Icebound Core, Shock Generator -> Power Generator, Sunbeam Tower -> Radiant Spire, Ultimate
+Kirin Tor Wizard -> Ultimate Spellslinger, Ultimate Devourer -> Ultimate Harbinger, Rift Lord ->
+Zealot, Tide Lurker -> Lurker, Noxious Weed -> Nettle, Virulent Thorn -> Thorns, Septic Tank ->
+Poison Bloom, Plague Fanatic -> Fanatic, Ultimate Moonbeam Projector -> Ultimate Doom Guard.
+
+---
+
+# 3. Basic towers
+
+Always available, no technology required. Three independent lines, each starting at 10g, each
+splitting into two branches at the 150g tier.
+
+    Lesser Archer 10g -> Archer 30g -> Lesser Watch Tower 150g -> Watch Tower 1,000g -> Greater Watch Tower 5,000g -> Ultimate Watch Tower 25,000g
+                                    -> Lesser Cannon      150g -> Cannon      1,000g -> Greater Cannon      5,000g -> Ultimate Cannon      25,000g
+
+    Lesser Cutter 10g -> Cutter 30g -> Lesser Carver      150g -> Carver      1,000g -> Greater Carver      5,000g -> Ultimate Carver      25,000g
+                                    -> Lesser Crusher     150g -> Crusher     1,000g -> Greater Crusher     5,000g -> Ultimate Crusher     25,000g
+
+    Lesser Sentry 10g -> Sentry 30g -> Lesser Defender    150g -> Defender    1,000g -> Greater Defender    5,000g -> Ultimate Defender    25,000g
+                                    -> Lesser Turret      150g -> Turret      1,000g -> Greater Turret      5,000g -> Ultimate Turret      25,000g
+
+Each line keeps one name across its 10g and 30g towers, and each branch keeps one name across
+all four of its own tiers. See 2.4 for the scheme and the old Warcraft III names.
+
+The three lines and what they are for:
+
+- **Archer** is the ranged Piercing line. It either stays a long-range single-target sniper
+  (Watch Tower) or becomes a splash cannon (Cannon).
+- **Cutter** is the short-range Normal line. It either stays a fast no-splash grinder (Carver)
+  or becomes a slow heavy stomper (Crusher).
+- **Sentry** is the Magic line. It either stays a magic splash tower (Defender) or becomes the
+  dedicated **anti-air** line (Turret), which cannot hit ground at any tier.
+
+The gold column is the price of that one upgrade; "total" is the cumulative gold sunk into the
+tower, which is what the sell refund is calculated from. Health and armour are in section 1.4
+and depend only on the tier.
+
+## 3.1 Archer line
+
+| Tower | Gold | Total | Type | Damage | Speed | Range | Splash | Targets |
+| ----- | ---- | ----- | ---- | ------ | ----- | ----- | ------ | ------- |
+| Lesser Archer | 10 | 10 | Piercing | ~1-1 | ~0.667 | ~400 | - | Ground, Air |
+| Archer | 30 | 40 | Piercing | ~3-3 | ~0.638 | ~500 | - | Ground, Air |
+| Lesser Watch Tower | 150 | 190 | Piercing | ~8-10 | ~0.5 | ~700 | - | Ground, Air |
+| Watch Tower | 1,000 | 1,190 | Piercing | ~38-40 | ~0.5 | ~700 | - | Ground, Air |
+| Greater Watch Tower | 5,000 | 6,190 | Piercing | ~157-158 | ~0.5 | ~800 | - | Ground, Air |
+| Ultimate Watch Tower | 25,000 | 31,190 | Piercing | ~609-610 | ~0.5 | ~800 | - | Ground, Air |
+| Lesser Cannon | 150 | 190 | Siege | ~16-19 | ~2.0 | ~500 | ~150 | Ground |
+| Cannon | 1,000 | 1,190 | Siege | 77-81 | ~2.0 | 500 | ~200 | Ground |
+| Greater Cannon | 5,000 | 6,190 | Siege | ~294-298 | ~2.0 | ~600 | ~250 | Ground |
+| Ultimate Cannon | 25,000 | 31,190 | Siege | 1,147-1,153 | ~2.0 | 600 | ~300 | Ground |
+
+## 3.2 Cutter line
+
+| Tower | Gold | Total | Type | Damage | Speed | Range | Splash | Targets |
+| ----- | ---- | ----- | ---- | ------ | ----- | ----- | ------ | ------- |
+| Lesser Cutter | 10 | 10 | Normal | ~1-1 | ~0.333 | ~150 | - | Ground |
+| Cutter | 30 | 40 | Normal | ~3-3 | ~0.333 | ~150 | - | Ground |
+| Lesser Carver | 150 | 190 | Normal | ~14-16 | ~0.333 | ~150 | - | Ground |
+| Carver | 1,000 | 1,190 | Normal | ~69-75 | ~0.333 | ~150 | - | Ground, Air |
+| Greater Carver | 5,000 | 6,190 | Normal | ~291-299 | ~0.333 | ~200 | - | Ground, Air |
+| Ultimate Carver | 25,000 | 31,190 | Normal | ~1,180-1,191 | ~0.333 | ~200 | - | Ground, Air |
+| Lesser Crusher | 150 | 190 | Normal | ~24-26 | ~5.0 | ~150 | ~300 | Ground, Air |
+| Crusher | 1,000 | 1,190 | Normal | ~136-141 | ~5.0 | ~150 | ~300 | Ground, Air |
+| Greater Crusher | 5,000 | 6,190 | Normal | ~601-608 | ~5.0 | ~150 | ~350 | Ground, Air |
+| Ultimate Crusher | 25,000 | 31,190 | Normal | ~2,395-2,403 | ~5.0 | ~150 | ~400 | Ground, Air |
+
+`?` The 9.4 sheet has the Carver branch hitting Ground only at 150g and Ground + Air from
+1,000g upwards. That looks like a data slip rather than a design, but it is what the sheet
+says.
+
+## 3.3 Sentry line
+
+| Tower | Gold | Total | Type | Damage | Speed | Range | Splash | Targets |
+| ----- | ---- | ----- | ----- | ------ | ----- | ----- | ------ | ------- |
+| Lesser Sentry | 10 | 10 | Magic | ~2-2 | ~1.5 | ~800 | - | Ground, Air |
+| Sentry | 30 | 40 | Magic | ~6-6 | ~1.5 | ~800 | - | Ground, Air |
+| Lesser Defender | 150 | 190 | Magic | 8-11 | 1.2 | 800 | 100 | Ground, Air |
+| Defender | 1,000 | 1,190 | Magic | 41-44 | 1.2 | 800 | 125 | Ground, Air |
+| Greater Defender | 5,000 | 6,190 | Magic | 160-163 | 1.2 | 900 | 175 | Ground, Air |
+| Ultimate Defender | 25,000 | 31,190 | Magic | 585-588 | 1.2 | 900 | 225 | Ground, Air |
+| Lesser Turret | 150 | 190 | Siege | 19-27 | 0.8 | 900 | - | **Air only** |
+| Turret | 1,000 | 1,190 | Siege | 162-170 | 0.8 | 900 | - | **Air only** |
+| Greater Turret | 5,000 | 6,190 | Siege | 553-561 | 0.8 | 1,000 | - | **Air only** |
+| Ultimate Turret | 25,000 | 31,190 | Siege | 2,022-2,030 | 0.8 | 1,000 | - | **Air only** |
+
+## 3.4 Notes
+
+No Basic tower has an ability. **Prioritize** (hotkey F, toggles between preferring nearby air
+creeps and default targeting) exists on every tower that can hit both ground and air.
+
+**Elemental Core - 200g, Chaos, ~6-7 damage, ~1.0 speed, ~600 range, Ground + Air.** The
+generic technology base tower. It has no ability and is not part of any Basic line; it is the
+thing that morphs for free into an element's 200g tower once that element's Basic tech is
+owned. `?` The 9.4 sheet lists a "total cost" of 1,000 for it, which does not match its 200g
+price - probably a spreadsheet artefact.
+
+---
+
+# 4. Elemental towers
+
+Every element has the same shape:
+
+    Elemental Core 200g --(free, needs Basic tech)--> element base tower 200g
+      -> 800g upgrade  (needs Basic tech)
+        -> Lesser (1) 4,000g -> Greater (1) 10,000g -> Ultimate (1) 30,000g
+        -> Lesser (2) 4,000g -> Greater (2) 10,000g -> Ultimate (2) 30,000g
+
+The 200g and 800g towers are shared by both paths. The "Gold" column is the price of that
+single upgrade, not the running total. Primal is the one exception to the price ladder: its
+base tower (Quarry) is listed at 0 gold because it is reached by morphing an already-paid-for
+Elemental Core - the same as every other element's 200g tower, just recorded differently in
+the source.
+
+Health and armour are not repeated per tower: they depend only on the price tier and are in
+section 1.4. `Mana` columns are filled in only where a tower actually uses mana.
+
+## 4.1 Arcane
+
+- **Path (1): Spellslinger** - Apprentice -> Sorcerer -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Arcane Orb** - Apprentice -> Sorcerer -> **Lesser** -> Greater -> Ultimate
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Apprentice | 200 | Magic | 11-13 | 0.8 | 900 | - | Ground, Air | 32 |
+| Sorcerer | 800 | Magic | 29-31 | 0.8 | 900 | - | Ground, Air | 64 |
+| Lesser Spellslinger | 4,000 | Magic | 51-54 | ~1.0 | ~800 | - | Ground, Air | 50 |
+| Greater Spellslinger | 10,000 | Magic | 225-228 | ~1.0 | ~800 | - | Ground, Air | 50 |
+| Ultimate Spellslinger | 30,000 | Magic | 852-855 | ~1.0 | ~800 | - | Ground, Air | 90 |
+| Lesser Arcane Orb | 4,000 | Chaos | 71-73 | 0.8 | ~900 | - | Ground, Air | 100 `?` |
+| Greater Arcane Orb | 10,000 | Chaos | 216-218 | 0.8 | 900 | - | Ground, Air | 100 `?` |
+| Ultimate Arcane Orb | 30,000 | Chaos | 602-604 | 0.8 | 900 | - | Ground, Air | 100 `?` |
+
+**Arcanize (1)** *(Apprentice)* - attacks increase mana by 1. At maximum mana, damage dealt
+is increased by **100%**.
+
+**Arcanize (2)** *(Sorcerer)* - as above but **+150%** at maximum mana. Mana is not reduced
+when the tower is upgraded.
+
+**Spellcaster (1)** *(Lesser Spellslinger)* - regenerates 10 mana/sec. Casts **Frostfire**
+every 3.34 sec on a creep within 600 AoE, dealing **90 Spell Damage per second for 15 sec**
+and slowing it by 8% per tick up to 40%. At full mana an attack is spent as an **Arcane
+Orb**: +110 bonus damage and 180 splash. Any target hit increases the Spell Damage of the
+next Frostfire by 10%.
+
+**Spellcaster (2)** *(Greater Spellslinger)* - identical shape. Frostfire **250 Spell
+Damage/sec**, slow 10% per tick up to 40%; Arcane Orb +315 bonus damage, 240 splash.
+
+**Spell Mastery** *(Ultimate Spellslinger)* - Frostfire **600 Spell Damage/sec for 15 sec**
+within 800 AoE, slow 12.5% per tick up to 50%. Attacks use up to 33% of max mana to fire an
+Arcane Orb: +750 bonus splash damage, 240 splash. Each target hit raises the next Frostfire's
+Spell Damage by 15%. Regenerates 10 mana/sec. **Aether Attunement** is exclusive to this tier
+as of 12.0a: 100% of damage dealt is re-applied to an attuned target every 0.5 sec; the
+target can be set manually on a shared 30 sec cooldown (reset if it dies).
+
+**Shifting Power (1)** *(Lesser Arcane Orb)* - attacks bounce up to 3 times, +2.0 mana per
+target hit. Damage dealt is increased by the current mana percentage, up to +50%. Every other
+attack is dealt as Spell Damage. +15% damage against flying creeps. Mana decreases by 2/sec.
+
+**Shifting Power (2)** *(Greater Arcane Orb)* - bounces up to 4 times, +2.25 mana per target,
+bounce range 220. +20% damage against flying. Otherwise as (1).
+
+**Arcane Surge** *(Ultimate Arcane Orb)* - attacks bounce, +4 mana per target hit, bounce
+range 240. Every other attack is dealt as Spell Damage. While above 80% mana, attacks bounce
+to **2 additional targets** and mana drains at 15/sec instead of 8/sec. +33% damage against
+flying creeps.
+
+## 4.2 Earth
+
+- **Path (1): Ancient Warden** - Rockfall -> Avalanche -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Scorpion** - Rockfall -> Avalanche -> **Lesser** -> Greater -> Ultimate
+
+Earth 1 is the heavy Siege splash line with permanent armour erosion. Earth 2 was made pure
+single-target in 12.0a.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Rockfall | 200 | Siege | ~18-22 | ~2.5 | ~300 | ~250 | Ground | - |
+| Avalanche | 800 | Siege | ~75-87 | ~2.5 | ~300 | ~250 | Ground | - |
+| Lesser Ancient Warden | 4,000 | Siege | 230-248 | ~2.5 | ~400 | 300 (full damage) | Ground | - |
+| Greater Ancient Warden | 10,000 | Siege | 518-536 | ~2.5 | ~450 | 350 (full damage) | Ground | - |
+| Ultimate Ancient Warden | 30,000 | Siege | 1,492-1,510 | ~2.5 | ~500 | 400 (full damage) | Ground | - |
+| Lesser Scorpion | 4,000 | Piercing | 196-206 | ~0.7 | ~700 | - | Ground, Air | - |
+| Greater Scorpion | 10,000 | Piercing | 498-508 | ~0.7 | ~700 | - | Ground, Air | - |
+| Ultimate Scorpion | 30,000 | Piercing | 1,246-1,273 | 0.5 | ~700 | - | Ground, Air | 999 |
+
+**Shatter Armor (1)** *(Rockfall)* - attacks **permanently** reduce the armour of creeps hit
+by 0.1, down to a floor of 1.
+
+**Shatter Armor (2)** *(Avalanche)* - permanently -0.1 armour, down to a floor of 0.
+
+**Devastating Attack (1)** *(Lesser Ancient Warden)* - attacks permanently reduce armour by
+0.12, down to 0. Deals **full damage across the whole splash radius**.
+
+**Devastating Attack (2)** *(Greater Ancient Warden)* - permanently -0.2 armour, full damage
+across the splash radius.
+
+**Nature's Guidance** *(Ultimate Ancient Warden)* - permanently -0.5 armour down to 0, full
+damage across the splash radius, and heals the tower for **2.35% of damage dealt**.
+
+**Germinate (1)** *(Lesser Scorpion)* - after not attacking for over 1 second, the next 5
+attacks gain +10% damage per 0.5 sec of idling, up to +50%. Attacks can **critical strike for
++50% damage**; the chance rises as the target's health falls, up to 50%.
+
+**Germinate (2)** *(Greater Scorpion)* - idle bonus +15% per 0.5 sec up to +75%; crit +50%
+damage with up to 60% chance.
+
+**Lethal Strike** *(Ultimate Scorpion)* - gains **5 mana per attack**; the critical strike
+*damage* percentage equals current mana. Crit *chance* is based on the target's current health
+percentage (lower health, higher chance) capped at 75%. Killing a target resets mana to 100.
+Idling over 1 second gives the next 5 attacks +20% damage per 0.5 sec up to +100% **and a 100%
+crit chance**; a kill refreshes that idle bonus to its maximum.
+
+## 4.3 Fire
+
+- **Path (1): Doom Guard** - Fire Pit -> Magma Well -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Firelord** - Fire Pit -> Magma Well -> **Lesser** -> Greater -> Ultimate
+
+Fire 1 is a decaying-mana burst line: it is at its strongest the moment it is built and
+weakens over roughly a 2-minute window. Fire 2 is a proc line built around Volcanic Eruption.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Fire Pit | 200 | Normal | 17-20 | 2.0 | ~400 | ~150 | Ground, Air | - |
+| Magma Well | 800 | Normal | 58-60 | 2.0 | ~400 | ~200 | Ground, Air | - |
+| Lesser Doom Guard | 4,000 | Siege | 131-134 | ~3.0 | ~800 | 275 | Ground | 100 |
+| Greater Doom Guard | 10,000 | Siege | 268-271 | ~3.0 | ~975 | ~325 | Ground | 100 |
+| Ultimate Doom Guard | 30,000 | Siege | 871-874 | ~3.0 | 1,200 | ~400 | Ground | 45 |
+| Lesser Firelord | 4,000 | Normal | 325-333 | 1.0 | ~400 | ~75 | Ground, Air | - |
+| Greater Firelord | 10,000 | Normal | 549-557 | 1.0 | ~400 | ~100 | Ground, Air | - |
+| Ultimate Firelord | 30,000 | Normal | 980-988 | 1.0 | ~500 | 200 | Ground, Air | - |
+
+**Ignite (1)** *(Fire Pit)* - ignites a ground creep every 2.1 sec within a 400 radius,
+dealing **5 Spell Damage per second for 8 sec**.
+
+**Ignite (2)** *(Magma Well)* - as above, **13 Spell Damage per second for 8 sec**.
+
+**Blazing Inferno (1)** *(Lesser Doom Guard)* - starts at 100% mana on upgrade, **loses 0.83%
+mana per second and can never regain it**. Attacks deal up to **+300% damage** scaled by
+current mana percentage. While mana is above 0, each attack also makes the tower explode for
+**66% of the damage dealt** as Spell Damage within 200 AoE.
+
+**Blazing Inferno (2)** *(Greater Doom Guard)* - same decay, explosion **80% of damage dealt**
+within 250 AoE.
+
+**Frenzied Flames** *(Ultimate Doom Guard)* - regenerates 10 mana/sec (max 45). Attacks
+consume mana to spew flames at the target location for 3 sec within 300 AoE, dealing up to
+**1,575 Spell Damage per second** scaled by the mana spent.
+
+**Volcanic Eruption (1)** *(Lesser Firelord)* - 40% chance to deal **+100% bonus damage as
+Spell Damage to 3 targets** and reduce their armour by **7%**.
+
+**Volcanic Eruption (2)** *(Greater Firelord)* - 40% chance, **5 targets**, armour **-9%**.
+
+**Magma Blast** *(Ultimate Firelord)* - 40% chance, **8 targets**, armour **-12%**. Every 3rd
+attack triggers it with 100% chance. Deals an extra **+6% bonus Spell Damage for every 10% of
+base armour the target is missing**.
+
+## 4.4 Holy
+
+- **Path (1): Divineshroom** - Light Flies -> Holy Lantern -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Titan Vault** - Light Flies -> Holy Lantern -> **Lesser** -> Greater -> Ultimate
+
+**Holy 1 is the anti-air path**: from the Lesser tier onwards it targets air creeps only, and
+pays for that with heavy splash, slow and negative armour. Holy 2 is the multi-target support
+line that amplifies everyone else's Spell Damage.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Hits |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Light Flies | 200 | Piercing | 11-12 | ~1.8 | ~800 | - | Ground, Air | 5 |
+| Holy Lantern | 800 | Piercing | 35-36 | ~1.8 | ~850 | - | Ground, Air | 6 |
+| Lesser Divineshroom | 4,000 | Normal | 232-233 | ~1.0 | ~400 | ~200 | **Air only** | 1 |
+| Greater Divineshroom | 10,000 | Normal | 443-444 | ~1.0 | ~450 | ~250 | **Air only** | 1 |
+| Ultimate Divineshroom | 30,000 | Normal | 1,124-1,126 | ~1.0 | ~500 | ~300 | **Air only** | 1 |
+| Lesser Titan Vault | 4,000 | Piercing | 114-115 | ~1.8 | ~900 | - | Ground, Air | 7 |
+| Greater Titan Vault | 10,000 | Piercing | 315-316 | ~1.8 | ~1,000 | - | Ground, Air | 8 |
+| Ultimate Titan Vault | 30,000 | Piercing | 900-901 | ~1.8 | ~1,000 | - | Ground, Air | 11 |
+
+"Hits" is the total number of creeps struck per attack (primary + additional).
+
+**Bursting Light (1)** *(Light Flies)* - attacks hit 4 additional targets.
+
+**Bursting Light (2)** *(Holy Lantern)* - attacks hit 5 additional targets.
+
+**Light Burst (1)** *(Lesser Divineshroom)* - slows targets hit by **3.33% per hit up to 40%**
+and reduces their armour by **0.12** per hit. The armour reduction can push armour **below
+zero, down to -3**.
+
+**Light Burst (2)** *(Greater Divineshroom)* - slow **4.16% per hit up to 50%**, armour
+**-0.15** per hit, floor -3.
+
+**Divine Spores** *(Ultimate Divineshroom)* - slow **6% per hit up to 66%**, armour **-0.25**
+per hit, floor -3. Additionally heals friendly towers within 300 AoE for **10% of damage
+dealt**.
+
+**Luminous Grasp (1)** *(Lesser Titan Vault)* - attacks hit 6 additional targets; each target
+takes **+12% Spell Damage for 5 sec** and is slowed by **14%**.
+
+**Luminous Grasp (2)** *(Greater Titan Vault)* - hits 7 additional targets; **+12% Spell
+Damage for 7 sec**, slow **18%**.
+
+**Titan Defense Mechanism** *(Ultimate Titan Vault)* - hits 10 additional targets. Creeps
+within a **700 AoE** aura take **+15% Spell Damage**, are slowed by **24%**, have their slow
+duration extended by 2 sec, and have their attack damage reduced by 20%.
+
+## 4.5 Ice
+
+- **Path (1): Lich** - Obelisk -> Runic Monolith -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Crystal** - Obelisk -> Runic Monolith -> **Lesser** -> Greater -> Ultimate
+
+Ice 1 is the chill / slow line with splash. Ice 2 was reworked in 11.4a into the **only tech
+path in the game that fully ignores creep armour value**, in exchange for lower base damage.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- |
+| Obelisk | 200 | Magic | 14-17 | ~1.5 | ~500 | 100 | Ground, Air |
+| Runic Monolith | 800 | Magic | 45-48 | ~1.5 | ~600 | 100 | Ground, Air |
+| Lesser Lich | 4,000 | Magic | 162-166 | 1.5 | ~600 | 150 | Ground, Air |
+| Greater Lich | 10,000 | Magic | 494-498 | 1.5 | ~600 | 150 | Ground, Air |
+| Ultimate Lich | 30,000 | Magic | 946-950 | 1.5 | ~600 | 225 | Ground, Air |
+| Lesser Crystal | 4,000 | Piercing | 205-207 | 1.4 | ~700 | - (pierces) | Ground, Air |
+| Greater Crystal | 10,000 | Piercing | 489-491 | 1.4 | ~700 | - (pierces) | Ground, Air |
+| Ultimate Crystal | 30,000 | Piercing | 1,333-1,335 | 1.4 | ~800 | - (pierces) | Ground, Air |
+
+**Frost Attack (1)** *(Obelisk)* - each attack chills the target, **-3.75% movement speed per
+hit, up to -20%**.
+
+**Frost Attack (2)** *(Runic Monolith)* - **-4.5% per hit, up to -25%**.
+
+**Frost Blast (1)** *(Lesser Lich)* - **-5.5% per hit, up to -30%**; slow duration increased
+by 1 sec.
+
+**Frost Blast (2)** *(Greater Lich)* - **-6.35% per hit, up to -36%**; slow duration increased
+by 1.5 sec.
+
+**Chilling Death** *(Ultimate Lich)* - creeps within a **700 AoE** aura have their attack
+speed reduced by **15%**. Each attack chills **-7.5% up to -45%** and increases slow duration
+by 3 sec. A target chilled by 45% is **Frostbitten**: it takes **2% of its maximum health as
+Spell Damage**, and can only be Frostbitten once every 15 sec.
+
+**Ice Lance (1)** *(Lesser Crystal)* - attacks pierce and hit every creep in a line towards
+the target, out to the tower's attack range, up to **15 targets**. Damage increases by **5% per
+target hit**. **Ignores creep armour value.**
+
+**Ice Lance (2)** *(Greater Crystal)* - up to 15 targets, **+7.5% per target hit**, ignores
+armour value.
+
+**Crystalized Light** *(Ultimate Crystal)* - up to **20 targets**, **+10% per target hit**,
+ignores armour value. Creeps hit that use mana for their abilities have their mana
+regeneration crystalized, **losing 0.35 mana per second for 12 sec**.
+## 4.6 Lightning
+
+- **Path (1): Annihilation Glyph** - Shock Particle -> Power Generator -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Orb Keeper** - Shock Particle -> Power Generator -> **Lesser** -> Greater -> Ultimate
+
+Lightning 1 is the long-range ramping single-target line. Lightning 2 was redesigned in 11.0a
+into short-range single-target damage with stun utility (its old anti-air identity was
+removed).
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Shock Particle | 200 | Chaos | ~20-20 | ~0.5 | ~200 | - | Ground, Air | - |
+| Power Generator | 800 | Chaos | ~80-80 | ~0.5 | ~200 | - | Ground, Air | - |
+| Lesser Annihilation Glyph | 4,000 | Chaos | 499-511 | ~2.0 | ~1,000 | - | Ground, Air | - |
+| Greater Annihilation Glyph | 10,000 | Chaos | 1,122-1,134 | ~2.0 | ~1,250 | - | Ground, Air | - |
+| Ultimate Annihilation Glyph | 30,000 | Chaos | 2,416-2,428 | ~2.0 | ~1,500 | - | Ground, Air | - |
+| Lesser Orb Keeper | 4,000 | Chaos | 240-240 | 0.5 | ~200 | - | Ground, Air | 100 |
+| Greater Orb Keeper | 10,000 | Chaos | 590-590 | 0.5 | ~200 | - | Ground, Air | 100 |
+| Ultimate Orb Keeper | 30,000 | Chaos | 850-850 | 0.5 | ~200 | - | Ground, Air | 100 |
+
+**Overcharge (1)** *(Shock Particle)* - attacks deal **+2 damage for every 10% of the target's
+current health**.
+
+**Overcharge (2)** *(Power Generator)* - **+7 damage per 10% current health**.
+
+`?` The 9.4 sheet's ability cell for Shock Particle reads "Arcanize (2)", which is the
+Sorcerer's ability and clearly wrong; the changelog treats Shock Particle as carrying
+Overcharge (1). The sheet also has a stray "extra damage per hit: 15" column value for it.
+
+**Focused Lightning (1)** *(Lesser Annihilation Glyph)* - each attack on the **same** target
+increases base damage by **50%**, **capped at 5 attacks**. Attacking a new target resets the
+bonus. *(The air-creep slow aura this tower used to have was removed in 11.6a.)*
+
+**Focused Lightning (2)** *(Greater Annihilation Glyph)* - **+75%** per attack on the same
+target, capped at 5.
+
+**Annihilation** *(Ultimate Annihilation Glyph)* - **+100%** base damage per attack on the
+same target, capped at 5, and each attack **chains to 2 additional targets within 500 radius**
+at full damage. New target resets the bonus.
+
+**Crash Lightning (1)** *(Lesser Orb Keeper)* - attacks gain **10 mana** and deal additional
+damage equal to **1.2% of the target's current health**. At 100 mana the tower spends all of
+it to **stun the target for 0.67 sec** and deal **300 bonus Spell Damage**.
+
+**Crash Lightning (2)** *(Greater Orb Keeper)* - **15 mana** per attack, **1.8%** current
+health, stun 0.67 sec, **800 bonus Spell Damage**.
+
+**Arc Lightning** *(Ultimate Orb Keeper)* - **20 mana** per attack, **2.5%** current health.
+At 100 mana: stun 0.67 sec, **2,500 bonus Spell Damage**, and the tower's *maximum* mana drops
+by 5. When maximum mana falls below 20 it resets to 100 and **lowers the maximum mana of other
+Ultimate Orb Keepers within 150 AoE by 20**.
+
+## 4.7 Primal *(added in 10.0a - not present in the 9.4 sheets)*
+
+- **Path (1): Primalist** - Quarry -> Coreway -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Beastmaster** - Quarry -> Coreway -> **Lesser** -> Greater -> Ultimate
+
+Primal is the economy element: path 1 generates gold on every attack, at the cost of
+generating less the more Primal towers are packed together. Path 2 is the stun/beast line.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Quarry | 0 | Siege | 23-29 | 2.0 | 700 | - | Ground, Air | 4 |
+| Coreway | 800 | Siege | 92-98 | 2.0 | 700 | - | Ground, Air | 4 |
+| Lesser Primalist | 4,000 | Magic | 255-269 | 3.0 | 900 | - | Ground, Air | 90 |
+| Greater Primalist | 10,000 | Magic | 637-651 | 3.0 | 900 | - | Ground, Air | 90 |
+| Ultimate Primalist | 30,000 | Magic | 1,674-1,688 | 3.0 | 900 | - | Ground, Air | 90 |
+| Lesser Beastmaster | 4,000 | Siege | 130-136 | 0.7 | 700 | - | Ground, Air | 100 |
+| Greater Beastmaster | 10,000 | Siege | 348-354 | 0.7 | 700 | - | Ground, Air | 100 |
+| Ultimate Beastmaster | 30,000 | Siege | 974-980 | 0.7 | 700 | - | Ground, Air | 100 |
+
+**Break (1)** *(Quarry)* - gains 1 mana per attack; at full mana (4) **stuns the target for
+0.8 sec**. *(This replaced the old gold-generating Prospect (1) in 12.0a - basic Primal no
+longer makes gold, the whole economy is behind the Primal 1 upgrade.)*
+
+**Break (2)** *(Coreway)* - gains 1 mana per attack; at full mana **stuns for 1.0 sec**.
+
+**Ancient Bloom (1)** *(Lesser Primalist)* - generates up to **120 gold per attack**, reduced
+by 48 for every nearby Primal Technology tower within 250 AoE, down to a minimum of 12.
+*Quarry and Coreway no longer count towards that reduction as of 12.4a.* Generates 13
+mana/sec; at full mana it blasts the earth for **350 Magic Physical Damage** to creeps within
+200 AoE of the primary target and reduces their armour by 1 for 7 sec. Refunds 50% of the mana
+if the blast hits 3 or fewer targets.
+
+**Ancient Bloom (2)** *(Greater Primalist)* - up to **300 gold per attack**, -120 per nearby
+Primal tower, minimum 30. Blast **775 Magic Physical Damage**, armour -2 for 7 sec, same 200
+AoE and 50% refund rule.
+
+**Primordial Bond** *(Ultimate Primalist)* - generates **750 gold per attack** flat, with no
+crowding penalty. Generates 13 mana/sec; at full mana blasts for **1,800 Magic Physical
+Damage** within 200 AoE and reduces armour by 3 for 7 sec, with the same 50% refund rule. The
+Builder attack buff and the "root a creep about to steal a life" effect this tower had at
+introduction are **removed**.
+
+**Bloodthirst (1)** *(Lesser Beastmaster)* - attacks hit 1 additional target within 400 AoE
+and gain **5 mana per target hit**. At full mana, unleashes a beast towards the target hit (or
+a manually set point) up to 700 range, dealing **240 Siege Physical Damage** to ground creeps
+in its path and **stunning them for 0.5 sec**. A creep can only be stunned this way once every
+8 sec.
+
+**Bloodthirst (2)** *(Greater Beastmaster)* - beast **570 Siege Physical Damage**, stun
+**0.7 sec**.
+
+**Stampede** *(Ultimate Beastmaster)* - attacks hit 1 additional target within 500 AoE, gain
+5 mana per target hit, and **damage increases by 10% per 100 range to the target, up to
++100%**. At full mana, unleashes a beast up to **1,200 range** dealing **1,865 Siege Physical
+Damage** and stunning for **1.2 sec** (8 sec immunity per creep). The beast's direction can be
+set manually with the **Stampede Target** ability (hotkey R); targeting the tower itself resets
+it to "wherever the attack landed".
+
+## 4.8 Unholy
+
+- **Path (1): Gravedigger** - Plague Well -> Defiled Fountain -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Alchemist** - Plague Well -> Defiled Fountain -> **Lesser** -> Greater -> Ultimate
+
+Unholy 1 is the multi-target poison-stacking line (it inherited the AoE-explosion role from
+Earth 2 in 12.0a). Unholy 2 is the permanent-damage-gain splash line.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Plague Well | 200 | Normal | ~16-17 | ~1.0 | ~500 | - | Ground, Air | - |
+| Defiled Fountain | 800 | Normal | ~58-59 | ~1.0 | ~600 | - | Ground, Air | - |
+| Lesser Gravedigger | 4,000 | Normal | 148-152 | 0.7 | ~700 | - | Ground, Air | - |
+| Greater Gravedigger | 10,000 | Normal | 246-250 | 0.7 | ~700 | - | Ground, Air | - |
+| Ultimate Gravedigger | 30,000 | Normal | 1,089-1,093 | 0.7 | ~700 | - | Ground, Air | - |
+| Lesser Alchemist | 4,000 | Siege | 254-260 | 2.0 | ~500 | ~250 | Ground, Air | - |
+| Greater Alchemist | 10,000 | Siege | 649-655 | 2.0 | ~500 | ~250 | Ground, Air | - |
+| Ultimate Alchemist | 30,000 | Siege | 1,678-1,686 | 2.0 | ~600 | ~300 | Ground, Air | 125 |
+
+**Corruption (1)** *(Plague Well)* - corrupts creeps hit for **4 sec**; a corrupted creep
+explodes on death for **28 Spell Damage** within a 160 radius.
+
+**Corruption (2)** *(Defiled Fountain)* - 4 sec, **76 Spell Damage** within 160 radius.
+
+**Poison (1)** *(Lesser Gravedigger)* - attacks hit **1 additional target** and apply a stack
+of poison damage equal to **20% of the damage dealt**, up to 10 stacks. At 10 stacks the target
+explodes, dealing the stored damage to **itself** as Spell Damage. A target can only explode
+once every 3 sec; stacks reset on explosion.
+
+**Poison (2)** *(Greater Gravedigger)* - hits **2 additional targets**, stack = **25% of damage
+dealt**, same 10-stack self-explosion.
+
+**Pestilence** *(Ultimate Gravedigger)* - hits **2 additional targets**, stack = **35% of
+damage dealt**. The target explodes at 10 stacks **or when killed**, dealing the stored damage
+as Spell Damage to **creeps within 200 AoE**, not just itself.
+
+**Devour Essence (1)** *(Lesser Alchemist)* - permanently gains **+2 attack damage** per creep
+killed, up to **+100**. The bonus carries over when the tower is upgraded. Once the cap is
+reached, further bonuses go to the closest Unholy (2) tower within 300 AoE.
+
+**Devour Essence (2)** *(Greater Alchemist)* - **+3 per kill**, cap **+200**, same overflow.
+
+**Unholy Concoction** *(Ultimate Alchemist)* - **+5 per kill**, cap **+500**, same overflow.
+Additionally, attacks **alter the armour type of creeps hit for 8 sec** (Goblin Shredder
+included). A given creep can only be altered to a specific armour type once. The armour type
+to apply is chosen manually on the command card and the active choice is displayed there.
+
+## 4.9 Void
+
+- **Path (1): Harbinger** - Voidling -> Voidalisk -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Leviathan** - Voidling -> Voidalisk -> **Lesser** -> Greater -> Ultimate
+
+Void 1 is the teleport/delay line - it drags a creep backwards along the lane and burns a
+percentage of its maximum health. Void 2 is the armour-eating line that grows its own attack
+damage.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Voidling | 200 | Chaos | 40-44 | ~3.0 | 400 | - | Ground, Air | 45 |
+| Voidalisk | 800 | Chaos | 148-152 | ~3.0 | 400 | - | Ground, Air | 45 |
+| Lesser Harbinger | 4,000 | Magic | 353-355 | 1.8 | ~600 | - | Ground, Air | 60 |
+| Greater Harbinger | 10,000 | Magic | 933-935 | 1.8 | 700 | - | Ground, Air | 60 |
+| Ultimate Harbinger | 30,000 | Magic | 2,670-2,672 | 1.8 | ~800 | - | Ground, Air | 60 |
+| Lesser Leviathan | 4,000 | Chaos | 242-244 | 1.6 | ~400 | ~150 | Ground, Air | - |
+| Greater Leviathan | 10,000 | Chaos | 561-563 | 1.6 | ~400 | ~200 | Ground, Air | - |
+| Ultimate Leviathan | 30,000 | Chaos | 1,637-1,639 | 1.6 | ~400 | ~250 | Ground, Air | - |
+
+**Void Growth (1)** *(Voidling)* - regenerates 1 mana/sec and gains 1 mana per attack. At 45
+mana it **transforms a nearby Lesser Archer, Lesser Cutter or Lesser Sentry within 400 radius into
+a Voidling** (falling back to an Archer, Cutter or Sentry if none is found). Triggers once only.
+
+**Void Growth (2)** *(Voidalisk)* - at 45 mana, transforms a nearby **Voidling** within 400
+radius into a Voidalisk. Once only.
+
+**Temporal Rift (1)** *(Lesser Harbinger)* - regenerates 10 mana/sec. At full mana, a
+**random** creep within a 300 AoE is marked; after a 3 sec delay it is returned to its previous
+location and takes **(2% of its maximum health + 300) Spell Damage**. A creep can only be
+affected once every 9 sec, the effect is cancelled if it steals a life, and **50% of the mana
+is refunded if the creep dies during the delay**.
+
+**Temporal Rift (2)** *(Greater Harbinger)* - 3.2 sec delay, **(3% of maximum health + 800)
+Spell Damage**, same rules.
+
+**Whispers of the Void** *(Ultimate Harbinger)* - every **60 sec** a Greater Harbinger within
+500 AoE is converted into an Ultimate Harbinger. At full mana, marks a random creep within 300
+AoE; after a **3.6 sec** delay it is teleported back, taking **(5% of maximum health + 4,250)
+Spell Damage** and being **slowed by 45%, ignoring all slow resistances**. 50% mana refund if
+it dies during the delay.
+
+**Feasting Void (1)** *(Lesser Leviathan)* - attacks **consume 0.17 armour** from targets hit
+(down to 0) and grant the tower **+1.5 attack damage**, up to **+90**. The bonus resets if the
+tower does not attack for 3 sec.
+
+**Feasting Void (2)** *(Greater Leviathan)* - **-0.20 armour** per hit, **+3 attack damage**,
+cap **+200**, same 3 sec idle reset.
+
+**Hungering Void** *(Ultimate Leviathan)* - **-0.27 armour** per hit, **+8 attack damage**, cap
+**+600**. At maximum bonus the tower gains **10% life steal** against its primary target. Same
+3 sec idle reset.
+
+## 4.10 Water
+
+- **Path (1): Hurricane Elemental** - Splasher -> Tidecaller -> **Lesser** -> Greater -> Ultimate
+- **Path (2): Sludge Monstrosity** - Splasher -> Tidecaller -> **Lesser** -> Greater -> Ultimate
+
+Water 1 is the anti-air paralysis line with a Chaos-damage attack modifier; Water 2 is the
+aura-slow line with a periodic stun.
+
+| Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
+| ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
+| Splasher | 200 | Piercing | 12-13 | 1.0 | ~500 | ~75 | Ground, Air | - |
+| Tidecaller | 800 | Piercing | 44-45 | 1.0 | ~500 | ~75 | Ground, Air | - |
+| Lesser Hurricane Elemental | 4,000 | Piercing | 286-288 | 1.2 | ~500 | ~100 | Ground, Air | - |
+| Greater Hurricane Elemental | 10,000 | Piercing | 753-755 | 1.2 | ~500 | 100 | Ground, Air | - |
+| Ultimate Hurricane Elemental | 30,000 | Piercing | 2,322-2,324 | 1.2 | ~500 | 125 | Ground, Air | 100 |
+| Lesser Sludge Monstrosity | 4,000 | Normal | 209-212 | ~1.5 | ~600 | 75 | Ground, Air | - |
+| Greater Sludge Monstrosity | 10,000 | Normal | 561-564 | ~1.5 | ~600 | 75 | Ground, Air | - |
+| Ultimate Sludge Monstrosity | 30,000 | Normal | 1,622-1,625 | ~1.5 | ~600 | 100 | Ground, Air | - |
+
+**Crushing Wave (1)** *(Splasher)* - every 4th attack unleashes a Crushing Wave dealing **12
+Spell Damage** to creeps hit.
+
+**Crushing Wave (2)** *(Tidecaller)* - **44 Spell Damage** every 4th attack.
+
+**Pressuring Water (1)** *(Lesser Hurricane Elemental)* - **50% chance to paralyze a random air
+creep within 400 AoE for 1.5 sec** (9 sec immunity per creep; a paralyzed air creep cannot move
+and can be attacked as though it were a ground creep). **Every 3rd attack is dealt as Chaos
+Physical Damage with a +25% damage bonus.**
+
+**Pressuring Water (2)** *(Greater Hurricane Elemental)* - paralyze 50% for **1.8 sec**; every
+3rd attack Chaos Physical with **+33%**.
+
+**Raging Tempest** *(Ultimate Hurricane Elemental)* - **75% chance to paralyze** a random air
+creep within 400 AoE for **2.5 sec** (9 sec immunity). Gains 3 mana per target hit. **Every 3rd
+attack spends all mana on a forked lightning dealing 2,000 Chaos Physical Damage to up to 1
+target per 10 mana used.**
+
+**Torrent (1)** *(Lesser Sludge Monstrosity)* - creeps within a 400 radius are **slowed by 4.8%
+every 1.5 sec, up to 24%**. Every 3rd attack **stuns the primary target for 1 sec**.
+
+**Torrent (2)** *(Greater Sludge Monstrosity)* - slow **7% every 1.5 sec up to 28%**; stun
+**1.2 sec** every 3rd attack.
+
+**Crippling Decay** *(Ultimate Sludge Monstrosity)* - creeps within a 400 radius take **+10%
+damage from physical attacks** and are **slowed 9% every 1.5 sec up to 36%**. Attacking the
+same target 3 times in a row **stuns it for 1.8 sec**.
+---
+
+# 5. Technology Discs
+
+A disc is a building that occupies exactly one tower footprint and that **creeps walk over**.
+It is used to fill the holes in a maze where a tower would not earn its place, and it pays for
+itself with an aura or an on-step trigger.
+
+## 5.1 Structure and cost
+
+| Tier | Name | Cost | Requirement |
+| ---- | ---- | ---- | ----------- |
+| 0 | Technology Disc (inactive) | 2,500 | none - does nothing |
+| 1 | Technology Disc: *Element* | free morph | that element's **Basic** tech |
+| 2 | Technology Disc: Advanced *Element* | 250,000 | at least **2 of the 3** techs of that element |
+| 3 | Technology Disc: Ultimate *Element* | 1,000,000 | **all 3** techs of that element |
+
+- **A player may own only one Ultimate disc per element** (11.0a). This is the disc equivalent
+  of "you cannot fill the whole maze with the best thing".
+- Morphing a disc back down to the inactive Technology Disc takes **5 seconds** (11.7a raised
+  it from 3, deliberately, to discourage swapping discs on the fly to counter an incoming
+  send).
+- **A disc cannot attack and cannot BE attacked.** Its armour type is `Invulnerable` and it is
+  not a valid target for an attacking creep at all. See 1.8 - this matters for maze design: a
+  wall of discs is a wall an attacker creep cannot chew through.
+
+## 5.2 Disc effects by element
+
+Effects come from the 9.4 disc sheet unless a patch note replaced them, plus the Ultimate-tier
+values supplied for this project (the 9.4 sheet only recorded the base and Advanced tiers).
+
+### Arcane *(reworked in 10.0a)*
+On-step trigger. Whenever a ground creep steps on the disc it takes **+10% Spell Damage and
+cannot benefit from friendly auras** for a duration. Can trigger once per second.
+
+| Tier | Duration |
+| ---- | -------- |
+| Arcane | 12 sec |
+| Advanced Arcane | 20 sec |
+| Ultimate Arcane | 25 sec |
+
+### Earth
+Aura. Friendly towers within **300 AoE** gain attack speed.
+
+| Tier | Attack speed |
+| ---- | ------------ |
+| Earth | +8% |
+| Advanced Earth | +12% |
+| Ultimate Earth | +15% |
+
+### Unholy *(reworked in 11.0a)*
+Aura, attack modifier. Friendly towers within **300 AoE** have their attacks **permanently
+erode the armour of creeps hit**, down to 0.
+
+| Tier | Armour erosion per hit |
+| ---- | ---------------------- |
+| Unholy | -0.05 |
+| Advanced Unholy | -0.067 |
+| Ultimate Unholy | -0.1 |
+
+### Primal *(added in 10.0a)*
+Aura. Friendly towers within **300 AoE** gain attack range.
+
+| Tier | Attack range |
+| ---- | ------------ |
+| Primal | +100 |
+| Advanced Primal | +200 |
+| Ultimate Primal | +250 |
+
+Stacking rule: a weaker Primal disc must not override the range bonus of a nearby stronger one
+(this was a bug fixed in 12.3a, and is a real implementation trap).
+
+### Fire
+On-step trigger. When a ground creep steps on the disc, an explosion damages it for a
+percentage of its **maximum health**. That creep is then immune to every Fire disc for a short
+window, and the disc itself has its own cooldown.
+
+| Tier | Damage | Disc cooldown | Creep immunity |
+| ---- | ------ | ------------- | -------------- |
+| Fire | ~20% of max health | ~30 sec | ~5 sec |
+| Advanced Fire | ~24% of max health | ~30 sec | ~5 sec |
+| Ultimate Fire | 33% of max health | 15 sec | 3.6 sec |
+
+### Ice
+Aura, attack modifier. Friendly towers within **300 radius** have their attacks chill the
+target.
+
+| Tier | Chill per hit | Cap |
+| ---- | ------------- | --- |
+| Ice | ~-1% | ~-20% |
+| Advanced Ice | ~-1.5% | ~-30% |
+| Ultimate Ice | -1.8% | -36% |
+
+### Lightning
+Aura. Friendly towers within **500 AoE** become **static**: they heal for a share of the
+Physical Damage they deal, they return a share of the damage an attacking creep does to them,
+and they have a chance to stun that creep for **2 seconds**.
+
+| Tier | Healing (of Physical Damage dealt) | Return damage | Stun chance |
+| ---- | ---------------------------------- | ------------- | ----------- |
+| Lightning | 1% | 500% | 15% |
+| Advanced Lightning | 1.6% | 750% | ~20% |
+| Ultimate Lightning | 1.75% | 1,000% | 25% |
+
+The return damage is dealt to the creep that attacked the tower, as a multiple of the damage
+that creep just did. The 9.4 sheet's 300% / 350% predate the healing rework of this disc and
+are wrong.
+
+### Holy
+Aura. Friendly towers within **500 radius** gain armour and health regeneration. Only the
+armour scales with tier; the regeneration does not increase past the Advanced tier.
+
+| Tier | Armour | Health regeneration |
+| ---- | ------ | ------------------- |
+| Holy | ~+3 | ~+165% |
+| Advanced Holy | ~+6 | ~+200% |
+| Ultimate Holy | +8 | same as Advanced |
+
+### Void
+Aura. Friendly towers within **300 radius** deal bonus damage, scaled by **how many distinct
+non-disc tower types stand inside the radius**: a fixed amount per unique type, up to a cap.
+This is the "reward a varied maze" disc.
+
+| Tier | Per unique type | Cap |
+| ---- | --------------- | --- |
+| Void | ~+2% | ~+8% |
+| Advanced Void | ~+2% | ~+16% |
+| Ultimate Void | +3% | +24% |
+
+### Water
+Aura. Friendly towers within **300 radius** regenerate mana. That is the whole effect - the
+**whirlpool** in the 9.4 sheet (pull ground creeps to the disc's centre and stun them) has since
+been removed, so do not implement it.
+
+| Tier | Mana regen |
+| ---- | ---------- |
+| Water | 2.0/sec |
+| Advanced Water | 4.0/sec |
+| Ultimate Water | 5.4/sec |
+
+---
+
+# 6. Creeps
+
+## 6.1 How the roster is organised
+
+Creeps have **no upgrades**. They are sorted into four tiers, which are cost brackets and a
+release schedule rather than a power ladder:
+
+| Tier | Unlocks from | Role |
+| ---- | ------------ | ---- |
+| 1 | 00:00 game time | opening economy |
+| 2 | 07:00 game time | mid game |
+| 3 | 14:00 game time | late game |
+| 4 | 25:00 game time (= Sudden Death) | end game |
+
+Within a tier, creeps unlock **one at a time every 30 seconds** in ascending cost order
+(12.0a; it used to be two per minute). So Tier 1's twelfth and last creep is available at
+05:30, Tier 2's at 12:30, Tier 3's at 19:30. Every Tier 4 creep unlocks together at 25:00
+when Sudden Death begins, and **tiers 1-3 can no longer be sent from that moment**.
+
+Tier 4 is special in two ways: the creeps are much stronger for their cost because the game
+is meant to end, and they give **very little income** - and above 4,000,000 income they give
+75% less still. The "Income" column for Tier 4 below shows the normal value with the
+above-4M value in brackets.
+
+**Sending.** One send produces a **pack of 3** creeps for a normal creep and **1** for a boss
+or a large creep. Bosses steal **2 lives** instead of 1. Stock replenishes over time; initial
+stock on unlock is half of maximum.
+
+| Creep kind | Max stock | Replenish |
+| ---------- | --------- | --------- |
+| normal ground | ~32 | ~8 sec |
+| flying | ~16 | ~8 sec |
+| boss | ~8 | ~16 sec |
+| attacker (Corrupted Treant, Siege Engine) | 8 | 16 sec |
+| Tier 4 normal | ~64 | ~4 sec |
+| Mountain Giant | 16 | ~4 sec |
+| Frost Wyrm | ~32 | ~4 sec |
+| Phoenix | ~16 | ~8 sec |
+| Demon | 4 (initial 2) | 32 sec |
+| Treasure Goblin | 16 (initial 8) | 2 sec |
+
+**Food.** Population is charged **per creep, not per send**, so one normal send of 3 costs 3
+food. Every creep in the 9.4 sheet costs **1 food**, bosses included - the Phoenix tooltip
+confirms 1 even though it is a Boss. Two exceptions are recorded in the changelog:
+
+| Creep | Food |
+| ----- | ---- |
+| Obsidian Statue | 3 |
+| Demon | 5 |
+
+There are no other exceptions. The default food cap is 100 and is a game-mode setting.
+
+## 6.2 Tier 1
+
+| Creep | Unlock | Cost | Income | Bounty | HP | Armour | Type | Speed | Sent | Traits |
+| ----- | ------ | ---- | ------ | ------ | -- | ------ | ---- | ----- | ---- | ------ |
+| Sheep | 00:00 | 10 | 2 | 0 | ~2 | 0 | Unarmored | 210 | 2 Sheep + 1 Timber Wolf | Fast Producing |
+| Skeleton Warrior | 00:30 | 25 | 4 | 2 | 12 | ~0 | ~Medium | 210 | 3 | Death Pact (1) |
+| Acolyte | 01:00 | 40 | ~5 | ~4 | 26 | ~0 | ~Heavy | 240 | 3 | Unholy Sacrifice (1) |
+| Forest Spider | 01:30 | ~50 | ~6 | 4 | 48 | ~1 | ~Unarmored | 270 | 3 | Skittering |
+| Swordsman | 02:00 | ~70 | ~8 | 5 | 77 | ~1 | ~Medium | 240 | 3 | Devotion Aura (1) |
+| Fel Orc Grunt | 02:30 | ~100 | ~11 | 7 | 70 | ~2 | ~Heavy | 270 | 3 | Fel Blood |
+| Vile Temptress | 03:00 | ~150 | ~16 | 10 | 118 | ~2 | ~Light | 280 | 3 | Endurance Aura (1) |
+| Shade | 03:30 | 225 | 23 | 14 | 110 | ~0 | ~Unarmored | ~150 | 3 | Flying |
+| Mud Golem | 04:00 | 400 | 40 | ~23 | 238 | ~2 | ~Fortified | 280 | 3 | Lesser Spell Resistance |
+| Priest | 04:30 | 600 | 58 | 35 | 290 | 2 | Light | 270 | 3 | Regen Aura (1) |
+| Corrupted Treant | 05:00 | ~750 | 50 | 90 | 265 | ~2 | ~Fortified | ~270 | 3 | **Attacker** |
+| Rot Golem | 05:30 | ~1,000 | 92 | 150 | 1,325 | ~5 | ~Hero | ~270 | **1** | Boss (1) |
+
+**Timber Wolf** is not sendable on its own. It only exists as part of the Sheep pack:
+6 HP, 0 Light armour, 230 speed, 2 bounty. Its old sendable form, *Frost Wolf*, was removed
+in 10.0a.
+
+## 6.3 Tier 2
+
+| Creep | Unlock | Cost | Income | Bounty | HP | Armour | Type | Speed | Sent | Traits |
+| ----- | ------ | ---- | ------ | ------ | -- | ------ | ---- | ----- | ---- | ------ |
+| Knight | 07:00 | ~1,000 | 95 | ~48 | 690 | ~2 | ~Medium | 310 | 3 | Armored (1) |
+| Vengeful Spirit | 07:30 | ~2,250 | 208 | ~106 | 1,080 | ~2 | Light | ~290 | 3 | Death Pact (2) |
+| Forest Troll | 08:00 | ~4,000 | 360 | ~190 | 2,050 | ~2 | Unarmored | ~420 | 3 | Skittering |
+| Wyvern | 08:30 | ~7,500 | 657 | ~356 | 2,195 | ~2 | ~Medium | ~160 | 3 | Flying |
+| Voidwalker | 09:00 | ~10,000 | ~850 | ~463 | 4,130 | ~3 | ~Heavy | ~250 | 3 | Regen Aura (1), Chaotic Void |
+| Faceless One | 09:30 | ~12,500 | ~1,031 | ~579 | 6,435 | ~3 | ~Heavy | ~310 | 3 | Endurance Aura (2) |
+| Dragonspawn | 10:00 | ~15,000 | ~1,200 | ~694 | 7,695 | ~3 | ~Medium | ~450 | 3 | Spell Resistance |
+| Sea Turtle | 10:30 | ~20,000 | ~1,550 | ~926 | 10,085 | ~4 | ~Fortified | ~285 | 3 | Devotion Aura (2) |
+| Banshee | 11:00 | ~30,000 | ~2,175 | ~1,354 | 7,860 | ~4 | ~Unarmored | 180 | 3 | Flying, Unholy Sacrifice (2) |
+| Kobold Geomancer | 11:30 | 60,000 | 4,200 | 2,700 | 31,430 | ~4 | ~Light | ~330 | 3 | Regen Aura (2) |
+| Siege Engine | 12:00 | 75,000 | 3,750 | 7,312 | 28,800 | ~4 | ~Fortified | ~200 | 3 | **Attacker (2)**, Bombardment |
+| Infernal | 12:30 | ~100,000 | 5,000 | 13,500 | 74,255 | ~10 | ~Hero | ~410 | **1** | Boss (2), Spell Resistance |
+
+Siege Engine attack damage: **44-52**. Bombardment fires a rocket at a random tower within
+400 radius every 4 sec.
+
+## 6.4 Tier 3
+
+| Creep | Unlock | Cost | Income | Bounty | HP | Armour | Type | Speed | Sent | Traits |
+| ----- | ------ | ---- | ------ | ------ | -- | ------ | ---- | ----- | ---- | ------ |
+| Death Revenant | 14:00 | ~100,000 | 5,000 | ~4,038 | 39,400 | ~5 | ~Heavy | 340 | 3 | Death Pact (3) |
+| Satyr Shadowdancer | 14:30 | ~125,000 | 6,250 | ~5,046 | 62,250 | ~5 | Medium | 350 | 3 | Endurance Aura (3), Armored (2) |
+| Crypt Fiend | 15:00 | ~150,000 | 7,125 | ~5,700 | 83,405 | ~5 | ~Unarmored | ~475 | 3 | Skittering, Ethereal Aura |
+| Necromancer | 15:30 | 175,000 | 8,312 | 7,000 | 121,800 (146,160 effective) | 0 (5 converted) | Light | 320 | 3 | Bone Shield, Unholy Sacrifice (3) |
+| Spirit Walker | 16:00 | 200,000 | 9,000 | 7,500 | 93,675 | 6 | ~Medium | ~150 | 3 | Spiritual Aid, Ethereal |
+| Ancient Wendigo | 16:30 | ~225,000 | 10,125 | ~8,015 | 222,915 | 80 | ~Fortified | ~290 | 3 | Hardened Skin, Regen Aura (3) |
+| Shaman | 17:00 | 250,000 | 10,625 | 8,750 | 185,085 | 8 | ~Unarmored | ~350 | 3 | Elemental Warding, Wind Rush |
+| Abomination | 17:30 | 275,000 | 11,687 | 9,625 | 231,850 | 10 | ~Heavy | ~500 | 3 | Regenerative Flesh |
+| Gryphon Rider | 18:00 | 300,000 | 12,000 | 9,750 | 92,450 | 8 | ~Light | 250 | 3 | Flying, Devotion Aura (3) |
+| Ogre Magi | 18:30 | ~350,000 | 14,000 | ~10,806 | 240,785 | 10 | ~Medium | ~370 | 3 | Earth Shield |
+| Chaos Wardens | 19:00 | ~400,000 | ~16,000 | ~11,400 | 246,355 | 12 | ~Light | 440 | 3 | Chaos Barrier, Mana Drain |
+| Behemoth | 19:30 | ~500,000 | ~20,000 | ~15,000 | 546,865 | 16 | ~Hero | ~360 | **1** | Boss (3), Major Spell Resistance, Abyssal Carapace |
+
+Notes:
+
+- **Necromancer** converts its base armour into maximum health: 4% of max health per armour
+  point. It ends up with 0 effective armour and +20% health, so 121,800 base becomes 146,160.
+- **Ancient Wendigo**'s armour is not a typo. Hardened Skin starts it at 80 armour, and every
+  50 physical damage taken strips 1 point, down to a floor of 6.
+- **Behemoth**'s Abyssal Carapace converts 90% of its maximum health into a damage absorption
+  shield on spawn, so its visible health bar is a tenth of the number above. The 9.4 sheet
+  recorded the post-carapace figure (54,736), which is why the two look so different.
+
+## 6.5 Tier 4 - Sudden Death
+
+Every Tier 4 creep unlocks at **25:00**. Income shown as `normal (above 4M income)`.
+
+| Creep | Cost | Income | Bounty | HP | Armour | Type | Speed | Sent | Traits |
+| ----- | ---- | ------ | ------ | -- | ------ | ---- | ----- | ---- | ------ |
+| Huntress | 500,000 | 10,000 (2,500) | 15,000 | 246,500 | 13 | ~Unarmored | 460 | 3 | Elune's Grace, Quickness, Skittering |
+| Obsidian Statue | 600,000 | 12,000 (3,000) | 54,000 | 1,111,025 | 20 | ~Fortified | ~200 | **1** | Power of the Destroyer (food 3), Annihilation Aura, Exhume Ghouls |
+| Mountain Giant | 600,000 | 0 | 36,000 | 282,470 | 15 | ~Fortified | 290 | 3 | **Attacker**, Stoneskin Fortitude, Blocked |
+| Harpy Windwitch | 700,000 | 14,000 (3,500) | 21,000 | 158,715 | 9 | Light | 460 | 3 | Flying, Wicked Curse |
+| Naga Siren | 800,000 | 16,000 (4,000) | 24,000 | 328,965 | 12 | Unarmored | 320 | 3 | Regen Aura (4), Siren's Song |
+| Kodo Beast | 800,000 | 16,000 (4,000) | 24,000 | 286,285 | 14 | ~Heavy | 270 | 3 | Endurance Aura (4), Devotion Aura (4), War Stance |
+| Goblin Shredder | 1,000,000 | 20,000 (5,000) | 33,000 | 802,720 | 16 | ~Medium | 400 | 3 | Goblin Engineering, Reactive Armor |
+| Frost Wyrm | 1,500,000 | 30,000 (7,500) | 45,000 | 486,310 | 16 | ~Heavy | 320 | 3 | Flying, Unholy Sacrifice (4) |
+| Phoenix | 3,000,000 | 0 | 150,000 | 782,700 | 20 | ~Hero | 220 | **1** | Boss (4), Flying, **Attacker**, Volatile Death, Legendary Spell Resistance, Dive |
+| Demon | 4,200,000 | 0 | 0 | 1,098,835 | 50 | Hero | 260 | **1** | Boss (5) - steals 2 lives, Unfathomable Power (invulnerable, food 5) |
+| Treasure Goblin | 333,333 | 15,625 | 30,000 | - | - | - | - | 3 | Escape Portal |
+
+**Treasure Goblin** is the odd one out: it cannot steal lives and is removed the moment it
+takes any damage, giving its bounty to whoever hit it. It is a pure income accelerator, and
+it **cannot be used at all above 4,000,000 income** (the gold spent is refunded). Eight
+Treasure Goblins are worth +125,000 income.
+
+**Demon** is the last-resort stalemate breaker: invulnerable, ignores friendly auras, costs
+5 food, and unlocks with Sudden Death. It cannot be killed, so it always steals its 2 lives -
+but it is slow, expensive, has a max stock of 4, and replenishes only once every 32 seconds.
+
+**Attacking creeps** are Corrupted Treant, Siege Engine, Mountain Giant and Phoenix. Their
+initial stock is 1, and what they can and cannot target is in section 1.5 - towers only, never
+a disc and never the builder.
+
+Phoenix bounty is contradictory in the sources - 10.0a sets it to 270,000 but 10.7a says
+"changed from 147,270 to 150,000" - and 150,000 is the correct one. Its speed of 220 is
+confirmed by an in-game tooltip.
+
+## 6.6 Creep trait glossary
+
+Numbered traits are the same effect at increasing strength.
+
+| Trait | Effect |
+| ----- | ------ |
+| Flying | Flies over towers; can only be hit by towers that target air. On the Phoenix this is merged with Attacker into a single "Flying Attacker" tooltip. |
+| Attacker | Attacks towers and tries to destroy them; destroyed towers leave rubble for 7 sec. |
+| Skittering | Never draws tower attention; always targeted last. |
+| Boss (n) | Sent as 1 strong creep with higher base stats. Steals **2 lives** instead of 1. |
+| Fast Producing | Stock replenishes faster than other creep types. |
+| Death Pact (1/2/3) | Returns to life 1.5 sec after being killed, once, at 33% / 50% / 75% health. |
+| Devotion Aura (1/2/3/4) | +1 / +3 / +4 / +5 armour to allied creeps within 700 AoE. |
+| Endurance Aura (1/2/3/4) | +10% / +15% / +20% / (+30% attack speed, +25% move speed) within 700 AoE. |
+| Regen Aura (1/2/3/4) | +2 to +6 / +10 / +30 / +120 health regeneration per sec within 700 AoE. Replaced the old Ancient Aura in 10.0a. |
+| Unholy Sacrifice (1/2/3/4) | On death, heals nearby allied creeps for 3 / 310 / 4,875 / 12,750. |
+| Armored (1/2) | Physical **splash** damage taken reduced by 10% / 20%. |
+| Lesser Spell Resistance | Spell Damage -33%, harmful spell durations -75%, 50% immune to movement chill. |
+| Spell Resistance | Spell Damage -50%, harmful spell durations -90%, 50% immune to movement chill. |
+| Major Spell Resistance | Spell Damage -66%, harmful spell durations -50%. |
+| Bone Shield | Spell Damage -75%, 100% slow resistance, harmful spell durations -50%, converts base armour into 4% max health per point. |
+| Legendary Spell Resistance | Spell Damage -75%, full slow immunity, immune to durational harmful spell effects. |
+| Fel Blood | +3 health regeneration per sec. |
+| Ethereal | Can walk **through towers**; increased health regeneration. |
+| Ethereal Aura | Permanently +2 armour to a random creep within 700 radius every 6 sec. |
+| Hardened Skin | Very high base armour; every 50 physical damage taken removes 1 armour, down to 6. |
+| Chaotic Void | Any damage taken gives +1 mana; at 26 mana heals 5% of maximum health and resets. |
+| Spiritual Aid | At full mana (6), heals a creep within 500 for 1% of its max health (cap 2,000) and grants +1 armour, up to 12. |
+| Elemental Warding | Gains **70%** damage resistance against whichever damage type has dealt it the most damage. Can swap resistance once every 3 sec. |
+| Wind Rush | At full mana (14, starting at 10), grants a creep within 400 AoE +40% movement speed for 3 sec; slower creeps are prioritised. |
+| Regenerative Flesh | Harmful slow durations -65% (max 1.4 sec); +2.4 health regen per missing health percentage, capped at 240/sec; at 50% health the current slow percentage is halved, once. |
+| Earth Shield | Every 14 sec shields a creep within 400 radius, removing chill/slow and healing 10% of max health over 12 sec. Also removes Ultimate Lich's Frostbite. |
+| Chaos Barrier | Damage taken is reduced based on current mana percentage. Loses 5% mana every sec. Maximum mana 100. |
+| Mana Drain | At 0 mana, drains 33% of a tower's mana within 180 AoE and gains 500% of the amount, up to a maximum of 75 mana. Can only trigger on the same tower once every 7 sec. |
+| Abyssal Carapace | On spawn, 90% of maximum health is converted into a damage absorption shield. |
+| Elune's Grace | 15 sec invulnerability shield the first time damage is taken (once), plus a 5 sec shield at 50% health. |
+| Quickness | 50% chance to dodge attacks from towers with 900 or more attack range. |
+| Blocked | Attack damage -8% for every Mountain Giant within 200 AoE (no effect at 3 or fewer), capped at -50%. |
+| Stoneskin Fortitude | 100% resistance to slow effects. |
+| Goblin Engineering | Cannot be chilled or slowed by more than 25%. |
+| Reactive Armor | Damage above 1,000 reduced by 75%; damage above 300 reduced by 95%. |
+| Wicked Curse | On death, curses up to 3 towers within 200 AoE for 10 sec, reducing their attack speed by 30%. |
+| Siren's Song | Any damage taken gives +1 mana. At full mana (50) gains +50 maximum mana and heals 15% of max health; creeps within 300 AoE recover 1.6 armour if below their base armour, once per creep per 5 sec. |
+| War Stance | At 30% health, gains Hero armour type, +7 armour, and an aura giving creeps within 2,000 AoE +20% attack damage. |
+| Annihilation Aura | Towers within 300 AoE deal 15% less attack damage. |
+| Exhume Ghouls | Spawns 3 Ghouls (119,075 HP each) on death. Formerly "Aphotic Chant"; the spawned creep used to be an Essence of Blight. |
+| Volatile Death | On death, deals 1,000 Physical Damage to towers within 250 AoE. |
+| Dive *(active)* | Phoenix dives forward and back in an arc up to 700 distance in the targeted direction, dealing **150 Spell Damage per sec for 4 sec**. 16 sec cooldown. The dive can be stopped with the stop ability; **if stopped, the Phoenix regenerates its armour to full**. |
+| Unfathomable Power | Invulnerable, ignores friendly auras, food cost 5. |
+| Escape Portal | Cannot steal lives, is removed once damaged, and gives its bounty to whoever damaged it. |
+
+## 6.7 Abilities removed from creeps
+
+Listed because they appear all over the 9.4 sheet and must **not** be implemented:
+
+| Removed ability | Removed in | Why |
+| --------------- | ---------- | --- |
+| Dash (1-5) | 12.0a | Turn-rate bonus was hard to read; all ground creeps now share the default turn rate. Base movement speed values are unchanged. |
+| Geomancy Aura (1/2) | 12.0a | Too hard to judge its strength in play. Armour values of the affected creeps were raised instead. |
+| Necrotic Transfusion | 12.0a | Only on Death Revenant; too RNG-driven. (The Frost Wyrm version went in 10.6a.) |
+| Shadowdance | 12.0a | Only on Satyr Shadowdancer; visually impossible to follow. |
+| Ancient Aura (1/2) | 10.0a | Replaced by Regen Aura. |
+| Lingering Void Aura | 11.5a | Tower attack-speed reduction on a Tier 1 creep was out of place. |
+| Engine Overload | 11.0a | Goblin Shredder's static burst; the effect moved to Harpy Windwitch's Wicked Curse. |
+| Hypothermia | 11.0a | Kodo Beast (then War Beast) extra-slow vulnerability. |
+| Enduring Chill | 11.6a | Frost Wyrm slow-shedding on damage. |
+| Secret Technique | 11.7a | Chaos Warden's 50% dodge vs short-range towers. Health raised to compensate. |
+| Primordial Flux | 11.5a | Shaman mana gain from being slowed. |
+
+12.0a also capped how many abilities a creep may carry, which is a useful design constraint
+to keep: **Tier 1 at most 1, Tier 2 at most 1 (2 on the later ones), Tier 3 at most 2 (3 on
+the later ones), Tier 4 at most 3.**
+---
+
+# 7. Open questions
+
+Everything marked `?` above, gathered in one place. Nothing here was guessed at in the tables;
+each is either missing from all four source files or contradictory between them.
+
+**Nothing here blocks implementation.** Every value needed to author a tower, creep or disc is
+now decided. What follows is the audit trail: source conflicts that were resolved, and values
+that are correct-but-inherited and could in principle be stale.
+
+## 7.1 Source conflicts, resolved
+
+1. **Phoenix bounty**: 10.0a sets 270,000, 10.7a says "changed from 147,270 to 150,000".
+   **150,000** is correct.
+2. **Ultimate Scorpion's tech requirement** is **Ice (1)**, even though 10.0a says it was moved
+   off Ice (1) onto Lightning (2). It was moved back with no patch note.
+3. **Shock Particle's ability.** The 9.4 sheet lists "Arcanize (2)", which belongs to the
+   Sorcerer. The changelog treats it as carrying Overcharge (1). Used Overcharge (1).
+4. **Elemental Core "total cost" of 1,000** in the 9.4 sheet, against its 200g price.
+5. **The Arcane Orb line's maximum mana.** Shown as 100 throughout, inferred from the drain
+   rates in the ability text; no source states it.
+6. **The Carver branch's target types.** The 9.4 sheet has Lesser Carver hitting Ground only
+   while every tier above it hits Ground and Air. Probably a sheet slip.
+7. **Chains that break inside the logged period.** A handful of patch notes quote a "changed
+   from" value that does not match the result of the previous note, which means a silent change
+   happened in between. The clearest cases are Holy Lantern (10.5a leaves it at 28-29, 11.5a
+   says "from 33-35"), Lesser Titan Vault (11.3a leaves 95-96, 11.5a says "from 94-95"),
+   Ultimate Lich (11.3a leaves 901-905, 11.6a says "from 901-951"), Ultimate Firelord's splash
+   and Greater Harbinger's damage. In every case the *result* of the later note is what this
+   document carries, so the current values are still right - but it means the changelog is not
+   a complete record even after 10.0a.
+
+## 7.2 Values inherited from 9.4 that may be stale
+
+Every `~` in this document. They are not errors - they are values no patch note touched between
+10.0a and 12.4a, so they are correct unless they were changed in 9.5 or 9.6, whose patch notes
+no longer exist. The riskiest cluster is the **Basic towers**, because 10.0a's own patch notes
+prove that the anti-air branch had its damage changed during that window (10.0a's "changed
+from" values do not match the 9.4 sheet).
+
+Also unrecorded anywhere and therefore absent from this document: **hotkeys and command card
+positions** for towers and creeps (only scattered fragments appear in the changelog), and
+**projectile speeds** (a long list of them was normalised to 1200 in 10.4a, but the full
+per-tower table is not in the sources).
+
+## 7.3 A note on in-game tooltips as a source
+
+Tooltips read straight out of a running game are the best way to close gaps like these, and
+three have been used here: the Chaos Wardens creep, the Phoenix, and the Technology Disc:
+Lightning. They are authoritative for **text, mechanics and effects** - the Lightning disc's
+healing and the fact that discs are Invulnerable both came from one, and neither is in any
+source file.
+
+Their **numbers** still need checking against the changelog, because a screenshot is a snapshot
+of whatever build it was taken in. The three used here were captured in **12.2a**: the Chaos
+Wardens tooltip shows 236,880 health, which 12.3a raised to 246,355, and the Phoenix tooltip
+shows 759,905 health, which 12.4a raised to 782,700. Both tables in this document carry the
+12.4a values.
+
+---
+
+# 8. Keeping this document current
+
+## 8.1 The intended relationship to the resources
+
+Once a unit is implemented, its `.tres` resource is the authority and this file is a
+human-readable mirror of it. That is the only arrangement that does not rot: a number
+written in two places diverges the first time one of them is edited.
+
+## 8.2 Making it generated rather than hand-maintained - yes, this is worth doing
+
+It is straightforward, and it fits how this project is already built. The stats already live
+in typed resources (`UnitStats`, `BuildingStats`, `CreepStats`, `AttackStats`,
+`UnitAbility`), each keyed by an authored id, and `ContentConfig` already names the folders
+to scan - which is exactly what a generator needs.
+
+Proposed shape:
+
+- A tool script under `Scripts/Dev` (or an `EditorScript`) run headless, that scans the
+  content folders the same way the unit-type registry does, and writes the stat tables into
+  this file between marker comments:
+
+      <!-- GENERATED:towers:begin -->
+      ... table rendered from the .tres files ...
+      <!-- GENERATED:towers:end -->
+
+- Everything outside the markers - the prose, the upgrade paths, the ability descriptions,
+  the open questions - stays hand-written and survives regeneration.
+- Run it from the same place `Main._validate_content` runs, or as a manual step before a
+  commit. It can double as a content check: a tower in this document with no matching
+  `unit_type_id` is either unimplemented or misnamed.
+
+Until enough content exists for that to be worth writing, this file is maintained by hand,
+and the rule is: **change the `.tres`, then change the row here in the same commit.**
+
+## 8.3 Scope note
+
+Per the CLAUDE.md rule against writing counts and live values into markdown, this file is a
+deliberate exception alongside `game_rules.md`, on the same grounds: these numbers *are* the
+design being copied, not a restatement of what the code happens to do. No other `.md` in the
+project should grow a stats table.

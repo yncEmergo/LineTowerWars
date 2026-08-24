@@ -29,6 +29,7 @@ disagree the more specific wins.
 | File | Contents |
 | --- | --- |
 | [game_rules.md](game_rules.md) | The game design: economy, creeps, towers, lives, win condition. **The authority on rules.** Says which of them are built. |
+| [unit_data.md](unit_data.md) | Every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, which the prototype copies. Stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferenceFilesFromOtherProjects/LineTowerWarsData/`. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
 | [multiplayer.md](multiplayer.md) | The multiplayer decisions (D1–D26), the architecture they imply, the roadmap, and what each step actually took. The long one. |
 | [server.md](server.md) | How to start, stop and aim the dedicated server. Controls only. |
