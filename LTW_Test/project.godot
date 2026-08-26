@@ -16,12 +16,12 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 Net="*res://Scripts/Multiplayer/NetworkService.gd"
 MatchStart="*res://Scripts/Multiplayer/MatchStartService.gd"
 Lobby="*res://Scripts/Multiplayer/LobbyService.gd"
 Commands="*res://Scripts/Multiplayer/CommandService.gd"
 Replication="*res://Scripts/Multiplayer/ReplicationService.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
