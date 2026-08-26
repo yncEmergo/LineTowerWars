@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Minimap.gd" id="1_minimap"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_minimap"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.08, 0.09, 0.12, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_top_right = 4
+
+[node name="Minimap" type="PanelContainer"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -200.0
+offset_right = 200.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_minimap")
+
+[node name="View" type="Control" parent="."]
+layout_mode = 2
+clip_contents = true
+script = ExtResource("1_minimap")

@@ -2,13 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="1_model"]
 [ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="2_spin"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
-albedo_color = Color(0.24, 0.24, 0.26, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_base"]
-material = SubResource("StandardMaterial3D_base")
-size = Vector3(0.84, 0.34, 0.84)
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="3_foundation"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_post"]
 albedo_color = Color(0.45, 0.45, 0.48, 1)
@@ -39,16 +33,14 @@ size = Vector3(0.94, 0.09, 0.14)
 [node name="GrinderTowerModel" type="Node3D"]
 script = ExtResource("1_model")
 
-[node name="Base" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
-mesh = SubResource("BoxMesh_base")
+[node name="Base" parent="." instance=ExtResource("3_foundation")]
 
 [node name="Post" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.51, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
 mesh = SubResource("CylinderMesh_post")
 
 [node name="Spinner" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
 
 [node name="Blade" type="MeshInstance3D" parent="Spinner"]
 mesh = SubResource("CylinderMesh_blade")

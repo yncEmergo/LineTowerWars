@@ -1,13 +1,7 @@
 [gd_scene format=3 uid="uid://c52d7s2p3e2e6"]
 
 [ext_resource type="Script" uid="uid://c4n4md5kn88mh" path="res://Scripts/Units/UnitModel.gd" id="1_model"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
-albedo_color = Color(0.42, 0.44, 0.5, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_base"]
-material = SubResource("StandardMaterial3D_base")
-size = Vector3(0.86, 0.25, 0.86)
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="2_foundation"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_turret"]
 albedo_color = Color(0.62, 0.55, 0.32, 1)
@@ -18,13 +12,11 @@ top_radius = 0.2
 bottom_radius = 0.28
 height = 0.75
 
-[node name="BasicTowerModel" type="Node3D" unique_id=1413814011]
+[node name="BasicTowerModel" type="Node3D"]
 script = ExtResource("1_model")
 
-[node name="Base" type="MeshInstance3D" parent="." unique_id=1635369951]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
-mesh = SubResource("BoxMesh_base")
+[node name="Base" parent="." instance=ExtResource("2_foundation")]
 
-[node name="Turret" type="MeshInstance3D" parent="." unique_id=1614614641]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+[node name="Turret" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
 mesh = SubResource("CylinderMesh_turret")

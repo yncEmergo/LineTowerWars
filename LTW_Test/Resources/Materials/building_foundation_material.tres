@@ -1,0 +1,23 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://i3qdv0mlug0u"]
+
+[ext_resource type="Shader" uid="uid://ba6umc1frynk2" path="res://Resources/Shaders/building_foundation.gdshader" id="1_foundation"]
+
+[resource]
+render_priority = -1
+shader = ExtResource("1_foundation")
+shader_parameter/stone_color = Color(0.78601825, 0.7704931, 0.7300144, 1)
+shader_parameter/stone_dark_color = Color(0.7125541, 0.6944072, 0.6544465, 1)
+shader_parameter/crack_color = Color(0.5261449, 0.50341433, 0.45795637, 1)
+shader_parameter/rim_color = Color(0.5406433, 0.5101229, 0.4534673, 1)
+shader_parameter/squareness = 0.84
+shader_parameter/radius = 0.7
+shader_parameter/edge_softness = 0.035
+shader_parameter/edge_noise = 0.08
+shader_parameter/edge_noise_scale = 6.0
+shader_parameter/rim_width = 0.13
+shader_parameter/blotch_scale = 3.0
+shader_parameter/crack_scale = 4.0
+shader_parameter/crack_width = 0.09
+shader_parameter/crack_strength = 0.35
+shader_parameter/opacity = 0.3499999921768
+shader_parameter/preview_tint = Color(0, 0, 0, 0)

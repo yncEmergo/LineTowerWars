@@ -1,0 +1,200 @@
+[gd_scene format=3 uid="uid://bo2fa6m0p0uce"]
+
+[ext_resource type="Script" uid="uid://cjvgxgqp2yvm" path="res://Scripts/UI/SelectionBoxOverlay.gd" id="1_selection_box"]
+[ext_resource type="PackedScene" uid="uid://blfftwryikbwo" path="res://Scenes/UI/unit_panel.tscn" id="2_unit_panel"]
+[ext_resource type="Script" uid="uid://cqjqej3lral7e" path="res://Scripts/UI/MatchStatusBar.gd" id="3_status_bar"]
+[ext_resource type="Texture2D" uid="uid://cht2c4h7xacq" path="res://2DArt/UI/Icons/stat_gold.png" id="4_c6esv"]
+[ext_resource type="Script" uid="uid://b76phvckprwr1" path="res://Scripts/UI/PlayerStatsPanel.gd" id="4_player_stats"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
+[ext_resource type="Texture2D" uid="uid://bb1sxtbxor6sj" path="res://2DArt/UI/Icons/stat_player.png" id="7_stat_player"]
+[ext_resource type="Texture2D" uid="uid://bdq0ogm6osuay" path="res://2DArt/UI/Icons/stat_life.png" id="8_stat_life"]
+[ext_resource type="Texture2D" uid="uid://bglm4ehnvx88i" path="res://2DArt/UI/Icons/stat_income.png" id="9_stat_income"]
+[ext_resource type="Texture2D" uid="uid://cp1ut6f541ggp" path="res://2DArt/UI/Icons/stat_value.png" id="10_stat_value"]
+[ext_resource type="Texture2D" uid="uid://cn735mrtrwki0" path="res://2DArt/UI/Icons/stat_placement.png" id="11_stat_placement"]
+[ext_resource type="Texture2D" uid="uid://bb3cr34v8tgyv" path="res://2DArt/UI/Icons/stat_population.png" id="12_stat_population"]
+[ext_resource type="Texture2D" uid="uid://cgwo0gw0q1cjy" path="res://2DArt/UI/Icons/stat_timer.png" id="13_stat_timer"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.08, 0.09, 0.12, 0.94)
+border_width_left = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c6esv"]
+content_margin_left = 5.0
+content_margin_top = 10.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.08, 0.09, 0.12, 0.94)
+border_width_left = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_bottom_left = 4
+
+[node name="MatchHUD" type="CanvasLayer" unique_id=1200918478]
+
+[node name="SelectionBox" type="Control" parent="." unique_id=478782438]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_selection_box")
+
+[node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
+
+[node name="MatchStatusBar" type="PanelContainer" parent="." unique_id=1375302278 node_paths=PackedStringArray("_gold_label", "_population_label", "_income_label", "_gold_icon", "_population_icon", "_timer_icon")]
+custom_minimum_size = Vector2(0, 40)
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -186.5
+offset_right = 186.5
+offset_bottom = 40.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_status_bar")
+script = ExtResource("3_status_bar")
+_gold_label = NodePath("Row/Gold/GoldLabel")
+_population_label = NodePath("Row/Population/PopulationLabel")
+_income_label = NodePath("Row/Timer/IncomeLabel")
+_gold_icon = NodePath("Row/Gold/GoldIcon")
+_population_icon = NodePath("Row/Population/PopulationIcon")
+_timer_icon = NodePath("Row/Timer/TimerIcon")
+
+[node name="Row" type="HBoxContainer" parent="MatchStatusBar" unique_id=946909984]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Gold" type="HBoxContainer" parent="MatchStatusBar/Row" unique_id=170611023]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="GoldIcon" type="TextureRect" parent="MatchStatusBar/Row/Gold" unique_id=1105719252]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+tooltip_text = "Gold"
+texture = ExtResource("4_c6esv")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldLabel" type="Label" parent="MatchStatusBar/Row/Gold" unique_id=482933456]
+custom_minimum_size = Vector2(78, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
+
+[node name="Population" type="HBoxContainer" parent="MatchStatusBar/Row" unique_id=1766654036]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="PopulationIcon" type="TextureRect" parent="MatchStatusBar/Row/Population" unique_id=1192472149]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+tooltip_text = "Living creeps against the population cap"
+texture = ExtResource("12_stat_population")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PopulationLabel" type="Label" parent="MatchStatusBar/Row/Population" unique_id=258730600]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0 / 100"
+vertical_alignment = 1
+
+[node name="Timer" type="HBoxContainer" parent="MatchStatusBar/Row" unique_id=1420748392]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="TimerIcon" type="TextureRect" parent="MatchStatusBar/Row/Timer" unique_id=797112731]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+tooltip_text = "Time until the next income"
+texture = ExtResource("13_stat_timer")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IncomeLabel" type="Label" parent="MatchStatusBar/Row/Timer" unique_id=1589084116]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0s"
+vertical_alignment = 1
+
+[node name="PlayerStatsPanel" type="PanelContainer" parent="." unique_id=1233856371 node_paths=PackedStringArray("_row_list", "_height_source")]
+custom_minimum_size = Vector2(0, 40)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -312.0
+offset_bottom = 38.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_c6esv")
+script = ExtResource("4_player_stats")
+_row_list = NodePath("Column/RowList")
+_height_source = NodePath("../MatchStatusBar")
+_row_scene = ExtResource("5_stat_row")
+
+[node name="Column" type="VBoxContainer" parent="PlayerStatsPanel" unique_id=1430475734]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Header" type="HBoxContainer" parent="PlayerStatsPanel/Column" unique_id=1440881794]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NameIcon" type="TextureRect" parent="PlayerStatsPanel/Column/Header" unique_id=306448475]
+custom_minimum_size = Vector2(110, 18)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Player"
+texture = ExtResource("7_stat_player")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="LifeIcon" type="TextureRect" parent="PlayerStatsPanel/Column/Header" unique_id=1827634352]
+custom_minimum_size = Vector2(32, 18)
+layout_mode = 2
+tooltip_text = "Life"
+texture = ExtResource("8_stat_life")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IncomeIcon" type="TextureRect" parent="PlayerStatsPanel/Column/Header" unique_id=983395756]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Income"
+texture = ExtResource("9_stat_income")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValueIcon" type="TextureRect" parent="PlayerStatsPanel/Column/Header" unique_id=1993988674]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Value  (gold spent on towers)"
+texture = ExtResource("10_stat_value")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlacementIcon" type="TextureRect" parent="PlayerStatsPanel/Column/Header" unique_id=903959260]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Placement"
+texture = ExtResource("11_stat_placement")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RowList" type="VBoxContainer" parent="PlayerStatsPanel/Column" unique_id=324205862]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Minimap" parent="." instance=ExtResource("14_minimap")]
+
+[node name="GameMenu" parent="." unique_id=1407213534 instance=ExtResource("6_game_menu")]

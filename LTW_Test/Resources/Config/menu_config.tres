@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="MenuConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="MenuConfig" format=3 uid="uid://c3omktbk173rd"]
 
-[ext_resource type="Script" path="res://Scripts/Config/MenuConfig.gd" id="1_menu_config"]
+[ext_resource type="Script" uid="uid://bpf1rlh1n5nlt" path="res://Scripts/Config/MenuConfig.gd" id="1_menu_config"]
 
 [resource]
 script = ExtResource("1_menu_config")
@@ -9,13 +9,4 @@ lobby_browser_scene_path = "res://Scenes/UI/Menus/lobby_browser.tscn"
 lobby_room_scene_path = "res://Scenes/UI/Menus/lobby_room.tscn"
 game_scene_path = "res://Scenes/Main.tscn"
 match_loading_scene_path = "res://Scenes/UI/Menus/match_loading.tscn"
-game_title = "LINE TOWER WARS"
 version_text = "prototype - name to be decided"
-min_players = 2
-max_players = 15
-default_lobby_size = 2
-default_lobby_name_pattern = "%s's Game"
-max_lobby_name_length = 32
-start_countdown_seconds = 5.0
-load_timeout_seconds = 60.0
-disconnect_grace_seconds = 10.0

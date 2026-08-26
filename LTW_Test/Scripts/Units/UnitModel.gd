@@ -23,6 +23,14 @@ const PREVIEW_INVALID_COLOR: Color = Color(0.90, 0.28, 0.28, 0.45)
 var _mode: Mode = Mode.BUILT
 var _preview_valid: bool = true
 var _meshes: Array[MeshInstance3D] = []
+## Each mesh's authored shadow setting, so leaving preview mode restores what
+## the scene asked for instead of switching everything on. The foundation quad
+## is the reason: a flat decal lying on the ground has no business casting.
+var _mesh_shadows: Array[int] = []
+## Kept apart from _meshes because a foundation is the one part of a model
+## that is NOT the building: it never takes the flat ghost material, and it
+## has a say of its own in whether it shows at all.
+var _foundations: Array[BuildingFoundation] = []
 var _preview_material: StandardMaterial3D
 
 
@@ -32,12 +40,18 @@ func _ready() -> void:
 
 
 ## Every MeshInstance3D under the model, so a model can be as deep as it likes
-## without this needing to know its layout.
+## without this needing to know its layout. Ground patches are sorted out here
+## rather than tested for again in every loop below.
 func _collect_meshes(node: Node) -> void:
 	for child in node.get_children():
-		var mesh: MeshInstance3D = child as MeshInstance3D
-		if mesh != null:
-			_meshes.append(mesh)
+		var foundation: BuildingFoundation = child as BuildingFoundation
+		if foundation != null:
+			_foundations.append(foundation)
+		else:
+			var mesh: MeshInstance3D = child as MeshInstance3D
+			if mesh != null:
+				_meshes.append(mesh)
+				_mesh_shadows.append(mesh.cast_shadow)
 		_collect_meshes(child)
 
 
@@ -60,15 +74,26 @@ func set_preview_valid(valid: bool) -> void:
 func _apply_mode() -> void:
 	if _mode == Mode.PREVIEW:
 		_build_preview_material()
-		_apply_preview_color()
 
-	for mesh in _meshes:
+	for index: int in _meshes.size():
+		var mesh: MeshInstance3D = _meshes[index]
 		if _mode == Mode.PREVIEW:
 			mesh.material_override = _preview_material
 			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		else:
 			mesh.material_override = null
-			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			mesh.cast_shadow = (
+				_mesh_shadows[index] as GeometryInstance3D.ShadowCastingSetting
+			)
+
+	# A ground patch keeps its own stone shader in both modes. Flattening it
+	# into the ghost material would lose the thing worth showing - which cells
+	# the building is about to pave - and leave a plain coloured square.
+	if _mode == Mode.PREVIEW:
+		_apply_preview_color()
+	else:
+		for foundation: BuildingFoundation in _foundations:
+			foundation.show_as_built()
 
 
 func _build_preview_material() -> void:
@@ -82,9 +107,11 @@ func _build_preview_material() -> void:
 
 
 func _apply_preview_color() -> void:
-	if _preview_material == null:
-		return
-	if _preview_valid:
-		_preview_material.albedo_color = PREVIEW_VALID_COLOR
-	else:
-		_preview_material.albedo_color = PREVIEW_INVALID_COLOR
+	var color: Color = PREVIEW_VALID_COLOR
+	if !_preview_valid:
+		color = PREVIEW_INVALID_COLOR
+
+	if _preview_material != null:
+		_preview_material.albedo_color = color
+	for foundation: BuildingFoundation in _foundations:
+		foundation.show_as_preview(color)

@@ -32,6 +32,17 @@ extends Resource
 ## Empty space between neighbouring player areas along x.
 @export var area_gap_cells: float = 4.0
 
+@export_group("Map")
+## The map is a grid of area slots, filled left to right and then row by row.
+## Six by two is the Warcraft III Line Tower Wars layout the prototype copies,
+## and the two together are the most players a match can hold - keep
+## MenuConfig.max_players at or under their product.
+@export var area_columns: int = 6
+@export var area_rows: int = 2
+## Empty space between one row of areas and the next along z, measured from the
+## end zone of the row above to the send strip of the row below.
+@export var area_row_gap_cells: float = 6.0
+
 @export_group("Creeps")
 ## Creeps appear within this many cells of the very top of the spawn zone, at a
 ## random x across the full width. See game_rules.md.
@@ -88,6 +99,13 @@ func area_stride_x() -> float:
 	return area_width() + area_gap_cells * cell_size
 
 
+## Distance from one row's area origin to the next row's. Counts the send strip
+## too, since that hangs above the origin rather than below it, so the gap
+## really is empty ground.
+func area_stride_z() -> float:
+	return send_zone_depth() + area_depth() + area_row_gap_cells * cell_size
+
+
 func send_zone_depth() -> float:
 	return send_zone_depth_cells * cell_size
 
@@ -117,7 +135,36 @@ func starting_lives(count: int) -> int:
 	return maxi(min_starting_lives, rounded)
 
 
-## World origin of a player area. Areas sit side by side along x, with
-## player 1 leftmost. player_id is 1-based.
+## World origin of a player area. Slots fill left to right and then row by
+## row, so player 1 is the top left one. player_id is 1-based.
 func area_origin(player_id: int) -> Vector3:
-	return Vector3(float(player_id - 1) * area_stride_x(), 0.0, 0.0)
+	if area_columns <= 0:
+		Log.err("GameConfig has no area columns, every area would stack on the origin")
+		return Vector3.ZERO
+
+	var index: int = maxi(0, player_id - 1)
+	var column: int = index % area_columns
+	# Truncating IS the row number, which is what the warning is about.
+	@warning_ignore("integer_division")
+	var row: int = index / area_columns
+	return Vector3(float(column) * area_stride_x(), 0.0, float(row) * area_stride_z())
+
+
+## How many players the map has room for. A match with more than this has
+## nowhere to put the extra areas and stacks them on top of the first row.
+func map_slot_count() -> int:
+	return maxi(0, area_columns) * maxi(0, area_rows)
+
+
+## The whole map as an xz rectangle, from the top of the first row's send strip
+## to the bottom of the last row's end zone.
+##
+## Always the FULL grid of slots, whatever the player count: the map is the
+## same size in a 1v1 as in a full house and the unused lanes are simply black.
+## Both the camera's panning bounds and the minimap's frame come from here, so
+## the two can never disagree about how big the world is.
+func map_bounds() -> Rect2:
+	var top: float = send_zone_start_z()
+	var bottom: float = float(maxi(1, area_rows) - 1) * area_stride_z() + area_depth()
+	var width: float = float(maxi(1, area_columns) - 1) * area_stride_x() + area_width()
+	return Rect2(0.0, top, width, bottom - top)

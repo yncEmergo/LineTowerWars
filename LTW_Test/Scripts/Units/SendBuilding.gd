@@ -16,7 +16,7 @@ extends Unit
 ##
 ## It also owns the send stock, one reserve per creep type on its card. Stock
 ## belongs to the building rather than to the ability, because abilities are
-## shared stateless resources: one send_basic_creep.tres is the same object for
+## shared stateless resources: one send_sheep_ability.tres is the same object for
 ## every player, so a count stored there would be everyone's count at once.
 
 ## Emitted when any reserve changes, so the command card can redraw its numbers.

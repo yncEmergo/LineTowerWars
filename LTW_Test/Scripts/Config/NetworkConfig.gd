@@ -26,7 +26,7 @@ extends Resource
 ## match it is running at once.
 ##
 ## NOT the same number as MenuConfig.max_players, which is seats in ONE lobby
-## (2-15, per game_rules.md). One process currently runs the lobby and the
+## (2-12, per game_rules.md). One process currently runs the lobby and the
 ## matches together (D19), so this has to cover everyone connected to it.
 @export var max_peers: int = 32
 

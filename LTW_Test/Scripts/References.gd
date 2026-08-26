@@ -61,6 +61,10 @@ extends Node
 ## Where the server listens and where a client dials. Wired by every scene
 ## that can touch the network: the lobby screens and the server.
 @export var _network_config: NetworkConfig
+## How the local player's view is drawn. PRESENTATION ONLY, so a dedicated
+## server leaves it null and everything that reads it falls back to a sane
+## look rather than refusing to run - see multiplayer.md.
+@export var _presentation_config: PresentationConfig
 
 static var instance: References
 
@@ -171,6 +175,12 @@ static var network_config: NetworkConfig:
 		if instance == null:
 			return null
 		return instance._network_config
+
+static var presentation_config: PresentationConfig:
+	get:
+		if instance == null:
+			return null
+		return instance._presentation_config
 
 ## Claimed on entering the tree rather than in _init, so the static handle
 ## only ever points at a node that is actually live. _init would also fire

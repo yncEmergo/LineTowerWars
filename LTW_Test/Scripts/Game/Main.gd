@@ -51,6 +51,14 @@ func _ready() -> void:
 	var setup: MatchSetup = _take_setup(config)
 	if !setup.validate():
 		Log.err("Main is starting a match with a broken setup, see the errors above")
+	# Slots are handed out by area_origin, which wraps past the last column and
+	# would stack row three on top of row one. Loud here rather than as two
+	# players silently sharing a lane.
+	if setup.player_count() > config.map_slot_count():
+		Log.err("More players than the map has slots, areas will overlap", {
+			"players": setup.player_count(),
+			"slots": config.map_slot_count(),
+		})
 	session.begin(setup)
 
 	# Once, here, rather than on every hit of every fight: a broken damage
@@ -75,7 +83,7 @@ func _ready() -> void:
 
 	_create_areas(setup)
 	var builders: Array[Builder] = _create_builders(setup)
-	_configure_camera(config, setup.player_count())
+	_configure_camera(config)
 
 	# After the areas and the builders exist, so it walks the real content graph
 	# rather than a guess at it. Any builder reaches the same tower cards, so
@@ -187,8 +195,13 @@ func _find_area(player_id: int) -> PlayerArea:
 	return null
 
 
-## Clamps camera panning to the full span of all areas plus a margin.
-func _configure_camera(config: GameConfig, player_count: int) -> void:
+## Clamps camera panning to the whole map plus a margin.
+##
+## The MAP, not the areas that happen to exist: the slot grid is the same size
+## whoever turned up, so a 1v1 pans over the same world a full house does and
+## the empty slots are black ground. GameConfig.map_bounds is the one answer to
+## how big that is, shared with the minimap.
+func _configure_camera(config: GameConfig) -> void:
 	# A machine playing no slot draws nothing, so having no camera is correct
 	# rather than broken. One that DOES play a slot and has no camera is broken.
 	var camera: RTSCamera = References.rts_camera
@@ -197,16 +210,12 @@ func _configure_camera(config: GameConfig, player_count: int) -> void:
 			Log.err("Main found no RTSCamera on References")
 		return
 
-	var span_x: float = config.area_width()
-	if player_count > 1:
-		span_x = float(player_count - 1) * config.area_stride_x() + config.area_width()
-
 	var margin: float = 0.0
 	var camera_config: CameraConfig = References.camera_config
 	if camera_config != null:
 		margin = camera_config.bounds_margin
 
-	var bounds: Rect2 = Rect2(0.0, 0.0, span_x, config.area_depth()).grow(margin)
+	var bounds: Rect2 = config.map_bounds().grow(margin)
 
 	# The camera aims at the centre of the screen, so the top bound is the send
 	# building's own row rather than the far edge of its strip. Panning fully up

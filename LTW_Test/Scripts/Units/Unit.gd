@@ -163,7 +163,7 @@ func is_owned_by_local_player() -> bool:
 
 
 ## There are no team modes, so anything owned by a different player is an
-## enemy. That stays true for the whole 2-15 player range.
+## enemy. That stays true for the whole 2-12 player range.
 func is_hostile_to(other: Unit) -> bool:
 	return other != null && other.owner_player_id != owner_player_id
 

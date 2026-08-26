@@ -1,9 +1,14 @@
 class_name MatchStatusBar
-extends HBoxContainer
+extends PanelContainer
 
 ## What the local player has right now, across the top middle of the screen:
 ## gold, living population against the cap, and the countdown to the next
 ## income payout.
+##
+## Each number is named by an icon rather than a word, which is what keeps the
+## bar short enough to sit in the middle of the screen without crowding what is
+## under it. The icons carry tooltips, since a picture on its own is only
+## obvious once you already know what it means.
 ##
 ## Three numbers rather than one, because they answer three different questions
 ## a player asks constantly - can I afford this, can I send more, and how long
@@ -31,6 +36,11 @@ const REFRESH_SECONDS: float = 0.25
 @export var _gold_label: Label
 @export var _population_label: Label
 @export var _income_label: Label
+## The icon beside each number, painted from the same constant as the label it
+## belongs to so the pair can never drift apart.
+@export var _gold_icon: TextureRect
+@export var _population_icon: TextureRect
+@export var _timer_icon: TextureRect
 
 var _state: PlayerState
 var _elapsed: float = 0.0
@@ -41,9 +51,9 @@ var _manager: PlayerManager:
 
 
 func _ready() -> void:
-	_paint(_gold_label, GOLD_COLOR)
-	_paint(_population_label, POPULATION_COLOR)
-	_paint(_income_label, INCOME_COLOR)
+	_paint(_gold_label, _gold_icon, GOLD_COLOR)
+	_paint(_population_label, _population_icon, POPULATION_COLOR)
+	_paint(_income_label, _timer_icon, INCOME_COLOR)
 	_connect_state.call_deferred()
 
 
@@ -92,7 +102,7 @@ func _refresh_polled() -> void:
 	if _income_label != null:
 		# Rounded UP, so the last part-second still reads as 1 rather than
 		# sitting on 0 while nothing has been paid yet.
-		_income_label.text = "Income: %ds" % ceili(manager.seconds_until_income())
+		_income_label.text = "%ds" % ceili(manager.seconds_until_income())
 
 
 func _population_cap() -> int:
@@ -100,6 +110,8 @@ func _population_cap() -> int:
 	return 100 if config == null else config.population_cap
 
 
-func _paint(label: Label, color: Color) -> void:
+func _paint(label: Label, icon: TextureRect, color: Color) -> void:
 	if label != null:
 		label.add_theme_color_override("font_color", color)
+	if icon != null:
+		icon.modulate = color

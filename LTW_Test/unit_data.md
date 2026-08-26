@@ -1,22 +1,63 @@
 # Line Tower Wars - Unit, Tower and Technology Data
 
-**What this is.** A full extract of the *Warcraft III Line Tower Wars* design as of
-version **12.4a** (2026-08-04), reconstructed from the reference files in
-`ReferenceFilesFromOtherProjects/LineTowerWarsData/` and completed with the project
-owner's own knowledge of the game. It exists so the prototype can copy that design
-directly, and so there is one place to look up a number before it is authored into a
-resource.
+**What this is.** Every number in *Warcraft III Line Tower Wars* as of version **12.4a**
+(2026-08-04): every tower, creep, technology disc and core system, with its costs, stats,
+upgrade paths and abilities. It is the balance sheet of the game this project is remaking,
+and it is the file to look a number up in before authoring it into a resource.
 
-**Status of the numbers here.** This document is a RECORD OF A DESIGN DECISION, in the
-same way `game_rules.md` is, and is therefore the one other `.md` allowed to hold stat
-tables (see the "no live values in markdown" rule in CLAUDE.md). Once a unit is
-implemented, its `.tres` resource becomes the authority and this file is the human-readable
-mirror of it. Where the two disagree, the `.tres` wins and this file is wrong and must be
-fixed. See "Keeping this document current" at the bottom.
+## Why the prototype copies it
 
-**This is not a copy of the source game's names.** Section 2.4 defines a deliberate renaming
-of every tower upgrade chain for this project, elemental and Basic alike. The old Warcraft III
-names are recorded there and nowhere else.
+**The goal for the prototype is to be a near-exact copy of Warcraft III Line Tower Wars
+12.4a**, and to use that as the starting point for further development rather than as a
+finished destination.
+
+That is a deliberate choice, for two reasons:
+
+- **The project owner knows that game extremely well.** Copying a design they can already
+  play from memory removes the largest unknown in a prototype: whether the thing is any
+  good. It is known to be good. What is unknown is only whether this implementation
+  reproduces it.
+- **It is already balanced.** LTW 12.4a is the result of many years of continuous active
+  development on the original map. That balance is worth far more than anything this
+  project could invent from scratch at prototype stage, and it comes for free.
+
+So where this document and an instinct disagree, this document wins. Original design
+decisions come AFTER the copy works, not during it - and when one is made, it is made
+knowingly, against a baseline that is known to play well.
+
+**The one deliberate departure is naming.** Section 2.4 renames every tower upgrade chain,
+because the source game renames a tower at every tier and that makes the tech tree hard to
+read. The old Warcraft III names are recorded in 2.4 and nowhere else.
+
+## What this file is for, now and later
+
+**Now:** a hand-maintained reference, written ahead of the content it describes. Almost
+none of it is implemented yet, which is exactly why it can hold numbers - a `.md` is the
+right and only home for a design that has no code behind it (see the "no live values in
+markdown" rule in CLAUDE.md; this file and `game_rules.md` are its two exceptions, because
+these numbers ARE the design rather than a restatement of what some script happens to do).
+
+**Once a unit is implemented, its `.tres` becomes the authority** and the row here becomes a
+mirror of it. Where the two disagree the `.tres` wins, and this file is wrong and must be
+fixed. Until the generator below exists, the rule is: change the `.tres`, then change the
+row here, in the same commit.
+
+**Later:** this file stops being hand-maintained. The intended end state is that it remains
+the single readable overview of the complete balance of the game - so that nobody, human or
+otherwise, has to open thirty resource files to answer one question - but that its tables
+are GENERATED from those resources rather than typed alongside them. Section 8 has the
+proposed shape. This was assessed in an earlier working session and again here, and the
+conclusion both times was that it is straightforward and worth doing: the stats already live
+in typed resources keyed by an authored id, and `ContentConfig` already names the folders to
+scan, which is the whole of what a generator needs. It is not blocked on anything - only on
+there being enough implemented content to make it worth writing.
+
+## How to read a row
+
+`game_rules.md` is the other half of this document and never repeats it: that file holds the
+RULES - how sending, mazing, damage resolution, lives and the economy work - and points here
+for every number those rules operate on. If you want to know what a Grunt costs, it is here.
+If you want to know what happens when it reaches the end of a maze, it is there.
 
 ## How this was reconstructed, and how much to trust it
 
@@ -1081,25 +1122,37 @@ been removed, so do not implement it.
 
 ## 6.1 How the roster is organised
 
-Creeps have **no upgrades**. They are sorted into four tiers, which are cost brackets and a
-release schedule rather than a power ladder:
+Creeps have **no upgrades**. They are sorted into four tiers.
 
-| Tier | Unlocks from | Role |
-| ---- | ------------ | ---- |
-| 1 | 00:00 game time | opening economy |
-| 2 | 07:00 game time | mid game |
-| 3 | 14:00 game time | late game |
-| 4 | 25:00 game time (= Sudden Death) | end game |
+**A tier is a cost bracket and nothing else.** It is not a power ladder, not a category a
+rule can test, and not a thing a creep gains or loses. It exists to group the roster into
+readable chunks, and each bracket ends on that bracket's Boss:
 
-Within a tier, creeps unlock **one at a time every 30 seconds** in ascending cost order
-(12.0a; it used to be two per minute). So Tier 1's twelfth and last creep is available at
-05:30, Tier 2's at 12:30, Tier 3's at 19:30. Every Tier 4 creep unlocks together at 25:00
-when Sudden Death begins, and **tiers 1-3 can no longer be sent from that moment**.
+| Tier | Cost bracket | Ends on |
+| ---- | ------------ | ------- |
+| 1 | 10g up to and including 1,000g | Rot Golem, the 1,000g Boss |
+| 2 | above 1,000g up to and including 100,000g | Infernal, the 100,000g Boss |
+| 3 | above 100,000g up to and including 500,000g | Behemoth, the 500,000g Boss |
+| 4 | everything above that | Sudden Death, no upper bound |
 
-Tier 4 is special in two ways: the creeps are much stronger for their cost because the game
-is meant to end, and they give **very little income** - and above 4,000,000 income they give
-75% less still. The "Income" column for Tier 4 below shows the normal value with the
-above-4M value in brackets.
+**A tier carries no mechanical meaning.** A creep does not become stronger, cheaper or
+differently targetable for being in one. In particular a lower tier is never retired by a
+higher one: once a creep is unlocked it stays sendable for the rest of the match, and a
+player at 20:00 can still send Sheep. The one exception belongs to Sudden Death rather than
+to the idea of a tier, and is recorded in 6.5.
+
+**Unlocking is per creep, not per tier.** Every creep carries its own start delay and
+becomes available when the match clock reaches it - one at a time, every 30 seconds, in
+ascending cost order (12.0a; it used to be two per minute). Tiers appear to "unlock" only
+because the creeps inside one share a stretch of the clock. The Unlock column in each table
+below is the authority; the tier is just where that creep happens to sit.
+
+Each of tiers 1 to 3 holds twelve creeps and tier 4 holds eleven, which is why the source
+game can give each tier **its own send building**: twelve is exactly one 4 x 3 command card.
+
+> **To be decided for this project:** whether to copy that four-building arrangement, or
+> reach the tiers some other way. The prototype currently has a single send building. This
+> is a UI question, not a rules question - nothing about a creep changes either way.
 
 **Sending.** One send produces a **pack of 3** creeps for a normal creep and **1** for a boss
 or a large creep. Bosses steal **2 lives** instead of 1. Stock replenishes over time; initial
@@ -1199,7 +1252,14 @@ Notes:
 
 ## 6.5 Tier 4 - Sudden Death
 
-Every Tier 4 creep unlocks at **25:00**. Income shown as `normal (above 4M income)`.
+Tier 4 is the one place a tier does mean something, and it is Sudden Death that means it
+rather than the tier itself. At **25:00** the whole of Tier 4 unlocks at once - no per-creep
+start delay, unlike every other tier - and **tiers 1 to 3 stop being sendable from that
+moment**. It is the only time a creep is ever taken away from a player.
+
+Tier 4 is also special in two ways of its own: the creeps are much stronger for their cost,
+because the game is meant to end; and they give **very little income**, dropping a further
+75% above 4,000,000 income. Income below is shown as `normal (above 4M income)`.
 
 | Creep | Cost | Income | Bounty | HP | Armour | Type | Speed | Sent | Traits |
 | ----- | ---- | ------ | ------ | -- | ------ | ---- | ----- | ---- | ------ |
@@ -1370,16 +1430,17 @@ shows 759,905 health, which 12.4a raised to 782,700. Both tables in this documen
 
 ## 8.1 The intended relationship to the resources
 
-Once a unit is implemented, its `.tres` resource is the authority and this file is a
-human-readable mirror of it. That is the only arrangement that does not rot: a number
-written in two places diverges the first time one of them is edited.
+Stated in full at the top of this file. In short: the `.tres` is the authority once a unit
+exists, this file is the readable mirror, and a number written in two places diverges the
+first time one of them is edited - which is why the mirror should stop being written by hand.
 
 ## 8.2 Making it generated rather than hand-maintained - yes, this is worth doing
 
-It is straightforward, and it fits how this project is already built. The stats already live
-in typed resources (`UnitStats`, `BuildingStats`, `CreepStats`, `AttackStats`,
-`UnitAbility`), each keyed by an authored id, and `ContentConfig` already names the folders
-to scan - which is exactly what a generator needs.
+**Assessed twice, both times the same answer: it is straightforward and worth doing.** It
+fits how this project is already built. The stats live in typed resources (`UnitStats`,
+`BuildingStats`, `CreepStats`, `AttackStats`, `UnitAbility`), each keyed by an authored id,
+and `ContentConfig` already names the folders to scan - which is exactly what a generator
+needs. Nothing blocks it except there not yet being enough content to make it pay.
 
 Proposed shape:
 

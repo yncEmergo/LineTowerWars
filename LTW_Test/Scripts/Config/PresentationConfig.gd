@@ -1,0 +1,117 @@
+class_name PresentationConfig
+extends Resource
+
+## Settings that only change what the local player SEES.
+##
+## Nothing in here may reach the simulation. A dedicated server never wires
+## this resource and runs the same match without it, so a value in this file
+## can never decide a gameplay outcome - which is exactly the line
+## multiplayer.md draws between simulation and presentation.
+##
+## That makes it the home for the knobs that have nowhere else to live: the
+## ones about how a thing is drawn rather than what it does. GameConfig stays
+## the file for rules, CameraConfig for the camera.
+##
+## Stored as Resources/Config/presentation_config.tres, reached via
+## References.presentation_config.
+
+## How the minimap decides what colour a unit's owner gets.
+##
+## The numbers are pinned because this is authored into a .tres as an int, so
+## reordering the list would otherwise silently change what a saved file means.
+enum OwnerColors {
+	## Yours white, everyone else's red. Tells your own from an opponent's at a
+	## glance and says nothing else, which is all a free for all with no teams
+	## strictly needs.
+	SELF_WHITE_ENEMIES_RED = 0,
+	## Yours white, everyone else's in their own player colour. Keeps your own
+	## units the easiest thing on the map to find while still saying WHOSE
+	## creeps are in your maze.
+	SELF_WHITE_OTHERS_COLORED = 1,
+	## Everyone in their own player colour, yours included.
+	ALL_COLORED = 2,
+}
+
+@export_group("Build Preview")
+## Whether the ground patch under a building shows while a build order is
+## still being aimed. Off shows the ghost's shape alone, on also shows the
+## footprint it is about to pave.
+@export var preview_shows_foundation: bool = true
+## How far the ghost's colour washes over that patch. 0 leaves the stone as
+## it is, 1 replaces it with flat colour.
+@export_range(0.0, 1.0, 0.05) var preview_foundation_tint: float = 0.55
+
+@export_group("Minimap", "minimap_")
+## Ground under everything, and what an empty map slot looks like. Black,
+## because the world itself is black outside the player areas.
+@export var minimap_background_color: Color = Color(0.0, 0.0, 0.0, 1.0)
+## The strip creeps appear on, the grey cap at the top of every lane.
+@export var minimap_spawn_color: Color = Color(0.55, 0.55, 0.55, 1.0)
+## The buildable middle, the green body of every lane.
+@export var minimap_build_color: Color = Color(0.24, 0.31, 0.15, 1.0)
+## The strip creeps leak out of, at the bottom of every lane.
+@export var minimap_end_color: Color = Color(0.3, 0.3, 0.3, 1.0)
+## Which of the three owner colour schemes to paint with. Nothing in the game
+## changes this yet - there is no options menu - so it is set here.
+@export var minimap_owner_colors: OwnerColors = OwnerColors.SELF_WHITE_ENEMIES_RED
+## Everything the local player owns, in the two schemes that single you out.
+@export var minimap_own_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+## Everything anybody else owns, including their creeps walking in YOUR maze.
+## There are no teams, so one colour covers every opponent - see game_rules.md.
+## Only SELF_WHITE_ENEMIES_RED uses it; the other two schemes ask the palette.
+@export var minimap_enemy_color: Color = Color(0.87, 0.16, 0.16, 1.0)
+## Outline of what the camera can currently see.
+@export var minimap_camera_color: Color = Color(1.0, 1.0, 1.0, 0.85)
+@export var minimap_camera_width: float = 1.0
+## Side of the square EVERY building is drawn as, in pixels. One size for all
+## of them: at this scale the shape of a maze is not readable anyway, only
+## roughly where its towers stand.
+@export var minimap_building_px: float = 5.0
+## Side of a mobile unit's square as a share of a building's, so a creep or a
+## builder reads as clearly smaller than a tower.
+@export_range(0.1, 1.0, 0.05) var minimap_unit_scale: float = 0.5
+
+@export_group("Player Colours", "player_")
+## One colour per slot, in slot order. The Warcraft III player colours, since
+## that is the game being copied.
+##
+## A STAND-IN. A colour is meant to be per-match identity chosen in the lobby,
+## travelling on MatchPlayer next to slot and network_id - see multiplayer.md
+## 8.1. Until it does, a slot's colour is simply its place in this list, which
+## is local to each machine and therefore cannot be what a player picked. Read
+## it through player_color() rather than indexing it.
+@export var player_colors: PackedColorArray = PackedColorArray([
+	Color("ff0303"), Color("0042ff"), Color("1ce6b9"), Color("540081"),
+	Color("fffc01"), Color("feba0e"), Color("20c000"), Color("e55bb0"),
+	Color("959697"), Color("7ebff1"), Color("106246"), Color("4e2a04"),
+])
+
+
+## The colour a unit belonging to this slot is drawn in on the minimap.
+##
+## is_local is passed in rather than worked out here, because who "you" are is
+## the PlayerManager's answer and a config resource has no business asking it.
+func minimap_color_for(slot: int, is_local: bool) -> Color:
+	match minimap_owner_colors:
+		OwnerColors.SELF_WHITE_ENEMIES_RED:
+			return minimap_own_color if is_local else minimap_enemy_color
+		OwnerColors.SELF_WHITE_OTHERS_COLORED:
+			return minimap_own_color if is_local else player_color(slot)
+		OwnerColors.ALL_COLORED:
+			return player_color(slot)
+
+	Log.err("PresentationConfig has an owner colour scheme it does not know",
+		minimap_owner_colors)
+	return minimap_own_color
+
+
+## The colour belonging to a slot. Slots are 1-based.
+##
+## Wraps rather than failing when the palette is shorter than the match, so a
+## trimmed list costs two players the same colour instead of costing one of
+## them any colour at all.
+func player_color(slot: int) -> Color:
+	if player_colors.is_empty():
+		Log.err("PresentationConfig has no player colours, nothing could be told apart")
+		return minimap_own_color
+	return player_colors[maxi(0, slot - 1) % player_colors.size()]

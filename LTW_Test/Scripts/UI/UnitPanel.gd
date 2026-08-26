@@ -120,18 +120,21 @@ func _build_selection_tiles() -> void:
 		_tiles.append(tile)
 
 
-## Slots are built once from the prefab and then refilled, so the card keeps
-## its shape and no nodes churn as the selection or the card changes.
+## Slots are claimed once and then refilled, so the card keeps its shape and no
+## nodes churn as the selection or the card changes.
 ##
-## The grid is built at its full size whatever the current unit offers, which
+## The squares themselves are AUTHORED into unit_panel.tscn rather than built
+## here, because every unit gets the whole grid whatever it has to put on it,
+## so the panel has exactly one width and the editor may as well show it. The
+## prefab stays wired as the fallback for a ControlsConfig asking for a shape
+## the scene was not authored for.
+##
+## The grid is always at its full size whatever the current unit offers, which
 ## is what makes an ability able to claim a fixed square: slot 11 exists even
 ## on a card that fills only the first row.
 func _build_command_slots() -> void:
 	if _command_grid == null:
 		Log.err("UnitPanel has no command grid assigned")
-		return
-	if _command_slot_scene == null:
-		Log.err("UnitPanel has no command slot scene assigned")
 		return
 
 	var columns: int = FALLBACK_COMMAND_COLUMNS
@@ -142,14 +145,48 @@ func _build_command_slots() -> void:
 		rows = config.command_rows
 
 	_command_grid.columns = columns
+	for child in _command_grid.get_children():
+		var authored: CommandSlot = child as CommandSlot
+		if authored != null:
+			_slots.append(authored)
+	_fit_slot_count(columns * rows)
 
-	for slot_index in range(columns * rows):
+	for slot_index in range(_slots.size()):
+		_slots[slot_index].name = "CommandSlot%d" % slot_index
+		_slots[slot_index].ability_activated.connect(_on_ability_activated)
+
+
+## Brings the authored squares in line with the shape ControlsConfig asks for:
+## frees any the scene has too many of, and makes up any it is short of from
+## the prefab.
+##
+## Loud when it has to do either. The scene matching the config is the normal
+## case, and a mismatch means one of the two was changed without the other.
+func _fit_slot_count(wanted: int) -> void:
+	while _slots.size() > wanted:
+		var extra: CommandSlot = _slots.pop_back()
+		_command_grid.remove_child(extra)
+		extra.queue_free()
+
+	if _slots.size() == wanted:
+		return
+
+	if _command_slot_scene == null:
+		Log.err("UnitPanel has too few authored squares and no slot scene to add more", {
+			"authored": _slots.size(),
+			"wanted": wanted,
+		})
+		return
+
+	Log.warn("Command grid in unit_panel.tscn does not match the configured card shape", {
+		"authored": _slots.size(),
+		"wanted": wanted,
+	})
+	while _slots.size() < wanted:
 		var slot: CommandSlot = _command_slot_scene.instantiate() as CommandSlot
 		if slot == null:
 			Log.err("Command slot scene does not have a CommandSlot script")
 			return
-		slot.name = "CommandSlot%d" % slot_index
-		slot.ability_activated.connect(_on_ability_activated)
 		_command_grid.add_child(slot)
 		_slots.append(slot)
 

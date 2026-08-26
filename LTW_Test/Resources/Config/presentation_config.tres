@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="PresentationConfig" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/PresentationConfig.gd" id="1_presentation_config"]
+
+[resource]
+script = ExtResource("1_presentation_config")
+preview_shows_foundation = true
+preview_foundation_tint = 0.55

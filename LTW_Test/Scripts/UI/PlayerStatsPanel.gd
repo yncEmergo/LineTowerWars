@@ -25,6 +25,13 @@ extends PanelContainer
 @export_group("References")
 ## Parent for the rows, refilled whenever anything on them changes.
 @export var _row_list: VBoxContainer
+## The status bar beside this panel. The two sit in one band across the top of
+## the screen, so this one is never allowed to be shorter than that one - which
+## matters most once the rows can be toggled away and only the header is left.
+##
+## Taken from the bar rather than written down twice, so changing the bar's
+## font or padding moves both and neither can drift.
+@export var _height_source: Control
 
 @export_group("Settings")
 ## The row prefab. A node's own prefab stays a PackedScene export.
@@ -36,7 +43,19 @@ var _slots: Array[int] = []
 
 
 func _ready() -> void:
+	_match_source_height()
+	if _height_source != null:
+		_height_source.minimum_size_changed.connect(_match_source_height)
 	_connect_states.call_deferred()
+
+
+## Holds this panel to at least the height of the bar beside it. Follows the
+## bar's own minimum rather than its current size, which is already known this
+## early and does not wait for a layout pass.
+func _match_source_height() -> void:
+	if _height_source == null:
+		return
+	custom_minimum_size.y = _height_source.get_combined_minimum_size().y
 
 
 func _connect_states() -> void:

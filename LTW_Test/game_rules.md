@@ -1,13 +1,21 @@
 # Line Tower Wars - Game Rules
 
-Status: living document. Expanded incrementally as features are implemented.
-Values marked TBD are not decided yet. Values given are current, not final.
+**This file holds the RULES: how the game works. It does not hold numbers.**
+Every cost, stat, roster entry and balance value lives in `unit_data.md`, which
+records the Warcraft III Line Tower Wars 12.4a design this prototype copies. Where
+this file needs a number to explain a rule, it points there rather than repeating
+it - a number written twice diverges the first time one copy is edited.
 
-A rule marked NOT BUILT is decided but has no code behind it yet. Everything
-else described here is implemented and working.
+So: what happens when a creep reaches the end of a maze is here. What that creep
+costs is in `unit_data.md`. Once a unit is implemented its `.tres` is the authority
+over both.
+
+Status: living document. Expanded incrementally as features are implemented.
+A rule marked NOT BUILT is decided but has no code behind it yet. Everything else
+described here is implemented and working. Values marked TBD are not decided yet.
 
 # Core concept
-- PvP tower defence for 2-15 players
+- PvP tower defence for 2-12 players
 - Each player owns one area and defends it alone
 - Creeps are sent by players, never spawned by the game
 - Sending creeps raises your permanent income
@@ -27,13 +35,17 @@ else described here is implemented and working.
 - Every player has their own separate area
 - The builder can only walk and build inside its owner's area
 - Other players' areas can be viewed on the minimap to inspect their maze
-  - A minimap is required, to be added later
 - Later: attacker creeps can be actively controlled inside enemy areas
 
 # Map layout
-- Player areas are placed side by side along the x axis
-- For the 1v1 prototype: player 1 on the left, player 2 on the right
-- TBD: layout for more than 2 players
+- The map is a fixed grid of 12 area slots, 6 across and 2 down, copying the
+  Warcraft III map
+- Slots fill left to right and then row by row, so player 1 is the top left one
+- Both rows run the same way round: every lane spawns at its own top and ends at
+  its own bottom
+- The map is the same size whoever turned up. A 1v1 uses two slots and the other
+  ten are empty ground; the camera and the minimap still cover all twelve
+- Everything that is not a player area is black
 
 # The builder
 - Each player controls one builder unit
@@ -158,8 +170,27 @@ else described here is implemented and working.
   - TBD: the NAME. An anonymous mode showing the player's COLOUR instead belongs
     to a game mode selection that does not exist yet, and player colours are not
     built either, so it is the display name for now
-  under it
-- Space is left free at the bottom left of the screen for the minimap
+- The minimap sits in the bottom left corner, square, and shows the whole map
+  - A lane is drawn as its spawn strip and its buildable body. The send strip
+    above them is left out: nobody plays on it
+  - Everything standing on the map is a square - one size for every building,
+    a smaller one for every mobile unit. A maze's SHAPE is deliberately not
+    readable at that scale, only roughly where its towers stand
+  - Colour says ownership and nothing else. A creep carries its SENDER's
+    colour, so an opponent's creeps in your own maze read as theirs
+  - Three schemes exist, and which one is used is a setting:
+    - yours white, everyone else's red. The default
+    - yours white, everyone else's in their own player colour
+    - everyone in their own player colour, yours included
+  - NOT BUILT: any way to change that setting in game. There is no options
+    menu yet, so it is set in the presentation config
+  - NOT BUILT: player colours are not chosen in the lobby yet, so the two
+    schemes that use them fall back to a fixed list indexed by slot
+  - A rectangle shows where the camera is looking. The camera's real footprint
+    is a trapezoid, since it looks down at an angle, but the box is drawn square
+    off the near edge of the view and always stays whole inside the minimap
+  - Left clicking jumps the camera there, and holding keeps steering it
+  - TBD: giving orders from the minimap
 - A move order marks the clicked ground position with a short lived marker
   - Four arrows converge on the spot and fade, the usual RTS click feedback
   - It marks where the player clicked, not where the unit ends up
@@ -180,8 +211,9 @@ else described here is implemented and working.
   - WASD is deliberately not used for the camera, it is reserved for builder hotkeys
 - A center-on-target function exists to snap the camera to the builder or any other unit or building
   - Reached by tapping a control group's number twice
-- Panning is bounded to the span of every player area, plus the send strip above
-  them so the send building can be reached
+- Panning is bounded to the whole map, plus the send strip above the top row so
+  the send building can be reached. The bound is the MAP rather than the areas
+  in play, so the empty slots of a small match can still be panned over
 - No zoom for now
 - TBD: controller equivalent of edge panning
 
@@ -266,6 +298,9 @@ else described here is implemented and working.
 - One attack per tower, described by that tower's own attack stats
   - Attack speed in attacks per second, written as APS in the UI, so a bigger
     number is faster
+    - `unit_data.md` states the same value the way the source game does, as the
+      COOLDOWN IN SECONDS between attacks, where a bigger number is slower. The
+      two are reciprocals; do not copy one into the other without inverting it
   - Range in player cells, measured from the tower's centre to the creep's
   - Damage as a min to max range, rolled fresh per attack, plus a damage type
   - Whether it can hit ground targets, air targets or both
@@ -305,21 +340,24 @@ else described here is implemented and working.
   - "Near" is one distance shared by the whole game, not a per tower value
   - A projectile attack fires one projectile per target
 
-# The basic towers
-Basic towers are available from the start. Elemental towers need research and
-are a later feature. Every basic tower's base version costs 10 gold.
+# Towers - which ones exist
+The roster, the upgrade chains, the names and every number are in `unit_data.md`:
+basic towers in its section 3, elemental towers in section 4, the naming scheme
+in 2.4, and the technology that gates the elemental ones in section 2.
 
-All four names and all of their numbers are placeholders and are not balanced.
+The rules that hold whatever the roster says:
 
-- Sniper Tower: single target projectile, long range, fast, low damage per hit,
-  piercing
-- Cannon Tower: single projectile that splashes everything around whatever it
-  hits, medium range, slow, medium damage, siege. AREA damage
-- Meatgrinder Tower: a blade that spins in place and hits a single target at
-  very close range, very fast, high damage, normal. No splash. NAME TBD
-- Stomper Tower: very close range like the meatgrinder, but a huge splash of at
-  least 2 x 2 player cells, very slow, high damage, normal. AREA damage. NAME
-  AND CONCEPT TBD, other than that towers are not to look like living creatures
+- Basic towers are available from the start and need no research
+- Elemental towers require technology, which is a later feature and NOT BUILT
+- A tower is upgraded rather than replaced: an upgrade chain carries one name and
+  a tier prefix, so a player follows one line rather than relearning it each tier
+- Towers do not look like living creatures. That is a setting constraint on art,
+  not a balance one, and it survives any renaming
+
+**The four towers currently implemented - Sniper, Cannon, Meatgrinder and Stomper -
+are a TEST SET and are all being replaced** by the real roster from `unit_data.md`.
+Their names, costs and stats were placeholders chosen to have something to shoot
+with, and none of them was balanced. Nothing should be built on top of them.
 
 # Damage and armour
 Two separate questions decide what a hit costs, and they are kept deliberately
@@ -327,41 +365,28 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 
 - Every attack carries a damage type, every damageable unit an armour type
 - The pair decides what share of the attack's damage actually lands
-- Chaos currently reads 100% against every armour type. That is a balancing
-  value like any other, not a rule, so nothing may shortcut it as "ignores
-  armour"
+- **The matrix itself is in `unit_data.md` section 1.1**, and is stored as
+  `Resources/Config/damage_table.tres`, which is the authority
+- Chaos reading 100% against everything is a balancing value like any other, not
+  a rule, so nothing may shortcut it as "ignores armour"
 - Invulnerable is not a row. It is the absence of damage, not a resistance to it
+- Magic is a PHYSICAL damage type and goes through the table like any other. The
+  damage that ignores the table entirely is SPELL DAMAGE, which is not a row in
+  it: it ignores armour type and armour points both, and is resisted only by
+  explicit creep traits. Nearly every tower ABILITY deals it; no tower's basic
+  attack does
 
-| Armour \ Damage | Magic | Chaos | Normal | Piercing | Siege |
-| --------------- | ----- | ----- | ------ | -------- | ----- |
-| Light           | 150%  | 100%  | 80%    | 150%     | 100%  |
-| Medium          | 80%   | 100%  | 150%   | 100%     | 80%   |
-| Heavy           | 150%  | 100%  | 100%   | 80%      | 80%   |
-| Fortified       | 66%   | 100%  | 80%    | 66%      | 150%  |
-| Hero            | 66%   | 100%  | 80%    | 66%      | 80%   |
-| Unarmored       | 100%  | 100%  | 100%   | 150%     | 125%  |
-
-- This is the Line Tower Wars 12.4a matrix. An older one was in use here until
-  the source data was extracted; Magic vs Light and Piercing vs Unarmored were
-  both 125% and are now 150%. See unit_data.md
-- Magic is a PHYSICAL damage type and goes through this table like any other.
-  The damage that ignores the table entirely is SPELL DAMAGE, which is not a
-  row here: it ignores armour type and armour points both, and is resisted only
-  by explicit creep traits. Nearly every tower ABILITY deals it; no tower's
-  basic attack does
-
-- Armour POINTS are a separate number every unit carries, and are 0 on
-  everything so far. The knight's aura is currently the only source of any
+- Armour POINTS are a separate number every unit carries, independent of armour
+  type. Who has how many is `unit_data.md`
   - Positive armour reduces damage with diminishing returns, so armour can
     never reach immunity however much of it is stacked:
       reduction = (armor * 0.06) / (1 + 0.06 * armor)
   - Negative armour amplifies damage instead, and never quite doubles it:
       amplification = 2 - 0.94 ^ -armor
   - Both read exactly 100% at 0 armour, which is where the two halves meet
-  - Worked values: 1 point 5.7%, 3 points 15.3%, 5 points 23.1%, 10 points 37.5%
+  - The two constants live in `damage_table.tres` beside the matrix
 - Some attacks are AREA damage, which some creeps resist. A flag on the attack,
-  true for the Cannon and the Stomper, covering the primary hit as well as the
-  splash around it
+  covering the primary hit as well as the splash around it
   - Any splash counts as area damage whatever its attack says, since covering
     ground is what a splash is
   - Multishot is deliberately NOT area damage: it picks several single targets
@@ -369,19 +394,17 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 - A hit resolves in a fixed order, and that order is a rule rather than an
   accident of how anything happens to be listed:
     1. roll the attack's damage
-    2. the damage type versus armour type matrix above
-    3. the target's own resistances, e.g. the spider's half against area damage
+    2. the damage type versus armour type matrix
+    3. the target's own resistances, such as a trait halving area damage
     4. the target's armour points
-    5. any flat block, e.g. the grunt's 10
+    5. any flat block, such as Hardened Skin
   - Percentages resolve before flat points on purpose. A flat block is meant to
     blunt many small hits rather than one big one, and putting it last is what
     makes that true
 - Damage is rounded to whole points, and an attack that lands at all does at
   least 1. So a block can blunt a hit but never swallow it entirely
-- Stored as Resources/Config/damage_table.tres, which also holds the 0.06 and
-  the 0.94 of the two armour curves
-- Every tower and building still carries Unarmored, which is a placeholder
-  rather than a balancing decision. Creeps have real types, see the roster
+- Towers and buildings currently all carry Unarmored, which is a placeholder
+  standing in until the real roster is authored, not a balancing decision
 
 # Creeps
 - Creeps enter at the top and walk to the bottom
@@ -411,7 +434,7 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 - Killed creeps pay bounty gold to the player whose maze they died in
   - Not to whoever fired the killing shot and not to the sender, so nothing
     anywhere has to track who dealt the damage
-  - Each creep type carries its own bounty, see the roster below
+  - Each creep type carries its own bounty, see the roster
   - A creep that reaches the end zone pays nobody. Only a kill does
 - Reaching the end zone steals a life and recycles the creep instead of removing
   it, see the Lives section
@@ -426,55 +449,40 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 - TBD: unlock order
 
 # The creep roster
-Six creeps. All are sent in packs of 3, all are worth 1 population, and all
-hold a stock of 32 that refills one every 3 seconds. Health runs at roughly
-0.8 per gold of cost, with the sheep as the deliberate exception.
+**The roster is `unit_data.md` section 6**: which creeps exist, what they cost,
+what they are worth in income and bounty, their health, armour, speed, pack size
+and traits, sorted into four tiers. The trait glossary is 6.6.
 
-Every number here is current, not final.
+The rules that hold whatever the roster says:
 
-| Creep    | Cost | Health | Bounty | Income | Armour    | Speed |
-| -------- | ---- | ------ | ------ | ------ | --------- | ----- |
-| Sheep    | 10   | 10     | 1      | +2     | Unarmored | 2.0   |
-| Skeleton | 25   | 20     | 2      | +4     | Light     | 2.0   |
-| Acolyte  | 40   | 32     | 3      | +5     | Medium    | 2.0   |
-| Spider   | 50   | 40     | 4      | +6     | Light     | 2.2   |
-| Knight   | 70   | 56     | 5      | +8     | Heavy     | 2.0   |
-| Grunt    | 100  | 80     | 7      | +11    | Medium    | 2.0   |
-
-- Bounty is per creep, so a pack of three pays out three times over
-- Income is per send rather than per creep. The ratio of income to cost falls
-  as the creeps get stronger, which is what makes early sends compound
-- Armour POINTS are 0 on every creep. The knight's aura is the only source
-- Each creep has exactly one passive, except the grunt which has two
-  - Sheep, Fast Producing: its reserve in the send building refills 25% faster.
-    In exchange it is far frailer than its price would suggest
-  - Skeleton, Undying: the first time it dies it goes DOWN rather than away,
-    and gets back up 2 seconds later with 40% of its health
-    - While down it is hidden, does not move, is shot at by nothing, grants and
-      receives no auras, is walked straight through and cannot be clicked
-    - A shaft of yellow light stands on the spot for those 2 seconds,
-      brightening and widening as the revive nears, and flashes as it gets up
-    - The delay is the point. A creep that popped straight back at a fraction
-      of its health was killed again by the very next shot, so nothing a player
-      could see ever happened. The wait also gives the maze a real window: the
-      tower that was shooting it moves on to the next creep
-    - A revived creep did not die, so it pays no bounty and keeps walking the
-      route it was already committed to. Killing it again pays as normal
-  - Acolyte, Last Rites: heals every creep within 1.5 cells for 20 as it dies.
-    Its own death is not called off, so it still pays bounty and still leaves.
-    The heal lands where it FELL, so walking one in the middle of a pack is
-    worth more than at the back
-  - Spider, Carapace: takes 50% less area damage, and moves 10% faster
-  - Knight, Devotion Aura: grants +3 armour to every creep in range, itself
-    included
-  - Grunt, Hardened Skin and Regeneration: blocks 10 damage from every hit it
-    takes, and regenerates 5 health per second. The regeneration runs all the
-    time rather than only out of combat, so a maze has to out-damage it rather
-    than merely interrupt it
-- EVERY creep aura shares ONE radius, currently 3 cells, so a player learns the
-  size of an aura once and it holds for all of them
-  - Stored as GameConfig.creep_aura_radius_cells, never per creep
+- A tier is a COST BRACKET and carries no mechanical meaning. A creep is not
+  stronger or differently targetable for being in one, and a lower tier is never
+  retired by a higher one - Sudden Death is the single exception
+- Creeps unlock one at a time on the match clock, each by its own start delay,
+  never as a whole tier at once. Sudden Death is again the exception
+- Bounty is per creep, so a pack pays out once per creep in it
+- Income is per SEND rather than per creep, and the ratio of income to cost gets
+  worse as creeps get stronger. That is what makes early sends compound
+- Population is charged per creep, not per send
+- Auras: EVERY creep aura shares ONE radius, so a player learns the size of an
+  aura once and it holds for all of them
+  - Stored on `GameConfig`, never per creep
   - Auras do not stack: the best one in range applies, never the sum
+- A creep that revives rather than dying does not pay bounty and keeps the route
+  it was already committed to. Killing it again pays as normal
+  - A revive waits before it happens, and is visible while it waits. A creep that
+    popped straight back at a fraction of its health was killed again by the very
+    next shot, so nothing a player could see ever happened - and the wait is also
+    what gives the maze a real window, since the tower that was shooting it moves
+    on to the next creep
+  - While down it is hidden, does not move, is shot at by nothing, grants and
+    receives no auras, is walked straight through and cannot be clicked
+
+**The six creeps currently implemented - Sheep, Skeleton, Acolyte, Spider, Knight
+and Grunt - are a TEST SET and are all being replaced** by the real roster. Their
+costs, stats and passives were placeholders chosen to have something to send, and
+none of them was balanced. Some names survive into the real roster by coincidence;
+the numbers behind them do not.
 
 # Sending creeps
 - Creeps are purchased in a dedicated building located above the player's own building area
@@ -490,48 +498,50 @@ Every number here is current, not final.
   every send so an elimination closing the ring needs nothing invalidated
   - A one-player run has no neighbour, so it falls back to sending into your own
     area - which is what keeps solo testing working
-- NOT BUILT: sending is disabled for the first 20 seconds
-  - Can be handled organically by not unlocking any creep until then
-- NOT BUILT: creeps unlock over game time
-  - The weakest 2 are available from the start. All six are available from the
-    start today, since nothing gates them yet
-  - Every 30 seconds the next stronger creep unlocks
-- Normal creeps are sent in packs of 3 of the same type
-- Bosses are sent as a single larger creep
-- Each creep type has its own stock of sends, so one type cannot be sent infinitely
-  - Default is 32, special creeps get their own lower numbers
-  - One stock regenerates every 3 seconds, and the timer only runs while the
-    stock is below full, so waiting at full never banks an instant refill
-  - A creep's own passive can speed its reserve up, e.g. the sheep's 25%. It
-    scales the base rate rather than replacing it, so 3 seconds stays the one
-    number everything is measured against
-  - Players start a match with stock full, so the opening burst is available
+- NOT BUILT: creeps unlock over game time, each on its own start delay. Until
+  that exists every implemented creep is sendable from the first second
+  - The delays are per creep and are in `unit_data.md` section 6
+  - It also removes the need for a separate rule disabling sending at the start:
+    nothing is unlocked yet, so there is nothing to send
+- Normal creeps are sent in packs, bosses as a single larger creep. Pack size is
+  per creep type and is in the roster
+- Each creep type has its own stock of sends, so one type cannot be sent
+  infinitely. Maximum stock and replenish rate are per creep type
+  - The replenish timer only runs while the stock is below full, so waiting at
+    full never banks an instant refill
+  - A creep's own trait can speed its reserve up. It scales the base rate rather
+    than replacing it, so the base rate stays the one number everything is
+    measured against
   - A send costs one stock. At zero the creep cannot be sent at all
-- Holding a creep's hotkey repeats the send, accelerating from about three a
-  second up to a cap of ten, which is how a full stock gets dumped quickly
-- Population cap is 100. SHOWN but NOT ENFORCED: the status bar draws the count
-  against the cap, and nothing yet refuses a send that would exceed it
-  - Population equals the player's currently alive sent creeps, counted per
-    SENDER wherever those creeps happen to be walking
+  - TBD: starting stock. The prototype starts full so the opening burst is
+    available; `unit_data.md` records the source game as starting at half
+- Holding a creep's hotkey repeats the send, accelerating up to a capped rate,
+  which is how a full stock gets dumped quickly
+- Population is charged per CREEP, not per send, and is counted per SENDER
+  wherever those creeps happen to be walking
+  - SHOWN but NOT ENFORCED: the status bar draws the count against the cap, and
+    nothing yet refuses a send that would exceed it
   - At the cap no further creeps can be sent
-  - Each creep type carries its own population value, 1 on every creep so far
-  - TBD: whether a stronger creep is ever worth more than 1
+  - Each creep type carries its own population value; the exceptions are in the
+    roster
 
 # Economy
 - Gold is spent on towers and on sending creeps
-- Income is paid out once every 8 seconds
+- Income is paid out on a fixed interval
   - One shared clock, so every player is paid on the same beat
-- Starting gold is 20, starting income is 20
+- Starting gold and starting income are match rules, and live in
+  `Resources/Config/game_config.tres`
 - Sending a creep permanently increases the sender's income
   - The raise applies from the next tick onwards, never retroactively, so
     sending just before a tick is worth no more than sending just after one
 - Income therefore compounds: early sends outscale late sends
-- Every creep has an implicit income ratio of cost to income granted
-  - Illustrative: a 10 gold creep grants 2 income, a 1000 gold creep grants 100 income
-  - The ratio gets worse as creeps get stronger
-  - Special creeps such as attackers may have an even worse ratio
+- Every creep has an implicit income ratio of cost to income granted, and the
+  ratio gets worse as creeps get stronger. Special creeps such as attackers are
+  worse still, and some Tier 4 creeps grant no income at all
+- There is an income CAP, above which Tier 4 income gain is heavily reduced
 - Killing creeps in your own area pays bounty gold, see Creeps
-- Send costs, income and bounty are decided for all six creeps, see the roster
+- Every one of these numbers - send cost, income, bounty, the cap - is in
+  `unit_data.md`, sections 1.7 and 6
 
 # Life steal and recycling
 BUILT.
@@ -552,12 +562,12 @@ BUILT.
 - A player with no lives left is eliminated. Nothing acts on that yet beyond the
   ring skipping them, because the win condition below is deliberately not built
 - Starting lives depend on the player count: fewer players means more lives each
-  - Formula: max(25, round to nearest 5 of 200 / player count)
-  - The pool is roughly 200 total lives, but every player has at least 25
-  - Resulting values: 2 players 100, 3 players 65, 4 players 50, 5 players 40,
-    6 players 35, 7 players 30, 8 players 25, 9+ players 25
-  - Above 8 players the total therefore grows beyond 200
-- TBD: whether stronger creeps steal more than 1 life
+  - The prototype derives them from a formula so any player count works, kept in
+    `Resources/Config/game_config.tres`
+  - The SOURCE GAME instead sets them per player count and per ruleset, and those
+    figures are in `unit_data.md` section 1.7. Adopting them is pending a ruleset
+    concept, which does not exist yet
+- Bosses steal more than one life. How many is per creep, in the roster
 
 # Win condition
 BUILT, in the smallest form: the match decides itself and then stops. There is no
@@ -580,32 +590,37 @@ end screen yet - players leave through the in-game menu.
     settled in ascending slot order, which is that order
 
 # Values Claude chose that you have never reviewed
-Recorded because they LOOK decided in the files and are not. None is a rule; all
-are placeholders waiting on your word.
+Recorded because they LOOK decided and are not. None is a rule; all are choices
+made to get something working, waiting on your word.
 
-- Every tower number except attacks-per-second is an unbalanced placeholder:
-  damage, range, 200 health, and a flat 10 gold for all four. The APS values are
-  yours
-- Towers and buildings still carry Unarmored and 0 armour points. Creeps have
-  real armour types, chosen by Claude and never reviewed
-- Acolyte heal radius of 1.5 cells is Claude's; you gave only the amount (20) and
-  "a small aoe"
-- Sniper arc_height is 0.25 rather than 0 - "rather straight curve" read as mostly
-  straight rather than flat
-- The Spider's "10% faster" is plain move_speed 2.2, not a passive, so its tooltip
-  advertises only the AoE resistance
-- Passive names echo the WC3 originals: Fast Producing, Undying, Last Rites,
-  Carapace, Hardened Skin, Regeneration, Devotion Aura. Strings only
-- Meatgrinder Tower needs a real name; Stomper Tower needs a name AND a concept -
-  the WC3 original was a bear stomping, and you want non-living towers, so it is
-  currently a piston press
-- Send building display_name is still the placeholder "Send Building"
-- Creep models are primitives varying only by shape, size and colour
-- Creep separation is switched OFF (SEPARATION_LIMIT 0.0 in Creep.gd), your call.
-  Worth revisiting now the waypoint bug it was masking is gone
+**No current values are listed here on purpose.** A number written down here goes
+stale the moment the `.tres` behind it is edited, and this file is never the one
+that gets edited with it. What is recorded is WHICH decision was never yours.
+
+- Every tower and creep currently implemented is a placeholder set being replaced
+  wholesale from `unit_data.md`. Their costs, stats, armour types and names were
+  all chosen by Claude and none was balanced. The attacks-per-second values are
+  the exception - those are yours
+- Towers and buildings carry Unarmored and no armour points, which is a stand-in
+  rather than a decision
+- The Sniper's projectile arc is a guess: "rather straight curve" was read as
+  mostly straight rather than flat
+- Passive names on the test creeps echo the WC3 originals. Strings only, and they
+  go with the test set
+- The send building's display name is still a placeholder
+- Creep and tower models are primitives varying only by shape, size and colour
+- Creep separation strength is a tuning value you change while testing. Whatever
+  it currently reads is a test state, not a decision - and the waypoint bug it was
+  once masking is gone, so it is worth a real call at some point
+- Starting gold in `game_config.tres` is set far above its script default as a
+  deliberate test value, so building is quick to try
 
 # Open questions
 - Recycling rule generalisation for 3+ players (deferred)
 - Map layout for more than 2 players (deferred)
-- Whether a creep can ever be worth more than 1 population
 - Whether the send tooltip should state pack size
+- Whether to copy the source game's FOUR send buildings, one per creep tier, or
+  reach the tiers from one building some other way. A UI question, not a rules
+  one - nothing about a creep changes either way. See `unit_data.md` 6.1
+- Whether to adopt the source game's per-ruleset starting lives, which needs a
+  ruleset concept first. See Life steal

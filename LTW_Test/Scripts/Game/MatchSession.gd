@@ -207,6 +207,20 @@ func unit_count() -> int:
 	return _units.size()
 
 
+## Every live unit, in no particular order. For anything that has to look at
+## all of them at once rather than at one id - the minimap does.
+##
+## Unordered on purpose: sorting is unit_ids()'s job, and it only sorts because
+## its caller compares the result between two machines. Nothing that just draws
+## the world needs to pay for that.
+func live_units() -> Array:
+	var units: Array = []
+	for unit: Unit in _units.values():
+		if is_instance_valid(unit):
+			units.append(unit)
+	return units
+
+
 ## Every live unit id, ascending. Ascending because the one caller compares the
 ## result between two machines (WorldChecksum), and a dictionary's own order is
 ## an implementation detail that has no business deciding whether two worlds

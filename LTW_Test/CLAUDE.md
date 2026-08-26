@@ -1,7 +1,7 @@
 # What's this project?
 - 3d game
 - The goal is to make a standalone version of the Warcraft III custom Map "Line Tower Wars"
-- It's a PvP tower defence game with 2-15 players where players have to send creeps and defend against creeps from other players
+- It's a PvP tower defence game with 2-12 players where players have to send creeps and defend against creeps from other players
 - Game name: to be decided.
 - The first major milestone and for now the only one is a prototype where 1v1 gameplay can be tested. No need for 3+ player FFA gameplay yet-
 
@@ -41,6 +41,17 @@
   index or a name: UnitAbility.ability_id and UnitStats.unit_type_id. Both are
   scanned out of the folders ContentConfig names, so an orphan still owns its
   number and nothing can be authored into a taken one
+  - the NUMBER itself carries no meaning. There is no block plan and no range
+    that implies a kind: ids were handed out in creation order and any gap or
+    grouping in them is an accident. Do not read one, and do not preserve one
+  - what an id must be is UNIQUE within its own namespace and PERMANENT once
+    authored. ability_id and unit_type_id are separate namespaces
+  - to pick the next one, scan the folder and take the highest plus one. The
+    registry refuses a duplicate loudly at boot, so a collision is a failed boot
+    rather than a bug that ships
+  - ints rather than guids on purpose: an id is read by a human in a .tres, in a
+    server rejection line and in a log, and a guid would cost that for a
+    uniqueness the registry already enforces
 - An @rpc endpoint must be an AUTOLOAD. Godot routes rpcs by node path, and the
   client's match scene root is /root/Main while the server's is /root/ServerMatch,
   so no node inside a match scene can receive one
@@ -106,7 +117,7 @@
   - the ability reads it off that stats resource, so a number cannot drift
     between two files
 - Abilities are Resources carrying their own behaviour, and they are SHARED
-  - one send_basic_creep.tres is the same object for every unit referencing it
+  - one send_sheep_ability.tres is the same object for every unit referencing it
   - so an ability must never hold per-unit state: no cooldowns, charges or counts
   - that state belongs on the unit: the send building owns its creep stock
   - a value derived only from the ability's own @exports may be cached on it,
@@ -137,6 +148,16 @@
 - A node with node-typed @exports needs node_paths=PackedStringArray("_field", ...)
   on its [node] line, or those references silently stay null at runtime
 - Never invent a uid. Omit it, or reference by path only, and let Godot assign one
+- A PanelContainer's padding lives in its StyleBox content margins, never in a
+  MarginContainer inside it. Both do the same job, so a panel carrying both double
+  dips and its real padding is spread across two files
+  - a StyleBoxFlat that sets no content_margin does NOT mean zero: each side falls
+    back to that side's border width, so a bordered panel silently adds to whatever
+    the MarginContainer asks for, and the number authored is not the number drawn.
+    Cost a pass over unit_panel.tscn once
+  - two panels wanting different padding then need two styleboxes, which repeats
+    the colour and border between them. Worth it: padding is what gets tuned, the
+    look is not
 - A child node's _ready runs BEFORE its parent's, and Godot refuses to give a node
   a child while that node is still setting its own up. So a component cannot add a
   node to its own unit from _ready - build it lazily on first use instead
@@ -229,27 +250,38 @@
 - Targeting pc (Keyboard & Mouse)
 
 # Project structure
+Where a kind of file goes. Some of these folders do not exist yet - there is no
+art at all so far - so this is the placement rule, not a description of the tree.
+- /Scripts/ contains all gd scripts, split by area
+- /Scenes/ contains all scenes, split by area
+- /Resources/ contains all resources, split by kind: Config, UnitStats,
+  Abilities, Materials, Shaders, UI
 - /2DArt/ contains all textures
-- /3DArt/ contains all Meshes
-- /Scripts/ contains all gd scripts
-- /Scenes/ contains all scenes
-- /Resources/ contains all resources
+- /3DArt/ contains all meshes
 - /Audio/ contains all sound files
+- A UI element that will gain behaviour later - a command slot, an ability
+  button - is a prefab scene, never a node built in code
 
 # Other
+- GIT IS THE USER'S. Never commit, never push, never branch, never revert. Leave
+  the work in the working tree and say what changed; the user reads it before it
+  lands. Reading git - log, diff, blame, status - is fine and often useful
 - README.md is the way in: what the project is, what works, and which file answers
   what. Keep its Status section honest - it is the first thing a new reader trusts.
-- Refer to game_rules.md for the rules. It says which rules are BUILT and which
-  are only written down; keep that marking correct when you implement one.
-- unit_data.md holds every tower, creep, disc and technology of Warcraft III Line
-  Tower Wars 12.4a, whose design the prototype copies wholesale. It is the second
-  and last .md allowed to carry stat tables, on the same grounds as game_rules.md:
-  those numbers ARE the design being copied. Once a unit is implemented its .tres
-  is the authority and unit_data.md is the mirror - change both in the same commit.
-- multiplayer.md holds the multiplayer working notes and its open questions.
+- Refer to game_rules.md for the RULES - how the game works, not what anything
+  costs. It says which rules are BUILT and which are only written down; keep that
+  marking correct when you implement one. It never restates a number that
+  unit_data.md already carries, it points there instead.
+- unit_data.md holds the NUMBERS: every tower, creep, disc and technology of
+  Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies as
+  closely as it can. It is the second and last .md allowed to carry stat tables,
+  on the same grounds as game_rules.md: those numbers ARE the design being
+  copied. Once a unit is implemented its .tres is the authority and unit_data.md
+  is the mirror - change both in the same commit, until the generator in its
+  section 8 makes that automatic.
+- multiplayer.md is what the networked build is and where each part of it lives.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
-- claude_notes.md is a stale duplicate of the conventions above. Ignore it.
 - NEVER write a COUNT or a live value into a .md file. No "26 abilities", no
   "13 unit types", no "29 public methods", no stat quoted out of a .tres. They
   are true for a day and misleading afterwards, and keeping them current is
@@ -264,6 +296,17 @@
     restatement of the code. Nothing else may copy them
   - a game design document may take that job over later. Until then no other .md
     grows a stats table
+- NEVER write the CURRENT VALUE of a tuning knob into a .md file either. Whether
+  creep separation is on, what starting_gold is set to today, which constant is
+  temporarily cranked up for a test - all of it changes without warning and the
+  .md is never the file that gets changed with it
+  - the scripts and the .tres are well commented and are the authority. A .md
+    that repeats them is a second copy that only ever goes stale
+  - some overlap between the .md files and the code is unavoidable and fine. The
+    test is whether the line would survive somebody editing the value: the RULE
+    survives, the READING does not
+  - the exception is something NOT YET IMPLEMENTED. A .md is the only place that
+    can live, and it is exactly what a .md is for
 
 # Known weaknesses
 Real, none blocking. Recorded so they are not rediscovered as surprises.
@@ -274,14 +317,8 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
 - Three naive linear scans over an area's creeps: creep separation, TargetFinder,
   and Creep._refresh_aura. One spatial hash fixes all three
 - Replication sends the whole world every tick, every unit in it. Fine for a
-  1v1 on a LAN, nowhere near 15 players. That is multiplayer.md
+  1v1 on a LAN, nowhere near 12 players. That is multiplayer.md
   3.3, deliberately deferred until there was something to measure
-- Dead content, safe to delete on the user's word: Scenes/basic_tower.tscn,
-  Scenes/basic_tower_stats.tres, Resources/Abilities/build_basic_tower_ability.tres,
-  Scenes/Units/basic_creep.tscn, Resources/UnitStats/basic_creep_stats.tres,
-  Resources/Abilities/send_basic_creep_ability.tres. Sniper and Sheep replaced
-  them. basic_tower_stats.tres also sits in Scenes/ rather than
-  Resources/UnitStats/, so the unit type registry never sees its id
 - Two traps not covered by the rules above: SelectionController._select_in_rect
   must FALL THROUGH when the box caught neither a commandable unit nor a creep,
   or an empty box stops clearing the selection; and AttackRangeOverlay.MAX_CIRCLES

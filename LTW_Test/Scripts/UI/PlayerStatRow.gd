@@ -7,6 +7,14 @@ extends HBoxContainer
 ## one: the row is going to grow. A player colour swatch, a ping, a spectate
 ## click and a highlight for whoever you are currently sending into all belong
 ## here, and none of them wants to be threaded through a builder function.
+##
+## The column widths are authored twice, here and on the icon header inside
+## match_hud.tscn, and the two have to agree or the header stops sitting over
+## the numbers it names. They are sized to the widest thing each column can
+## ever hold rather than to today's numbers: three digits of life, four
+## characters of compacted income or value ("9.9M"), and a two digit ordinal
+## placement ("15th"). Only the name column is elastic, and a name too long
+## for it ends in an ellipsis.
 
 @export_group("References")
 @export var _name_label: Label

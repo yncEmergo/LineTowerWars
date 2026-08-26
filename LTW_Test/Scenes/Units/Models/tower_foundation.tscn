@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://qehxin400wqm"]
+
+[ext_resource type="Script" uid="uid://dbx6cm3x3tcok" path="res://Scripts/Units/BuildingFoundation.gd" id="1_foundation_script"]
+[ext_resource type="Material" uid="uid://i3qdv0mlug0u" path="res://Resources/Materials/building_foundation_material.tres" id="2_foundation"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_foundation"]
+material = ExtResource("2_foundation")
+size = Vector2(1.5, 1.5)
+
+[node name="TowerFoundation" type="MeshInstance3D" unique_id=1054907882]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_foundation")
+script = ExtResource("1_foundation_script")

@@ -4,7 +4,7 @@ extends Node
 ## Owns what there is exactly one of PER PLAYER: their state, and their area.
 ##
 ## The lookup exists so nothing has to reach for "the" player: a tower asks
-## for its own owner's state, which stays correct once there are 15 of them.
+## for its own owner's state, which stays correct once there are 12 of them.
 ##
 ## It also answers the two ring questions - who a player sends into, and where
 ## a creep goes after it leaks - because answering them needs both halves it

@@ -1,13 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="1_model"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
-albedo_color = Color(0.22, 0.23, 0.25, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_base"]
-material = SubResource("StandardMaterial3D_base")
-size = Vector3(0.92, 0.22, 0.92)
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="2_foundation"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_frame"]
 albedo_color = Color(0.36, 0.37, 0.4, 1)
@@ -36,22 +30,20 @@ size = Vector3(0.78, 0.2, 0.78)
 [node name="StomperTowerModel" type="Node3D"]
 script = ExtResource("1_model")
 
-[node name="Base" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
-mesh = SubResource("BoxMesh_base")
+[node name="Base" parent="." instance=ExtResource("2_foundation")]
 
 [node name="FrameLeft" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.53, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.31, 0)
 mesh = SubResource("BoxMesh_frame")
 
 [node name="FrameRight" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.53, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.31, 0)
 mesh = SubResource("BoxMesh_frame")
 
 [node name="Piston" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.51, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29, 0)
 mesh = SubResource("CylinderMesh_piston")
 
 [node name="Plate" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 0)
 mesh = SubResource("BoxMesh_plate")

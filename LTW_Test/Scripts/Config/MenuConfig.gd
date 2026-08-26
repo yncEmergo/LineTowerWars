@@ -34,7 +34,11 @@ extends Resource
 ## Free for all only, no team modes, see game_rules.md. Two is the smallest
 ## real match, which is also the prototype's 1v1.
 @export var min_players: int = 2
-@export var max_players: int = 15
+## Seats one lobby opens at most. Must stay at or under the map's slot count,
+## GameConfig.area_columns * area_rows, or the extra players get no lane -
+## Main says so at boot when it happens. Not read off GameConfig directly
+## because the menus never wire one.
+@export var max_players: int = 12
 ## Slots a freshly created lobby opens with.
 @export var default_lobby_size: int = 2
 ## Pattern for the name a new lobby is offered, given the host's display name.
