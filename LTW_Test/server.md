@@ -34,7 +34,7 @@ running and ready to test against. `.\stop_server.ps1 -List` is how you check.
 ```
 Starting the LTW dedicated server (headless). Ctrl+C to stop.
 
-Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+Godot Engine v4.7.x.stable.official.<hash> - https://godotengine.org
 [Boot] Boot dispatching { "role": server, "scene": res://Scenes/Server/server_main.tscn, ... }
 [server] Server process started
 [server] Process id: 26628
@@ -81,7 +81,7 @@ but the terminal is the better place for it.
 The script only assembles this:
 
 ```powershell
-& "C:\Users\Emergo Entertainment\Desktop\Godot 4.7.1.exe" --path . --headless -- --server
+& $env:GODOT --path . --headless -- --server
 ```
 
 The **`--` separator is required**. Godot treats an unrecognised argument before it as an
@@ -89,12 +89,30 @@ engine argument and refuses to start, so `--server` has to come after it.
 
 ### Telling the script where Godot is
 
-It looks in three places, in order: the `-Godot` argument, the `GODOT` environment variable,
-then `Desktop\Godot 4.7.1.exe`. To set it for a terminal session:
+Where the editor lives is a **per-machine** detail, not a project setting — the repo is
+developed on more than one PC and they do not agree on the path or the patch version. So the
+script never hardcodes yours. It looks in three places, in order:
+
+1. the `-Godot` argument
+2. the `GODOT` environment variable
+3. a legacy `Desktop\Godot 4.7.1.exe` fallback, kept only so an already-working machine that
+   never set `GODOT` does not break
+
+**Set `GODOT` once per machine** and the fallback stops mattering:
 
 ```powershell
+# permanent, survives reboots — run once per PC, then reopen the terminal
+[Environment]::SetEnvironmentVariable('GODOT', 'C:\path\to\Godot.exe', 'User')
+
+# or just this terminal session
 $env:GODOT = "C:\path\to\Godot.exe"
 ```
+
+Point it at the **real `.exe`**, not a `.lnk` shortcut — PowerShell's call operator cannot
+launch a shortcut.
+
+Anything that inherits the environment — the Godot editor, a terminal, the MCP server — only
+sees the variable if it was **started after** it was set.
 
 ---
 
