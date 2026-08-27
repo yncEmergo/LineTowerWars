@@ -3,6 +3,10 @@ extends RefCounted
 
 ## The reserve of sends held for one creep type.
 ##
+## It starts part full rather than empty or full: the source game hands a creep
+## half its maximum the moment it unlocks, and the attacker creeps exactly one.
+## CreepStats.starting_stock() is where that is decided, so this only ever asks.
+##
 ## One of these per creep type per send building. Spending a send takes one,
 ## and they refill on their own timer, so a player cannot pour a single creep
 ## type out faster than it regenerates however much gold they have.
@@ -23,7 +27,7 @@ var _interval: float = 0.0
 
 func setup(creep_stats: CreepStats) -> void:
 	stats = creep_stats
-	count = max_count() if creep_stats != null && creep_stats.starts_at_max_stock else 0
+	count = 0 if creep_stats == null else creep_stats.starting_stock()
 	_elapsed = 0.0
 	_interval = _compute_interval()
 

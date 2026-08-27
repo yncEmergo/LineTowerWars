@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cxf6tbbuo1lr7"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://c3cc6s0p6klaf" path="res://Resources/UnitStats/Towers/unholy_defiled_fountain_stats.tres" id="2_unholy_defiled_fountain_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_unholy_defiled_fountain_stats")
+required_tech_id = 4
+ability_id = 249
+display_name = "Upgrade to Defiled Fountain"
+description = "Corrupts what it hits, so a corrupted creep explodes when it dies. Splits into poison and permanent damage."
+slot = 0

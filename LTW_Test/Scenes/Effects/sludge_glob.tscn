@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+
+[sub_resource type="StandardMaterial3D" id="M_body"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.34, 0.58, 0.34, 0.95)
+
+[sub_resource type="StandardMaterial3D" id="M_drip"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.2, 0.38, 0.3, 0.7)
+
+[sub_resource type="SphereMesh" id="Body"]
+radius = 0.095
+height = 0.1805
+radial_segments = 7
+rings = 4
+material = SubResource("M_body")
+
+[sub_resource type="SphereMesh" id="Drip"]
+radius = 0.0428
+height = 0.0855
+radial_segments = 5
+rings = 3
+material = SubResource("M_drip")
+
+[node name="SludgeGlob" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Body")
+
+[node name="DripA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0.11)
+cast_shadow = 0
+mesh = SubResource("Drip")
+
+[node name="DripB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04, -0.02, 0.18)
+cast_shadow = 0
+mesh = SubResource("Drip")

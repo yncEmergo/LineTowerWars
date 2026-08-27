@@ -1,0 +1,114 @@
+class_name DevourEssencePassive
+extends TowerPassive
+
+## Unholy 2, the whole Alchemist line: a tower that grows permanently stronger
+## with every creep it kills.
+##
+## unit_data.md 4.8: each kill is worth a flat amount of attack damage forever,
+## up to a cap, and the bonus survives an upgrade. Once the cap is reached the
+## overflow goes to the nearest other Unholy (2) tower, so a maxed Alchemist
+## feeds the one next to it rather than wasting kills.
+##
+## The bonus is PER TOWER and permanent, so it lives in Building.ability_state
+## and rides across an upgrade with everything else there.
+##
+## The Ultimate also alters the ARMOUR TYPE of what it hits, to a type the
+## player picks off the command card - see ArmorTypeChoiceAbility, which is the
+## button, while the applying of it is here.
+
+## Key the eaten damage is kept under. Shared by every tier of the line ON
+## PURPOSE: it is the same bonus carried up the chain, and using one key is
+## what makes carrying it across an upgrade need no code at all.
+const BONUS_KEY: String = "devoured_damage"
+
+@export_group("Devour Essence")
+## Attack damage gained per creep killed.
+@export var damage_per_kill: int = 2
+## The most this tower may ever eat.
+@export var damage_cap: int = 100
+## How far the overflow reaches for another tower of the same line, in cells.
+@export var overflow_cells: float = 2.34
+
+@export_group("Unholy Concoction")
+## Seconds an altered armour type lasts, or 0 on the tiers that alter none.
+@export var armor_type_seconds: float = 0.0
+
+
+func permanent_bonus(tower: Building) -> int:
+	return int(tower.ability_state.get(BONUS_KEY, 0))
+
+
+func bonus_damage(tower: Building, _target: Unit, _rolled: int) -> int:
+	return permanent_bonus(tower)
+
+
+func on_kill(tower: Building, _target: Unit) -> void:
+	_feed(tower, damage_per_kill)
+
+
+func on_hit(tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
+	if armor_type_seconds <= 0.0 || target == null:
+		return
+	var status: StatusEffects = status_of(target)
+	if status == null:
+		return
+	# A creep may only ever be altered to a given type once, which
+	# StatusEffects enforces - so the answer being refused is normal and not
+	# worth reporting.
+	status.alter_armor_type(ArmorTypeChoiceAbility.chosen_type(tower), armor_type_seconds)
+
+
+## Adds to what this tower has eaten, and passes the excess on.
+##
+## The overflow is what stops a maxed Alchemist wasting a lane: it looks for
+## the nearest tower carrying THIS VERY passive resource, which is identity
+## rather than a type check - a Lesser and a Greater Alchemist have different
+## caps and do not feed each other, exactly as the source states.
+func _feed(tower: Building, amount: int) -> void:
+	if amount <= 0:
+		return
+
+	var held: int = permanent_bonus(tower)
+	var room: int = maxi(0, damage_cap - held)
+	tower.ability_state[BONUS_KEY] = held + mini(room, amount)
+
+	var spare: int = amount - mini(room, amount)
+	if spare <= 0:
+		return
+	var neighbour: Building = _nearest_sibling(tower)
+	if neighbour != null:
+		_feed(neighbour, spare)
+
+
+func _nearest_sibling(tower: Building) -> Building:
+	if tower.area == null:
+		return null
+
+	var best: Building = null
+	var best_distance: float = overflow_cells
+	for child: Node in tower.area.get_children():
+		var other: Building = child as Building
+		if other == null || other == tower || !(self in other.tower_passives()):
+			continue
+		if other.ability_state.get(BONUS_KEY, 0) >= damage_cap:
+			continue
+		var offset: Vector3 = other.global_position - tower.global_position
+		var distance: float = Vector2(offset.x, offset.z).length()
+		if distance <= best_distance:
+			best = other
+			best_distance = distance
+	return best
+
+
+func effect_text() -> String:
+	var text: String = ("Permanently gains +%d attack damage per creep killed,"
+		+ " up to +%s, and keeps it across upgrades. Overflow goes to the"
+		+ " nearest tower of this line within %s cells.") % [
+		damage_per_kill, StringUtil.compact_number(damage_cap),
+		StringUtil.trim_number(overflow_cells),
+	]
+	if armor_type_seconds > 0.0:
+		text += (" Attacks also alter the armor type of creeps hit for %ss, to"
+			+ " the type chosen on the command card - once per type per creep.") \
+			% StringUtil.trim_number(armor_type_seconds)
+	return text

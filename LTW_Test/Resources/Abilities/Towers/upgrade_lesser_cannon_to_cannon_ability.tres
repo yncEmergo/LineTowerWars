@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cf7mrnu04h1oa"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://dw27pgtywobls" path="res://Resources/UnitStats/Towers/cannon_stats.tres" id="2_cannon_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_cannon_stats")
+ability_id = 78
+display_name = "Upgrade to Cannon"
+description = "Siege mortar. Slow, and the shell damages everything around where it lands. Cannot hit air at any tier."
+slot = 0

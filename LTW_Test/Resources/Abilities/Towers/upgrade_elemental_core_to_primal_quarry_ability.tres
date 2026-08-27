@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://da8imcq2vpwso"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://cngc80uwq0ctr" path="res://Resources/UnitStats/Towers/primal_quarry_stats.tres" id="2_primal_quarry_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_primal_quarry_stats")
+required_tech_id = 28
+ability_id = 280
+display_name = "Morph into Quarry"
+description = "Stuns on every fourth attack. Splits into the gold making Primalist and the beast unleashing Beastmaster."
+slot = 9

@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://c3cc6s0p6klaf"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Resource" uid="uid://fo1ras45u2y" path="res://Resources/Abilities/Towers/unholy_defiled_fountain_ability.tres" id="5_unholy_defiled_fountain_ability"]
+[ext_resource type="Resource" uid="uid://duj03nk25f82s" path="res://Resources/Abilities/Towers/upgrade_unholy_defiled_fountain_to_unholy_lesser_gravedigger_ability.tres" id="6_upgrade_unholy_defiled_fountain_to_unholy_lesser_gravedigger_ability"]
+[ext_resource type="Resource" uid="uid://ckbflg0cuyoty" path="res://Resources/Abilities/Towers/upgrade_unholy_defiled_fountain_to_unholy_lesser_alchemist_ability.tres" id="7_upgrade_unholy_defiled_fountain_to_unholy_lesser_alchemist_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="8_return_to_elemental_core_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="9_5c6r8"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="10_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="11_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://bag1q80snp85y" path="res://2DArt/Icons/defiled_fountain.png" id="15_defiled_fountain"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/poison_glob.tscn"
+speed = 8
+arc_height = 0.7
+impact_scene_path = "res://Scenes/Effects/toxic_impact.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 58
+damage_max = 59
+attack_range = 4.69
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/unholy_defiled_fountain_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
+gold_cost = 800
+total_gold_cost = 1000
+unit_type_id = 106
+display_name = "Defiled Fountain"
+icon = ExtResource("15_defiled_fountain")
+max_health = 150
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_unholy_defiled_fountain_ability"), ExtResource("6_upgrade_unholy_defiled_fountain_to_unholy_lesser_gravedigger_ability"), ExtResource("7_upgrade_unholy_defiled_fountain_to_unholy_lesser_alchemist_ability"), ExtResource("8_return_to_elemental_core_ability"), ExtResource("9_attack_ability"), ExtResource("10_prioritize_ability"), ExtResource("11_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/unholy_defiled_fountain.tscn"

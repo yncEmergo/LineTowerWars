@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bw3p51qpck3yi"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://m8jc6u3endvh" path="res://Resources/UnitStats/Towers/holy_lesser_divineshroom_stats.tres" id="2_holy_lesser_divineshroom_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_holy_lesser_divineshroom_stats")
+required_tech_id = 20
+ability_id = 234
+display_name = "Upgrade to Lesser Divineshroom"
+description = "AIR ONLY from this tier up. Heavy splash, deep slow, and the only armor reduction that goes below zero."
+slot = 0

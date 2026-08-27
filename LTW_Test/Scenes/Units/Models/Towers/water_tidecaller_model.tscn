@@ -1,0 +1,135 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone.tres" id="1_water_stone"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone_deep.tres" id="2_water_stone_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone_pale.tres" id="3_water_stone_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t2.tres" id="4_trim_t2"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_water_t1.tres" id="5_energy_water_t1"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Script" path="res://Scripts/Components/BobAnimation3D.gd" id="8_BobAnimation3D"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.3122
+bottom_radius = 0.3323
+height = 0.0736
+radial_segments = 8
+rings = 0
+material = ExtResource("2_water_stone_deep")
+
+[sub_resource type="TorusMesh" id="TorusMesh_2"]
+inner_radius = 0.2971
+outer_radius = 0.3474
+rings = 14
+ring_segments = 5
+material = ExtResource("4_trim_t2")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.3021
+bottom_radius = 0.282
+height = 0.0792
+radial_segments = 8
+rings = 0
+material = ExtResource("1_water_stone")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.2517
+bottom_radius = 0.2517
+height = 0.017
+radial_segments = 8
+rings = 0
+material = ExtResource("5_energy_water_t1")
+
+[sub_resource type="TorusMesh" id="TorusMesh_5"]
+inner_radius = 0.2618
+outer_radius = 0.3122
+rings = 14
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="TorusMesh" id="TorusMesh_6"]
+inner_radius = 0.2719
+outer_radius = 0.3323
+rings = 12
+ring_segments = 5
+material = ExtResource("4_trim_t2")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_7"]
+radius = 0.0856
+height = 0.1697
+radial_segments = 8
+rings = 3
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_8"]
+radius = 0.0755
+height = 0.0962
+radial_segments = 6
+rings = 3
+material = ExtResource("5_energy_water_t1")
+
+[sub_resource type="TorusMesh" id="TorusMesh_9"]
+inner_radius = 0.0906
+outer_radius = 0.1259
+rings = 10
+ring_segments = 4
+material = ExtResource("4_trim_t2")
+
+[node name="WaterTidecallerModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0368, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="BaseTrim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0736, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_2")
+
+[node name="Basin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1132, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1471, 0)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_4")
+
+[node name="Lip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1528, 0)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Collar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1528, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_6")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1867, 0)
+
+[node name="Spout" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0736, 0)
+mesh = SubResource("CapsuleMesh_7")
+
+[node name="Drop" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1811, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Collar2" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1245, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_9")
+
+[node name="Breathe" type="Node" parent="Turret" node_paths=PackedStringArray("_floater")]
+script = ExtResource("8_BobAnimation3D")
+_floater = NodePath("..")
+height = 0.0091
+cycles_per_second = 0.3
+phase = 0
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1697, -0.1007)

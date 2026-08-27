@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://b38l4q5g1o8bd"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
+[ext_resource type="Resource" uid="uid://cf7mrnu04h1oa" path="res://Resources/Abilities/Towers/upgrade_lesser_cannon_to_cannon_ability.tres" id="7_upgrade_lesser_cannon_to_cannon_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://c8wdyg68umniv" path="res://2DArt/Icons/lesser_cannon.png" id="13_lesser_cannon"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/mortar_shell.tscn"
+speed = 6
+arc_height = 2.4
+impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SplashEffect")
+radius = 1.17
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 16
+damage_max = 19
+damage_type = 4
+is_aoe_damage = true
+attacks_per_second = 0.5
+attack_range = 3.91
+target_types = 1
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/lesser_cannon_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
+gold_cost = 150
+total_gold_cost = 190
+unit_type_id = 32
+display_name = "Lesser Cannon"
+icon = ExtResource("13_lesser_cannon")
+max_health = 75
+armor_type = 5
+armor = 3
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_upgrade_lesser_cannon_to_cannon_ability"), ExtResource("8_attack_ability"), ExtResource("9_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/lesser_cannon.tscn"

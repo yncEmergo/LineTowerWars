@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bbqvco4y3q5ea"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://dbhwhumyye3wn" path="res://Resources/UnitStats/Towers/archer_stats.tres" id="2_archer_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_archer_stats")
+ability_id = 72
+display_name = "Upgrade to Archer"
+description = "Cheap ranged opener. Piercing shots that reach a long way for the price, at ground and air alike."
+slot = 0

@@ -16,7 +16,7 @@ extends CreepPassive
 @export_range(0.0, 1.0, 0.05) var damage_ratio: float = 0.5
 
 
-func damage_taken_ratio(is_aoe: bool) -> float:
+func damage_taken_ratio(is_aoe: bool, _is_spell: bool) -> float:
 	return damage_ratio if is_aoe else 1.0
 
 

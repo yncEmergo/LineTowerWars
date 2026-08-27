@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CancelUpgradeAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/CancelUpgradeAbility.gd" id="1_cancel_upgrade"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_cancel.png" id="2_ability_cancel"]
+
+[resource]
+script = ExtResource("1_cancel_upgrade")
+ability_id = 70
+display_name = "Cancel Upgrade"
+description = "Stop the upgrade and hand back what this tier cost. Everything already sunk into the tower stays in it."
+slot = 10
+icon = ExtResource("2_ability_cancel")

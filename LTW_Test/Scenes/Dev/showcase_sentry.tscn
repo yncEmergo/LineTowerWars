@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_sentry_model.tscn" id="1_lesser_sentry_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/sentry_model.tscn" id="2_sentry_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_defender_model.tscn" id="3_lesser_defender_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/defender_model.tscn" id="4_defender_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/greater_defender_model.tscn" id="5_greater_defender_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ultimate_defender_model.tscn" id="6_ultimate_defender_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_turret_model.tscn" id="7_lesser_turret_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/turret_model.tscn" id="8_turret_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/greater_turret_model.tscn" id="9_greater_turret_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ultimate_turret_model.tscn" id="10_ultimate_turret_model"]
+
+[sub_resource type="StandardMaterial3D" id="M_ground"]
+albedo_color = Color(0.3, 0.33, 0.3, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Ground"]
+size = Vector2(30, 20)
+material = SubResource("M_ground")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.09, 0.10, 0.12, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.48, 0.58, 1)
+ambient_light_energy = 0.7
+
+[node name="TowerShowcase" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
+mesh = SubResource("Ground")
+
+[node name="LesserSentry" parent="." instance=ExtResource("1_lesser_sentry_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, -1.9)
+
+[node name="Sentry" parent="." instance=ExtResource("2_sentry_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, -1.9)
+
+[node name="LesserDefender" parent="." instance=ExtResource("3_lesser_defender_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, 0)
+
+[node name="Defender" parent="." instance=ExtResource("4_defender_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, 0)
+
+[node name="GreaterDefender" parent="." instance=ExtResource("5_greater_defender_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0.75, 0, 0)
+
+[node name="UltimateDefender" parent="." instance=ExtResource("6_ultimate_defender_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 2.25, 0, 0)
+
+[node name="LesserTurret" parent="." instance=ExtResource("7_lesser_turret_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, 1.9)
+
+[node name="Turret" parent="." instance=ExtResource("8_turret_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, 1.9)
+
+[node name="GreaterTurret" parent="." instance=ExtResource("9_greater_turret_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0.75, 0, 1.9)
+
+[node name="UltimateTurret" parent="." instance=ExtResource("10_ultimate_turret_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 2.25, 0, 1.9)
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8253, -0.4593, 0.3284, 0, 0.5817, 0.8134, -0.5646, -0.6713, 0.4801, 0, 6, 0)
+light_energy = 1.35
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.9668, 0.1225, -0.2243, 0, 0.8776, 0.4794, 0.2555, 0.4635, -0.8484, 0, 6, 0)
+light_energy = 0.45
+light_color = Color(0.6, 0.7, 0.9, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8678, 0.4969, 0, -0.4969, 0.8678, 0, 3.5, 5.2)
+current = true
+fov = 46
+near = 0.05

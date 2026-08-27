@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/carver_stats.tres" id="2_carver_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 84
+tower_stats = ExtResource("2_carver_stats")
+display_name = "Upgrade to Carver"
+description = "Single target grinder. Keeps the line's speed and its very short reach, and gains air targets from the second tier up."
+targeting = 1
+slot = 0

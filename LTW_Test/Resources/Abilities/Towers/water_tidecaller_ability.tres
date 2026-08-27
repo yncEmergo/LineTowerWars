@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CrushingWavePassive" format=3 uid="uid://do0x8bqce8ijw"]
+
+[ext_resource type="Script" uid="uid://1xqi1ewwh7bk" path="res://Scripts/Abilities/TowerPassives/CrushingWavePassive.gd" id="1_CrushingWavePassive"]
+[ext_resource type="Texture2D" uid="uid://egisu4v3kbah" path="res://2DArt/Icons/tidecaller.png" id="2_tidecaller"]
+
+[resource]
+script = ExtResource("1_CrushingWavePassive")
+damage = 44
+ability_id = 177
+display_name = "Crushing Wave"
+icon = ExtResource("2_tidecaller")
+targeting = 0
+slot = 11

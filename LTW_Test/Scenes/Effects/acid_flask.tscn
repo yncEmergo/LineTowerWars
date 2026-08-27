@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="2_SpinAnimation3D"]
+
+[sub_resource type="StandardMaterial3D" id="M_glass"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.72, 0.86, 0.7, 0.55)
+
+[sub_resource type="StandardMaterial3D" id="M_brew"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.62, 1, 0.28, 1)
+
+[sub_resource type="SphereMesh" id="Body"]
+radius = 0.085
+height = 0.17
+radial_segments = 6
+rings = 4
+material = SubResource("M_glass")
+
+[sub_resource type="SphereMesh" id="Brew"]
+radius = 0.06
+height = 0.10
+radial_segments = 6
+rings = 3
+material = SubResource("M_brew")
+
+[sub_resource type="CylinderMesh" id="Neck"]
+top_radius = 0.028
+bottom_radius = 0.04
+height = 0.09
+radial_segments = 6
+rings = 0
+material = SubResource("M_glass")
+
+[node name="AcidFlask" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Tumble" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Body" type="MeshInstance3D" parent="Tumble"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Body")
+
+[node name="Brew" type="MeshInstance3D" parent="Tumble"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+cast_shadow = 0
+mesh = SubResource("Brew")
+
+[node name="Neck" type="MeshInstance3D" parent="Tumble"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+cast_shadow = 0
+mesh = SubResource("Neck")
+
+[node name="TumbleDrive" type="Node" parent="Tumble" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("2_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 1.8
+axis = Vector3(1, 0, 0)

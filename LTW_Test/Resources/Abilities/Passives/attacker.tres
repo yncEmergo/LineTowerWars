@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/TraitPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 125
+display_name = "Attacker"
+description = "Attacks towers instead of walking past them, and takes orders from you.\nIt never advances on its own."
+targeting = 0

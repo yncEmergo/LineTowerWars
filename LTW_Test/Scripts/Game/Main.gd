@@ -285,8 +285,15 @@ func _build_registries(roots: Array[UnitStats]) -> bool:
 	var types: UnitTypeRegistry = session.unit_types()
 	types.build("" if content == null else content.unit_stats_folder)
 
+	# Scanned the same way and for the same reason, with one difference worth
+	# knowing: a technology is on no card, so there is no walk that could ever
+	# reach one and the scan is not a second net but the only one.
+	var techs: TechRegistry = session.techs()
+	techs.build("" if content == null else content.tech_folder)
+
 	Log.info("Registries built", {
 		"abilities": registry.count(),
 		"unit_types": types.count(),
+		"technologies": techs.count(),
 	})
-	return registry.validate() && types.validate() && complete
+	return registry.validate() && types.validate() && techs.validate() && complete

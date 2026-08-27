@@ -33,11 +33,24 @@ enum DamageType {
 	NORMAL,
 	PIERCING,
 	SIEGE,
+	## The one type that is NOT physical: it ignores the matrix above and a
+	## unit's armour points entirely, and is resisted only by a trait that says
+	## so. Almost every tower ABILITY deals it and no tower's basic attack
+	## does. See unit_data.md 1.1.
+	##
+	## Last in the enum deliberately, so every row of the matrix is still
+	## exactly PHYSICAL_TYPE_COUNT long and no authored damage_type shifts.
+	SPELL,
 }
 
 ## Used when a row has not been filled in, so a half configured table deals
 ## plain damage rather than none. validate() is what reports the gap.
 const DEFAULT_MULTIPLIER: float = 1.0
+
+## How many damage types go through the armour matrix, which is every one of
+## them except SPELL. It is the length every row of the table must have, and it
+## is why SPELL sits last in the enum rather than anywhere else.
+const PHYSICAL_TYPE_COUNT: int = 5
 
 @export_group("Armor Rows")
 ## One multiplier per damage type, in DamageType order. Empty means unset.
@@ -63,6 +76,11 @@ func multiplier(damage_type: DamageType, armor_type: UnitStats.ArmorType) -> flo
 	# take_damage() already stops before this, so this is only a second line.
 	if armor_type == UnitStats.ArmorType.INVULNERABLE:
 		return 0.0
+
+	# Spell damage does not index the matrix at all. Full damage against every
+	# armour type, and only an explicit trait takes any of it back off.
+	if is_spell(damage_type):
+		return DEFAULT_MULTIPLIER
 
 	var row: PackedFloat32Array = _row_for(armor_type)
 	var index: int = int(damage_type)
@@ -113,10 +131,23 @@ func apply(amount: int, damage_type: DamageType, armor_type: UnitStats.ArmorType
 		return 0
 
 	scaled *= maxf(0.0, taken_ratio)
-	scaled *= armor_multiplier(armor)
+	# Armour POINTS are skipped for spell damage as well as the matrix. A creep
+	# resists a spell by carrying a resistance trait, never by being armoured -
+	# which is what makes a heavily armoured Boss worth hitting with one.
+	if !is_spell(damage_type):
+		scaled *= armor_multiplier(armor)
 	scaled -= float(maxi(0, block))
 
 	return maxi(1, roundi(scaled))
+
+
+## Whether a damage type bypasses the armour matrix and armour points.
+##
+## Static and asked by name rather than compared inline, so the one place that
+## decides what "not physical" means is here rather than at every call site
+## that has to branch on it.
+static func is_spell(damage_type: DamageType) -> bool:
+	return damage_type == DamageType.SPELL
 
 
 ## Name of a damage type as shown in the UI, e.g. "Piercing".
@@ -132,7 +163,7 @@ static func damage_type_text(damage_type: DamageType) -> String:
 ## table is complete. Meant to be called once at boot rather than per hit, so a
 ## broken table is reported without flooding the log during a fight.
 func validate() -> bool:
-	var expected: int = DamageType.size()
+	var expected: int = PHYSICAL_TYPE_COUNT
 	var complete: bool = true
 
 	for armor_type: int in UnitStats.ArmorType.values():

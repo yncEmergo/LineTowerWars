@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://j1vm4g2ihx6w"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
+[ext_resource type="Resource" uid="uid://c5k7w12t68v2b" path="res://Resources/Abilities/Towers/fire_magma_well_ability.tres" id="7_fire_magma_well_ability"]
+[ext_resource type="Resource" uid="uid://b3p3h0un8fgd2" path="res://Resources/Abilities/Towers/upgrade_fire_magma_well_to_fire_lesser_doom_guard_ability.tres" id="8_upgrade_fire_magma_well_to_fire_lesser_doom_guard_ability"]
+[ext_resource type="Resource" uid="uid://d11wyykn4fxu4" path="res://Resources/Abilities/Towers/upgrade_fire_magma_well_to_fire_lesser_firelord_ability.tres" id="9_upgrade_fire_magma_well_to_fire_lesser_firelord_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="10_return_to_elemental_core_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="11_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="12_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="13_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="14_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="15_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="16_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://cgyu1rh1rki7l" path="res://2DArt/Icons/magma_well.png" id="17_magma_well"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/fire_bolt.tscn"
+speed = 9
+arc_height = 0.9
+impact_scene_path = "res://Scenes/Effects/flame_impact.tscn"
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SplashEffect")
+radius = 1.56
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 58
+damage_max = 60
+is_aoe_damage = true
+attacks_per_second = 0.5
+attack_range = 3.12
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/fire_magma_well_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_upgrade_ability")])
+gold_cost = 800
+total_gold_cost = 1000
+unit_type_id = 66
+display_name = "Magma Well"
+icon = ExtResource("17_magma_well")
+max_health = 150
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_fire_magma_well_ability"), ExtResource("8_upgrade_fire_magma_well_to_fire_lesser_doom_guard_ability"), ExtResource("9_upgrade_fire_magma_well_to_fire_lesser_firelord_ability"), ExtResource("10_return_to_elemental_core_ability"), ExtResource("11_attack_ability"), ExtResource("12_prioritize_ability"), ExtResource("13_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/fire_magma_well.tscn"

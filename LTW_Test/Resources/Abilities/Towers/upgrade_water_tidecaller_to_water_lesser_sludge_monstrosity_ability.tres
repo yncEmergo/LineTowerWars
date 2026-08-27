@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dal7om6vqkccv"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://61gi34ucplvn" path="res://Resources/UnitStats/Towers/water_lesser_sludge_monstrosity_stats.tres" id="2_water_lesser_sludge_monstrosity_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_water_lesser_sludge_monstrosity_stats")
+required_tech_id = 12
+ability_id = 261
+display_name = "Upgrade to Lesser Sludge Monstrosity"
+description = "An aura that grinds every creep near it slower, whether or not it is shooting them."
+slot = 1

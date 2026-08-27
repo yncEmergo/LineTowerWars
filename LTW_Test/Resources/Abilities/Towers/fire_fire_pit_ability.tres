@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="IgnitePassive" format=3 uid="uid://cgg4hsqqt8vec"]
+
+[ext_resource type="Script" uid="uid://cfg23sicnwtg3" path="res://Scripts/Abilities/TowerPassives/IgnitePassive.gd" id="1_IgnitePassive"]
+[ext_resource type="Texture2D" uid="uid://1qacccryn4pg" path="res://2DArt/Icons/fire_pit.png" id="2_fire_pit"]
+
+[resource]
+script = ExtResource("1_IgnitePassive")
+ability_id = 128
+display_name = "Ignite"
+icon = ExtResource("2_fire_pit")
+targeting = 0
+slot = 11

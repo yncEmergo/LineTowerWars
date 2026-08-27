@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ArcanizePassive" format=3 uid="uid://bwmjingvsy5y8"]
+
+[ext_resource type="Script" uid="uid://dugqxlrklnqlw" path="res://Scripts/Abilities/TowerPassives/ArcanizePassive.gd" id="1_ArcanizePassive"]
+[ext_resource type="Texture2D" uid="uid://codgslte051ef" path="res://2DArt/Icons/sorcerer.png" id="2_sorcerer"]
+
+[resource]
+script = ExtResource("1_ArcanizePassive")
+full_mana_bonus = 1.5
+ability_id = 193
+display_name = "Arcanize"
+icon = ExtResource("2_sorcerer")
+targeting = 0
+slot = 11

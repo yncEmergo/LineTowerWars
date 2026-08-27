@@ -42,3 +42,23 @@ static func compact_number(value: int) -> String:
 	if size < 1000000:
 		return "%dk" % roundi(value / 1000.0)
 	return "%.1fM" % (value / 1000000.0)
+
+
+## The suffix that turns a whole number into its ordinal: "st", "nd", "rd" or
+## "th". Written out rather than the whole word, so a caller keeps the number
+## and only asks for the tail.
+##
+## The teens are the special case and they are the only one: 11, 12 and 13 all
+## take "th" however their last digit reads.
+static func ordinal_suffix(value: int) -> String:
+	var last_two: int = absi(value) % 100
+	if last_two >= 11 && last_two <= 13:
+		return "th"
+	match absi(value) % 10:
+		1:
+			return "st"
+		2:
+			return "nd"
+		3:
+			return "rd"
+	return "th"

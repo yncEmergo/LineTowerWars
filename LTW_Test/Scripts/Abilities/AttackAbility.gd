@@ -1,12 +1,17 @@
 class_name AttackAbility
 extends UnitAbility
 
-## Orders a unit onto one specific creep.
+## Orders a unit onto one specific target.
 ##
 ## UNIT targeting, so choosing it arms the order and the next left click names
-## the creep. It is also the ability behind a right click on a creep, which is
+## the target. It is also the ability behind a right click on one, which is
 ## the same resource serving the command card and the context sensitive right
 ## click, exactly as Move does for the ground.
+##
+## What a given unit may be aimed at is the ATTACK's question and not this
+## one's: a tower refuses anything that is not a creep it can reach, and an
+## attacker creep refuses anything that is not a tower. So one resource sits on
+## both cards and neither has to know about the other.
 ##
 ## Giving the order to a whole selection is safe: a unit that cannot reach the
 ## creep refuses quietly and carries on with whatever it was already shooting,
@@ -21,12 +26,10 @@ extends UnitAbility
 func execute(unit: Unit, target: AbilityTarget) -> void:
 	if unit == null || target == null:
 		return
-
-	var creep: Creep = target.unit as Creep
-	if creep == null || unit.attack_component == null:
+	if target.unit == null || unit.attack_component == null:
 		return
 
-	unit.attack_component.order_target(creep)
+	unit.attack_component.order_target(target.unit)
 
 
 func can_execute(unit: Unit) -> bool:

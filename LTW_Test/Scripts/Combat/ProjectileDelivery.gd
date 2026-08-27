@@ -62,7 +62,7 @@ func deliver(hit: AttackHit, from: Vector3, target: Unit) -> void:
 ## property of the delivery rather than of every projectile prefab.
 func on_impact(hit: AttackHit, target: Unit, at: Vector3) -> void:
 	hit.resolve(target, at)
-	spawn_impact(at)
+	spawn_impact(at, hit.attacker_position)
 
 
 ## The projectile is required, unlike the impact visual the base class checks:

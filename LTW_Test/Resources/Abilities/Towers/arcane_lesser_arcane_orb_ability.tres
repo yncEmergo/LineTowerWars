@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ShiftingPowerPassive" format=3 uid="uid://bta0d48f4k7lp"]
+
+[ext_resource type="Script" uid="uid://dbrv5bs3wsnfw" path="res://Scripts/Abilities/TowerPassives/ShiftingPowerPassive.gd" id="1_ShiftingPowerPassive"]
+[ext_resource type="Texture2D" uid="uid://j5rjla7hxvqh" path="res://2DArt/Icons/lesser_arcane_orb.png" id="2_lesser_arcane_orb"]
+
+[resource]
+script = ExtResource("1_ShiftingPowerPassive")
+ability_id = 197
+display_name = "Shifting Power"
+icon = ExtResource("2_lesser_arcane_orb")
+targeting = 0
+slot = 11

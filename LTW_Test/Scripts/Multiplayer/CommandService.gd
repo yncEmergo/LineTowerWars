@@ -31,6 +31,13 @@ extends Node
 ## `ability.execute()` the client would have run, over its own authoritative
 ## world, and that world refuses what it always refused.
 
+## Two shapes travel down it. Nearly every order is given TO something - a
+## builder, a tower, a selection of creeps - and is checked against who owns
+## those units and what card they are showing. A PLAYER order is given to
+## nobody: a Research Center press names a technology rather than a unit, so
+## the only ownership question left is the slot, which the server has already
+## taken from the peer id. See Command.PlayerAction.
+
 ## Server side: a command was accepted and applied. Carries the command so 3.2
 ## has something to broadcast from.
 signal command_applied(command: Command)
@@ -94,6 +101,37 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget) -> void:
 	submit_command.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict())
 
 
+## The same road, for an order given to nobody: a Research Center press.
+##
+## A second entry point rather than a null unit through submit(), because the
+## two really are different shapes - one names an ability and the units it runs
+## on, the other names an action and a technology - and a submit() that started
+## accepting an empty selection would stop refusing the mistake it is there to
+## refuse.
+func submit_player_action(action: Command.PlayerAction, tech_id: int = 0) -> void:
+	if action == Command.PlayerAction.NONE:
+		return
+
+	var session: MatchSession = _session
+	if session == null:
+		Log.err("Commands.submit_player_action with no MatchSession, the order goes nowhere")
+		return
+
+	var command: Command = Command.create_player_action(action, tech_id)
+	command.tick = session.tick()
+	command.player_slot = session.local_slot()
+
+	# Same three machines, same branch as submit(): offline is its own
+	# authority, a server queues for the tick, a client asks and waits.
+	if !Net.is_online():
+		_apply_player_order(command)
+		return
+	if multiplayer.is_server():
+		_queue(command)
+		return
+	submit_command.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict())
+
+
 # --- server ---------------------------------------------------------------
 
 ## An order arriving from a client.
@@ -142,6 +180,13 @@ func _physics_process(_delta: float) -> void:
 func _validate_and_apply(command: Command) -> void:
 	var session: MatchSession = _session
 	if session == null:
+		return
+
+	# A player order names no units and no ability, so nothing below applies to
+	# it: there is no unit to own and no card to be on. Who sent it is the
+	# whole of the question, and that was answered the moment it arrived.
+	if command.is_player_order():
+		_apply_player_order(command)
 		return
 
 	var ability: UnitAbility = session.abilities().ability_for(command.ability_id)
@@ -234,6 +279,61 @@ func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 
 	if acted:
 		command_applied.emit(command)
+
+
+## A Research Center press, applied against this machine's own world.
+##
+## Every rule of it is TechManager's and is refused there, in the same code a
+## single player run reaches - exactly as a build order's rules belong to the
+## area it would be placed in. There is deliberately no copy of the price or
+## the prerequisite here, for the same reason there is no copy of the gold
+## check for a tower.
+func _apply_player_order(command: Command) -> void:
+	if command.player_action == Command.PlayerAction.CHEAT_GOLD:
+		_apply_cheat_gold(command)
+		return
+
+	var tech: TechManager = References.tech_manager
+	if tech == null:
+		_reject(command, "this scene has no TechManager")
+		return
+
+	var reason: String = tech.apply_order(
+		command.player_slot, command.player_action, command.tech_id
+	)
+	if reason.is_empty():
+		command_applied.emit(command)
+	else:
+		_reject(command, reason)
+
+
+## A developer cheat, applied by the authority exactly as every other player
+## order is - which is the whole reason it takes this road rather than adding
+## gold where the key was pressed. A client would only have redrawn a number
+## the server never agreed to.
+##
+## Checked against THIS machine's GameConfig rather than the sender's word, so
+## a server with cheats off refuses one however the client asking was built.
+func _apply_cheat_gold(command: Command) -> void:
+	var config: GameConfig = References.game_config
+	if config == null || !config.cheats_enabled:
+		_reject(command, "cheats are off")
+		return
+
+	var manager: PlayerManager = References.player_manager
+	var state: PlayerState = null
+	if manager != null:
+		state = manager.state_for(command.player_slot)
+	if state == null:
+		_reject(command, "slot %d has no player state" % command.player_slot)
+		return
+
+	state.gain(config.cheat_gold_amount)
+	Log.info("Cheat: gold granted", {
+		"slot": command.player_slot,
+		"amount": config.cheat_gold_amount,
+	})
+	command_applied.emit(command)
 
 
 func _reject(command: Command, reason: String) -> void:

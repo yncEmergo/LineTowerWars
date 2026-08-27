@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_BuildTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_cutter_stats.tres" id="2_lesser_cutter_stats"]
+
+[resource]
+script = ExtResource("1_BuildTowerAbility")
+ability_id = 68
+tower_stats = ExtResource("2_lesser_cutter_stats")
+display_name = "Lesser Cutter"
+description = "Cheap grinder. Almost no reach, and the fastest attack in the game."
+targeting = 5
+slot = 1

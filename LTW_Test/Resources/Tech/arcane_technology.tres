@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 22
+element = 0
+kind = 0
+display_name = "Arcane Technology: Basic"
+description = "Unlocks the Arcane Elemental Core morph and the upgrade above it. Required before either Arcane path."
+slot = 21

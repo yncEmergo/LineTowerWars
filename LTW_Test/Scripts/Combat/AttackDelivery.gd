@@ -42,7 +42,16 @@ func impact_scene() -> PackedScene:
 ## Drops the impact visual at a world point, if this delivery has one. Parented
 ## to the shared effects root rather than to the tower, so selling the tower
 ## mid animation cannot take the effect with it.
-func spawn_impact(at: Vector3) -> void:
+##
+## The effect is TURNED TO FACE where the hit came from, so a scene can be
+## authored knowing which way is "back towards the tower" - a spray of blood
+## off the near side of a creep needs that, and a plain flash simply ignores it.
+## Godot's forward is -Z, so an effect's -Z ends up pointing at the attacker.
+##
+## Orientation rather than an offset, deliberately: how far towards the tower a
+## given effect should sit depends on the effect, so it belongs in the scene
+## next to the thing being offset rather than as a number here.
+func spawn_impact(at: Vector3, from: Vector3 = Vector3.ZERO) -> void:
 	var scene: PackedScene = impact_scene()
 	if scene == null:
 		return
@@ -58,6 +67,21 @@ func spawn_impact(at: Vector3) -> void:
 
 	root.add_child(effect)
 	effect.global_position = at
+
+	# Flat, because the game is played on the xz plane and an effect tipped up
+	# at a muzzle would read as leaning over.
+	var back: Vector3 = from - at
+	back.y = 0.0
+	if back.length_squared() > 0.0001:
+		effect.look_at(at + back.normalized(), Vector3.UP)
+
+	# LAST, and it has to be last. Particles emit in world space and a one-shot
+	# burst fires the moment it is allowed to, so an effect that started
+	# emitting on the way into the tree would leave its whole spray at the
+	# effects root's origin instead of on the creep. See VisualEffect3D.play().
+	var visual: VisualEffect3D = effect as VisualEffect3D
+	if visual != null:
+		visual.play()
 
 
 ## Reports a filled-in path that does not resolve. Called at boot through the

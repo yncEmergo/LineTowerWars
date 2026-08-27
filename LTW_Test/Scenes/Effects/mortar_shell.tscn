@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+
+[sub_resource type="StandardMaterial3D" id="M_body"]
+transparency = 1
+albedo_color = Color(0.2, 0.18, 0.17, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_band"]
+transparency = 1
+albedo_color = Color(0.55, 0.38, 0.16, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_fuse"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.62, 0.22, 1)
+
+[sub_resource type="SphereMesh" id="Body"]
+radius = 0.085
+height = 0.17
+radial_segments = 7
+rings = 4
+material = SubResource("M_body")
+
+[sub_resource type="TorusMesh" id="Band"]
+inner_radius = 0.08
+outer_radius = 0.10
+rings = 8
+ring_segments = 4
+material = SubResource("M_band")
+
+[sub_resource type="SphereMesh" id="Fuse"]
+radius = 0.05
+height = 0.10
+radial_segments = 6
+rings = 3
+material = SubResource("M_fuse")
+
+[node name="MortarShell" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Body")
+
+[node name="Band" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Band")
+
+[node name="Fuse" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+cast_shadow = 0
+mesh = SubResource("Fuse")

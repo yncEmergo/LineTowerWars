@@ -136,6 +136,6 @@ func cover_build_zone(area: PlayerArea) -> void:
 
 
 ## Deliberately no input handling of its own any more. Showing and hiding the
-## grid is a BUILDER ABILITY now (slot 9), so it gets a card square, a hotkey
+## grid is a BUILDER ABILITY now, so it gets a card square, a hotkey
 ## that follows that square and a tooltip - and there is one way to do it
 ## rather than a key binding beside a button. See ToggleGridAbility.

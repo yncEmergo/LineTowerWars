@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="GerminatePassive" format=3 uid="uid://b1vtathjtmf83"]
+
+[ext_resource type="Script" uid="uid://bqu5b85jwnxfl" path="res://Scripts/Abilities/TowerPassives/GerminatePassive.gd" id="1_GerminatePassive"]
+[ext_resource type="Texture2D" uid="uid://dhf6qvhmshux4" path="res://2DArt/Icons/greater_scorpion.png" id="2_greater_scorpion"]
+
+[resource]
+script = ExtResource("1_GerminatePassive")
+bonus_per_half_second = 0.15
+max_idle_bonus = 0.75
+max_crit_chance = 0.6
+ability_id = 190
+display_name = "Germinate"
+icon = ExtResource("2_greater_scorpion")
+targeting = 0
+slot = 11

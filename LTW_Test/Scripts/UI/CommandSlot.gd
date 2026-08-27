@@ -20,6 +20,11 @@ signal ability_activated(ability: UnitAbility)
 
 ## Greyed out tint for an ability that exists but cannot be used right now.
 const UNAVAILABLE_MODULATE: Color = Color(0.55, 0.55, 0.55, 1.0)
+## Lit tint for a TOGGLE that is currently switched on, so a card answers
+## "which way is this set" at a glance rather than only when hovered.
+## Above 1 on purpose: it brightens the square rather than recolouring it, so
+## it still reads once real icons replace the placeholder squares.
+const TOGGLED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
 
 ## Charge count no ability can ever report, so the first refresh after a slot
 ## is filled always redraws the corner. Without it a slot refilled from a send
@@ -68,7 +73,10 @@ func set_ability(new_ability: UnitAbility, unit: Unit, hotkey: String) -> void:
 	ability = new_ability
 	_unit = unit
 	disabled = false
-	icon = ability.icon
+	# The prefab sets expand_icon, without which a Button grows to fit whatever
+	# it is given and one 256 pixel icon blows the whole command card apart -
+	# custom_minimum_size is a MINIMUM and does not hold it back.
+	icon = ability.icon_texture()
 	# A passive has nothing to press, so it draws no letter however good a
 	# square it happened to land in.
 	_hotkey = "" if ability.targeting == UnitAbility.Targeting.PASSIVE else hotkey
@@ -117,7 +125,12 @@ func _refresh_state() -> void:
 	# case where the player most wants the tooltip explaining why.
 	var usable: bool = ability.targeting != UnitAbility.Targeting.PASSIVE \
 		&& ability.can_execute(_unit)
-	modulate = Color.WHITE if usable else UNAVAILABLE_MODULATE
+	if !usable:
+		modulate = UNAVAILABLE_MODULATE
+	elif ability.is_toggled_on(_unit):
+		modulate = TOGGLED_MODULATE
+	else:
+		modulate = Color.WHITE
 
 	var count: int = ability.charge_count(_unit)
 	if count != _charges:

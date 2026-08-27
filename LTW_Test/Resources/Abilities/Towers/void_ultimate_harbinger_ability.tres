@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="TemporalRiftPassive" format=3 uid="uid://cdwai5yeao3s"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_bm36i"]
+[ext_resource type="Script" uid="uid://dre6enavaorsh" path="res://Scripts/Abilities/TowerPassives/TemporalRiftPassive.gd" id="1_TemporalRiftPassive"]
+[ext_resource type="Texture2D" uid="uid://b63clmjotkvp2" path="res://2DArt/Icons/ultimate_harbinger.png" id="2_ultimate_harbinger"]
+
+[resource]
+script = ExtResource("1_TemporalRiftPassive")
+delay_seconds = 3.6
+health_share = 0.05
+flat_damage = 4250
+slow_amount = 0.45
+convert_seconds = 60
+convert_cells = 3.91
+ability_id = 164
+display_name = "Whispers of the Void"
+icon = ExtResource("2_ultimate_harbinger")
+targeting = 0
+slot = 11

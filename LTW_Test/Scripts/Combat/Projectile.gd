@@ -1,7 +1,13 @@
+@tool
 class_name Projectile
-extends Node3D
+extends VisualEffect3D
 
 ## One shot in flight, spawned by a ProjectileDelivery and freed when it lands.
+##
+## A VisualEffect3D for its opacity setting and nothing else - the flight
+## itself is simulation, not decoration. @tool only so that opacity previews in
+## the editor; every gameplay method below stands aside there, and
+## _physics_process already does by way of having no delivery to fly for.
 ##
 ## Homes on its target, so a creep cannot outwalk a shot already aimed at it.
 ## When the target dies mid flight the projectile keeps going to where it last

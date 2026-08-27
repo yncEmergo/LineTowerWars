@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 17
+element = 1
+kind = 1
+display_name = "Earth Technology (1): Ancient Warden"
+description = "Unlocks the Lesser and Greater Ancient Warden."
+slot = 16
+ultimate_name = "Ultimate Ancient Warden"
+ultimate_cross_tech_id = 24

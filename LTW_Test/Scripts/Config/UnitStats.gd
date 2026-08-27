@@ -42,6 +42,18 @@ enum ArmorType {
 @export var unit_type_id: int = 0
 ## Shown as the unit name in the UI panel.
 @export var display_name: String = "Unit"
+## The picture of this unit, wherever one is shown: the button that builds it,
+## the button that upgrades into it, the button that sends it, and its tile in
+## a multi-unit selection.
+##
+## HERE rather than on those buttons, for the same reason a tower's price is
+## here rather than on the ability that buys it: the picture belongs to the
+## thing it is a picture OF, and one authored in four places drifts the first
+## time three of them are updated.
+##
+## Currently a generated placeholder - a render of the unit's own primitive
+## model. See 2DArt/Icons.
+@export var icon: Texture2D
 
 @export_group("Stats")
 @export var max_health: int = 100

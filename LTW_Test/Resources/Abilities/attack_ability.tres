@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="AttackAbility" format=3]
+[gd_resource type="Resource" script_class="AttackAbility" format=3 uid="uid://bvr0w22ph6i1"]
 
-[ext_resource type="Script" path="res://Scripts/Abilities/AttackAbility.gd" id="1_attack"]
+[ext_resource type="Script" uid="uid://bsqgpfvh2bj0u" path="res://Scripts/Abilities/AttackAbility.gd" id="1_attack"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_attack.png" id="2_ability_attack"]
 
 [resource]
 script = ExtResource("1_attack")
 ability_id = 3
 display_name = "Attack"
-description = "Order this tower onto one creep. Towers pick their own targets without it."
+description = "Order this unit onto one target. It picks its own without being told."
 targeting = 3
 slot = 4
+icon = ExtResource("2_ability_attack")

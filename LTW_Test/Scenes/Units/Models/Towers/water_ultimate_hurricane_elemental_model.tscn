@@ -1,0 +1,284 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone.tres" id="1_water_stone"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone_deep.tres" id="2_water_stone_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/water_stone_pale.tres" id="3_water_stone_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t5.tres" id="4_trim_t5"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_water_t4.tres" id="5_energy_water_t4"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Script" path="res://Scripts/Components/BobAnimation3D.gd" id="8_BobAnimation3D"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="9_SpinAnimation3D"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.3718
+bottom_radius = 0.3958
+height = 0.102
+radial_segments = 8
+rings = 0
+material = ExtResource("2_water_stone_deep")
+
+[sub_resource type="TorusMesh" id="TorusMesh_2"]
+inner_radius = 0.3538
+outer_radius = 0.4138
+rings = 14
+ring_segments = 5
+material = ExtResource("4_trim_t5")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.3718
+bottom_radius = 0.3478
+height = 0.102
+radial_segments = 8
+rings = 0
+material = ExtResource("1_water_stone")
+
+[sub_resource type="TorusMesh" id="TorusMesh_4"]
+inner_radius = 0.3238
+outer_radius = 0.3838
+rings = 16
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="TorusMesh" id="TorusMesh_5"]
+inner_radius = 0.3358
+outer_radius = 0.4078
+rings = 12
+ring_segments = 5
+material = ExtResource("4_trim_t5")
+
+[sub_resource type="SphereMesh" id="SphereMesh_6"]
+radius = 0.0408
+height = 0.0396
+radial_segments = 5
+rings = 2
+material = ExtResource("4_trim_t5")
+
+[sub_resource type="PrismMesh" id="PrismMesh_7"]
+size = Vector3(0.072, 0.1239, 0.06)
+material = ExtResource("4_trim_t5")
+
+[sub_resource type="TorusMesh" id="TorusMesh_8"]
+inner_radius = 0.2279
+outer_radius = 0.2879
+rings = 14
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="TorusMesh" id="TorusMesh_9"]
+inner_radius = 0.1739
+outer_radius = 0.2339
+rings = 14
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="TorusMesh" id="TorusMesh_10"]
+inner_radius = 0.1199
+outer_radius = 0.1799
+rings = 14
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="TorusMesh" id="TorusMesh_11"]
+inner_radius = 0.066
+outer_radius = 0.1259
+rings = 14
+ring_segments = 5
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_12"]
+radius = 0.1379
+height = 0.3206
+radial_segments = 8
+rings = 4
+material = ExtResource("5_energy_water_t4")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_13"]
+radius = 0.06
+height = 0.2186
+radial_segments = 6
+rings = 2
+material = ExtResource("3_water_stone_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_14"]
+radius = 0.1079
+height = 0.1166
+radial_segments = 6
+rings = 3
+material = ExtResource("5_energy_water_t4")
+
+[sub_resource type="TorusMesh" id="TorusMesh_15"]
+inner_radius = 0.2759
+outer_radius = 0.3358
+rings = 16
+ring_segments = 6
+material = ExtResource("4_trim_t5")
+
+[sub_resource type="SphereMesh" id="SphereMesh_16"]
+radius = 0.066
+height = 0.0801
+radial_segments = 6
+rings = 2
+material = ExtResource("5_energy_water_t4")
+
+[node name="WaterUltimateHurricaneElementalModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.051, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="BaseTrim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.102, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_2")
+
+[node name="Basin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.153, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Lip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.204, 0)
+mesh = SubResource("TorusMesh_4")
+
+[node name="Collar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.204, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_5")
+
+[node name="Bolt1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.153, 0.3838)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bolt2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3324, 0.153, 0.1919)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bolt3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3324, 0.153, -0.1919)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bolt4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.153, -0.3838)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bolt5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3324, 0.153, -0.1919)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bolt6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3324, 0.153, 0.1919)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Fin1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9611, -0.2764, 0, 0.2764, 0.9611, 0, 0.2186, 0.3478)
+mesh = SubResource("PrismMesh_7")
+
+[node name="Fin2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0.2764, 0.9611, 0, 0.9611, -0.2764, -1, 0, 0, 0.3478, 0.2186, 0)
+mesh = SubResource("PrismMesh_7")
+
+[node name="Fin3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 0.9611, -0.2764, -0, -0.2764, -0.9611, 0, 0.2186, -0.3478)
+mesh = SubResource("PrismMesh_7")
+
+[node name="Fin4" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0, -0.2764, -0.9611, 0, 0.9611, -0.2764, 1, -0, -0, -0.3478, 0.2186, -0)
+mesh = SubResource("PrismMesh_7")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2477, 0)
+
+[node name="Vortex" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Coil1" type="MeshInstance3D" parent="Turret/Vortex"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0437, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_8")
+
+[node name="Coil2" type="MeshInstance3D" parent="Turret/Vortex"]
+transform = Transform3D(0.8776, 0, 0.4794, 0, 1, 0, -0.4794, 0, 0.8776, 0, 0.1384, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_9")
+
+[node name="Coil3" type="MeshInstance3D" parent="Turret/Vortex"]
+transform = Transform3D(0.5403, 0, 0.8415, 0, 1, 0, -0.8415, 0, 0.5403, 0, 0.2332, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_10")
+
+[node name="Coil4" type="MeshInstance3D" parent="Turret/Vortex"]
+transform = Transform3D(0.0707, 0, 0.9975, 0, 1, 0, -0.9975, 0, 0.0707, 0, 0.3279, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_11")
+
+[node name="Core" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.204, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_12")
+
+[node name="Arm1" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 0.5403, -0.8415, 0, 0.8415, 0.5403, 0, 0.1749, 0.2999)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Arm2" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(0.5, 0.7287, 0.4679, 0, 0.5403, -0.8415, -0.866, 0.4207, 0.2702, 0.2597, 0.1749, 0.1499)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Arm3" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(-0.5, 0.7287, 0.4679, 0, 0.5403, -0.8415, -0.866, -0.4207, -0.2702, 0.2597, 0.1749, -0.1499)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Arm4" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(-1, 0, 0, 0, 0.5403, -0.8415, -0, -0.8415, -0.5403, 0, 0.1749, -0.2999)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Arm5" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(-0.5, -0.7287, -0.4679, 0, 0.5403, -0.8415, 0.866, -0.4207, -0.2702, -0.2597, 0.1749, -0.1499)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Arm6" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(0.5, -0.7287, -0.4679, 0, 0.5403, -0.8415, 0.866, 0.4207, 0.2702, -0.2597, 0.1749, 0.1499)
+mesh = SubResource("CapsuleMesh_13")
+
+[node name="Head" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4226, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_14")
+
+[node name="Breathe" type="Node" parent="Turret" node_paths=PackedStringArray("_floater")]
+script = ExtResource("8_BobAnimation3D")
+_floater = NodePath("..")
+height = 0.0175
+cycles_per_second = 0.3
+phase = 0
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2477, -0.2159)
+
+[node name="Halo" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0929, 0)
+
+[node name="HaloRing" type="MeshInstance3D" parent="Halo"]
+transform = Transform3D(1, 0, 0, 0, 0.9759, -0.2182, 0, 0.2182, 0.9759, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_15")
+
+[node name="HaloCore" type="MeshInstance3D" parent="Halo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_16")
+
+[node name="HaloSpin" type="Node" parent="Halo" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("9_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 0.22
+axis = Vector3(0, 1, 0)

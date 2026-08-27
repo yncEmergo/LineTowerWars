@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BreakPassive" format=3 uid="uid://dr1owoage15d7"]
+
+[ext_resource type="Script" uid="uid://ptwbo4slab2q" path="res://Scripts/Abilities/TowerPassives/BreakPassive.gd" id="1_BreakPassive"]
+[ext_resource type="Texture2D" uid="uid://bs80qh0qkhr4w" path="res://2DArt/Icons/quarry.png" id="2_quarry"]
+
+[resource]
+script = ExtResource("1_BreakPassive")
+ability_id = 200
+display_name = "Break"
+icon = ExtResource("2_quarry")
+targeting = 0
+slot = 11

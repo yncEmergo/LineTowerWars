@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/Menus/GameMenu.gd" id="1_game_menu"]
 [ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="2_menu_theme"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/options_menu.tscn" id="3_options_menu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
 content_margin_left = 30.0
@@ -19,7 +20,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="GameMenu" type="Control" node_paths=PackedStringArray("_resume_button", "_options_button", "_leave_button", "_quit_button")]
+[node name="GameMenu" type="Control" node_paths=PackedStringArray("_resume_button", "_options_button", "_leave_button", "_quit_button", "_options_menu")]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -33,6 +34,7 @@ _resume_button = NodePath("Center/Panel/Column/ResumeButton")
 _options_button = NodePath("Center/Panel/Column/OptionsButton")
 _leave_button = NodePath("Center/Panel/Column/LeaveButton")
 _quit_button = NodePath("Center/Panel/Column/QuitButton")
+_options_menu = NodePath("OptionsMenu")
 
 [node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1
@@ -79,7 +81,6 @@ text = "Resume"
 
 [node name="OptionsButton" type="Button" parent="Center/Panel/Column"]
 layout_mode = 2
-disabled = true
 text = "Options"
 
 [node name="LeaveButton" type="Button" parent="Center/Panel/Column"]
@@ -96,3 +97,6 @@ theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 12
 text = "Esc or F10"
 horizontal_alignment = 1
+
+[node name="OptionsMenu" parent="." instance=ExtResource("3_options_menu")]
+visible = false

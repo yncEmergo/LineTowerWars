@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/VolumeRow.gd" id="1_volume_row"]
+
+[node name="VolumeRow" type="HBoxContainer" node_paths=PackedStringArray("_name_label", "_slider", "_value_label")]
+theme_override_constants/separation = 14
+script = ExtResource("1_volume_row")
+_name_label = NodePath("NameLabel")
+_slider = NodePath("Slider")
+_value_label = NodePath("ValueLabel")
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Master Volume"
+
+[node name="Slider" type="HSlider" parent="."]
+custom_minimum_size = Vector2(360, 24)
+layout_mode = 2
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="ValueLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(52, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.65, 0.72, 1)
+text = "80%"
+horizontal_alignment = 2

@@ -1,0 +1,104 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/lightning_stone.tres" id="1_lightning_stone"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/lightning_stone_deep.tres" id="2_lightning_stone_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/lightning_stone_pale.tres" id="3_lightning_stone_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t1.tres" id="4_trim_t1"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_lightning_t0.tres" id="5_energy_lightning_t0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Script" path="res://Scripts/Components/BobAnimation3D.gd" id="8_BobAnimation3D"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.2755
+bottom_radius = 0.304
+height = 0.078
+radial_segments = 8
+rings = 0
+material = ExtResource("2_lightning_stone_deep")
+
+[sub_resource type="TorusMesh" id="TorusMesh_2"]
+inner_radius = 0.2612
+outer_radius = 0.3087
+rings = 14
+ring_segments = 5
+material = ExtResource("4_trim_t1")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.228
+bottom_radius = 0.2755
+height = 0.104
+radial_segments = 8
+rings = 0
+material = ExtResource("1_lightning_stone")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.0712, 0.1456, 0.0712)
+material = ExtResource("3_lightning_stone_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_5"]
+radius = 0.0902
+height = 0.1144
+radial_segments = 6
+rings = 3
+material = ExtResource("5_energy_lightning_t0")
+
+[sub_resource type="TorusMesh" id="TorusMesh_6"]
+inner_radius = 0.1235
+outer_radius = 0.1472
+rings = 10
+ring_segments = 4
+material = ExtResource("4_trim_t1")
+
+[node name="LightningShockParticleModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.039, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="BaseTrim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.078, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_2")
+
+[node name="Drum" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Post1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2548, 0.1805)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Post2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.1563, 0.2548, -0.0902)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Post3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.1563, 0.2548, -0.0903)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3484, 0)
+
+[node name="Orb" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_5")
+
+[node name="OrbCage" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_6")
+
+[node name="Bob" type="Node" parent="Turret" node_paths=PackedStringArray("_floater")]
+script = ExtResource("8_BobAnimation3D")
+_floater = NodePath("..")
+height = 0.0156
+cycles_per_second = 0.4
+phase = 0
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1425)

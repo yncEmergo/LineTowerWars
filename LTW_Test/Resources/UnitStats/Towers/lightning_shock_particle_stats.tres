@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://d2guhjqf6myt1"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Resource" uid="uid://dk1g5wmdwosxh" path="res://Resources/Abilities/Towers/lightning_shock_particle_ability.tres" id="5_lightning_shock_particle_ability"]
+[ext_resource type="Resource" uid="uid://xkfu2jvd5fgw" path="res://Resources/Abilities/Towers/upgrade_lightning_shock_particle_to_lightning_power_generator_ability.tres" id="6_upgrade_lightning_shock_particle_to_lightning_power_generator_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="8_juuos"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://cpws1hi4vp0bt" path="res://2DArt/Icons/shock_particle.png" id="13_shock_particle"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_InstantDelivery")
+impact_scene_path = "res://Scenes/Effects/spark_impact.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 20
+damage_max = 20
+damage_type = 1
+attacks_per_second = 2
+attack_range = 1.56
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/lightning_shock_particle_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
+total_gold_cost = 200
+unit_type_id = 81
+display_name = "Shock Particle"
+icon = ExtResource("13_shock_particle")
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_lightning_shock_particle_ability"), ExtResource("6_upgrade_lightning_shock_particle_to_lightning_power_generator_ability"), ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/lightning_shock_particle.tscn"

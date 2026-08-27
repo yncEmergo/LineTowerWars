@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="ReviveOncePassive" format=3 uid="uid://cq1ynxca2mpat"]
-
-[ext_resource type="Script" uid="uid://bamjueadme58f" path="res://Scripts/Abilities/Passives/ReviveOncePassive.gd" id="1_passive"]
-
-[resource]
-script = ExtResource("1_passive")
-ability_id = 61
-display_name = "Undying"
-targeting = 0

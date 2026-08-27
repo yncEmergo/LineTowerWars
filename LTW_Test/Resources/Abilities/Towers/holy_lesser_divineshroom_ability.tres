@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="LightBurstPassive" format=3 uid="uid://drubjysv78r4x"]
+
+[ext_resource type="Script" uid="uid://rc0r1uwdx72r" path="res://Scripts/Abilities/TowerPassives/LightBurstPassive.gd" id="1_LightBurstPassive"]
+[ext_resource type="Texture2D" uid="uid://cvahkt4gk2p0y" path="res://2DArt/Icons/lesser_divineshroom.png" id="2_lesser_divineshroom"]
+
+[resource]
+script = ExtResource("1_LightBurstPassive")
+chill_source = "lesser_divineshroom"
+ability_id = 154
+display_name = "Light Burst"
+icon = ExtResource("2_lesser_divineshroom")
+targeting = 0
+slot = 11

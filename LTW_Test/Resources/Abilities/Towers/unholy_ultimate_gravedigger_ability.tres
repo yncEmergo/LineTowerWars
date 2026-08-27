@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PoisonPassive" format=3 uid="uid://bckmkm4ug5opb"]
+
+[ext_resource type="Script" uid="uid://cq0iudckdgk24" path="res://Scripts/Abilities/TowerPassives/PoisonPassive.gd" id="1_PoisonPassive"]
+[ext_resource type="Texture2D" uid="uid://dwcigqsrhnv5c" path="res://2DArt/Icons/ultimate_gravedigger.png" id="2_ultimate_gravedigger"]
+
+[resource]
+script = ExtResource("1_PoisonPassive")
+additional_targets = 2
+stack_share = 0.35
+explosion_cells = 1.56
+explodes_on_death = true
+ability_id = 172
+display_name = "Pestilence"
+icon = ExtResource("2_ultimate_gravedigger")
+targeting = 0
+slot = 11

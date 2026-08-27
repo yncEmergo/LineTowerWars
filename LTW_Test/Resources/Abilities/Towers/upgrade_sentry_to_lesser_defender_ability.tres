@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_defender_stats.tres" id="2_lesser_defender_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 91
+tower_stats = ExtResource("2_lesser_defender_stats")
+display_name = "Upgrade to Lesser Defender"
+description = "Long ranged magic splash. Damages everything around the target wherever it stands, ground or air."
+targeting = 1
+slot = 0

@@ -13,12 +13,20 @@ extends Control
 ## submenu, and only reaches this menu once there is nothing left to back out
 ## of. CommandController says so by emitting escape_unused. F10 opens it
 ## regardless, which is also the Warcraft III binding.
+##
+## The options screen continues that chain one link further. It is a child of
+## this node rather than a screen of its own so the key never has to be handed
+## over: Escape reaches the same handler either way and close() peels whichever
+## layer is on top. Two nodes both watching for Escape would have to agree on
+## who goes first, and _input ordering is not a thing to build a menu on.
 
 @export_group("References")
 @export var _resume_button: Button
 @export var _options_button: Button
 @export var _leave_button: Button
 @export var _quit_button: Button
+## Fullscreen and opaque, so it covers this menu rather than replacing it.
+@export var _options_menu: OptionsMenu
 
 var _commands: CommandController:
 	get:
@@ -61,7 +69,13 @@ func open() -> void:
 		_resume_button.grab_focus()
 
 
+## Closes ONE layer: the options screen if it is up, this menu otherwise. So
+## Escape out of Video lands back on Resume rather than in the game, which is
+## the same one-step-at-a-time rule the command card follows.
 func close() -> void:
+	if _options_menu != null && _options_menu.visible:
+		_options_menu.close()
+		return
 	if !visible:
 		return
 	release_focus()
@@ -82,10 +96,25 @@ func _connect_buttons() -> void:
 		_leave_button.pressed.connect(_on_leave_pressed)
 	if _quit_button != null:
 		_quit_button.pressed.connect(_on_quit_pressed)
+
+	if _options_menu == null:
+		if _options_button != null:
+			# A button that does nothing is worse than one that says it cannot
+			# be pressed.
+			_options_button.disabled = true
+		Log.err("GameMenu has no OptionsMenu assigned, its Options button is dead")
+		return
+
+	_options_menu.closed.connect(_on_options_closed)
 	if _options_button != null:
-		# Nothing behind it yet, and a button that does nothing is worse than
-		# one that says it cannot be pressed.
-		_options_button.disabled = true
+		_options_button.pressed.connect(_options_menu.open)
+
+
+## Focus goes back where it was before the options screen took it, so the menu
+## is still keyboard-drivable after backing out of a tab.
+func _on_options_closed() -> void:
+	if visible && _resume_button != null:
+		_resume_button.grab_focus()
 
 
 ## Back to the main menu, hanging up on the way: the menu is offline territory,

@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://cul0jyrwte8ba"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Resource" uid="uid://di3tt5apwrpv8" path="res://Resources/Abilities/Towers/primal_ultimate_beastmaster_ability.tres" id="5_primal_ultimate_beastmaster_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="6_return_to_elemental_core_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="7_4unt7"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://c5rf8mmk4r7ua" path="res://2DArt/Icons/ultimate_beastmaster.png" id="13_ultimate_beastmaster"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_InstantDelivery")
+impact_scene_path = "res://Scenes/Effects/blood_spray.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 974
+damage_max = 980
+damage_type = 4
+attacks_per_second = 1.429
+windup_seconds = 0.35
+attack_range = 5.47
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/primal_ultimate_beastmaster_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
+gold_cost = 30000
+max_mana = 100
+total_gold_cost = 45000
+unit_type_id = 144
+display_name = "Ultimate Beastmaster"
+icon = ExtResource("13_ultimate_beastmaster")
+max_health = 3000
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_primal_ultimate_beastmaster_ability"), ExtResource("6_return_to_elemental_core_ability"), ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/primal_ultimate_beastmaster.tscn"

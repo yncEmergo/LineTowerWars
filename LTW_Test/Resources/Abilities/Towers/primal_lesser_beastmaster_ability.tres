@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BloodthirstPassive" format=3 uid="uid://cm13wuycsywim"]
+
+[ext_resource type="Script" uid="uid://bly1w1q0m2ybo" path="res://Scripts/Abilities/TowerPassives/BloodthirstPassive.gd" id="1_BloodthirstPassive"]
+[ext_resource type="Texture2D" uid="uid://dmxjoa4q281xh" path="res://2DArt/Icons/lesser_beastmaster.png" id="2_lesser_beastmaster"]
+
+[resource]
+script = ExtResource("1_BloodthirstPassive")
+ability_id = 205
+display_name = "Bloodthirst"
+icon = ExtResource("2_lesser_beastmaster")
+targeting = 0
+slot = 11

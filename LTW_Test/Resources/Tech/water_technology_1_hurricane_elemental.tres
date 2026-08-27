@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 11
+element = 9
+kind = 1
+display_name = "Water Technology (1): Hurricane Elemental"
+description = "Unlocks the Lesser and Greater Hurricane Elemental."
+slot = 10
+ultimate_name = "Ultimate Hurricane Elemental"
+ultimate_cross_tech_id = 15

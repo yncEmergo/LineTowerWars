@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://jvt28hwwgf8f"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Resource" uid="uid://bbqvco4y3q5ea" path="res://Resources/Abilities/Towers/upgrade_lesser_archer_to_archer_ability.tres" id="5_upgrade_lesser_archer_to_archer_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="6_attack_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="7_0knmj"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="7_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="8_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="11_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://dp5mholbyr6wp" path="res://2DArt/Icons/lesser_archer.png" id="12_lesser_archer"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/arrow.tscn"
+speed = 16
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_type = 3
+attacks_per_second = 1.499
+attack_range = 3.12
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/lesser_archer_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_upgrade_ability")])
+gold_cost = 10
+total_gold_cost = 10
+unit_type_id = 26
+display_name = "Lesser Archer"
+icon = ExtResource("12_lesser_archer")
+max_health = 25
+armor_type = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_lesser_archer_to_archer_ability"), ExtResource("6_attack_ability"), ExtResource("7_prioritize_ability"), ExtResource("8_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/lesser_archer.tscn"

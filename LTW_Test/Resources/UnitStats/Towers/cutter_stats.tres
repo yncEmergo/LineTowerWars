@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_cutter_to_lesser_carver_ability.tres" id="5_upgrade_cutter_to_lesser_carver_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_cutter_to_lesser_crusher_ability.tres" id="6_upgrade_cutter_to_lesser_crusher_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="8_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="11_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/cutter.png" id="12_cutter"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_InstantDelivery")
+impact_scene_path = "res://Scenes/Effects/blood_spray.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 3
+damage_max = 3
+damage_type = 2
+attacks_per_second = 3.003
+attack_range = 1.17
+target_types = 1
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+unit_type_id = 37
+display_name = "Cutter"
+icon = ExtResource("12_cutter")
+max_health = 35
+armor_type = 5
+armor = 1
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_cutter_to_lesser_carver_ability"), ExtResource("6_upgrade_cutter_to_lesser_crusher_ability"), ExtResource("7_attack_ability"), ExtResource("8_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/cutter.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/cutter_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_upgrade_ability")])
+gold_cost = 30
+total_gold_cost = 40

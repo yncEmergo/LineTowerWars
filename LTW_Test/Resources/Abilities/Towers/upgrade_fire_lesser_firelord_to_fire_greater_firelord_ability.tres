@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dqkc2mkvfc7r0"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://4d1ney3xgtp" path="res://Resources/UnitStats/Towers/fire_greater_firelord_stats.tres" id="2_fire_greater_firelord_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_fire_greater_firelord_stats")
+required_tech_id = 3
+ability_id = 214
+display_name = "Upgrade to Greater Firelord"
+description = "A living flame. A chance on every attack to burst over several creeps and permanently eat their armor."
+slot = 0

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FrostAttackPassive" format=3 uid="uid://ckucg5y38jeq6"]
+
+[ext_resource type="Script" uid="uid://dlb0frugo1k6f" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
+[ext_resource type="Texture2D" uid="uid://cjecj8t7k258r" path="res://2DArt/Icons/obelisk.png" id="2_obelisk"]
+
+[resource]
+script = ExtResource("1_FrostAttackPassive")
+chill_source = "obelisk"
+ability_id = 136
+display_name = "Frost Attack"
+icon = ExtResource("2_obelisk")
+targeting = 0
+slot = 11

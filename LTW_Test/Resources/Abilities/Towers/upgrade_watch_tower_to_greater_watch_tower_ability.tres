@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://g8xp8vcip1bt"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://brjpnigg5njwp" path="res://Resources/UnitStats/Towers/greater_watch_tower_stats.tres" id="2_greater_watch_tower_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_greater_watch_tower_stats")
+ability_id = 76
+display_name = "Upgrade to Greater Watch Tower"
+description = "Pure single target reach. The longest range in the game and no splash at all, so every shot is spent on one creep."
+slot = 0

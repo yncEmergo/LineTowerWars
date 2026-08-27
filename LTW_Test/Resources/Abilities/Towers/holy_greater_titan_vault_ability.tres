@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LuminousGraspPassive" format=3 uid="uid://rmhgrpoxrqm6"]
+
+[ext_resource type="Script" uid="uid://bpwscmm6ulckx" path="res://Scripts/Abilities/TowerPassives/LuminousGraspPassive.gd" id="1_LuminousGraspPassive"]
+[ext_resource type="Texture2D" uid="uid://dm88nic86uwd4" path="res://2DArt/Icons/greater_titan_vault.png" id="2_greater_titan_vault"]
+
+[resource]
+script = ExtResource("1_LuminousGraspPassive")
+additional_targets = 7
+amplification_seconds = 7
+slow_amount = 0.18
+ability_id = 158
+display_name = "Luminous Grasp"
+icon = ExtResource("2_greater_titan_vault")
+targeting = 0
+slot = 11

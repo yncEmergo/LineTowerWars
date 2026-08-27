@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="VolcanicEruptionPassive" format=3 uid="uid://cils2qtua33j2"]
+
+[ext_resource type="Script" uid="uid://cdqxmm34sgvqw" path="res://Scripts/Abilities/TowerPassives/VolcanicEruptionPassive.gd" id="1_VolcanicEruptionPassive"]
+[ext_resource type="Texture2D" uid="uid://dthwt6y4j6qvl" path="res://2DArt/Icons/lesser_firelord.png" id="2_lesser_firelord"]
+
+[resource]
+script = ExtResource("1_VolcanicEruptionPassive")
+ability_id = 133
+display_name = "Volcanic Eruption"
+icon = ExtResource("2_lesser_firelord")
+targeting = 0
+slot = 11

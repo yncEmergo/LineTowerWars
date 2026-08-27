@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TemporalRiftPassive" format=3 uid="uid://vcquurc563qe"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_750yi"]
+[ext_resource type="Script" uid="uid://dre6enavaorsh" path="res://Scripts/Abilities/TowerPassives/TemporalRiftPassive.gd" id="1_TemporalRiftPassive"]
+[ext_resource type="Texture2D" uid="uid://cbenfk6xt1aga" path="res://2DArt/Icons/lesser_harbinger.png" id="2_lesser_harbinger"]
+
+[resource]
+script = ExtResource("1_TemporalRiftPassive")
+ability_id = 162
+display_name = "Temporal Rift"
+icon = ExtResource("2_lesser_harbinger")
+targeting = 0
+slot = 11

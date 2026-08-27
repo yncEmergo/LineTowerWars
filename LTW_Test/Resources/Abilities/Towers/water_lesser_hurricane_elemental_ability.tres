@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PressuringWaterPassive" format=3 uid="uid://b0riq3uqgxixn"]
+
+[ext_resource type="Script" uid="uid://decub6gp60s3o" path="res://Scripts/Abilities/TowerPassives/PressuringWaterPassive.gd" id="1_PressuringWaterPassive"]
+[ext_resource type="Texture2D" uid="uid://jle1dstm3ctq" path="res://2DArt/Icons/lesser_hurricane_elemental.png" id="2_lesser_hurricane_elemental"]
+
+[resource]
+script = ExtResource("1_PressuringWaterPassive")
+ability_id = 178
+display_name = "Pressuring Water"
+icon = ExtResource("2_lesser_hurricane_elemental")
+targeting = 0
+slot = 11

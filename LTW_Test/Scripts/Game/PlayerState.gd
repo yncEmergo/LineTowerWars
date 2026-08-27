@@ -33,6 +33,14 @@ var value: int = 0
 ## Where this player finished, or 0 while they are still in it. 1 is the winner,
 ## and the first player out of a five player game takes 5.
 var placement: int = 0
+## What this player has researched, and what they can still take back. Here
+## rather than in a manager of its own for exactly the reason gold is here: it
+## is per player, it is handed down by the server, and a static handle to "the
+## player's technology" would break the moment there were two players.
+##
+## The RULES that decide whether any of it may change are TechManager's. This
+## only holds the record.
+var tech: PlayerTech = PlayerTech.new()
 
 
 func setup(id: int, starting_gold: int, starting_income: int, starting_lives: int) -> void:
@@ -126,19 +134,25 @@ func set_standing(new_value: int, new_placement: int) -> void:
 	standing_changed.emit()
 
 
-## Takes one life off `victim` and adds it to this player, which is what a leak
+## Takes lives off `victim` and adds them to this player, which is what a leak
 ## does: lives are STOLEN rather than merely lost, so the pool never shrinks.
 ##
 ## One method rather than a lose() and a gain() at two call sites, because the
 ## two halves must never happen separately - half a steal would quietly destroy
 ## or invent a life. Reports whether it went through, so a leak into a player
 ## who is already out cannot pay out twice.
-func steal_life_from(victim: PlayerState) -> bool:
+##
+## A Boss takes two rather than one, and the count is CAPPED at what the victim
+## actually has: a player on their last life loses that one and no more, so a
+## Boss can never invent a life by taking more than was there. Which creep
+## takes how many is CreepStats.lives_stolen.
+func steal_life_from(victim: PlayerState, count: int = 1) -> bool:
 	if victim == null || victim == self || victim.is_eliminated():
 		return false
 
-	victim.lives -= 1
-	lives += 1
+	var stolen: int = clampi(count, 1, victim.lives)
+	victim.lives -= stolen
+	lives += stolen
 	victim.lives_changed.emit(victim.lives)
 	lives_changed.emit(lives)
 	return true

@@ -67,6 +67,13 @@ func _ready() -> void:
 	if _overlay == null:
 		Log.err("SelectionController found no selection box overlay on References")
 
+	# An upgraded tower is a different NODE and the same tower, so the selection
+	# and the control groups both have to follow it across. References is filled
+	# in _enter_tree, so the session is already there to listen to.
+	var session: MatchSession = References.match_session
+	if session != null:
+		session.unit_replaced.connect(_on_unit_replaced)
+
 
 ## The current selection. Read by CommandController when issuing orders.
 func get_selection() -> Array:
@@ -79,6 +86,28 @@ func select_single(unit: Node) -> void:
 	if unit == null || !is_instance_valid(unit):
 		return
 	_set_selection([unit])
+
+
+## One unit became another - a tower finished an upgrade - so everything
+## holding the old one swaps to the new one in place.
+##
+## Called while the OLD unit is still in the tree, deliberately. Its
+## tree_exiting would otherwise erase it from the selection and from every
+## group a moment before this could put the replacement where it stood, and the
+## player would watch their selection empty for no reason they can see.
+func _on_unit_replaced(old_unit: Unit, new_unit: Unit) -> void:
+	_control_groups.replace(old_unit, new_unit)
+
+	var at: int = _selected.find(old_unit)
+	if at < 0:
+		return
+
+	_stop_watching(old_unit)
+	_selected[at] = new_unit
+	new_unit.set_selected(true)
+	_watch(new_unit)
+	# A copy, for the reason every other emit here makes one.
+	selection_changed.emit(_selected.duplicate())
 
 
 func _unhandled_input(event: InputEvent) -> void:

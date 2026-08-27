@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="Texture2D" uid="uid://bb1sxtbxor6sj" path="res://2DArt/UI/Icons/stat_player.png" id="7_stat_player"]
 [ext_resource type="Texture2D" uid="uid://bdq0ogm6osuay" path="res://2DArt/UI/Icons/stat_life.png" id="8_stat_life"]
 [ext_resource type="Texture2D" uid="uid://bglm4ehnvx88i" path="res://2DArt/UI/Icons/stat_income.png" id="9_stat_income"]
@@ -196,5 +197,7 @@ layout_mode = 2
 theme_override_constants/separation = 2
 
 [node name="Minimap" parent="." instance=ExtResource("14_minimap")]
+
+[node name="ResearchCenter" parent="." instance=ExtResource("15_research")]
 
 [node name="GameMenu" parent="." unique_id=1407213534 instance=ExtResource("6_game_menu")]

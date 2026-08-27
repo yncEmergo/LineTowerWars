@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="CancelSellAbility" format=3 uid="uid://cuh8pqg4v4y4k"]
 
 [ext_resource type="Script" uid="uid://t4qm2fkq45vo" path="res://Scripts/Abilities/CancelSellAbility.gd" id="1_cancel_sell"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_cancel.png" id="2_ability_cancel"]
 
 [resource]
 script = ExtResource("1_cancel_sell")
@@ -8,3 +9,4 @@ ability_id = 6
 display_name = "Cancel Sale"
 description = "Keep the building after all."
 slot = 10
+icon = ExtResource("2_ability_cancel")

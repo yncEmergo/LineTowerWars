@@ -217,6 +217,14 @@ Sell time is the same for every building; only the refund percentage differs.
 
 # 2. The technology system
 
+**Implemented.** The system this section describes is built: `Resources/Tech/` holds one
+resource per technology, `Scripts/Tech/` holds the rules, and the Research Center screen
+sells them. The towers it gates are built too: an elemental upgrade names the technology it
+needs by `tech_id`, and the same `TechManager.owns` call the Research Center makes is what
+refuses it. The prices in 2.2 are mirrored by `game_config.tres` and the cross requirements
+in 2.3 by the path technologies themselves, which is what lets the bijection be checked at
+boot.
+
 ## 2.1 Ten elements, three techs each
 
 There are **ten elements**: Arcane, Earth, Fire, Holy, Ice, Lightning, **Primal**, Unholy,
@@ -379,6 +387,36 @@ Poison Bloom, Plague Fanatic -> Fanatic, Ultimate Moonbeam Projector -> Ultimate
 
 # 3. Basic towers
 
+**IMPLEMENTED.** Every tower in this section exists as a `BuildingStats` resource under
+`Resources/UnitStats/Towers/`, and per 8.1 those files are now the authority - this section is
+the readable mirror. Change the `.tres` and the row here in the same commit.
+
+Three things had to be decided to turn these rows into resources, because the source records
+none of them. They are decisions rather than data, so they are written down here once:
+
+- **Range and splash are divided by 128** to reach player cells, 128 being the Warcraft III
+  build tile. A 150 range Cutter reaches just over one cell, an 800 range Sentry reaches most
+  of the width of a lane, and a 1,000 range Turret very nearly all of it.
+- **Attack speed is INVERTED.** This document states the cooldown in seconds, the way the
+  source game does; `AttackStats.attacks_per_second` is its reciprocal, because the UI shows
+  APS and a bigger number reading as faster is the less confusing of the two. Never copy one
+  into the other without inverting it.
+- **Delivery is chosen per BRANCH**, since 7.2 records that no projectile data survives: the
+  Archer line fires a flat arrow, the Cannon lobs an arced shell, the whole Cutter line is
+  instant, the Sentry line throws a bolt, and the anti-air branch fires a missile. Projectile
+  speeds are a tuning value and are currently deliberately slow, so travel time is visible.
+
+Two things this project ADDS, which the source does not have and which are therefore not
+balance changes to it:
+
+- **A windup**, the gap between an attack starting and its damage landing, authored only where
+  a tower has a swing to play. It is taken out of the attack period rather than added to it, so
+  it never changes a tower's rate - `game_rules.md` has the rule.
+- **The Crusher branch's blast is measured from the TOWER**, not from the creep it hit. Its
+  reach is barely over a cell while its blast is more than twice that, so what it does in
+  practice is flatten the ground it stands on; the source's own tooltip describes it that way.
+  Everything else in this section splashes from the impact as usual.
+
 Always available, no technology required. Three independent lines, each starting at 10g, each
 splitting into two branches at the 150g tier.
 
@@ -393,6 +431,10 @@ splitting into two branches at the 150g tier.
 
 Each line keeps one name across its 10g and 30g towers, and each branch keeps one name across
 all four of its own tiers. See 2.4 for the scheme and the old Warcraft III names.
+
+**The builder can only place the three 10g towers.** Every tier above them is reached by
+upgrading the tower below it, which is what keeps the build menu three buttons long while the
+roster is thirty towers deep. The rule is in `game_rules.md`.
 
 The three lines and what they are for:
 
@@ -458,18 +500,51 @@ says.
 
 ## 3.4 Notes
 
-No Basic tower has an ability. **Prioritize** (hotkey F, toggles between preferring nearby air
-creeps and default targeting) exists on every tower that can hit both ground and air.
+No Basic tower has an ability. **Prioritize** (toggles between preferring nearby air
+creeps and default targeting) exists on every tower that can hit both ground and air, and is
+implemented - see `game_rules.md`. It is therefore offered by every tower in this section
+except the Cannon branch, which cannot hit air, and the Turret branch, which cannot hit
+ground.
 
 **Elemental Core - 200g, Chaos, ~6-7 damage, ~1.0 speed, ~600 range, Ground + Air.** The
-generic technology base tower. It has no ability and is not part of any Basic line; it is the
-thing that morphs for free into an element's 200g tower once that element's Basic tech is
-owned. `?` The 9.4 sheet lists a "total cost" of 1,000 for it, which does not match its 200g
-price - probably a spreadsheet artefact.
+generic technology base tower, and IMPLEMENTED. It has no ability and is not part of any
+Basic line; it is the thing that morphs for free into an element's 200g tower once that
+element's Basic tech is owned. It is the fourth and last tower the builder can place.
+
+The free morph falls out of the existing cost model rather than needing a rule of its own:
+`gold_cost` is the price of ONE step, so an element's 200g base tower authors 0 there and 200
+in `total_gold_cost`. The Core is what charged the 200, and the sell refund reads the total.
+
+`?` The 9.4 sheet lists a "total cost" of 1,000 for it, which does not match its 200g price -
+probably a spreadsheet artefact.
 
 ---
 
 # 4. Elemental towers
+
+**IMPLEMENTED.** Every tower in this section exists as a `BuildingStats`
+resource under `Resources/UnitStats/Towers/`, and every ability in it as a
+`TowerPassive` resource under `Resources/Abilities/Towers/`. Per 8.1 those files
+are now the authority and this section is the readable mirror - change the
+`.tres` and the row here in the same commit.
+
+The three decisions section 3 had to make to turn its rows into resources are
+made the same way here, and they are not repeated: range and splash are divided
+by 128, attack speed is INVERTED into attacks per second, and health and armour
+come from the price tier alone (1.4). Two more are made only here:
+
+- **Delivery is chosen per PATH**, the way section 3 chooses it per branch, and
+  on the same grounds - 7.2 records that no projectile data survives. What the
+  ability DESCRIBES is what leaves the tower: the Doom Guard lobs a meteor, the
+  Crystal fires a needle, the Beastmaster's attack is instant.
+- **Every ability's numbers are authored in the game's own units**, not the
+  source's: a 400 AoE is written as 3.12 cells and "-3.75% per hit" as 0.0375.
+  The conversion happens once, in the generator's table, so a `.tres` can be
+  read against its script without a divisor in the way.
+
+Six pieces of these abilities are approximated or left out, and `game_rules.md`
+lists all six under "What of the elemental abilities is NOT built" rather than
+leaving them to be rediscovered.
 
 Every element has the same shape:
 
@@ -827,7 +902,7 @@ in its path and **stunning them for 0.5 sec**. A creep can only be stunned this 
 5 mana per target hit, and **damage increases by 10% per 100 range to the target, up to
 +100%**. At full mana, unleashes a beast up to **1,200 range** dealing **1,865 Siege Physical
 Damage** and stunning for **1.2 sec** (8 sec immunity per creep). The beast's direction can be
-set manually with the **Stampede Target** ability (hotkey R); targeting the tower itself resets
+set manually with the **Stampede Target** ability; targeting the tower itself resets
 it to "wherever the attack landed".
 
 ## 4.8 Unholy
@@ -1120,6 +1195,29 @@ been removed, so do not implement it.
 
 # 6. Creeps
 
+**TIER 1 IS IMPLEMENTED.** Every creep in 6.2 exists as a `CreepStats` resource under
+`Resources/UnitStats/Creeps/`, and per 8.1 those files are now the authority - 6.2 is the
+readable mirror. Change the `.tres` and the row in the same commit. Tiers 2 to 4 are still
+only written down here.
+
+Three decisions had to be made to turn those rows into resources, the same way section 3
+records the ones the towers needed:
+
+- **Movement speed is divided by 128**, the same divisor section 3 already uses for range
+  and splash. A 210 speed Sheep walks 1.64 cells a second and crosses a 34 cell lane in
+  about twenty seconds.
+- **Every creep aura radius is 700**, which is 5.47 cells at that divisor. It is stored once
+  on `GameConfig` rather than per creep, because the rules give every creep aura in the game
+  one radius - see `game_rules.md`.
+- **Spell damage is a damage TYPE** in `Config/DamageTable.gd`, sitting outside the armour
+  matrix rather than being a second pipeline. Nothing deals it yet, since no tower ability
+  exists; the Mud Golem's resistance to it is real and testable.
+
+Three traits are answered by the creep's stats file rather than by a passive on its card -
+flying, attacking and being a Boss - because each decides something structural before any
+passive could be asked. Their card entry is a `TraitPassive`, which carries the tooltip text
+and no mechanics. Everything else in 6.6 is a real passive resource.
+
 ## 6.1 How the roster is organised
 
 Creeps have **no upgrades**. They are sorted into four tiers.
@@ -1198,6 +1296,13 @@ There are no other exceptions. The default food cap is 100 and is a game-mode se
 | Priest | 04:30 | 600 | 58 | 35 | 290 | 2 | Light | 270 | 3 | Regen Aura (1) |
 | Corrupted Treant | 05:00 | ~750 | 50 | 90 | 265 | ~2 | ~Fortified | ~270 | 3 | **Attacker** |
 | Rot Golem | 05:30 | ~1,000 | 92 | 150 | 1,325 | ~5 | ~Hero | ~270 | **1** | Boss (1) |
+
+**Corrupted Treant attack: 4-5 damage, 0.5 sec speed.** `?` The speed is an ESTIMATE from
+play and is **unverified** - the game does not state it and the developer has not been asked
+yet. Two more figures the source records nowhere and this project therefore chose: its
+**range is 150** (1.17 cells, enough to reach a tower's corner without walking into it) and
+its damage type is **Normal**. All three are in
+`Resources/UnitStats/Creeps/corrupted_treant_stats.tres`.
 
 **Timber Wolf** is not sendable on its own. It only exists as part of the Sheep pack:
 6 HP, 0 Light armour, 230 speed, 2 bounty. Its old sendable form, *Frost Wolf*, was removed
@@ -1305,8 +1410,8 @@ Numbered traits are the same effect at increasing strength.
 | Fast Producing | Stock replenishes faster than other creep types. |
 | Death Pact (1/2/3) | Returns to life 1.5 sec after being killed, once, at 33% / 50% / 75% health. |
 | Devotion Aura (1/2/3/4) | +1 / +3 / +4 / +5 armour to allied creeps within 700 AoE. |
-| Endurance Aura (1/2/3/4) | +10% / +15% / +20% / (+30% attack speed, +25% move speed) within 700 AoE. |
-| Regen Aura (1/2/3/4) | +2 to +6 / +10 / +30 / +120 health regeneration per sec within 700 AoE. Replaced the old Ancient Aura in 10.0a. |
+| Endurance Aura (1/2/3/4) | +10% / +15% / +20% to BOTH attack speed and movement speed within 700 AoE; the Tier 4 one splits into +30% attack speed and +25% move speed. Only an attacking creep has an attack for the first half to act on. |
+| Regen Aura (1/2/3/4) | +2 / +10 / +30 / +120 health regeneration per sec within 700 AoE. Replaced the old Ancient Aura in 10.0a. The Tier 1 figure is the Priest's, confirmed in game. |
 | Unholy Sacrifice (1/2/3/4) | On death, heals nearby allied creeps for 3 / 310 / 4,875 / 12,750. |
 | Armored (1/2) | Physical **splash** damage taken reduced by 10% / 20%. |
 | Lesser Spell Resistance | Spell Damage -33%, harmful spell durations -75%, 50% immune to movement chill. |

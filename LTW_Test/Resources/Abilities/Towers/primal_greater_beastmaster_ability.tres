@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BloodthirstPassive" format=3 uid="uid://bq1ew5ad7xk2x"]
+
+[ext_resource type="Script" uid="uid://bly1w1q0m2ybo" path="res://Scripts/Abilities/TowerPassives/BloodthirstPassive.gd" id="1_BloodthirstPassive"]
+[ext_resource type="Texture2D" uid="uid://cvobtk2kbq2jj" path="res://2DArt/Icons/greater_beastmaster.png" id="2_greater_beastmaster"]
+
+[resource]
+script = ExtResource("1_BloodthirstPassive")
+beast_damage = 570
+stun_seconds = 0.7
+ability_id = 206
+display_name = "Bloodthirst"
+icon = ExtResource("2_greater_beastmaster")
+targeting = 0
+slot = 11

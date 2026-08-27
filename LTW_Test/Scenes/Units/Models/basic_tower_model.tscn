@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://c52d7s2p3e2e6"]
+[gd_scene format=3 uid="uid://df48kgyaj1o36"]
 
 [ext_resource type="Script" uid="uid://c4n4md5kn88mh" path="res://Scripts/Units/UnitModel.gd" id="1_model"]
-[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="2_foundation"]
+[ext_resource type="PackedScene" uid="uid://qehxin400wqm" path="res://Scenes/Units/Models/tower_foundation.tscn" id="2_foundation"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_turret"]
 albedo_color = Color(0.62, 0.55, 0.32, 1)
@@ -12,11 +12,11 @@ top_radius = 0.2
 bottom_radius = 0.28
 height = 0.75
 
-[node name="BasicTowerModel" type="Node3D"]
+[node name="BasicTowerModel" type="Node3D" unique_id=95611752]
 script = ExtResource("1_model")
 
-[node name="Base" parent="." instance=ExtResource("2_foundation")]
+[node name="Base" parent="." unique_id=1154357412 instance=ExtResource("2_foundation")]
 
-[node name="Turret" type="MeshInstance3D" parent="."]
+[node name="Turret" type="MeshInstance3D" parent="." unique_id=712696313]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
 mesh = SubResource("CylinderMesh_turret")

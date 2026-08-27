@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AncientBloomPassive" format=3 uid="uid://b7drlhcclqqnc"]
+
+[ext_resource type="Script" uid="uid://kj06k1t3ka14" path="res://Scripts/Abilities/TowerPassives/AncientBloomPassive.gd" id="1_AncientBloomPassive"]
+[ext_resource type="Texture2D" uid="uid://tjslr4vtda4l" path="res://2DArt/Icons/lesser_primalist.png" id="2_lesser_primalist"]
+
+[resource]
+script = ExtResource("1_AncientBloomPassive")
+refund_below = 3
+ability_id = 202
+display_name = "Ancient Bloom"
+icon = ExtResource("2_lesser_primalist")
+targeting = 0
+slot = 11

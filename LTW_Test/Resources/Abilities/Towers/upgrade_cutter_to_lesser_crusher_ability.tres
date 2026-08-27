@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_crusher_stats.tres" id="2_lesser_crusher_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 83
+tower_stats = ExtResource("2_lesser_crusher_stats")
+display_name = "Upgrade to Lesser Crusher"
+description = "Overhead slam. The slowest attack in the game, over the widest area, and it reaches air."
+targeting = 1
+slot = 1

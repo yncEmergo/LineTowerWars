@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://8rvvl30iwrbj"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://dsihbxtwg55g" path="res://Resources/UnitStats/Towers/holy_light_flies_stats.tres" id="2_holy_light_flies_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_holy_light_flies_stats")
+required_tech_id = 19
+ability_id = 232
+display_name = "Morph into Light Flies"
+description = "Strikes several creeps with one attack. Splits into the anti-air shroom and the support vault."
+slot = 3

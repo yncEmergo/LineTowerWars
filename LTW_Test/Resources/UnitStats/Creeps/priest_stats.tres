@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/regen_aura_1.tres" id="3_regen_aura_1"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/priest.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 61
+display_name = "Priest"
+max_health = 290
+armor_type = 2
+armor = 2
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_regen_aura_1")])
+scene_path = "res://Scenes/Units/Creeps/priest.tscn"
+move_speed = 2.109
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 600
+income_gain = 58
+unlock_seconds = 270.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.2
+bounty = 35

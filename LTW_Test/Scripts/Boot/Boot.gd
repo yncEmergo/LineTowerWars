@@ -65,6 +65,11 @@ func _dispatch() -> void:
 	if is_dedicated_server(config):
 		_open("server", _server_scene_path(config))
 	else:
+		# Here rather than in the options screen alone, so a player who chose
+		# fullscreen last time gets it before the menu's first frame instead of
+		# watching a window flash and then resize. The server branch never asks:
+		# it has no window, and nothing a player wrote in a file may reshape it.
+		UserSettings.apply_window_mode()
 		_open("client", _client_scene_path())
 
 

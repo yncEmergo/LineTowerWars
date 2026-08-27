@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://1wocowlj4rg7"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://dcl33sbqgpobv" path="res://Resources/UnitStats/Towers/holy_ultimate_titan_vault_stats.tres" id="2_holy_ultimate_titan_vault_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_holy_ultimate_titan_vault_stats")
+required_tech_id = 21
+ability_id = 239
+display_name = "Upgrade to Ultimate Titan Vault"
+description = "Support. Strikes many creeps at once and leaves them taking more Spell Damage from everything."
+slot = 0

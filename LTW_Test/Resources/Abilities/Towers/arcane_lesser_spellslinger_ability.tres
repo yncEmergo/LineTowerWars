@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SpellcasterPassive" format=3 uid="uid://bq5duw3fqjwck"]
+
+[ext_resource type="Script" uid="uid://dpruk1edk4tcd" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
+[ext_resource type="Texture2D" uid="uid://b221kl78kq6ik" path="res://2DArt/Icons/lesser_spellslinger.png" id="2_lesser_spellslinger"]
+
+[resource]
+script = ExtResource("1_SpellcasterPassive")
+ability_id = 194
+display_name = "Spellcaster"
+icon = ExtResource("2_lesser_spellslinger")
+targeting = 0
+slot = 11

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpellcasterPassive" format=3 uid="uid://bdkhtdseq5uhm"]
+
+[ext_resource type="Script" uid="uid://dpruk1edk4tcd" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
+[ext_resource type="Texture2D" uid="uid://bdjwfwe7kr3ja" path="res://2DArt/Icons/greater_spellslinger.png" id="2_greater_spellslinger"]
+
+[resource]
+script = ExtResource("1_SpellcasterPassive")
+damage_per_second = 250
+slow_per_tick = 0.1
+orb_bonus_damage = 315
+orb_splash_cells = 1.88
+ability_id = 195
+display_name = "Spellcaster"
+icon = ExtResource("2_greater_spellslinger")
+targeting = 0
+slot = 11

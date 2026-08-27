@@ -11,12 +11,14 @@
 [ext_resource type="Script" uid="uid://ff88ao08y1od" path="res://Scripts/Input/CommandController.gd" id="13_cmdctl"]
 [ext_resource type="Script" uid="uid://se5c6bgai77e" path="res://Scripts/Game/PlayerManager.gd" id="14_players"]
 [ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="21_session"]
+[ext_resource type="Script" path="res://Scripts/Tech/TechManager.gd" id="28_tech"]
 [ext_resource type="Resource" uid="uid://dntbwmi5dakuc" path="res://Resources/Config/controls_config.tres" id="16_ctrl"]
 [ext_resource type="Resource" path="res://Resources/Config/damage_table.tres" id="17_dmgt"]
 [ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="20_menucfg"]
 [ext_resource type="Resource" path="res://Resources/Config/content_config.tres" id="22_content"]
 [ext_resource type="Resource" path="res://Resources/Config/presentation_config.tres" id="23_present"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_hud.tscn" id="27_hud"]
+[ext_resource type="Script" path="res://Scripts/Input/CheatController.gd" id="29_cheat"]
 
 [sub_resource type="Environment" id="Environment_50glp"]
 background_mode = 1
@@ -58,13 +60,19 @@ script = ExtResource("4_jw32o")
 [node name="CommandController" type="Node" parent="." unique_id=891704023]
 script = ExtResource("13_cmdctl")
 
+[node name="CheatController" type="Node" parent="."]
+script = ExtResource("29_cheat")
+
 [node name="PlayerManager" type="Node" parent="." unique_id=1466625998]
 script = ExtResource("14_players")
 
 [node name="MatchSession" type="Node" parent="."]
 script = ExtResource("21_session")
 
-[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_effects_root", "_projectiles_root")]
+[node name="TechManager" type="Node" parent="."]
+script = ExtResource("28_tech")
+
+[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_tech_manager", "_effects_root", "_projectiles_root")]
 script = ExtResource("5_pbw6q")
 _units_root = NodePath("../Units")
 _rts_camera = NodePath("../Camera")
@@ -74,6 +82,7 @@ _selection_box_overlay = NodePath("../MatchHUD/SelectionBox")
 _unit_panel = NodePath("../MatchHUD/UnitPanel")
 _player_manager = NodePath("../PlayerManager")
 _match_session = NodePath("../MatchSession")
+_tech_manager = NodePath("../TechManager")
 _effects_root = NodePath("../Effects")
 _projectiles_root = NodePath("../Projectiles")
 _game_config = ExtResource("6_gcfg")

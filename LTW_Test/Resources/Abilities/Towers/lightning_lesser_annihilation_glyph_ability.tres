@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FocusedLightningPassive" format=3 uid="uid://b5g6kgqa3rfi0"]
+
+[ext_resource type="Script" uid="uid://dgl50478plfko" path="res://Scripts/Abilities/TowerPassives/FocusedLightningPassive.gd" id="1_FocusedLightningPassive"]
+[ext_resource type="Texture2D" uid="uid://brfsnc3jrk3nx" path="res://2DArt/Icons/lesser_annihilation_glyph.png" id="2_lesser_annihilation_glyph"]
+
+[resource]
+script = ExtResource("1_FocusedLightningPassive")
+ability_id = 146
+display_name = "Focused Lightning"
+icon = ExtResource("2_lesser_annihilation_glyph")
+targeting = 0
+slot = 11

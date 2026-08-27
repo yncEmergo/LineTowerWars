@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bd8a3fe0qjqsb"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://d2wckaxikahxx" path="res://Resources/UnitStats/Towers/fire_fire_pit_stats.tres" id="2_fire_fire_pit_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_fire_fire_pit_stats")
+required_tech_id = 1
+ability_id = 208
+display_name = "Morph into Fire Pit"
+description = "Burns creeps over time. Splits into the meteor caller and the living flame."
+slot = 0

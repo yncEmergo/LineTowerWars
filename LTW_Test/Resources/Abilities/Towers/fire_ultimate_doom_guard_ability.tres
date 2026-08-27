@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FrenziedFlamesPassive" format=3 uid="uid://ujko11wdadap"]
+
+[ext_resource type="Script" uid="uid://dj0fbbxcguli1" path="res://Scripts/Abilities/TowerPassives/FrenziedFlamesPassive.gd" id="1_FrenziedFlamesPassive"]
+[ext_resource type="Texture2D" uid="uid://np2a3x4vx3qo" path="res://2DArt/Icons/ultimate_doom_guard.png" id="2_ultimate_doom_guard"]
+
+[resource]
+script = ExtResource("1_FrenziedFlamesPassive")
+ability_id = 132
+display_name = "Frenzied Flames"
+icon = ExtResource("2_ultimate_doom_guard")
+targeting = 0
+slot = 11

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 8
+element = 4
+kind = 1
+display_name = "Ice Technology (1): Lich"
+description = "Unlocks the Lesser and Greater Lich."
+slot = 7
+ultimate_name = "Ultimate Lich"
+ultimate_cross_tech_id = 5

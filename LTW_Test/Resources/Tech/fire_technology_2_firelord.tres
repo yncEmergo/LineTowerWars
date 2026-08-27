@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 3
+element = 2
+kind = 2
+display_name = "Fire Technology (2): Firelord"
+description = "Unlocks the Lesser and Greater Firelord."
+slot = 2
+ultimate_name = "Ultimate Firelord"
+ultimate_cross_tech_id = 14

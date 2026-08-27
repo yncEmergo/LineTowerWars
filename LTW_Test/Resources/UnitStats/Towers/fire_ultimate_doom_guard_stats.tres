@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://d01dkyqmcbxck"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
+[ext_resource type="Resource" uid="uid://ujko11wdadap" path="res://Resources/Abilities/Towers/fire_ultimate_doom_guard_ability.tres" id="7_fire_ultimate_doom_guard_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="8_return_to_elemental_core_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://np2a3x4vx3qo" path="res://2DArt/Icons/ultimate_doom_guard.png" id="14_ultimate_doom_guard"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/meteor.tscn"
+speed = 5
+arc_height = 3.4
+impact_scene_path = "res://Scenes/Effects/flame_impact.tscn"
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SplashEffect")
+radius = 3.12
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 871
+damage_max = 874
+damage_type = 4
+is_aoe_damage = true
+attacks_per_second = 0.333
+windup_seconds = 0.5
+attack_range = 9.38
+target_types = 1
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/fire_ultimate_doom_guard_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 30000
+max_mana = 45
+total_gold_cost = 45000
+unit_type_id = 69
+display_name = "Ultimate Doom Guard"
+icon = ExtResource("14_ultimate_doom_guard")
+max_health = 3000
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_fire_ultimate_doom_guard_ability"), ExtResource("8_return_to_elemental_core_ability"), ExtResource("9_attack_ability"), ExtResource("10_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/fire_ultimate_doom_guard.tscn"

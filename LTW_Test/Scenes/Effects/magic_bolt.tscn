@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="2_SpinAnimation3D"]
+
+[sub_resource type="StandardMaterial3D" id="M_core"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.85, 0.7, 1.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="M_shell"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.55, 0.34, 0.95, 0.5)
+
+[sub_resource type="SphereMesh" id="Core"]
+radius = 0.055
+height = 0.20
+radial_segments = 4
+rings = 2
+material = SubResource("M_core")
+
+[sub_resource type="SphereMesh" id="Shell"]
+radius = 0.105
+height = 0.21
+radial_segments = 6
+rings = 3
+material = SubResource("M_shell")
+
+[node name="MagicBolt" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Spin" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Core" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(0.8253, -0.5646, 0, 0.5646, 0.8253, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="SpinDrive" type="Node" parent="Spin" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("2_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 2.5
+axis = Vector3(0, 0, 1)
+
+[node name="Shell" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Shell")

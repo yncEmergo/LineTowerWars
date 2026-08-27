@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ShatterArmorPassive" format=3 uid="uid://d3xb7x31ejs5"]
+
+[ext_resource type="Script" uid="uid://tl1cs54i54v6" path="res://Scripts/Abilities/TowerPassives/ShatterArmorPassive.gd" id="1_ShatterArmorPassive"]
+[ext_resource type="Texture2D" uid="uid://c26utqmkmucmr" path="res://2DArt/Icons/lesser_ancient_warden.png" id="2_lesser_ancient_warden"]
+
+[resource]
+script = ExtResource("1_ShatterArmorPassive")
+armor_per_hit = 0.12
+armor_floor = 0
+ability_id = 186
+display_name = "Devastating Attack"
+icon = ExtResource("2_lesser_ancient_warden")
+targeting = 0
+slot = 11

@@ -170,9 +170,11 @@ func is_hostile_to(other: Unit) -> bool:
 
 ## Exactly the same unit type, which is what double click selects.
 ##
-## Identity is the stats resource itself: every Sniper Tower references the one
-## sniper_tower_stats.tres, so they match, while a different tower or a future
-## upgraded version carries its own stats and will not be swept up with them.
+## Identity is the stats resource itself: every Cannon references the one
+## cannon_stats.tres, so they match, while a different tower carries its own
+## stats and is not swept up with them. That is also what makes double click
+## pick up ONE TIER rather than a whole upgrade line - a Greater Cannon is a
+## different resource, so it stays out. See game_rules.md.
 func is_same_type_as(other: Unit) -> bool:
 	if other == null || stats == null:
 		return false
@@ -183,6 +185,18 @@ func is_same_type_as(other: Unit) -> bool:
 ## selection stays duck-typed, and so future non-tower buildings inherit it.
 func is_structure() -> bool:
 	return false
+
+
+## The node whose meshes stand for this unit in a portrait or a baked icon.
+##
+## Itself by default, which is right for a creep - its meshes hang directly off
+## it. A building overrides it with the model it swaps out, so a portrait shows
+## the tower rather than the tower plus whatever the prefab has bolted on
+## around it. What is never wanted either way - the selection ring, the health
+## bar, the ground patch - is VisualUtil.portrait_skips()'s job rather than
+## this one, because that list is the same for everything.
+func visual_root() -> Node3D:
+	return self
 
 
 ## Whether this unit takes orders from its owner. False for ordinary creeps,
@@ -249,9 +263,22 @@ func resolve_damage(amount: int, damage_type: DamageTable.DamageType,
 		return amount
 
 	return table.apply(
-		amount, damage_type, stats.armor_type,
-		armor_value(), _damage_taken_ratio(is_aoe), _damage_block()
+		amount, damage_type, armor_type_value(), armor_value(),
+		_damage_taken_ratio(is_aoe, DamageTable.is_spell(damage_type)),
+		_damage_block()
 	)
+
+
+## Armour TYPE this unit counts as RIGHT NOW, which is a different question to
+## the armour points above it.
+##
+## Its own by default. Overridable for the same reason armor_value() is: the
+## Ultimate Alchemist alters the type of the creeps it hits, and the stats file
+## cannot know that. See Combat/StatusEffects.gd.
+func armor_type_value() -> UnitStats.ArmorType:
+	if stats == null:
+		return UnitStats.ArmorType.UNARMORED
+	return stats.armor_type
 
 
 ## Armour points this unit has RIGHT NOW: its own, plus anything granted to it
@@ -278,10 +305,15 @@ func heal(amount: int) -> void:
 ## Share of incoming damage this unit takes, applied after the damage matrix
 ## and before its armour points. 1.0 is no resistance at all.
 ##
+## Both questions the pipeline can ask arrive together rather than as two
+## hooks, because the answer is ONE number however many of them apply: a creep
+## that resists both area damage and spells multiplies the two, and doing that
+## here keeps the order it happens in out of the caller's hands.
+##
 ## Protected rather than public: it is one step of the pipeline above, not a
 ## question anything outside the unit should be asking. Creeps override it to
 ## fold in their passives.
-func _damage_taken_ratio(_is_aoe: bool) -> float:
+func _damage_taken_ratio(_is_aoe: bool, _is_spell: bool) -> float:
 	return 1.0
 
 
@@ -293,6 +325,16 @@ func _damage_block() -> int:
 ## Whether this unit is in a state where its attack may fire, if it has one.
 func can_attack() -> bool:
 	return is_alive()
+
+
+## Multiplier on how fast this unit attacks RIGHT NOW, above 1 being faster.
+##
+## Asked of the unit rather than read off its AttackStats for the same reason
+## armor_value() is: an aura standing over it changes the answer, and the
+## stats file cannot know that. 1.0 for anything nothing is buffing, which is
+## every tower.
+func attack_speed_ratio() -> float:
+	return 1.0
 
 
 func _set_health(value: int) -> void:

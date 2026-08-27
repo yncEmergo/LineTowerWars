@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_archer_model.tscn" id="1_lesser_archer_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/archer_model.tscn" id="2_archer_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_watch_tower_model.tscn" id="3_lesser_watch_tower_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/watch_tower_model.tscn" id="4_watch_tower_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/greater_watch_tower_model.tscn" id="5_greater_watch_tower_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ultimate_watch_tower_model.tscn" id="6_ultimate_watch_tower_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lesser_cannon_model.tscn" id="7_lesser_cannon_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/cannon_model.tscn" id="8_cannon_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/greater_cannon_model.tscn" id="9_greater_cannon_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ultimate_cannon_model.tscn" id="10_ultimate_cannon_model"]
+
+[sub_resource type="StandardMaterial3D" id="M_ground"]
+albedo_color = Color(0.3, 0.33, 0.3, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Ground"]
+size = Vector2(30, 20)
+material = SubResource("M_ground")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.09, 0.10, 0.12, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.48, 0.58, 1)
+ambient_light_energy = 0.7
+
+[node name="TowerShowcase" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
+mesh = SubResource("Ground")
+
+[node name="LesserArcher" parent="." instance=ExtResource("1_lesser_archer_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, -1.9)
+
+[node name="Archer" parent="." instance=ExtResource("2_archer_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, -1.9)
+
+[node name="LesserWatchTower" parent="." instance=ExtResource("3_lesser_watch_tower_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, 0)
+
+[node name="WatchTower" parent="." instance=ExtResource("4_watch_tower_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, 0)
+
+[node name="GreaterWatchTower" parent="." instance=ExtResource("5_greater_watch_tower_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0.75, 0, 0)
+
+[node name="UltimateWatchTower" parent="." instance=ExtResource("6_ultimate_watch_tower_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 2.25, 0, 0)
+
+[node name="LesserCannon" parent="." instance=ExtResource("7_lesser_cannon_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -2.25, 0, 1.9)
+
+[node name="Cannon" parent="." instance=ExtResource("8_cannon_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -0.75, 0, 1.9)
+
+[node name="GreaterCannon" parent="." instance=ExtResource("9_greater_cannon_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0.75, 0, 1.9)
+
+[node name="UltimateCannon" parent="." instance=ExtResource("10_ultimate_cannon_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 2.25, 0, 1.9)
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8253, -0.4593, 0.3284, 0, 0.5817, 0.8134, -0.5646, -0.6713, 0.4801, 0, 6, 0)
+light_energy = 1.35
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.9668, 0.1225, -0.2243, 0, 0.8776, 0.4794, 0.2555, 0.4635, -0.8484, 0, 6, 0)
+light_energy = 0.45
+light_color = Color(0.6, 0.7, 0.9, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8678, 0.4969, 0, -0.4969, 0.8678, 0, 3.5, 5.2)
+current = true
+fov = 46
+near = 0.05

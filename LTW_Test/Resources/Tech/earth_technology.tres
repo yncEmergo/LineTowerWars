@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 16
+element = 1
+kind = 0
+display_name = "Earth Technology: Basic"
+description = "Unlocks the Earth Elemental Core morph and the upgrade above it. Required before either Earth path."
+slot = 15

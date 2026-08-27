@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cldq3qux4scgk"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://d2guhjqf6myt1" path="res://Resources/UnitStats/Towers/lightning_shock_particle_stats.tres" id="2_lightning_shock_particle_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_lightning_shock_particle_stats")
+required_tech_id = 13
+ability_id = 224
+display_name = "Morph into Shock Particle"
+description = "Hits harder the healthier the target is. Splits into the long ranged Glyph and the short ranged stunner."
+slot = 2

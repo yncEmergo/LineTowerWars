@@ -1,0 +1,126 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/elemental_core_model.tscn" id="1_elemental_core_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/fire_lesser_doom_guard_model.tscn" id="2_fire_lesser_doom_guard_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/fire_lesser_firelord_model.tscn" id="3_fire_lesser_firelord_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ice_lesser_lich_model.tscn" id="4_ice_lesser_lich_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/ice_lesser_crystal_model.tscn" id="5_ice_lesser_crystal_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lightning_lesser_annihilation_glyph_model.tscn" id="6_lightning_lesser_annihilation_glyph_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lightning_lesser_orb_keeper_model.tscn" id="7_lightning_lesser_orb_keeper_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/holy_lesser_divineshroom_model.tscn" id="8_holy_lesser_divineshroom_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/holy_lesser_titan_vault_model.tscn" id="9_holy_lesser_titan_vault_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/void_lesser_harbinger_model.tscn" id="10_void_lesser_harbinger_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/void_lesser_leviathan_model.tscn" id="11_void_lesser_leviathan_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/unholy_lesser_gravedigger_model.tscn" id="12_unholy_lesser_gravedigger_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/unholy_lesser_alchemist_model.tscn" id="13_unholy_lesser_alchemist_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_lesser_hurricane_elemental_model.tscn" id="14_water_lesser_hurricane_elemental_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_lesser_sludge_monstrosity_model.tscn" id="15_water_lesser_sludge_monstrosity_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/earth_lesser_ancient_warden_model.tscn" id="16_earth_lesser_ancient_warden_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/earth_lesser_scorpion_model.tscn" id="17_earth_lesser_scorpion_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/arcane_lesser_spellslinger_model.tscn" id="18_arcane_lesser_spellslinger_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/arcane_lesser_arcane_orb_model.tscn" id="19_arcane_lesser_arcane_orb_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/primal_lesser_primalist_model.tscn" id="20_primal_lesser_primalist_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/primal_lesser_beastmaster_model.tscn" id="21_primal_lesser_beastmaster_model"]
+
+[sub_resource type="StandardMaterial3D" id="M_ground"]
+albedo_color = Color(0.3, 0.33, 0.3, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Ground"]
+size = Vector2(30, 20)
+material = SubResource("M_ground")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.09, 0.10, 0.12, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.48, 0.58, 1)
+ambient_light_energy = 0.7
+
+[node name="TowerShowcase" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
+mesh = SubResource("Ground")
+
+[node name="ElementalCore" parent="." instance=ExtResource("1_elemental_core_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -3, 0, -3.8)
+
+[node name="FireLesserDoomGuard" parent="." instance=ExtResource("2_fire_lesser_doom_guard_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, -3.8)
+
+[node name="FireLesserFirelord" parent="." instance=ExtResource("3_fire_lesser_firelord_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, -3.8)
+
+[node name="IceLesserLich" parent="." instance=ExtResource("4_ice_lesser_lich_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, -3.8)
+
+[node name="IceLesserCrystal" parent="." instance=ExtResource("5_ice_lesser_crystal_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 3, 0, -3.8)
+
+[node name="LightningLesserAnnihilationGlyph" parent="." instance=ExtResource("6_lightning_lesser_annihilation_glyph_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -3, 0, -1.9)
+
+[node name="LightningLesserOrbKeeper" parent="." instance=ExtResource("7_lightning_lesser_orb_keeper_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, -1.9)
+
+[node name="HolyLesserDivineshroom" parent="." instance=ExtResource("8_holy_lesser_divineshroom_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, -1.9)
+
+[node name="HolyLesserTitanVault" parent="." instance=ExtResource("9_holy_lesser_titan_vault_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, -1.9)
+
+[node name="VoidLesserHarbinger" parent="." instance=ExtResource("10_void_lesser_harbinger_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 3, 0, -1.9)
+
+[node name="VoidLesserLeviathan" parent="." instance=ExtResource("11_void_lesser_leviathan_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -3, 0, 0)
+
+[node name="UnholyLesserGravedigger" parent="." instance=ExtResource("12_unholy_lesser_gravedigger_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, 0)
+
+[node name="UnholyLesserAlchemist" parent="." instance=ExtResource("13_unholy_lesser_alchemist_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, 0)
+
+[node name="WaterLesserHurricaneElemental" parent="." instance=ExtResource("14_water_lesser_hurricane_elemental_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, 0)
+
+[node name="WaterLesserSludgeMonstrosity" parent="." instance=ExtResource("15_water_lesser_sludge_monstrosity_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 3, 0, 0)
+
+[node name="EarthLesserAncientWarden" parent="." instance=ExtResource("16_earth_lesser_ancient_warden_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -3, 0, 1.9)
+
+[node name="EarthLesserScorpion" parent="." instance=ExtResource("17_earth_lesser_scorpion_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, 1.9)
+
+[node name="ArcaneLesserSpellslinger" parent="." instance=ExtResource("18_arcane_lesser_spellslinger_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, 1.9)
+
+[node name="ArcaneLesserArcaneOrb" parent="." instance=ExtResource("19_arcane_lesser_arcane_orb_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, 1.9)
+
+[node name="PrimalLesserPrimalist" parent="." instance=ExtResource("20_primal_lesser_primalist_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 3, 0, 1.9)
+
+[node name="PrimalLesserBeastmaster" parent="." instance=ExtResource("21_primal_lesser_beastmaster_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -3, 0, 3.8)
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8253, -0.4593, 0.3284, 0, 0.5817, 0.8134, -0.5646, -0.6713, 0.4801, 0, 6, 0)
+light_energy = 1.35
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.9668, 0.1225, -0.2243, 0, 0.8776, 0.4794, 0.2555, 0.4635, -0.8484, 0, 6, 0)
+light_energy = 0.45
+light_color = Color(0.6, 0.7, 0.9, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.7776, 0.6288, 0, -0.6288, 0.7776, 0, 7.4, 8.8)
+current = true
+fov = 52
+near = 0.05

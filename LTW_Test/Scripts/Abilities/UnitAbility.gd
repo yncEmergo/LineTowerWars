@@ -47,6 +47,9 @@ const AUTO_SLOT: int = -1
 @export var ability_id: int = 0
 @export var display_name: String = "Ability"
 @export_multiline var description: String = ""
+## This ability's own picture, for the ones that are not ABOUT a unit - Move,
+## Stop, Sell. Anything that builds, upgrades or sends takes the unit's icon
+## instead and leaves this empty; see icon_texture().
 @export var icon: Texture2D
 
 @export_group("Input")
@@ -106,6 +109,27 @@ func reached_stats() -> Array[UnitStats]:
 ## share this very resource and must not share a count.
 func charge_count(_unit: Unit) -> int:
 	return -1
+
+
+## The picture a slot showing this ability should draw.
+##
+## A method rather than the export straight, because the answer is not always
+## the ability's own: one that produces a UNIT shows that unit, which lives on
+## the unit's stats and is authored once there. Everything else answers with
+## what it was given.
+func icon_texture() -> Texture2D:
+	return icon
+
+
+## Whether this ability is a TOGGLE that is currently switched on, which the
+## slot draws as a lit square. False for everything that is not a toggle, which
+## is nearly everything.
+##
+## Takes the unit for the same reason charge_count() does: the setting is per
+## unit and this resource is shared, so two towers of one type must be able to
+## be set differently.
+func is_toggled_on(_unit: Unit) -> bool:
+	return false
 
 
 ## How ready the next charge is, 0 to 1, driving the slot's cooldown sweep.

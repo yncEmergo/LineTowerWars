@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_defender.png" id="13_ultimate_defender"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/magic_bolt.tscn"
+speed = 10
+impact_scene_path = "res://Scenes/Effects/arcane_impact.tscn"
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SplashEffect")
+radius = 1.76
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 585
+damage_max = 588
+damage_type = 0
+is_aoe_damage = true
+attacks_per_second = 0.833
+attack_range = 7.03
+target_types = 3
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+unit_type_id = 51
+display_name = "Ultimate Defender"
+icon = ExtResource("13_ultimate_defender")
+max_health = 2275
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/ultimate_defender.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/ultimate_defender_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
+gold_cost = 25000
+total_gold_cost = 31190

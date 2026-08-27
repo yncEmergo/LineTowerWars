@@ -24,6 +24,14 @@ extends UnitAbility
 
 
 ## The creep this names, so the registry finds the abilities on its card.
+## The creep's own picture. A send describes the CREEP, and that goes for what
+## it looks like as much as for what it costs.
+func icon_texture() -> Texture2D:
+	if creep_stats != null && creep_stats.icon != null:
+		return creep_stats.icon
+	return icon
+
+
 func reached_stats() -> Array[UnitStats]:
 	var reached: Array[UnitStats] = []
 	if creep_stats != null:
@@ -78,17 +86,40 @@ func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
 	# and the income line standing right above it.
 	data.description = ""
 	data.gold_cost = info.gold_cost
-	data.population = info.population
+	# What the whole SEND costs in population rather than what one creep of it
+	# does. Population is charged per creep, so a pack of three costs three -
+	# and quoting the per creep figure next to a per pack price would be two
+	# different questions on one line.
+	data.population = info.pack_population()
 	data.income_gain = info.income_gain
 
-	# Filled in reading order, since the tooltip lays four stats out as a 2x2:
-	# health and armour on the top row, speed and bounty under them.
+	# Filled in reading order, since the tooltip lays stats out in pairs across
+	# rather than down: health beside armour, speed beside bounty, and what one
+	# press puts on the field beside when it can first be pressed.
 	data.add_stat("Health", str(info.max_health))
 	data.add_stat("Armor", info.armor_text(info.armor))
-	data.add_stat("Speed", "%.1f" % info.move_speed)
+	data.add_stat("Speed", "%.2f" % info.move_speed)
 	data.add_stat("Bounty", str(info.bounty))
+	data.add_stat("Sent", _pack_text(info))
+	data.add_stat("Unlocks", info.unlock_text())
 	_add_passives(data, info)
 	return data
+
+
+## What one press puts on the field, e.g. "3" or "2 + 1 Timber Wolf".
+##
+## Spelled out only where a pack holds more than one KIND, which in the whole
+## roster is the Sheep and its Timber Wolf. Everything else reads as a plain
+## count, because naming the creep again on its own tooltip would be noise.
+func _pack_text(info: CreepStats) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Array in info.pack_contents():
+		var stats: CreepStats = entry[0] as CreepStats
+		if stats == info:
+			parts.append(str(int(entry[1])))
+		else:
+			parts.append("%d %s" % [int(entry[1]), stats.display_name])
+	return " + ".join(parts)
 
 
 ## A send with no stats, or stats naming a prefab which is not there, is a dead

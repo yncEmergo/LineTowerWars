@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_BuildTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_sentry_stats.tres" id="2_lesser_sentry_stats"]
+
+[resource]
+script = ExtResource("1_BuildTowerAbility")
+ability_id = 69
+tower_stats = ExtResource("2_lesser_sentry_stats")
+display_name = "Lesser Sentry"
+description = "Cheap magic tower. Long ranged from the very first tier, at ground and air alike."
+targeting = 5
+slot = 2

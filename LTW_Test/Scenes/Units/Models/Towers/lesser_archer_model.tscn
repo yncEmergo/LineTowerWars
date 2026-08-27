@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate.tres" id="1_archer_plate"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_deep.tres" id="2_archer_plate_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_pale.tres" id="3_archer_plate_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t0.tres" id="4_trim_t0"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_archer_t0.tres" id="5_energy_archer_t0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.1886
+bottom_radius = 0.2132
+height = 0.0504
+radial_segments = 4
+rings = 0
+material = ExtResource("2_archer_plate_deep")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.1148
+bottom_radius = 0.1558
+height = 0.0924
+radial_segments = 4
+rings = 0
+material = ExtResource("2_archer_plate_deep")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.246, 0.021, 0.0492)
+material = ExtResource("1_archer_plate")
+
+[node name="LesserArcherModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0252, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="Stump" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0966, 0)
+mesh = SubResource("CylinderMesh_2")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1512, 0)
+
+[node name="CrossBar" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0328)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1476)

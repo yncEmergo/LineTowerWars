@@ -17,6 +17,8 @@ extends Unit
 signal construction_finished()
 signal sell_started()
 signal sell_cancelled()
+signal upgrade_started()
+signal upgrade_cancelled()
 
 ## Height the building's visuals start at while they rise into place.
 const CONSTRUCTION_START_HEIGHT: float = 0.15
@@ -32,10 +34,57 @@ var cell: Vector2i = Vector2i(-1, -1)
 ## will add to this rather than being tracked separately.
 var invested_gold: int = 0
 
+## Mana this tower holds right now, whole points. 0 for every tower that uses
+## none, which is every Basic one.
+var current_mana: int = 0
+## Maximum mana this tower has RIGHT NOW, which is not always its stats figure:
+## the Ultimate Orb Keeper lowers its own ceiling as it fires, and resets it
+## when it runs out. -1 until _ready reads the stats.
+var max_mana: int = -1
+## Scratch space the tower's own passives keep their per-tower state in, keyed
+## by whatever each passive calls it.
+##
+## It lives here rather than on the passive because a passive is a SHARED
+## resource - one .tres is every tower of that type at once - and because the
+## state is genuinely the tower's: how much damage it has eaten, which creep it
+## has been ramping up on, when it last idled. See TowerPassive.
+var ability_state: Dictionary = {}
+
+## The tower's own passives, read off its stats once. Cached because they are
+## asked on every tick and every hit, and because the card can swap underneath
+## while a tower builds or sells without the mechanics changing.
+var _tower_passives: Array[TowerPassive] = []
+## Fraction of a mana point regeneration has built up but not handed over yet,
+## so a rate below one point a tick still fills.
+var _mana_carry: float = 0.0
 var _under_construction: bool = false
 var _construction_elapsed: float = 0.0
 var _selling: bool = false
 var _sell_elapsed: float = 0.0
+var _upgrading: bool = false
+var _upgrade_elapsed: float = 0.0
+## Whether the morph currently running is a RETURN to an Elemental Core rather
+## than an upgrade. The two share every mechanism and differ in exactly three
+## places - the clock, the money and what is carried over - so this marks which
+## one is running rather than duplicating the machinery. See return_to_core.
+var _returning: bool = false
+## What this tower is turning into, held only while the upgrade runs.
+##
+## Per-unit state and so it lives here rather than on the ability, which is
+## shared between every tower of this type and must stay stateless.
+var _upgrade_target: BuildingStats = null
+## The TARGET tier's model, standing in for this one while the upgrade runs.
+##
+## An upgrade shows what you are buying, not what you are replacing: the new
+## tower rises out of the ground over the countdown and the old one is hidden
+## behind it. Anything else makes an upgrade look like a tower being rebuilt
+## into the same thing it already was.
+##
+## Only the LOOK is swapped early. The unit, its stats, its card and its
+## attack are still the old tier's until the upgrade actually completes, which
+## is what keeps a cancel free and keeps the server and this client agreeing
+## about what is standing here.
+var _upgrade_preview: Node3D = null
 ## Damage suffered while still building, kept apart from the construction ramp
 ## so attacks never slow the timer.
 var _construction_damage: int = 0
@@ -44,11 +93,136 @@ var _building_stats: BuildingStats:
 	get:
 		return stats as BuildingStats
 
+var _config: GameConfig:
+	get:
+		return References.game_config
+
 
 func _ready() -> void:
 	super()
 	if stats != null && _building_stats == null:
 		Log.err("Building needs BuildingStats but got plain UnitStats", name)
+	_collect_passives()
+	_reset_mana()
+
+
+## Reads this building's passives off its stats once. They are asked on every
+## tick and every hit, not because the list is expensive to build.
+func _collect_passives() -> void:
+	_tower_passives.clear()
+	if stats == null:
+		return
+	for entry in stats.abilities:
+		var passive: TowerPassive = entry as TowerPassive
+		if passive != null:
+			_tower_passives.append(passive)
+
+
+func _reset_mana() -> void:
+	if _building_stats == null:
+		max_mana = 0
+		return
+	max_mana = maxi(0, _building_stats.max_mana)
+	current_mana = int(round(float(max_mana) * clampf(
+		_building_stats.starting_mana_ratio, 0.0, 1.0)))
+
+
+# --- Mana ---------------------------------------------------------------
+
+## The tower's passives, for whatever needs to ask all of them at once. Empty
+## for every Basic tower, which is what makes them cost nothing.
+func tower_passives() -> Array[TowerPassive]:
+	return _tower_passives
+
+
+## Whether this tower uses mana at all, which is what decides whether the panel
+## draws a mana bar for it.
+func uses_mana() -> bool:
+	return max_mana > 0
+
+
+## How full the tower is, 0 to 1. 0 for a tower with no mana, so a caller never
+## has to divide by a ceiling that might be zero.
+func mana_ratio() -> float:
+	if max_mana <= 0:
+		return 0.0
+	return clampf(float(current_mana) / float(max_mana), 0.0, 1.0)
+
+
+func has_full_mana() -> bool:
+	return max_mana > 0 && current_mana >= max_mana
+
+
+## Adds mana, never past the ceiling and never below zero. Fractional amounts
+## are carried between calls, so a regeneration slower than one point a tick
+## still fills rather than doing nothing at all.
+##
+## Authority only, exactly as health is: a client is TOLD how much mana a tower
+## has, so filling it locally would show a number the server never agreed to.
+func gain_mana(amount: float) -> void:
+	if max_mana <= 0 || amount == 0.0 || !MatchSession.is_authority():
+		return
+
+	_mana_carry += amount
+	var whole: int = int(_mana_carry)
+	if whole == 0:
+		return
+	_mana_carry -= float(whole)
+	current_mana = clampi(current_mana + whole, 0, max_mana)
+
+
+## Takes mana if there is enough, and answers whether there was. All or
+## nothing, because every ability that spends mana in unit_data.md spends a
+## fixed amount and does nothing at all when it cannot.
+func spend_mana(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if !MatchSession.is_authority() || current_mana < amount:
+		return false
+	current_mana -= amount
+	return true
+
+
+## Empties the tower and answers what was in it, for the abilities that spend
+## whatever they have rather than a fixed price - the Ultimate Doom Guard's
+## flames and the Hurricane Elemental's fork both scale with what was left.
+func drain_mana() -> int:
+	if !MatchSession.is_authority():
+		return 0
+	var stored: int = current_mana
+	current_mana = 0
+	_mana_carry = 0.0
+	return stored
+
+
+## Lowers this tower's own ceiling, which only the Ultimate Orb Keeper does.
+## Answers the new ceiling so the caller can act on it having bottomed out.
+func set_max_mana(value: int) -> int:
+	max_mana = maxi(0, value)
+	current_mana = mini(current_mana, max_mana)
+	return max_mana
+
+
+## Takes over what the tier below this one had banked. Called by the upgrade
+## that replaced it, after the replacement is standing.
+##
+## Mana is carried across but CLAMPED to the new ceiling, and only when the new
+## tier does not author a starting ratio of its own - a Lesser Doom Guard is
+## built full on purpose and must not inherit an empty Magma Well.
+func inherit_ability_state(banked: Dictionary, mana: int) -> void:
+	for key in banked:
+		ability_state[key] = banked[key]
+	if _building_stats != null && _building_stats.starting_mana_ratio > 0.0:
+		return
+	current_mana = clampi(mana, 0, max_mana)
+
+
+## Mana handed down by the server, which is the ONLY way it changes on a client
+## (3.2). Not routed through gain_mana for the same reason health is not routed
+## through _set_health: this has already been through the rules once.
+func set_replicated_mana(value: int, maximum: int) -> void:
+	max_mana = maxi(0, maximum)
+	current_mana = clampi(value, 0, max_mana)
 
 
 ## Footprint in internal cells, which is what the grid works in.
@@ -60,7 +234,13 @@ func footprint() -> Vector2i:
 
 ## Anchors the building to a grid cell and starts construction.
 ## Call after the node is in the tree.
-func place(player_id: int, home_area: PlayerArea, grid_cell: Vector2i, spent_gold: int) -> void:
+##
+## start_built skips the construction phase entirely, which is what the far
+## side of an upgrade wants: the wait already happened on the tower that was
+## standing here, and making the replacement serve it again would charge the
+## player twice for one timer.
+func place(player_id: int, home_area: PlayerArea, grid_cell: Vector2i, spent_gold: int,
+		start_built: bool = false) -> void:
 	setup(player_id, home_area)
 	cell = grid_cell
 	invested_gold = spent_gold
@@ -76,6 +256,12 @@ func place(player_id: int, home_area: PlayerArea, grid_cell: Vector2i, spent_gol
 	home_area.occupy(grid_cell, size)
 	global_position = home_area.footprint_world_center(grid_cell, size)
 	reset_physics_interpolation()
+
+	if start_built:
+		_under_construction = false
+		_apply_visual_height(1.0)
+		_apply_animation_state()
+		return
 	_begin_construction()
 
 
@@ -87,8 +273,11 @@ func place(player_id: int, home_area: PlayerArea, grid_cell: Vector2i, spent_gol
 ## building at its footprint's world centre, so snapping that centre back gives
 ## the cell it came from, and the message stays one position shorter.
 ##
-## invested_gold is a stand-in: the sell refund is quoted from it, and the real
-## figure lives on the server. It is only ever read to draw a number here.
+## invested_gold is taken from the tower TYPE rather than sent, because there
+## is exactly one path to owning any given tower and so exactly one figure it
+## can have sunk into it. That makes the sell refund quoted here right even for
+## a tower that was already standing when this machine joined, and it costs the
+## snapshot nothing. See BuildingStats.total_gold_cost.
 func adopt(id: int, player_id: int, home_area: PlayerArea, world_pos: Vector3) -> void:
 	var session: MatchSession = References.match_session
 	if session != null && session.claim_unit_id(self, id):
@@ -96,7 +285,7 @@ func adopt(id: int, player_id: int, home_area: PlayerArea, world_pos: Vector3) -
 
 	global_position = world_pos
 	var size: Vector2i = _adopted_footprint(home_area)
-	var spent: int = 0 if _building_stats == null else _building_stats.gold_cost
+	var spent: int = 0 if _building_stats == null else _building_stats.total_gold_cost
 	place(player_id, home_area, home_area.snap_footprint(world_pos, size), spent)
 
 
@@ -109,26 +298,51 @@ func _adopted_footprint(home_area: PlayerArea) -> Vector2i:
 ## What the server says this building is doing, which on a client is the only
 ## thing that says so: the timers that would normally flip these are switched
 ## off (3.4).
-func set_replicated_phase(under_construction: bool, selling: bool) -> void:
+##
+## The upgrade squashes the model the same way construction does, so a client
+## can see that something is happening to a tower that has otherwise not
+## changed. It is only ever a phase here - the swap to the new tower type
+## arrives as an ordinary snapshot, see ReplicationService.
+func set_replicated_phase(under_construction: bool, selling: bool,
+		upgrading: bool) -> void:
 	if _under_construction && !under_construction:
 		_finish_construction()
 	_under_construction = under_construction
 	_selling = selling
+
+	if upgrading != _upgrading:
+		_upgrading = upgrading
+		if upgrading && _upgrade_target != null:
+			_show_upgrade_preview(_upgrade_target)
+		elif !upgrading:
+			_clear_upgrade_preview()
+		_apply_visual_height(0.0 if upgrading else 1.0)
+		_apply_animation_state()
+		abilities_changed.emit()
 
 
 func is_under_construction() -> bool:
 	return _under_construction
 
 
-## A tower still going up has nothing to shoot with. A tower being sold does:
-## it is standing, it still blocks the maze, and the sale can still be called
-## off, so it goes on defending until it is actually gone.
+## A tower still going up has nothing to shoot with, and neither does one in
+## the middle of an upgrade - it is being rebuilt into something else. A tower
+## being SOLD still shoots: it is standing, it still blocks the maze, and the
+## sale can still be called off, so it goes on defending until it is actually
+## gone.
 func can_attack() -> bool:
-	return super() && !_under_construction
+	return super() && !_under_construction && !_upgrading
 
 
 func is_structure() -> bool:
 	return true
+
+
+## The model, not the whole building. During an upgrade that is the model of
+## the tier being BOUGHT, so a portrait shows what the player is waiting for
+## rather than what is being replaced.
+func visual_root() -> Node3D:
+	return _rising_visual()
 
 
 ## A building in the middle of something offers only that job's card, which is
@@ -138,6 +352,8 @@ func current_abilities() -> Array:
 	if _building_stats != null:
 		if _under_construction:
 			return _building_stats.construction_abilities
+		if _upgrading:
+			return _building_stats.upgrading_abilities
 		if _selling:
 			return _building_stats.selling_abilities
 	return super()
@@ -145,12 +361,19 @@ func current_abilities() -> Array:
 
 # --- Selling ------------------------------------------------------------
 
+## The state of whoever owns this building, or null outside a real match.
+func _owner_state() -> PlayerState:
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return null
+	return manager.state_for(owner_player_id)
+
+
 ## Gold returned for selling right now.
 func sell_refund() -> int:
-	var ratio: float = 0.7
-	var config: GameConfig = References.game_config
-	if config != null:
-		ratio = config.sell_refund_ratio
+	var ratio: float = 0.6
+	if _config != null:
+		ratio = _config.sell_refund_ratio
 	return int(floor(float(invested_gold) * ratio))
 
 
@@ -177,12 +400,10 @@ func is_selling() -> bool:
 ## Begins a sale. The building stays standing and keeps blocking pathing for
 ## the whole countdown, so cancelling costs nothing and changes nothing.
 func sell() -> void:
-	if _selling || _under_construction:
+	if _selling || _under_construction || _upgrading:
 		return
 
-	var duration: float = 0.0
-	if _building_stats != null:
-		duration = _building_stats.sell_time
+	var duration: float = _sell_time()
 
 	if duration <= 0.0:
 		_complete_sell()
@@ -220,6 +441,354 @@ func _complete_sell() -> void:
 	queue_free()
 
 
+# --- Upgrading ----------------------------------------------------------
+
+func is_upgrading() -> bool:
+	return _upgrading
+
+
+## What this tower is turning into, or null when it is not upgrading.
+func upgrade_target() -> BuildingStats:
+	return _upgrade_target
+
+
+## Stands the target tier's model up in place of this one, flat to the ground,
+## ready to rise. Its own visuals are hidden rather than removed, so cancelling
+## is a matter of putting them back.
+func _show_upgrade_preview(target_stats: BuildingStats) -> void:
+	_clear_upgrade_preview()
+
+	var scene: PackedScene = target_stats.model_scene()
+	if scene == null:
+		# No model to show, so the tower simply stays as it is for the
+		# countdown. model_scene() has already reported why.
+		return
+
+	var preview: Node3D = scene.instantiate() as Node3D
+	if preview == null:
+		Log.err("Upgrade target's model root is not a Node3D",
+			target_stats.display_name)
+		return
+
+	preview.name = "UpgradeVisual"
+	add_child(preview)
+	_upgrade_preview = preview
+	if _visual_root != null:
+		_visual_root.visible = false
+
+
+func _clear_upgrade_preview() -> void:
+	if _upgrade_preview != null && is_instance_valid(_upgrade_preview):
+		_upgrade_preview.queue_free()
+	_upgrade_preview = null
+	if _visual_root != null:
+		_visual_root.visible = true
+
+
+## How far through the upgrade this is, 0 to 1. Drives the model rising back
+## into place; a progress bar can read the same number later.
+func upgrade_progress() -> float:
+	var total: float = _upgrade_time()
+	if total <= 0.0:
+		return 1.0
+	return clampf(_upgrade_elapsed / total, 0.0, 1.0)
+
+
+## Begins turning this tower into another one, charging that tier's own price.
+##
+## Only the tier is charged, never the total: `invested_gold` accumulates, so a
+## Watch Tower that cost 10 + 30 + 150 + 1,000 sells back a share of 1,190
+## rather than of the last rung it climbed. The player table's Value column
+## reads the same number, so both follow from one place.
+##
+## The tower stays standing and keeps blocking the maze for the whole
+## countdown, exactly as a sale does, so an upgrade can never be used to open a
+## path. What it does NOT do is keep shooting - it is being rebuilt.
+func upgrade_to(target_stats: BuildingStats) -> void:
+	if target_stats == null:
+		Log.err("Building was told to upgrade into nothing", name)
+		return
+	if _under_construction || _selling || _upgrading:
+		return
+
+	var cost: int = target_stats.gold_cost
+	var state: PlayerState = _owner_state()
+	if state != null && !state.spend(cost):
+		Log.warn("Not enough gold to upgrade", {
+			"building": name, "into": target_stats.display_name, "cost": cost,
+		})
+		return
+
+	invested_gold += cost
+	# Same commitment a new tower makes: the gold is on the field, so the
+	# technology choice behind it stops being undoable. See TechManager.
+	if References.tech_manager != null:
+		References.tech_manager.notify_construction_started(owner_player_id)
+
+	_upgrade_target = target_stats
+	_upgrading = true
+	_upgrade_elapsed = 0.0
+	_show_upgrade_preview(target_stats)
+	_apply_visual_height(0.0)
+	_apply_animation_state()
+
+	Log.info("Upgrade started", {
+		"building": name, "into": target_stats.display_name, "cost": cost,
+	})
+	upgrade_started.emit()
+	# Swaps the card down to just cancel while the upgrade runs.
+	abilities_changed.emit()
+
+
+## Begins taking this tower back down to a bare Elemental Core.
+##
+## The way out of an element, and the reason it is a MORPH rather than a sale
+## is the cell: the tower stays standing and keeps blocking for the whole
+## countdown, a Core is standing there when it ends, and the maze never opens.
+##
+## Charges nothing. What it hands back arrives when the countdown COMPLETES,
+## exactly as a sale's refund does - so calling it off costs nothing and
+## changes nothing, and there is no gold to take back. See _refund_return for
+## the share and for what stays sunk in the cell.
+func return_to_core(core_stats: BuildingStats) -> void:
+	if core_stats == null:
+		Log.err("Building was told to return to nothing", name)
+		return
+	if _under_construction || _selling || _upgrading:
+		return
+
+	_upgrade_target = core_stats
+	_upgrading = true
+	_returning = true
+	_upgrade_elapsed = 0.0
+	_show_upgrade_preview(core_stats)
+	_apply_visual_height(0.0)
+	_apply_animation_state()
+
+	Log.info("Return to Core started", {"building": name, "value": invested_gold})
+	upgrade_started.emit()
+	# Swaps the card down to just cancel while the return runs.
+	abilities_changed.emit()
+
+
+## Calls off the morph in progress, whichever one it is.
+##
+## An UPGRADE hands back only the tier that was being paid for, leaving
+## everything sunk into the tower before it exactly where it was. A RETURN
+## hands back nothing, because it charged nothing and pays out at the end -
+## see return_to_core. Either way the tower goes back to what it was.
+func cancel_upgrade() -> void:
+	if !_upgrading:
+		return
+
+	# A return charged nothing and refunds on completion, so calling one off
+	# moves no gold at all. Only an upgrade has a tier to hand back.
+	var refund: int = 0
+	if !_returning && _upgrade_target != null:
+		refund = _upgrade_target.gold_cost
+	invested_gold -= refund
+
+	var state: PlayerState = _owner_state()
+	if state != null:
+		state.gain(refund)
+
+	_upgrading = false
+	_returning = false
+	_upgrade_elapsed = 0.0
+	_upgrade_target = null
+	_clear_upgrade_preview()
+	_apply_visual_height(1.0)
+	_apply_animation_state()
+
+	Log.info("Morph cancelled", {"building": name, "refund": refund})
+	upgrade_cancelled.emit()
+	abilities_changed.emit()
+
+
+## Seconds this morph takes. An upgrade takes the build time - every tower
+## shares one figure at every tier per unit_data.md 1.4 - and a return takes
+## its own, because coming back down to a Core is a different job from going
+## up. Both figures live on GameConfig.
+func _upgrade_time() -> float:
+	if _returning:
+		return 0.0 if _config == null else _config.return_to_core_seconds
+	return _build_time()
+
+
+func _advance_upgrade(delta: float) -> void:
+	_upgrade_elapsed += delta
+	var progress: float = upgrade_progress()
+	_apply_visual_height(progress)
+
+	if progress >= 1.0:
+		_complete_upgrade()
+
+
+## Swaps this tower for the one it was becoming.
+##
+## A REPLACEMENT rather than a change of clothes: the new tier is a different
+## unit type with its own prefab, its own model and its own card, and
+## replication already knows how to draw a unit type it has been handed. What
+## carries over is the unit id, the grid cell and the gold - so to every other
+## machine, and to the player's selection, this is still the same tower.
+##
+## The order below is load bearing:
+##   1. the replacement enters the tree, so anything told about it finds a unit
+##      that has run its _ready and knows its own health
+##   2. the swap is ANNOUNCED while this tower is still standing, so the
+##      selection and the control groups can put the replacement where this one
+##      was. Announcing it afterwards would let tree_exiting empty them first
+##   3. only then does this tower leave, which frees the grid cells and hands
+##      the unit id back
+##   4. the replacement claims that id and takes the cells
+func _complete_upgrade() -> void:
+	var target: BuildingStats = _upgrade_target
+	var returning: bool = _returning
+	_upgrading = false
+	_returning = false
+	_upgrade_elapsed = 0.0
+	_upgrade_target = null
+
+	_clear_upgrade_preview()
+
+	var upgraded: Building = _instantiate_upgrade(target)
+	if upgraded == null:
+		# Nothing to become, so the tower goes back to what it was. The gold
+		# stays spent, which is visible and wrong-looking on purpose: a missing
+		# prefab is a content bug and should not be quietly absorbed.
+		_apply_visual_height(1.0)
+		abilities_changed.emit()
+		return
+
+	var parent: Node = get_parent()
+	var kept_id: int = unit_id
+	var kept_cell: Vector2i = cell
+	var kept_gold: int = invested_gold
+	# A RETURN pays out here rather than at the press, on the same terms a sale
+	# does, and hands nothing else down: what arrives is a bare Core, so an
+	# Alchemist's banked damage and a Doom Guard's mana are gone with the tower
+	# that earned them. Only an UPGRADE is the same tower one tier further on.
+	var kept_state: Dictionary = ability_state
+	var kept_mana: int = current_mana
+	if returning:
+		kept_gold = _refund_return(target)
+		kept_state = {}
+		kept_mana = 0
+	var home: PlayerArea = area
+	var player: int = owner_player_id
+
+	# Set before the node enters the tree, so nothing ever sees it owned by the
+	# default player - which would read as an enemy tower for one call.
+	upgraded.owner_player_id = player
+	parent.add_child(upgraded)
+
+	var session: MatchSession = References.match_session
+	if session != null:
+		session.replace_unit(self, upgraded)
+
+	# remove_child runs _exit_tree straight away - queue_free would not - which
+	# is what gives the grid cells and the unit id back before the replacement
+	# asks for them.
+	parent.remove_child(self)
+	queue_free()
+
+	if session != null && session.claim_unit_id(upgraded, kept_id):
+		upgraded.unit_id = kept_id
+
+	upgraded.place(player, home, kept_cell, kept_gold, true)
+	# Everything the old tier's passives had banked comes across, because
+	# unit_data.md says so in several places at once: an Alchemist keeps the
+	# damage it has eaten, an Apprentice keeps its mana when it becomes a
+	# Sorcerer. A passive whose new tier does not use a key simply never reads
+	# it, which costs nothing.
+	upgraded.inherit_ability_state(kept_state, kept_mana)
+	Log.info("Morph finished", {"tower": upgraded.name, "value": kept_gold})
+
+
+## Hands back the sell share of everything sunk into this tower ABOVE the Core,
+## and answers what stays sunk in the cell.
+##
+## The Core's own gold is not refunded, because the Core is not being sold - one
+## is left standing on the cell. That is the rule the free morph already states
+## from the other side: the 200 was paid for the Core and stays in that cell,
+## so the sell refund reads the same either side of the morph. See
+## game_rules.md, The Elemental Core.
+##
+## The share is sell_refund_ratio rather than a second number, since this IS a
+## sale of the part that goes away, and two numbers would drift.
+func _refund_return(core_stats: BuildingStats) -> int:
+	var kept: int = 0 if core_stats == null else core_stats.total_gold_cost
+	kept = clampi(kept, 0, invested_gold)
+
+	var ratio: float = 0.6
+	if _config != null:
+		ratio = _config.sell_refund_ratio
+	var refund: int = int(floor(float(invested_gold - kept) * ratio))
+
+	var state: PlayerState = _owner_state()
+	if state != null:
+		state.gain(refund)
+
+	Log.info("Returned to Core", {
+		"building": name, "refund": refund, "kept": kept,
+	})
+	return kept
+
+
+## Swaps this tower for another one FREE and AT ONCE: no gold, no countdown,
+## and the value already sunk into this cell carried over unchanged.
+##
+## The Void element is what this exists for. A Voidling that fills its mana
+## turns one of its neighbours into another Voidling, and the neighbour's owner
+## pays nothing and waits for nothing - so upgrade_to(), which charges and
+## starts a timer, is the wrong road entirely.
+##
+## The gold is DELIBERATELY not adjusted. A 10g Lesser Archer that becomes a
+## 200g Voidling still has 10g sunk into it and still refunds a share of 10g,
+## because 10g is what its owner actually spent. Anything else would let the
+## Void line print gold through the sell button.
+func transform_into(target_stats: BuildingStats) -> void:
+	if target_stats == null || _under_construction || _selling || _upgrading:
+		return
+	if !MatchSession.is_authority():
+		return
+
+	_upgrade_target = target_stats
+	_complete_upgrade()
+
+
+## The replacement tower, or null with a reason logged. Split out so
+## _complete_upgrade reads as the sequence it is, rather than as three failure
+## branches with a swap buried among them.
+func _instantiate_upgrade(target: BuildingStats) -> Building:
+	if target == null || area == null || get_parent() == null:
+		Log.err("Upgrade completed with nothing to become", name)
+		return null
+
+	var scene: PackedScene = target.scene()
+	if scene == null:
+		Log.err("Upgrade target names no loadable prefab", target.display_name)
+		return null
+
+	var upgraded: Building = scene.instantiate() as Building
+	if upgraded == null:
+		Log.err("Upgrade target's prefab root is not a Building", target.display_name)
+		return null
+	return upgraded
+
+
+## Leaves rubble where it stood, then goes.
+##
+## Only a DESTROYED tower reaches here: selling and upgrading both remove the
+## node directly, so neither leaves rubble and neither has to say so. That is
+## the whole distinction - rubble is what an attacker creep earns, and a player
+## must not be able to lock their own cells by selling.
+func _die() -> void:
+	if cell.x >= 0 && is_instance_valid(area):
+		area.mark_rubble(cell, footprint())
+	super()
+
+
 # --- Construction -------------------------------------------------------
 
 func take_damage(amount: int, damage_type: DamageTable.DamageType,
@@ -238,10 +807,25 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 	super(amount, damage_type, is_aoe)
 
 
+## Seconds a build - and so an upgrade - takes. One figure for every tower at
+## every tier, so it comes off GameConfig rather than off the stats file of
+## whichever tower happens to be going up. 0 with no config means instant,
+## which is the same graceful answer an authored 0 would give.
+func _build_time() -> float:
+	if _config == null:
+		return 0.0
+	return _config.build_seconds
+
+
+## Seconds a sale takes, on the same terms as _build_time.
+func _sell_time() -> float:
+	if _config == null:
+		return 0.0
+	return _config.sell_seconds
+
+
 func _begin_construction() -> void:
-	var total: float = 0.0
-	if _building_stats != null:
-		total = _building_stats.build_time
+	var total: float = _build_time()
 
 	_construction_damage = 0
 	_construction_elapsed = 0.0
@@ -249,17 +833,20 @@ func _begin_construction() -> void:
 	if total <= 0.0:
 		_under_construction = false
 		_apply_visual_height(1.0)
+		_apply_animation_state()
 		return
 
 	_under_construction = true
 	_apply_visual_height(0.0)
 	_apply_construction_health()
+	_apply_animation_state()
 
 
 func _construction_progress() -> float:
-	if _building_stats == null || _building_stats.build_time <= 0.0:
+	var total: float = _build_time()
+	if total <= 0.0:
 		return 1.0
-	return clampf(_construction_elapsed / _building_stats.build_time, 0.0, 1.0)
+	return clampf(_construction_elapsed / total, 0.0, 1.0)
 
 
 ## Health climbs from 1 to full across the build, minus anything taken on the
@@ -270,8 +857,29 @@ func _apply_construction_health() -> void:
 
 
 func _apply_visual_height(progress: float) -> void:
-	var root: Node3D = _visual_root if _visual_root != null else self
+	var root: Node3D = _rising_visual()
 	root.scale = Vector3(1.0, lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress), 1.0)
+
+
+## Whatever is currently rising out of the ground: the upgrade's preview if one
+## is standing, otherwise this building's own visuals.
+func _rising_visual() -> Node3D:
+	if _upgrade_preview != null && is_instance_valid(_upgrade_preview):
+		return _upgrade_preview
+	return _visual_root if _visual_root != null else self
+
+
+## Holds this building's own motion still while it is being assembled, and lets
+## it run once it is finished. Decoration only - see UnitModel.set_animated().
+func _apply_animation_state() -> void:
+	var model: UnitModel = _visual_root as UnitModel
+	if model != null:
+		model.set_animated(!_under_construction && !_upgrading)
+
+	var preview: UnitModel = _upgrade_preview as UnitModel
+	if preview != null && is_instance_valid(preview):
+		# The thing being built never animates. It is not finished.
+		preview.set_animated(false)
 
 
 ## Simulation, so it runs on the fixed tick rather than the render frame.
@@ -289,8 +897,38 @@ func _physics_process(delta: float) -> void:
 
 	if _under_construction:
 		_advance_construction(delta)
-	elif _selling:
+		return
+	if _upgrading:
+		_advance_upgrade(delta)
+		return
+	if _selling:
 		_advance_sell(delta)
+
+	# A tower being SOLD still runs its passives, exactly as it still shoots:
+	# it is standing, the sale can be called off, and stopping its aura for
+	# three seconds would be a hole in a maze nobody asked for.
+	_advance_passives(delta)
+
+
+## Runs the tower's own passives: their mana, and whatever each of them does on
+## a clock of its own.
+##
+## Mana is summed across every passive and applied once, so two passives that
+## both regenerate add up and neither has to know about the other. It is
+## deliberately applied BEFORE the ticks, so a passive that spends at full mana
+## sees the point that filled it on the same tick it arrives.
+func _advance_passives(delta: float) -> void:
+	if _tower_passives.is_empty():
+		return
+
+	var per_second: float = 0.0
+	for passive in _tower_passives:
+		per_second += passive.mana_per_second(self)
+	if per_second != 0.0:
+		gain_mana(per_second * delta)
+
+	for passive in _tower_passives:
+		passive.on_tick(self, delta)
 
 
 func _advance_construction(delta: float) -> void:
@@ -305,13 +943,14 @@ func _advance_construction(delta: float) -> void:
 
 func _advance_sell(delta: float) -> void:
 	_sell_elapsed += delta
-	if _sell_elapsed >= _building_stats.sell_time:
+	if _sell_elapsed >= _sell_time():
 		_complete_sell()
 
 
 func _finish_construction() -> void:
 	_under_construction = false
 	_apply_visual_height(1.0)
+	_apply_animation_state()
 	_set_health(max_health() - _construction_damage)
 	construction_finished.emit()
 	# Swaps the cancel button for the finished building's real card.

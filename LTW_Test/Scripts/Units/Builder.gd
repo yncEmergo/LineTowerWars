@@ -152,6 +152,13 @@ func _start_pending_build() -> void:
 	area.add_child(building)
 	building.place(owner_player_id, area, cell, cost)
 
+	# Gold is on the field from this moment, so the technology choice behind it
+	# is committed too and can no longer be taken back (unit_data.md 2.2's undo
+	# window). Here rather than when the order was given, because a walk that
+	# ended in a refused spot cost nothing and settled nothing.
+	if References.tech_manager != null:
+		References.tech_manager.notify_construction_started(owner_player_id)
+
 	# The builder is free the instant the tower starts, it does not construct,
 	# but it turns to face what it just started.
 	_is_moving = false

@@ -17,4 +17,4 @@ func deliver(hit: AttackHit, from: Vector3, target: Unit) -> void:
 		point = target.global_position
 
 	hit.resolve(target, point)
-	spawn_impact(point)
+	spawn_impact(point, from)

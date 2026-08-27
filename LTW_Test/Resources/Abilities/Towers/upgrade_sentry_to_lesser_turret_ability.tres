@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_turret_stats.tres" id="2_lesser_turret_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 92
+tower_stats = ExtResource("2_lesser_turret_stats")
+display_name = "Upgrade to Lesser Turret"
+description = "Dedicated anti-air. Cannot hit ground AT ANY TIER, so it defends against flyers and nothing else."
+targeting = 1
+slot = 1

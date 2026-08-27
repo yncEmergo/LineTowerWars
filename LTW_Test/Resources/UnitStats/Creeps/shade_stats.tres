@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/flying.tres" id="3_flying"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/shade.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 59
+display_name = "Shade"
+max_health = 110
+armor_type = 1
+armor = 0
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_flying")])
+scene_path = "res://Scenes/Units/Creeps/shade.tscn"
+move_speed = 1.172
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 225
+income_gain = 23
+unlock_seconds = 210.0
+max_stock = 16
+stock_regen_seconds = 8.0
+body_radius = 0.18
+bounty = 14
+is_flying = true

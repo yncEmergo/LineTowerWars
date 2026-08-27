@@ -51,7 +51,58 @@ extends Resource
 ## rather than a per creep one, so an aura is the same size whichever creep
 ## brings it and a player only ever has to learn the shape once. Auras also do
 ## not stack: the best one in range applies. See game_rules.md.
-@export var creep_aura_radius_cells: float = 3.0
+##
+## The source game gives every creep aura 700 AoE, which is 5.47 cells at the
+## same divisor every other reach in the game uses (unit_data.md 3).
+@export var creep_aura_radius_cells: float = 5.47
+## How far a MULTISHOT reaches for its further targets, in player cells.
+##
+## One value for the whole game, exactly as the creep aura radius is and for
+## the same reason: a multishot picks several single targets standing near the
+## one that was aimed at, and a player should learn that distance once rather
+## than per tower. game_rules.md is the rule.
+##
+## The source game states these AoEs at 400-500 for the towers that name one at
+## all; 3 cells is 384 at the divisor every other reach uses. A passive that
+## really does name its own - the Beastmaster - overrides it through
+## TowerPassive.extra_target_range.
+@export var multishot_reach_cells: float = 3.0
+
+@export_group("Buildings")
+## Send buildings a player's strip has room for, filled left to right.
+##
+## Four because the source game gives each creep TIER its own send building,
+## and twelve creeps is exactly one 4 x 3 command card. Only the first of them
+## exists so far; the number is here now so the one that does stands where it
+## will still stand once the other three are built. See unit_data.md 6.1.
+@export var send_building_slots: int = 4
+## Seconds a building takes to go up, and the same figure an UPGRADE takes.
+##
+## One value for every tower at every tier, which is what unit_data.md 1.4
+## states, so it lives here rather than being restated on a hundred stats
+## files that would all have to be edited together to change it.
+@export var build_seconds: float = 2.0
+## Seconds a sale takes. The building stays standing and keeps blocking until
+## it completes, so a cancelled sale changes nothing.
+##
+## Here for the same reason build_seconds is: unit_data.md 1.8 gives every
+## building one sell time and varies only the refund, which is
+## sell_refund_ratio below.
+@export var sell_seconds: float = 3.0
+## Seconds an elemental tower takes to come back down to a bare Elemental
+## Core. Its own figure rather than the sell time, because the two are
+## different jobs: a sale takes the cell away, a return hands it back as a
+## Core, and one wants to be quicker than the other the day either is tuned.
+##
+## The tower stays standing and keeps blocking for the whole countdown,
+## exactly as an upgrade does, so a return can never be used to open a path.
+## See ReturnToCoreAbility.
+@export var return_to_core_seconds: float = 3.0
+## Seconds a destroyed tower leaves its cells unbuildable. The cells are
+## walkable again immediately - it is only the rebuild that waits, which is
+## what stops an attacker's work being undone the instant it finishes.
+## unit_data.md 1.5.
+@export var rubble_seconds: float = 7.0
 
 @export_group("Combat")
 ## How near the primary target a creep has to be to be picked up by multishot,
@@ -67,9 +118,30 @@ extends Resource
 @export var starting_income: int = 20
 ## Seconds between income payouts.
 @export var income_interval: float = 8.0
-## Share of a building's invested gold returned when it is sold.
-## Invested gold includes upgrades once those exist.
-@export_range(0.0, 1.0, 0.05) var sell_refund_ratio: float = 0.7
+## Share of a building's invested gold returned when it is sold, which for an
+## upgraded tower is the whole chain rather than the last rung it climbed.
+##
+## 60% is the source game's figure for a BASIC tower, unit_data.md 1.8. It also
+## gives Technology towers 50%, so this stops being one number for the whole
+## game the day elemental towers exist - at which point it moves onto
+## BuildingStats. One value until then, because a second one today would only
+## ever read the same.
+@export_range(0.0, 1.0, 0.05) var sell_refund_ratio: float = 0.6
+
+@export_group("Technology")
+## Technologies a player gets for nothing at the start of a match. Every one
+## after these is paid for, and each costs a step more than the last
+## (unit_data.md 2.2). Four is what the whole opening is built around: it is
+## exactly one Ultimate tower's requirement.
+@export var free_technologies: int = 4
+## What the first PAID technology costs. The second costs twice this, the third
+## three times, and so on - so the number is the step rather than the price.
+@export var technology_cost_step: int = 50000
+## How long a technology can be taken back after it is bought. Committing gold
+## to the field - starting a build or an upgrade - closes the window early,
+## because a tower bought under a technology must not be left standing by one
+## that is given back.
+@export var technology_undo_seconds: float = 5.0
 
 @export_group("Rules")
 ## Ceiling on a player's living sent creeps, as the sum of their population
@@ -77,6 +149,14 @@ extends Resource
 @export var population_cap: int = 100
 @export var life_pool: int = 200
 @export var min_starting_lives: int = 25
+
+@export_group("Cheats")
+## Whether developer cheats respond at all. Off by default and checked by the
+## AUTHORITY as well as by the machine the key was pressed on, so a server with
+## this off refuses a cheat order however the client asking was built.
+@export var cheats_enabled: bool = false
+## Gold one press of the gold cheat hands the player. See CheatController.
+@export var cheat_gold_amount: int = 9999999
 
 
 func internal_cell_size() -> float:

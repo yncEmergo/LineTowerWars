@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FeastingVoidPassive" format=3 uid="uid://d0eiepuovi2ns"]
+
+[ext_resource type="Script" uid="uid://bxwv6vt14o04g" path="res://Scripts/Abilities/TowerPassives/FeastingVoidPassive.gd" id="1_FeastingVoidPassive"]
+[ext_resource type="Texture2D" uid="uid://jeqco0jkn6uh" path="res://2DArt/Icons/lesser_leviathan.png" id="2_lesser_leviathan"]
+
+[resource]
+script = ExtResource("1_FeastingVoidPassive")
+ability_id = 165
+display_name = "Feasting Void"
+icon = ExtResource("2_lesser_leviathan")
+targeting = 0
+slot = 11

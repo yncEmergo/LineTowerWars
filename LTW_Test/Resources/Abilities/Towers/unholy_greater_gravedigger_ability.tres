@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PoisonPassive" format=3 uid="uid://burg40tabbltt"]
+
+[ext_resource type="Script" uid="uid://cq0iudckdgk24" path="res://Scripts/Abilities/TowerPassives/PoisonPassive.gd" id="1_PoisonPassive"]
+[ext_resource type="Texture2D" uid="uid://bof7861bwm5wo" path="res://2DArt/Icons/greater_gravedigger.png" id="2_greater_gravedigger"]
+
+[resource]
+script = ExtResource("1_PoisonPassive")
+additional_targets = 2
+stack_share = 0.25
+ability_id = 171
+display_name = "Poison"
+icon = ExtResource("2_greater_gravedigger")
+targeting = 0
+slot = 11

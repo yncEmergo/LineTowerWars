@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChillingDeathPassive" format=3 uid="uid://dypqkdb2n2yi8"]
+
+[ext_resource type="Script" uid="uid://bs67mye3ohyp1" path="res://Scripts/Abilities/TowerPassives/ChillingDeathPassive.gd" id="1_ChillingDeathPassive"]
+[ext_resource type="Texture2D" uid="uid://chj3yllh2u1wg" path="res://2DArt/Icons/ultimate_lich.png" id="2_ultimate_lich"]
+
+[resource]
+script = ExtResource("1_ChillingDeathPassive")
+ability_id = 140
+display_name = "Chilling Death"
+icon = ExtResource("2_ultimate_lich")
+targeting = 0
+slot = 11

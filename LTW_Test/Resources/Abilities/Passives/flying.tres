@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/TraitPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 122
+display_name = "Flying"
+description = "Flies over the maze and can only be hit by towers that target air."
+targeting = 0

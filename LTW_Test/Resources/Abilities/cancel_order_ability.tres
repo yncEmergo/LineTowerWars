@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CancelOrderAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/CancelOrderAbility.gd" id="1_cancel_order"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_cancel.png" id="2_ability_cancel"]
+
+[resource]
+script = ExtResource("1_cancel_order")
+ability_id = 127
+display_name = "Cancel"
+description = "Back out: drop the order being aimed, or leave the menu and return to this unit's own commands."
+targeting = 1
+slot = 10
+icon = ExtResource("2_ability_cancel")

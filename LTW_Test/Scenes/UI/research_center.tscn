@@ -1,0 +1,185 @@
+[gd_scene format=3 uid="uid://cimbya3sr27g3"]
+
+[ext_resource type="Script" uid="uid://dmv4hukcs3knd" path="res://Scripts/UI/ResearchCenter.gd" id="1_research"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tech_slot.tscn" id="2_tech_slot"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(0.08, 0.09, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="ResearchCenter" type="Control" unique_id=888755325 node_paths=PackedStringArray("_toggle_button", "_panel", "_grid", "_random_button", "_undo_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_research")
+_toggle_button = NodePath("ToggleButton")
+_panel = NodePath("Panel")
+_grid = NodePath("Panel/Column/Grid")
+_random_button = NodePath("Panel/Column/Footer/RandomButton")
+_undo_button = NodePath("Panel/Column/Footer/UndoButton")
+_tech_slot_scene = ExtResource("2_tech_slot")
+
+[node name="ToggleButton" type="Button" parent="." unique_id=1090114067]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -263.0
+offset_top = -187.0
+offset_right = -223.0
+offset_bottom = -144.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 25
+text = "R"
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1193153839]
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 16.0
+offset_bottom = 16.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Column" type="VBoxContainer" parent="Panel" unique_id=2093200209]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="Panel/Column" unique_id=2099018611]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 12
+text = "Research Center"
+horizontal_alignment = 1
+
+[node name="Grid" type="GridContainer" parent="Panel/Column" unique_id=431801137]
+layout_mode = 2
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 3
+columns = 6
+
+[node name="TechSlot0" parent="Panel/Column/Grid" unique_id=1611416499 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot1" parent="Panel/Column/Grid" unique_id=390932918 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot2" parent="Panel/Column/Grid" unique_id=1381598624 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot3" parent="Panel/Column/Grid" unique_id=16516979 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot4" parent="Panel/Column/Grid" unique_id=1694141936 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot5" parent="Panel/Column/Grid" unique_id=1715737705 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot6" parent="Panel/Column/Grid" unique_id=143369879 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot7" parent="Panel/Column/Grid" unique_id=1189300553 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot8" parent="Panel/Column/Grid" unique_id=1340251430 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot9" parent="Panel/Column/Grid" unique_id=1390852366 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot10" parent="Panel/Column/Grid" unique_id=1195822667 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot11" parent="Panel/Column/Grid" unique_id=1299675537 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot12" parent="Panel/Column/Grid" unique_id=567364616 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot13" parent="Panel/Column/Grid" unique_id=1077099746 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot14" parent="Panel/Column/Grid" unique_id=1271139851 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot15" parent="Panel/Column/Grid" unique_id=1503474628 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot16" parent="Panel/Column/Grid" unique_id=1544720769 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot17" parent="Panel/Column/Grid" unique_id=1964526357 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot18" parent="Panel/Column/Grid" unique_id=106380913 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot19" parent="Panel/Column/Grid" unique_id=1280044209 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot20" parent="Panel/Column/Grid" unique_id=558063156 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot21" parent="Panel/Column/Grid" unique_id=2075196394 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot22" parent="Panel/Column/Grid" unique_id=1661351933 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot23" parent="Panel/Column/Grid" unique_id=299614993 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot24" parent="Panel/Column/Grid" unique_id=1198784228 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot25" parent="Panel/Column/Grid" unique_id=1894164041 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot26" parent="Panel/Column/Grid" unique_id=1033242460 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot27" parent="Panel/Column/Grid" unique_id=150120420 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot28" parent="Panel/Column/Grid" unique_id=1272683395 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="TechSlot29" parent="Panel/Column/Grid" unique_id=1885502550 instance=ExtResource("2_tech_slot")]
+layout_mode = 2
+
+[node name="Footer" type="HBoxContainer" parent="Panel/Column" unique_id=1104665175]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 2
+
+[node name="RandomButton" type="Button" parent="Panel/Column/Footer" unique_id=1936632272]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Random Ultimate"
+
+[node name="UndoButton" type="Button" parent="Panel/Column/Footer" unique_id=970919884]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Undo"

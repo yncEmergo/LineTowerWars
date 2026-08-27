@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/sentry_stats.tres" id="2_sentry_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 90
+tower_stats = ExtResource("2_sentry_stats")
+display_name = "Upgrade to Sentry"
+description = "Cheap magic tower. Long ranged from the very first tier, at ground and air alike."
+targeting = 1
+slot = 0

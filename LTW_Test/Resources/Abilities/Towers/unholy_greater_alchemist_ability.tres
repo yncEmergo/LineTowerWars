@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DevourEssencePassive" format=3 uid="uid://hk5euyi4eh8i"]
+
+[ext_resource type="Script" uid="uid://dliv4sp3xr6ds" path="res://Scripts/Abilities/TowerPassives/DevourEssencePassive.gd" id="1_DevourEssencePassive"]
+[ext_resource type="Texture2D" uid="uid://crf8h7yaw7xfs" path="res://2DArt/Icons/greater_alchemist.png" id="2_greater_alchemist"]
+
+[resource]
+script = ExtResource("1_DevourEssencePassive")
+damage_per_kill = 3
+damage_cap = 200
+ability_id = 174
+display_name = "Devour Essence"
+icon = ExtResource("2_greater_alchemist")
+targeting = 0
+slot = 11

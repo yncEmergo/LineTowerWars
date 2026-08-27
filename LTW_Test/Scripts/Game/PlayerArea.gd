@@ -40,6 +40,11 @@ var player_id: int = 1
 var _occupied: PackedByteArray = PackedByteArray()
 ## Route to the end zone, rebuilt whenever the occupancy grid changes.
 var _flow: FlowField = FlowField.new()
+## Internal cells a destroyed tower left rubble on, as cell index -> seconds
+## left. Sparse rather than one entry per cell, because rubble is rare and a
+## dictionary of three entries costs nothing to tick where a full grid would be
+## a thousand writes a frame for nothing.
+var _rubble: Dictionary = {}
 
 ## Read all over this class, so it comes through a getter onto References
 ## rather than being fetched and passed around by hand.
@@ -232,15 +237,70 @@ func footprint_world_center(cell: Vector2i, footprint: Vector2i) -> Vector3:
 	))
 
 
+## Counts rubble down. Only ever has anything to do just after a tower was
+## destroyed, which is why it returns on the common case before touching
+## anything.
+##
+## Simulation, so it runs on the fixed tick like everything else. It is only
+## ever MARKED on the authority - a client is told a tower is gone but never
+## why - so a client's grid simply has none, and its build ghost can read green
+## over a cell the server will refuse for a few seconds. See multiplayer.md.
+func _physics_process(delta: float) -> void:
+	if _rubble.is_empty():
+		return
+
+	# keys() hands back a copy, so erasing while walking it is safe.
+	for index: int in _rubble.keys():
+		var left: float = float(_rubble[index]) - delta
+		if left <= 0.0:
+			_rubble.erase(index)
+		else:
+			_rubble[index] = left
+
+
+## Leaves rubble over a footprint, blocking a rebuild there for a while.
+##
+## The cells are NOT re-occupied: a destroyed tower stops being a wall
+## immediately and creeps walk straight over the spot. Only building there
+## waits, which is what stops an attacker creep's work being undone the instant
+## it finishes. unit_data.md 1.5.
+func mark_rubble(cell: Vector2i, footprint: Vector2i) -> void:
+	var seconds: float = 0.0 if _config == null else _config.rubble_seconds
+	if seconds <= 0.0:
+		return
+
+	var width: int = internal_width()
+	for dz in range(footprint.y):
+		for dx in range(footprint.x):
+			var index: int = (cell.y + dz) * width + cell.x + dx
+			if index >= 0 && index < _occupied.size():
+				_rubble[index] = seconds
+
+
 ## Whether a footprint may be built at a cell. Checks the buildable zone, then
-## occupancy, then that creeps would still have a route. Order matters: the
-## path flood fill is the expensive one, so it runs last.
+## occupancy, then rubble, then that creeps would still have a route. Order
+## matters: the path flood fill is the expensive one, so it runs last.
 func can_place(cell: Vector2i, footprint: Vector2i) -> bool:
 	if !_fits_build_zone(cell, footprint):
 		return false
 	if !_footprint_free(cell, footprint):
 		return false
+	if _rubble_in(cell, footprint):
+		return false
 	return _path_exists(cell, footprint)
+
+
+## Whether any cell of a footprint is still under rubble.
+func _rubble_in(cell: Vector2i, footprint: Vector2i) -> bool:
+	if _rubble.is_empty():
+		return false
+
+	var width: int = internal_width()
+	for dz in range(footprint.y):
+		for dx in range(footprint.x):
+			if _rubble.has((cell.y + dz) * width + cell.x + dx):
+				return true
+	return false
 
 
 func occupy(cell: Vector2i, footprint: Vector2i) -> void:
@@ -407,7 +467,9 @@ func _displace_creeps_in(cell: Vector2i, footprint: Vector2i) -> void:
 
 	for child in _creeps_root.get_children():
 		var creep: Creep = child as Creep
-		if creep == null:
+		# A flyer reads none of this grid, so a tower going up under one is
+		# nothing that happened to it.
+		if creep == null || creep.is_flying():
 			continue
 
 		var at: Vector2i = world_to_internal_cell(creep.global_position)
@@ -485,12 +547,21 @@ func send_building() -> SendBuilding:
 	return _send_building
 
 
-## Centre of the send strip above the area, where the send building stands.
-func send_zone_center() -> Vector3:
+## Where one send building stands on the strip above the area.
+##
+## The strip is divided into GameConfig.send_building_slots even columns and
+## the building takes the middle of its own, so the Tier 1 building sits at the
+## LEFT rather than in the middle of an empty strip - which is where it will
+## still be once the other three tiers have buildings of their own.
+## unit_data.md 6.1.
+func send_zone_slot_center(slot: int) -> Vector3:
 	if _config == null:
 		return global_position
+
+	var slots: int = maxi(1, _config.send_building_slots)
+	var column: float = (float(clampi(slot, 0, slots - 1)) + 0.5) / float(slots)
 	return to_global(Vector3(
-		_config.area_width() * 0.5,
+		_config.area_width() * column,
 		0.0,
 		_config.send_zone_start_z() + _config.send_zone_depth() * 0.5
 	))

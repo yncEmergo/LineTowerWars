@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AncientBloomPassive" format=3 uid="uid://duv8rj514u2rt"]
+
+[ext_resource type="Script" uid="uid://kj06k1t3ka14" path="res://Scripts/Abilities/TowerPassives/AncientBloomPassive.gd" id="1_AncientBloomPassive"]
+[ext_resource type="Texture2D" uid="uid://dy5ulmwvllpkr" path="res://2DArt/Icons/greater_primalist.png" id="2_greater_primalist"]
+
+[resource]
+script = ExtResource("1_AncientBloomPassive")
+gold_per_attack = 300
+gold_per_neighbour = 120
+minimum_gold = 30
+blast_damage = 775
+armor_reduction = 2
+refund_below = 3
+ability_id = 203
+display_name = "Ancient Bloom"
+icon = ExtResource("2_greater_primalist")
+targeting = 0
+slot = 11

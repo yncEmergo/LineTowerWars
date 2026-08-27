@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cu52r0k3354f3"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://cul0jyrwte8ba" path="res://Resources/UnitStats/Towers/primal_ultimate_beastmaster_stats.tres" id="2_primal_ultimate_beastmaster_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_primal_ultimate_beastmaster_stats")
+required_tech_id = 30
+ability_id = 287
+display_name = "Upgrade to Ultimate Beastmaster"
+description = "Unleashes a beast down the lane, damaging and stunning every ground creep in its path."
+slot = 0

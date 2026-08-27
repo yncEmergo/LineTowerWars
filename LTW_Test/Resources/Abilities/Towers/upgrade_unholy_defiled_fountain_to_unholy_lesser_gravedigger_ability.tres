@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://duj03nk25f82s"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://i6jq0uf7gjvv" path="res://Resources/UnitStats/Towers/unholy_lesser_gravedigger_stats.tres" id="2_unholy_lesser_gravedigger_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_unholy_lesser_gravedigger_stats")
+required_tech_id = 5
+ability_id = 250
+display_name = "Upgrade to Lesser Gravedigger"
+description = "Stacks poison on several creeps at once and detonates it once it is deep enough."
+slot = 0

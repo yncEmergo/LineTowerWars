@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://cjrbc36k3yiik"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Resource" uid="uid://qg4ixg5g1y5t" path="res://Resources/Abilities/Towers/lightning_greater_annihilation_glyph_ability.tres" id="5_lightning_greater_annihilation_glyph_ability"]
+[ext_resource type="Resource" uid="uid://bn6er6i30a3f3" path="res://Resources/Abilities/Towers/upgrade_lightning_greater_annihilation_glyph_to_lightning_ultimate_annihilation_glyph_ability.tres" id="6_upgrade_lightning_greater_annihilation_glyph_to_lightning_ultimate_annihilation_glyph_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="7_return_to_elemental_core_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="8_1pfdl"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://l2iv46ollmh8" path="res://2DArt/Icons/greater_annihilation_glyph.png" id="14_greater_annihilation_glyph"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_InstantDelivery")
+impact_scene_path = "res://Scenes/Effects/spark_impact.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 1122
+damage_max = 1134
+damage_type = 1
+attacks_per_second = 0.5
+attack_range = 9.77
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/lightning_greater_annihilation_glyph_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 10000
+total_gold_cost = 15000
+unit_type_id = 84
+display_name = "Greater Annihilation Glyph"
+icon = ExtResource("14_greater_annihilation_glyph")
+max_health = 1500
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_lightning_greater_annihilation_glyph_ability"), ExtResource("6_upgrade_lightning_greater_annihilation_glyph_to_lightning_ultimate_annihilation_glyph_ability"), ExtResource("7_return_to_elemental_core_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/lightning_greater_annihilation_glyph.tscn"

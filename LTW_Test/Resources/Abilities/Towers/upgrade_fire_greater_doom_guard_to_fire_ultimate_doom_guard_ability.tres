@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://daursb3q3o44q"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://d01dkyqmcbxck" path="res://Resources/UnitStats/Towers/fire_ultimate_doom_guard_stats.tres" id="2_fire_ultimate_doom_guard_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_fire_ultimate_doom_guard_stats")
+required_tech_id = 2
+ability_id = 212
+display_name = "Upgrade to Ultimate Doom Guard"
+description = "Calls meteors. Built at full mana and strongest the moment it is placed, weakening every second afterwards. Cannot hit air."
+slot = 0

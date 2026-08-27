@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dl4avm1o5p2l0"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://dyjk0bw7gj85" path="res://Resources/UnitStats/Towers/earth_rockfall_stats.tres" id="2_earth_rockfall_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_earth_rockfall_stats")
+required_tech_id = 16
+ability_id = 264
+display_name = "Morph into Rockfall"
+description = "Permanently eats armor. Splits into heavy siege splash and pure single target."
+slot = 7

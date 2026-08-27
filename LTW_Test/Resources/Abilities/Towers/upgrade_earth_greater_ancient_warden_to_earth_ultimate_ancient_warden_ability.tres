@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://d0qc6p7yg5feg"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://3s8hkmpl26hk" path="res://Resources/UnitStats/Towers/earth_ultimate_ancient_warden_stats.tres" id="2_earth_ultimate_ancient_warden_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_earth_ultimate_ancient_warden_stats")
+required_tech_id = 17
+ability_id = 268
+display_name = "Upgrade to Ultimate Ancient Warden"
+description = "Heavy siege splash that permanently eats armor. What you put at the front of a maze."
+slot = 0

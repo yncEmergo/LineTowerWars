@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PressuringWaterPassive" format=3 uid="uid://vbxdhb3ts4li"]
+
+[ext_resource type="Script" uid="uid://decub6gp60s3o" path="res://Scripts/Abilities/TowerPassives/PressuringWaterPassive.gd" id="1_PressuringWaterPassive"]
+[ext_resource type="Texture2D" uid="uid://bevlu3rf726fv" path="res://2DArt/Icons/greater_hurricane_elemental.png" id="2_greater_hurricane_elemental"]
+
+[resource]
+script = ExtResource("1_PressuringWaterPassive")
+paralyze_seconds = 1.8
+charged_bonus = 0.33
+ability_id = 179
+display_name = "Pressuring Water"
+icon = ExtResource("2_greater_hurricane_elemental")
+targeting = 0
+slot = 11

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://xkfu2jvd5fgw"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://c2wn0knk6djxj" path="res://Resources/UnitStats/Towers/lightning_power_generator_stats.tres" id="2_lightning_power_generator_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_lightning_power_generator_stats")
+required_tech_id = 13
+ability_id = 225
+display_name = "Upgrade to Power Generator"
+description = "Hits harder the healthier the target is. Splits into the long ranged Glyph and the short ranged stunner."
+slot = 0

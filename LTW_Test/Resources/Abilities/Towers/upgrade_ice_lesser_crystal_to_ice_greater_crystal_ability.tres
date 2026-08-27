@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dp3fjkx4lrclw"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://bg8gt57fga61w" path="res://Resources/UnitStats/Towers/ice_greater_crystal_stats.tres" id="2_ice_greater_crystal_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_ice_greater_crystal_stats")
+required_tech_id = 9
+ability_id = 222
+display_name = "Upgrade to Greater Crystal"
+description = "Pierces every creep in a line and IGNORES ARMOR ENTIRELY, in exchange for lower base damage."
+slot = 0

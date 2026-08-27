@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AncientBloomPassive" format=3 uid="uid://dvqkrgf2oy8cn"]
+
+[ext_resource type="Script" uid="uid://kj06k1t3ka14" path="res://Scripts/Abilities/TowerPassives/AncientBloomPassive.gd" id="1_AncientBloomPassive"]
+[ext_resource type="Texture2D" uid="uid://dt70selj7y0l0" path="res://2DArt/Icons/ultimate_primalist.png" id="2_ultimate_primalist"]
+
+[resource]
+script = ExtResource("1_AncientBloomPassive")
+gold_per_attack = 750
+gold_per_neighbour = 0
+minimum_gold = 750
+crowding_cells = 0
+blast_damage = 1800
+armor_reduction = 3
+refund_below = 3
+ability_id = 204
+display_name = "Primordial Bond"
+icon = ExtResource("2_ultimate_primalist")
+targeting = 0
+slot = 11

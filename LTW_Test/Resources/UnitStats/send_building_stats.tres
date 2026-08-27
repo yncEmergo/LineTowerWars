@@ -1,17 +1,25 @@
 [gd_resource type="Resource" script_class="UnitStats" format=3 uid="uid://de1l67456p30w"]
 
-[ext_resource type="Script" uid="uid://bd7dgorq33rgt" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
-[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_sheep_ability.tres" id="3_sheep"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_skeleton_ability.tres" id="4_skeleton"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_acolyte_ability.tres" id="5_acolyte"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_spider_ability.tres" id="6_spider"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_knight_ability.tres" id="7_knight"]
-[ext_resource type="Resource" path="res://Resources/Abilities/send_grunt_ability.tres" id="8_grunt"]
+[ext_resource type="Script" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_sheep_ability.tres" id="3_sheep"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_skeleton_warrior_ability.tres" id="4_skeleton_warrior"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_acolyte_ability.tres" id="5_acolyte"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_forest_spider_ability.tres" id="6_forest_spider"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_swordsman_ability.tres" id="7_swordsman"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_fel_orc_grunt_ability.tres" id="8_fel_orc_grunt"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_vile_temptress_ability.tres" id="9_vile_temptress"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_shade_ability.tres" id="10_shade"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_mud_golem_ability.tres" id="11_mud_golem"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_priest_ability.tres" id="12_priest"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_corrupted_treant_ability.tres" id="13_corrupted_treant"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_rot_golem_ability.tres" id="14_rot_golem"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/send_building.png" id="98_icon"]
 
 [resource]
 script = ExtResource("1_send_stats")
+icon = ExtResource("98_icon")
 unit_type_id = 2
 display_name = "Send Building"
 max_health = 1
-abilities = Array[ExtResource("2_ability")]([ExtResource("3_sheep"), ExtResource("4_skeleton"), ExtResource("5_acolyte"), ExtResource("6_spider"), ExtResource("7_knight"), ExtResource("8_grunt")])
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_sheep"), ExtResource("4_skeleton_warrior"), ExtResource("5_acolyte"), ExtResource("6_forest_spider"), ExtResource("7_swordsman"), ExtResource("8_fel_orc_grunt"), ExtResource("9_vile_temptress"), ExtResource("10_shade"), ExtResource("11_mud_golem"), ExtResource("12_priest"), ExtResource("13_corrupted_treant"), ExtResource("14_rot_golem")])

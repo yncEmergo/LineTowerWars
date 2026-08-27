@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ShatterArmorPassive" format=3 uid="uid://dddm5jpifuoqi"]
+
+[ext_resource type="Script" uid="uid://tl1cs54i54v6" path="res://Scripts/Abilities/TowerPassives/ShatterArmorPassive.gd" id="1_ShatterArmorPassive"]
+[ext_resource type="Texture2D" uid="uid://borihle3aeo4m" path="res://2DArt/Icons/rockfall.png" id="2_rockfall"]
+
+[resource]
+script = ExtResource("1_ShatterArmorPassive")
+ability_id = 184
+display_name = "Shatter Armor"
+icon = ExtResource("2_rockfall")
+targeting = 0
+slot = 11

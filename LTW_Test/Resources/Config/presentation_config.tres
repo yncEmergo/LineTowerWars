@@ -1,8 +1,7 @@
-[gd_resource type="Resource" script_class="PresentationConfig" format=3]
+[gd_resource type="Resource" script_class="PresentationConfig" format=3 uid="uid://bqef376tkn1sl"]
 
-[ext_resource type="Script" path="res://Scripts/Config/PresentationConfig.gd" id="1_presentation_config"]
+[ext_resource type="Script" uid="uid://b8j6ycf2h8n25" path="res://Scripts/Config/PresentationConfig.gd" id="1_presentation_config"]
 
 [resource]
 script = ExtResource("1_presentation_config")
-preview_shows_foundation = true
-preview_foundation_tint = 0.55
+player_colors = null

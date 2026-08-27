@@ -26,6 +26,13 @@ signal stock_changed()
 ## the ground. Visual only.
 const GROUND_OFFSET: float = 0.0
 
+@export_group("Settings")
+## Which column of the send strip this building stands in, counting from 0 at
+## the left. The source game gives each creep TIER a send building of its own
+## and only Tier 1 exists so far, so this one stands at the left and leaves the
+## rest of the strip clear for the three that follow. See unit_data.md 6.1.
+@export var send_slot: int = 0
+
 ## One reserve per creep type, keyed by that type's stats resource.
 var _stocks: Dictionary = {}
 
@@ -40,7 +47,8 @@ func _ready() -> void:
 func place_above(player_id: int, home_area: PlayerArea) -> void:
 	setup(player_id, home_area)
 	name = "SendBuilding%d" % player_id
-	global_position = home_area.send_zone_center() + Vector3(0.0, GROUND_OFFSET, 0.0)
+	global_position = home_area.send_zone_slot_center(send_slot) \
+		+ Vector3(0.0, GROUND_OFFSET, 0.0)
 	reset_physics_interpolation()
 
 
@@ -190,8 +198,12 @@ func send_creeps(creep_stats: CreepStats) -> void:
 		stock.consume()
 		stock_changed.emit()
 
-	for index in range(maxi(1, creep_stats.pack_size)):
-		_spawn_one(creep_scene, creep_stats, destination)
+	# The pack rather than a count, because a Sheep send is two Sheep and one
+	# Timber Wolf. Everything else in the roster has a pack of one kind, and
+	# reads as [[itself, 3]]. See CreepStats.pack_contents().
+	for entry: Array in creep_stats.pack_contents():
+		_spawn_pack_entry(entry[0] as CreepStats, int(entry[1]), creep_scene,
+			creep_stats, destination)
 
 	# Income rises per send, not per creep, so a pack and a boss are priced on
 	# the same scale. See game_rules.md.
@@ -200,7 +212,7 @@ func send_creeps(creep_stats: CreepStats) -> void:
 
 	Log.info("Creeps sent", {
 		"type": creep_stats.display_name,
-		"count": creep_stats.pack_size,
+		"count": creep_stats.pack_creep_count(),
 		"cost": creep_stats.gold_cost,
 		"stock": stock.count if stock != null else -1,
 	})
@@ -213,6 +225,10 @@ func can_send(creep_stats: CreepStats) -> bool:
 	var manager: PlayerManager = References.player_manager
 	if manager != null && manager.is_match_over():
 		return false
+	if !is_unlocked(creep_stats):
+		return false
+	if is_at_population_cap():
+		return false
 
 	var stock: CreepStock = stock_for(creep_stats)
 	if stock != null && !stock.has_stock():
@@ -220,6 +236,56 @@ func can_send(creep_stats: CreepStats) -> bool:
 
 	var state: PlayerState = _owner_state()
 	return state == null || state.can_afford(creep_stats.gold_cost)
+
+
+## Whether the match clock has reached this creep's start delay yet.
+##
+## Every creep unlocks on its own, one at a time in ascending cost order, so
+## this is per creep and never per tier - unit_data.md 6.1. A creep is refused
+## here as well as greyed out on the card, because a client's clock is its own
+## count and may be a fraction ahead of the server's.
+func is_unlocked(creep_stats: CreepStats) -> bool:
+	if creep_stats == null:
+		return false
+	var session: MatchSession = References.match_session
+	if session == null:
+		return true
+	return session.elapsed_seconds() >= creep_stats.unlock_seconds
+
+
+## Whether this player is at their population ceiling.
+##
+## AT it, not over it: a send is refused from the cap upwards, and a player at
+## 98 of 100 may still send a pack of three and end up at 101. Population is
+## charged per creep, so what a send costs is not a whole number of slots and
+## refusing a partial one would make the last few unusable. See game_rules.md.
+func is_at_population_cap() -> bool:
+	var config: GameConfig = References.game_config
+	var manager: PlayerManager = References.player_manager
+	if config == null || manager == null || config.population_cap <= 0:
+		return false
+	return manager.population_for(owner_player_id) >= config.population_cap
+
+
+## One kind of creep out of a pack, however many of it the pack holds.
+##
+## The prefab of the creep that was BOUGHT is already loaded and comes in
+## rather than being looked up again; a companion loads its own. A companion
+## whose prefab is missing is skipped with a message rather than taking the
+## whole send down - the pack that could be sent still is.
+func _spawn_pack_entry(entry_stats: CreepStats, count: int, bought_scene: PackedScene,
+		bought_stats: CreepStats, destination: PlayerArea) -> void:
+	if entry_stats == null || count <= 0:
+		return
+
+	var scene: PackedScene = bought_scene if entry_stats == bought_stats else entry_stats.scene()
+	if scene == null:
+		Log.err("Creep in a pack names no loadable prefab, it was left out",
+			entry_stats.display_name)
+		return
+
+	for index in range(count):
+		_spawn_one(scene, entry_stats, destination)
 
 
 ## One creep, at its own random spot in the spawn zone. Each rolls separately,

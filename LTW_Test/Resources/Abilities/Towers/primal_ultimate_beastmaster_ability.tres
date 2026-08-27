@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BloodthirstPassive" format=3 uid="uid://di3tt5apwrpv8"]
+
+[ext_resource type="Script" uid="uid://bly1w1q0m2ybo" path="res://Scripts/Abilities/TowerPassives/BloodthirstPassive.gd" id="1_BloodthirstPassive"]
+[ext_resource type="Texture2D" uid="uid://c5rf8mmk4r7ua" path="res://2DArt/Icons/ultimate_beastmaster.png" id="2_ultimate_beastmaster"]
+
+[resource]
+script = ExtResource("1_BloodthirstPassive")
+multishot_cells = 3.91
+beast_cells = 9.38
+beast_damage = 1865
+stun_seconds = 1.2
+range_bonus_per_cell = 0.128
+max_range_bonus = 1
+ability_id = 207
+display_name = "Stampede"
+icon = ExtResource("2_ultimate_beastmaster")
+targeting = 0
+slot = 11

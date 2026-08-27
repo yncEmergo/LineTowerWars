@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FeastingVoidPassive" format=3 uid="uid://bqx6gm20wuavl"]
+
+[ext_resource type="Script" uid="uid://bxwv6vt14o04g" path="res://Scripts/Abilities/TowerPassives/FeastingVoidPassive.gd" id="1_FeastingVoidPassive"]
+[ext_resource type="Texture2D" uid="uid://diq2xwvqccqyu" path="res://2DArt/Icons/ultimate_leviathan.png" id="2_ultimate_leviathan"]
+
+[resource]
+script = ExtResource("1_FeastingVoidPassive")
+armor_per_hit = 0.27
+damage_per_hit = 8
+damage_cap = 600
+life_steal = 0.1
+ability_id = 167
+display_name = "Hungering Void"
+icon = ExtResource("2_ultimate_leviathan")
+targeting = 0
+slot = 11

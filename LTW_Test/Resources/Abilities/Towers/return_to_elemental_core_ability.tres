@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ReturnToCoreAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/ReturnToCoreAbility.gd" id="1_ReturnToCoreAbility"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/elemental_core.png" id="2_elemental_core"]
+
+[resource]
+script = ExtResource("1_ReturnToCoreAbility")
+ability_id = 291
+core_stats_path = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"
+display_name = "Return to Elemental Core"
+description = "Take this tower back down to a bare Elemental Core and choose another element. Everything sunk into it above the Core is refunded at the usual sell share; the Core's own gold stays in the cell. The tower keeps blocking until it finishes, and calling it off costs nothing."
+targeting = 1
+slot = 8
+icon = ExtResource("2_elemental_core")

@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://b8o6jghavyq0r"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Resource" uid="uid://cdwai5yeao3s" path="res://Resources/Abilities/Towers/void_ultimate_harbinger_ability.tres" id="5_void_ultimate_harbinger_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="6_return_to_elemental_core_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="7_sajli"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://b63clmjotkvp2" path="res://2DArt/Icons/ultimate_harbinger.png" id="13_ultimate_harbinger"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/void_bolt.tscn"
+speed = 11
+impact_scene_path = "res://Scenes/Effects/void_impact.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 2670
+damage_max = 2672
+damage_type = 0
+attacks_per_second = 0.556
+attack_range = 6.25
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/void_ultimate_harbinger_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
+gold_cost = 30000
+max_mana = 60
+total_gold_cost = 45000
+unit_type_id = 101
+display_name = "Ultimate Harbinger"
+icon = ExtResource("13_ultimate_harbinger")
+max_health = 3000
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_void_ultimate_harbinger_ability"), ExtResource("6_return_to_elemental_core_ability"), ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/void_ultimate_harbinger.tscn"

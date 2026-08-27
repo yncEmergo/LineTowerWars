@@ -31,6 +31,10 @@ const SELECTION_ROWS: int = 3
 @export_group("References")
 @export var _name_label: Label
 @export var _health_label: Label
+## Mana, for the towers that use any. Hidden for everything else, which is
+## every Basic tower and every creep - a line reading "0 / 0" on all of them
+## would be noise on the panel a player looks at most.
+@export var _mana_label: Label
 @export var _damage_label: Label
 @export var _armor_label: Label
 ## Attack speed and range. Hidden for anything that cannot attack, so a creep's
@@ -40,6 +44,12 @@ const SELECTION_ROWS: int = 3
 @export var _selection_grid: GridContainer
 @export var _command_slot_scene: PackedScene
 @export var _unit_tile_scene: PackedScene
+## The live 3D picture of whichever unit drives the panel. Optional, so a
+## stripped-down panel in a test scene still works without one.
+@export var _portrait: UnitPortrait
+## Put on the card whenever there is something to back out of - an ability
+## being aimed, or a submenu that was opened. Optional for the same reason.
+@export var _cancel_ability: UnitAbility
 
 var _slots: Array[CommandSlot] = []
 var _tiles: Array[UnitTile] = []
@@ -130,8 +140,8 @@ func _build_selection_tiles() -> void:
 ## the scene was not authored for.
 ##
 ## The grid is always at its full size whatever the current unit offers, which
-## is what makes an ability able to claim a fixed square: slot 11 exists even
-## on a card that fills only the first row.
+## is what makes an ability able to claim a fixed square: the last square
+## exists even on a card that fills only the first row.
 func _build_command_slots() -> void:
 	if _command_grid == null:
 		Log.err("UnitPanel has no command grid assigned")
@@ -221,12 +231,14 @@ func show_unit(unit: Variant) -> void:
 
 	_name_label.text = stats.display_name
 	_health_label.text = "%d / %d" % [int(unit.current_health), stats.max_health]
+	_set_mana_text(unit as Building)
 	_set_damage_text(stats)
 	_armor_label.text = "Armor:   %s" % stats.armor_text(unit.armor_value())
 	_set_attack_text(stats)
 
 	_card_stack = [_unit.current_abilities()]
 	_refresh_slots()
+	_show_portrait(_unit)
 	visible = true
 
 
@@ -247,9 +259,11 @@ func show_group(units: Array) -> void:
 	_group = units.duplicate()
 	_attach_units(_group)
 	_set_group_mode(true)
+	_show_portrait(_unit)
 
 	if _unit != null:
 		_health_label.text = "%d / %d" % [_unit.current_health, _unit.max_health()]
+	_set_mana_text(_unit as Building)
 
 	_fill_selection_grid(units)
 	_card_stack = [_shared_abilities(units)]
@@ -257,11 +271,20 @@ func show_group(units: Array) -> void:
 	visible = true
 
 
+## Points the portrait at whatever drives the panel. Split out rather than
+## called inline, so the null check lives in one place and a panel with no
+## portrait wired simply does nothing.
+func _show_portrait(unit: Unit) -> void:
+	if _portrait != null:
+		_portrait.show_unit(unit)
+
+
 func clear() -> void:
 	_detach_units()
 	_unit = null
 	_group = []
 	_card_stack = []
+	_show_portrait(null)
 	visible = false
 
 
@@ -299,6 +322,8 @@ func _set_attack_text(stats: UnitStats) -> void:
 func _set_group_mode(group: bool) -> void:
 	if _name_label != null:
 		_name_label.visible = !group
+	if _mana_label != null && group:
+		_mana_label.visible = false
 	if _damage_label != null:
 		_damage_label.visible = !group
 	if _armor_label != null:
@@ -442,6 +467,39 @@ func is_in_submenu() -> bool:
 	return _card_stack.size() > 1
 
 
+## Backs out of one thing.
+##
+## The armed ability first, then the submenu. Both can be true at once - a
+## build order is aimed FROM the build submenu - and in that case the player
+## means the order they are aiming, not the menu they opened to reach it. One
+## press per thing being backed out of, which is also how Escape already
+## behaves.
+func _cancel_current() -> void:
+	if _armed:
+		if _command_controller != null:
+			_command_controller.cancel()
+		return
+	pop_to_root()
+
+
+## Puts Cancel on the card whenever there is something to back out of.
+##
+## Placed AFTER the card rather than as part of it, so it cannot be pushed out
+## of its square by a busy submenu and its key never moves. Left off entirely
+## when there is nothing to cancel, rather than shown greyed out - a card that
+## always carries a dead button teaches a player to ignore that square.
+func _place_cancel(placed: Array) -> void:
+	if _cancel_ability == null:
+		return
+	if !_armed && !is_in_submenu():
+		return
+
+	var slot: int = _cancel_ability.slot
+	if slot < 0 || slot >= placed.size():
+		slot = placed.size() - 1
+	placed[slot] = _cancel_ability
+
+
 func _current_card() -> Array:
 	if _card_stack.is_empty():
 		return []
@@ -455,12 +513,14 @@ func _current_card() -> Array:
 ## Everything left over falls into the first free square, which is what a
 ## passive with no key worth pressing wants.
 func _refresh_slots() -> void:
-	# An armed ability owns the next click, so the card empties rather than
-	# offering buttons that would fight it. The grid keeps its place, so the
-	# panel never changes shape mid-order. The card STACK is untouched, which
-	# is what lets cancelling drop straight back to what was showing.
+	# An armed ability owns the next click, so everything else comes off the
+	# card rather than offering buttons that would fight it. The grid keeps its
+	# place, so the panel never changes shape mid-order. The card STACK is
+	# untouched, which is what lets cancelling drop straight back to what was
+	# showing.
 	var placed: Array = [] if _armed else _place_card(_current_card())
 	placed.resize(_slots.size())
+	_place_cancel(placed)
 
 	for index in range(_slots.size()):
 		_slots[index].set_ability(placed[index], _unit, _hotkey_letter(index))
@@ -525,6 +585,13 @@ func _hotkey_letter(slot_index: int) -> String:
 
 func _on_ability_activated(ability: UnitAbility) -> void:
 	if ability == null:
+		return
+
+	# Card navigation, so it never reaches the command controller. Checked by
+	# IDENTITY rather than by type, because the panel was handed this exact
+	# resource and nothing else should be able to claim the behaviour.
+	if ability == _cancel_ability:
+		_cancel_current()
 		return
 
 	match ability.targeting:
@@ -623,6 +690,7 @@ func _release_hold() -> void:
 ## slow start leaves room to let go after one or two.
 func _process(delta: float) -> void:
 	_refresh_armor_label()
+	_refresh_mana_label()
 
 	if _held_ability == null:
 		return
@@ -656,6 +724,34 @@ func _process(delta: float) -> void:
 ## an aura can reach it, so it is re-read every frame rather than only when the
 ## selection changes. Written only on a real change, so the label is not
 ## rebuilt sixty times a second for a number that has not moved.
+## Shows or hides the mana line for whatever is on the panel.
+##
+## Asked of the BUILDING rather than of its stats, because one tower in the
+## game lowers its own maximum as it fires - see Building.set_max_mana. A unit
+## that is not a tower, or a tower with no mana, hides the line entirely.
+func _set_mana_text(tower: Building) -> void:
+	if _mana_label == null:
+		return
+	_mana_label.visible = tower != null && tower.uses_mana()
+	if _mana_label.visible:
+		_mana_label.text = "%d / %d" % [tower.current_mana, tower.max_mana]
+
+
+## Keeps it up to date. Polled rather than driven by a signal for the same
+## reason the armour line is: mana moves on the simulation tick, from a dozen
+## different passives and from the server's own snapshot, and a signal per
+## source would mean every new one having to remember to wire itself up.
+func _refresh_mana_label() -> void:
+	if _mana_label == null || !_mana_label.visible:
+		return
+	var tower: Building = _unit as Building
+	if tower == null || !is_instance_valid(tower):
+		return
+	var text: String = "%d / %d" % [tower.current_mana, tower.max_mana]
+	if _mana_label.text != text:
+		_mana_label.text = text
+
+
 func _refresh_armor_label() -> void:
 	if _armor_label == null || !_armor_label.visible:
 		return

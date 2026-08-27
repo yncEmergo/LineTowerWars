@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bdotffub8vr1a"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://chpdps3hpmstd" path="res://Resources/UnitStats/Towers/ice_lesser_lich_stats.tres" id="2_ice_lesser_lich_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_ice_lesser_lich_stats")
+required_tech_id = 8
+ability_id = 218
+display_name = "Upgrade to Lesser Lich"
+description = "Chills deeper than anything else, with splash. The Ultimate kills a fully chilled creep with its own health."
+slot = 0

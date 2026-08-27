@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://bblrenrux2jld"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" uid="uid://bjy36qnkh5xni" path="res://Scripts/Combat/SelfSplashEffect.gd" id="6_SelfSplashEffect"]
+[ext_resource type="Resource" uid="uid://ntc2gsf552qw" path="res://Resources/Abilities/Towers/upgrade_greater_crusher_to_ultimate_crusher_ability.tres" id="7_upgrade_greater_crusher_to_ultimate_crusher_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://drnsql1s7rflp" path="res://2DArt/Icons/greater_crusher.png" id="14_greater_crusher"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_InstantDelivery")
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SelfSplashEffect")
+radius = 2.73
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 601
+damage_max = 608
+is_aoe_damage = true
+attacks_per_second = 0.2
+windup_seconds = 0.55
+attack_range = 1.17
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/greater_crusher_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 5000
+total_gold_cost = 6190
+unit_type_id = 44
+display_name = "Greater Crusher"
+icon = ExtResource("14_greater_crusher")
+max_health = 575
+armor_type = 5
+armor = 5
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_upgrade_greater_crusher_to_ultimate_crusher_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/greater_crusher.tscn"

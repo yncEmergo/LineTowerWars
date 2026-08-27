@@ -1,0 +1,312 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/OptionsMenu.gd" id="1_options_menu"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="2_menu_theme"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/volume_row.tscn" id="3_volume_row"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_page"]
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
+bg_color = Color(0.08, 0.09, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.31, 0.38, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_window_mode"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_health_bars"]
+
+[node name="OptionsMenu" type="Control" node_paths=PackedStringArray("_tab_row", "_page_stack", "_window_mode_row", "_health_bar_row", "_mute_button", "_back_button")]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_menu_theme")
+script = ExtResource("1_options_menu")
+_tab_row = NodePath("Layout/Column/TabRow")
+_page_stack = NodePath("Layout/Column/PageStack")
+_window_mode_row = NodePath("Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices")
+_health_bar_row = NodePath("Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices")
+_mute_button = NodePath("Layout/Column/PageStack/AudioPage/MuteSetting/MuteButton")
+_back_button = NodePath("Layout/Column/Footer/BackButton")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.045, 0.06, 1)
+
+[node name="Layout" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 32
+
+[node name="Column" type="VBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="Layout/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 28
+text = "Options"
+
+[node name="TabRow" type="HBoxContainer" parent="Layout/Column"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="VideoTab" type="Button" parent="Layout/Column/TabRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Video"
+
+[node name="AudioTab" type="Button" parent="Layout/Column/TabRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Audio"
+
+[node name="GameplayTab" type="Button" parent="Layout/Column/TabRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Gameplay"
+
+[node name="HotkeysTab" type="Button" parent="Layout/Column/TabRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Hotkeys"
+
+[node name="PageStack" type="PanelContainer" parent="Layout/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_page")
+
+[node name="VideoPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/VideoPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Display"
+
+[node name="WindowModeSetting" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Window Mode"
+
+[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="WindowedButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_window_mode")
+text = "Windowed"
+
+[node name="WindowedFullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_window_mode")
+text = "Windowed Fullscreen"
+
+[node name="FullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_window_mode")
+text = "Fullscreen"
+
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/VideoPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "Resolution, refresh rate and graphics quality are not settings yet."
+
+[node name="AudioPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/AudioPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Volume"
+
+[node name="VolumeList" type="VBoxContainer" parent="Layout/Column/PageStack/AudioPage"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MasterRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+
+[node name="UIRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+channel = 1
+
+[node name="SFXRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+channel = 2
+
+[node name="MusicRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+channel = 3
+
+[node name="SpeechRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+channel = 4
+
+[node name="AtmoRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+layout_mode = 2
+channel = 5
+
+[node name="MuteSetting" type="HBoxContainer" parent="Layout/Column/PageStack/AudioPage"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/AudioPage/MuteSetting"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Mute All"
+
+[node name="MuteButton" type="CheckButton" parent="Layout/Column/PageStack/AudioPage/MuteSetting"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/AudioPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "There is no sound in the build yet. These are remembered and take effect once there is."
+
+[node name="GameplayPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Interface"
+
+[node name="HealthBarSetting" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Unit Health Bars"
+
+[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="AlwaysButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_health_bars")
+text = "Always"
+
+[node name="WhenDamagedButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_health_bars")
+text = "Only When Damaged"
+
+[node name="NeverButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_health_bars")
+text = "Never"
+
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "The bars drawn over units in the world, yours and everyone else's alike."
+
+[node name="HotkeysPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Hotkeys"
+
+[node name="BodyLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+layout_mode = 2
+text = "Nothing is rebindable yet."
+
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "The command card and the Research Center read their key off the square it sits in, so what a rebind would change is the rows of letters on ControlsConfig, not one key per ability."
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Layout/Column"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="Layout/Column/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="Layout/Column/Footer"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Back"

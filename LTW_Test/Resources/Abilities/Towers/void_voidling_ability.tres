@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VoidGrowthPassive" format=3 uid="uid://bpvbo0wnelw1"]
+
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_sp5xg"]
+[ext_resource type="Script" uid="uid://dwhbok3kg7bmk" path="res://Scripts/Abilities/TowerPassives/VoidGrowthPassive.gd" id="1_VoidGrowthPassive"]
+[ext_resource type="Texture2D" uid="uid://cq3e0uyf6feds" path="res://2DArt/Icons/voidling.png" id="2_voidling"]
+
+[resource]
+script = ExtResource("1_VoidGrowthPassive")
+ability_id = 160
+display_name = "Void Growth"
+icon = ExtResource("2_voidling")
+targeting = 0
+slot = 11

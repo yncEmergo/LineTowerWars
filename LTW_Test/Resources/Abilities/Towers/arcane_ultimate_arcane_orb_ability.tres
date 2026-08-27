@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ShiftingPowerPassive" format=3 uid="uid://67many3ls4l5"]
+
+[ext_resource type="Script" uid="uid://dbrv5bs3wsnfw" path="res://Scripts/Abilities/TowerPassives/ShiftingPowerPassive.gd" id="1_ShiftingPowerPassive"]
+[ext_resource type="Texture2D" uid="uid://cy3bcclmnq81u" path="res://2DArt/Icons/ultimate_arcane_orb.png" id="2_ultimate_arcane_orb"]
+
+[resource]
+script = ExtResource("1_ShiftingPowerPassive")
+bounces = 4
+bounce_cells = 1.88
+mana_per_target = 4
+drain_per_second = 8
+flying_bonus = 0.33
+surge_threshold = 0.8
+ability_id = 199
+display_name = "Arcane Surge"
+icon = ExtResource("2_ultimate_arcane_orb")
+targeting = 0
+slot = 11

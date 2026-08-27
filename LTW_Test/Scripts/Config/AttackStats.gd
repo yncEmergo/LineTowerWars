@@ -27,6 +27,23 @@ enum TargetPriority {
 	WEAKEST,
 }
 
+## What an attack goes after at all, which is a different question to the
+## ground-versus-air one below.
+##
+## An enum rather than a flag field, because the two are EXCLUSIVE and nothing
+## in the game targets both: a tower shoots the creeps walking its area and an
+## attacker creep chews on the towers standing in it. Nothing anywhere shoots
+## its own side, so there is no hostility question here either.
+enum TargetClass {
+	## Creeps walking the area. Every tower, and the default.
+	CREEPS,
+	## Towers standing in the area. The attacker creeps, and only them - the
+	## builder and technology discs are never valid targets, which is enforced
+	## by their being invulnerable rather than by anything here. See
+	## unit_data.md 1.5.
+	BUILDINGS,
+}
+
 ## Bits of target_types. A tower that hits neither can never fire.
 const TARGET_GROUND: int = 1
 const TARGET_AIR: int = 2
@@ -54,8 +71,25 @@ const TARGET_AIR: int = 2
 @export_group("Timing")
 ## Attacks per second, so a bigger number is faster. Shown as APS in the UI.
 @export var attacks_per_second: float = 1.0
+## Seconds between an attack STARTING and its damage landing.
+##
+## The window an attack animation plays in: a hammer rises and falls, a barrel
+## rocks back, a crystal charges. The tower commits at the start of it - it has
+## picked its target and cannot pick another - and the damage lands at the end.
+##
+## **It comes OUT of the attack period, never on top of it.** A 1 APS tower with
+## a 0.1s windup still attacks once a second: the cooldown starts ticking when
+## the windup does, so what changes is when in the second the damage lands, not
+## how often. A windup that added to the cooldown would make every animation a
+## silent balance change, and nobody would ever be able to tell which of the two
+## numbers a tower's real rate came from.
+##
+## 0 lands the damage the instant the tower fires, which is what everything
+## without an animation wants.
+@export var windup_seconds: float = 0.0
 
 @export_group("Targeting")
+@export var target_class: TargetClass = TargetClass.CREEPS
 ## Measured in player cells from the tower's centre to the creep's, which is
 ## the same as world units because cell_size is 1.0.
 @export var attack_range: float = 4.0
@@ -82,6 +116,17 @@ func cooldown_seconds() -> float:
 	return 1.0 / attacks_per_second
 
 
+## The windup this attack can actually serve, which is never longer than the
+## gap between attacks.
+##
+## Clamped rather than reported as an error every tick, because the failure is
+## silent and strange otherwise: a windup longer than the cooldown would have a
+## tower start its next attack before the last one landed, and the two would
+## queue up until it was permanently behind. validate() is what says so once.
+func windup_seconds_clamped() -> float:
+	return clampf(windup_seconds, 0.0, cooldown_seconds())
+
+
 ## One attack's damage before the armour matrix touches it.
 ##
 ## The generator comes in rather than being reached for, so the roll is part of
@@ -89,6 +134,12 @@ func cooldown_seconds() -> float:
 ## for the same shot. See MatchSession.match_rng().
 func roll_damage(rng: RandomNumberGenerator) -> int:
 	return rng.randi_range(mini(damage_min, damage_max), maxi(damage_min, damage_max))
+
+
+## Whether this attack goes after buildings rather than creeps, which is the
+## attacker creeps and nothing else.
+func hits_buildings() -> bool:
+	return target_class == TargetClass.BUILDINGS
 
 
 func can_hit_ground() -> bool:
@@ -120,10 +171,50 @@ func range_text() -> String:
 	return StringUtil.trim_number(attack_range)
 
 
+## What this attack can shoot at, as shown in the UI, e.g. "Ground, Air".
+##
+## Worth a line of its own rather than being left implicit, because the anti-air
+## branch cannot hit ground AT ALL and a player who does not read that before
+## paying for one has bought a tower that never fires. "None" is authoring
+## damage nobody can take, which validate() reports at boot.
+func target_types_text() -> String:
+	# The ground-versus-air flags describe creeps, and a tower is neither, so
+	# an attack aimed at buildings answers the question it was actually asked.
+	if hits_buildings():
+		return "Towers"
+	if can_hit_ground() && can_hit_air():
+		return "Ground, Air"
+	if can_hit_air():
+		return "Air only"
+	if can_hit_ground():
+		return "Ground only"
+	return "None"
+
+
+## Reports an attack that could never fire at anything. Cheap to author by
+## accident - target_types is a flag field and zero is a legal value for it -
+## and completely silent in play, since the tower simply stands there.
+func validate_targets(owner_name: String) -> bool:
+	# Only a creep is ground or air. An attack on buildings passes whatever the
+	# flags say, since nothing reads them on that path.
+	if hits_buildings() || target_types != 0:
+		return true
+	Log.err("Attack can hit neither ground nor air and could never fire", owner_name)
+	return false
+
+
 ## Reports every scene path this attack reaches that does not resolve. Called
 ## at boot by the stats resource that owns the attack.
 func validate(owner_name: String) -> bool:
-	var complete: bool = true
+	var complete: bool = validate_targets(owner_name)
+
+	if windup_seconds > cooldown_seconds():
+		Log.err("Attack windup is longer than the gap between attacks", {
+			"owner": owner_name,
+			"windup": windup_seconds,
+			"cooldown": cooldown_seconds(),
+		})
+		complete = false
 
 	if delivery != null && !delivery.validate(owner_name):
 		complete = false

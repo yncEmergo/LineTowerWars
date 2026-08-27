@@ -6,8 +6,8 @@ extends Button
 ## Clicking it narrows the selection down to that single unit, which is the
 ## standard way to pull one unit out of a group.
 ##
-## A prefab like CommandSlot, because these will grow icons and per-unit health
-## bars rather than staying plain labels.
+## A prefab like CommandSlot, because these will grow per-unit health bars
+## rather than staying plain buttons.
 
 signal unit_clicked(unit: Unit)
 
@@ -27,7 +27,9 @@ func set_unit(new_unit: Unit) -> void:
 	unit = new_unit
 	visible = true
 	disabled = false
-	text = _short_label(new_unit)
+	# The prefab sets expand_icon, without which a Button grows to fit whatever
+	# it is given - see CommandSlot for the same trap.
+	icon = new_unit.stats.icon if new_unit.stats != null else null
 	tooltip_text = _tooltip(new_unit)
 
 
@@ -37,19 +39,8 @@ func clear() -> void:
 	unit = null
 	visible = false
 	disabled = true
-	text = ""
+	icon = null
 	tooltip_text = ""
-
-
-## Initials of the unit's name, until real portraits exist.
-func _short_label(target: Unit) -> String:
-	if target.stats == null:
-		return "?"
-
-	var label: String = ""
-	for word in target.stats.display_name.split(" ", false):
-		label += word.substr(0, 1)
-	return label.to_upper().substr(0, 3)
 
 
 func _tooltip(target: Unit) -> String:

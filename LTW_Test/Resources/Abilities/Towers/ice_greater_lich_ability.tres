@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FrostAttackPassive" format=3 uid="uid://472xd2qmac7m"]
+
+[ext_resource type="Script" uid="uid://dlb0frugo1k6f" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
+[ext_resource type="Texture2D" uid="uid://dc3rtokpjmsan" path="res://2DArt/Icons/greater_lich.png" id="2_greater_lich"]
+
+[resource]
+script = ExtResource("1_FrostAttackPassive")
+slow_per_hit = 0.0635
+slow_cap = 0.36
+slow_seconds = 5.5
+chill_source = "greater_lich"
+ability_id = 139
+display_name = "Frost Blast"
+icon = ExtResource("2_greater_lich")
+targeting = 0
+slot = 11

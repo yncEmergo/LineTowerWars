@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GerminatePassive" format=3 uid="uid://dcgj4meqc1quw"]
+
+[ext_resource type="Script" uid="uid://bqu5b85jwnxfl" path="res://Scripts/Abilities/TowerPassives/GerminatePassive.gd" id="1_GerminatePassive"]
+[ext_resource type="Texture2D" uid="uid://bmuswjpa36ddc" path="res://2DArt/Icons/ultimate_scorpion.png" id="2_ultimate_scorpion"]
+
+[resource]
+script = ExtResource("1_GerminatePassive")
+bonus_per_half_second = 0.2
+max_idle_bonus = 1
+max_crit_chance = 0.75
+mana_per_attack = 5
+idle_guarantees_crit = true
+ability_id = 191
+display_name = "Lethal Strike"
+icon = ExtResource("2_ultimate_scorpion")
+targeting = 0
+slot = 11

@@ -1,0 +1,76 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+
+[sub_resource type="StandardMaterial3D" id="M_body"]
+transparency = 1
+albedo_color = Color(0.58, 0.6, 0.66, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_tip"]
+transparency = 1
+albedo_color = Color(0.44, 0.36, 0.62, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_flame"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.8, 0.62, 1.1, 1)
+
+[sub_resource type="CylinderMesh" id="Body"]
+top_radius = 0.04
+bottom_radius = 0.045
+height = 0.26
+radial_segments = 6
+rings = 0
+material = SubResource("M_body")
+
+[sub_resource type="CylinderMesh" id="Tip"]
+top_radius = 0.0
+bottom_radius = 0.042
+height = 0.11
+radial_segments = 6
+rings = 0
+material = SubResource("M_tip")
+
+[sub_resource type="PrismMesh" id="Fin"]
+size = Vector3(0.09, 0.07, 0.014)
+material = SubResource("M_tip")
+
+[sub_resource type="CylinderMesh" id="Flame"]
+top_radius = 0.0
+bottom_radius = 0.035
+height = 0.16
+radial_segments = 6
+rings = 0
+material = SubResource("M_flame")
+
+[node name="Missile" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Body")
+
+[node name="Tip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0, 1, -0, -1, -0, 0, 0, -0.185)
+cast_shadow = 0
+mesh = SubResource("Tip")
+
+[node name="FinA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0, 0.1)
+cast_shadow = 0
+mesh = SubResource("Fin")
+
+[node name="FinB" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0, 1, -0, -0, -0, -1, -1, -0, 0, 0, 0, 0.1)
+cast_shadow = 0
+mesh = SubResource("Fin")
+
+[node name="Flame" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0, 0.2)
+cast_shadow = 0
+mesh = SubResource("Flame")

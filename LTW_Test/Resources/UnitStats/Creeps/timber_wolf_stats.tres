@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/timber_wolf.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 56
+display_name = "Timber Wolf"
+max_health = 6
+armor_type = 2
+armor = 0
+scene_path = "res://Scenes/Units/Creeps/timber_wolf.tscn"
+move_speed = 1.797
+turn_speed = 8.0
+arrive_threshold = 0.05
+body_radius = 0.16
+bounty = 2

@@ -149,20 +149,20 @@ func _set_range_circles(value: bool) -> void:
 	_range_overlay.show_ranges(_selected_units())
 
 
-## Blinks a red ring on the creep an attack order was just given on.
+## Blinks a red ring on whatever an attack order was just given on.
 ##
-## Parented to the creep, so it walks with it and goes with it. This is the
-## confirmation for an attack the way the move marker is for a move: what was
-## chosen is the TARGET, so pointing at the ground would be answering a
-## different question.
-func _show_attack_marker(creep: Creep) -> void:
-	if creep == null || !is_instance_valid(creep):
+## Parented to the target, so it walks with a creep and stands still on a
+## tower, and goes when it does. This is the confirmation for an attack the way
+## the move marker is for a move: what was chosen is the TARGET, so pointing at
+## the ground would be answering a different question.
+func _show_attack_marker(target: Unit) -> void:
+	if target == null || !is_instance_valid(target):
 		return
 
 	var marker: AttackTargetMarker = AttackTargetMarker.new()
 	marker.name = "AttackTargetMarker"
-	creep.add_child(marker)
-	marker.setup(creep.selection_radius())
+	target.add_child(marker)
+	marker.setup(target.selection_radius())
 
 # --- Placement preview --------------------------------------------------
 
@@ -288,29 +288,30 @@ func _show_order_feedback(
 	ability: UnitAbility, target: AbilityTarget, was_placement: bool
 ) -> void:
 	if ability.targeting == UnitAbility.Targeting.UNIT:
-		_show_attack_marker(target.unit as Creep)
+		_show_attack_marker(target.unit)
 		return
 
 	if target.has_position && !was_placement:
 		_show_move_marker(target.position)
 
 
-## A left click that lands on a creep while something that can attack is
-## selected, which is an attack order rather than a selection.
+## A left click that lands on something the selection could attack, which is an
+## attack order rather than a selection.
 ##
 ## Asked by SelectionController before it selects anything, and it answers
-## whether it took the click. So the same click still selects a creep whenever
-## nothing in the selection could attack it - clicking a creep to read it works
-## exactly as before while the builder, or nothing, is selected.
+## whether it took the click. So the same click still SELECTS whenever nothing
+## in the selection could attack what was clicked - reading a creep with the
+## builder selected works exactly as before, and so does clicking one of your
+## own towers while attacker creeps are out in somebody else's lane.
 func try_attack_click(screen_pos: Vector2) -> bool:
 	if is_armed():
 		return false
 
-	var creep: Creep = _creep_at(screen_pos)
-	if creep == null:
+	var target: Unit = _unit_at(screen_pos)
+	if target == null:
 		return false
 
-	return _order_attack_on(_selected_units(), creep)
+	return _order_attack_on(_selected_units(), target)
 
 ## Right click with nothing armed. Each unit resolves its own default, so a
 ## mixed selection does the right thing per unit rather than one blanket order.
@@ -324,8 +325,8 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 	if units.is_empty():
 		return
 
-	var creep: Creep = _creep_at(screen_pos)
-	if creep != null && _order_attack_on(units, creep):
+	var target_unit: Unit = _unit_at(screen_pos)
+	if target_unit != null && _order_attack_on(units, target_unit):
 		return
 
 	var point: Variant = _ground_point(screen_pos)
@@ -355,19 +356,26 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 		_show_move_marker(target.position)
 
 
-## Hands a clicked creep to everything in the selection that can attack.
+## Hands a clicked unit to everything in the selection that could attack it.
 ##
-## Answers whether anything took the order at all, so a right click on a creep
-## with only the builder selected falls through to a plain move rather than
-## being swallowed - which is what the same click does in any RTS.
-func _order_attack_on(units: Array, creep: Creep) -> bool:
-	var target: AbilityTarget = AbilityTarget.at_unit(creep)
+## Whether a given unit COULD is its attack's question, asked here before the
+## order exists rather than refused after it arrives: a tower can be aimed at a
+## creep and never at a tower, an attacker creep the other way round. So a
+## click that nothing in the selection can act on is not swallowed at all.
+##
+## Answers whether anything took the order, so a right click with only the
+## builder selected falls through to a plain move - which is what the same
+## click does in any RTS.
+func _order_attack_on(units: Array, target_unit: Unit) -> bool:
+	var target: AbilityTarget = AbilityTarget.at_unit(target_unit)
 
 	# Grouped by ability rather than one order per unit: a mixed selection can
 	# resolve to two different attacks, and each group travels as one command.
 	var by_ability: Dictionary = {}
 	for unit in units:
 		if !is_instance_valid(unit) || unit.stats == null:
+			continue
+		if unit.attack_component == null || !unit.attack_component.can_target(target_unit):
 			continue
 		var ability: UnitAbility = unit.stats.attack_ability()
 		if ability == null || !ability.can_execute(unit):
@@ -381,15 +389,16 @@ func _order_attack_on(units: Array, creep: Creep) -> bool:
 
 	var acted: bool = !by_ability.is_empty()
 	if acted:
-		_show_attack_marker(creep)
+		_show_attack_marker(target_unit)
 	return acted
 
-## The creep under a screen point, or null. Only creeps: a right click on a
-## tower is not an order, and there is no friendly fire to aim.
-func _creep_at(screen_pos: Vector2) -> Creep:
+## The unit under a screen point, or null. Any unit: what may be attacked is
+## decided per attacking unit in _order_attack_on, not by narrowing the pick to
+## one type here.
+func _unit_at(screen_pos: Vector2) -> Unit:
 	if _selection_controller == null:
 		return null
-	return _selection_controller.unit_at(screen_pos) as Creep
+	return _selection_controller.unit_at(screen_pos) as Unit
 
 func _default_ability_for(unit: Unit) -> UnitAbility:
 	if unit == null || unit.stats == null:

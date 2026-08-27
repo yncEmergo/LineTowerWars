@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_lesser_defender_to_defender_ability.tres" id="7_upgrade_lesser_defender_to_defender_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_defender.png" id="14_lesser_defender"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("4_ProjectileDelivery")
+projectile_scene_path = "res://Scenes/Effects/magic_bolt.tscn"
+speed = 10
+impact_scene_path = "res://Scenes/Effects/arcane_impact.tscn"
+
+[sub_resource type="Resource" id="Splash"]
+script = ExtResource("6_SplashEffect")
+radius = 0.78
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("3_AttackStats")
+damage_min = 8
+damage_max = 11
+damage_type = 0
+is_aoe_damage = true
+attacks_per_second = 0.833
+attack_range = 6.25
+target_types = 3
+delivery = SubResource("Delivery")
+effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+
+[resource]
+script = ExtResource("1_BuildingStats")
+unit_type_id = 48
+display_name = "Lesser Defender"
+icon = ExtResource("14_lesser_defender")
+max_health = 75
+armor_type = 5
+armor = 3
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_upgrade_lesser_defender_to_defender_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability")])
+scene_path = "res://Scenes/Units/Towers/lesser_defender.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/lesser_defender_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 150
+total_gold_cost = 190

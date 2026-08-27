@@ -1,0 +1,88 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/cutter_plate.tres" id="1_cutter_plate"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/cutter_plate_deep.tres" id="2_cutter_plate_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/cutter_plate_pale.tres" id="3_cutter_plate_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t1.tres" id="4_trim_t1"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_cutter_t1.tres" id="5_energy_cutter_t1"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.2293
+bottom_radius = 0.247
+height = 0.0655
+radial_segments = 6
+rings = 0
+material = ExtResource("2_cutter_plate_deep")
+
+[sub_resource type="TorusMesh" id="TorusMesh_2"]
+inner_radius = 0.2161
+outer_radius = 0.2602
+rings = 14
+ring_segments = 5
+material = ExtResource("4_trim_t1")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.194
+bottom_radius = 0.2293
+height = 0.0936
+radial_segments = 6
+rings = 0
+material = ExtResource("1_cutter_plate")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.0794
+bottom_radius = 0.097
+height = 0.0468
+radial_segments = 6
+rings = 0
+material = ExtResource("3_cutter_plate_pale")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.3528, 0.0131, 0.0706)
+material = ExtResource("3_cutter_plate_pale")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.3704, 0.0056, 0.0265)
+material = ExtResource("5_energy_cutter_t1")
+
+[node name="CutterModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0328, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="BaseTrim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0655, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_2")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1123, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1685, 0)
+
+[node name="Hub" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_4")
+
+[node name="Spinner" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Blade" type="MeshInstance3D" parent="Turret/Spinner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.014, 0)
+mesh = SubResource("BoxMesh_5")
+
+[node name="Edge" type="MeshInstance3D" parent="Turret/Spinner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0225, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_6")
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1764)

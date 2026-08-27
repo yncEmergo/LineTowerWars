@@ -7,8 +7,9 @@ extends Camera3D
 ## player via edge panning, plus a center_on() call used by the
 ## center-on-target function.
 ##
-## The camera is described by a ground focus point, a fixed pitch and a fixed
-## distance. Panning moves the focus point, the transform is derived from it.
+## The camera is described by a ground focus point, a fixed pitch and a
+## distance. Panning moves the focus point, the wheel moves the distance, and
+## the transform is derived from both.
 ##
 ## Its config comes from References, which is where every shared config lives.
 
@@ -30,6 +31,15 @@ var _focus: Vector3 = Vector3.ZERO
 var _focus_bounds: Rect2 = Rect2()
 var _has_bounds: bool = false
 
+## How far back the camera currently sits, and where it is heading. Two
+## values rather than one so a wheel notch eases in instead of snapping, which
+## is the difference between reading as a zoom and reading as a teleport.
+##
+## Never below min_distance() and never past the config's own distance: the
+## authored value IS zoomed all the way out, so a match opens there.
+var _distance: float = 0.0
+var _target_distance: float = 0.0
+
 var _grabbing: bool = false
 ## World point that was under the cursor when the middle drag started. The pan
 ## keeps putting this point back under the cursor, which makes the drag
@@ -42,6 +52,8 @@ func _ready() -> void:
 		Log.err("RTSCamera found no CameraConfig on References, panning is disabled")
 		return
 	fov = _config.field_of_view
+	_distance = _config.distance
+	_target_distance = _distance
 	_apply_transform()
 
 
@@ -59,6 +71,52 @@ func center_on(world_position: Vector3) -> void:
 	_set_focus(world_position)
 
 
+## How far back the camera is right now. Read by anything that has to scale
+## with the zoom rather than assume a fixed view.
+func distance() -> float:
+	return _distance
+
+
+## The closest the wheel may bring the camera in, worked out from how much of a
+## lane the config wants visible at that point.
+##
+## Derived rather than authored so the knob can stay in CELLS, which is the
+## unit a player and a designer both think in - and so a change to the field of
+## view or the window's aspect cannot silently make the closest zoom show a
+## different amount of ground than it was tuned to.
+##
+## The horizontal extent is what is solved for: the camera only pitches around
+## X, so the ground and the view plane stay parallel across the screen's width
+## and the width is a straight frustum calculation. The DEPTH the player sees is
+## foreshortened by the pitch, which is exactly why width is the honest measure.
+func min_distance() -> float:
+	if _config == null:
+		return 1.0
+
+	var cell: float = 1.0
+	var game: GameConfig = References.game_config
+	if game != null:
+		cell = game.cell_size
+
+	var wanted: float = maxf(0.5, _config.min_visible_width_cells) * cell
+	var half_angle: float = tan(deg_to_rad(clampf(fov, 1.0, 179.0) * 0.5))
+	var closest: float = wanted / (2.0 * half_angle * _viewport_aspect())
+	# A config that asks for a closest zoom further out than its own distance is
+	# an authoring mistake rather than a range, so the distance wins and the
+	# wheel simply has nowhere to go.
+	return minf(closest, _config.distance)
+
+
+func _viewport_aspect() -> float:
+	var viewport: Viewport = get_viewport()
+	if viewport == null:
+		return 1.0
+	var size: Vector2 = viewport.get_visible_rect().size
+	if size.x <= 0.0 || size.y <= 0.0:
+		return 1.0
+	return size.x / size.y
+
+
 ## Where a screen point lands on the ground plane at y = 0, or null when the
 ## ray runs parallel to or away from the ground.
 ## Public because ability targeting needs the same projection.
@@ -71,11 +129,18 @@ func ground_point_at(screen_pos: Vector2) -> Variant:
 # --- Middle mouse drag --------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _config == null || !_config.allow_middle_drag_pan:
+	if _config == null:
 		return
 
 	if event is InputEventMouseButton:
 		var button: InputEventMouseButton = event as InputEventMouseButton
+		# Checked before the middle drag, and independently of it, so turning
+		# the drag off in the config does not take the wheel with it.
+		if _handle_zoom(button):
+			get_viewport().set_input_as_handled()
+			return
+		if !_config.allow_middle_drag_pan:
+			return
 		if button.button_index != MOUSE_BUTTON_MIDDLE:
 			return
 		if button.pressed:
@@ -86,6 +151,28 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	elif event is InputEventMouseMotion && _grabbing:
 		_update_grab((event as InputEventMouseMotion).position)
+
+
+## Answers whether this button event was a zoom, so the caller knows to stop.
+##
+## Only the press half is acted on: a wheel notch arrives as a press and a
+## release, and treating both would double every step.
+func _handle_zoom(button: InputEventMouseButton) -> bool:
+	if !_config.allow_zoom || !button.pressed:
+		return false
+
+	var step: float = clampf(_config.zoom_step, 0.5, 0.99)
+	if button.button_index == MOUSE_BUTTON_WHEEL_UP:
+		_set_target_distance(_target_distance * step)
+		return true
+	if button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		_set_target_distance(_target_distance / step)
+		return true
+	return false
+
+
+func _set_target_distance(value: float) -> void:
+	_target_distance = clampf(value, min_distance(), _config.distance)
 
 
 func _begin_grab(screen_pos: Vector2) -> void:
@@ -116,6 +203,49 @@ func _process(delta: float) -> void:
 	var pan: Vector2 = _read_pan_input()
 	if pan != Vector2.ZERO:
 		_set_focus(_focus + Vector3(pan.x, 0.0, pan.y) * _config.pan_speed * delta)
+	_advance_zoom(delta)
+
+
+## Eases the camera towards the zoom the wheel asked for.
+##
+## The cursor anchoring is re-done every frame rather than once per notch,
+## because the distance is still moving in between: anchoring only at the
+## moment of the click would let the point under the cursor drift for the rest
+## of the ease, which is the exact thing the anchoring exists to prevent.
+func _advance_zoom(delta: float) -> void:
+	if is_equal_approx(_distance, _target_distance):
+		return
+
+	var anchor: Variant = null
+	if _config.zoom_to_cursor:
+		anchor = ground_point_at(_cursor_position())
+
+	if _config.zoom_smoothing <= 0.0:
+		_distance = _target_distance
+	else:
+		_distance = lerpf(_distance, _target_distance,
+			clampf(_config.zoom_smoothing * delta, 0.0, 1.0))
+		# Snap the last sliver, or the lerp approaches forever and this runs
+		# every frame for the rest of the match.
+		if absf(_distance - _target_distance) < 0.001:
+			_distance = _target_distance
+	_apply_transform()
+
+	if anchor == null:
+		return
+	# Moving the camera by D shifts every ground intersection by D, so putting
+	# the anchored point back under the cursor is one subtraction - the same
+	# trick the middle drag uses.
+	var landed: Variant = ground_point_at(_cursor_position())
+	if landed != null:
+		_set_focus(_focus + (anchor as Vector3) - (landed as Vector3))
+
+
+func _cursor_position() -> Vector2:
+	var viewport: Viewport = get_viewport()
+	if viewport == null:
+		return Vector2.ZERO
+	return viewport.get_mouse_position()
 
 
 func _read_pan_input() -> Vector2:
@@ -192,4 +322,4 @@ func _apply_transform() -> void:
 	rotation_degrees = Vector3(_config.pitch_degrees, 0.0, 0.0)
 	# Pull the camera back along its own view direction from the focus point.
 	var forward: Vector3 = -transform.basis.z
-	global_position = _focus - forward * _config.distance
+	global_position = _focus - forward * _distance

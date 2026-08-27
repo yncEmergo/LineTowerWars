@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Effects/ImpactBurst.gd" id="1_ImpactBurst"]
+
+[sub_resource type="StandardMaterial3D" id="M_ring"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.72, 0.34, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="M_inner"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.88, 0.62, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="M_dust"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.72, 0.62, 0.48, 0.85)
+
+[sub_resource type="TorusMesh" id="Ring"]
+inner_radius = 0.86
+outer_radius = 1.0
+rings = 40
+ring_segments = 5
+material = SubResource("M_ring")
+
+[sub_resource type="TorusMesh" id="Inner"]
+inner_radius = 0.30
+outer_radius = 0.62
+rings = 32
+ring_segments = 5
+material = SubResource("M_inner")
+
+[sub_resource type="SphereMesh" id="Dust"]
+radius = 0.16
+height = 0.2
+radial_segments = 6
+rings = 3
+material = SubResource("M_dust")
+
+[node name="Shockwave" type="Node3D"]
+script = ExtResource("1_ImpactBurst")
+duration = 0.5
+start_scale = 0.12
+end_scale = 1.0
+grow_share = 0.26
+scale_curve = 0.75
+
+[node name="Ring" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+cast_shadow = 0
+mesh = SubResource("Ring")
+
+[node name="Inner" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+cast_shadow = 0
+mesh = SubResource("Inner")
+
+[node name="Dust1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.12, 0.24)
+cast_shadow = 0
+mesh = SubResource("Dust")
+
+[node name="Dust2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.12, 0.44)
+cast_shadow = 0
+mesh = SubResource("Dust")
+
+[node name="Dust3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.12, -0.66)
+cast_shadow = 0
+mesh = SubResource("Dust")
+
+[node name="Dust4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.12, -0.44)
+cast_shadow = 0
+mesh = SubResource("Dust")

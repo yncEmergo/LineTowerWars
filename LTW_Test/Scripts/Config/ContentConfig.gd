@@ -29,6 +29,11 @@ extends Resource
 ## spawn by unit_type_id, so a type missing from here is a unit that spawns on
 ## the server and appears on nobody.
 @export_dir var unit_stats_folder: String = "res://Resources/UnitStats"
+## Every technology in the build, searched the same way. A technology sits on
+## nobody's card and is reachable from nothing, so unlike an ability there is
+## no walk that could ever find one - this folder is the only way they are
+## found at all.
+@export_dir var tech_folder: String = "res://Resources/Tech"
 
 
 ## Reports every folder that does not resolve. Called at boot alongside the
@@ -38,6 +43,7 @@ func validate() -> bool:
 	var complete: bool = true
 	complete = _validate_folder(abilities_folder, "abilities_folder") && complete
 	complete = _validate_folder(unit_stats_folder, "unit_stats_folder") && complete
+	complete = _validate_folder(tech_folder, "tech_folder") && complete
 	return complete
 
 

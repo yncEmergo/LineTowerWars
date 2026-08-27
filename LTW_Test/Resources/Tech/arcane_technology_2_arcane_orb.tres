@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 24
+element = 0
+kind = 2
+display_name = "Arcane Technology (2): Arcane Orb"
+description = "Unlocks the Lesser and Greater Arcane Orb."
+slot = 23
+ultimate_name = "Ultimate Arcane Orb"
+ultimate_cross_tech_id = 12

@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="StopAbility" format=3 uid="uid://bo2r4bfsi2pd0"]
 
 [ext_resource type="Script" uid="uid://cbw1bh5rqxsy7" path="res://Scripts/Abilities/StopAbility.gd" id="1_stop"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_stop.png" id="2_ability_stop"]
 
 [resource]
 script = ExtResource("1_stop")
@@ -8,3 +9,4 @@ ability_id = 2
 display_name = "Stop"
 description = "Cancel the current order."
 slot = 1
+icon = ExtResource("2_ability_stop")

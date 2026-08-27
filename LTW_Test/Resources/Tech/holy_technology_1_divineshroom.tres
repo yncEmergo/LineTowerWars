@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 20
+element = 3
+kind = 1
+display_name = "Holy Technology (1): Divineshroom"
+description = "Unlocks the Lesser and Greater Divineshroom."
+slot = 19
+ultimate_name = "Ultimate Divineshroom"
+ultimate_cross_tech_id = 30

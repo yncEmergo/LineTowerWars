@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LightBurstPassive" format=3 uid="uid://b087l06nhuvna"]
+
+[ext_resource type="Script" uid="uid://rc0r1uwdx72r" path="res://Scripts/Abilities/TowerPassives/LightBurstPassive.gd" id="1_LightBurstPassive"]
+[ext_resource type="Texture2D" uid="uid://bpqupmsxvako3" path="res://2DArt/Icons/ultimate_divineshroom.png" id="2_ultimate_divineshroom"]
+
+[resource]
+script = ExtResource("1_LightBurstPassive")
+slow_per_hit = 0.06
+slow_cap = 0.66
+chill_source = "ultimate_divineshroom"
+armor_per_hit = 0.25
+tower_heal_share = 0.1
+ability_id = 156
+display_name = "Divine Spores"
+icon = ExtResource("2_ultimate_divineshroom")
+targeting = 0
+slot = 11

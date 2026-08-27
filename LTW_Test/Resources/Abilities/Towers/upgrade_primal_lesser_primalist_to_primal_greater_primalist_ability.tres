@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://b7js8vrqgu42m"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://budho5rsq0b3e" path="res://Resources/UnitStats/Towers/primal_greater_primalist_stats.tres" id="2_primal_greater_primalist_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_primal_greater_primalist_stats")
+required_tech_id = 29
+ability_id = 283
+display_name = "Upgrade to Greater Primalist"
+description = "GENERATES GOLD on every attack, less for every other Primalist standing near it."
+slot = 0

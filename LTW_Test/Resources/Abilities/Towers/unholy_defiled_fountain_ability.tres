@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CorruptionPassive" format=3 uid="uid://fo1ras45u2y"]
+
+[ext_resource type="Script" uid="uid://7mujbbod28lw" path="res://Scripts/Abilities/TowerPassives/CorruptionPassive.gd" id="1_CorruptionPassive"]
+[ext_resource type="Texture2D" uid="uid://bag1q80snp85y" path="res://2DArt/Icons/defiled_fountain.png" id="2_defiled_fountain"]
+
+[resource]
+script = ExtResource("1_CorruptionPassive")
+explosion_damage = 76
+ability_id = 169
+display_name = "Corruption"
+icon = ExtResource("2_defiled_fountain")
+targeting = 0
+slot = 11

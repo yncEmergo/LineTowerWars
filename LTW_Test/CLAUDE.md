@@ -95,18 +95,29 @@
       gameplay-relevant happens on a render frame. Paired with
       physics/common/physics_interpolation for smooth rendering between ticks.
       See multiplayer.md
-- A resource NEVER holds a PackedScene. It names the scene by res:// path
+- A resource REFERENCES a scene BY res:// PATH, never by holding a PackedScene
   - `@export_file("*.tscn") var thing_scene_path: String`, loaded on first use
     and cached on the resource
-  - a PackedScene inside a .tres is a hard load-time dependency: Godot aborts the
-    WHOLE resource when one ext_resource is missing, so a deleted prefab silently
-    nulls every property of the file that referenced it, and of anything holding
-    that file. Cost us a whole debugging session once
-  - a path fails loudly, on its own, at the point of use, and makes a reference
-    cycle impossible - which is what lets a stats resource name its own prefab
-    while that prefab points back at the stats through its own @export
-  - the editor does NOT rewrite a path string when a scene moves or is renamed,
-    so every declared path is checked once at boot by Main._validate_content
+  - **this is a PERFORMANCE rule.** A PackedScene inside a .tres is a hard
+    load-time dependency, so loading the resource loads the scene, and
+    everything that scene reaches, whether or not any of it is ever used.
+    Touching one tower's stats to read its gold cost would pull its prefab, its
+    model, its meshes and its materials into memory. A path costs nothing until
+    something actually spawns from it
+  - it is also what makes a reference CYCLE impossible, which is what lets a
+    stats resource name its own prefab while that prefab points back at the
+    stats through its own @export
+  - and a missing scene then fails loudly, on its own, at the point of use,
+    rather than taking its whole .tres down with it - Godot aborts the WHOLE
+    resource when one ext_resource is missing, so a deleted prefab would
+    silently null every property of the file that referenced it
+  - the cost is that the editor does NOT rewrite a path string when a scene
+    moves or is renamed, so every declared path is checked once at boot by
+    Main._validate_content
+  - a path is HARDER TO FOLLOW in the inspector than a resource slot, since it
+    draws as a text field. Where that matters, surface it: see
+    AttackComponent, which shows a tower's projectile and impact scenes as
+    read-only slots you can click
   - NODES keep plain PackedScene @exports: their scenes are their own assets,
     wired in the same .tscn, and the editor does keep those references up to date
 - A stats resource is the authority on the thing it describes, and names its own prefab
@@ -196,6 +207,10 @@
 - The MCP tools can drive the running game, with limits worth knowing up front
   - clicking works, and command card slots can be clicked by their rect from
     get_ui_elements, which is steadier than hoping a hotkey lands
+    - send an input_mouse MOTION to the rect BEFORE the press. Without it the
+      first press on a button can fall straight through to the world - the
+      click selects a unit instead, which reads exactly like a dead button.
+      Cost a round of second-guessing the Research Center's footer buttons
   - a key press and its release are separate calls seconds apart, so any ability
     with repeat_on_hold fires dozens of times. Expect that, or do not use keys
   - tens of seconds of game time pass between two calls. Nothing that lasts under
@@ -257,8 +272,37 @@ art at all so far - so this is the placement rule, not a description of the tree
 - /Resources/ contains all resources, split by kind: Config, UnitStats,
   Abilities, Materials, Shaders, UI
 - /2DArt/ contains all textures
+  - /2DArt/Icons/ is GENERATED placeholder art: one render per unit type, baked
+    from that unit's own model. Do not hand-edit one, it is overwritten
+  - /2DArt/UI/Icons/ is the HUD's own glyphs, flat white silhouettes so that
+    CommandSlot can tint them. stat_* was drawn by hand; ability_* is generated
+    by Tools/IconGen and is overwritten the same way
 - /3DArt/ contains all meshes
 - /Audio/ contains all sound files
+- /Tools/ is BUILD TIME TOOLING and is not part of the game. Nothing at
+  runtime may reach into it, and a `.gdignore` keeps Godot's filesystem out
+  - Tools/ModelGen generates the placeholder art: the tower models, the
+    materials they share, their projectiles, and the .tres content pointing at
+    all of it. Its output is checked in and is ordinary hand-editable Godot, so
+    editing a generated file is fine - the next run just overwrites it
+  - it is where the tower visual language actually lives as code. If a tier
+    rule or a palette changes, change it there and re-run rather than editing
+    thirty scenes. Tools/ModelGen/README.md has the layers and how to run it
+  - **before building placeholder visuals for a new roster - the elemental
+    towers, the creeps - read Tools/ModelGen/PLACEHOLDER_ART.md.** It is the
+    design philosophy the tower roster was built to, the contracts a model has
+    to meet, how to verify the result, and the traps that have already been
+    paid for. It is the file that stops the next roster looking like a
+    different game
+  - it is deliberately NOT Scripts/Dev: that folder is scaffolding to delete,
+    this is a tool to keep
+  - Tools/IconGen is the second tool, and draws the command card ACTION icons -
+    Move, Stop, Attack, Sell, Build, Cancel - into 2DArt/UI/Icons. Same shape as
+    ModelGen: stdlib Python, run from the project root, output checked in.
+    Tools/IconGen/README.md has the style rules a new glyph has to meet
+  - an ability that ModelGen owns takes its icon through action_icon_path() in
+    element_content.py or tower_content.py. Wiring one by hand into the .tres
+    instead is silently thrown away by the next ModelGen run
 - A UI element that will gain behaviour later - a command slot, an ability
   button - is a prefab scene, never a node built in code
 
@@ -307,6 +351,19 @@ art at all so far - so this is the placement rule, not a description of the tree
     survives, the READING does not
   - the exception is something NOT YET IMPLEMENTED. A .md is the only place that
     can live, and it is exactly what a .md is for
+- NEVER write a HOTKEY or a CARD SLOT into a .md file. Not which letter an
+  ability answers to, not which square it claims, not the rows of letters
+  themselves. The .tres is the single source of truth for both, and a .md
+  naming one is a contradiction waiting to happen the next time a card is
+  relaid out
+  - the RULE survives and is worth writing: that the key is read off the
+    POSITION, that a passive never takes a square worth pressing, that the
+    Cancels share one square wherever you are. The POSITION does not
+  - "the same square on every card" is durable. "the bottom left square" is a
+    reading of today's .tres and goes stale silently
+  - this covers generated content too: where ModelGen writes the slot, THAT
+    line is the authority and a hand edit to its output is overwritten on the
+    next run. Change the generator
 
 # Known weaknesses
 Real, none blocking. Recorded so they are not rediscovered as surprises.
@@ -314,15 +371,55 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   PlayerArea.gd by a lot. Intended fix for it: extract the grid half - occupancy,
   cell maths, flow field - into an AreaGrid it owns. Touches Building, Builder,
   BuildGrid, CommandController. Not started
+- Building.gd, Creep.gd and Combat/StatusEffects.gd are over that ceiling too,
+  and all three for the same reason: they gained the elemental roster's
+  machinery. Building took mana, StatusEffects is a wall of small questions
+  about one creep, and Creep grew the four calls that reach it. Intended fix for
+  Building: a TowerMana object it owns, the way it already owns ability_state.
+  StatusEffects is a bad candidate for splitting - the whole point of it is that
+  a caller asks one object everything
 - Three naive linear scans over an area's creeps: creep separation, TargetFinder,
   and Creep._refresh_aura. One spatial hash fixes all three
 - Replication sends the whole world every tick, every unit in it. Fine for a
   1v1 on a LAN, nowhere near 12 players. That is multiplayer.md
   3.3, deliberately deferred until there was something to measure
+  - a unit record grew by two floats when towers gained mana, so the same is
+    now true of a little more of it
+- A client is NOT told what status effects are on a creep. It sees the creep
+  where the server puts it, which is most of what a slow or a stun looks like,
+  but a creep's armour on a client's panel is its own rather than what has been
+  eaten out of it. Cheap to fix by sending the delta; not worth a wire field
+  until somebody notices
+- Godot's gl_compatibility renderer, which this project uses, silently drops
+  two things that look like clean one-liners: PER-INSTANCE SHADER UNIFORMS and
+  GeometryInstance3D.transparency. Neither errors, both simply do nothing. That
+  is why a tower's tier is baked into one material per tier rather than
+  overridden per tower, and why an effect's opacity duplicates its materials
+- The editor does NOT reload a script whose BASE CLASS changed. Its property
+  disappears from the inspector and a filesystem scan does not help - only
+  restarting the editor does. Different from the stale-signature trap below,
+  and headless is the honest answer in both cases
 - Two traps not covered by the rules above: SelectionController._select_in_rect
   must FALL THROUGH when the box caught neither a commandable unit nor a creep,
   or an empty box stops clearing the selection; and AttackRangeOverlay.MAX_CIRCLES
   must match the const in Resources/Shaders/attack_range.gdshader
+- An upgrade chain is a CHAIN OF ext_resources: a tower's stats name the upgrade
+  ability above them, which names the next tower's stats, all the way to the
+  Ultimate. So loading the 10g tower of a line pulls that whole line into
+  memory, and one broken .tres in the middle takes every tower BELOW it down
+  with it - the load-time dependency trap the PackedScene rule already warns
+  about, reached the long way round. It is why prefabs and models are still
+  named by PATH from those files, which is what keeps the blast radius to the
+  stats and not the scenes. Main._validate_content walks the chain at boot
 
 # Look & setting
-- To be decided
+- Broadly to be decided, with one part settled: the TOWER roster has a visual
+  language, written down under Presentation in game_rules.md. It is a rule
+  rather than a description of the current primitives, so it survives real art
+  replacing them
+  - the short version: shape and material say which LINE, one silhouette change
+    says which BRANCH, and six cumulative rules on the price tier say which
+    TIER. Basic towers carry no colour of their own, because the ten elements
+    each need one
+- Everything else - setting, period, palette beyond that constraint, whether
+  any of this is grounded or fantastical - is still open

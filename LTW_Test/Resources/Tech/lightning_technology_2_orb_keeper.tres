@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechDefinition" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Tech/TechDefinition.gd" id="1_tech"]
+
+[resource]
+script = ExtResource("1_tech")
+tech_id = 15
+element = 5
+kind = 2
+display_name = "Lightning Technology (2): Orb Keeper"
+description = "Unlocks the Lesser and Greater Orb Keeper."
+slot = 14
+ultimate_name = "Ultimate Orb Keeper"
+ultimate_cross_tech_id = 21

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TemporalRiftPassive" format=3 uid="uid://bso1hp0dwvnvl"]
+
+[ext_resource type="Script" uid="uid://dre6enavaorsh" path="res://Scripts/Abilities/TowerPassives/TemporalRiftPassive.gd" id="1_TemporalRiftPassive"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_yhtev"]
+[ext_resource type="Texture2D" uid="uid://cp7ucd0n4y85f" path="res://2DArt/Icons/greater_harbinger.png" id="2_greater_harbinger"]
+
+[resource]
+script = ExtResource("1_TemporalRiftPassive")
+delay_seconds = 3.2
+health_share = 0.03
+flat_damage = 800
+ability_id = 163
+display_name = "Temporal Rift"
+icon = ExtResource("2_greater_harbinger")
+targeting = 0
+slot = 11

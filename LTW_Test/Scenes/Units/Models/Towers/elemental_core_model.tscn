@@ -1,0 +1,92 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/core_stone.tres" id="1_core_stone"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/core_stone_deep.tres" id="2_core_stone_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/core_stone_pale.tres" id="3_core_stone_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t1.tres" id="4_trim_t1"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_core_t0.tres" id="5_energy_core_t0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="8_SpinAnimation3D"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.323
+bottom_radius = 0.342
+height = 0.052
+radial_segments = 8
+rings = 0
+material = ExtResource("2_core_stone_deep")
+
+[sub_resource type="TorusMesh" id="TorusMesh_2"]
+inner_radius = 0.3087
+outer_radius = 0.3562
+rings = 14
+ring_segments = 5
+material = ExtResource("4_trim_t1")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.285
+bottom_radius = 0.304
+height = 0.052
+radial_segments = 8
+rings = 0
+material = ExtResource("1_core_stone")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.285, 0.0104, 0.0475)
+material = ExtResource("5_energy_core_t0")
+
+[sub_resource type="SphereMesh" id="SphereMesh_5"]
+radius = 0.057
+height = 0.0312
+radial_segments = 6
+rings = 2
+material = ExtResource("5_energy_core_t0")
+
+[node name="ElementalCoreModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="BaseTrim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.052, 0)
+cast_shadow = 0
+mesh = SubResource("TorusMesh_2")
+
+[node name="Slab" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.078, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.104, 0)
+
+[node name="Rune" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="RuneA" type="MeshInstance3D" parent="Turret/Rune"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0104, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_4")
+
+[node name="RuneB" type="MeshInstance3D" parent="Turret/Rune"]
+transform = Transform3D(-0, 0, 1, 0, 1, 0, -1, -0, -0, 0, 0.0104, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_4")
+
+[node name="RuneCore" type="MeshInstance3D" parent="Turret/Rune"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0156, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_5")
+
+[node name="RuneSpin" type="Node" parent="Turret/Rune" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("8_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 0.12
+axis = Vector3(0, 1, 0)
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0312, -0.133)

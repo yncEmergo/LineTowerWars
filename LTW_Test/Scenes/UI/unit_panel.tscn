@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://b4d3k3tiub15y" path="res://Scripts/UI/UnitPanel.gd" id="1_unit_panel"]
 [ext_resource type="PackedScene" uid="uid://bvruv5vhclx66" path="res://Scenes/UI/command_slot.tscn" id="2_command_slot"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/unit_tile.tscn" id="3_unit_tile"]
+[ext_resource type="Script" path="res://Scripts/UI/UnitPortrait.gd" id="9_portrait"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="10_cancel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
 content_margin_left = 16.0
@@ -30,7 +32,14 @@ border_color = Color(0.29, 0.31, 0.38, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 
-[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_damage_label", "_armor_label", "_attack_label", "_command_grid", "_selection_grid")]
+[sub_resource type="Environment" id="Env_portrait"]
+background_mode = 1
+background_color = Color(0, 0, 0, 0)
+ambient_light_source = 2
+ambient_light_color = Color(0.66, 0.69, 0.75, 1)
+ambient_light_energy = 1.15
+
+[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_mana_label", "_damage_label", "_armor_label", "_attack_label", "_command_grid", "_selection_grid", "_portrait")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -41,11 +50,14 @@ mouse_filter = 2
 script = ExtResource("1_unit_panel")
 _name_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/NameLabel")
 _health_label = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/HealthLabel")
+_mana_label = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/ManaLabel")
 _damage_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/DamageLabel")
 _armor_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/ArmorLabel")
 _attack_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/AttackLabel")
 _command_grid = NodePath("Layout/CommandPanel/CommandGrid")
 _selection_grid = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/SelectionGrid")
+_portrait = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/Portrait")
+_cancel_ability = ExtResource("10_cancel")
 _command_slot_scene = ExtResource("2_command_slot")
 _unit_tile_scene = ExtResource("3_unit_tile")
 
@@ -77,15 +89,50 @@ theme_override_constants/separation = 18
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Portrait" type="Panel" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=2116016378]
+[node name="Portrait" type="SubViewportContainer" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=2116016378 node_paths=PackedStringArray("_stage", "_camera")]
 custom_minimum_size = Vector2(104, 104)
 layout_mode = 2
+stretch = true
+script = ExtResource("9_portrait")
+_stage = NodePath("View/Stage")
+_camera = NodePath("View/Camera3D")
+
+[node name="View" type="SubViewport" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait"]
+transparent_bg = true
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(104, 104)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
+
+[node name="Stage" type="Node3D" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
+
+[node name="Sun" type="DirectionalLight3D" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
+transform = Transform3D(0.8253, -0.4593, 0.3284, 0, 0.5817, 0.8134, -0.5646, -0.6713, 0.4801, 0, 4, 0)
+light_energy = 1.75
+
+[node name="Fill" type="DirectionalLight3D" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
+transform = Transform3D(-0.9668, 0.1225, -0.2243, 0, 0.8776, 0.4794, 0.2555, 0.4635, -0.8484, 0, 4, 0)
+light_energy = 0.5
+light_color = Color(0.68, 0.75, 0.92, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
+environment = SubResource("Env_portrait")
 
 [node name="HealthLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=1730412266]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.44, 0.89, 0.46, 1)
 theme_override_font_sizes/font_size = 18
 text = "100 / 100"
+horizontal_alignment = 1
+
+[node name="ManaLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn"]
+layout_mode = 2
+visible = false
+theme_override_colors/font_color = Color(0.42, 0.68, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "0 / 0"
 horizontal_alignment = 1
 
 [node name="InfoColumn" type="VBoxContainer" parent="Layout/InfoPanel/InfoRow" unique_id=1093665997]

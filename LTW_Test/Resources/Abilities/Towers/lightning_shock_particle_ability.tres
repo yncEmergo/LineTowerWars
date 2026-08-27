@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="OverchargePassive" format=3 uid="uid://dk1g5wmdwosxh"]
+
+[ext_resource type="Script" uid="uid://djyawh55g65mb" path="res://Scripts/Abilities/TowerPassives/OverchargePassive.gd" id="1_OverchargePassive"]
+[ext_resource type="Texture2D" uid="uid://cpws1hi4vp0bt" path="res://2DArt/Icons/shock_particle.png" id="2_shock_particle"]
+
+[resource]
+script = ExtResource("1_OverchargePassive")
+ability_id = 144
+display_name = "Overcharge"
+icon = ExtResource("2_shock_particle")
+targeting = 0
+slot = 11

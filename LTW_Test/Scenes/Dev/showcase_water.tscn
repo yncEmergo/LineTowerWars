@@ -1,0 +1,74 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_splasher_model.tscn" id="1_water_splasher_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_tidecaller_model.tscn" id="2_water_tidecaller_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_lesser_hurricane_elemental_model.tscn" id="3_water_lesser_hurricane_elemental_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_greater_hurricane_elemental_model.tscn" id="4_water_greater_hurricane_elemental_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_ultimate_hurricane_elemental_model.tscn" id="5_water_ultimate_hurricane_elemental_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_lesser_sludge_monstrosity_model.tscn" id="6_water_lesser_sludge_monstrosity_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_greater_sludge_monstrosity_model.tscn" id="7_water_greater_sludge_monstrosity_model"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/water_ultimate_sludge_monstrosity_model.tscn" id="8_water_ultimate_sludge_monstrosity_model"]
+
+[sub_resource type="StandardMaterial3D" id="M_ground"]
+albedo_color = Color(0.3, 0.33, 0.3, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Ground"]
+size = Vector2(30, 20)
+material = SubResource("M_ground")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.09, 0.10, 0.12, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.48, 0.58, 1)
+ambient_light_energy = 0.7
+
+[node name="TowerShowcase" type="Node3D"]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
+mesh = SubResource("Ground")
+
+[node name="WaterSplasher" parent="." instance=ExtResource("1_water_splasher_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, -1.9)
+
+[node name="WaterTidecaller" parent="." instance=ExtResource("2_water_tidecaller_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, -1.9)
+
+[node name="WaterLesserHurricaneElemental" parent="." instance=ExtResource("3_water_lesser_hurricane_elemental_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, 0)
+
+[node name="WaterGreaterHurricaneElemental" parent="." instance=ExtResource("4_water_greater_hurricane_elemental_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, 0)
+
+[node name="WaterUltimateHurricaneElemental" parent="." instance=ExtResource("5_water_ultimate_hurricane_elemental_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, 0)
+
+[node name="WaterLesserSludgeMonstrosity" parent="." instance=ExtResource("6_water_lesser_sludge_monstrosity_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, -1.5, 0, 1.9)
+
+[node name="WaterGreaterSludgeMonstrosity" parent="." instance=ExtResource("7_water_greater_sludge_monstrosity_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 0, 0, 1.9)
+
+[node name="WaterUltimateSludgeMonstrosity" parent="." instance=ExtResource("8_water_ultimate_sludge_monstrosity_model")]
+transform = Transform3D(-0.3421, 0, 0.9396, 0, 1, 0, -0.9396, -0, -0.3421, 1.5, 0, 1.9)
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8253, -0.4593, 0.3284, 0, 0.5817, 0.8134, -0.5646, -0.6713, 0.4801, 0, 6, 0)
+light_energy = 1.35
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.9668, 0.1225, -0.2243, 0, 0.8776, 0.4794, 0.2555, 0.4635, -0.8484, 0, 6, 0)
+light_energy = 0.45
+light_color = Color(0.6, 0.7, 0.9, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8577, 0.5141, 0, -0.5141, 0.8577, 0, 3.6, 5.4)
+current = true
+fov = 46
+near = 0.05

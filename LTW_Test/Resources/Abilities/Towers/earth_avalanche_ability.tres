@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ShatterArmorPassive" format=3 uid="uid://dfpwuwif0kia1"]
+
+[ext_resource type="Script" uid="uid://tl1cs54i54v6" path="res://Scripts/Abilities/TowerPassives/ShatterArmorPassive.gd" id="1_ShatterArmorPassive"]
+[ext_resource type="Texture2D" uid="uid://btm1qwatvbu6a" path="res://2DArt/Icons/avalanche.png" id="2_avalanche"]
+
+[resource]
+script = ExtResource("1_ShatterArmorPassive")
+armor_floor = 0
+ability_id = 185
+display_name = "Shatter Armor"
+icon = ExtResource("2_avalanche")
+targeting = 0
+slot = 11

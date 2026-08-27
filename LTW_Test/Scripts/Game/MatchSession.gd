@@ -14,6 +14,16 @@ extends Node
 
 ## Emitted once the setup is in place, before anything is built from it.
 signal match_began(setup: MatchSetup)
+## One unit became another and is the SAME unit as far as the player is
+## concerned: a tower that finished an upgrade. Presentation listens so a
+## selection and a control group follow the tower across the swap rather than
+## quietly emptying.
+##
+## A signal rather than a call into the selection, because the two machines
+## reach it from different directions - the authority from the upgrade itself,
+## a client from the snapshot noticing the type changed - and neither should
+## have to know what is listening.
+signal unit_replaced(old_unit: Unit, new_unit: Unit)
 
 ## Ids count from 1 so 0 can mean "no unit" without ambiguity.
 const NO_UNIT: int = 0
@@ -27,6 +37,7 @@ var _rng: RandomNumberGenerator = null
 var _start_frame: int = 0
 var _abilities: AbilityRegistry = AbilityRegistry.new()
 var _unit_types: UnitTypeRegistry = UnitTypeRegistry.new()
+var _techs: TechRegistry = TechRegistry.new()
 var _units: Dictionary = {}
 var _next_unit_id: int = 1
 
@@ -118,6 +129,18 @@ func tick() -> int:
 	return Engine.get_physics_frames() - _start_frame
 
 
+## Seconds this match has been running, which is what a creep unlock is timed
+## against (unit_data.md 6.1).
+##
+## Derived from the tick rather than kept as a second clock of its own, so
+## there is nothing that could ever drift from it. On a client it is this
+## machine's own count and so is approximate by however long the match took to
+## start here - fine for greying out a button, and the server refuses a send
+## that arrives too early whatever the button showed.
+func elapsed_seconds() -> float:
+	return float(tick()) * tick_seconds()
+
+
 ## Seconds per simulation tick, read from the engine rather than duplicated, so
 ## there is exactly one place the rate is set.
 static func tick_seconds() -> float:
@@ -134,6 +157,12 @@ func abilities() -> AbilityRegistry:
 ## from the same ContentConfig.
 func unit_types() -> UnitTypeRegistry:
 	return _unit_types
+
+
+## Every technology a Research Center press can name, by id. Built by Main
+## alongside the other two registries, from the folder ContentConfig names.
+func techs() -> TechRegistry:
+	return _techs
 
 
 ## Whether THIS machine decides what happens, as opposed to being told.
@@ -201,6 +230,21 @@ func unit_for(id: int) -> Unit:
 		_units.erase(id)
 		return null
 	return unit
+
+
+## Hands an id from one node to another and tells the world they are the same
+## unit. Called on the authority the moment an upgrade completes, and on a
+## client the moment replication notices the id changed type.
+##
+## The OLD unit must already be out of the tree, so its _exit_tree has given
+## the id back - claiming it again is what makes the new node answer to the
+## name both machines already use, and is why an upgrade costs no wire format
+## change at all.
+func replace_unit(old_unit: Unit, new_unit: Unit) -> void:
+	if old_unit == null || new_unit == null:
+		Log.err("MatchSession was asked to replace a unit with nothing")
+		return
+	unit_replaced.emit(old_unit, new_unit)
 
 
 func unit_count() -> int:

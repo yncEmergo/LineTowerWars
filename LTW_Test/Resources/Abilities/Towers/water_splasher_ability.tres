@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CrushingWavePassive" format=3 uid="uid://dx118nwm1npfb"]
+
+[ext_resource type="Script" uid="uid://1xqi1ewwh7bk" path="res://Scripts/Abilities/TowerPassives/CrushingWavePassive.gd" id="1_CrushingWavePassive"]
+[ext_resource type="Texture2D" uid="uid://cfyoi7dqnmfmg" path="res://2DArt/Icons/splasher.png" id="2_splasher"]
+
+[resource]
+script = ExtResource("1_CrushingWavePassive")
+ability_id = 176
+display_name = "Crushing Wave"
+icon = ExtResource("2_splasher")
+targeting = 0
+slot = 11

@@ -17,11 +17,21 @@ enum Mode {
 	PREVIEW,
 }
 
+## Every animation component a model can carry. Listed rather than duck typed,
+## for the same reason UnitStats.card_abilities() is: a new kind of motion has
+## to say it is one, or it silently keeps playing through a construction.
+const ANIMATION_SCRIPTS: Array[StringName] = [
+	&"SpinAnimation3D", &"BobAnimation3D",
+]
+
 const PREVIEW_VALID_COLOR: Color = Color(0.30, 0.90, 0.40, 0.45)
 const PREVIEW_INVALID_COLOR: Color = Color(0.90, 0.28, 0.28, 0.45)
 
 var _mode: Mode = Mode.BUILT
 var _preview_valid: bool = true
+## Whether the model's own motion runs. Off while it is being assembled.
+var _animated: bool = true
+var _animations: Array[Node] = []
 var _meshes: Array[MeshInstance3D] = []
 ## Each mesh's authored shadow setting, so leaving preview mode restores what
 ## the scene asked for instead of switching everything on. The foundation quad
@@ -36,7 +46,42 @@ var _preview_material: StandardMaterial3D
 
 func _ready() -> void:
 	_collect_meshes(self)
+	_collect_animations(self)
 	_apply_mode()
+	_apply_animation()
+
+
+## Whether this model's own motion is running.
+##
+## Held STILL while the thing it belongs to is still being assembled - a tower
+## going up, or one being rebuilt into its next tier. A model that spins and
+## bobs while it is rising out of the ground reads as finished, which is
+## exactly the wrong thing to say about something the player is waiting on.
+##
+## Decoration only. It never touches an ATTACK animation, because those are on
+## the prefab rather than in here and a tower under construction has no attack
+## to play one for.
+func set_animated(value: bool) -> void:
+	if _animated == value:
+		return
+	_animated = value
+	_apply_animation()
+
+
+## Every motion component under this model, however deep. Collected once, since
+## a model's own children never change after it is built.
+func _collect_animations(node: Node) -> void:
+	for child in node.get_children():
+		var script: Script = child.get_script() as Script
+		if script != null && ANIMATION_SCRIPTS.has(script.get_global_name()):
+			_animations.append(child)
+		_collect_animations(child)
+
+
+func _apply_animation() -> void:
+	for animation: Node in _animations:
+		if is_instance_valid(animation):
+			animation.set_process(_animated)
 
 
 ## Every MeshInstance3D under the model, so a model can be as deep as it likes

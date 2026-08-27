@@ -128,7 +128,7 @@ it leaves.
 | `Scripts/Game/UnitTypeRegistry.gd` | Every KIND of unit by id, so a spawn can be replicated as a number (D12's argument, applied to units). |
 | `Scripts/UI/MatchStatusBar.gd` | Gold, population and the income countdown, across the top middle. |
 | `Scripts/UI/PlayerStatsPanel.gd` + `PlayerStatRow.gd` + `Scenes/UI/player_stat_row.tscn` | Every player's life, income, value and placement. Placeholder layout - `game_rules.md` does not place it yet. |
-| `Scripts/Abilities/ToggleGridAbility.gd` | The builder's grid toggle, slot 9. Local only: presentation never becomes a command. |
+| `Scripts/Abilities/ToggleGridAbility.gd` | The builder's grid toggle. Local only: presentation never becomes a command. |
 | `Scripts/Multiplayer/LobbyInfo.gd` | What one lobby advertises, AND its roster of `MatchPlayer`s. |
 | `Scripts/Multiplayer/LobbyIdentity.gd` | Who the local player is. Currently the OS user name. |
 | `Scripts/Multiplayer/MatchSetup.gd` + `MatchPlayer.gd` | Who is in a match, which slot is local, the RNG seed. Flat and serialisable. |
@@ -398,7 +398,15 @@ by NODE PATH, and the two match scenes have different roots (`/root/Main/...` ag
 
 ```gdscript
 Commands.submit(ability: UnitAbility, units: Array, target: AbilityTarget) -> void
+Commands.submit_player_action(action: Command.PlayerAction, tech_id: int = 0) -> void
 ```
+The second is the same road for an order given to NOBODY - a Research Center press. It names
+no units and no ability, so the two checks that make a unit order safe (does this player own
+the unit, is the ability on its card) have nothing to check: the whole of the question is
+WHO sent it, and the server already answers that by overwriting the slot from the peer id.
+Everything past it is refused by `TechManager`, which is where the rules live, exactly as a
+build order's rules live in the area it would be placed in.
+
 Signals: `command_applied(Command)`, `command_rejected(Command, String)` - both server side.
 Wire: `submit_command` is `@rpc("any_peer", "reliable")`. `Command`
 (`Scripts/Multiplayer/Command.gd`) is a RefCounted, not a Resource: it is created, sent and
@@ -408,6 +416,16 @@ dropped, never authored.
 Nothing calls into it; it reads the world on the server and writes it on a client. Wire:
 `receive_snapshot` is `@rpc("authority", "unreliable")`. `process_priority = 1000` so it runs
 AFTER the match scene and describes the tick that just finished.
+
+A unit record carries its MANA and its MAXIMUM mana alongside its health. Mana is what most
+of the elemental roster's abilities run on - fill up by attacking, then spend the lot - so a
+client that could not see the bar would be watching a tower fire for no reason it could read.
+The maximum is sent rather than looked up because one tower in the game lowers its own.
+
+What a snapshot does NOT carry is the STATUS EFFECTS on a creep. A client sees the creep where
+the server puts it, which is most of what a slow or a stun looks like; what it cannot see is
+armour that has been eaten out of an opponent's creep, so the figure on that creep's panel is
+its own. Cheap to add as one more field when somebody notices.
 
 **`MatchSession.is_authority()`** - static, and the single question every simulation loop
 asks:
@@ -423,6 +441,32 @@ two will disagree.
 and the ability registry (D12), for the same reasons. `UnitTypeRegistry.stats_for(id)` returns
 null for a type this build does not contain, which is a mismatched build and must be refused.
 
+**`TechDefinition.tech_id` + `MatchSession.techs()`** - a third namespace on the same pattern,
+for what a Research Center press names. Found by SCANNING the folder `ContentConfig` names and
+never by a walk: a technology is on nobody's card and is reachable from nothing, so unlike an
+ability there is no graph that could lead to one. What each player owns rides in the snapshot
+as their slot, the ticks left on their undo window, and the list of ids - self-describing
+rather than a fixed stride, because the list is a different length for every player.
+
+**A unit id can CHANGE TYPE, and that is the whole of tower upgrading on the wire.** An
+upgraded tower keeps its id on purpose - to every other machine, and to the player's own
+selection, it is still the same tower - so the snapshot describes the same id with a different
+`unit_type_id` and the client rebuilds it from the new prefab. It cost no wire format change
+at all, because the type id was already in every record for the spawn path.
+
+The order that rebuild happens in is load bearing, and it is the same order the authority uses
+in `Building._complete_upgrade()`: the replacement enters the tree first, the swap is
+ANNOUNCED while the old node is still standing, only then does the old node leave, and only
+then does the replacement adopt the id and the grid cells. Announcing it afterwards lets
+`tree_exiting` empty the selection and the control groups a moment before anything can put the
+replacement where the old tower stood; adopting before the old node leaves marks the cell free
+with a tower standing on it, which this client would then draw a green build ghost over.
+
+**`MatchSession.replace_unit(old, new)` / `unit_replaced`** - how that announcement reaches
+presentation. A signal rather than a call into the selection, because the two machines reach
+it from different directions - the authority from the upgrade itself, a client from the
+snapshot noticing the type changed - and neither should have to know what is listening.
+
 **`UnitAbility.is_local_only()`** - the one thing an ability can be that is NOT a
 command. A build ghost, the selection and the range overlay never left the machine already;
 this makes that a property an ability can declare, so the builder's grid toggle gets a card
@@ -437,7 +481,8 @@ Unit.set_replicated_health(value)                  # never kills; removal comes 
 Unit.adopt(id, player_id, area, world_pos)         # setup(), but with the id handed IN
 PlayerState.set_replicated(gold, income, lives)    # no spend/gain rules re-run
 SendBuilding.set_replicated_stock(stats, count)
-Building.set_replicated_phase(building, selling)
+Building.set_replicated_phase(building, selling, upgrading)
+AttackComponent.set_prioritize_air(value)          # which creep a tower picks IS simulation
 ```
 Each exists because the ordinary method ENFORCES something - you cannot spend what you do not
 have, a life must come from somebody, zero health means death - and a value that already went
@@ -1002,6 +1047,7 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 | **Replication phase B** | Spawn-and-extrapolate, interest management, quantisation - all of §5.4. The server currently sends the whole world, every unit, twenty times a second. | Phase A shipped first on purpose so this is measured rather than guessed at. Fine for a 1v1 on a LAN, nowhere near 12 players. This is the next thing to do when it is wanted. |
 | **Client-side prediction** | An order takes a full round trip before anything moves (D17). | Nothing to do until somebody plays over a real connection: measure before optimising. §11.4 covers why a tower defence tolerates this and a shooter would not. |
 | **Projectile replication** | Projectiles are re-simulated locally as presentation; only the server applies their damage. | Cheap and correct as it stands. |
+| **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |
 | **An end screen** | The match decides itself and stops; players leave through the in-game menu. | Deliberately the smallest thing that works. |
 | **Player colours** | Needed before the minimap can name WHICH opponent a square belongs to, and before the anonymous mode `game_rules.md` wants. Shape and consequences in §8.1. | The minimap already has the two schemes that would use them, running off a fixed local palette indexed by slot - so it draws colours nobody chose and two machines need not agree on. |
 | **Game mode selection** | Where anonymity, and anything else chosen before a match, would be picked. | Nothing depends on it yet. |

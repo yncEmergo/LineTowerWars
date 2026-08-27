@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="IceLancePassive" format=3 uid="uid://dxqp71xx4lhpf"]
+
+[ext_resource type="Script" uid="uid://c1a0cpyfypi6q" path="res://Scripts/Abilities/TowerPassives/IceLancePassive.gd" id="1_IceLancePassive"]
+[ext_resource type="Texture2D" uid="uid://dc6cf7i4vamrs" path="res://2DArt/Icons/lesser_crystal.png" id="2_lesser_crystal"]
+
+[resource]
+script = ExtResource("1_IceLancePassive")
+ability_id = 141
+display_name = "Ice Lance"
+icon = ExtResource("2_lesser_crystal")
+targeting = 0
+slot = 11

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dshfybckm76h"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://coekndl31gxjp" path="res://Resources/UnitStats/Towers/primal_lesser_primalist_stats.tres" id="2_primal_lesser_primalist_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_primal_lesser_primalist_stats")
+required_tech_id = 29
+ability_id = 282
+display_name = "Upgrade to Lesser Primalist"
+description = "GENERATES GOLD on every attack, less for every other Primalist standing near it."
+slot = 0

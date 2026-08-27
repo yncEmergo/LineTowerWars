@@ -26,6 +26,10 @@ extends Node
 @export var _player_manager: PlayerManager
 ## Who is in THIS match, the shared RNG and the unit registry.
 @export var _match_session: MatchSession
+## Every rule of the technology system, and the far end of the road a Research
+## Center press takes. Wired by both match scenes, because the server enforces
+## it and a client asks it what to grey out.
+@export var _tech_manager: TechManager
 ## Parent for short lived world effects: move markers, and later hit effects
 ## and floating damage numbers.
 ##
@@ -109,6 +113,12 @@ static var match_session: MatchSession:
 		if instance == null:
 			return null
 		return instance._match_session
+
+static var tech_manager: TechManager:
+	get:
+		if instance == null:
+			return null
+		return instance._tech_manager
 
 static var effects_root: Node3D:
 	get:

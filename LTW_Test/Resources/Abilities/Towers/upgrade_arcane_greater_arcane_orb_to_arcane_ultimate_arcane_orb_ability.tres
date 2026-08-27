@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://dukhqg6m28xb2"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://b2oaynw0mlblu" path="res://Resources/UnitStats/Towers/arcane_ultimate_arcane_orb_stats.tres" id="2_arcane_ultimate_arcane_orb_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_arcane_ultimate_arcane_orb_stats")
+required_tech_id = 24
+ability_id = 279
+display_name = "Upgrade to Ultimate Arcane Orb"
+description = "Attacks bounce between creeps, feeding the tower and draining away again when it stops."
+slot = 0

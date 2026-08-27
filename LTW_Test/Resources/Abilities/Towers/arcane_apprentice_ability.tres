@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ArcanizePassive" format=3 uid="uid://balqoy2svyf4v"]
+
+[ext_resource type="Script" uid="uid://dugqxlrklnqlw" path="res://Scripts/Abilities/TowerPassives/ArcanizePassive.gd" id="1_ArcanizePassive"]
+[ext_resource type="Texture2D" uid="uid://c7qlkqlb4k4sx" path="res://2DArt/Icons/apprentice.png" id="2_apprentice"]
+
+[resource]
+script = ExtResource("1_ArcanizePassive")
+ability_id = 192
+display_name = "Arcanize"
+icon = ExtResource("2_apprentice")
+targeting = 0
+slot = 11

@@ -39,6 +39,29 @@ func recall(index: int) -> Array:
 	return alive.duplicate()
 
 
+## Swaps one unit for another wherever it is stored, keeping its position in
+## every group it was in.
+##
+## An upgraded tower is a NEW node, and without this it would drop out of every
+## group the moment the old one left the tree - which is exactly the wrong
+## answer, because to the player nothing left. Order is preserved because a
+## group's first unit is what the camera centres on.
+func replace(old_unit: Node, new_unit: Node) -> void:
+	if old_unit == null || new_unit == null || !is_instance_valid(new_unit):
+		return
+
+	var watched: bool = false
+	for index: int in _groups:
+		var stored: Array = _groups[index]
+		var at: int = stored.find(old_unit)
+		if at < 0:
+			continue
+		stored[at] = new_unit
+		if !watched:
+			_watch(new_unit)
+			watched = true
+
+
 func size_of(index: int) -> int:
 	if !_groups.has(index):
 		return 0

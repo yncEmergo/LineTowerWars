@@ -1,0 +1,13 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/ArmorTypeChoiceAbility.gd" id="1_ArmorTypeChoiceAbility"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_alter_armor.png" id="2_ability_alter_armor"]
+
+[resource]
+script = ExtResource("1_ArmorTypeChoiceAbility")
+ability_id = 289
+display_name = "Alter Armor"
+description = "Which armor type this tower alters the creeps it hits into. A creep can only ever be altered into a given type once."
+targeting = 1
+slot = 6
+icon = ExtResource("2_ability_alter_armor")

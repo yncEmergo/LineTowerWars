@@ -1,3 +1,4 @@
+@tool
 class_name AttackComponent
 extends Node
 
@@ -12,14 +13,32 @@ extends Node
 ##
 ## Towers need no attack order and no command card entry. A tower with this
 ## component simply shoots, which is why nothing here talks to abilities.
+##
+## @tool for ONE reason, and it is an editor convenience with no gameplay in
+## it: a tower's projectile and impact scenes are named by PATH, two levels
+## down inside the sub-resources of its stats file, so the inspector draws them
+## as text fields in a collapsed section nobody can find. This node surfaces
+## them as read-only slots you can click straight through to. See the res://
+## path rule in CLAUDE.md for why they are paths in the first place.
+##
+## Everything else here stands aside in the editor.
 
-## Raised the moment an attack is fired, before it lands. Attack animations
-## hang off this once towers have real models.
+## Raised when an attack COMMITS: the target is chosen, the cooldown has
+## started, and the windup is now running. This is what an attack animation
+## plays on, and the animation has exactly `windup_seconds` to finish.
+signal attack_started(target: Unit, windup: float)
+## Raised the moment the damage is released - the hammer lands, the shot
+## leaves. With no windup it follows attack_started in the same frame.
 signal attacked(target: Unit)
 
 ## Height above the unit's origin that shots leave from when no muzzle node was
 ## wired. A placeholder visual value, like the rest of the primitive art.
 const MUZZLE_FALLBACK_HEIGHT: float = 0.7
+
+## How far a multishot reaches for its further targets when no config is
+## wired, in player cells. A placeholder like MUZZLE_FALLBACK_HEIGHT above it;
+## GameConfig.multishot_reach_cells is the real answer.
+const MULTISHOT_FALLBACK_REACH: float = 3.0
 
 @export_group("References")
 ## The unit this attacks for. Its own parent in every prefab so far, wired
@@ -40,7 +59,26 @@ const MUZZLE_FALLBACK_HEIGHT: float = 0.7
 
 ## Seconds left before the next attack may fire.
 var _cooldown: float = 0.0
-var _target: Creep
+## What this is shooting. A Unit rather than a Creep, because an attacker creep
+## uses this same component to chew on a tower - see AttackStats.TargetClass.
+var _target: Unit
+## The attack this tower has COMMITTED to, and how long is left of its windup.
+##
+## Kept apart from _target on purpose: once an attack starts, the tower has
+## picked what it is hitting and must not be retargeted mid-swing, or an
+## animation would play at one creep and land on another. The point is
+## remembered too, so a creep that dies during the windup still gets swung at -
+## the same rule a projectile already follows when its target dies mid flight.
+var _windup_left: float = 0.0
+var _windup_target: Unit = null
+var _windup_point: Vector3 = Vector3.ZERO
+## Whether the Prioritize toggle is set to go for air first, see
+## PrioritizeAbility.
+##
+## Per TOWER, which is why it lives here rather than on the shared ability
+## resource, and simulation rather than presentation, which is why the server
+## owns it and a client is told - see ReplicationService.
+var _prioritize_air: bool = false
 
 var _attack: AttackStats:
 	get:
@@ -56,6 +94,8 @@ var _attack: AttackStats:
 
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
 	if _unit == null:
 		Log.err("AttackComponent has no unit assigned in its prefab", get_parent().name)
 		return
@@ -65,54 +105,129 @@ func _ready() -> void:
 	_unit.attack_component = self
 
 
-## Whether this component currently has something to shoot. Read by the UI.
+## Whether this component currently has something to shoot. Read by the UI,
+## and by any animation that idles differently when there is nothing to hit.
 func has_target() -> bool:
+	if _windup_target != null && is_instance_valid(_windup_target):
+		return true
 	return _target != null && is_instance_valid(_target)
 
 
-## Orders this unit onto one specific creep, the way an attack order works in
+## Whether an attack is committed and its damage has not landed yet.
+func is_winding_up() -> bool:
+	return _windup_left > 0.0
+
+
+## Whether this tower is set to go for air targets first.
+func prioritizes_air() -> bool:
+	return _prioritize_air
+
+
+## Flips the Prioritize toggle and drops whatever the tower was shooting, so
+## the change takes effect on the next scan rather than after the current
+## target happens to die. Pressing it and watching nothing happen for six
+## seconds would read as a broken button.
+func set_prioritize_air(value: bool) -> void:
+	if _prioritize_air == value:
+		return
+	_prioritize_air = value
+	_target = null
+
+
+## Orders this unit onto one specific target, the way an attack order works in
 ## any RTS. Answers whether the order was taken.
 ##
-## Refused when the creep is out of range, and refused QUIETLY: per the rules a
-## tower told to shoot something it cannot reach keeps shooting whatever it was
-## already on, rather than standing idle waiting for the creep to wander in.
-## That is what makes the order safe to give to a whole selection at once - the
-## towers that can reach it switch, the rest carry on.
+## Refused when the target is out of range, and refused QUIETLY: per the rules
+## a tower told to shoot something it cannot reach keeps shooting whatever it
+## was already on, rather than standing idle waiting for the creep to wander
+## in. That is what makes the order safe to give to a whole selection at once -
+## the towers that can reach it switch, the rest carry on.
 ##
 ## The commanded target is then an ordinary target: it is dropped when it dies
-## or leaves range, and the tower goes back to picking its own.
-func order_target(creep: Creep) -> bool:
+## or leaves range, and the unit goes back to picking its own.
+##
+## A SKITTERING creep can be ordered onto perfectly well. Its rule is a
+## priority inside the automatic search, and this never goes through it.
+func order_target(target: Unit) -> bool:
 	var attack: AttackStats = _attack
 	if attack == null || _unit == null || !_unit.can_attack():
 		return false
-	if !TargetFinder.can_be_hit_by(creep, attack):
+	if !_is_valid_target(target, attack):
 		return false
-	if !TargetFinder.is_in_range(_origin(), creep, attack.attack_range):
+	if !TargetFinder.is_in_range(_origin(), target, attack.attack_range):
 		return false
 
-	_target = creep
+	_target = target
 	return true
 
+
+## Whether this unit could be aimed at that one at all, ignoring range.
+##
+## Public so a click can ask BEFORE it becomes an order. It is what decides
+## whether a left click on something is an attack order or an ordinary
+## selection: with towers selected a creep is an order and a tower is not, and
+## with attacker creeps selected it is the other way round.
+func can_target(target: Unit) -> bool:
+	var attack: AttackStats = _attack
+	return attack != null && _is_valid_target(target, attack)
+
+
+## Whether this attack may go after that unit at all, ignoring range.
+##
+## Three questions. The AREA first, because every search here is over one
+## area's own units and an order across a lane boundary is not a thing that can
+## be carried out. Then the class - a tower shoots creeps, an attacker creep
+## chews on towers - and then the ground-versus-air one, which only means
+## anything about a creep.
+func _is_valid_target(target: Unit, attack: AttackStats) -> bool:
+	if target == null || !is_instance_valid(target) || _unit == null:
+		return false
+	if target.area != _unit.area:
+		return false
+	if attack.hits_buildings():
+		return target is Building
+	return TargetFinder.can_be_hit_by(target as Creep, attack)
+
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	var attack: AttackStats = _attack
 	if attack == null || _unit == null || !_unit.can_attack():
+		# A tower that started upgrading mid-swing drops it rather than landing
+		# a hit it is no longer standing to deliver.
+		_cancel_windup()
 		return
 
 	_cooldown = maxf(0.0, _cooldown - delta)
+
+	# A committed attack owns the tower until it lands. It still aims, so the
+	# swing tracks, but nothing may retarget it and nothing may start a second.
+	if _windup_left > 0.0:
+		_advance_windup(delta, attack)
+		return
+
 	_drop_lost_target(attack)
 
 	# Scanning only when the tower could actually shoot keeps the cost down: a
 	# tower on cooldown has nothing to do with a new target anyway, and it goes
 	# on aiming at the last one meanwhile.
 	if _target == null && _cooldown <= 0.0:
-		_target = TargetFinder.best_target(_unit.area, _origin(), attack)
+		_target = _acquire(attack)
 
 	if _target == null:
 		return
 
 	_aim(delta)
 	if _cooldown <= 0.0:
-		_fire(attack)
+		_begin_attack(attack)
+
+
+## The target this unit picks for itself, which is a different search per
+## target class. Nothing else in here has to know which kind it got back.
+func _acquire(attack: AttackStats) -> Unit:
+	if attack.hits_buildings():
+		return TargetFinder.best_building_target(_unit.area, _origin(), attack)
+	return TargetFinder.best_target(_unit.area, _origin(), attack, _prioritize_air)
 
 
 ## Forgets a target that died, left range, or stopped being a legal target.
@@ -122,30 +237,186 @@ func _drop_lost_target(attack: AttackStats) -> void:
 	if !TargetFinder.is_in_range(_origin(), _target, attack.attack_range):
 		_target = null
 		return
-	if !TargetFinder.can_be_hit_by(_target, attack):
+	if !_is_valid_target(_target, attack):
 		_target = null
 
 
-func _fire(attack: AttackStats) -> void:
-	_cooldown = attack.cooldown_seconds()
+## Commits to an attack. The cooldown starts HERE rather than when the damage
+## lands, which is what keeps the windup inside the attack period instead of on
+## top of it - see AttackStats.windup_seconds.
+func _begin_attack(attack: AttackStats) -> void:
+	# Asked of the UNIT rather than read off the stats, so an aura standing
+	# over an attacker creep really does make it swing faster. Every tower
+	# answers 1.0 and pays nothing for the question.
+	_cooldown = attack.cooldown_seconds() / maxf(0.01, _unit.attack_speed_ratio())
+	_windup_target = _target
+	_windup_point = _target.global_position
+	_windup_left = attack.windup_seconds_clamped()
 
+	# The tower's own abilities hear about the attack the moment it COMMITS,
+	# not when it lands: mana gained by attacking, a ramp that resets on a new
+	# target and an idle bonus being cashed in are all per attack rather than
+	# per creep struck. See TowerPassive.on_attack.
+	var tower: Building = _unit as Building
+	if tower != null:
+		for passive in tower.tower_passives():
+			passive.on_attack(tower, _target)
+
+	attack_started.emit(_target, _windup_left)
+	if _windup_left <= 0.0:
+		_release(attack)
+
+
+## Keeps the aim and the remembered impact point up to date while the swing
+## plays out, so a windup tracks a walking creep instead of committing to where
+## it stood a moment ago.
+func _advance_windup(delta: float, attack: AttackStats) -> void:
+	if is_instance_valid(_windup_target) && _windup_target.is_alive():
+		_windup_point = _windup_target.global_position
+		_target = _windup_target
+		_aim(delta)
+
+	_windup_left -= delta
+	if _windup_left <= 0.0:
+		_release(attack)
+
+
+## Drops a swing that can no longer land. Nothing is refunded: the cooldown was
+## already spent, exactly as it would have been if the attack had landed.
+func _cancel_windup() -> void:
+	_windup_left = 0.0
+	_windup_target = null
+
+
+## Releases the damage of a committed attack.
+##
+## A creep that died during the windup leaves the swing to land where it stood,
+## so a splash still catches the crowd around it - the same rule a projectile
+## already follows when its target dies mid flight.
+func _release(attack: AttackStats) -> void:
+	var target: Unit = _windup_target
+	var point: Vector3 = _windup_point
+	_windup_left = 0.0
+	_windup_target = null
+
+	var gone: bool = target == null || !is_instance_valid(target) || !target.is_alive()
+	_fire(attack, null if gone else target, point)
+	if gone:
+		_target = null
+
+
+func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:
+	# ONE roll for the whole attack, shared by the primary target and by every
+	# creep a multishot picks up alongside it - the same rule splash already
+	# follows, and for the same reason: a player watching one shot land should
+	# not see three different numbers come off it.
+	var rolled: int = attack.roll_damage(MatchSession.match_rng())
+	_send(attack, _new_hit(attack, rolled, true), target, point)
+
+	for extra: Unit in _extra_targets(attack, target):
+		_send(attack, _new_hit(attack, rolled, false), extra, extra.global_position)
+
+	attacked.emit(target)
+
+
+## One AttackHit, filled in from the attack and from the tower firing it.
+func _new_hit(attack: AttackStats, rolled: int, primary: bool) -> AttackHit:
 	var hit: AttackHit = AttackHit.new()
-	hit.damage = attack.roll_damage(MatchSession.match_rng())
+	hit.damage = rolled
 	hit.damage_type = attack.damage_type
 	hit.is_aoe = attack.is_aoe_damage
-	hit.effects = attack.effects
+	# A creep picked up by a multishot takes no splash of its own: the splash
+	# belongs to the shot, and running it once per extra target would multiply
+	# a splash tower's output by however many creeps were standing about.
+	hit.effects = attack.effects if primary else ([] as Array[AttackEffect])
 	hit.area = _unit.area
 	hit.attacker_player_id = _unit.owner_player_id
+	hit.attacker_position = _origin()
+	hit.is_primary = primary
+
+	var tower: Building = _unit as Building
+	if tower != null:
+		hit.source = tower
+		hit.passives = tower.tower_passives()
+	return hit
+
+
+## Hands one hit to the delivery, or lands it where the target stood if there
+## is nothing left to hand it to.
+func _send(attack: AttackStats, hit: AttackHit, target: Unit, point: Vector3) -> void:
+	if target == null:
+		hit.resolve(null, point)
+		if attack.delivery != null:
+			attack.delivery.spawn_impact(point, _muzzle_position())
+		return
 
 	if attack.delivery == null:
 		# An attack with no delivery is a half authored resource. Landing it
 		# instantly makes that visible in play rather than as silence.
 		Log.err("AttackStats has no delivery assigned", _unit.name)
-		hit.resolve(_target, _target.global_position)
-	else:
-		attack.delivery.deliver(hit, _muzzle_position(), _target)
+		hit.resolve(target, target.global_position)
+		return
 
-	attacked.emit(_target)
+	attack.delivery.deliver(hit, _muzzle_position(), target)
+
+
+## The further creeps this attack strikes alongside its primary target.
+##
+## MULTISHOT, and it is a different thing from splash: it picks several single
+## targets standing near the one that was aimed at, so it is not area damage
+## and a creep that resists area damage gets no help from it. See
+## game_rules.md.
+##
+## The count comes off the attack's own stats PLUS whatever the tower's
+## passives add, because nearly every elemental tower that multishots does it
+## through an ability rather than through its base attack.
+func _extra_targets(attack: AttackStats, target: Unit) -> Array[Unit]:
+	var found: Array[Unit] = []
+	if target == null || _unit == null || _unit.area == null:
+		return found
+
+	var wanted: int = attack.multishot_targets + _passive_extra_targets()
+	if wanted <= 0:
+		return found
+
+	var reach: float = _multishot_reach()
+	for creep: Creep in TargetFinder.creeps_in_radius(
+			_unit.area, target.global_position, reach):
+		if found.size() >= wanted:
+			break
+		if creep == target || !TargetFinder.can_be_hit_by(creep, attack):
+			continue
+		found.append(creep)
+	return found
+
+
+func _passive_extra_targets() -> int:
+	var tower: Building = _unit as Building
+	if tower == null:
+		return 0
+	var extra: int = 0
+	for passive in tower.tower_passives():
+		extra += passive.extra_targets(tower)
+	return extra
+
+
+## How far from the primary target a further creep may stand.
+##
+## ONE distance shared by the whole game unless a passive names its own, which
+## is game_rules.md's rule: a player learns the reach of a multishot once
+## rather than per tower.
+func _multishot_reach() -> float:
+	var tower: Building = _unit as Building
+	if tower != null:
+		for passive in tower.tower_passives():
+			var named: float = passive.extra_target_range(tower)
+			if named > 0.0:
+				return named
+
+	var config: GameConfig = References.game_config
+	if config == null:
+		return MULTISHOT_FALLBACK_REACH
+	return config.multishot_reach_cells
 
 
 ## Point range is measured from, which is the unit itself rather than the
@@ -174,3 +445,59 @@ func _aim(delta: float) -> void:
 	_turret_head.global_rotation.y = rotate_toward(
 		_turret_head.global_rotation.y, wanted, turret_turn_speed * delta
 	)
+
+
+# --- editor only ------------------------------------------------------------
+#
+# Shown rather than stored: these are DERIVED from the unit's stats, so they
+# carry PROPERTY_USAGE_EDITOR without PROPERTY_USAGE_STORAGE and can never be
+# saved into a prefab or drift from the resource they are read out of. They are
+# read only for the same reason - the stats file is the one place to change
+# them.
+
+func _get_property_list() -> Array[Dictionary]:
+	var shown: Array[Dictionary] = []
+	if !Engine.is_editor_hint():
+		return shown
+
+	shown.append({
+		"name": "Attack Visuals",
+		"type": TYPE_NIL,
+		"usage": PROPERTY_USAGE_GROUP,
+	})
+	for entry: String in ["projectile_scene", "impact_scene"]:
+		shown.append({
+			"name": entry,
+			"type": TYPE_OBJECT,
+			"hint": PROPERTY_HINT_RESOURCE_TYPE,
+			"hint_string": "PackedScene",
+			"usage": PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY,
+		})
+	return shown
+
+
+func _get(property: StringName) -> Variant:
+	if !Engine.is_editor_hint():
+		return null
+	if property == &"projectile_scene":
+		return _editor_scene(_editor_delivery_path("projectile_scene_path"))
+	if property == &"impact_scene":
+		return _editor_scene(_editor_delivery_path("impact_scene_path"))
+	return null
+
+
+## The path one of the delivery's scene fields holds, or empty when this tower
+## has no attack, no delivery, or a delivery without that field - an instant
+## attack has no projectile, which is an answer rather than a fault.
+func _editor_delivery_path(field: String) -> String:
+	var attack: AttackStats = _attack
+	if attack == null || attack.delivery == null:
+		return ""
+	var path: Variant = attack.delivery.get(field)
+	return "" if path == null else String(path)
+
+
+func _editor_scene(path: String) -> PackedScene:
+	if path.is_empty() || !ResourceLoader.exists(path):
+		return null
+	return load(path) as PackedScene

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bcq17vx3t5ds6"]
+
+[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" uid="uid://4uklhbhjldns" path="res://Resources/UnitStats/Towers/arcane_greater_spellslinger_stats.tres" id="2_arcane_greater_spellslinger_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+tower_stats = ExtResource("2_arcane_greater_spellslinger_stats")
+required_tech_id = 23
+ability_id = 275
+display_name = "Upgrade to Greater Spellslinger"
+description = "A caster: it burns and slows on its own clock as well as attacking, and spends mana on splashing orbs."
+slot = 0

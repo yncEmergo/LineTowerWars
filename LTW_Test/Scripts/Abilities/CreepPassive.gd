@@ -30,7 +30,11 @@ func execute(_unit: Unit, _target: AbilityTarget) -> void:
 
 ## Share of incoming damage the creep takes, applied after the damage matrix
 ## and before its armour points. Multiplied together across every passive.
-func damage_taken_ratio(_is_aoe: bool) -> float:
+##
+## Both questions arrive at once - whether the hit covered ground, and whether
+## it was spell damage - so a passive answers only the one it cares about and
+## returns 1.0 for the other.
+func damage_taken_ratio(_is_aoe: bool, _is_spell: bool) -> float:
 	return 1.0
 
 
@@ -44,6 +48,35 @@ func damage_block() -> int:
 ## this one included. The best aura in range wins; they do not add up.
 func aura_armor_bonus() -> int:
 	return 0
+
+
+## Multiplier on the MOVEMENT speed of every creep inside the shared aura
+## radius, this one included. Above 1 is faster, and the best aura in range
+## wins exactly as it does for armour.
+func aura_move_speed_ratio() -> float:
+	return 1.0
+
+
+## Multiplier on the ATTACK speed of every creep inside the shared aura radius,
+## which matters only to the attacker creeps - everything else in a pack has no
+## attack for it to act on.
+func aura_attack_speed_ratio() -> float:
+	return 1.0
+
+
+## Health restored per second to every creep inside the shared aura radius,
+## this one included. Separate from health_regen() below, which is the creep
+## healing only ITSELF: an aura reaches the pack, and the two are added rather
+## than one hiding the other.
+func aura_health_regen() -> float:
+	return 0.0
+
+
+## Whether the creep never draws a tower's attention and is always shot at
+## last. Read once when the creep collects its passives, not per scan, since a
+## creep cannot gain or lose a passive while it walks.
+func is_skittering() -> bool:
+	return false
 
 
 ## Multiplier on how fast this creep's reserve refills in the send building.

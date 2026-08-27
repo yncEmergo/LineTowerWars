@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GerminatePassive" format=3 uid="uid://cwpsfe1ufujj4"]
+
+[ext_resource type="Script" uid="uid://bqu5b85jwnxfl" path="res://Scripts/Abilities/TowerPassives/GerminatePassive.gd" id="1_GerminatePassive"]
+[ext_resource type="Texture2D" uid="uid://p2tcuwx2wsvs" path="res://2DArt/Icons/lesser_scorpion.png" id="2_lesser_scorpion"]
+
+[resource]
+script = ExtResource("1_GerminatePassive")
+ability_id = 189
+display_name = "Germinate"
+icon = ExtResource("2_lesser_scorpion")
+targeting = 0
+slot = 11
