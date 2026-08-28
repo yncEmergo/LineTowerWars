@@ -1,8 +1,8 @@
 # ModelGen
 
-Generates the placeholder art the game ships with: the tower models, the
-materials they share, their projectiles and impacts, and the `.tres` content
-that points at all of it.
+Generates the placeholder art the game ships with: the tower and creep
+models, the materials they share, the towers' projectiles and impacts, and the
+`.tres` content that points at all of it.
 
 Not part of the build. Nothing at runtime knows it exists, and `.gdignore`
 keeps Godot's filesystem out of this folder entirely.
@@ -20,6 +20,18 @@ python Tools/ModelGen/generate.py --showcase      plus the review scenes
 Stages are `materials`, `effects`, `models`, `content`. It is idempotent: a run
 with nothing changed rewrites every file byte for byte, so `git status` after a
 run tells you exactly what your edit did.
+
+**With one caveat that will bite you the first time.** Opening a generated
+`.tres` in the Godot editor and saving it — which the editor does on its own
+whenever it touches one — rewrites the file in the editor's own dialect: it
+adds `uid://` lines this tool deliberately never writes, reorders properties,
+and drops any property that happens to equal its script default. None of that
+changes what the file MEANS and the game does not care, but it does mean that
+after somebody has had the project open, the next full run comes back with a
+few hundred files "changed" that you did not touch.
+
+So `git status` is only a useful signal for the roster you are actually
+working on. Check that folder, and `git checkout --` the rest.
 
 Needs Python 3 and nothing else — no Godot, no packages.
 
@@ -50,10 +62,22 @@ generator.
 | `element_abilities.py` | each tower's named ability and its numbers | balance changes |
 | `element_models.py` | ten element base shapes and twenty path silhouettes | shapes change |
 | `element_content.py` | elemental stats, prefabs, passives, morphs, upgrades | rules change |
+| `creep_roster.py` | the creep table, straight from `unit_data.md` 6.2 | balance changes |
+| `creep_models.py` | the six creep body plans and the creep ladder | shapes change |
+| `creep_content.py` | creep PREFABS. **Not** their stats, see below | wiring changes |
 | `materials.py`, `effects.py` | the shared palette; projectiles and impacts | |
 | `showcase.py` | throwaway review scenes, opt in | |
 
-The two rosters are separate files all the way up from `style.py` on purpose:
+**The creep stage writes prefabs and nothing else.** Creep stats, passives and
+pack entries live in `Resources/UnitStats/Creeps` and
+`Resources/Abilities/Passives`, they were authored by hand, and `unit_data.md`
+8.1 makes them the authority. Towers are generated because thirty of them come
+out of one balance table; creeps are not, because each of them is a handful of
+hand-made decisions and a generator that rewrote them would win an argument it
+should lose. What the prefab stage does own is the three numbers measured off
+the model: the health bar's height, the click box, and the walk's stride.
+
+The rosters are separate files all the way up from `style.py` on purpose:
 they answer the same three questions differently, and a Basic tower cannot
 accidentally take an elemental rule (or a hue) if it never sees one. What they
 DO share is every layer below - the same primitives, the same five material
@@ -76,11 +100,17 @@ meet, how to verify the result, and every trap that has already been paid for.
 The short version of the shape of the work: only the top two layers are new.
 Everything from `style.py` down is inherited.
 
-- **Elemental towers** are DONE, and were the cheap case they were predicted to
-  be: the same material roles and the same shape of ladder, plus a palette entry
-  per element, a builder per shape, an ability table and a content file.
-- **Creeps** need their own model file and their own content file, but inherit
-  `tscn.py`, `modelkit.py` and the ladder machinery unchanged.
+- **Elemental towers** were the cheap case they were predicted to be: the same
+  material roles and the same shape of ladder, plus a palette entry per
+  element, a builder per shape, an ability table and a content file.
+- **Creeps** were the bigger one. They inherited `tscn.py`, `modelkit.py` and
+  the ladder machinery unchanged, and needed on top of that a shader of their
+  own (`creep_hide` and `creep_vapour`), a ladder measured in GOLD rather than
+  in price tiers, six body plans, and one thing no tower needed: an explicit
+  split between authoring in HEIGHT units and in WIDTH units. Read
+  PLACEHOLDER_ART.md before touching a creep model — the width and height
+  ramps are separate, and for a creature that quietly breaks every angled limb
+  and flattens every round part unless each number says which space it is in.
 
 ## Reviewing the result
 

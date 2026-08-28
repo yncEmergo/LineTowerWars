@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/unit_tile.tscn" id="3_unit_tile"]
 [ext_resource type="Script" path="res://Scripts/UI/UnitPortrait.gd" id="9_portrait"]
 [ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="10_cancel"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/stat_bar.tscn" id="11_stat_bar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
 content_margin_left = 16.0
@@ -39,7 +40,7 @@ ambient_light_source = 2
 ambient_light_color = Color(0.66, 0.69, 0.75, 1)
 ambient_light_energy = 1.15
 
-[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_mana_label", "_damage_label", "_armor_label", "_attack_label", "_command_grid", "_selection_grid", "_portrait")]
+[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_mana_label", "_damage_label", "_armor_label", "_attack_label", "_command_grid", "_selection_grid", "_portrait", "_health_bar", "_mana_bar", "_job_row", "_job_icon", "_job_label", "_job_bar")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -57,6 +58,12 @@ _attack_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/AttackLabel")
 _command_grid = NodePath("Layout/CommandPanel/CommandGrid")
 _selection_grid = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/SelectionGrid")
 _portrait = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/Portrait")
+_health_bar = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/HealthBar")
+_mana_bar = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/ManaBar")
+_job_row = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow")
+_job_icon = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobIcon")
+_job_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn/JobLabel")
+_job_bar = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn/JobBar")
 _cancel_ability = ExtResource("10_cancel")
 _command_slot_scene = ExtResource("2_command_slot")
 _unit_tile_scene = ExtResource("3_unit_tile")
@@ -120,12 +127,23 @@ light_color = Color(0.68, 0.75, 0.92, 1)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View"]
 environment = SubResource("Env_portrait")
 
+[node name="HealthBar" parent="Layout/InfoPanel/InfoRow/PortraitColumn" instance=ExtResource("11_stat_bar")]
+custom_minimum_size = Vector2(0, 9)
+layout_mode = 2
+fill_color = Color(0.24, 0.8, 0.28, 1)
+
 [node name="HealthLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=1730412266]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.44, 0.89, 0.46, 1)
 theme_override_font_sizes/font_size = 18
 text = "100 / 100"
 horizontal_alignment = 1
+
+[node name="ManaBar" parent="Layout/InfoPanel/InfoRow/PortraitColumn" instance=ExtResource("11_stat_bar")]
+visible = false
+custom_minimum_size = Vector2(0, 9)
+layout_mode = 2
+fill_color = Color(0.35, 0.58, 0.98, 1)
 
 [node name="ManaLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn"]
 layout_mode = 2
@@ -159,6 +177,36 @@ text = "Armor:   Invulnerable"
 [node name="AttackLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn"]
 layout_mode = 2
 text = "Attack:   1 APS,  4 range"
+
+[node name="JobRow" type="HBoxContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="JobIcon" type="TextureRect" parent="Layout/InfoPanel/InfoRow/InfoColumn/JobRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JobColumn" type="VBoxContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn/JobRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 6
+
+[node name="JobLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.74, 0.24, 1)
+theme_override_font_sizes/font_size = 18
+text = "Selling (1s)"
+horizontal_alignment = 1
+
+[node name="JobBar" parent="Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn" instance=ExtResource("11_stat_bar")]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+fill_color = Color(0.93, 0.74, 0.24, 1)
 
 [node name="SelectionGrid" type="GridContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn"]
 visible = false

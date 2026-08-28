@@ -23,6 +23,13 @@ signal upgrade_cancelled()
 ## Height the building's visuals start at while they rise into place.
 const CONSTRUCTION_START_HEIGHT: float = 0.15
 
+## Gap between the health bar and the job bar sitting above it. A little more
+## than a bar's own height, so the two read as two bars rather than one thick
+## one. Placeholder visual values, so they live here rather than in a .tres.
+const JOB_BAR_GAP: float = 0.16
+const JOB_BAR_FILL: Color = Color(0.93, 0.74, 0.24, 1.0)
+const JOB_BAR_EMPTY: Color = Color(0.16, 0.13, 0.06, 1.0)
+
 @export_group("References")
 ## Meshes that rise during construction. Separate from the root so the health
 ## bar does not get squashed along with them.
@@ -88,6 +95,13 @@ var _upgrade_preview: Node3D = null
 ## Damage suffered while still building, kept apart from the construction ramp
 ## so attacks never slow the timer.
 var _construction_damage: int = 0
+## Worldspace bar over this tower's head while it is selling or morphing.
+##
+## Built on the FIRST job rather than in _ready, because most towers stand in a
+## maze for a whole match and never have one. Kept afterwards rather than freed
+## with the job, since a tower that sold once is a tower somebody is fiddling
+## with and will probably sell again.
+var _job_bar: Bar3D = null
 
 var _building_stats: BuildingStats:
 	get:
@@ -304,14 +318,18 @@ func _adopted_footprint(home_area: PlayerArea) -> Vector2i:
 ## changed. It is only ever a phase here - the swap to the new tower type
 ## arrives as an ordinary snapshot, see ReplicationService.
 func set_replicated_phase(under_construction: bool, selling: bool,
-		upgrading: bool) -> void:
+		upgrading: bool, returning: bool, progress: float) -> void:
 	if _under_construction && !under_construction:
 		_finish_construction()
+
+	var was_upgrading: bool = _upgrading
 	_under_construction = under_construction
 	_selling = selling
+	_upgrading = upgrading
+	_returning = returning
+	_apply_replicated_progress(progress)
 
-	if upgrading != _upgrading:
-		_upgrading = upgrading
+	if upgrading != was_upgrading:
 		if upgrading && _upgrade_target != null:
 			_show_upgrade_preview(_upgrade_target)
 		elif !upgrading:
@@ -319,6 +337,31 @@ func set_replicated_phase(under_construction: bool, selling: bool,
 		_apply_visual_height(0.0 if upgrading else 1.0)
 		_apply_animation_state()
 		abilities_changed.emit()
+
+	# The model rises across the countdown here as well as on the change, so a
+	# client watching a tower go up or morph sees the same thing the server
+	# does. Without the progress it had only the two ends of the movement and
+	# the tower sat squashed until the job finished.
+	if _under_construction || _upgrading:
+		_apply_visual_height(progress)
+
+	_refresh_job_bar()
+
+
+## Puts the countdown clocks where the server says they are.
+##
+## Written INTO the same _elapsed fields a single player run uses rather than
+## kept beside them, so current_job, upgrade_progress and the rising model all
+## read one number through one path on both machines. A client never advances
+## them itself - _physics_process stands aside (3.4) - so a snapshot is the
+## only thing that ever moves them here.
+func _apply_replicated_progress(progress: float) -> void:
+	if _under_construction:
+		_construction_elapsed = progress * _build_time()
+	elif _selling:
+		_sell_elapsed = progress * _sell_time()
+	elif _upgrading:
+		_upgrade_elapsed = progress * _upgrade_time()
 
 
 func is_under_construction() -> bool:
@@ -336,6 +379,17 @@ func can_attack() -> bool:
 
 func is_structure() -> bool:
 	return true
+
+
+## Every tower is one selection class, so any two of them box and group
+## together whatever their element or tier.
+##
+## A BUILDING THAT IS NOT A TOWER MUST OVERRIDE THIS. The technology discs are
+## the case that is coming: they occupy a tower footprint and extend from here,
+## and inheriting this line would quietly let them be selected among the towers,
+## which game_rules.md says they never are.
+func selection_class() -> StringName:
+	return SELECT_TOWER
 
 
 ## The model, not the whole building. During an upgrade that is the model of
@@ -411,6 +465,7 @@ func sell() -> void:
 
 	_selling = true
 	_sell_elapsed = 0.0
+	_refresh_job_bar()
 	sell_started.emit()
 	# Swaps the card down to just cancel while the sale runs.
 	abilities_changed.emit()
@@ -422,6 +477,7 @@ func cancel_sell() -> void:
 		return
 	_selling = false
 	_sell_elapsed = 0.0
+	_refresh_job_bar()
 	Log.info("Sale cancelled", {"building": name})
 	sell_cancelled.emit()
 	abilities_changed.emit()
@@ -450,6 +506,29 @@ func is_upgrading() -> bool:
 ## What this tower is turning into, or null when it is not upgrading.
 func upgrade_target() -> BuildingStats:
 	return _upgrade_target
+
+
+## Whether the morph running is a RETURN to an Elemental Core rather than an
+## upgrade. Both are one phase with one clock, so this is what tells them
+## apart for anything outside this class - the panel, and the snapshot.
+func is_returning() -> bool:
+	return _returning
+
+
+## How far through whatever countdown is running, 0 to 1, and 0 when none is.
+##
+## The RAW phase clock, which is not quite current_job(): construction is in
+## here because a client has to be told about it, and left out of a job because
+## a tower going up already shows its progress in its health. One number
+## because a tower only ever runs one of these at a time.
+func phase_progress() -> float:
+	if _under_construction:
+		return _construction_progress()
+	if _selling:
+		return _sell_progress()
+	if _upgrading:
+		return upgrade_progress()
+	return 0.0
 
 
 ## Stands the target tier's model up in place of this one, flat to the ground,
@@ -531,6 +610,7 @@ func upgrade_to(target_stats: BuildingStats) -> void:
 	_show_upgrade_preview(target_stats)
 	_apply_visual_height(0.0)
 	_apply_animation_state()
+	_refresh_job_bar()
 
 	Log.info("Upgrade started", {
 		"building": name, "into": target_stats.display_name, "cost": cost,
@@ -564,6 +644,7 @@ func return_to_core(core_stats: BuildingStats) -> void:
 	_show_upgrade_preview(core_stats)
 	_apply_visual_height(0.0)
 	_apply_animation_state()
+	_refresh_job_bar()
 
 	Log.info("Return to Core started", {"building": name, "value": invested_gold})
 	upgrade_started.emit()
@@ -599,10 +680,113 @@ func cancel_upgrade() -> void:
 	_clear_upgrade_preview()
 	_apply_visual_height(1.0)
 	_apply_animation_state()
+	_refresh_job_bar()
 
 	Log.info("Morph cancelled", {"building": name, "refund": refund})
 	upgrade_cancelled.emit()
 	abilities_changed.emit()
+
+
+# --- Jobs ---------------------------------------------------------------
+
+## What this tower is busy with, or null when it is simply standing there.
+##
+## The one question the UI asks about a countdown, whichever countdown it is.
+## Selling, upgrading and returning to a Core are three timers with three
+## different meanings and one identical presentation - a bar over the tower's
+## head and a row on its panel - so they are answered here together rather than
+## by three sets of getters the panel would have to try in turn.
+##
+## CONSTRUCTION is not one of them on purpose: a tower going up already says so
+## by its health climbing from 1 to full, and a second bar would say it twice.
+func current_job() -> BuildingJob:
+	if _selling:
+		return _make_job(BuildingJob.Kind.SELLING, _sell_progress(), _sell_time(),
+			_sell_icon())
+
+	if _upgrading:
+		var kind: BuildingJob.Kind = BuildingJob.Kind.UPGRADING
+		if _returning:
+			kind = BuildingJob.Kind.RETURNING
+		return _make_job(kind, upgrade_progress(), _upgrade_time(), _morph_icon())
+
+	return null
+
+
+func _make_job(kind: BuildingJob.Kind, progress: float, total: float,
+		icon: Texture2D) -> BuildingJob:
+	var job: BuildingJob = BuildingJob.new()
+	job.kind = kind
+	job.progress = progress
+	job.seconds_left = maxf(0.0, total * (1.0 - progress))
+	job.icon = icon
+	return job
+
+
+## How far through the sale this is, 0 to 1, on the same terms as
+## upgrade_progress.
+func _sell_progress() -> float:
+	var total: float = _sell_time()
+	if total <= 0.0:
+		return 1.0
+	return clampf(_sell_elapsed / total, 0.0, 1.0)
+
+
+## The Sell button's own icon, taken off the tower's normal card rather than
+## authored a second time here - it is literally the button that was pressed.
+##
+## The tower's own picture if it has no Sell ability at all, which is not a
+## case that exists yet but is a blank square if it ever does.
+func _sell_icon() -> Texture2D:
+	if stats != null:
+		for entry in stats.abilities:
+			if entry is SellAbility:
+				return (entry as UnitAbility).icon_texture()
+	return null if stats == null else stats.icon
+
+
+## What a morph is turning this tower into, because that is what the player is
+## waiting for - the same reason the upgrade preview stands the TARGET's model
+## up rather than this one's.
+##
+## Falls back to this tower's own picture, which is what a CLIENT gets: the
+## target is never sent over the wire, only the phase and the progress are.
+func _morph_icon() -> Texture2D:
+	if _upgrade_target != null:
+		return _upgrade_target.icon
+	return null if stats == null else stats.icon
+
+
+## Puts the worldspace bar in step with the job, building it the first time one
+## is needed.
+##
+## The bar sits ABOVE the health bar and is shown for as long as the job runs,
+## whatever the player has health bars set to. A sale is something the player
+## started and can still call off, so it is not theirs to switch off - see
+## game_rules.md.
+func _refresh_job_bar() -> void:
+	var job: BuildingJob = current_job()
+	if job == null:
+		if _job_bar != null:
+			_job_bar.visible = false
+		return
+
+	if _job_bar == null:
+		_create_job_bar()
+	_job_bar.visible = true
+	_job_bar.set_ratio(job.progress)
+
+
+func _create_job_bar() -> void:
+	_job_bar = Bar3D.new()
+	_job_bar.name = "JobBar"
+	_job_bar.fill_color = JOB_BAR_FILL
+	_job_bar.empty_color = JOB_BAR_EMPTY
+	add_child(_job_bar)
+	# Offset from where the health bar sits rather than from the health bar
+	# itself, so the job bar stands in the same place whether or not that one
+	# is being drawn.
+	_job_bar.position = Vector3(0.0, health_bar_height + JOB_BAR_GAP, 0.0)
 
 
 ## Seconds this morph takes. An upgrade takes the build time - every tower
@@ -622,6 +806,8 @@ func _advance_upgrade(delta: float) -> void:
 
 	if progress >= 1.0:
 		_complete_upgrade()
+		return
+	_refresh_job_bar()
 
 
 ## Swaps this tower for the one it was becoming.
@@ -945,6 +1131,8 @@ func _advance_sell(delta: float) -> void:
 	_sell_elapsed += delta
 	if _sell_elapsed >= _sell_time():
 		_complete_sell()
+		return
+	_refresh_job_bar()
 
 
 func _finish_construction() -> void:

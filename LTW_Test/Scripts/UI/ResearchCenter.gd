@@ -101,10 +101,16 @@ func is_open() -> bool:
 	return _panel != null && _panel.visible
 
 
-## Handled in _input rather than _unhandled_input so an open screen always wins
-## its keys, the way the game menu does. That is deliberate: while it is open,
-## Q is Fire Technology rather than whatever the selected unit's card puts
-## there, exactly as the source game behaves.
+## Handled in _input rather than _unhandled_input so an open screen wins its
+## keys ahead of the command card, the way the game menu does. That is
+## deliberate: while it is open, a letter is a technology rather than whatever
+## the selected unit's card puts there.
+##
+## The BUILDER is the one exception, because it is what a player has selected
+## while they research and taking its card away for as long as this screen is
+## open would make building and researching mutually exclusive. So a key the
+## builder's card answers is left to the builder, and only a key it leaves
+## alone reaches a square here.
 ##
 ## Nothing is consumed while it is closed, and a key that lands on no square is
 ## left alone, so the rest of the game's keys are untouched either way.
@@ -128,9 +134,28 @@ func _input(event: InputEvent) -> void:
 	var index: int = config.research_slot_for_key(key.keycode, key.shift_pressed)
 	if index < 0 || index >= _slots.size() || _slots[index].tech == null:
 		return
+	if _builder_answers(key):
+		return
 
 	_on_tech_activated(_slots[index].tech)
 	get_viewport().set_input_as_handled()
+
+
+## Whether the builder's command card would answer this press, in which case
+## the press is the builder's and not this screen's.
+##
+## Only unmodified letters: the command card ignores Shift, so the shifted
+## rows down here are letters no card can ever claim and stay reachable with
+## the builder selected. A square the builder leaves empty is not claimed
+## either, which is the same rule the card itself follows.
+func _builder_answers(key: InputEventKey) -> bool:
+	if key.shift_pressed:
+		return false
+
+	var panel: UnitPanel = References.unit_panel
+	if panel == null:
+		return false
+	return panel.shown_unit() is Builder && panel.claims_key(key.keycode)
 
 
 ## The two buttons at the foot move on their own - the undo window runs out on

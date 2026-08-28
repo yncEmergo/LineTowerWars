@@ -1553,9 +1553,9 @@ Proposed shape:
   content folders the same way the unit-type registry does, and writes the stat tables into
   this file between marker comments:
 
-      <!-- GENERATED:towers:begin -->
-      ... table rendered from the .tres files ...
-      <!-- GENERATED:towers:end -->
+	  <!-- GENERATED:towers:begin -->
+	  ... table rendered from the .tres files ...
+	  <!-- GENERATED:towers:end -->
 
 - Everything outside the markers - the prose, the upgrade paths, the ability descriptions,
   the open questions - stays hand-written and survives regeneration.

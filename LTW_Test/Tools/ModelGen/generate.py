@@ -30,19 +30,25 @@ ADDING A ROSTER. The layers are stacked so that only the top one is new work:
 
     tscn.py       writes Godot's text formats. Never changes
     modelkit.py   primitives, placement, motion. Shared by everything
-    style.py      the visual language. A creep roster adds its palette here,
-                  next to the tower lines, so the two are chosen together
+    style.py      the visual language. Every roster's palette lives here, next
+                  to the others, so they are chosen against each other
     <x>_models.py the shapes. This is the real work for a new roster
     <x>_content.py the stats and abilities that point at those models
 
-Elemental towers are the cheap case: same three material roles, same tier
-ladder, so they need a palette entry per element and a builder per shape.
-Creeps are the bigger one - they need their own model file and their own
-content file - but they inherit everything below style.py unchanged.
+All three rosters are in. Elemental towers were the cheap case - same material
+roles, same shape of ladder - and creeps were the bigger one, needing their own
+shader, their own ladder and six body plans, while still inheriting every layer
+below style.py unchanged.
+
+The creep stage writes PREFABS ONLY. Creep stats, passives and pack entries
+were authored by hand and unit_data.md 8.1 makes them the authority; see
+creep_content.py for why that line is where it is.
 """
 
 import sys
 
+import creep_content
+import creep_models
 import effects
 import element_content
 import element_models
@@ -55,39 +61,47 @@ STAGES = ("materials", "effects", "models", "content")
 
 
 def run(stages, with_showcase):
-    heights = None
+    built = None
     if "materials" in stages:
         materials.generate()
     if "effects" in stages:
         effects.generate()
     if "models" in stages:
-        heights = _models()
+        built = _models()
     if "content" in stages:
         # The prefabs size their health bar and their click box off the model,
-        # so content cannot run without the heights models just measured.
-        if heights is None:
-            heights = _models()
+        # so content cannot run without the dimensions models just measured.
+        if built is None:
+            built = _models()
         # The Basic roster LAST, because its build menu has to name the
         # Elemental Core alongside the three 10g towers - and that ability is
         # the elemental content stage's to write.
-        element_content.generate(heights)
+        element_content.generate(built["towers"])
         tower_content.generate(
-            heights, [element_content.build_ability_path("elemental_core")])
+            built["towers"],
+            [element_content.build_ability_path("elemental_core")])
+        creep_content.generate(built["creeps"])
     if with_showcase:
         showcase.generate()
 
 
 def _models():
-    """Both rosters' models, and their heights in one dictionary.
+    """Every roster's models, and what the content stage needs to know about
+    them afterwards.
 
-    One dictionary rather than two because a KEY is unique across the whole
-    game - a tower's files are named by it, and two towers sharing one would
-    already have collided on disk long before this.
+    The two TOWER rosters share one dictionary of heights, because a KEY is
+    unique across the whole game - a tower's files are named by it, and two
+    towers sharing one would already have collided on disk long before this.
+
+    Creeps are kept apart because what a creep model hands back is a different
+    SHAPE of answer: not one number but its height, its click radius, its
+    stride and the names of every node that walks. A tower has none of those
+    and a creep needs all of them.
     """
     heights = tower_models.generate()
     heights.update(element_models.generate())
     print("wrote %d tower models" % len(heights))
-    return heights
+    return {"towers": heights, "creeps": creep_models.generate()}
 
 
 if __name__ == "__main__":

@@ -79,6 +79,21 @@ described here is implemented and working. Values marked TBD are not decided yet
   - it covers decoration only: a turning halo, a floating core, an idling
     blade. An attack animation is not affected, because something that cannot
     attack has no attack to animate
+- **A tower on a clock says so in two places at once**: a bar over its head in
+  the world, and a row on its panel where the stat lines usually are
+  - it covers selling, upgrading and reverting to an Elemental Core. All three
+    are countdowns the player started and can still call off, and all three
+    look the same because what the player needs to know is the same: how long,
+    and what will be standing there afterwards
+  - the worldspace bar sits ABOVE the health bar, at a fixed height, so it
+    stands in the same place whether or not the health bar is being drawn
+  - it IGNORES the player's health bar setting and shows for the whole
+    countdown. That setting is about clutter over a field of full-health
+    towers; a countdown is a thing the player asked for and is waiting on, and
+    hiding it would hide the only sign that a press landed
+  - CONSTRUCTION is the exception and gets no bar of its own. A tower going up
+    already shows its progress by its health climbing from 1 to full, and a
+    second bar over the first would say the same thing twice
 - An effect that stands for an AREA is drawn at the area it really covered, and
   holds there long enough to be read
   - it snaps out to full size and then rests, rather than creeping outwards for
@@ -190,14 +205,102 @@ described here is implemented and working. Values marked TBD are not decided yet
     sits at the middle of the model rather than at its outline, so the two
     cannot be confused at a glance
 
+- **The CREEP roster answers the same three questions again**, and it is a rule
+  in the same way both tower rosters are: it survives real art replacing every
+  model, and it is what a 3D artist should be handed with them
+  - WHICH FAMILY is what the creep does to the MAZE, and it is the only
+    question a player has to answer in the second before one arrives. It is
+    deliberately not the creep's TIER: a tier is a cost bracket and carries no
+    mechanical meaning, so making it the loudest signal would teach a player
+    something untrue. Three families, three hard rules:
+    - a GROUND creep stands on legs, on the floor, and is opaque
+    - a FLYING creep has NO LEGS AT ALL, hangs at its cruising height, is drawn
+      translucent and unlit, and is the only thing in the game with a SHADOW
+      DISC pinned to the ground beneath it. The disc is the tell, not the
+      altitude: from a top down camera a flyer at height and a flyer on the
+      floor are the same picture, so the height is worth nothing on its own
+    - an ATTACKER creep is the only creep whose WEAPON IS LIT. Every other hard
+      part in the roster is unlit - bone, claw, iron, a Swordsman's sword - so
+      the one thing on the field with a hot edge is the one thing coming for
+      your towers rather than past them. It is about the LIT edge and not about
+      carrying a weapon, because half the roster carries one and almost none of
+      them ever swing it at a building
+  - WHICH CREEP is its body plan and its hide colour. The plans are the shapes
+    a roster of creatures actually needs - four legs, two legs, eight legs, a
+    hulk, a floating wraith, a walking tree - and two creeps on the same plan
+    are pulled apart on the things that change the OUTLINE rather than the
+    detail: how far the torso stoops, whether legs are replaced by a hem,
+    what the head is, what the hands hold
+  - HOW STRONG IT IS is a stepped ladder on the creep's own GOLD COST, and it
+    is worth more here than on towers: a creep cannot be upgraded, so a player
+    has no other way to learn the ordering. It runs on cost rather than on tier
+    so that it is one ladder across the whole roster - a bracket does not
+    restart it - and it climbs the same way the tower ladder does, with
+    continuous rules keeping neighbours apart and stepped ones making the
+    dangerous ones readable across a map:
+    - the creep grows, its EYES brighten, and its CARAPACE - every claw, horn,
+      plate and weapon on it - ramps from raw bone through to blackened steel
+    - plates arrive over the shoulders or flanks, then a row of spines down the
+      back, then a crest of horns. WHERE each goes is the body plan's business;
+      what the ladder fixes is that it is there
+    - the carapace ramp runs from PALE TO DARK, opposite to the tower trim
+      ramp's iron to white gold, so a creep's hard parts can never be read as a
+      tower's tier metal halfway up either ladder
+  - a BOSS is forced onto the top of that ladder whatever it costs, and takes a
+    size bonus on top. It is sent one at a time and steals two lives, so it has
+    to read as the biggest thing in its bracket before a player has read
+    anything else about it
+- **A creep's only lit parts are its EYES**, in one amber that is the same on
+  every creep in the game, brightening as the ladder climbs - plus an
+  attacker's weapon edge, which is that same amber and is the one exception
+  - a player learns "brighter eyes, tougher creep" once and it holds for the
+    whole roster, which is worth more than a per-creep eye colour at the size
+    an eye is actually drawn
+  - it is also what separates a creep from an ELEMENTAL tower, which glows over
+    its whole body. Creeps carry hide colour and elements carry light
+- **A creep's hide says WHICH CREEP, never WHOSE.** Ownership is the minimap's
+  job. Tinting a creep by its sender would cost the roster the one axis that
+  tells a Sheep from a Skeleton, and an in-world owner tell - if one is ever
+  wanted - has to be a separate device such as a ring on the ground
+  - creep hides are MUTED and are chosen against the ten elemental hues rather
+    than around them. Where one lands near an element that is a deliberate
+    outcome and not a collision: mud is earth coloured. What keeps the two
+    apart is everything else - a creep is unlit, organically banded rather than
+    panelled, and stands on no foundation patch
+- **Every creep walks**, and the walk is measured in DISTANCE TRAVELLED rather
+  than played on a clock
+  - a creep chilled to half speed takes half as many steps in the same second,
+    a stunned one stands still, and a big creep covering the same ground takes
+    fewer, longer strides. None of that has to be told to the animation
+  - it is also what makes the walk work unchanged on a client, which runs no
+    simulation and only sees the position the server sent
+  - a flyer has no legs to measure a stride with, so its drift is on a clock
+    instead and what it swings is the rags trailing under it. A creature that
+    is perfectly still reads as dead, in the air as much as on the ground
+- **A killed creep pops the gold it paid**, in the air over the spot it died on
+  - bounty goes to whoever owns the maze, and a tower defence is watched at the
+    maze rather than at the resource bar, so the payout is drawn where the
+    player is already looking
+  - it is the same number on every machine watching, and it costs nothing on
+    the wire: the authority draws it as it pays the bounty, and a client draws
+    it when the creep leaves the snapshot
+
 # Controls
 - Mouse controls follow the WC3 standard
   - Left click selects a unit, or gives an attack order when the click lands
     on a creep and the selection can shoot it
   - Left click and drag draws a selection box
   - Right click on walkable ground issues a move order to the selection
-- A multi selection only ever holds one unit type, from one owner
-  - A selection box drawn across a mixture keeps the first unit's type
+- A multi selection only ever holds one KIND of unit, from one owner
+  - Kind is coarser than type: every tower is one kind, so any tower can stand
+    in a selection beside any other whatever its element, branch or tier
+  - Towers, mobile units, the send building and the technology discs are all
+    different kinds and are never mixed in one selection. The discs themselves
+    are NOT BUILT; the rule that keeps them out of a tower selection already is
+  - A selection BOX is narrower still and comes back with one exact TYPE: the
+    type it caught most of, so a box over three Archers and two Crushers hands
+    back the three Archers. A tie goes to the type the box met first
+  - Assembling a selection of several types is what shift is for, below
   - A box that catches both units and buildings keeps the units
 - Anything can be clicked to inspect it, including creeps and enemy units
   - It fills the normal unit panel; a unit that takes no orders simply shows an
@@ -216,16 +319,24 @@ described here is implemented and working. Values marked TBD are not decided yet
 - Holding shift while selecting adds to the current selection instead of
   replacing it, by click or by box
   - Shift clicking an already selected unit removes it again
-  - Only units matching the selection's type can be added, by the rule above
+  - Any unit of the selection's KIND can be added, so shift is how a mixture of
+    tower types is put together - a box would have kept only one of them
+  - A shift box adds everything it touched that may join, without narrowing to
+    one type: the selection already says what is wanted
   - Shift clicking empty ground keeps the selection rather than clearing it
 - Double clicking a unit selects every unit of exactly that type
-  - Exact type, not category: double clicking a Basic Tower picks up Basic Towers
-    only, never other tower types, and later never other upgrade levels
+  - Exact type, not kind: double clicking a Basic Tower picks up Basic Towers
+    only, never other tower types, and never other upgrade levels
+  - Every one of them on the field, where a box is limited to what it drew
+    around, which is the difference between the two
   - Own units only, so an enemy's identical towers are never caught
   - The window is 0.5 seconds for now
 - Control groups on the number keys 1 to 9
   - Control plus a number assigns the current selection to that number
   - The number alone recalls that group
+  - A group holds whatever was selected, so a group of mixed tower types is
+    normal - assembled with shift - while a group of towers plus the builder
+    cannot be put together in the first place
   - The same number twice inside the double click window also centres the camera
     on the group's first unit
   - Units that die or are sold drop out of every group they were in
@@ -258,6 +369,16 @@ described here is implemented and working. Values marked TBD are not decided yet
 - A unit panel sits at the bottom of the screen while exactly one unit is selected
   - Unit portrait on the left with current and max health below it, and mana
     below that for the towers that have any
+    - each of the two is a BAR as well as a number, the bar above the number it
+      belongs to. The bar is what is read at a glance mid-fight, the number is
+      what is read when the player actually wants to know
+    - the second bar is whatever that unit's second resource is. Mana for the
+      towers that spend it, and the same bar carries a tower whose named
+      ability fills up rather than spends - a Voidling growing towards the
+      point it transforms at is reading its own mana
+    - neither bar is affected by the worldspace health bar setting. That
+      setting is about clutter over the field; a panel is open because the
+      player selected something and is always answering a question they asked
     - the mana line is left out entirely for everything else, which is every
       Basic tower and every creep. A line reading "0 / 0" on all of them would
       be noise on the panel a player looks at most
@@ -277,6 +398,19 @@ described here is implemented and working. Values marked TBD are not decided yet
       creep's panel carries no line that only ever says "not this one"
   - Below those, attack speed and range, on a line that is left out entirely
     for anything that cannot attack
+  - **While the tower is on a clock, those stat lines give way to the
+    countdown**: the picture of what the job is about, what it is called, the
+    seconds left, and a bar
+    - the panel says one thing at a time. A tower two seconds from being sold
+      is not a tower whose attack speed anybody is reading
+    - the picture is what the job is ABOUT rather than the tower it is
+      happening to - the Sell button for a sale, and what a morph is turning
+      into for an upgrade or a return, on the same grounds the rising model
+      shows what is being bought
+    - the name is the tower's own and stays where it is. What is counting down
+      is happening TO the thing the panel is already describing
+    - the seconds round UP, so a countdown never shows a 0 that is then waited
+      on
   - A command card grid on the right holds that unit's available commands
     - 4 squares across by 3 down. Most units leave most of it empty, which is
       the price of the send building and the build menu having room

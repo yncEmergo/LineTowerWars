@@ -902,6 +902,8 @@ func _pay_bounty() -> void:
 	if _creep_stats == null || _creep_stats.bounty <= 0 || area == null:
 		return
 
+	BountyPopup.show_for(self)
+
 	var manager: PlayerManager = References.player_manager
 	if manager == null:
 		return
