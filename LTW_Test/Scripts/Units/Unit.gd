@@ -23,6 +23,17 @@ signal died()
 ## construction and swapping its cancel button for its real abilities.
 signal abilities_changed()
 
+## Which units may share a selection. Two units can be selected together only
+## when these match, so a box drawn across a whole area comes back as towers
+## OR as the builder rather than as a mixture no command card can describe.
+##
+## Deliberately COARSER than the unit type: every tower is one class, so any
+## tower boxes and groups with any other regardless of element or tier. It is
+## the double click sweep that stays exact - see is_same_type_as.
+const SELECT_MOBILE: StringName = &"mobile"
+const SELECT_TOWER: StringName = &"tower"
+const SELECT_SEND_BUILDING: StringName = &"send_building"
+
 @export_group("References")
 ## Stats for this unit type. Assigned per prefab, so every unit type carries
 ## its own without a central registry.
@@ -185,6 +196,17 @@ func is_same_type_as(other: Unit) -> bool:
 ## selection stays duck-typed, and so future non-tower buildings inherit it.
 func is_structure() -> bool:
 	return false
+
+
+## Which selection this unit may join. Anything that moves by default, which
+## covers the builder and the creeps.
+##
+## Separate from is_structure() rather than derived from it, because the two
+## answer different questions: the technology discs are structures and still
+## must not be selected alongside towers, so being a building is not on its
+## own enough to say what a unit groups with.
+func selection_class() -> StringName:
+	return SELECT_MOBILE
 
 
 ## The node whose meshes stand for this unit in a portrait or a baked icon.

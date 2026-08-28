@@ -1,8 +1,9 @@
 # Adding a roster of placeholder visuals
 
 How the Basic tower roster got its look, written down so the next roster gets
-the same one. Read this before building placeholder art for **elemental
-towers** or **creeps**.
+the same one. The elemental towers and the creeps have both been built to it
+since; where a roster answered one of its questions, the answer is recorded
+here next to the question.
 
 [README.md](README.md) is the tool reference — what the files are and how to
 run it. This is the method.
@@ -38,7 +39,17 @@ reads.
 | How STRONG is it? | a stepped ladder | six rungs of metal, size, glow, added parts |
 
 For a creep roster the same three exist and need naming before the first model
-is built:
+is built. **The tier 1 creeps answered them like this** — the full rules are
+in `game_rules.md` under Presentation, and this is only what they were chosen
+against:
+
+| Question | Axis | Creeps use |
+| --- | --- | --- |
+| What FAMILY is it? | what it does to the maze | ground walks / flying has no legs and a shadow disc / attacker is the only one with a LIT weapon |
+| What KIND within it? | body plan and hide colour | quadruped, biped, arachnid, golem, wraith, treant |
+| How STRONG is it? | a ladder on GOLD COST | mass, eye brightness, carapace, then plates, spines, a crest |
+
+The reasoning that got there:
 
 - **Family** — the creep TIER is the obvious candidate, and it is the wrong
   one. `game_rules.md` says a tier is a cost bracket and carries no mechanical
@@ -63,11 +74,15 @@ not a phase:
 
 - **Elemental towers** may use their element's hue freely. It is the one thing
   they have that Basic towers do not, and it is why Basic towers gave it up.
-- **Creeps** have the same problem the Basic towers had. A creep belongs to its
-  SENDER, the minimap already colours it by owner, and an opponent's creeps in
-  your maze must read as theirs. Any creep palette has to survive that. Solve
-  it in `style.py` next to the tower entries so the two are chosen against each
-  other, and not in a file of its own.
+- **Creeps** had the same problem the Basic towers had, and it was solved
+  differently: they keep a hide colour of their own, because a Sheep and a
+  Skeleton have to be told apart at a glance, and ownership stays the
+  minimap's job. What separates a creep from an element is a SECOND axis
+  rather than the hue — creep hides are muted, a creep's only lit parts are
+  its eyes, and it is drawn with an organic shader and stands on no foundation
+  patch. Where a creep lands near an element that is deliberate: mud is earth
+  coloured. All of it is in `style.py` next to the tower entries, so the
+  three rosters are chosen against each other.
 
 If a roster needs colour and cannot have it, spend the budget on **shape** and
 on the **tone split** below instead. That is what the Basic towers did.
@@ -193,6 +208,26 @@ ramps on the way out; pre-scaling double-applies them.
 
 Break one of these and nothing errors — the model is just quietly wrong.
 
+**Creeps meet a different contract**, and it is the WALK that sets it:
+
+- **`Gait`** — everything that bobs and leans as the creep travels.
+- **`Leg1 .. LegN`** — hip pivots, at the MODEL ROOT and NOT inside `Gait`.
+  A walk cycle is a body bobbing over feet that stay planted, so a leg hung
+  under the bobbing node lifts its own foot off the floor twice a stride and
+  the whole creature reads as swimming.
+- optional `Gait/ArmL`, `Gait/ArmR` — limbs that counter-swing.
+- optional `Gait/ArmR/Swing` — what an attacker chops with.
+- optional `Shadow` — the disc under a flyer, which must be a
+  `GroundShadow3D` and not merely a named node, or a portrait frames itself on
+  a box a metre taller than the creep.
+
+**A leg's LENGTH is derived from its hip height, never authored.** Authoring
+both and hoping they add up is how a roster ends up with one creep wading and
+another on stilts, and it is invisible in a diff: the numbers look perfectly
+reasonable right up until something is rendered.
+
+The tower contract, unchanged:
+
 - **`Turret`** — the node that turns to face a target.
 - **`Turret/Muzzle`** — where shots leave from.
   Every tower has both, including the ones with nothing to aim. One wiring
@@ -213,8 +248,12 @@ Break one of these and nothing errors — the model is just quietly wrong.
 
 Both come out of the models with no extra art:
 
-- **Icons** — `Scenes/Dev/icon_renderer.tscn`, run from the editor (baking an
-  image needs a renderer; headless has none). One PNG per unit type in
+- **Icons** — `Scenes/Dev/icon_renderer.tscn`, which has to RUN because baking
+  an image means rendering one and headless Godot has no renderer. It does not
+  need the editor: `godot --path . res://Scenes/Dev/icon_renderer.tscn -- creeps`
+  bakes one roster and leaves the others alone, which matters — re-baking a
+  roster whose models have not moved is a few hundred files of churn for no
+  change anybody asked for. One PNG per unit type in
   `2DArt/Icons/`, framed on the unit's own bounding box so every tier is the
   same size on a card. Re-run it whenever a model changes or the icon is stale.
   - **it names the file after the unit's DISPLAY NAME, not its key.** That works
@@ -248,9 +287,21 @@ In this order. Do not skip to the last one.
 3. **The probe** — `Scenes/Dev/tower_probe.tscn`. Anything that is a *timed
    state machine* goes here, because a screenshot cannot see it. It already
    proves attack rates, upgrade swaps and effect placement.
+   - a probe that has to run the real match must be a SCENE that instances
+     `Main.tscn`, never a `--script` main loop: a `--script` loop gets no
+     autoloads and no global class table, so the world comes up black and every
+     `MatchSession.is_authority()` in the project fails to resolve
+   - what a probe should PRINT is the moving part's own number, tick by tick.
+     A leg angle going 0.06, -0.22, 0.30 while the creep's z climbs is proof a
+     walk cycle is driven by distance; a screenshot of it is not
 4. **Look at it** — `generate.py --showcase` writes review scenes laying a
-   family out as its own upgrade tree. **Run them**; the editor's cinematic
-   capture renders them unlit.
+   family out as its own upgrade tree, and for creeps a second one from the
+   MATCH CAMERA'S OWN PITCH, which is the only view that answers the question
+   the roster exists to answer. **Run them**; the editor's cinematic capture
+   renders them unlit.
+   - `Scripts/Dev/CaptureRunner.gd` runs one and saves a PNG, for when nobody
+     is sitting in front of the screen:
+     `godot --path . --resolution 1600x900 --script res://Scripts/Dev/CaptureRunner.gd -- <scene> <out.png>`
 
 **A screenshot is the weakest evidence available.** Anything under about two
 seconds — a swing, a spray, a windup — cannot be caught reliably. Prove those
@@ -283,7 +334,40 @@ Each of these cost real time. None of them errors.
   Restart the editor; trust headless over the editor.
 - **`const` cannot hold a constructor call.** `PackedStringArray([...])` is not
   a constant expression; the literal `[...]` is.
-- **Never invent a `uid`.** Omit it and let Godot assign one.
+- **Never invent a `uid`.** Omit it and let Godot assign one. The editor DOES
+  write them into generated files the moment it saves one, which is why a full
+  run after somebody has had the project open reports a few hundred files
+  changed that nobody touched. See README.md.
+- **Width and height ramp SEPARATELY, and for a creature that breaks things.**
+  It is free on a tower — a stack of axis aligned drums just gets squatter —
+  and it is not free on anything with a limb. Two things go wrong and neither
+  errors: a head authored as a sphere comes out a PANCAKE, because its radius
+  took the width ramp and its height took the height one; and a leg placed by
+  trigonometry lands at an angle NOBODY AUTHORED, because its x offset and its
+  y offset were scaled by different numbers. The first creep pass had every
+  head flat and the spider's knees inside its own abdomen. The fix is to make
+  the two spaces explicit and convert between them at the call site —
+  `CreepModel.up()` and `.down()` — so every number says which one it is in.
+  Keeping the anisotropy is worth it: it is what makes the roster stocky, and
+  stocky is what reads from above.
+- **A rotated part's authored HEIGHT ends up somewhere else.** An axe head laid
+  on its side, a toe pointing forwards: its authored y is now a width, and left
+  alone it gets shorter every time the roster gets lower.
+- **`metallic` near 1 renders BLACK.** Under `gl_compatibility` with no
+  reflection probes and no sky, a metallic surface takes almost all its colour
+  from reflections it does not have. Tower trim gets away with it because its
+  top rungs emit; the creep carapace could not, because the eyes are the only
+  thing in that roster allowed to be lit. It read as holes cut in the model
+  until the metallic values came down.
+- **A weapon authored straight down the arm's own axis is INSIDE the
+  creature.** The first pass gave the Skeleton and the Swordsman blades that
+  came out of their own shoulders and were invisible from every angle a player
+  ever sees. Hang the weapon off a `Hold` pivot carrying one pose — out,
+  forward and tilted — and every weapon in the plan inherits it.
+- **A creature leans forward on a NEGATIVE rotation about X**, because Godot's
+  forward is -Z. Getting the sign wrong stands every neck up over the animal's
+  own back, and a fleece or a barrel then hides the join so it reads as a
+  floating head rather than as a wrong angle.
 - **Ids are claimed loudly.** `ability_id` and `unit_type_id` are permanent and
   never reused; scan the folder and take the highest plus one. A duplicate is a
   failed boot, which is the point — and it will happen if two people author at

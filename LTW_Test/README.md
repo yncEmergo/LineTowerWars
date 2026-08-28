@@ -31,9 +31,19 @@ are what a 3D artist should be handed with the models.
 plus the Timber Wolf that only ever arrives inside a Sheep pack. They unlock one at a time on
 the match clock, cost population that is now enforced, and come in three kinds: ordinary creeps
 that walk the maze, a flyer that ignores it entirely, and an attacker that goes after the towers
-and is the one creep its owner can command. The Boss steals two lives. Creeps are white spheres
-and are waiting on the same artist the towers are. Tiers 2 to 4 are still only written down, in
-[unit_data.md](unit_data.md) section 6.
+and is the one creep its owner can command. The Boss steals two lives. Tiers 2 to 4 are still
+only written down, in [unit_data.md](unit_data.md) section 6.
+
+**The creeps have a visual system of their own**, on the same three axes and answering them
+differently. What a creep does to the maze is its FAMILY and is a hard rule — a flyer has no
+legs and hangs over a shadow disc pinned to the ground, and an attacker is the only creep whose
+weapon is lit. Its body plan and hide colour say WHICH creep, and a ladder on its gold cost says
+how dangerous it is: it grows, its eyes brighten, its claws and plates ramp from bone to
+blackened steel, and it gains shoulder plates, then a row of spines, then a crest of horns.
+Every creep walks, and the walk is measured in distance travelled rather than played on a clock,
+so a chilled creep takes fewer steps and a stunned one stands still. A killed creep pops the
+gold it paid in the air over where it died. All of it is under Presentation in
+[game_rules.md](game_rules.md) alongside the tower rules.
 
 **The technology system is built, and so is everything it gates.** A Research Center screen
 sells the ten elements and the two tower paths each of them owns, at the source game's own
@@ -114,17 +124,18 @@ Attack, Sell, Build, Cancel. All of them are flat white silhouettes, because `Co
 tints the whole texture to say greyed-out or toggled-on.
 
 `Tools/` is build-time tooling and is not part of the game; a `.gdignore` keeps Godot out of
-it. [Tools/ModelGen](Tools/ModelGen/README.md) generates the tower models, the materials they
-share and the content that points at them — run it from the project root with
-`python Tools/ModelGen/generate.py`. [Tools/IconGen](Tools/IconGen/README.md) draws the
+it. [Tools/ModelGen](Tools/ModelGen/README.md) generates the tower and creep models, the materials
+they share and the content that points at them — run it from the project root with
+`python Tools/ModelGen/generate.py`. It writes creep PREFABS but not creep stats, which were
+authored by hand and stay the authority. [Tools/IconGen](Tools/IconGen/README.md) draws the
 `ability_*` action icons the same way, from `python Tools/IconGen/generate.py`. Both tools'
 output is checked in and is ordinary hand-editable Godot, so they are a convenience rather
 than a dependency.
 
-**Before building placeholder visuals for another roster** — the elemental towers, the
-creeps — read [PLACEHOLDER_ART.md](Tools/ModelGen/PLACEHOLDER_ART.md). It is the method the
-tower roster was built to: what the three readability axes are, why colour is reserved for
-the ten elements, the contracts a model must meet, and the traps already paid for.
+**Before building placeholder visuals for another roster** read
+[PLACEHOLDER_ART.md](Tools/ModelGen/PLACEHOLDER_ART.md). It is the method all three rosters
+were built to: what the three readability axes are, how each roster answered them, the
+contracts a model must meet, and every trap already paid for.
 
 Boot scene is `Scenes/Boot/boot.tscn`. It decides whether this process is a client or a
 dedicated server and then gets out of the way — see multiplayer.md §2.

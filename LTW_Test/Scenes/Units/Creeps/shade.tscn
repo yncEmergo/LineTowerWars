@@ -1,39 +1,45 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://Scripts/Units/Creep.gd" id="1_creep"]
-[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/shade_stats.tres" id="2_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Units/Creep.gd" id="1_Creep"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/shade_stats.tres" id="2_shade_stats"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Creeps/shade_model.tscn" id="3_shade_model"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="4_selection_ring"]
+[ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
-[sub_resource type="StandardMaterial3D" id="Material_body"]
-albedo_color = Color(1, 1, 1, 1)
-
-[sub_resource type="SphereMesh" id="Mesh_body"]
-material = SubResource("Material_body")
-radius = 0.2
-height = 0.4
-
-[sub_resource type="StandardMaterial3D" id="Material_ring"]
-shading_mode = 0
-albedo_color = Color(0.3, 0.95, 0.35, 1)
-
-[sub_resource type="TorusMesh" id="Mesh_ring"]
-material = SubResource("Material_ring")
-inner_radius = 0.26
-outer_radius = 0.3
+[sub_resource type="TorusMesh" id="SelectionRing"]
+inner_radius = 0.2504
+outer_radius = 0.3054
+rings = 20
+ring_segments = 4
+material = ExtResource("4_selection_ring")
 
 [node name="Shade" type="Node3D" node_paths=PackedStringArray("_selection_ring")]
-script = ExtResource("1_creep")
-stats = ExtResource("2_creep_stats")
+script = ExtResource("1_Creep")
+stats = ExtResource("2_shade_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.62
-select_radius = 0.46
-select_height = 0.2
+health_bar_height = 0.426
+select_radius = 0.25
+select_height = 0.123
 
-[node name="Body" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-mesh = SubResource("Mesh_body")
+[node name="Visual" parent="." instance=ExtResource("3_shade_model")]
 
 [node name="SelectionRing" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.165, 0)
 visible = false
 cast_shadow = 0
-mesh = SubResource("Mesh_ring")
+mesh = SubResource("SelectionRing")
+
+[node name="Walk" type="Node" parent="." node_paths=PackedStringArray("_unit", "_body", "_legs", "_arms")]
+script = ExtResource("5_WalkAnimation3D")
+_unit = NodePath("..")
+_body = NodePath("../Visual/Gait")
+_legs = [NodePath("../Visual/Tatter1"), NodePath("../Visual/Tatter2"), NodePath("../Visual/Tatter3"), NodePath("../Visual/Tatter4")]
+_arms = [NodePath("../Visual/Gait/ArmL"), NodePath("../Visual/Gait/ArmR")]
+leg_phases = PackedFloat32Array(0, 0.25, 0.5, 0.75)
+stride_length = 0.3431
+hover_cycles_per_second = 0.55
+bob_height = 0.0221
+swing_degrees = 9
+arm_swing_degrees = 5
+lean_degrees = 0
+roll_degrees = 3

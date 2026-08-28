@@ -46,7 +46,8 @@ STEP_Z = 1.9
 FACING = 1.92
 
 
-def build(rows, camera):
+def build(rows, camera, folder="Towers", facing=FACING, step=(STEP_X, STEP_Z),
+          lift=None):
     s = Scene()
     s.node("TowerShowcase", "Node3D", ".")
 
@@ -65,13 +66,16 @@ def build(rows, camera):
 
     width = max(len(r) for r in rows)
     for row, keys in enumerate(rows):
-        z = (row - (len(rows) - 1) * 0.5) * STEP_Z
+        z = (row - (len(rows) - 1) * 0.5) * step[1]
         for column, key in enumerate(keys):
-            x = (column - (width - 1) * 0.5) * STEP_X
-            path = "res://Scenes/Units/Models/Towers/%s_model.tscn" % key
+            x = (column - (width - 1) * 0.5) * step[0]
+            path = "res://Scenes/Units/Models/%s/%s_model.tscn" % (folder, key)
+            # A flyer's model origin IS its cruising height, so a review scene
+            # that puts one on the floor buries its own shadow disc.
+            y = 0.0 if lift is None else lift.get(key, 0.0)
             s.node("".join(p.capitalize() for p in key.split("_")), None, ".",
                    instance=s.ext("PackedScene", path),
-                   props=["transform = %s" % t3(x=x, z=z, ry=FACING)])
+                   props=["transform = %s" % t3(x=x, y=y, z=z, ry=facing)])
 
     # A sun roughly where the match camera's is, so what this shows is what the
     # game shows rather than a studio render.
@@ -150,6 +154,37 @@ def generate_elements():
     return len(er.ELEMENT_ORDER) + 2
 
 
+def generate_creeps():
+    """The creep roster, twice.
+
+    Once from the MATCH CAMERA'S OWN ANGLE, because that is the only view that
+    answers the question the roster exists to answer - can a player tell these
+    apart from up there - and once side on, because that is the view that shows
+    whether a silhouette is doing any work at all.
+
+    Laid out in unlock order, which is ascending cost, which is the ladder. So
+    reading either scene left to right is reading the strength ladder climb.
+    """
+    import creep_roster as cr
+    lf = chr(10)
+    keys = cr.keys()
+    lift = dict((k, cr.FLY_HEIGHT) for k in keys if cr.is_flying(k))
+    # The match camera's own pitch, from directly over the middle of the grid.
+    text = build([keys[0:5], keys[5:9], keys[9:13]],
+                 (4.23, 1.54, -1.222, 40), "Creeps", 3.1416,
+                 (0.82, 0.9), lift).render("[gd_scene format=3]")
+    io.open("Scenes/Dev/creep_showcase.tscn", "w",
+            encoding="utf-8", newline=lf).write(text)
+    # Side on, for the silhouettes. Two rows so each one is big enough to
+    # argue with.
+    text = build([keys[0:5], keys[5:9], keys[9:13]], (1.95, 4.3, -0.36, 34),
+                 "Creeps", 1.5708, (0.78, 1.45),
+                 lift).render("[gd_scene format=3]")
+    io.open("Scenes/Dev/creep_lineup.tscn", "w",
+            encoding="utf-8", newline=lf).write(text)
+    return 2
+
+
 def generate():
     os.makedirs("Scenes/Dev", exist_ok=True)
     lf = "\n"
@@ -164,4 +199,5 @@ def generate():
     text = build(every, (6.6, 8.0, -0.66, 50)).render("[gd_scene format=3]")
     io.open("Scenes/Dev/tower_showcase.tscn", "w",
             encoding="utf-8", newline=lf).write(text)
-    print("wrote %d showcase scenes" % (4 + generate_elements()))
+    print("wrote %d showcase scenes"
+          % (4 + generate_elements() + generate_creeps()))

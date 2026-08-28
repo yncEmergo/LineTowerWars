@@ -96,7 +96,7 @@ static func measure(into: Node3D) -> AABB:
 ## Everything a unit's portrait should leave out.
 ##
 ## Three kinds of thing, and none of them is the unit:
-##   - the selection ring and the health bar, which are UI wearing a mesh
+##   - the selection ring and every worldspace bar, which are UI wearing a mesh
 ##   - the ground patch a building stands on, which is FLOOR. Left in, it
 ##     renders as a grey smear under the tower in an icon that has no floor
 static func portrait_skips(unit: Node) -> Array[Node]:
@@ -113,7 +113,13 @@ static func portrait_skips(unit: Node) -> Array[Node]:
 
 static func _collect_skips(node: Node, into: Array[Node]) -> void:
 	for child in node.get_children():
-		if child is HealthBar3D || child is BuildingFoundation:
+		# Bar3D rather than HealthBar3D, so a tower's job bar is left out of its
+		# portrait for the same reason its health bar is. GroundShadow3D is the
+		# creep equivalent of a foundation: a flyer's shadow is FLOOR, and left
+		# in it frames every portrait of one on a box a metre taller than the
+		# creep, with the creep itself a speck at the top.
+		if child is Bar3D || child is BuildingFoundation \
+				|| child is GroundShadow3D:
 			into.append(child)
 		else:
 			_collect_skips(child, into)

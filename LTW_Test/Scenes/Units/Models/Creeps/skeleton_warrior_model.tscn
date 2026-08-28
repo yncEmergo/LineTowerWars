@@ -1,0 +1,302 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/skeleton_warrior_hide.tres" id="1_skeleton_warrior_hide"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/skeleton_warrior_hide_deep.tres" id="2_skeleton_warrior_hide_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/skeleton_warrior_hide_pale.tres" id="3_skeleton_warrior_hide_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r0.tres" id="4_carapace_r0"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r0.tres" id="5_eye_r0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.0198
+height = 0.0862
+radial_segments = 5
+rings = 2
+material = ExtResource("1_skeleton_warrior_hide")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_2"]
+radius = 0.0158
+height = 0.0796
+radial_segments = 5
+rings = 2
+material = ExtResource("2_skeleton_warrior_hide_deep")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.0317, 0.0125, 0.0412)
+material = ExtResource("4_carapace_r0")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_4"]
+radius = 0.0198
+height = 0.0862
+radial_segments = 5
+rings = 2
+material = ExtResource("1_skeleton_warrior_hide")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
+radius = 0.0158
+height = 0.0796
+radial_segments = 5
+rings = 2
+material = ExtResource("2_skeleton_warrior_hide_deep")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.0317, 0.0125, 0.0412)
+material = ExtResource("4_carapace_r0")
+
+[sub_resource type="SphereMesh" id="SphereMesh_7"]
+radius = 0.0495
+height = 0.0891
+radial_segments = 6
+rings = 2
+material = ExtResource("2_skeleton_warrior_hide_deep")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_8"]
+radius = 0.0693
+height = 0.104
+radial_segments = 7
+rings = 3
+material = ExtResource("1_skeleton_warrior_hide")
+
+[sub_resource type="TorusMesh" id="TorusMesh_9"]
+inner_radius = 0.047
+outer_radius = 0.0594
+rings = 12
+ring_segments = 4
+material = ExtResource("4_carapace_r0")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.1178, 0.0097, 0.0624)
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.1214, 0.0499, 0.0728)
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_12"]
+top_radius = 0.0236
+bottom_radius = 0.0281
+height = 0.014
+radial_segments = 5
+rings = 0
+material = ExtResource("2_skeleton_warrior_hide_deep")
+
+[sub_resource type="SphereMesh" id="SphereMesh_13"]
+radius = 0.0561
+height = 0.1122
+radial_segments = 6
+rings = 3
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(0.0617, 0.0224, 0.0645)
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_15"]
+radius = 0.0112
+height = 0.0224
+radial_segments = 5
+rings = 2
+material = ExtResource("5_eye_r0")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_16"]
+radius = 0.0185
+height = 0.054
+radial_segments = 5
+rings = 2
+material = ExtResource("1_skeleton_warrior_hide")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_17"]
+radius = 0.0159
+height = 0.0459
+radial_segments = 5
+rings = 2
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_18"]
+radius = 0.0222
+height = 0.0444
+radial_segments = 5
+rings = 2
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_19"]
+radius = 0.0185
+height = 0.054
+radial_segments = 5
+rings = 2
+material = ExtResource("1_skeleton_warrior_hide")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_20"]
+radius = 0.0159
+height = 0.0459
+radial_segments = 5
+rings = 2
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="SphereMesh" id="SphereMesh_21"]
+radius = 0.0222
+height = 0.0444
+radial_segments = 5
+rings = 2
+material = ExtResource("3_skeleton_warrior_hide_pale")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_22"]
+top_radius = 0.0102
+bottom_radius = 0.0102
+height = 0.0211
+radial_segments = 5
+rings = 0
+material = ExtResource("2_skeleton_warrior_hide_deep")
+
+[sub_resource type="BoxMesh" id="BoxMesh_23"]
+size = Vector3(0.0591, 0.0083, 0.0166)
+material = ExtResource("4_carapace_r0")
+
+[sub_resource type="BoxMesh" id="BoxMesh_24"]
+size = Vector3(0.0259, 0.096, 0.0092)
+material = ExtResource("4_carapace_r0")
+
+[sub_resource type="PrismMesh" id="PrismMesh_25"]
+size = Vector3(0.0259, 0.0211, 0.0092)
+material = ExtResource("4_carapace_r0")
+
+[node name="SkeletonWarriorModel" type="Node3D"]
+script = ExtResource("6_UnitModel")
+
+[node name="LegL" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0495, 0.172, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0431, 0)
+mesh = SubResource("CapsuleMesh_1")
+
+[node name="Shin" type="MeshInstance3D" parent="LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.126, 0)
+mesh = SubResource("CapsuleMesh_2")
+
+[node name="Foot" type="MeshInstance3D" parent="LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1595, -0.0087)
+mesh = SubResource("BoxMesh_3")
+
+[node name="LegR" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0495, 0.172, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0431, 0)
+mesh = SubResource("CapsuleMesh_4")
+
+[node name="Shin" type="MeshInstance3D" parent="LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.126, 0)
+mesh = SubResource("CapsuleMesh_5")
+
+[node name="Foot" type="MeshInstance3D" parent="LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1595, -0.0087)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Gait" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.172, 0)
+
+[node name="Pelvis" type="MeshInstance3D" parent="Gait"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("SphereMesh_7")
+
+[node name="Torso" type="Node3D" parent="Gait"]
+transform = Transform3D(1, 0, 0, 0, 0.995, -0.0998, 0, 0.0998, 0.995, 0, 0, 0)
+
+[node name="Chest" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0437, 0)
+mesh = SubResource("CapsuleMesh_8")
+
+[node name="Belt" type="MeshInstance3D" parent="Gait"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0099, 0)
+mesh = SubResource("TorusMesh_9")
+
+[node name="Rib1" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0354, -0.0194)
+mesh = SubResource("BoxMesh_10")
+
+[node name="Rib2" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.052, -0.0194)
+mesh = SubResource("BoxMesh_10")
+
+[node name="Rib3" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0686, -0.0194)
+mesh = SubResource("BoxMesh_10")
+
+[node name="Shoulders" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0853, 0)
+mesh = SubResource("BoxMesh_11")
+
+[node name="Head" type="Node3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1301, 0)
+
+[node name="Neck" type="MeshInstance3D" parent="Gait/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0923, 0)
+mesh = SubResource("CylinderMesh_12")
+
+[node name="Skull" type="MeshInstance3D" parent="Gait/Torso/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("SphereMesh_13")
+
+[node name="Jaw" type="MeshInstance3D" parent="Gait/Torso/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0348, -0.0123)
+mesh = SubResource("BoxMesh_14")
+
+[node name="Eye1" type="MeshInstance3D" parent="Gait/Torso/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0224, 0.0056, -0.0426)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_15")
+
+[node name="Eye2" type="MeshInstance3D" parent="Gait/Torso/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0224, 0.0056, -0.0426)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_15")
+
+[node name="ArmL" type="Node3D" parent="Gait/Torso"]
+transform = Transform3D(0.9838, 0.179, 0, -0.179, 0.9838, 0, 0, 0, 1, -0.0759, 0.0853, 0)
+
+[node name="Upper" type="MeshInstance3D" parent="Gait/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.027, 0)
+mesh = SubResource("CapsuleMesh_16")
+
+[node name="Fore" type="MeshInstance3D" parent="Gait/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0733, 0)
+mesh = SubResource("CapsuleMesh_17")
+
+[node name="Hand" type="MeshInstance3D" parent="Gait/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0953, 0)
+mesh = SubResource("SphereMesh_18")
+
+[node name="ArmR" type="Node3D" parent="Gait/Torso"]
+transform = Transform3D(0.9838, -0.179, 0, 0.179, 0.9838, 0, 0, 0, 1, 0.0759, 0.0853, 0)
+
+[node name="Upper" type="MeshInstance3D" parent="Gait/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.027, 0)
+mesh = SubResource("CapsuleMesh_19")
+
+[node name="Fore" type="MeshInstance3D" parent="Gait/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0733, 0)
+mesh = SubResource("CapsuleMesh_20")
+
+[node name="Hand" type="MeshInstance3D" parent="Gait/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0953, 0)
+mesh = SubResource("SphereMesh_21")
+
+[node name="Hold" type="Node3D" parent="Gait/Torso/ArmR"]
+transform = Transform3D(0.9801, 0.1939, 0.0434, -0.1987, 0.9564, 0.2139, 0, -0.2182, 0.9759, 0.037, -0.0919, -0.0222)
+
+[node name="Grip" type="MeshInstance3D" parent="Gait/Torso/ArmR/Hold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0058, 0)
+mesh = SubResource("CylinderMesh_22")
+
+[node name="Guard" type="MeshInstance3D" parent="Gait/Torso/ArmR/Hold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0067, 0)
+mesh = SubResource("BoxMesh_23")
+
+[node name="Blade" type="MeshInstance3D" parent="Gait/Torso/ArmR/Hold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0557, 0)
+mesh = SubResource("BoxMesh_24")
+
+[node name="Tip" type="MeshInstance3D" parent="Gait/Torso/ArmR/Hold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1142, 0)
+mesh = SubResource("PrismMesh_25")

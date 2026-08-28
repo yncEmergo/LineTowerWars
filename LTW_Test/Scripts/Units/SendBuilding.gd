@@ -76,6 +76,13 @@ func is_structure() -> bool:
 	return true
 
 
+## A class of its own, so a box drawn over the send strip and the maze below it
+## never hands back the send building lumped in with towers. There is one of
+## these per player, so its class only ever holds the one unit.
+func selection_class() -> StringName:
+	return SELECT_SEND_BUILDING
+
+
 # --- Stock --------------------------------------------------------------
 
 ## Reserve for a creep type, or null if this building cannot send it. Read by

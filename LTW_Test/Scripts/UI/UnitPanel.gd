@@ -35,11 +35,26 @@ const SELECTION_ROWS: int = 3
 ## every Basic tower and every creep - a line reading "0 / 0" on all of them
 ## would be noise on the panel a player looks at most.
 @export var _mana_label: Label
+## Health and the secondary resource, drawn under the portrait as bars as well
+## as written out as numbers. The bar is what is read at a glance mid-fight;
+## the numbers are what is read when the player actually wants to know.
+@export var _health_bar: StatBar
+## Hidden for anything with no second resource, which is every creep, the
+## builder and every Basic tower.
+@export var _mana_bar: StatBar
 @export var _damage_label: Label
 @export var _armor_label: Label
 ## Attack speed and range. Hidden for anything that cannot attack, so a creep's
 ## panel does not carry an empty line.
 @export var _attack_label: Label
+## Shown INSTEAD of the stat lines while the selected tower is busy with
+## something on a clock - selling, upgrading, reverting to a Core. The panel
+## says one thing at a time, and while a countdown is running that is the one
+## thing worth saying. See Building.current_job.
+@export var _job_row: Control
+@export var _job_icon: TextureRect
+@export var _job_label: Label
+@export var _job_bar: StatBar
 @export var _command_grid: GridContainer
 @export var _selection_grid: GridContainer
 @export var _command_slot_scene: PackedScene
@@ -70,6 +85,10 @@ var _unit: Unit = null
 var _group: Array = []
 ## Units whose signals are currently connected, so they can be released again.
 var _watched: Array[Unit] = []
+## Whether the job row is on screen, which is what the stat lines hide behind.
+## Kept because those lines are shown from three places and every one of them
+## has to lose to a running countdown.
+var _busy: bool = false
 
 ## Read on every selection change, so they come through getters onto
 ## References rather than being wired separately on this node.
@@ -235,6 +254,8 @@ func show_unit(unit: Variant) -> void:
 	_set_damage_text(stats)
 	_armor_label.text = "Armor:   %s" % stats.armor_text(unit.armor_value())
 	_set_attack_text(stats)
+	_refresh_bars()
+	_refresh_job()
 
 	_card_stack = [_unit.current_abilities()]
 	_refresh_slots()
@@ -264,6 +285,8 @@ func show_group(units: Array) -> void:
 	if _unit != null:
 		_health_label.text = "%d / %d" % [_unit.current_health, _unit.max_health()]
 	_set_mana_text(_unit as Building)
+	_refresh_bars()
+	_refresh_job()
 
 	_fill_selection_grid(units)
 	_card_stack = [_shared_abilities(units)]
@@ -284,6 +307,9 @@ func clear() -> void:
 	_unit = null
 	_group = []
 	_card_stack = []
+	_busy = false
+	if _job_row != null:
+		_job_row.visible = false
 	_show_portrait(null)
 	visible = false
 
@@ -297,7 +323,7 @@ func _set_damage_text(stats: UnitStats) -> void:
 	if _damage_label == null:
 		return
 
-	_damage_label.visible = stats.attack != null
+	_damage_label.visible = stats.attack != null && !_busy
 	if stats.attack != null:
 		_damage_label.text = "Damage:   %s" % stats.damage_text()
 
@@ -310,7 +336,7 @@ func _set_attack_text(stats: UnitStats) -> void:
 		return
 
 	var attack: AttackStats = stats.attack
-	_attack_label.visible = attack != null
+	_attack_label.visible = attack != null && !_busy
 	if attack == null:
 		return
 
@@ -324,12 +350,16 @@ func _set_group_mode(group: bool) -> void:
 		_name_label.visible = !group
 	if _mana_label != null && group:
 		_mana_label.visible = false
+	if _mana_bar != null && group:
+		_mana_bar.visible = false
 	if _damage_label != null:
 		_damage_label.visible = !group
 	if _armor_label != null:
 		_armor_label.visible = !group
 	if _attack_label != null:
 		_attack_label.visible = !group
+	if _job_row != null:
+		_job_row.visible = false
 	if _selection_grid != null:
 		_selection_grid.visible = group
 
@@ -465,6 +495,22 @@ func pop_to_root() -> void:
 ## Escape has something to back out of before it reaches the game menu.
 func is_in_submenu() -> bool:
 	return _card_stack.size() > 1
+
+
+## The unit driving the panel, or null when nothing is selected. The first of
+## the group when several are.
+func shown_unit() -> Unit:
+	return _unit
+
+
+## Whether the card on screen would answer this key: the square it names holds
+## an ability that can actually be pressed.
+##
+## Asked by the Research Center, which is open ON TOP of the card and sees the
+## key first. It is the same question _unhandled_key_input asks itself, put
+## where somebody else can ask it.
+func claims_key(key: Key) -> bool:
+	return _ability_for_key(key) != null
 
 
 ## Backs out of one thing.
@@ -647,24 +693,36 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_release_hold()
 		return
 
-	var config: ControlsConfig = _controls_config
-	if config == null:
-		return
-
-	var index: int = config.slot_for_key(key.keycode)
-	if index < 0 || index >= _slots.size():
-		return
-
-	var ability: UnitAbility = _slots[index].ability
-	# An empty square, and a passive that cannot be pressed, both leave the key
-	# unhandled rather than swallowing it.
-	if ability == null || ability.targeting == UnitAbility.Targeting.PASSIVE:
+	var ability: UnitAbility = _ability_for_key(key.keycode)
+	if ability == null:
 		return
 
 	_on_ability_activated(ability)
 	if ability.repeat_on_hold:
 		_begin_hold(ability, key.keycode)
 	get_viewport().set_input_as_handled()
+
+
+## The ability a key press lands on, or null for a key this card does not
+## answer. An empty square, and a passive that cannot be pressed, both give
+## null rather than swallowing the key.
+func _ability_for_key(key: Key) -> UnitAbility:
+	if !visible:
+		return null
+
+	var config: ControlsConfig = _controls_config
+	if config == null:
+		return null
+
+	var index: int = config.slot_for_key(key)
+	if index < 0 || index >= _slots.size():
+		return null
+
+	var ability: UnitAbility = _slots[index].ability
+	if ability == null || ability.targeting == UnitAbility.Targeting.PASSIVE:
+		return null
+	return ability
+
 
 # --- Hold to repeat -----------------------------------------------------
 
@@ -691,6 +749,8 @@ func _release_hold() -> void:
 func _process(delta: float) -> void:
 	_refresh_armor_label()
 	_refresh_mana_label()
+	_refresh_bars()
+	_refresh_job()
 
 	if _held_ability == null:
 		return
@@ -761,6 +821,89 @@ func _refresh_armor_label() -> void:
 	var text: String = "Armor:   %s" % _unit.stats.armor_text(_unit.armor_value())
 	if _armor_label.text != text:
 		_armor_label.text = text
+
+
+## The two bars under the portrait. Polled with the numbers they sit above and
+## for the same reason: health and mana both move from a dozen places, and a
+## signal per source would mean every new one having to remember this panel.
+##
+## The bar ignores the player's worldspace health bar setting on purpose. That
+## setting is about clutter over the field; a panel is something the player
+## opened by selecting a unit and is always answering a question they asked.
+func _refresh_bars() -> void:
+	if !visible || _unit == null || !is_instance_valid(_unit):
+		return
+
+	if _health_bar != null:
+		_health_bar.set_ratio(float(_unit.current_health) / float(_unit.max_health()))
+
+	var tower: Building = _unit as Building
+	# One answer for the bar and the number under it. Asked every frame rather
+	# than only when the selection changes, because a tower CAN gain or lose
+	# its ceiling mid-match - see Building.set_max_mana - and a bar that
+	# appeared without its number would be halfway right.
+	var shows_mana: bool = _group.is_empty() && tower != null && tower.uses_mana()
+	if _mana_label != null:
+		_mana_label.visible = shows_mana
+	if _mana_bar == null:
+		return
+	_mana_bar.visible = shows_mana
+	if shows_mana:
+		_mana_bar.set_ratio(tower.mana_ratio())
+
+
+## Swaps the stat lines for the countdown row while the selected tower is busy,
+## and swaps them back when it finishes or is called off.
+##
+## Polled rather than driven off sell_started and its siblings: the progress
+## has to be re-read every frame anyway, so a signal would only tell this panel
+## something the very next frame was going to tell it regardless.
+func _refresh_job() -> void:
+	var job: BuildingJob = _current_job()
+	var busy: bool = job != null
+	if busy != _busy:
+		_busy = busy
+		_apply_stat_lines()
+	if _job_row != null:
+		_job_row.visible = busy
+	if !busy:
+		return
+
+	if _job_icon != null:
+		_job_icon.texture = job.icon
+	if _job_label != null:
+		# Rounded UP, so a countdown never shows a 0 the player then waits on.
+		var text: String = "%s (%ds)" % [job.label(), ceili(job.seconds_left)]
+		if _job_label.text != text:
+			_job_label.text = text
+	if _job_bar != null:
+		_job_bar.set_ratio(job.progress)
+
+
+## What the panel's unit is busy with, or null. Never for a group: a countdown
+## belongs to one tower, and the group card has no room to say whose.
+func _current_job() -> BuildingJob:
+	if !visible || !_group.is_empty():
+		return null
+	var tower: Building = _unit as Building
+	if tower == null || !is_instance_valid(tower):
+		return null
+	return tower.current_job()
+
+
+## Puts the three stat lines back under their own rules once _busy has changed.
+## Damage and attack decide for themselves whether they apply at all - a creep
+## has no attack line either way - so both go back through their own setters.
+func _apply_stat_lines() -> void:
+	if _unit == null || !is_instance_valid(_unit) || _unit.stats == null:
+		return
+	if !_group.is_empty():
+		return
+
+	_set_damage_text(_unit.stats)
+	_set_attack_text(_unit.stats)
+	if _armor_label != null:
+		_armor_label.visible = !_busy
 
 func _repeat_interval(config: ControlsConfig) -> float:
 	var ramp: float = config.hold_repeat_ramp_seconds

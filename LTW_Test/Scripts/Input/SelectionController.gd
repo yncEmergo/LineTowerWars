@@ -9,8 +9,14 @@ extends Node
 ##
 ## Units are found through the UNIT_GROUP group and only ever duck-typed, so
 ## any future selectable unit works here without changing this script as long
-## as it exposes selection_anchor(), selection_radius(), set_selected() and an
-## owner_player_id.
+## as it exposes selection_anchor(), selection_radius(), set_selected(),
+## selection_class() and an owner_player_id.
+##
+## What may be selected TOGETHER is asked of the unit rather than decided here,
+## and the two gestures ask two different questions. A BOX takes one exact
+## type, the one it caught most of. SHIFT takes anything of the same
+## selection_class(), so a mixture of tower types is assembled by hand while a
+## tower and the builder are never both in one selection either way.
 ##
 ## Everything it needs is shared, so it all comes through References.
 
@@ -269,14 +275,16 @@ func _select_in_rect(rect: Rect2, additive: bool) -> void:
 		var extended: Array = _selected.duplicate()
 		for unit in caught:
 			# The units-over-buildings rule is skipped here on purpose: the
-			# existing selection already says which type is wanted, so there is
-			# nothing left to disambiguate.
+			# existing selection already says which class is wanted, so there
+			# is nothing left to disambiguate. Nor is the box narrowed to one
+			# type - shift is assembling a selection by hand, so everything it
+			# touched that may join, joins.
 			if !extended.has(unit) && _can_join_selection(unit):
 				extended.append(unit)
 		_set_selection(extended)
 		return
 
-	_set_selection(_uniform_type(_prefer_mobile_units(caught)))
+	_set_selection(_dominant_type(_prefer_mobile_units(caught)))
 
 
 ## The single unit a box comes back with when it caught nothing the player can
@@ -334,7 +342,7 @@ func _toggle_in_selection(unit: Node) -> void:
 		return
 
 	if !_can_join_selection(unit):
-		Log.info("Unit not added, selection holds another type", {"unit": unit.name})
+		Log.info("Unit not added, selection holds another class", {"unit": unit.name})
 		return
 
 	var extended: Array = _selected.duplicate()
@@ -342,26 +350,55 @@ func _toggle_in_selection(unit: Node) -> void:
 	_set_selection(extended)
 
 
-## A multi selection only ever holds one unit type. The owner half of that rule
-## is already covered by only ever searching the local player's own units.
+## A multi selection only ever holds one selection CLASS, which is coarser than
+## the unit type: any tower joins any other tower, while a tower and the builder
+## never share a selection. Unit.selection_class is where that line is drawn.
+##
+## The owner half of the rule is already covered by only ever searching the
+## local player's own units.
 func _can_join_selection(unit: Node) -> bool:
 	if _selected.is_empty():
 		return true
-	return unit.is_same_type_as(_selected[0])
+	return unit.selection_class() == _selected[0].selection_class()
 
 
-## Keeps the first unit's type and drops anything else, so a box drawn across a
-## mixture comes back as a selection the command card can actually describe.
-func _uniform_type(units: Array) -> Array:
+## Keeps the most numerous unit type in a box and drops the rest, so a box
+## drawn across a mixture comes back as one type rather than as a crowd sharing
+## an almost empty command card.
+##
+## The MAJORITY rather than the first one found, because a box is a rough
+## gesture: dragging over three Archers and two Crushers means the Archers,
+## whichever of them the sweep happened to reach first. A tie goes to the type
+## the box met first, which is the old behaviour and is as good an answer as
+## any when the player was equally ambiguous about both.
+##
+## Only the box narrows like this. Assembling a mixture of types is what shift
+## is for, and that goes through _can_join_selection instead.
+func _dominant_type(units: Array) -> Array:
 	if units.size() <= 1:
 		return units
 
-	# The first unit is kept unconditionally rather than tested against itself,
-	# so a unit with no stats resource yet still selects on its own.
-	var result: Array = [units[0]]
-	for i in range(1, units.size()):
-		if units[i].is_same_type_as(units[0]):
-			result.append(units[i])
+	# Counted by the stats resource, which IS the unit type - see
+	# Unit.is_same_type_as. Ownership needs no test here, because a box only
+	# ever sweeps up the local player's own units in the first place.
+	var counts: Dictionary = {}
+	for unit in units:
+		counts[unit.stats] = int(counts.get(unit.stats, 0)) + 1
+
+	var wanted: UnitStats = null
+	var best: int = 0
+	# Dictionary iteration is insertion ordered, so a tie is settled by which
+	# type the box met first rather than arbitrarily.
+	for key: UnitStats in counts:
+		var count: int = counts[key]
+		if count > best:
+			wanted = key
+			best = count
+
+	var result: Array = []
+	for unit in units:
+		if unit.stats == wanted:
+			result.append(unit)
 	return result
 
 

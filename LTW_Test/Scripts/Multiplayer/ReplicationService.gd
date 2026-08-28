@@ -24,7 +24,7 @@ extends Node
 ## nothing that can drift. What it draws is what arrived.
 
 ## Fields per unit in the snapshot: id, type, owner, area, x, y, z, yaw,
-## health, flags, mana, maximum mana.
+## health, flags, mana, maximum mana, job progress.
 ##
 ## Mana is in there because an elemental tower's whole ability is usually "fill
 ## up, then spend it", and a client that could not see the bar would be
@@ -40,9 +40,20 @@ extends Node
 ## nothing to turn a unit with. Without it every creep walks the maze facing
 ## whichever way it happened to spawn, which is exactly what it looked like.
 ##
+## The job progress is one number for whichever countdown the flags say is
+## running - a tower only ever runs one at a time. It is in for the same reason
+## the mana is: a client that could not see the bar would be watching a tower
+## it had told to sell simply stand there. It also puts the rising model back
+## on a client, which had only the two ends of that movement before.
+##
+## What is NOT sent is what a morph is turning INTO, so a client draws no
+## upgrade preview and its panel pictures the tower rather than what it is
+## becoming. That is a whole unit type per record for one icon, and the
+## countdown, the name and the bar are all right without it.
+##
 ## Floats hold every one of these exactly: a float32 is exact on integers up to
 ## 16.7 million, which is far past any id this game will hand out.
-const UNIT_STRIDE: int = 12
+const UNIT_STRIDE: int = 13
 ## Fields per player: slot, gold, income, lives, value, placement.
 const PLAYER_STRIDE: int = 6
 ## Fields per reserve: slot, creep type, count.
@@ -64,6 +75,11 @@ const FLAG_UPGRADING: int = 4
 ## presentation - it changes what the server shoots - so the client is told
 ## rather than remembering its own click.
 const FLAG_PRIORITIZE_AIR: int = 8
+## Whether the morph running is a RETURN to an Elemental Core rather than an
+## upgrade. Sent because the two are one phase with one clock and the panel
+## calls them different things, so without it a client says a tower being
+## reverted is being upgraded.
+const FLAG_RETURNING: int = 16
 
 ## Newest snapshot received and not yet applied, or empty.
 ##
@@ -158,6 +174,8 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 			flags |= FLAG_SELLING
 		if building.is_upgrading():
 			flags |= FLAG_UPGRADING
+		if building.is_returning():
+			flags |= FLAG_RETURNING
 	if unit.attack_component != null && unit.attack_component.prioritizes_air():
 		flags |= FLAG_PRIORITIZE_AIR
 
@@ -173,6 +191,7 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 		flags,
 		0 if building == null else building.current_mana,
 		0 if building == null else building.max_mana,
+		0.0 if building == null else building.phase_progress(),
 	])
 
 
@@ -387,7 +406,9 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 		building.set_replicated_phase(
 			(flags & FLAG_UNDER_CONSTRUCTION) != 0,
 			(flags & FLAG_SELLING) != 0,
-			(flags & FLAG_UPGRADING) != 0
+			(flags & FLAG_UPGRADING) != 0,
+			(flags & FLAG_RETURNING) != 0,
+			records[at + 12]
 		)
 		building.set_replicated_mana(int(records[at + 10]), int(records[at + 11]))
 	if unit.attack_component != null:
@@ -402,6 +423,13 @@ func _remove(id: int) -> void:
 	var unit: Unit = session.unit_for(id)
 	session.unregister_unit(id)
 	if unit != null:
+		# The one thing a client can tell about a death without being sent
+		# anything: a creep that was here last tick is gone. That is what a
+		# bounty popup needs and it costs no wire field (3.3). It is also all
+		# it can tell - a creep despawned for any other reason would pop the
+		# same number, which today is only a leak with nowhere left to go.
+		if unit is Creep:
+			BountyPopup.show_for(unit)
 		unit.queue_free()
 
 

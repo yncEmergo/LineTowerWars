@@ -422,6 +422,19 @@ of the elemental roster's abilities run on - fill up by attacking, then spend th
 client that could not see the bar would be watching a tower fire for no reason it could read.
 The maximum is sent rather than looked up because one tower in the game lowers its own.
 
+It also carries the PROGRESS of whatever countdown a building is running, and one flag saying
+whether a morph is an upgrade or a return to an Elemental Core. Both are there for the same
+reason the mana is: a client that told a tower to sell would otherwise watch it stand there
+doing nothing for the whole countdown. One number covers construction, selling and morphing
+because a tower only ever runs one of them at a time, and it is written straight into the
+same elapsed clocks a single-player run uses, so every reader gets the server's answer through
+exactly one path. It puts the RISING MODEL back on a client too, which had only the two ends
+of that movement before.
+
+What a morph is turning INTO is still not sent, so a client draws no upgrade preview and its
+panel pictures the tower rather than what it is becoming. That is a whole unit type per record
+for one icon, and the countdown, the name and the bar are all right without it.
+
 What a snapshot does NOT carry is the STATUS EFFECTS on a creep. A client sees the creep where
 the server puts it, which is most of what a slow or a stun looks like; what it cannot see is
 armour that has been eaten out of an opponent's creep, so the figure on that creep's panel is
