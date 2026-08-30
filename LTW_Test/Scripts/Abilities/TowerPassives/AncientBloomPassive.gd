@@ -74,7 +74,7 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, target.global_position, blast_cells):
 		creep.take_damage(blast_damage, DamageTable.DamageType.MAGIC, true)
-		creep.status().change_armor(-armor_reduction, armor_seconds)
+		creep.status().change_armor(self, -armor_reduction, armor_seconds)
 		caught += 1
 
 	if caught <= refund_below:

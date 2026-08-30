@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://chifs1ptaub1r"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://b8o6jghavyq0r" path="res://Resources/UnitStats/Towers/void_ultimate_harbinger_stats.tres" id="2_void_ultimate_harbinger_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/void_ultimate_harbinger_stats.tres" id="2_void_ultimate_harbinger_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 244
 tower_stats = ExtResource("2_void_ultimate_harbinger_stats")
 required_tech_id = 26
-ability_id = 244
 display_name = "Upgrade to Ultimate Harbinger"
 description = "Drags a creep back down the lane it came from and burns a share of its maximum health."
+targeting = 1
 slot = 0

@@ -28,6 +28,11 @@ const DEFAULT_EMPTY: Color = Color(0.65, 0.13, 0.13, 1.0)
 
 var fill_color: Color = DEFAULT_FILL
 var empty_color: Color = DEFAULT_EMPTY
+## How thick this bar is drawn. A var rather than the constant it defaults to,
+## because a bar stacked under the health bar should not be as loud as the one
+## it hangs off - a second full-height rectangle over every tower reads as two
+## health bars. Set it before the bar enters the tree, like the colours.
+var bar_height: float = BAR_HEIGHT
 
 var _material: ShaderMaterial
 ## Last ratio set. Kept because a subclass's visibility rule is a question
@@ -49,7 +54,7 @@ func _ready() -> void:
 	_material.set_shader_parameter("ratio", _ratio)
 
 	var quad: QuadMesh = QuadMesh.new()
-	quad.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
+	quad.size = Vector2(BAR_WIDTH, bar_height)
 	quad.material = _material
 
 	var instance: MeshInstance3D = MeshInstance3D.new()
@@ -59,6 +64,18 @@ func _ready() -> void:
 	add_child(instance)
 
 	_on_ratio_changed()
+
+
+## Repaints the bar. Safe before the bar is in the tree - the vars are what
+## _ready hands to the material - and after, which is what a bar whose tower
+## changed KIND of second resource needs. See ResourceBar3D.
+func set_colors(fill: Color, empty: Color) -> void:
+	fill_color = fill
+	empty_color = empty
+	if _material == null:
+		return
+	_material.set_shader_parameter("fill_color", fill_color)
+	_material.set_shader_parameter("missing_color", empty_color)
 
 
 ## Sets the filled proportion, 0 to 1.

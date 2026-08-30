@@ -95,7 +95,7 @@ const NO_SLOT: int = -1
 @export var tech_id: int = 0
 @export var element: Element = Element.ARCANE
 @export var kind: Kind = Kind.BASIC
-## Full name, e.g. "Fire Technology (1): Doom Guard" (unit_data.md 2.1).
+## Full name, e.g. "Fire Technology (1): Moonbeam" (unit_data.md 2.1).
 @export var display_name: String = ""
 @export_multiline var description: String = ""
 @export var icon: Texture2D
@@ -111,7 +111,7 @@ const NO_SLOT: int = -1
 @export var slot: int = NO_SLOT
 
 @export_group("Ultimate")
-## The Ultimate tower this path leads to, e.g. "Ultimate Doom Guard". Empty on
+## The Ultimate tower this path leads to, e.g. "Ultimate Moonbeam". Empty on
 ## a Basic technology, which leads to no Ultimate of its own.
 @export var ultimate_name: String = ""
 ## The PATH technology of another element that this path's Ultimate also

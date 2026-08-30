@@ -46,12 +46,33 @@ func is_moving() -> bool:
 	return _is_moving
 
 
+## Whether this unit is standing on a world point, by the same reckoning its
+## own movement uses to decide it has arrived.
+##
+## CLAMPED first, deliberately: move_to clamps an order into the unit's own
+## area, so a point outside it is somewhere the unit can never stand and a
+## walk aimed there ends as close as it can get. Without the clamp an order
+## given past the edge would never read as reached and would hold up
+## everything queued behind it forever.
+func has_arrived_at(world_point: Vector3) -> bool:
+	if area == null || _mobile_stats == null:
+		return true
+
+	var offset: Vector3 = area.clamp_point(world_point) - global_position
+	offset.y = 0.0
+	return offset.length() <= _mobile_stats.arrive_threshold
+
+
 func _physics_process(delta: float) -> void:
 	# 3.4: a client runs no simulation of its own. What it draws is what the
 	# server sent, so anything that would advance the world here has to stand
 	# aside. See MatchSession.is_authority().
 	if !MatchSession.is_authority():
 		return
+
+	# Before the walking, so a task that starts this tick is walked this tick
+	# rather than next.
+	_advance_orders(delta)
 
 	if !_is_moving || _mobile_stats == null:
 		return

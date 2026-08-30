@@ -37,8 +37,8 @@ ADDING A ROSTER. The layers are stacked so that only the top one is new work:
 
 All three rosters are in. Elemental towers were the cheap case - same material
 roles, same shape of ladder - and creeps were the bigger one, needing their own
-shader, their own ladder and six body plans, while still inheriting every layer
-below style.py unchanged.
+shader, their own ladder and a builder per body plan, while still inheriting
+every layer below style.py unchanged.
 
 The creep stage writes PREFABS ONLY. Creep stats, passives and pack entries
 were authored by hand and unit_data.md 8.1 makes them the authority; see

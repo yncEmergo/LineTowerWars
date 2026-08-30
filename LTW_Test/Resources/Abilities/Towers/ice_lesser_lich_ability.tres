@@ -1,16 +1,16 @@
-[gd_resource type="Resource" script_class="FrostAttackPassive" format=3 uid="uid://b2wvluyx5k85g"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dlb0frugo1k6f" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
-[ext_resource type="Texture2D" uid="uid://bcek61gij000n" path="res://2DArt/Icons/lesser_lich.png" id="2_lesser_lich"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_lich.png" id="2_lesser_lich"]
 
 [resource]
 script = ExtResource("1_FrostAttackPassive")
+ability_id = 138
+display_name = "Frost Blast"
+targeting = 0
+slot = 6
+icon = ExtResource("2_lesser_lich")
 slow_per_hit = 0.055
 slow_cap = 0.3
 slow_seconds = 5
 chill_source = "lesser_lich"
-ability_id = 138
-display_name = "Frost Blast"
-icon = ExtResource("2_lesser_lich")
-targeting = 0
-slot = 11

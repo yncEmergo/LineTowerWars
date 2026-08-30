@@ -1,7 +1,7 @@
 class_name FrenziedFlamesPassive
 extends TowerPassive
 
-## Fire 1, Ultimate Doom Guard: the decay is gone and the mana is spent instead.
+## Fire 1, Ultimate Moonbeam: the decay is gone and the mana is spent instead.
 ##
 ## unit_data.md 4.3: it regenerates mana, and every attack spends whatever has
 ## built up to spew flames over the ground its shot landed on. The damage
@@ -40,7 +40,7 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 	var per_second: float = max_damage_per_second * (float(spent) / float(tower.max_mana))
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, target.global_position, radius_cells):
-		creep.status().burn(per_second, duration_seconds)
+		creep.status().burn(self, per_second, duration_seconds)
 
 
 func effect_text() -> String:

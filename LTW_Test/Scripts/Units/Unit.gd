@@ -17,7 +17,7 @@ extends Node3D
 ## and edited in the editor.
 
 signal selection_changed(is_selected: bool)
-signal health_changed(current: int, maximum: int)
+signal health_changed(current: float, maximum: int)
 signal died()
 ## Raised when the command card should be rebuilt, e.g. a building finishing
 ## construction and swapping its cancel button for its real abilities.
@@ -69,7 +69,12 @@ var owner_player_id: int = 1
 var area: PlayerArea
 ## Read by the unit panel. A unit with no health component never loses any,
 ## which is how the builder stays invulnerable without a special case.
-var current_health: int = 0
+##
+## A FLOAT, because regeneration is a share of maximum health per second and
+## one tick of that is a fraction of a point - rounding it away would leave a
+## small tower regenerating nothing at all. The player is never shown this
+## number directly: display_health() rounds it up to a whole one.
+var current_health: float = 0.0
 ## This unit's attack, or null for anything that cannot attack. Registered by
 ## the component itself in its _ready, from the @export it already carries
 ## pointing back here, so no prefab has to wire the same link twice.
@@ -77,6 +82,15 @@ var current_health: int = 0
 ## A plain var rather than a getter because abilities reach it by name on a
 ## duck-typed unit, and because a unit with no attack simply leaves it null.
 var attack_component: AttackComponent = null
+## The chain of orders this unit is working through, or null while nobody has
+## ever given it one.
+##
+## Lazily built by OrderQueue.of(), so the hundreds of creeps in a maze - none
+## of which takes an order at all - pay one null field and nothing else. A
+## plain var rather than a getter for the same reason attack_component is: it
+## is reached by name from abilities that were handed some unit, and a unit
+## that has never been ordered simply leaves it null.
+var order_queue: OrderQueue = null
 
 var _selected: bool = false
 var _health_bar: HealthBar3D
@@ -86,19 +100,23 @@ func _ready() -> void:
 	if stats == null:
 		Log.err("Unit has no UnitStats assigned in its prefab", name)
 	else:
-		current_health = stats.max_health
+		current_health = float(stats.max_health)
 
 	# An invulnerable unit can never lose health, so a bar would only ever be
 	# a full green rectangle. See game_rules.md on the builder.
 	if !is_invulnerable():
 		_create_health_bar()
 
-	if _selection_ring == null:
-		Log.err("Unit has no selection ring assigned in its prefab", name)
+	# Both of these are about a unit STANDING somewhere. A unit that is not in
+	# the world has no ring to draw and nothing to be clicked on, so neither
+	# the error nor the group applies to it - see is_in_world().
+	if is_in_world():
+		if _selection_ring == null:
+			Log.err("Unit has no selection ring assigned in its prefab", name)
 
-	# Every unit is selectable, so registering here means a new unit type never
-	# has to remember to opt in at its spawn site.
-	add_to_group(SelectionController.UNIT_GROUP)
+		# Every unit in the world is selectable, so registering here means a
+		# new unit type never has to remember to opt in at its spawn site.
+		add_to_group(SelectionController.UNIT_GROUP)
 	_apply_selection_visual()
 
 
@@ -140,6 +158,21 @@ func _claim_unit_id() -> void:
 	var session: MatchSession = References.match_session
 	if session != null:
 		unit_id = session.register_unit(self)
+
+
+## Runs the order chain for one tick, if this unit has one.
+##
+## Called explicitly from each unit type's own `_physics_process` rather than
+## from one on Unit, and that is forced: Godot calls only the MOST DERIVED
+## `_physics_process`, and Creep deliberately replaces MobileUnit's outright
+## rather than calling super(). A base class implementation would therefore be
+## silently skipped by exactly the units that take the most orders.
+##
+## Private, because it is the tick and not an order - everything that GIVES an
+## order goes through OrderQueue.
+func _advance_orders(delta: float) -> void:
+	if order_queue != null:
+		order_queue.advance(delta)
 
 
 ## Gives the id back when the unit dies or the scene ends, so the registry does
@@ -221,6 +254,31 @@ func visual_root() -> Node3D:
 	return self
 
 
+## Whether this unit STANDS somewhere a player can point at.
+##
+## True for everything with a body. False for the send buildings, which are
+## reached through the four buttons over the unit panel and have no presence on
+## the map at all - so nothing may click one, box one, sweep one up with a
+## double click, draw a marker for one or centre the camera on one.
+##
+## A question of its own rather than "has no meshes", because every one of
+## those callers is asking the same thing and each would otherwise have to
+## name the class. See SendBuilding.
+func is_in_world() -> bool:
+	return true
+
+
+## Whether this unit may share a selection with anything at all, its own kind
+## included.
+##
+## selection_class() is the finer rule - which OTHER kinds may join - and this
+## is the coarse one that comes first. The send buildings answer no: there are
+## four of them and each shows a different card, so a selection holding two
+## would have to pick one card to draw and silently drop the other.
+func allows_multi_selection() -> bool:
+	return true
+
+
 ## Whether this unit takes orders from its owner. False for ordinary creeps,
 ## which can be clicked and inspected but never commanded, and true again for
 ## attacker creeps once those exist. See game_rules.md.
@@ -239,6 +297,17 @@ func max_health() -> int:
 	return maxi(1, stats.max_health)
 
 
+## The health to SHOW, which is the real one rounded UP.
+##
+## Up rather than to nearest so that a unit still standing never reads as 0 -
+## anything above nothing is at least one point to the player - and so a tower
+## that has regenerated a sliver reads as having gained it rather than as
+## having gained nothing. The cost is that a full tower one hair below its
+## maximum reads as full, which is the harmless half of the trade.
+func display_health() -> int:
+	return mini(max_health(), ceili(current_health))
+
+
 ## Invulnerability is a property of the armour type, so it needs no per-unit
 ## flag and no special case anywhere else.
 func is_invulnerable() -> bool:
@@ -246,7 +315,7 @@ func is_invulnerable() -> bool:
 
 
 func is_alive() -> bool:
-	return current_health > 0
+	return current_health > 0.0
 
 
 ## Applies damage and kills the unit if it runs out. Invulnerable units
@@ -266,7 +335,7 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 	# number the server never agreed to and then have it snap back (3.4).
 	if !MatchSession.is_authority():
 		return
-	_set_health(current_health - resolve_damage(amount, damage_type, is_aoe))
+	_set_health(current_health - float(resolve_damage(amount, damage_type, is_aoe)))
 
 
 ## What a raw damage amount actually costs this unit, once the whole pipeline
@@ -318,8 +387,8 @@ func armor_value() -> int:
 ## and letting one bring a creep back would make the difference between the two
 ## a matter of arriving a frame earlier. Reviving has its own path, see
 ## Creep.revive().
-func heal(amount: int) -> void:
-	if amount <= 0 || is_invulnerable() || !is_alive():
+func heal(amount: float) -> void:
+	if amount <= 0.0 || is_invulnerable() || !is_alive():
 		return
 	_set_health(current_health + amount)
 
@@ -344,6 +413,19 @@ func _damage_block() -> int:
 	return 0
 
 
+## The SECOND RESOURCE this unit runs on, drawn under its portrait as a bar and
+## a number, or null for anything that runs on nothing but its health.
+##
+## Null here rather than on the panel, because "does this unit have one" is the
+## unit's own answer. Towers override it with mana or with whatever their
+## ability has banked; the creeps that carry a mana trait override it with
+## their pool; everything else - the builder, a Basic tower, an ordinary creep -
+## says nothing and the panel draws no line at all. See game_rules.md under
+## Interface.
+func secondary_resource() -> TowerResource:
+	return null
+
+
 ## Whether this unit is in a state where its attack may fire, if it has one.
 func can_attack() -> bool:
 	return is_alive()
@@ -359,17 +441,17 @@ func attack_speed_ratio() -> float:
 	return 1.0
 
 
-func _set_health(value: int) -> void:
-	var clamped: int = clampi(value, 0, max_health())
+func _set_health(value: float) -> void:
+	var clamped: float = clampf(value, 0.0, float(max_health()))
 	if clamped == current_health:
 		return
 
 	current_health = clamped
 	if _health_bar != null:
-		_health_bar.set_ratio(float(current_health) / float(max_health()))
+		_health_bar.set_ratio(current_health / float(max_health()))
 	health_changed.emit(current_health, max_health())
 
-	if current_health <= 0:
+	if current_health <= 0.0:
 		_die()
 
 
@@ -380,14 +462,14 @@ func _set_health(value: int) -> void:
 ## on a client a death is the server removing it from the snapshot rather than
 ## a number this machine noticed. Going through both would pay a bounty twice
 ## and free the node underneath the code that is still reading it.
-func set_replicated_health(value: int) -> void:
-	var clamped: int = clampi(value, 0, max_health())
+func set_replicated_health(value: float) -> void:
+	var clamped: float = clampf(value, 0.0, float(max_health()))
 	if clamped == current_health:
 		return
 
 	current_health = clamped
 	if _health_bar != null:
-		_health_bar.set_ratio(float(current_health) / float(max_health()))
+		_health_bar.set_ratio(current_health / float(max_health()))
 	health_changed.emit(current_health, max_health())
 
 
@@ -403,7 +485,7 @@ func _create_health_bar() -> void:
 	_health_bar.name = "HealthBar"
 	add_child(_health_bar)
 	_health_bar.position = Vector3(0.0, health_bar_height, 0.0)
-	_health_bar.set_ratio(float(current_health) / float(max_health()))
+	_health_bar.set_ratio(current_health / float(max_health()))
 
 
 # --- Selection ----------------------------------------------------------

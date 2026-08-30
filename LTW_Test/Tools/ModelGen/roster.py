@@ -14,6 +14,10 @@ UNITS_PER_CELL = 128.0
 
 # DamageTable.DamageType
 MAGIC, CHAOS, NORMAL, PIERCING, SIEGE = 0, 1, 2, 3, 4
+# The one type that is not physical: it ignores the armour matrix and a creep's
+# armour points entirely. No tower's BASIC attack deals it - it is what an
+# ability deals, and what an attack that pierces armour deals down its line.
+SPELL = 5
 # UnitStats.ArmorType
 FORTIFIED = 5
 # AttackStats target flags

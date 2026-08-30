@@ -19,16 +19,20 @@ extends Node3D
 ## are, so widening the area stays one number in one file.
 
 @export_group("References")
-## Strip above the walkable space that the send building stands on.
-@export var _send_zone: MeshInstance3D
 @export var _spawn_zone: MeshInstance3D
 @export var _build_zone: MeshInstance3D
 @export var _end_zone: MeshInstance3D
 ## Grid overlay over the buildable zone. Every area carries one, only the local
 ## player's is ever drawn.
 @export var _build_grid: BuildGrid
-## This area's own send building, standing on the send strip.
-@export var _send_building: SendBuilding
+## This area's own senders, one per creep tier that has creeps in it.
+##
+## They stand NOWHERE - see SendBuilding - and ride along in this prefab only
+## so that a player leaving the match takes them with them. An array because
+## each creep tier has a sender of its own and each says which tier it is, so
+## a tier with nothing implemented yet is simply absent from this list and the
+## ones around it notice nothing. See unit_data.md 6.1.
+@export var _send_buildings: Array[SendBuilding] = []
 ## Parent for this area's creeps. Kept apart from the towers so crowding only
 ## ever iterates creeps, and so an area's creeps die with it.
 @export var _creeps_root: Node3D
@@ -38,6 +42,9 @@ var player_id: int = 1
 ## One byte per internal cell, 1 when a building occupies it. Indexed
 ## iz * internal_width() + ix, so row major from the creep spawn downwards.
 var _occupied: PackedByteArray = PackedByteArray()
+## Every creep walking this area, kept in step with the creeps root rather than
+## asked for it. See creeps().
+var _creeps: Array[Creep] = []
 ## Route to the end zone, rebuilt whenever the occupancy grid changes.
 var _flow: FlowField = FlowField.new()
 ## Internal cells a destroyed tower left rubble on, as cell index -> seconds
@@ -66,7 +73,8 @@ func setup(id: int) -> void:
 	_occupied.resize(internal_width() * internal_depth())
 	_apply_layout()
 	_rebuild_flow_field()
-	_setup_send_building()
+	_watch_creeps()
+	_setup_send_buildings()
 	_setup_build_grid()
 
 
@@ -76,9 +84,6 @@ func _apply_layout() -> void:
 	var build_depth: float = float(_config.build_depth_cells) * _config.cell_size
 	var end_depth: float = float(_config.end_depth_cells) * _config.cell_size
 
-	# Above the walkable space and deliberately outside the grid, so the send
-	# building can never be pathed through or built on.
-	_place_zone(_send_zone, _config.send_zone_start_z(), _config.send_zone_depth())
 	_place_zone(_spawn_zone, 0.0, spawn_depth)
 	_place_zone(_build_zone, _config.build_zone_start_z(), build_depth)
 	_place_zone(_end_zone, _config.build_zone_end_z(), end_depth)
@@ -100,13 +105,15 @@ func _place_zone(zone: MeshInstance3D, start_z: float, depth: float) -> void:
 	zone.position = Vector3(_config.area_width() * 0.5, 0.0, start_z + depth * 0.5)
 
 
-## The send building rides along in the prefab and only has to be told whose
-## area it is standing on.
-func _setup_send_building() -> void:
-	if _send_building == null:
-		Log.err("PlayerArea has no send building in its prefab", player_id)
+## The senders ride along in the prefab and only have to be told whose they
+## are. Nothing is placed: they have no body to put anywhere.
+func _setup_send_buildings() -> void:
+	if _send_buildings.is_empty():
+		Log.err("PlayerArea has no sender in its prefab", player_id)
 		return
-	_send_building.place_above(player_id, self)
+	for building in _send_buildings:
+		if building != null:
+			building.attach_to(player_id, self)
 
 
 ## Only the player building here has any use for a grid, so every other area's
@@ -452,12 +459,69 @@ func is_point_free(world_pos: Vector3) -> bool:
 
 ## Parent for this area's creeps, taken from the prefab. Rebuilt on the spot if
 ## it is missing, so a hand-assembled area still spawns creeps somewhere valid.
+##
+## SPAWNING is what this is for. Anything that wants to LOOK at the creeps
+## wants creeps() below instead, which is the same list without the allocation.
 func creeps_root() -> Node3D:
 	if _creeps_root == null || !is_instance_valid(_creeps_root):
 		_creeps_root = Node3D.new()
 		_creeps_root.name = "Creeps"
 		add_child(_creeps_root)
+		_watch_creeps()
 	return _creeps_root
+
+
+## Every creep walking this area, in the order they arrived.
+##
+## THE LIST ITSELF, not a copy. Callers may only iterate it; anything that has
+## to hold on to the result or sort it takes its own copy. That is the whole
+## point of it existing: this is read by every tower's target search on every
+## tick, and get_children() builds a fresh hundred-element array each time it
+## is asked, which made those allocations the largest single cost in a loaded
+## tick after the search itself.
+##
+## A creep that is on its way out is still in here until the frame ends,
+## exactly as it was still a child before - TargetFinder._is_attackable is what
+## filters those out, and that has not moved.
+func creeps() -> Array[Creep]:
+	return _creeps
+
+
+## Starts keeping that list in step with the creeps root.
+##
+## Signals rather than a register/unregister pair the spawner has to remember
+## to call, because a creep is not only added and freed: a leak RECYCLES it
+## into the next player's maze with reparent(), so it leaves one area's list
+## and joins another's mid match. Both signals fire on a reparent, where a call
+## made at spawn time would miss it and leave the creep on two lists at once.
+## See Creep._recycle.
+func _watch_creeps() -> void:
+	var root: Node3D = _creeps_root
+	if root == null || !is_instance_valid(root):
+		return
+
+	if !root.child_entered_tree.is_connected(_on_creep_entered):
+		root.child_entered_tree.connect(_on_creep_entered)
+	if !root.child_exiting_tree.is_connected(_on_creep_exiting):
+		root.child_exiting_tree.connect(_on_creep_exiting)
+
+	# Whatever is already parented, so this is correct whether it is called
+	# before any creep exists or after a prefab arrived with some in it.
+	_creeps.clear()
+	for child: Node in root.get_children():
+		_on_creep_entered(child)
+
+
+func _on_creep_entered(child: Node) -> void:
+	var creep: Creep = child as Creep
+	if creep != null && !_creeps.has(creep):
+		_creeps.append(creep)
+
+
+func _on_creep_exiting(child: Node) -> void:
+	var creep: Creep = child as Creep
+	if creep != null:
+		_creeps.erase(creep)
 
 
 ## Pushes any creep standing inside a footprint out to the nearest free spot.
@@ -465,11 +529,10 @@ func _displace_creeps_in(cell: Vector2i, footprint: Vector2i) -> void:
 	if _creeps_root == null || !is_instance_valid(_creeps_root):
 		return
 
-	for child in _creeps_root.get_children():
-		var creep: Creep = child as Creep
+	for creep: Creep in _creeps:
 		# A flyer reads none of this grid, so a tower going up under one is
 		# nothing that happened to it.
-		if creep == null || creep.is_flying():
+		if creep.is_flying():
 			continue
 
 		var at: Vector2i = world_to_internal_cell(creep.global_position)
@@ -538,33 +601,18 @@ func build_grid() -> BuildGrid:
 	return _build_grid
 
 
-## Null once it has been freed, not a dangling reference. A player who is out
-## of the match has everything of theirs removed, this included, and callers
-## ask "is there one" rather than "was there one".
-func send_building() -> SendBuilding:
-	if _send_building == null || !is_instance_valid(_send_building):
-		return null
-	return _send_building
-
-
-## Where one send building stands on the strip above the area.
+## Every sender this area still has.
 ##
-## The strip is divided into GameConfig.send_building_slots even columns and
-## the building takes the middle of its own, so the Tier 1 building sits at the
-## LEFT rather than in the middle of an empty strip - which is where it will
-## still be once the other three tiers have buildings of their own.
-## unit_data.md 6.1.
-func send_zone_slot_center(slot: int) -> Vector3:
-	if _config == null:
-		return global_position
+## Freed ones are left out rather than handed back as dangling references: a
+## player who is out of the match has everything of theirs removed, these
+## included, and callers ask "which are there" rather than "which were there".
+func send_buildings() -> Array[SendBuilding]:
+	var standing: Array[SendBuilding] = []
+	for building in _send_buildings:
+		if building != null && is_instance_valid(building):
+			standing.append(building)
+	return standing
 
-	var slots: int = maxi(1, _config.send_building_slots)
-	var column: float = (float(clampi(slot, 0, slots - 1)) + 0.5) / float(slots)
-	return to_global(Vector3(
-		_config.area_width() * column,
-		0.0,
-		_config.send_zone_start_z() + _config.send_zone_depth() * 0.5
-	))
 
 
 ## Centre of the buildable zone in world space. Used as the builder's start.

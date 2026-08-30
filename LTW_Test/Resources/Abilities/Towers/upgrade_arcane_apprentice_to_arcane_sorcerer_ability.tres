@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cgou4rbe0i43o"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://cpgkvc3kp0rre" path="res://Resources/UnitStats/Towers/arcane_sorcerer_stats.tres" id="2_arcane_sorcerer_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/arcane_sorcerer_stats.tres" id="2_arcane_sorcerer_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 273
 tower_stats = ExtResource("2_arcane_sorcerer_stats")
 required_tech_id = 22
-ability_id = 273
 display_name = "Upgrade to Sorcerer"
 description = "Fills with mana as it attacks and hits far harder when full. Splits into the caster and the bouncing orb."
+targeting = 1
 slot = 0

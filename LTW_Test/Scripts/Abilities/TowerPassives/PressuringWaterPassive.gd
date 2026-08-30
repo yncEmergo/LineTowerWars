@@ -107,7 +107,7 @@ func _try_paralyze(tower: Building) -> void:
 		if !creep.is_flying() || creep.status().is_immune(IMMUNE_KEY):
 			continue
 		creep.status().set_immune(IMMUNE_KEY, paralyze_cooldown)
-		creep.status().paralyze(paralyze_seconds)
+		creep.status().paralyze(self, paralyze_seconds)
 		return
 
 

@@ -4,3 +4,7 @@
 
 # Python bytecode from Tools/, which is build-time tooling and not part of the game.
 __pycache__/
+
+# Benchmark reports written by run_bench.ps1. Generated output, not content:
+# a run is only ever compared with another run on the same machine.
+Reports/

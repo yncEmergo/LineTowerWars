@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://c0mo4r3x5qq20"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://beg4bax2d5yly" path="res://Resources/UnitStats/Towers/void_lesser_leviathan_stats.tres" id="2_void_lesser_leviathan_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/void_lesser_leviathan_stats.tres" id="2_void_lesser_leviathan_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 245
 tower_stats = ExtResource("2_void_lesser_leviathan_stats")
 required_tech_id = 27
-ability_id = 245
 display_name = "Upgrade to Lesser Leviathan"
 description = "Eats armor and turns it into its own attack damage, which it loses again if it stops shooting."
+targeting = 1
 slot = 1

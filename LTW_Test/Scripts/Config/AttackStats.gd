@@ -16,6 +16,10 @@ extends Resource
 ## Flags for both would be a combination of booleans nobody can read.
 
 ## How a tower picks which creep to shoot.
+##
+## The ORDER is creation order and means nothing - FIRST is 0 because it was
+## written first, not because it is the default. A .tres stores the int, so do
+## not reorder these.
 enum TargetPriority {
 	## Furthest along its route, the classic tower defence choice.
 	FIRST,
@@ -94,7 +98,13 @@ const TARGET_AIR: int = 2
 ## the same as world units because cell_size is 1.0.
 @export var attack_range: float = 4.0
 @export_flags("Ground", "Air") var target_types: int = TARGET_GROUND | TARGET_AIR
-@export var target_priority: TargetPriority = TargetPriority.FIRST
+## CLOSEST by default, because it is the only priority whose answer differs
+## from tower to tower. Every other one ranks the CREEPS - furthest along,
+## most health, least health - so a line of towers coming off cooldown in the
+## same tick all score the same creep best and empty into it together while
+## the rest of the wave walks past. Nearest is measured FROM THE TOWER, so a
+## row of them spreads across a wave on its own with nothing coordinating it.
+@export var target_priority: TargetPriority = TargetPriority.CLOSEST
 ## Further creeps struck alongside the primary target, so 2 means 3 creeps in
 ## total. 0 is an ordinary single target attack.
 ## NOT BUILT: nothing reads this yet, see game_rules.md.
@@ -151,8 +161,13 @@ func can_hit_air() -> bool:
 
 
 ## Damage range as shown in the UI panel, e.g. "12 - 15".
-func damage_text() -> String:
-	return "%d - %d" % [damage_min, damage_max]
+##
+## `bonus` is whole points a unit's own abilities have added to it for good, so
+## what is written is what the tower standing on the field actually rolls -
+## which is the same rule the armour line follows. 0 for everything that has
+## grown into nothing, which is nearly every unit in the game.
+func damage_text(bonus: int = 0) -> String:
+	return "%d - %d" % [damage_min + bonus, damage_max + bonus]
 
 
 ## Damage type as shown in the UI panel, e.g. "Piercing".
@@ -167,6 +182,22 @@ func attack_speed_text() -> String:
 
 
 ## Range as shown in the UI panel, in player cells.
+## The widest area this attack covers, in cells, or 0 for one that hits a
+## single creep. Read off the EFFECTS rather than stored, because which of them
+## an attack carries is the answer - a splash measured from the impact and one
+## measured from the tower are both area, and a tower with neither has none.
+func splash_radius() -> float:
+	var widest: float = 0.0
+	for effect: AttackEffect in effects:
+		var splash: SplashEffect = effect as SplashEffect
+		if splash != null:
+			widest = maxf(widest, splash.radius)
+		var blast: SelfSplashEffect = effect as SelfSplashEffect
+		if blast != null:
+			widest = maxf(widest, blast.radius)
+	return widest
+
+
 func range_text() -> String:
 	return StringUtil.trim_number(attack_range)
 

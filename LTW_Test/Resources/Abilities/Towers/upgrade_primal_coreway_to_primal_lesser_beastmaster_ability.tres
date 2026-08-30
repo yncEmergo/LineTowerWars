@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://d20f1uj3am5mp"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://bwjvjrdvucog" path="res://Resources/UnitStats/Towers/primal_lesser_beastmaster_stats.tres" id="2_primal_lesser_beastmaster_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/primal_lesser_beastmaster_stats.tres" id="2_primal_lesser_beastmaster_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 285
 tower_stats = ExtResource("2_primal_lesser_beastmaster_stats")
 required_tech_id = 30
-ability_id = 285
 display_name = "Upgrade to Lesser Beastmaster"
 description = "Unleashes a beast down the lane, damaging and stunning every ground creep in its path."
+targeting = 1
 slot = 1

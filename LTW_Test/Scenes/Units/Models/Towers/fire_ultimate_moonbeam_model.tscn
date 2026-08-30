@@ -1,0 +1,240 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone_t4.tres" id="1_fire_stone_t4"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone_t4_deep.tres" id="2_fire_stone_t4_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone_t4_pale.tres" id="3_fire_stone_t4_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_fire_t4.tres" id="4_energy_fire_t4"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="5_UnitModel"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_path_moonbeam_t4.tres" id="6_energy_path_moonbeam_t4"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Script" path="res://Scripts/Components/BobAnimation3D.gd" id="8_BobAnimation3D"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="9_SpinAnimation3D"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.363
+bottom_radius = 0.4114
+height = 0.114
+radial_segments = 6
+rings = 0
+material = ExtResource("2_fire_stone_t4_deep")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.3993
+bottom_radius = 0.3388
+height = 0.1216
+radial_segments = 6
+rings = 0
+material = ExtResource("2_fire_stone_t4_deep")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.3146
+bottom_radius = 0.3509
+height = 0.0532
+radial_segments = 6
+rings = 0
+material = ExtResource("1_fire_stone_t4")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.0726, 0.0228, 0.4114)
+material = ExtResource("4_energy_fire_t4")
+
+[sub_resource type="PrismMesh" id="PrismMesh_5"]
+size = Vector3(0.1452, 0.304, 0.121)
+material = ExtResource("1_fire_stone_t4")
+
+[sub_resource type="SphereMesh" id="SphereMesh_6"]
+radius = 0.2662
+height = 0.3344
+radial_segments = 8
+rings = 4
+material = ExtResource("6_energy_path_moonbeam_t4")
+
+[sub_resource type="PrismMesh" id="PrismMesh_7"]
+size = Vector3(0.0847, 0.228, 0.0605)
+material = ExtResource("6_energy_path_moonbeam_t4")
+
+[sub_resource type="SphereMesh" id="SphereMesh_8"]
+radius = 0.0484
+height = 0.0608
+radial_segments = 5
+rings = 2
+material = ExtResource("6_energy_path_moonbeam_t4")
+
+[sub_resource type="StandardMaterial3D" id="M_Aura"]
+shading_mode = 0
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.78, 0.96, 0.24, 1)
+
+[sub_resource type="Gradient" id="G_Aura"]
+offsets = PackedFloat32Array(0, 0.2, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="SphereMesh" id="SphereMesh_9"]
+radius = 0.0387
+height = 0.0774
+radial_segments = 4
+rings = 2
+material = SubResource("M_Aura")
+
+[node name="FireUltimateMoonbeamModel" type="Node3D"]
+script = ExtResource("5_UnitModel")
+
+[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.057, 0)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="Cradle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1748, 0)
+mesh = SubResource("CylinderMesh_2")
+
+[node name="Basin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.228, 0)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Seam1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2508, 0.121)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_4")
+
+[node name="Seam2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.1048, 0.2508, -0.0605)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_4")
+
+[node name="Seam3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.1048, 0.2508, -0.0605)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_4")
+
+[node name="Claw1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9872, 0.1593, 0, -0.1593, 0.9872, 0, 0.3572, 0.2904)
+mesh = SubResource("PrismMesh_5")
+
+[node name="Claw2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, -0.138, 0.855, 0, 0.9872, 0.1593, -0.866, 0.0797, -0.4936, 0.2515, 0.3572, -0.1452)
+mesh = SubResource("PrismMesh_5")
+
+[node name="Claw3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, 0.138, -0.855, 0, 0.9872, 0.1593, 0.866, 0.0797, -0.4936, -0.2515, 0.3572, -0.1452)
+mesh = SubResource("PrismMesh_5")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4788, 0)
+
+[node name="Orb" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Core" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6")
+
+[node name="Flame1" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(1, 0, 0, 0, 0.9394, 0.3429, 0, -0.3429, 0.9394, 0, 0, 0.3025)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame2" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(0.6235, -0.2681, 0.7344, 0, 0.9394, 0.3429, -0.7818, -0.2138, 0.5857, 0.2365, 0, 0.1886)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame3" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(-0.2225, -0.3343, 0.9158, 0, 0.9394, 0.3429, -0.9749, 0.0763, -0.209, 0.2949, 0, -0.0673)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame4" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(-0.901, -0.1488, 0.4076, 0, 0.9394, 0.3429, -0.4339, 0.3089, -0.8463, 0.1312, 0, -0.2725)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame5" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(-0.901, 0.1488, -0.4076, 0, 0.9394, 0.3429, 0.4339, 0.3089, -0.8463, -0.1312, 0, -0.2725)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame6" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(-0.2225, 0.3343, -0.9158, 0, 0.9394, 0.3429, 0.9749, 0.0763, -0.209, -0.2949, 0, -0.0673)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Flame7" type="MeshInstance3D" parent="Turret/Orb"]
+transform = Transform3D(0.6235, 0.2681, -0.7344, 0, 0.9394, 0.3429, 0.7818, -0.2138, 0.5857, -0.2365, 0, 0.1886)
+cast_shadow = 0
+mesh = SubResource("PrismMesh_7")
+
+[node name="Bob" type="Node" parent="Turret/Orb" node_paths=PackedStringArray("_floater")]
+script = ExtResource("8_BobAnimation3D")
+_floater = NodePath("..")
+height = 0.0228
+cycles_per_second = 0.3
+phase = 0
+
+[node name="Embers" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Ember1" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.4356)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember2" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3406, 0.0132, 0.2716)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember3" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4247, -0.0238, -0.0969)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember4" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.189, 0.0296, -0.3925)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember5" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.189, -0.0296, -0.3925)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember6" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4247, 0.0238, -0.0969)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="Ember7" type="MeshInstance3D" parent="Turret/Embers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3406, -0.0132, 0.2716)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_8")
+
+[node name="EmberSpin" type="Node" parent="Turret/Embers" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("9_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 0.24
+axis = Vector3(0, 1, 0)
+
+[node name="Muzzle" type="Node3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.152, 0)
+
+[node name="Aura" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.266, 0)
+emitting = true
+amount = 20
+lifetime = 1.8
+local_coords = true
+mesh = SubResource("SphereMesh_9")
+emission_shape = 1
+emission_sphere_radius = 0.363
+direction = Vector3(0, 1, 0)
+spread = 20.0
+initial_velocity_min = 0.2
+initial_velocity_max = 0.42
+gravity = Vector3(0, 0.06, 0)
+scale_amount_min = 0.4
+scale_amount_max = 1.0
+color_ramp = SubResource("G_Aura")

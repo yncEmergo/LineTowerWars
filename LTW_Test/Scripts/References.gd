@@ -36,6 +36,10 @@ extends Node
 ## PRESENTATION ONLY. A dedicated server leaves this null and everything that
 ## uses it steps aside quietly - see multiplayer.md.
 @export var _effects_root: Node3D
+## Draws the order chains: the waypoints a unit still has to walk to, and the
+## grey ghost of every tower ordered and not started yet. Reached from
+## OrderQueue, which is a RefCounted with no tree to walk.
+@export var _order_overlay: OrderOverlay
 ## Parent for every unit that is not parented to an area: the builders, and
 ## the send buildings. Shared because replication spawns into it too, which is
 ## what moved it here from Main's own @export.
@@ -125,6 +129,12 @@ static var effects_root: Node3D:
 		if instance == null:
 			return null
 		return instance._effects_root
+
+static var order_overlay: OrderOverlay:
+	get:
+		if instance == null:
+			return null
+		return instance._order_overlay
 
 static var units_root: Node3D:
 	get:

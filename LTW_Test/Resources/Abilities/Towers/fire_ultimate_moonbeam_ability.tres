@@ -1,0 +1,16 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FrenziedFlamesPassive.gd" id="1_FrenziedFlamesPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_moonbeam.png" id="2_ultimate_moonbeam"]
+
+[resource]
+script = ExtResource("1_FrenziedFlamesPassive")
+ability_id = 132
+display_name = "Frenzied Flames"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_moonbeam")
+regen_per_second = 10
+max_damage_per_second = 1575
+duration_seconds = 3
+radius_cells = 2.34

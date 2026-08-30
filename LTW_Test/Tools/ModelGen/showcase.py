@@ -170,15 +170,15 @@ def generate_creeps():
     keys = cr.keys()
     lift = dict((k, cr.FLY_HEIGHT) for k in keys if cr.is_flying(k))
     # The match camera's own pitch, from directly over the middle of the grid.
-    text = build([keys[0:5], keys[5:9], keys[9:13]],
-                 (4.23, 1.54, -1.222, 40), "Creeps", 3.1416,
-                 (0.82, 0.9), lift).render("[gd_scene format=3]")
+    text = build(_grid(keys, 5),
+                 (5.6, 2.5, -1.222, 40), "Creeps", 3.1416,
+                 (1.15, 1.25), lift).render("[gd_scene format=3]")
     io.open("Scenes/Dev/creep_showcase.tscn", "w",
             encoding="utf-8", newline=lf).write(text)
     # Side on, for the silhouettes. Two rows so each one is big enough to
     # argue with.
-    text = build([keys[0:5], keys[5:9], keys[9:13]], (1.95, 4.3, -0.36, 34),
-                 "Creeps", 1.5708, (0.78, 1.45),
+    text = build(_grid(keys, 5), (2.3, 5.2, -0.36, 34),
+                 "Creeps", 1.5708, (1.05, 1.75),
                  lift).render("[gd_scene format=3]")
     io.open("Scenes/Dev/creep_lineup.tscn", "w",
             encoding="utf-8", newline=lf).write(text)

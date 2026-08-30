@@ -13,8 +13,23 @@ extends Node3D
 enum Mode {
 	## Normal appearance, as placed in the world.
 	BUILT,
-	## Translucent ghost used while choosing where to build.
+	## Translucent ghost used while choosing where to build, and for a tower
+	## that has been ORDERED and not started yet. Which of the two it is
+	## showing is the Tint below.
 	PREVIEW,
+}
+
+## What a ghost is saying about the spot it is standing on.
+enum Tint {
+	## This is where the tower would go, and it may go there.
+	VALID,
+	## It may not: the cell is taken, under rubble, or would seal the maze.
+	INVALID,
+	## Not a question at all - a tower already ORDERED, waiting for a builder
+	## that is on its way. Deliberately colourless next to the other two: the
+	## player has stopped choosing and is now watching, so a green ghost would
+	## keep asking a question that has been answered.
+	PENDING,
 }
 
 ## Every animation component a model can carry. Listed rather than duck typed,
@@ -26,9 +41,10 @@ const ANIMATION_SCRIPTS: Array[StringName] = [
 
 const PREVIEW_VALID_COLOR: Color = Color(0.30, 0.90, 0.40, 0.45)
 const PREVIEW_INVALID_COLOR: Color = Color(0.90, 0.28, 0.28, 0.45)
+const PREVIEW_PENDING_COLOR: Color = Color(0.72, 0.75, 0.80, 0.38)
 
 var _mode: Mode = Mode.BUILT
-var _preview_valid: bool = true
+var _tint: Tint = Tint.VALID
 ## Whether the model's own motion runs. Off while it is being assembled.
 var _animated: bool = true
 var _animations: Array[Node] = []
@@ -107,11 +123,11 @@ func set_mode(mode: Mode) -> void:
 	_apply_mode()
 
 
-## Colours the ghost by whether the spot is legal. Ignored outside preview mode.
-func set_preview_valid(valid: bool) -> void:
-	if _preview_valid == valid:
+## Colours the ghost by what it is saying. Ignored outside preview mode.
+func set_preview_tint(tint: Tint) -> void:
+	if _tint == tint:
 		return
-	_preview_valid = valid
+	_tint = tint
 	if _mode == Mode.PREVIEW:
 		_apply_preview_color()
 
@@ -153,8 +169,10 @@ func _build_preview_material() -> void:
 
 func _apply_preview_color() -> void:
 	var color: Color = PREVIEW_VALID_COLOR
-	if !_preview_valid:
+	if _tint == Tint.INVALID:
 		color = PREVIEW_INVALID_COLOR
+	elif _tint == Tint.PENDING:
+		color = PREVIEW_PENDING_COLOR
 
 	if _preview_material != null:
 		_preview_material.albedo_color = color

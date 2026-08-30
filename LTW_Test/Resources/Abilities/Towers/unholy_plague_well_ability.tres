@@ -1,12 +1,15 @@
-[gd_resource type="Resource" script_class="CorruptionPassive" format=3 uid="uid://bar2hk5ncyhjv"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://7mujbbod28lw" path="res://Scripts/Abilities/TowerPassives/CorruptionPassive.gd" id="1_CorruptionPassive"]
-[ext_resource type="Texture2D" uid="uid://ypvlwtay3kyb" path="res://2DArt/Icons/plague_well.png" id="2_plague_well"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/CorruptionPassive.gd" id="1_CorruptionPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/plague_well.png" id="2_plague_well"]
 
 [resource]
 script = ExtResource("1_CorruptionPassive")
 ability_id = 168
 display_name = "Corruption"
-icon = ExtResource("2_plague_well")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_plague_well")
+duration_seconds = 4
+explosion_damage = 28
+explosion_cells = 1.25

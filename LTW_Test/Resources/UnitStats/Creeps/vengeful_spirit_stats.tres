@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/death_pact_2.tres" id="10_death_pact_2"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/vengeful_spirit.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 148
+display_name = "Vengeful Spirit"
+max_health = 1080
+armor_type = 2
+armor = 2
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_death_pact_2")])
+scene_path = "res://Scenes/Units/Creeps/vengeful_spirit.tscn"
+move_speed = 2.266
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 2250
+income_gain = 208
+unlock_seconds = 450.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.2
+bounty = 106

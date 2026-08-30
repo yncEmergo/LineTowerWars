@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://7gclp84lmga2"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://c78nmal677jmo" path="res://Resources/UnitStats/Towers/ice_greater_lich_stats.tres" id="2_ice_greater_lich_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/ice_greater_lich_stats.tres" id="2_ice_greater_lich_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 219
 tower_stats = ExtResource("2_ice_greater_lich_stats")
 required_tech_id = 8
-ability_id = 219
 display_name = "Upgrade to Greater Lich"
 description = "Chills deeper than anything else, with splash. The Ultimate kills a fully chilled creep with its own health."
+targeting = 1
 slot = 0

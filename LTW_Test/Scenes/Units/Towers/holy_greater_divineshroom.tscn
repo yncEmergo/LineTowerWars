@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_holy_greater_divineshroom_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.976
+health_bar_height = 0.946
 select_radius = 0.5
-select_height = 0.313
+select_height = 0.3
 
 [node name="Visual" parent="." instance=ExtResource("4_holy_greater_divineshroom_model")]
 

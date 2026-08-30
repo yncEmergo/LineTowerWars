@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_primal_coreway_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.653
+health_bar_height = 0.656
 select_radius = 0.5
-select_height = 0.168
+select_height = 0.169
 
 [node name="Visual" parent="." instance=ExtResource("4_primal_coreway_model")]
 

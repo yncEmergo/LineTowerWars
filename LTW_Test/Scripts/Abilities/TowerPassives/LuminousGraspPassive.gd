@@ -9,9 +9,16 @@ extends TowerPassive
 ## ability in the game deals Spell Damage, a Titan Vault standing behind a maze
 ## is worth a share of every other tower in it.
 ##
-## The Ultimate turns the debuff into an AURA that reaches everything nearby
-## whether or not it was struck, and adds a cut to what the creeps in it hit
-## for - which is the only thing in the element that helps against attackers.
+## THE AURA AND THE ATTACK ARE SEPARATE THINGS. A tier that has an aura debuffs
+## through it and through nothing else: its attack is a plain attack that hits a
+## great many creeps and applies no effect of its own. The tiers below have no
+## aura and put the same debuff on what they hit instead. So the tower never
+## does both, and which one it is reads off whether it has a radius at all.
+##
+## The aura BUILDS rather than landing whole - see GameConfig's aura section.
+## Every effect below is scaled by how tight the grip on that creep currently
+## is, so a creep crossing the edge of the radius is worth a fraction of one
+## parked in the middle of it.
 
 ## Key the tower counts its aura refresh under.
 const AURA_KEY: String = "luminous_aura"
@@ -41,50 +48,67 @@ func extra_targets(_tower: Building) -> int:
 	return additional_targets
 
 
+## The attack's debuff, on the tiers whose attack carries one. A tower with an
+## aura does its work through that instead and its attack stays plain.
 func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
-	_mark(target, true)
-
-
-## The aura, on the tiers that have one. Pushed onto the creeps in range on a
-## slow beat, exactly as the Ultimate Lich's is and for the same reason.
-func on_tick(tower: Building, delta: float) -> void:
-	if aura_cells <= 0.0 || !aura_due(tower, AURA_KEY, delta):
+	if aura_cells > 0.0:
 		return
-	if tower.area == null || !tower.can_attack():
+	var status: StatusEffects = status_of(target)
+	if status == null:
+		return
+	status.amplify_spell(self, spell_amplification, amplification_seconds)
+	status.slow(self, resource_path, slow_amount, amplification_seconds)
+
+
+## The aura, on the tier that has one. Beats on the stacking interval rather
+## than the ordinary aura beat, because one beat is one stack.
+func on_tick(tower: Building, delta: float) -> void:
+	if aura_cells <= 0.0 || tower.area == null || !tower.can_attack():
+		return
+	if !aura_due(tower, AURA_KEY, delta, aura_stack_interval()):
 		return
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
-		_mark(creep, false)
-		if damage_reduction > 0.0:
-			creep.status().weaken_attack(0.0, damage_reduction, AURA_HOLD_SECONDS)
-
-
-## `extend` is what separates a creep being STRUCK from one merely standing in
-## the aura: the source's "slow duration extended by 2 sec" is a property of a
-## slow being applied, so topping it up four times a second for as long as a
-## creep loiters would mean a chill that never wore off at all.
-func _mark(target: Unit, extend: bool) -> void:
-	var status: StatusEffects = status_of(target)
-	if status == null:
-		return
-	status.amplify_spell(spell_amplification, amplification_seconds)
-	status.slow(resource_path, slow_amount, amplification_seconds)
-	if extend && slow_extension > 0.0:
-		status.extend_slows(slow_extension)
+		var share: float = grip_aura(self, creep)
+		if share <= 0.0:
+			continue
+		var status: StatusEffects = creep.status()
+		status.amplify_spell(self, spell_amplification * share, AURA_HOLD_SECONDS)
+		status.slow(self, resource_path, slow_amount * share, AURA_HOLD_SECONDS)
+		status.weaken_attack(self, 0.0, damage_reduction * share, AURA_HOLD_SECONDS)
+		# Lengthens slows as they LAND rather than topping up the ones already
+		# running, which is what stops an aura from making every chill on
+		# everything standing in it permanent. See lengthen_slows.
+		status.lengthen_slows(self, slow_extension * share, AURA_HOLD_SECONDS)
 
 
 func effect_text() -> String:
-	var text: String = ("Strikes %d additional creeps. Everything hit takes"
-		+ " +%s%% Spell Damage for %ss and is slowed by %s%%.") % [
+	if aura_cells <= 0.0:
+		return ("Attacks hit %d additional targets. Everything hit takes"
+			+ " +%s%% Spell Damage for %ss and is slowed by %s%%.") % [
+			additional_targets,
+			StringUtil.trim_number(spell_amplification * 100.0),
+			StringUtil.trim_number(amplification_seconds),
+			StringUtil.trim_number(slow_amount * 100.0),
+		]
+
+	return ("Attacks hit %d additional targets. Creeps within %s cells have"
+		+ " their attack damage reduced by %s%%, take %s%% additional Spell"
+		+ " Damage, are slowed by %s%% and have their slow duration increased"
+		+ " by %ss. The aura builds up the longer a creep stays in it and"
+		+ " fades once it leaves.") % [
 		additional_targets,
+		StringUtil.trim_number(aura_cells),
+		StringUtil.trim_number(damage_reduction * 100.0),
 		StringUtil.trim_number(spell_amplification * 100.0),
-		StringUtil.trim_number(amplification_seconds),
 		StringUtil.trim_number(slow_amount * 100.0),
+		StringUtil.trim_number(slow_extension),
 	]
-	if aura_cells > 0.0:
-		text += (" Every creep within %s cells is affected whether struck or"
-			+ " not, and hits %s%% weaker.") % [
-			StringUtil.trim_number(aura_cells),
-			StringUtil.trim_number(damage_reduction * 100.0)]
-	return text
+
+
+## The aura, on the tier that has one. A tier that debuffs only what it hits
+## answers 0 and is drawn with its attack range alone, which is the truth about
+## it - the reach that matters there IS the attack.
+func display_radius(_unit: Unit) -> float:
+	return aura_cells

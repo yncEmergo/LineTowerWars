@@ -1,17 +1,20 @@
-[gd_resource type="Resource" script_class="TorrentPassive" format=3 uid="uid://bdahj03lfipdk"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://cpyh38o3uss8h" path="res://Scripts/Abilities/TowerPassives/TorrentPassive.gd" id="1_TorrentPassive"]
-[ext_resource type="Texture2D" uid="uid://bqbylaluc8y0b" path="res://2DArt/Icons/ultimate_sludge_monstrosity.png" id="2_ultimate_sludge_monstrosity"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/TorrentPassive.gd" id="1_TorrentPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_sludge_monstrosity.png" id="2_ultimate_sludge_monstrosity"]
 
 [resource]
 script = ExtResource("1_TorrentPassive")
+ability_id = 183
+display_name = "Crippling Decay"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_sludge_monstrosity")
+aura_cells = 3.12
+step_seconds = 1.5
 slow_per_step = 0.09
 slow_cap = 0.36
+stun_every = 3
 stun_seconds = 1.8
 stun_needs_same_target = true
 physical_amplification = 0.1
-ability_id = 183
-display_name = "Crippling Decay"
-icon = ExtResource("2_ultimate_sludge_monstrosity")
-targeting = 0
-slot = 11

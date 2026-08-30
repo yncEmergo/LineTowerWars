@@ -24,13 +24,19 @@ extends Node
 ## nothing that can drift. What it draws is what arrived.
 
 ## Fields per unit in the snapshot: id, type, owner, area, x, y, z, yaw,
-## health, flags, mana, maximum mana, job progress.
+## health, flags, mana, maximum mana, job progress, banked damage, ability
+## choice, ability cooldown, ability link.
 ##
 ## Mana is in there because an elemental tower's whole ability is usually "fill
 ## up, then spend it", and a client that could not see the bar would be
 ## watching a tower fire for no reason it could read. The MAXIMUM is sent as
 ## well rather than looked up, because one tower in the game lowers its own -
 ## see Building.set_max_mana.
+##
+## The same two fields carry a CREEP's pool, for the creeps whose trait runs on
+## one (CreepMana). They are the same question about a different kind of unit
+## and only one of the two kinds ever answers on a given record, so nothing on
+## the wire grew when the creeps that need mana arrived.
 ##
 ## A flat float array rather than an array of dictionaries, because a dictionary
 ## per unit would spend more bytes on the KEY NAMES than on the values, twenty
@@ -51,11 +57,41 @@ extends Node
 ## becoming. That is a whole unit type per record for one icon, and the
 ## countdown, the name and the bar are all right without it.
 ##
+## The banked damage is the attack damage a tower's passives have added to it
+## for good - the Alchemist line's whole ability. It is in here for the same
+## reason the mana is, and more sharply: it is bought by KILLING, which only
+## ever happens on the server, so a client that was not told would draw its own
+## tower's damage line and its stack bar at zero for the whole match. One field
+## for the tower rather than one per passive; see
+## Building.replicated_damage_bonus.
+##
+## The ability choice is which option a tower's CYCLED ability is set to - the
+## Ultimate Alchemist's armour type. It rides along for the reason the
+## Prioritize flag does: it is a setting the player changed on their own tower,
+## so a card that went on drawing the old answer would read as a dead button.
+##
+## The last two are the same argument again, for a tower's ACTIVE ability: how
+## long it still has to wait, and which unit it has been aimed at. Both are the
+## server's to decide and neither is something a client could work out, so
+## without them a Beastmaster's card would draw a ready button for an ability
+## on cooldown and an unlit square for a tower that is linked. The link is also
+## simulation on the way back out - it is where the beast runs - so a client
+## that was not told would draw it running the wrong way. One pair per unit
+## rather than one per ability, on the same grounds the ability choice is one
+## number; see ActiveAbilityState.
+##
 ## Floats hold every one of these exactly: a float32 is exact on integers up to
 ## 16.7 million, which is far past any id this game will hand out.
-const UNIT_STRIDE: int = 13
-## Fields per player: slot, gold, income, lives, value, placement.
-const PLAYER_STRIDE: int = 6
+const UNIT_STRIDE: int = 17
+## Fields per player: slot, gold, income, lives, value, placement, and whether
+## the creep-unlock cheat has been granted to them.
+##
+## The cheat is in here because it decides what a client's send card DRAWS - a
+## creep whose wait has been waived is neither greyed out nor counting down -
+## and a client that had to guess would sit there showing a countdown for a
+## delay the server has already dropped. One int in a record that is sent per
+## player rather than per unit.
+const PLAYER_STRIDE: int = 7
 ## Fields per reserve: slot, creep type, count.
 const STOCK_STRIDE: int = 3
 ## Fields before one player's researched technology ids: their slot, the ticks
@@ -67,6 +103,35 @@ const STOCK_STRIDE: int = 3
 ## and is applied in one piece - a set of ids and the window over it are read
 ## back together or not at all.
 const TECH_HEADER: int = 3
+
+## Fields per status effect: the unit it sits on, the kind, the ability that
+## applied it, its magnitude, the seconds left, the stacks held and the ceiling
+## on those. See StatusEntry, which reads and writes this record itself.
+##
+## Sent only for the units clients are actually LOOKING at, unlike everything
+## else in phase A - see _watched. A creep in a maze carries several of these
+## and a maze carries hundreds of creeps, so the complete version of this would
+## cost more than the whole rest of the snapshot put together for something at
+## most one creep per player can be reading at a time.
+const EFFECT_STRIDE: int = StatusEntry.RECORD_SIZE
+
+## Fields before one unit's queued orders: its id, and how many follow.
+## Self-describing rather than a fixed stride, for the reason TECH_HEADER is:
+## a chain is a different length for every unit and changes as it is worked
+## through.
+const ORDER_HEADER: int = 2
+## Fields per order that DRAWS something: the ability, and the point it names.
+##
+## Only the ones a player can SEE are on the wire at all - a walk still to be
+## made, a tower ordered and not started. An attack aimed at one creep is a
+## task like any other and puts nothing on the ground, so a client is never
+## told about it: what it would draw is the ring that already blinks on the
+## creep, locally, the moment the order is given.
+##
+## It is what makes this affordable next to the rest of phase A. A queue only
+## exists on a unit somebody has ordered, and only the builder's chain of
+## towers is ever more than a couple of entries long.
+const ORDER_STRIDE: int = 4
 
 const FLAG_UNDER_CONSTRUCTION: int = 1
 const FLAG_SELLING: int = 2
@@ -92,6 +157,27 @@ var _incoming: Dictionary = {}
 ## rather than dragging the world backwards.
 var _applied_tick: int = -1
 
+## SERVER: peer id -> the unit whose status effects that peer wants told.
+##
+## The one thing in phase A that is not "the whole world every tick", and it
+## earns the exception: the debuff row draws for the ONE unit a player has
+## selected, so this is at most a player's worth of records rather than a
+## maze's. Pruned against the live peer list on every broadcast, so a peer that
+## dropped stops being asked about.
+var _watched: Dictionary = {}
+## CLIENT: unit id -> Array[StatusEntry], the newest the server sent. Empty for
+## anything but the unit this client asked about.
+var _effects: Dictionary = {}
+## CLIENT: the unit currently asked about, so the request goes out on a change
+## of selection rather than every tick.
+var _watching: int = MatchSession.NO_UNIT
+## CLIENT: the units that had a drawn order chain in the LAST snapshot.
+##
+## A chain that is finished simply stops being in the block, the same way a
+## dead unit stops being in the unit records - so something has to remember
+## who was in it to notice who has dropped out and clear their markers.
+var _ordered: Dictionary = {}
+
 var _session: MatchSession:
 	get:
 		return References.match_session
@@ -102,7 +188,15 @@ func _ready() -> void:
 	# server: a snapshot has to describe the tick that just finished, not the
 	# one about to start. Autoloads sit above the scene in tree order, so
 	# without this it would broadcast the world one tick stale.
+	#
+	# BOTH properties, and the second is the one that does the work here.
+	# Godot 4.3 split the two callbacks apart: process_priority orders the
+	# RENDER frame and process_physics_priority orders the TICK. This service
+	# broadcasts from _physics_process, so on its own the line above ordered
+	# something this class does not even implement, and the snapshot really was
+	# a tick stale - exactly what the comment above says it must not be.
 	process_priority = 1000
+	process_physics_priority = 1000
 	set_physics_process(false)
 	Net.status_changed.connect(_on_network_status_changed)
 
@@ -113,6 +207,10 @@ func _on_network_status_changed(_status: NetworkService.Status) -> void:
 	set_physics_process(Net.is_online())
 	_applied_tick = -1
 	_incoming.clear()
+	_watched.clear()
+	_effects.clear()
+	_ordered.clear()
+	_watching = MatchSession.NO_UNIT
 
 
 func _physics_process(_delta: float) -> void:
@@ -137,10 +235,12 @@ func _broadcast() -> void:
 func _build_snapshot() -> Dictionary:
 	var session: MatchSession = _session
 	var units: PackedFloat32Array = PackedFloat32Array()
+	var orders: PackedFloat32Array = PackedFloat32Array()
 	for id in session.unit_ids():
 		var unit: Unit = session.unit_for(int(id))
 		if unit != null:
 			units.append_array(_unit_record(unit))
+			_append_orders(orders, unit)
 
 	var players: PackedInt32Array = PackedInt32Array()
 	var stocks: PackedInt32Array = PackedInt32Array()
@@ -153,11 +253,95 @@ func _build_snapshot() -> Dictionary:
 				players.append_array([
 					slot, state.gold, state.income, state.lives,
 					state.value, state.placement,
+					1 if state.creeps_unlocked else 0,
 				])
 				_append_techs(techs, state, slot)
 			_append_stocks(stocks, manager, slot)
 
-	return {"t": session.tick(), "u": units, "p": players, "s": stocks, "r": techs}
+	return {
+		"t": session.tick(), "u": units, "p": players, "s": stocks,
+		"r": techs, "e": _build_effects(), "o": orders,
+	}
+
+
+## One unit's order chain, or nothing at all when it has none - which is every
+## unit in a maze bar the handful somebody is steering.
+##
+## Written in the same pass that writes the unit records rather than in a
+## second walk of the registry: the world is already being iterated once a
+## tick, and this is one null check per unit on top of it.
+func _append_orders(records: PackedFloat32Array, unit: Unit) -> void:
+	if unit.order_queue == null:
+		return
+
+	var drawn: Array[QueuedOrder] = unit.order_queue.drawn_orders()
+	if drawn.is_empty():
+		return
+
+	records.append_array([unit.unit_id, drawn.size()])
+	for order: QueuedOrder in drawn:
+		records.append_array([
+			order.ability.ability_id,
+			order.target_position.x, order.target_position.y,
+			order.target_position.z,
+		])
+
+
+## The status effects on every unit some client is watching, in one flat array
+## tagged by unit id.
+##
+## Distinct units rather than distinct peers: two players looking at the same
+## creep are told about it once, and the snapshot is one broadcast rather than
+## one packet per peer.
+func _build_effects() -> PackedFloat32Array:
+	var records: PackedFloat32Array = PackedFloat32Array()
+	if _watched.is_empty():
+		return records
+
+	_prune_watchers()
+	var session: MatchSession = _session
+	var done: Dictionary = {}
+	for peer in _watched:
+		var id: int = int(_watched[peer])
+		if done.has(id):
+			continue
+		done[id] = true
+		var creep: Creep = session.unit_for(id) as Creep
+		if creep == null:
+			continue
+		var status: StatusEffects = creep.status_or_null()
+		if status == null:
+			continue
+		for entry in status.entries():
+			entry.append_to(records, id)
+	return records
+
+
+## Forgets whoever has left. A peer that disconnects never asks to stop
+## watching, so the list is checked against the live one rather than being kept
+## in step by a signal that a crash would skip.
+func _prune_watchers() -> void:
+	var live: PackedInt32Array = Net.peer_ids()
+	var gone: Array = []
+	for peer in _watched:
+		if !live.has(int(peer)):
+			gone.append(peer)
+	for peer in gone:
+		_watched.erase(peer)
+
+
+## A client saying which unit's debuffs it needs. Reliable rather than
+## unreliable, because it is sent once per change of selection and a lost one
+## would leave that panel permanently empty rather than late by a tick.
+@rpc("any_peer", "reliable")
+func watch_unit(id: int) -> void:
+	if !multiplayer.is_server():
+		return
+	var peer: int = multiplayer.get_remote_sender_id()
+	if id == MatchSession.NO_UNIT:
+		_watched.erase(peer)
+	else:
+		_watched[peer] = id
 
 
 func _unit_record(unit: Unit) -> PackedFloat32Array:
@@ -179,6 +363,11 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 	if unit.attack_component != null && unit.attack_component.prioritizes_air():
 		flags |= FLAG_PRIORITIZE_AIR
 
+	# The two mana fields carry a CREEP's pool as well as a tower's now. Same
+	# two floats either way, so nothing on the wire grew when the creeps that
+	# run a trait on mana arrived - see CreepMana.
+	var mana: Vector2i = _mana_of(unit, building)
+
 	var position: Vector3 = unit.global_position
 	return PackedFloat32Array([
 		unit.unit_id,
@@ -189,10 +378,29 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 		unit.rotation.y,
 		unit.current_health,
 		flags,
-		0 if building == null else building.current_mana,
-		0 if building == null else building.max_mana,
+		mana.x,
+		mana.y,
 		0.0 if building == null else building.phase_progress(),
+		0 if building == null else building.permanent_damage_bonus(),
+		0 if building == null else building.ability_choice(),
+		0.0 if building == null else building.active_ability.cooldown_left,
+		MatchSession.NO_UNIT if building == null else building.active_ability.link_id,
 	])
+
+
+## What this unit holds and the most it can hold, as (current, maximum).
+##
+## One question for both kinds, because the wire has one pair of fields for it.
+## A unit with no second pool at all answers (0, 0), which a client reads back
+## as "no bar".
+func _mana_of(unit: Unit, building: Building) -> Vector2i:
+	if building != null:
+		return Vector2i(building.current_mana, building.max_mana)
+
+	var creep: Creep = unit as Creep
+	if creep == null || creep.mana() == null:
+		return Vector2i.ZERO
+	return Vector2i(creep.mana().current, creep.mana().maximum)
 
 
 ## One player's whole technology state. Sent every tick like everything else in
@@ -207,10 +415,15 @@ func _append_techs(into: PackedInt32Array, state: PlayerState, slot: int) -> voi
 
 func _append_stocks(into: PackedInt32Array, manager: PlayerManager, slot: int) -> void:
 	var area: PlayerArea = manager.area_for(slot)
-	if area == null || area.send_building() == null:
+	if area == null:
 		return
-	for entry in area.send_building().stock_entries():
-		into.append_array([slot, int(entry[0]), int(entry[1])])
+	# Every building on the strip, flattened into one run of records. A reserve
+	# is named by its CREEP TYPE rather than by which building or which square
+	# it sits on, so which of them a creep belongs to never has to cross the
+	# wire and re-laying the strip out cannot move somebody's stock.
+	for building in area.send_buildings():
+		for entry in building.stock_entries():
+			into.append_array([slot, int(entry[0]), int(entry[1])])
 
 
 # --- client ---------------------------------------------------------------
@@ -244,6 +457,10 @@ func _apply_incoming() -> void:
 	_apply_players(payload.get("p", PackedInt32Array()) as PackedInt32Array)
 	_apply_stocks(payload.get("s", PackedInt32Array()) as PackedInt32Array)
 	_apply_techs(payload.get("r", PackedInt32Array()) as PackedInt32Array)
+	_apply_effects(payload.get("e", PackedFloat32Array()) as PackedFloat32Array)
+	# After the units, necessarily: a chain names a unit, and one that arrived
+	# in this same snapshot has to exist before anything can be hung off it.
+	_apply_orders(payload.get("o", PackedFloat32Array()) as PackedFloat32Array)
 
 
 ## Every unit in the snapshot is created or updated; every unit not in it is
@@ -398,7 +615,7 @@ func _parent_for(unit: Unit, area: PlayerArea) -> Node:
 func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 	unit.global_position = Vector3(records[at + 4], records[at + 5], records[at + 6])
 	unit.rotation.y = records[at + 7]
-	unit.set_replicated_health(int(records[at + 8]))
+	unit.set_replicated_health(records[at + 8])
 
 	var flags: int = int(records[at + 9])
 	var building: Building = unit as Building
@@ -411,6 +628,18 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 			records[at + 12]
 		)
 		building.set_replicated_mana(int(records[at + 10]), int(records[at + 11]))
+		building.replicated_damage_bonus = int(records[at + 13])
+		building.replicated_ability_choice = int(records[at + 14])
+		building.active_ability.set_replicated(records[at + 15], int(records[at + 16]))
+
+	# The same two fields, read back onto whichever kind of pool this unit has.
+	# The ceiling comes down the wire as well as the count, because one tier 4
+	# trait raises its own - see CreepMana.raise_ceiling().
+	var creep: Creep = unit as Creep
+	if creep != null && creep.mana() != null:
+		creep.mana().maximum = maxi(0, int(records[at + 11]))
+		creep.mana().set_replicated(int(records[at + 10]))
+
 	if unit.attack_component != null:
 		unit.attack_component.set_prioritize_air((flags & FLAG_PRIORITIZE_AIR) != 0)
 
@@ -444,7 +673,7 @@ func _apply_players(records: PackedInt32Array) -> void:
 		if state != null:
 			state.set_replicated(
 				records[index + 1], records[index + 2], records[index + 3],
-				records[index + 4], records[index + 5]
+				records[index + 4], records[index + 5], records[index + 6] != 0
 			)
 		index += PLAYER_STRIDE
 
@@ -459,9 +688,95 @@ func _apply_stocks(records: PackedInt32Array) -> void:
 	while index + STOCK_STRIDE <= records.size():
 		var area: PlayerArea = manager.area_for(records[index])
 		var stats: CreepStats = session.unit_types().stats_for(records[index + 1]) as CreepStats
-		if area != null && area.send_building() != null && stats != null:
-			area.send_building().set_replicated_stock(stats, records[index + 2])
+		if area != null && stats != null:
+			# Offered to every building; the one that does not hold this creep
+			# ignores it. Cheaper than sending which building it was and
+			# impossible to get wrong, since a creep is on exactly one card.
+			for building in area.send_buildings():
+				building.set_replicated_stock(stats, records[index + 2])
 		index += STOCK_STRIDE
+
+
+## Replaces what this client knows about every unit's debuffs.
+##
+## Rebuilt whole rather than merged, for the reason the unit list is: what
+## arrived IS the answer, so a unit that has dropped off it has nothing on it
+## any more and no removal message is needed to say so.
+## Every unit's order chain, replaced whole; every unit that had one last tick
+## and is not in this snapshot has its cleared. Same lifecycle the unit records
+## have, and for the same reason - the snapshot is the complete answer, so
+## absence IS the message that a chain is finished.
+func _apply_orders(records: PackedFloat32Array) -> void:
+	var session: MatchSession = _session
+	var seen: Dictionary = {}
+
+	var index: int = 0
+	while index + ORDER_HEADER <= records.size():
+		var id: int = int(records[index])
+		var count: int = int(records[index + 1])
+		index += ORDER_HEADER
+
+		var chain: Array[QueuedOrder] = []
+		for _entry: int in count:
+			if index + ORDER_STRIDE > records.size():
+				break
+			var ability: UnitAbility = session.abilities().ability_for(int(records[index]))
+			if ability != null:
+				chain.append(QueuedOrder.replicated(ability, Vector3(
+					records[index + 1], records[index + 2], records[index + 3]
+				)))
+			index += ORDER_STRIDE
+
+		var unit: Unit = session.unit_for(id)
+		if unit == null:
+			continue
+		seen[id] = true
+		OrderQueue.of(unit).set_replicated(chain)
+
+	var empty: Array[QueuedOrder] = []
+	for id in _ordered:
+		if seen.has(id):
+			continue
+		var gone: Unit = session.unit_for(int(id))
+		# A unit that has been removed entirely takes its markers with it, so
+		# only one that is still standing has anything left to clear.
+		if gone != null && gone.order_queue != null:
+			gone.order_queue.set_replicated(empty)
+	_ordered = seen
+
+
+func _apply_effects(records: PackedFloat32Array) -> void:
+	_effects.clear()
+	var index: int = 0
+	while index + EFFECT_STRIDE <= records.size():
+		var id: int = int(records[index])
+		if !_effects.has(id):
+			var fresh: Array[StatusEntry] = []
+			_effects[id] = fresh
+		var list: Array[StatusEntry] = _effects[id]
+		list.append(StatusEntry.from_record(records, index))
+		index += EFFECT_STRIDE
+
+
+## Asks the server to keep this client told about one unit's debuffs, or about
+## none when given NO_UNIT. Called by the panel as the selection changes.
+##
+## Does nothing at all on the authority, which reads the effects off the creep
+## itself and has no server to ask.
+func request_watch(id: int) -> void:
+	if MatchSession.is_authority() || !Net.is_online():
+		return
+	if id == _watching:
+		return
+	_watching = id
+	watch_unit.rpc_id(Net.SERVER_PEER_ID, id)
+
+
+## The debuffs the server last reported on one unit. Empty on the authority,
+## which has the real thing to read - see StatusEffects.entries().
+func effects_for(id: int) -> Array[StatusEntry]:
+	var list: Array[StatusEntry] = _effects.get(id, [] as Array[StatusEntry])
+	return list
 
 
 ## What every player has researched, and how long their Undo button has left.

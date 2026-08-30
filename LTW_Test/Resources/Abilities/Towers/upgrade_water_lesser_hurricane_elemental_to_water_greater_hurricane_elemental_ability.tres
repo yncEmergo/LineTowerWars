@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cn6kd6wedcb7x"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://bnrmrwcifre5r" path="res://Resources/UnitStats/Towers/water_greater_hurricane_elemental_stats.tres" id="2_water_greater_hurricane_elemental_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/water_greater_hurricane_elemental_stats.tres" id="2_water_greater_hurricane_elemental_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 259
 tower_stats = ExtResource("2_water_greater_hurricane_elemental_stats")
 required_tech_id = 11
-ability_id = 259
 display_name = "Upgrade to Greater Hurricane Elemental"
 description = "Pulls flyers out of the sky and pins them where your ground towers can reach them."
+targeting = 1
 slot = 0

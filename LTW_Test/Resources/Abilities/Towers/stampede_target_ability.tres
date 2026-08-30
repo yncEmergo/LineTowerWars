@@ -1,0 +1,13 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/StampedeTargetAbility.gd" id="1_StampedeTargetAbility"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_stampede_target.png" id="2_ability_stampede_target"]
+
+[resource]
+script = ExtResource("1_StampedeTargetAbility")
+ability_id = 318
+display_name = "Stampede Target"
+description = "Link this Beastmaster to one of your own towers. Its beast then always runs towards that tower instead of towards whatever the attack landed on. Only the DIRECTION is taken, so distance does not matter and there is no range on the link. Aim it at this tower to clear the link."
+targeting = 3
+slot = 3
+icon = ExtResource("2_ability_stampede_target")

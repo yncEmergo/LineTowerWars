@@ -67,7 +67,8 @@ func _ready() -> void:
 
 ## The entry point every player order goes through, replacing the direct
 ## `ability.execute()` calls that used to sit in CommandController.
-func submit(ability: UnitAbility, units: Array, target: AbilityTarget) -> void:
+func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
+		queued: bool = false) -> void:
 	if ability == null || units.is_empty():
 		return
 
@@ -76,7 +77,7 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget) -> void:
 		Log.err("Commands.submit with no MatchSession, the order goes nowhere")
 		return
 
-	var command: Command = Command.create(ability.ability_id, units, target)
+	var command: Command = Command.create(ability.ability_id, units, target, queued)
 	command.tick = session.tick()
 	command.player_slot = session.local_slot()
 
@@ -269,16 +270,49 @@ func _reaches(entries: Array, wanted: UnitAbility, seen: Dictionary) -> bool:
 ## Runs the order. Everything left to refuse - gold, stock, a blocked maze, a
 ## taken cell - is refused by the simulation itself, in the same code a single
 ## player run uses. There is deliberately no second copy of those rules here.
+##
+## An ORDER - Move, Attack, Build - goes through the unit's queue rather than
+## straight to execute(), because those are the three that take time and can
+## therefore be chained. Shift ADDS to the chain, no shift REPLACES it, and
+## everything that is not an order leaves the chain alone: pressing Prioritize
+## must not cost a tower the creeps it was told to shoot. See
+## UnitAbility.is_queueable.
 func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 	var acted: bool = false
 	for unit in units:
-		if !is_instance_valid(unit) || !ability.can_execute(unit):
+		if !is_instance_valid(unit):
 			continue
-		ability.execute(unit, command.to_target(_session))
-		acted = true
+		if _run_on(unit, ability, command):
+			acted = true
 
 	if acted:
 		command_applied.emit(command)
+
+
+## One unit's share of an order. Answers whether it was taken, so a command
+## that every named unit refused emits nothing.
+func _run_on(unit: Unit, ability: UnitAbility, command: Command) -> bool:
+	var target: AbilityTarget = command.to_target(_session)
+
+	if !ability.is_queueable():
+		if !ability.can_execute(unit):
+			return false
+		ability.execute(unit, target)
+		return true
+
+	# Chained. Asked with can_queue, which is the same question as can_execute
+	# everywhere except a build - a tower is paid for when the builder reaches
+	# it, so a chain may be longer than the gold in hand.
+	if command.queued:
+		if !ability.can_queue(unit):
+			return false
+		OrderQueue.of(unit).enqueue(ability, target)
+		return true
+
+	if !ability.can_execute(unit):
+		return false
+	OrderQueue.of(unit).replace(ability, target)
+	return true
 
 
 ## A Research Center press, applied against this machine's own world.
@@ -289,9 +323,16 @@ func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 ## the prerequisite here, for the same reason there is no copy of the gold
 ## check for a tower.
 func _apply_player_order(command: Command) -> void:
-	if command.player_action == Command.PlayerAction.CHEAT_GOLD:
-		_apply_cheat_gold(command)
-		return
+	match command.player_action:
+		Command.PlayerAction.CHEAT_GOLD:
+			_apply_cheat_gold(command)
+			return
+		Command.PlayerAction.CHEAT_UNLOCK_CREEPS:
+			_apply_cheat_unlock_creeps(command)
+			return
+		Command.PlayerAction.CHEAT_UNLOCK_TECHS:
+			_apply_cheat_unlock_techs(command)
+			return
 
 	var tech: TechManager = References.tech_manager
 	if tech == null:
@@ -311,14 +352,83 @@ func _apply_player_order(command: Command) -> void:
 ## order is - which is the whole reason it takes this road rather than adding
 ## gold where the key was pressed. A client would only have redrawn a number
 ## the server never agreed to.
-##
-## Checked against THIS machine's GameConfig rather than the sender's word, so
-## a server with cheats off refuses one however the client asking was built.
 func _apply_cheat_gold(command: Command) -> void:
+	var state: PlayerState = _cheat_target(command)
+	if state == null:
+		return
+
+	# Read straight through: _cheat_target has already refused a machine with
+	# no GameConfig, which is the same one this asks for the amount.
+	var amount: int = References.game_config.cheat_gold_amount
+	state.gain(amount)
+	Log.info("Cheat: gold granted", {"slot": command.player_slot, "amount": amount})
+	command_applied.emit(command)
+
+
+## The other developer cheat: every creep's start delay counts as served for
+## the sender from here on, and every reserve is filled to go with it. It sets
+## a flag rather than winding a clock back, because the match clock is the tick
+## counter itself and nothing may move it.
+##
+## Both halves ride down to a client in the snapshot the same tick - the flag
+## in the player record, the counts in the stock records - so a card that has
+## been cheated open says so on every machine rather than only on the one the
+## key was pressed on.
+func _apply_cheat_unlock_creeps(command: Command) -> void:
+	var state: PlayerState = _cheat_target(command)
+	if state == null:
+		return
+
+	state.creeps_unlocked = true
+
+	# Reached through the area, the same way replication finds them. Every
+	# building on the strip, since the cheat is "open the whole card" and a
+	# player with one tier full and another empty is not what was asked for.
+	var manager: PlayerManager = References.player_manager
+	if manager != null:
+		var area: PlayerArea = manager.area_for(command.player_slot)
+		if area != null:
+			for building in area.send_buildings():
+				building.fill_all_stocks()
+
+	Log.info("Cheat: creeps unlocked and stocked", {"slot": command.player_slot})
+	command_applied.emit(command)
+
+
+## The third developer cheat: every technology in the build, granted free to
+## the sender. The grant itself is TechManager's, in the same way a research
+## press is - this end only asks whether cheats are on and who pressed it.
+##
+## What rides down to a client is nothing new: the owned ids are already in
+## every snapshot, so a cheated Research Center fills in on both machines the
+## tick after the key.
+func _apply_cheat_unlock_techs(command: Command) -> void:
+	if _cheat_target(command) == null:
+		return
+
+	var manager: TechManager = References.tech_manager
+	if manager == null:
+		_reject(command, "this scene has no TechManager")
+		return
+
+	var reason: String = manager.grant_all(command.player_slot)
+	if reason.is_empty():
+		command_applied.emit(command)
+	else:
+		_reject(command, reason)
+
+
+## Who a cheat applies to, or null once it has already been refused.
+##
+## Both cheats ask the same two questions and neither trusts the sender's
+## answer to either: are cheats on HERE - so a server built with them off
+## refuses one however the client asking was built - and is there a player in
+## that slot to apply it to.
+func _cheat_target(command: Command) -> PlayerState:
 	var config: GameConfig = References.game_config
 	if config == null || !config.cheats_enabled:
 		_reject(command, "cheats are off")
-		return
+		return null
 
 	var manager: PlayerManager = References.player_manager
 	var state: PlayerState = null
@@ -326,14 +436,7 @@ func _apply_cheat_gold(command: Command) -> void:
 		state = manager.state_for(command.player_slot)
 	if state == null:
 		_reject(command, "slot %d has no player state" % command.player_slot)
-		return
-
-	state.gain(config.cheat_gold_amount)
-	Log.info("Cheat: gold granted", {
-		"slot": command.player_slot,
-		"amount": config.cheat_gold_amount,
-	})
-	command_applied.emit(command)
+	return state
 
 
 func _reject(command: Command, reason: String) -> void:

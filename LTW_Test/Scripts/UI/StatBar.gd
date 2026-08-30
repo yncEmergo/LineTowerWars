@@ -33,6 +33,18 @@ func _ready() -> void:
 	_apply()
 
 
+## Repaints the fill. For the one bar whose colour is not a property of where
+## it was placed: the second-resource bar is blue for mana and violet for a
+## count a passive has banked, and which one it is belongs to the unit on the
+## panel rather than to the prefab. See TowerResource.
+func set_fill_color(color: Color) -> void:
+	if color == fill_color:
+		return
+	fill_color = color
+	if _fill != null:
+		_fill.color = color
+
+
 ## Sets the filled proportion, 0 to 1.
 func set_ratio(ratio: float) -> void:
 	var clamped: float = clampf(ratio, 0.0, 1.0)

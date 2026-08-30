@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="FrostAttackPassive" format=3 uid="uid://bojfbnmltxhvm"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dlb0frugo1k6f" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
-[ext_resource type="Texture2D" uid="uid://c8f8b8vt7ehfk" path="res://2DArt/Icons/runic_monolith.png" id="2_runic_monolith"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FrostAttackPassive.gd" id="1_FrostAttackPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/runic_monolith.png" id="2_runic_monolith"]
 
 [resource]
 script = ExtResource("1_FrostAttackPassive")
-slow_per_hit = 0.045
-slow_cap = 0.25
-chill_source = "runic_monolith"
 ability_id = 137
 display_name = "Frost Attack"
-icon = ExtResource("2_runic_monolith")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_runic_monolith")
+slow_per_hit = 0.045
+slow_cap = 0.25
+slow_seconds = 4
+chill_source = "runic_monolith"

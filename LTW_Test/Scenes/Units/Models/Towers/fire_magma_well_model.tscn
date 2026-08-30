@@ -3,71 +3,71 @@
 [ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone.tres" id="1_fire_stone"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone_deep.tres" id="2_fire_stone_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/fire_stone_pale.tres" id="3_fire_stone_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t2.tres" id="4_trim_t2"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/element_ring_t1.tres" id="4_element_ring_t1"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/energy_fire_t1.tres" id="5_energy_fire_t1"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.3122
-bottom_radius = 0.3424
-height = 0.0849
+top_radius = 0.31
+bottom_radius = 0.34
+height = 0.0855
 radial_segments = 6
 rings = 0
 material = ExtResource("2_fire_stone_deep")
 
 [sub_resource type="TorusMesh" id="TorusMesh_2"]
-inner_radius = 0.2971
-outer_radius = 0.3474
+inner_radius = 0.295
+outer_radius = 0.345
 rings = 14
 ring_segments = 5
-material = ExtResource("4_trim_t2")
+material = ExtResource("4_element_ring_t1")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 0.2417
-bottom_radius = 0.3122
-height = 0.1358
+top_radius = 0.24
+bottom_radius = 0.31
+height = 0.1368
 radial_segments = 6
 rings = 0
 material = ExtResource("1_fire_stone")
 
 [sub_resource type="TorusMesh" id="TorusMesh_4"]
-inner_radius = 0.1712
-outer_radius = 0.2517
+inner_radius = 0.17
+outer_radius = 0.25
 rings = 10
 ring_segments = 5
 material = ExtResource("3_fire_stone_pale")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_5"]
-top_radius = 0.1913
-bottom_radius = 0.1913
-height = 0.017
+top_radius = 0.19
+bottom_radius = 0.19
+height = 0.0171
 radial_segments = 6
 rings = 0
 material = ExtResource("5_energy_fire_t1")
 
 [sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.0453, 0.0905, 0.0201)
+size = Vector3(0.045, 0.0912, 0.02)
 material = ExtResource("5_energy_fire_t1")
 
 [sub_resource type="TorusMesh" id="TorusMesh_7"]
-inner_radius = 0.2517
-outer_radius = 0.3021
+inner_radius = 0.25
+outer_radius = 0.3
 rings = 12
 ring_segments = 5
-material = ExtResource("4_trim_t2")
+material = ExtResource("4_element_ring_t1")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_8"]
-top_radius = 0.0705
-bottom_radius = 0.1108
-height = 0.1132
+top_radius = 0.07
+bottom_radius = 0.11
+height = 0.114
 radial_segments = 6
 rings = 0
 material = ExtResource("3_fire_stone_pale")
 
 [sub_resource type="SphereMesh" id="SphereMesh_9"]
-radius = 0.0554
-height = 0.0622
+radius = 0.055
+height = 0.0627
 radial_segments = 6
 rings = 2
 material = ExtResource("5_energy_fire_t1")
@@ -78,58 +78,58 @@ script = ExtResource("6_UnitModel")
 [node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
 
 [node name="Plinth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0424, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0427, 0)
 mesh = SubResource("CylinderMesh_1")
 
 [node name="BaseTrim" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0849, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0855, 0)
 cast_shadow = 0
 mesh = SubResource("TorusMesh_2")
 
 [node name="Cone" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1528, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1539, 0)
 mesh = SubResource("CylinderMesh_3")
 
 [node name="Mouth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2207, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2223, 0)
 mesh = SubResource("TorusMesh_4")
 
 [node name="Lava" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2263, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.228, 0)
 cast_shadow = 0
 mesh = SubResource("CylinderMesh_5")
 
 [node name="Seam1" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1584, 0.2719)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1596, 0.27)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Seam2" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.2355, 0.1584, -0.1359)
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.2338, 0.1596, -0.135)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Seam3" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.2355, 0.1584, -0.1359)
+transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.2338, 0.1596, -0.135)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Collar" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2207, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2223, 0)
 cast_shadow = 0
 mesh = SubResource("TorusMesh_7")
 
 [node name="Turret" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2433, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2451, 0)
 
 [node name="Spout" type="MeshInstance3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0566, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.057, 0)
 mesh = SubResource("CylinderMesh_8")
 
 [node name="SpoutCore" type="MeshInstance3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1245, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1254, 0)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_9")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1132, -0.1007)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.114, -0.1)

@@ -37,9 +37,15 @@ var _active_marker: MoveOrderMarker
 
 ## Live only while a PLACEMENT ability is armed.
 var _preview: BuildPreview = null
-## Live only while an attack order is being aimed. One overlay for the whole
-## selection, so overlapping ranges never stack into a darker patch.
+## Live only while an attack order is being aimed, or while Show Ranges is up.
+## One overlay for the whole selection, so overlapping ranges never stack into
+## a darker patch, and one for BOTH so the two can never be drawn over
+## each other either.
 var _range_overlay: AttackRangeOverlay = null
+## Seconds left on a TIMED range reveal, or 0 when the overlay is not on a
+## clock - which is what an armed attack's ranges are, since those belong to
+## the order and go when it does.
+var _range_reveal_left: float = 0.0
 ## Footprint of the armed placement in internal cells. Cached on arming so the
 ## per-frame preview never has to probe the prefab again.
 var _armed_footprint: Vector2i = Vector2i.ZERO
@@ -72,6 +78,21 @@ func _ready() -> void:
 
 func is_armed() -> bool:
 	return _armed != null
+
+
+## Whether this order is being CHAINED onto whatever the selection is already
+## doing, rather than replacing it.
+##
+## Live keyboard state rather than an event's modifier flag, for the same
+## reason SelectionController samples it that way: a click arriving through
+## the panel carries no modifiers at all, and one habit has to work everywhere.
+##
+## Shift is already the additive-selection key and there is no clash: a left
+## click that lands on something orderable is an ORDER before it is ever a
+## selection - see try_attack_click - and the two gestures were never both
+## available on the same click.
+func _is_chaining() -> bool:
+	return Input.is_key_pressed(KEY_SHIFT)
 
 
 ## Whether Escape has work to do here: an armed ability to drop, or a submenu
@@ -124,7 +145,8 @@ func _arm(ability: UnitAbility) -> void:
 	ability_armed.emit(ability)
 
 
-## Puts every selected unit's reach on the ground, or takes it away again.
+## Puts every selected unit's reach on the ground for as long as an order is
+## being aimed, or takes it away again.
 ##
 ## Driven from here rather than from the units, because whether a range matters
 ## is a property of the ORDER being aimed and not of the tower. It is also ONE
@@ -132,21 +154,71 @@ func _arm(ability: UnitAbility) -> void:
 ## ranges cannot stack into a darker patch where two towers cover the same
 ## ground. See Effects/AttackRangeOverlay.gd.
 func _set_range_circles(value: bool) -> void:
+	# An order takes the overlay over from a reveal that was still counting
+	# down, rather than the two fighting over one mesh. The newest thing the
+	# player asked for is the thing they are looking at.
+	_range_reveal_left = 0.0
 	if !value:
-		if is_instance_valid(_range_overlay):
-			_range_overlay.queue_free()
-		_range_overlay = null
+		_free_range_overlay()
 		return
 
-	if _effects_root == null:
+	var overlay: AttackRangeOverlay = _ensure_range_overlay()
+	if overlay != null:
+		overlay.show_attack_ranges(_selected_units())
+
+
+## Puts every range the selection carries - attack reach AND the radius of each
+## ability that has one - on the ground for `seconds`, then takes it away.
+##
+## The Show Ranges ability, which is on every tower's card. Local from end to
+## end: nothing here is an order, so it never reaches Commands and the server
+## is never told. Safe to call again while it is already up; it redraws and
+## restarts the clock.
+func reveal_ranges(seconds: float) -> void:
+	var overlay: AttackRangeOverlay = _ensure_range_overlay()
+	if overlay == null:
 		return
+
+	overlay.show_all_ranges(_selected_units())
+	_range_reveal_left = maxf(0.0, seconds)
+
+
+## Counts a reveal down and takes it away when it runs out. An attack still
+## being aimed underneath it gets its own circles back rather than the ground
+## going blank, since that order is still waiting for its click.
+func _tick_range_reveal(delta: float) -> void:
+	if _range_reveal_left <= 0.0:
+		return
+
+	_range_reveal_left -= delta
+	if _range_reveal_left > 0.0:
+		return
+
+	_range_reveal_left = 0.0
+	if _armed != null && _armed.shows_attack_range():
+		_set_range_circles(true)
+	else:
+		_free_range_overlay()
+
+
+## The overlay, built on first use and parented to the shared effects root so a
+## tower sold while it is up cannot take it with it. Null only when there is no
+## effects root to hang it on.
+func _ensure_range_overlay() -> AttackRangeOverlay:
+	if _effects_root == null:
+		return null
 
 	if !is_instance_valid(_range_overlay):
 		_range_overlay = AttackRangeOverlay.new()
 		_range_overlay.name = "AttackRangeOverlay"
 		_effects_root.add_child(_range_overlay)
+	return _range_overlay
 
-	_range_overlay.show_ranges(_selected_units())
+
+func _free_range_overlay() -> void:
+	if is_instance_valid(_range_overlay):
+		_range_overlay.queue_free()
+	_range_overlay = null
 
 
 ## Blinks a red ring on whatever an attack order was just given on.
@@ -194,9 +266,10 @@ func _end_placement() -> void:
 	_armed_footprint = Vector2i.ZERO
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _preview != null:
 		_update_preview()
+	_tick_range_reveal(delta)
 
 
 func _update_preview() -> void:
@@ -210,7 +283,24 @@ func _update_preview() -> void:
 
 	var cell: Vector2i = area.snap_footprint(point, _armed_footprint)
 	var center: Vector3 = area.footprint_world_center(cell, _armed_footprint)
-	_preview.show_at(center, area.can_place(cell, _armed_footprint))
+	var legal: bool = area.can_place(cell, _armed_footprint) \
+		&& !_ghost_in_the_way(area, cell)
+	_preview.show_at(center,
+		UnitModel.Tint.VALID if legal else UnitModel.Tint.INVALID)
+
+
+## Whether a tower this player has already QUEUED is standing where the next
+## one is being aimed.
+##
+## Local, and it has to be: the grid knows about towers that exist, and a
+## queued one does not exist yet on any machine. Without this, placing a chain
+## of five draws five green ghosts on top of each other and four of them fail
+## on arrival for a reason the player was never shown.
+func _ghost_in_the_way(area: PlayerArea, cell: Vector2i) -> bool:
+	var overlay: OrderOverlay = References.order_overlay
+	if overlay == null:
+		return false
+	return overlay.is_reserved(area, cell, _armed_footprint)
 
 
 ## Area of the current selection, which is whose grid a placement snaps to.
@@ -263,18 +353,31 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- Execution ----------------------------------------------------------
 
 ## Left click while an ability is armed.
+##
+## Holding shift does two things at once, and both are what an RTS player
+## expects of it: the order is CHAINED behind whatever the selection is already
+## doing, and the ability STAYS ARMED so the next click gives another one. That
+## second half is what makes a row of towers one press of the button and five
+## clicks, rather than five trips back to the card.
 func _confirm_armed(screen_pos: Vector2) -> void:
 	var ability: UnitAbility = _armed
-	_armed = null
+	var queued: bool = _is_chaining()
 	var was_placement: bool = ability.targeting == UnitAbility.Targeting.PLACEMENT
-	_set_range_circles(false)
-	_end_placement()
 
 	var target: AbilityTarget = _build_target(ability, screen_pos)
 	if target != null:
-		_execute_on_selection(ability, target)
+		_execute_on_selection(ability, target, queued)
 		_show_order_feedback(ability, target, was_placement)
 
+	# Stays armed only for an order that could actually be chained, and only
+	# when one was really given: a click that landed on nothing must still put
+	# the card back rather than leaving the player aiming at nothing.
+	if queued && target != null && ability.is_queueable():
+		return
+
+	_armed = null
+	_set_range_circles(false)
+	_end_placement()
 	command_ended.emit()
 
 
@@ -282,13 +385,20 @@ func _confirm_armed(screen_pos: Vector2) -> void:
 ##
 ## A creep gets the blinking ring, because for an attack the thing that was
 ## chosen is the target rather than a spot on the floor. Ground orders get the
-## usual marker. A build order needs neither: the tower appearing IS the
-## feedback, so a marker there would only be noise.
+## usual marker, and that now includes an attack aimed at the FLOOR - an
+## attack-move is a walk with a temper, so it is confirmed like a walk. A build
+## order needs neither: the grey ghost that appears IS the feedback, so a
+## marker there would only be noise.
+##
+## Which of the two an attack gets is decided by what the click LANDED ON
+## rather than by the ability, which is the whole point of UNIT_OR_GROUND.
 func _show_order_feedback(
 	ability: UnitAbility, target: AbilityTarget, was_placement: bool
 ) -> void:
-	if ability.targeting == UnitAbility.Targeting.UNIT:
+	if target.unit != null:
 		_show_attack_marker(target.unit)
+		return
+	if ability.targeting == UnitAbility.Targeting.UNIT:
 		return
 
 	if target.has_position && !was_placement:
@@ -311,7 +421,7 @@ func try_attack_click(screen_pos: Vector2) -> bool:
 	if target == null:
 		return false
 
-	return _order_attack_on(_selected_units(), target)
+	return _order_attack_on(_selected_units(), target, _is_chaining())
 
 ## Right click with nothing armed. Each unit resolves its own default, so a
 ## mixed selection does the right thing per unit rather than one blanket order.
@@ -325,8 +435,9 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 	if units.is_empty():
 		return
 
+	var queued: bool = _is_chaining()
 	var target_unit: Unit = _unit_at(screen_pos)
-	if target_unit != null && _order_attack_on(units, target_unit):
+	if target_unit != null && _order_attack_on(units, target_unit, queued):
 		return
 
 	var point: Variant = _ground_point(screen_pos)
@@ -343,14 +454,14 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 		if !is_instance_valid(unit):
 			continue
 		var ability: UnitAbility = _default_ability_for(unit)
-		if ability == null || !ability.can_execute(unit):
+		if ability == null || !_can_order(ability, unit, queued):
 			continue
 		if !by_ability.has(ability):
 			by_ability[ability] = []
 		by_ability[ability].append(unit)
 
 	for ability in by_ability:
-		Commands.submit(ability as UnitAbility, by_ability[ability], target)
+		Commands.submit(ability as UnitAbility, by_ability[ability], target, queued)
 
 	if !by_ability.is_empty():
 		_show_move_marker(target.position)
@@ -366,7 +477,7 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 ## Answers whether anything took the order, so a right click with only the
 ## builder selected falls through to a plain move - which is what the same
 ## click does in any RTS.
-func _order_attack_on(units: Array, target_unit: Unit) -> bool:
+func _order_attack_on(units: Array, target_unit: Unit, queued: bool) -> bool:
 	var target: AbilityTarget = AbilityTarget.at_unit(target_unit)
 
 	# Grouped by ability rather than one order per unit: a mixed selection can
@@ -378,14 +489,14 @@ func _order_attack_on(units: Array, target_unit: Unit) -> bool:
 		if unit.attack_component == null || !unit.attack_component.can_target(target_unit):
 			continue
 		var ability: UnitAbility = unit.stats.attack_ability()
-		if ability == null || !ability.can_execute(unit):
+		if ability == null || !_can_order(ability, unit, queued):
 			continue
 		if !by_ability.has(ability):
 			by_ability[ability] = []
 		by_ability[ability].append(unit)
 
 	for ability in by_ability:
-		Commands.submit(ability as UnitAbility, by_ability[ability], target)
+		Commands.submit(ability as UnitAbility, by_ability[ability], target, queued)
 
 	var acted: bool = !by_ability.is_empty()
 	if acted:
@@ -408,8 +519,9 @@ func _default_ability_for(unit: Unit) -> UnitAbility:
 	return unit.stats.default_ability
 
 
-func _execute_on_selection(ability: UnitAbility, target: AbilityTarget) -> void:
-	var units: Array = _orderable(ability, _selected_units())
+func _execute_on_selection(ability: UnitAbility, target: AbilityTarget,
+		queued: bool = false) -> void:
+	var units: Array = _orderable(ability, _selected_units(), queued)
 
 	# A local-only ability changes what THIS machine draws and nothing else, so
 	# sending it would be asking a server with no grid, no selection and no
@@ -419,19 +531,29 @@ func _execute_on_selection(ability: UnitAbility, target: AbilityTarget) -> void:
 			ability.execute(unit, target)
 		return
 
-	Commands.submit(ability, units, target)
+	Commands.submit(ability, units, target, queued)
 
 
 ## The units in a selection that could actually use an ability, which is what a
 ## card already greys out. Filtered here so an order names only units it makes
 ## sense for; the SERVER checks it again, because this answer was computed on
 ## the machine that wants the order to go through.
-func _orderable(ability: UnitAbility, units: Array) -> Array:
+func _orderable(ability: UnitAbility, units: Array, queued: bool) -> Array:
 	var able: Array = []
 	for unit in units:
-		if is_instance_valid(unit) && ability.can_execute(unit):
+		if is_instance_valid(unit) && _can_order(ability, unit, queued):
 			able.append(unit)
 	return able
+
+
+## Whether one unit may be given one order, asked the way the SERVER will ask
+## it. The two differ for a queued build and nothing else - a tower is paid for
+## when the builder reaches it - so this is the one place that knows which of
+## the two questions applies, rather than every call site guessing.
+func _can_order(ability: UnitAbility, unit: Unit, queued: bool) -> bool:
+	if queued && ability.is_queueable():
+		return ability.can_queue(unit)
+	return ability.can_execute(unit)
 
 
 func _selected_units() -> Array:
@@ -445,15 +567,18 @@ func _selected_units() -> Array:
 ## Returns null when the click did not land on anything the ability accepts,
 ## which leaves the order unissued rather than guessing.
 func _build_target(ability: UnitAbility, screen_pos: Vector2) -> AbilityTarget:
-	if ability.targeting == UnitAbility.Targeting.UNIT:
-		if _selection_controller == null:
-			return null
-		# Only the local player's units are pickable so far. Enemy targeting
-		# needs a wider search once attacking exists.
+	var wants_unit: bool = ability.targeting == UnitAbility.Targeting.UNIT \
+		|| ability.targeting == UnitAbility.Targeting.UNIT_OR_GROUND
+
+	if wants_unit && _selection_controller != null:
 		var picked: Node = _selection_controller.unit_at(screen_pos)
-		if picked == null:
+		if picked != null:
+			return AbilityTarget.at_unit(picked as Unit)
+		# UNIT alone insists on one and leaves the order unissued. Attack takes
+		# the floor instead and becomes an attack-MOVE, which is the whole
+		# difference between the two modes.
+		if ability.targeting == UnitAbility.Targeting.UNIT:
 			return null
-		return AbilityTarget.at_unit(picked as Unit)
 
 	var point: Variant = _ground_point(screen_pos)
 	if point == null:

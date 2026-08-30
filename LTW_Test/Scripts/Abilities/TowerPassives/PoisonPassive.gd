@@ -12,7 +12,9 @@ extends TowerPassive
 ##
 ## The poison lives on the CREEP rather than on the tower, which is what lets
 ## two Gravediggers stack into the same explosion instead of each keeping a
-## count nobody can see.
+## count nobody can see. The CEILING lives there with it, for the same reason:
+## ten stacks is ten stacks from any Gravedigger, and a creep already at ten
+## takes nothing more from the next hit until something detonates it.
 
 ## Key the per-creep explosion cooldown is kept under, on the CREEP - so two
 ## Gravediggers cannot take turns detonating the same creep every tick.
@@ -44,7 +46,8 @@ func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> voi
 	if status == null:
 		return
 
-	var stacks: int = status.add_poison(float(dealt) * stack_share)
+	var stacks: int = status.add_poison(self, float(dealt) * stack_share,
+		stacks_to_explode)
 	if stacks < stacks_to_explode || status.is_immune(COOLDOWN_KEY):
 		return
 	status.set_immune(COOLDOWN_KEY, explosion_cooldown)
@@ -74,10 +77,12 @@ func _detonate(tower: Building, target: Unit, status: StatusEffects) -> void:
 
 
 func effect_text() -> String:
-	var text: String = ("Strikes %d additional creeps and stores %d%% of the"
-		+ " damage dealt as poison, up to %d stacks. At full stacks the stored"
-		+ " damage is dealt as Spell Damage, once every %ss.") % [
-		additional_targets, int(round(stack_share * 100.0)),
+	var text: String = ("Strikes %d additional %s and stores %d%% of the"
+		+ " damage dealt as poison, up to %d stacks from any tower of this"
+		+ " line. At full stacks the stored damage is dealt as Spell Damage,"
+		+ " once every %ss.") % [
+		additional_targets, "creep" if additional_targets == 1 else "creeps",
+		int(round(stack_share * 100.0)),
 		stacks_to_explode, StringUtil.trim_number(explosion_cooldown),
 	]
 	if explosion_cells > 0.0:

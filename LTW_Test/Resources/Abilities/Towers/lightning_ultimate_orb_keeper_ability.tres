@@ -1,16 +1,20 @@
-[gd_resource type="Resource" script_class="CrashLightningPassive" format=3 uid="uid://bemdu8shoturw"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://73v4ykm8mspk" path="res://Scripts/Abilities/TowerPassives/CrashLightningPassive.gd" id="1_CrashLightningPassive"]
-[ext_resource type="Texture2D" uid="uid://fevc8migrbnq" path="res://2DArt/Icons/ultimate_orb_keeper.png" id="2_ultimate_orb_keeper"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/CrashLightningPassive.gd" id="1_CrashLightningPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_orb_keeper.png" id="2_ultimate_orb_keeper"]
 
 [resource]
 script = ExtResource("1_CrashLightningPassive")
-mana_per_attack = 20
-current_health_share = 0.025
-burst_damage = 2500
-max_mana_cost = 5
 ability_id = 151
 display_name = "Arc Lightning"
-icon = ExtResource("2_ultimate_orb_keeper")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_ultimate_orb_keeper")
+mana_per_attack = 20
+current_health_share = 0.025
+stun_seconds = 0.67
+burst_damage = 2500
+max_mana_cost = 5
+max_mana_floor = 20
+neighbour_penalty = 20
+neighbour_cells = 1.17

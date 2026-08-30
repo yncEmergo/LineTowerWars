@@ -151,10 +151,10 @@ func _draw_units() -> void:
 	var unit_px: float = building_px * _presentation.minimap_unit_scale
 
 	for unit: Unit in session.live_units():
-		# The send building has no ground of its own on this map, so a marker
-		# for it would float in the black above a lane. It is also not a thing
-		# the player ever needs to find.
-		if unit is SendBuilding:
+		# A unit that stands nowhere has no dot to draw. The senders are the
+		# whole of that: they are reached through the buttons over the unit
+		# panel, and a marker for one would float in the black above a lane.
+		if !unit.is_in_world():
 			continue
 
 		var side: float = building_px if unit.is_structure() else unit_px

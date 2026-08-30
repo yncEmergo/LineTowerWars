@@ -109,6 +109,17 @@ func armor_multiplier(armor: int) -> float:
 	return 2.0 - pow(negative_armor_base, float(-armor))
 
 
+## Share of the damage this many armour points takes OFF, as a percentage.
+##
+## The reading of armor_multiplier() rather than a second formula, because the
+## panel writing "23.1%" next to a 5 and the pipeline taking 23.1% off a hit
+## must be the same curve or the number is a lie. Negative for negative armour,
+## where the same curve amplifies instead of reducing - which is what the minus
+## sign in front of it means.
+func armor_reduction_percent(armor: int) -> float:
+	return (1.0 - armor_multiplier(armor)) * 100.0
+
+
 ## Damage actually dealt, run through the whole pipeline in the order
 ## game_rules.md sets out:
 ##   roll -> damage matrix -> the target's own resistances -> armour points

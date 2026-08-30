@@ -1,12 +1,22 @@
-[gd_resource type="Resource" script_class="BloodthirstPassive" format=3 uid="uid://cm13wuycsywim"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://bly1w1q0m2ybo" path="res://Scripts/Abilities/TowerPassives/BloodthirstPassive.gd" id="1_BloodthirstPassive"]
-[ext_resource type="Texture2D" uid="uid://dmxjoa4q281xh" path="res://2DArt/Icons/lesser_beastmaster.png" id="2_lesser_beastmaster"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/BloodthirstPassive.gd" id="1_BloodthirstPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_beastmaster.png" id="2_lesser_beastmaster"]
 
 [resource]
 script = ExtResource("1_BloodthirstPassive")
 ability_id = 205
 display_name = "Bloodthirst"
-icon = ExtResource("2_lesser_beastmaster")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_lesser_beastmaster")
+additional_targets = 1
+multishot_cells = 3.12
+mana_per_target = 5
+beast_scene_path = "res://Scenes/Effects/beast_charge.tscn"
+beast_cells = 5.47
+beast_speed = 4.7
+beast_radius = 1
+beast_damage = 240
+stun_seconds = 0.5
+stun_cooldown = 8

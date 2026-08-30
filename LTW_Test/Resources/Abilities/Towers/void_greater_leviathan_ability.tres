@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="FeastingVoidPassive" format=3 uid="uid://k31iai5k8q87"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://bxwv6vt14o04g" path="res://Scripts/Abilities/TowerPassives/FeastingVoidPassive.gd" id="1_FeastingVoidPassive"]
-[ext_resource type="Texture2D" uid="uid://l7jtb1l34mpq" path="res://2DArt/Icons/greater_leviathan.png" id="2_greater_leviathan"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FeastingVoidPassive.gd" id="1_FeastingVoidPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_leviathan.png" id="2_greater_leviathan"]
 
 [resource]
 script = ExtResource("1_FeastingVoidPassive")
+ability_id = 166
+display_name = "Feasting Void"
+targeting = 0
+slot = 6
+icon = ExtResource("2_greater_leviathan")
 armor_per_hit = 0.2
 damage_per_hit = 3
 damage_cap = 200
-ability_id = 166
-display_name = "Feasting Void"
-icon = ExtResource("2_greater_leviathan")
-targeting = 0
-slot = 11
+idle_reset = 3

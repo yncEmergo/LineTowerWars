@@ -1,15 +1,18 @@
-[gd_resource type="Resource" script_class="TorrentPassive" format=3 uid="uid://br44kxm4um30h"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://cpyh38o3uss8h" path="res://Scripts/Abilities/TowerPassives/TorrentPassive.gd" id="1_TorrentPassive"]
-[ext_resource type="Texture2D" uid="uid://b7a5b41e10pkk" path="res://2DArt/Icons/greater_sludge_monstrosity.png" id="2_greater_sludge_monstrosity"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/TorrentPassive.gd" id="1_TorrentPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_sludge_monstrosity.png" id="2_greater_sludge_monstrosity"]
 
 [resource]
 script = ExtResource("1_TorrentPassive")
-slow_per_step = 0.07
-slow_cap = 0.28
-stun_seconds = 1.2
 ability_id = 182
 display_name = "Torrent"
-icon = ExtResource("2_greater_sludge_monstrosity")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_greater_sludge_monstrosity")
+aura_cells = 3.12
+step_seconds = 1.5
+slow_per_step = 0.07
+slow_cap = 0.28
+stun_every = 3
+stun_seconds = 1.2

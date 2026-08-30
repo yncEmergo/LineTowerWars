@@ -123,8 +123,9 @@ func _owner_can_afford(unit: Unit) -> bool:
 ## Describes the TOWER rather than the order, the same way a send describes the
 ## creep: every number comes off the tower's own stats file, so the card cannot
 ## quote a price it does not charge or a range the tower does not have.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
 	var info: BuildingStats = tower_stats
 	if info == null:
 		return data

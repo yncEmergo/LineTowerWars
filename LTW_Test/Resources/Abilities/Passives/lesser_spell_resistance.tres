@@ -8,3 +8,5 @@ ability_id = 123
 display_name = "Lesser Spell Resistance"
 targeting = 0
 damage_ratio = 0.67
+duration_ratio = 0.25
+chill_ratio = 0.5

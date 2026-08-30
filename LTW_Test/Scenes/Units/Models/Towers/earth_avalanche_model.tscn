@@ -3,75 +3,75 @@
 [ext_resource type="Material" path="res://Resources/Materials/Towers/earth_stone.tres" id="1_earth_stone"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/earth_stone_deep.tres" id="2_earth_stone_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/earth_stone_pale.tres" id="3_earth_stone_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t2.tres" id="4_trim_t2"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/element_ring_t1.tres" id="4_element_ring_t1"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/energy_earth_t1.tres" id="5_energy_earth_t1"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.3222
-bottom_radius = 0.3524
-height = 0.0792
+top_radius = 0.32
+bottom_radius = 0.35
+height = 0.0798
 radial_segments = 5
 rings = 0
 material = ExtResource("2_earth_stone_deep")
 
 [sub_resource type="TorusMesh" id="TorusMesh_2"]
-inner_radius = 0.3071
-outer_radius = 0.3575
+inner_radius = 0.305
+outer_radius = 0.355
 rings = 14
 ring_segments = 5
-material = ExtResource("4_trim_t2")
+material = ExtResource("4_element_ring_t1")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 0.2417
-bottom_radius = 0.292
-height = 0.1245
+top_radius = 0.24
+bottom_radius = 0.29
+height = 0.1254
 radial_segments = 5
 rings = 0
 material = ExtResource("1_earth_stone")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_4"]
-top_radius = 0.1712
-bottom_radius = 0.2215
-height = 0.1018
+top_radius = 0.17
+bottom_radius = 0.22
+height = 0.1026
 radial_segments = 5
 rings = 0
 material = ExtResource("1_earth_stone")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_5"]
-top_radius = 0.1309
-bottom_radius = 0.1611
-height = 0.0736
+top_radius = 0.13
+bottom_radius = 0.16
+height = 0.0741
 radial_segments = 5
 rings = 0
 material = ExtResource("3_earth_stone_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.0302, 0.0736, 0.0201)
+size = Vector3(0.03, 0.0741, 0.02)
 material = ExtResource("5_energy_earth_t1")
 
 [sub_resource type="TorusMesh" id="TorusMesh_7"]
-inner_radius = 0.1913
-outer_radius = 0.2517
+inner_radius = 0.19
+outer_radius = 0.25
 rings = 12
 ring_segments = 5
-material = ExtResource("4_trim_t2")
+material = ExtResource("4_element_ring_t1")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
-size = Vector3(0.0906, 0.0509, 0.2618)
+size = Vector3(0.09, 0.0513, 0.26)
 material = ExtResource("2_earth_stone_deep")
 
 [sub_resource type="SphereMesh" id="SphereMesh_9"]
-radius = 0.1007
-height = 0.1018
+radius = 0.1
+height = 0.1026
 radial_segments = 5
 rings = 3
 material = ExtResource("3_earth_stone_pale")
 
 [sub_resource type="SphereMesh" id="SphereMesh_10"]
-radius = 0.0503
-height = 0.0509
+radius = 0.05
+height = 0.0513
 radial_segments = 5
 rings = 2
 material = ExtResource("5_energy_earth_t1")
@@ -82,64 +82,64 @@ script = ExtResource("6_UnitModel")
 [node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
 
 [node name="Plinth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0396, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0399, 0)
 mesh = SubResource("CylinderMesh_1")
 
 [node name="BaseTrim" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0792, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0798, 0)
 cast_shadow = 0
 mesh = SubResource("TorusMesh_2")
 
 [node name="RockA" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.9211, 0, 0.3894, 0, 1, 0, -0.3894, 0, 0.9211, 0, 0.1414, 0)
+transform = Transform3D(0.9211, 0, 0.3894, 0, 1, 0, -0.3894, 0, 0.9211, 0, 0.1425, 0)
 mesh = SubResource("CylinderMesh_3")
 
 [node name="RockB" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.7648, 0, -0.6442, 0, 1, 0, 0.6442, 0, 0.7648, 0, 0.249, 0)
+transform = Transform3D(0.7648, 0, -0.6442, 0, 1, 0, 0.6442, 0, 0.7648, 0, 0.2508, 0)
 mesh = SubResource("CylinderMesh_4")
 
 [node name="RockC" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.4536, 0, 0.8912, 0, 1, 0, -0.8912, 0, 0.4536, 0, 0.3282, 0)
+transform = Transform3D(0.4536, 0, 0.8912, 0, 1, 0, -0.8912, 0, 0.4536, 0, 0.3306, 0)
 mesh = SubResource("CylinderMesh_5")
 
 [node name="Vein1" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1471, 0.2618)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1482, 0.26)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Vein2" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.2267, 0.1471, -0.1309)
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, 0.2252, 0.1482, -0.13)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Vein3" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.2267, 0.1471, -0.1309)
+transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.2252, 0.1482, -0.13)
 cast_shadow = 0
 mesh = SubResource("BoxMesh_6")
 
 [node name="Collar" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2376, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2394, 0)
 cast_shadow = 0
 mesh = SubResource("TorusMesh_7")
 
 [node name="Turret" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3961, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.399, 0)
 
 [node name="Arm" type="Node3D" parent="Turret"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Sling" type="MeshInstance3D" parent="Turret/Arm"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1007)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
 mesh = SubResource("BoxMesh_8")
 
 [node name="Boulder" type="MeshInstance3D" parent="Turret/Arm"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.2215)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.22)
 mesh = SubResource("SphereMesh_9")
 
 [node name="BoulderGlow" type="MeshInstance3D" parent="Turret/Arm"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0283, -0.2215)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0285, -0.22)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_10")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3021)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)

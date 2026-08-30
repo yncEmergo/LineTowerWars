@@ -1,15 +1,15 @@
-[gd_resource type="Resource" script_class="ShatterArmorPassive" format=3 uid="uid://ddu5y5gdduoms"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://tl1cs54i54v6" path="res://Scripts/Abilities/TowerPassives/ShatterArmorPassive.gd" id="1_ShatterArmorPassive"]
-[ext_resource type="Texture2D" uid="uid://bg8tqcs8cqp2s" path="res://2DArt/Icons/ultimate_ancient_warden.png" id="2_ultimate_ancient_warden"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/ShatterArmorPassive.gd" id="1_ShatterArmorPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_ancient_warden.png" id="2_ultimate_ancient_warden"]
 
 [resource]
 script = ExtResource("1_ShatterArmorPassive")
+ability_id = 188
+display_name = "Nature's Guidance"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_ancient_warden")
 armor_per_hit = 0.5
 armor_floor = 0
 self_heal_share = 0.0235
-ability_id = 188
-display_name = "Nature's Guidance"
-icon = ExtResource("2_ultimate_ancient_warden")
-targeting = 0
-slot = 11

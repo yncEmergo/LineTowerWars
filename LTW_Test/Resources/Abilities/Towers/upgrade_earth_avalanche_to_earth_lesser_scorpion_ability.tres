@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://btl3suxl7i0qf"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://bu4u8jp61yhqs" path="res://Resources/UnitStats/Towers/earth_lesser_scorpion_stats.tres" id="2_earth_lesser_scorpion_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/earth_lesser_scorpion_stats.tres" id="2_earth_lesser_scorpion_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 269
 tower_stats = ExtResource("2_earth_lesser_scorpion_stats")
 required_tech_id = 18
-ability_id = 269
 display_name = "Upgrade to Lesser Scorpion"
 description = "Pure single target. Worth the most on the first shot after standing idle, and criticals against a hurt target."
+targeting = 1
 slot = 1

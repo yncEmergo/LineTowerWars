@@ -1,13 +1,22 @@
 class_name AttackRangeOverlay
 extends MeshInstance3D
 
-## The reach of every selected unit, drawn flat on the ground as ONE shape.
+## Every range a selection carries, drawn flat on the ground as ONE shape.
 ##
 ## A circle per tower, each its own transparent mesh, looked right until two
 ## overlapped: the fills blended over one another and the shared ground came
 ## out darker than either. One quad running Resources/Shaders/attack_range
 ## draws the UNION instead, so every pixel is painted at most once and ten
 ## towers piled together read exactly like one.
+##
+## TWO GROUPS, in two colours: how far a tower SHOOTS, and how far its ability
+## REACHES. Aiming an attack asks the first question only; Show Ranges asks
+## both. The union rule holds inside each group, so an aura shared by three
+## towers is still one shape.
+##
+## Where the groups OVERLAP the smaller circle owns the ground, which the shader
+## settles per pixel rather than this script settling it per unit - two towers
+## can each be the smaller one over different halves of the same patch.
 ##
 ## Built in code and parented to the shared effects root, like the move order
 ## marker: it belongs to the order being aimed rather than to any one tower, it
@@ -17,9 +26,10 @@ extends MeshInstance3D
 ## The quad is sized to the circles it has to hold rather than to the map, so
 ## the fragment shader only ever runs over ground that might be covered.
 
-## Must match MAX_CIRCLES in the shader. Selecting more than this many towers
-## simply leaves the extra ranges undrawn, which is reported rather than being
-## allowed to look like a tower with no reach.
+## Must match MAX_CIRCLES in the shader. Counted PER GROUP, so a selection may
+## draw this many attack ranges and this many ability ranges. Selecting more
+## than this many towers simply leaves the extra ranges undrawn, which is
+## reported rather than being allowed to look like a tower with no reach.
 const MAX_CIRCLES: int = 32
 
 const SHADER_PATH: String = "res://Resources/Shaders/attack_range.gdshader"
@@ -49,65 +59,117 @@ func _ready() -> void:
 	visible = false
 
 
-## Draws the reach of every unit handed over that actually has one, and hides
-## itself when none of them do.
+## The reach of every unit handed over that has one, and nothing else. What
+## aiming an attack shows, where the only question is whether the order can be
+## given at all.
 ##
 ## Recomputed wholesale rather than tracked per unit: a selection is small, this
 ## runs when an order is armed rather than every frame, and rebuilding is what
 ## keeps a sold or dead tower from leaving its range behind.
-func show_ranges(units: Array) -> void:
-	if _material == null:
-		return
+func show_attack_ranges(units: Array) -> void:
+	_draw(_attack_circles(units), PackedVector3Array())
 
-	var centres: PackedVector3Array = PackedVector3Array()
-	var bounds: Rect2 = Rect2()
-	var found: bool = false
 
-	for unit in units:
-		var radius: float = _range_of(unit)
-		if radius <= 0.0:
-			continue
-		if centres.size() >= MAX_CIRCLES:
-			Log.info("More units selected than the range overlay can draw", {
-				"limit": MAX_CIRCLES,
-			})
-			break
-
-		var origin: Vector3 = unit.global_position
-		centres.append(Vector3(origin.x, origin.z, radius))
-
-		var reach: Rect2 = Rect2(
-			origin.x - radius, origin.z - radius, radius * 2.0, radius * 2.0
-		)
-		bounds = reach if !found else bounds.merge(reach)
-		found = true
-
-	if !found:
-		hide_ranges()
-		return
-
-	_material.set_shader_parameter("circles", centres)
-	_material.set_shader_parameter("circle_count", centres.size())
-	_fit_quad(bounds.grow(QUAD_MARGIN))
-	visible = true
+## Attack reach AND every ability range those units carry, the second group in
+## its own colour. What Show Ranges puts on the ground.
+func show_all_ranges(units: Array) -> void:
+	_draw(_attack_circles(units), _ability_circles(units))
 
 
 func hide_ranges() -> void:
 	visible = false
-	if _material != null:
-		_material.set_shader_parameter("circle_count", 0)
+	if _material == null:
+		return
+	_material.set_shader_parameter("attack_count", 0)
+	_material.set_shader_parameter("ability_count", 0)
 
 
-## Reach of one unit, read off its stats rather than its attack component: the
-## number is on the prefab either way, and a unit that cannot attack simply has
-## no attack to ask.
-func _range_of(unit: Variant) -> float:
+## Hands both groups to the shader and sizes the quad to hold them, or hides
+## when neither group has anything in it.
+func _draw(attack: PackedVector3Array, ability: PackedVector3Array) -> void:
+	if _material == null:
+		return
+	if attack.is_empty() && ability.is_empty():
+		hide_ranges()
+		return
+
+	_material.set_shader_parameter("attack_circles", attack)
+	_material.set_shader_parameter("attack_count", attack.size())
+	_material.set_shader_parameter("ability_circles", ability)
+	_material.set_shader_parameter("ability_count", ability.size())
+	_fit_quad(_bounds(attack, ability).grow(QUAD_MARGIN))
+	visible = true
+
+
+## One circle per unit that can attack, as the shader wants them: xy is the
+## centre on the ground plane and z is the radius.
+func _attack_circles(units: Array) -> PackedVector3Array:
+	var circles: PackedVector3Array = PackedVector3Array()
+	for unit in units:
+		var typed: Unit = _valid_unit(unit)
+		if typed == null || typed.stats == null || typed.stats.attack == null:
+			continue
+		_append_circle(circles, typed, typed.stats.attack.attack_range)
+	return _capped(circles, "attack")
+
+
+## One circle per ability that answers with a radius, which is the handful that
+## reach a ring of ground around their tower - an aura, a heal, a spread. Asked
+## of the ability rather than listed here, so the number stays on the resource
+## that uses it and cannot drift.
+func _ability_circles(units: Array) -> PackedVector3Array:
+	var circles: PackedVector3Array = PackedVector3Array()
+	for unit in units:
+		var typed: Unit = _valid_unit(unit)
+		if typed == null || typed.stats == null:
+			continue
+		for ability: UnitAbility in typed.stats.abilities:
+			if ability == null:
+				continue
+			_append_circle(circles, typed, ability.display_radius(typed))
+	return _capped(circles, "ability")
+
+
+func _valid_unit(unit: Variant) -> Unit:
 	var typed: Unit = unit as Unit
-	if typed == null || !is_instance_valid(typed):
-		return 0.0
-	if typed.stats == null || typed.stats.attack == null:
-		return 0.0
-	return typed.stats.attack.attack_range
+	return null if typed == null || !is_instance_valid(typed) else typed
+
+
+## Adds one circle unless there is no radius to draw.
+func _append_circle(circles: PackedVector3Array, unit: Unit, radius: float) -> void:
+	if radius <= 0.0:
+		return
+	var origin: Vector3 = unit.global_position
+	circles.append(Vector3(origin.x, origin.z, radius))
+
+
+## Cuts a group down to what the shader can hold, and says so when it had to.
+## Trimmed after the fact rather than refused during: the cap is generous
+## enough that it is never reached in play, and a loop that has to watch for it
+## costs every caller a check for the sake of a case nobody hits.
+func _capped(circles: PackedVector3Array, group: String) -> PackedVector3Array:
+	if circles.size() <= MAX_CIRCLES:
+		return circles
+	Log.info("More ranges to draw than the overlay can hold", {
+		"limit": MAX_CIRCLES,
+		"group": group,
+		"wanted": circles.size(),
+	})
+	return circles.slice(0, MAX_CIRCLES)
+
+
+## The ground the two groups cover together, which is all the quad has to be.
+func _bounds(attack: PackedVector3Array, ability: PackedVector3Array) -> Rect2:
+	var area: Rect2 = Rect2()
+	var found: bool = false
+	for group: PackedVector3Array in [attack, ability]:
+		for circle: Vector3 in group:
+			var reach: Rect2 = Rect2(
+				circle.x - circle.z, circle.y - circle.z, circle.z * 2.0, circle.z * 2.0
+			)
+			area = reach if !found else area.merge(reach)
+			found = true
+	return area
 
 
 ## The quad only has to cover the circles, so it is sized to their bounding box

@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_ice_ultimate_crystal_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.979
+health_bar_height = 1.146
 select_radius = 0.5
-select_height = 0.315
+select_height = 0.39
 
 [node name="Visual" parent="." instance=ExtResource("4_ice_ultimate_crystal_model")]
 

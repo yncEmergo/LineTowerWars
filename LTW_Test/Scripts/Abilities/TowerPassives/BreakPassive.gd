@@ -27,7 +27,7 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 	tower.drain_mana()
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.stun(stun_seconds)
+		status.stun(self, stun_seconds)
 
 
 func effect_text() -> String:

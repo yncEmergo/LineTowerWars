@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://o4v3bwrpxb3b"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://bm7ugqgb4guvg" path="res://Resources/UnitStats/Towers/primal_coreway_stats.tres" id="2_primal_coreway_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/primal_coreway_stats.tres" id="2_primal_coreway_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 281
 tower_stats = ExtResource("2_primal_coreway_stats")
 required_tech_id = 28
-ability_id = 281
 display_name = "Upgrade to Coreway"
 description = "Stuns on every fourth attack. Splits into the gold making Primalist and the beast unleashing Beastmaster."
+targeting = 1
 slot = 0

@@ -33,6 +33,12 @@ var value: int = 0
 ## Where this player finished, or 0 while they are still in it. 1 is the winner,
 ## and the first player out of a five player game takes 5.
 var placement: int = 0
+## Developer cheat: every creep's start delay counts as already served, so the
+## whole send card is available from the first second. Per player rather than
+## per match for the same reason the gold cheat is - a cheat is granted to
+## whoever pressed it - and handed down by the server like everything else, so
+## a client's card greys and counts down the same way the server decides.
+var creeps_unlocked: bool = false
 ## What this player has researched, and what they can still take back. Here
 ## rather than in a manager of its own for exactly the reason gold is here: it
 ## is per player, it is handed down by the server, and a static handle to "the
@@ -48,6 +54,7 @@ func setup(id: int, starting_gold: int, starting_income: int, starting_lives: in
 	gold = starting_gold
 	income = starting_income
 	lives = starting_lives
+	creeps_unlocked = false
 	gold_changed.emit(gold)
 	income_changed.emit(income)
 	lives_changed.emit(lives)
@@ -91,16 +98,19 @@ func pay_income() -> void:
 	gain(income)
 
 
-## Gold, income and lives handed down by the server (3.2), which on a client is
-## the only way any of them change: nothing here is earned locally.
+## Gold, income, lives and the creep cheat handed down by the server (3.2),
+## which on a client is the only way any of them change: nothing here is earned
+## locally.
 ##
 ## Deliberately not spend()/gain()/steal(): those enforce rules - you cannot
 ## spend what you do not have, a life has to come from somebody - and a value
 ## that has already been through those rules on the server must not be put
 ## through them a second time here. This just says what the numbers are.
 func set_replicated(
-	new_gold: int, new_income: int, new_lives: int, new_value: int, new_placement: int
+	new_gold: int, new_income: int, new_lives: int, new_value: int, new_placement: int,
+	new_creeps_unlocked: bool
 ) -> void:
+	creeps_unlocked = new_creeps_unlocked
 	if gold != new_gold:
 		gold = new_gold
 		gold_changed.emit(gold)

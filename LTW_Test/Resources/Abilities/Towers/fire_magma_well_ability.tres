@@ -1,13 +1,16 @@
-[gd_resource type="Resource" script_class="IgnitePassive" format=3 uid="uid://c5k7w12t68v2b"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://cfg23sicnwtg3" path="res://Scripts/Abilities/TowerPassives/IgnitePassive.gd" id="1_IgnitePassive"]
-[ext_resource type="Texture2D" uid="uid://cgyu1rh1rki7l" path="res://2DArt/Icons/magma_well.png" id="2_magma_well"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/IgnitePassive.gd" id="1_IgnitePassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/magma_well.png" id="2_magma_well"]
 
 [resource]
 script = ExtResource("1_IgnitePassive")
-damage_per_second = 13
 ability_id = 129
 display_name = "Ignite"
-icon = ExtResource("2_magma_well")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_magma_well")
+interval_seconds = 2.1
+radius_cells = 3.12
+damage_per_second = 13
+duration_seconds = 8

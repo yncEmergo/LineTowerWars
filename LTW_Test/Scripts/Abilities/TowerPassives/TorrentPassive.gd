@@ -47,23 +47,36 @@ const TARGET_KEY: String = "torrent_target"
 ## The aura's own clock is the tower's, not each creep's: one step every
 ## step_seconds, applied to everything standing in range at that moment. A
 ## creep that walks in halfway through a step simply catches the next one.
+## The aura, beating on the stacking interval because one beat is one stack.
+##
+## It BUILDS on a creep rather than landing whole - see GameConfig's aura
+## section - so everything it applies is scaled by how tight its grip on that
+## creep currently is. The chill keeps its own separate `step_seconds` clock on
+## top of that: the grip decides how HARD each step lands, the step clock
+## decides how OFTEN one is taken.
 func on_tick(tower: Building, delta: float) -> void:
-	if !aura_due(tower, AURA_KEY, delta) || tower.area == null || !tower.can_attack():
+	if tower.area == null || !tower.can_attack():
+		return
+	if !aura_due(tower, AURA_KEY, delta, aura_stack_interval()):
 		return
 
-	var step: float = float(tower.ability_state.get(STEP_KEY, 0.0)) + AURA_REFRESH_SECONDS
+	var step: float = float(tower.ability_state.get(STEP_KEY, 0.0)) + aura_stack_interval()
 	var stepping: bool = step >= step_seconds
 	tower.ability_state[STEP_KEY] = 0.0 if stepping else step
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
+		var share: float = grip_aura(self, creep)
+		if share <= 0.0:
+			continue
 		var status: StatusEffects = creep.status()
 		if stepping:
 			# The chill's own window is longer than the step, so a creep in the
 			# aura keeps climbing rather than losing ground between steps.
-			status.chill(resource_path, slow_per_step, slow_cap, step_seconds * 3.0)
+			status.chill(self, resource_path, slow_per_step * share, slow_cap,
+				step_seconds * 3.0)
 		if physical_amplification > 0.0:
-			status.amplify_physical(physical_amplification, AURA_HOLD_SECONDS)
+			status.amplify_physical(self, physical_amplification * share, AURA_HOLD_SECONDS)
 
 
 ## The stun is counted on the attack, so a shot still in the air cannot be
@@ -88,12 +101,13 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.stun(stun_seconds)
+		status.stun(self, stun_seconds)
 
 
 func effect_text() -> String:
-	var text: String = ("Creeps within %s cells are slowed %s%% every %ss, up"
-		+ " to %s%%.") % [
+	var text: String = ("Creeps within %s cells are slowed up to %s%% every %ss,"
+		+ " to a maximum of %s%%. The aura builds up the longer a creep stays"
+		+ " in it and fades once it leaves.") % [
 		StringUtil.trim_number(aura_cells),
 		StringUtil.trim_number(slow_per_step * 100.0),
 		StringUtil.trim_number(step_seconds),
@@ -110,3 +124,8 @@ func effect_text() -> String:
 		text += " Creeps in the aura also take +%s%% damage from physical attacks." \
 			% StringUtil.trim_number(physical_amplification * 100.0)
 	return text
+
+
+## The aura. Every tier of the line has one, so this always answers.
+func display_radius(_unit: Unit) -> float:
+	return aura_cells

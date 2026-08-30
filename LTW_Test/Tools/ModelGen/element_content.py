@@ -13,12 +13,12 @@ Three things are here that the Basic roster has no need of:
   same call the Research Center makes, so there is no second copy of the rule
 
   A NAMED ABILITY. Each tower carries one TowerPassive .tres of its own,
-  authored from element_abilities.ABILITIES. It sits FIRST on the card, before
-  the upgrades, because it is what the tower IS
+  authored from element_abilities.ABILITIES. It claims the same square on all
+  eighty cards, so where to read what a tower IS is learned once
 
   MANA. Authored on the stats where unit_data.md gives a tower any, along with
-  the share it is built holding - which is 0 for everything except the Doom
-  Guard line, whose whole design is starting full and decaying
+  the share it is built holding - which is 0 for everything except the
+  Moonbeam line, whose whole design is starting full and decaying
 
 THE ICON IS OPTIONAL HERE, and that is a real dependency rather than a
 convenience: an `ext_resource` that does not resolve takes the WHOLE .tres down
@@ -45,18 +45,21 @@ S_UNIT_ABILITY = "res://Scripts/Abilities/UnitAbility.gd"
 S_ATTACK_STATS = "res://Scripts/Config/AttackStats.gd"
 S_ATTACK_EFFECT = "res://Scripts/Combat/AttackEffect.gd"
 S_SPLASH = "res://Scripts/Combat/SplashEffect.gd"
+S_BURNING_GROUND = "res://Scripts/Combat/BurningGroundEffect.gd"
 S_PROJECTILE_DELIVERY = "res://Scripts/Combat/ProjectileDelivery.gd"
+S_PIERCE_DELIVERY = "res://Scripts/Combat/PierceDelivery.gd"
 S_INSTANT_DELIVERY = "res://Scripts/Combat/InstantDelivery.gd"
 S_BUILD_TOWER = "res://Scripts/Abilities/BuildTowerAbility.gd"
 S_UPGRADE_TOWER = "res://Scripts/Abilities/UpgradeTowerAbility.gd"
 S_ARMOR_CHOICE = "res://Scripts/Abilities/ArmorTypeChoiceAbility.gd"
-S_MORPH_MENU = "res://Scripts/Abilities/MorphMenuAbility.gd"
 S_RETURN_TO_CORE = "res://Scripts/Abilities/ReturnToCoreAbility.gd"
+S_STAMPEDE_TARGET = "res://Scripts/Abilities/StampedeTargetAbility.gd"
 S_BUILDING = "res://Scripts/Units/Building.gd"
 S_ATTACK_COMPONENT = "res://Scripts/Combat/AttackComponent.gd"
 S_RECOIL = "res://Scripts/Components/RecoilAnimation3D.gd"
 S_SLAM = "res://Scripts/Components/SlamAnimation3D.gd"
 S_SPIN = "res://Scripts/Components/SpinAnimation3D.gd"
+S_SPARKS = "res://Scripts/Components/SparkAnimation3D.gd"
 
 A_ATTACK = "res://Resources/Abilities/attack_ability.tres"
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
@@ -64,9 +67,14 @@ A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
 A_CANCEL_UPGRADE = "res://Resources/Abilities/cancel_upgrade_ability.tres"
 A_PRIORITIZE = "res://Resources/Abilities/prioritize_ability.tres"
+# Reading tool rather than an order: it draws what the tower reaches and
+# never leaves the machine. On EVERY tower, the Core included.
+A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 A_ARMOR_CHOICE = "res://Resources/Abilities/Towers/alchemist_armor_choice_ability.tres"
-A_MORPH_MENU = "res://Resources/Abilities/Towers/elemental_morph_menu_ability.tres"
 A_RETURN_TO_CORE = ("res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres")
+A_STAMPEDE_TARGET = "res://Resources/Abilities/Towers/stampede_target_ability.tres"
+
+BURNING_GROUND_SCENE = "res://Scenes/Effects/burning_ground.tscn"
 
 RING_MATERIAL = "res://Resources/Materials/Towers/selection_ring.tres"
 ICONS = "res://2DArt/Icons"
@@ -84,23 +92,79 @@ ARMOR_CHOICE_TOWER = "unholy_ultimate_alchemist"
 # so a branch reads left to right with no gap - see _upgrade_slot.
 BRANCH_SLOTS = (0, 1)
 
-# Where a tower's named ability sits: the bottom RIGHT square, the furthest
-# one on the card from the keys worth pressing.
+# Which square each element claims on the ELEMENTAL CORE's card.
 #
-# A passive draws no hotkey letter, but it still OCCUPIES the square that
-# letter is bound to, so one sitting at the front of the card spends the best
-# key in the game on something that can never be pressed. It is read, not
-# pressed, so it gets the square nothing else wants - and its icon is the tower
-# itself, which is what makes it findable there.
+# The Core carries all ten morphs directly rather than behind a submenu, so
+# these ten squares plus Sell are eleven of the twelve and there is no room for
+# anything else - which is why the Core alone drops Attack and Prioritize off
+# its card. Both still work; see _card.
 #
-# It was the bottom LEFT until Return to Core claimed that square, which is a
-# button and needs the key. See RETURN_SLOT.
-PASSIVE_SLOT = 11
+# Authored HERE rather than derived from ELEMENT_ORDER, because the order the
+# roster tables are walked in and the order a player reaches for the elements
+# in are two different questions and neither should move the other. The one
+# square left over is held for the range readout every tower is to get.
+#
+# The gap in the run is Sell's square, which it takes ahead of the grid because
+# it answers to a key of its own - see UnitAbility.slot_override. Nothing has
+# to be authored around that: an ability names the square whose key it wants
+# and is only ever moved if something is actually standing on it, and here
+# nothing is. The square left over is the last one.
+CORE_MORPH_SLOTS = {
+    "ice": 0, "lightning": 1, "holy": 2, "unholy": 3,
+    "fire": 4, "water": 5, "earth": 6, "arcane": 7,
+    "void": 9, "primal": 10,
+}
 
-# Where Return to Core sits: the bottom left square, which is Y on the
-# "qwer"/"asdf"/"yxcv" command card. One square for the whole roster, so the
+# Where a tower's named ability sits. ONE square for all eighty of them, so a
+# player learns where to read an elemental tower's rule once.
+#
+# It is a middle-row square rather than the far corner it used to be, which is
+# a deliberate trade: a passive draws no hotkey letter but still OCCUPIES the
+# square that letter is bound to, so this square is spent on something that can
+# never be pressed. It buys the passive a place the eye lands on, next to the
+# upgrades rather than off in the corner behind them, and its icon is the tower
+# itself, which is what makes it readable there.
+PASSIVE_SLOT = 6
+
+# Where a tower's SECOND named ability sits, on the one tower that has two.
+#
+# Directly beside the first rather than anywhere free, so the pair reads as one
+# block: a player who has learned where to find what an elemental tower does
+# finds its other half without hunting for it. Nothing else in the roster
+# claims this square.
+SECOND_PASSIVE_SLOT = 5
+
+# Where the armour-type button sits, on the ONE tower that carries it. Its own
+# square rather than a shared one: nothing else in the roster is an active
+# named ability, so there is nothing for it to be consistent with.
+ARMOR_CHOICE_SLOT = 3
+
+# The Beastmaster line, and the only towers in the roster that carry an ability
+# a player AIMS. Its beast runs at whatever the tower's attack landed on unless
+# it has been linked, and linking is this button - see StampedeTargetAbility.
+#
+# All three tiers, not only the Ultimate. unit_data.md names the ability under
+# Stampede because that is the paragraph the source spells it out in, but the
+# Lesser's own line already says "towards the target hit (or a manually set
+# point)", so the whole line has always had it.
+STAMPEDE_TARGET_TOWERS = ("primal_lesser_beastmaster",
+                          "primal_greater_beastmaster",
+                          "primal_ultimate_beastmaster")
+
+# The square it takes. The same square the armour button takes on the one tower
+# that has one, which costs nothing - no tower carries both - and means the one
+# key in the roster that aims a named ability is the same key either way.
+STAMPEDE_TARGET_SLOT = ARMOR_CHOICE_SLOT
+
+# The square Return to Core asks for. One square for the whole roster, so the
 # key that takes a tower back down to a Core is the same key at every tier and
 # in every element.
+#
+# It does not usually GET this one. Sell claims the same square ahead of the
+# grid - it answers to a key of its own and has to be somewhere fixed - so
+# Return to Core is pushed one along, onto the next free square, which is free
+# on every card in the roster. Authored as the square it wants rather than as
+# the square it lands on, because the day Sell moves this should follow it back.
 RETURN_SLOT = 8
 
 # What a tower has to be WORTH before it carries Return to Core, counting
@@ -120,8 +184,24 @@ _PASSIVE_IDS = {}
 _UPGRADE_IDS = {}
 _BUILD_CORE_ID = 0
 _ARMOR_CHOICE_ID = 0
-_MORPH_MENU_ID = 0
 _RETURN_TO_CORE_ID = 0
+_EXTRA_IDS = {}
+
+# Where a SECOND named ability's id comes from.
+#
+# A literal rather than the end of the walk above, because that end is not free:
+# the hand-authored creep passives and sends start just past it. See _assign_ids.
+FIRST_EXTRA_ABILITY_ID = 295
+
+# And the Beastmaster's link button, which is neither a passive nor an upgrade
+# and so is on neither walk.
+#
+# A LITERAL for the same reason FIRST_EXTRA_ABILITY_ID is one: everything this
+# generator counts out has already shipped its numbers, and the hand-authored
+# creep passives and sends were numbered from just above where that count
+# happened to end. So this is picked clear of both, once, and never computed -
+# a collision is a failed boot, which is exactly how the registry reports it.
+STAMPEDE_TARGET_ID = 318
 
 
 def _assign_ids():
@@ -132,7 +212,7 @@ def _assign_ids():
     CLAUDE.md - the number carries no meaning, it only has to be unique and
     never move.
     """
-    global _BUILD_CORE_ID, _ARMOR_CHOICE_ID, _MORPH_MENU_ID, _RETURN_TO_CORE_ID
+    global _BUILD_CORE_ID, _ARMOR_CHOICE_ID, _RETURN_TO_CORE_ID
     next_id = er.FIRST_ABILITY_ID
 
     for row in er.tower_rows():
@@ -146,10 +226,28 @@ def _assign_ids():
 
     _BUILD_CORE_ID = next_id
     _ARMOR_CHOICE_ID = next_id + 1
-    _MORPH_MENU_ID = next_id + 2
+    # next_id + 2 is RETIRED and deliberately skipped: it belonged to the
+    # Core's element submenu, which is gone now that the Core carries all ten
+    # morphs on its own card. An id is never reused, so the hole stays and
+    # nothing below it moves.
     # APPENDED, never inserted. Everything above already shipped its number.
     _RETURN_TO_CORE_ID = next_id + 3
-    return next_id + 4
+    next_id += 4
+
+    # And the second abilities last of all - but NOT by carrying on counting.
+    #
+    # THIS GENERATOR IS NOT THE ONLY THING HANDING OUT ABILITY IDS. The creep
+    # passives and the sends are authored BY HAND, and they were numbered from
+    # just above where this roster's block happened to end at the time. So the
+    # next number after this walk is not free, and taking it silently collides
+    # with a hand-written .tres - which the registry refuses at boot, so the
+    # game does not start. It cost exactly that once.
+    #
+    # Hence an explicit base, clear of everything authored either way. Raise it
+    # if it is ever reached from below; never let it be computed.
+    for key in sorted(ea.EXTRA_ABILITIES):
+        _EXTRA_IDS[key] = FIRST_EXTRA_ABILITY_ID + len(_EXTRA_IDS)
+    return next_id
 
 
 LAST_ABILITY_ID = _assign_ids()
@@ -174,7 +272,7 @@ def icon_name(display):
     That is Scenes/Dev/icon_renderer.tscn's convention and it is kept rather
     than changed, because it is already what every Basic tower and every creep
     icon in 2DArt/Icons is called. It works because a display name is unique
-    across the whole game - "Lesser Doom Guard" belongs to Fire and to nothing
+    across the whole game - "Lesser Moonbeam" belongs to Fire and to nothing
     else - which is a thing worth knowing before adding a roster that reuses
     one.
     """
@@ -257,11 +355,43 @@ def gen_passives():
               as_resource(s, '[gd_resource type="Resource" format=3]'))
 
 
+def gen_extra_passives():
+    """The second named ability of the one tower that has two.
+
+    Written by the same shape gen_passives uses - same slot rule, same icon
+    rule, same empty description - and kept as its own function so that the
+    exception is visible rather than buried in a branch inside the main loop.
+    """
+    for key, entry in ea.EXTRA_ABILITIES.items():
+        s = Scene()
+        script = s.ext("Script", entry["script"])
+        props = [
+            "ability_id = %d" % _EXTRA_IDS[key],
+            'display_name = "%s"' % entry["name"],
+            "targeting = 0",
+            "slot = %d" % SECOND_PASSIVE_SLOT,
+        ]
+        display = BY_KEY[key]["display"]
+        if has_icon(display):
+            props.append('icon = ExtResource("%s")'
+                         % s.ext("Texture2D", icon_path(display)))
+        for field, value in entry["fields"].items():
+            props.append("%s = %s" % (field, _value(value)))
+
+        s.node("resource", None, ".", script=script, props=props)
+        write(ea.extra_ability_path(key),
+              as_resource(s, '[gd_resource type="Resource" format=3]'))
+
+
 def _value(value):
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, str):
         return '"%s"' % value
+    if isinstance(value, (tuple, list)):
+        # A list of ids, which is the only list any ability authors. Written as
+        # a PackedInt32Array so a .tres reads as the row of numbers it is.
+        return "PackedInt32Array(%s)" % ", ".join(str(int(v)) for v in value)
     return num(value)
 
 
@@ -277,11 +407,41 @@ def gen_armor_choice():
         'into. A creep can only ever be altered into a given type once."',
         # IMMEDIATE: pressing it cycles the choice, there is nothing to aim at.
         "targeting = 1",
-        "slot = 6",
+        "slot = %d" % ARMOR_CHOICE_SLOT,
         'icon = ExtResource("%s")'
         % s.ext("Texture2D", action_icon_path("alter_armor")),
     ])
     write(A_ARMOR_CHOICE,
+          as_resource(s, '[gd_resource type="Resource" format=3]'))
+
+
+def gen_stampede_target():
+    """The Beastmaster line's link button, and the one ability in the roster
+    that is AIMED rather than pressed.
+
+    ONE resource for all three tiers, because it is the same button on all
+    three: an ability holds no per-tower state - the link and its cooldown live
+    on the tower, in ActiveAbilityState - so there is nothing for a second copy
+    to carry. That is the same rule every shared ability in the game follows.
+    """
+    s = Scene()
+    script = s.ext("Script", S_STAMPEDE_TARGET)
+    s.node("resource", None, ".", script=script, props=[
+        "ability_id = %d" % STAMPEDE_TARGET_ID,
+        'display_name = "Stampede Target"',
+        'description = "Link this Beastmaster to one of your own towers. Its '
+        'beast then always runs towards that tower instead of towards whatever '
+        'the attack landed on. Only the DIRECTION is taken, so distance does '
+        'not matter and there is no range on the link. Aim it at this tower to '
+        'clear the link."',
+        # UNIT: pressing it arms the order and the next left click names the
+        # tower. The emptied card and its Cancel square come with that.
+        "targeting = 3",
+        "slot = %d" % STAMPEDE_TARGET_SLOT,
+        'icon = ExtResource("%s")'
+        % s.ext("Texture2D", action_icon_path("stampede_target")),
+    ])
+    write(A_STAMPEDE_TARGET,
           as_resource(s, '[gd_resource type="Resource" format=3]'))
 
 
@@ -299,9 +459,9 @@ def gen_stats(row, heights):
     ability_script = s.ext("Script", S_UNIT_ABILITY)
     attack_script = s.ext("Script", S_ATTACK_STATS)
 
-    _delivery(s, kind, projectile, speed, arc, impact)
-    effect_script = _splash(s, row)
-    _attack(s, row, attack_script, effect_script)
+    _delivery(s, shape, kind, projectile, speed, arc, impact)
+    effect_script, effects = _effects(s, row)
+    _attack(s, row, attack_script, effect_script, effects)
 
     card = _card(s, row)
     cancel_build = s.ext("Resource", A_CANCEL_BUILD)
@@ -349,14 +509,26 @@ def er_price(row):
     return ts.ELEMENT_PRICE_TIERS[row["ti"]]
 
 
-def _delivery(s, kind, projectile, speed, arc, impact):
-    if kind == "projectile":
+def _delivery(s, shape, kind, projectile, speed, arc, impact):
+    if kind == "pierce":
+        travel, trailing = er.PIERCE[shape]
+        script = s.ext("Script", S_PIERCE_DELIVERY)
+        lines = ['script = ExtResource("%s")' % script,
+                 'projectile_scene_path = "%s"' % projectile,
+                 "speed = %s" % num(speed),
+                 "travel_cells = %s" % num(travel),
+                 "trailing_damage_type = %d" % trailing]
+    elif kind == "projectile":
         script = s.ext("Script", S_PROJECTILE_DELIVERY)
         lines = ['script = ExtResource("%s")' % script,
                  'projectile_scene_path = "%s"' % projectile,
                  "speed = %s" % num(speed)]
         if arc:
             lines.append("arc_height = %s" % num(arc))
+        launch = er.SKY_LAUNCH.get(shape)
+        if launch:
+            lines.append("sky_launch_offset = Vector3(%s, %s, %s)" % (
+                num(launch[0]), num(launch[1]), num(launch[2])))
     else:
         script = s.ext("Script", S_INSTANT_DELIVERY)
         lines = ['script = ExtResource("%s")' % script]
@@ -365,21 +537,49 @@ def _delivery(s, kind, projectile, speed, arc, impact):
     s.sub("Resource", "Delivery", lines)
 
 
-def _splash(s, row):
-    if not row["splash"]:
-        return None
-    effect_script = s.ext("Script", S_ATTACK_EFFECT)
-    # Every elemental splash is measured from the IMPACT. Nothing in this
-    # roster is the Crusher, whose reach is shorter than its own blast - see
-    # SelfSplashEffect for the one exception in the game.
-    s.sub("Resource", "Splash", [
-        'script = ExtResource("%s")' % s.ext("Script", S_SPLASH),
-        "radius = %s" % num(td.cells(row["splash"])),
-    ])
-    return effect_script
+def _effects(s, row):
+    """Everything this attack does once it has landed, in the order it runs.
+
+    An ARRAY rather than a flag apiece, which is the whole point of the shape:
+    a meteor that splashes and then leaves the crater burning is two entries,
+    not a combination anybody has to name. See CLAUDE.md on AttackStats.
+    """
+    names = []
+    if row["splash"]:
+        # Every elemental splash is measured from the IMPACT. Nothing in this
+        # roster is the Crusher, whose reach is shorter than its own blast - see
+        # SelfSplashEffect for the one exception in the game.
+        s.sub("Resource", "Splash", [
+            'script = ExtResource("%s")' % s.ext("Script", S_SPLASH),
+            "radius = %s" % num(td.cells(row["splash"])),
+        ])
+        names.append("Splash")
+
+    burn = er.BURNING_GROUND.get(row["shape"])
+    if burn:
+        seconds, tick, share, radius_share = burn
+        # Measured off the attack's OWN splash, so a fire can never be authored
+        # bigger than the blast that lit it and the two stay in step at every
+        # tier. A path with no splash falls back to a single cell rather than to
+        # nothing, which would be a fire authored with no ground under it.
+        splash = td.cells(row["splash"]) if row["splash"] else 1.0
+        radius = round(splash * radius_share, 2)
+        s.sub("Resource", "BurningGround", [
+            'script = ExtResource("%s")' % s.ext("Script", S_BURNING_GROUND),
+            "radius = %s" % num(radius),
+            "duration_seconds = %s" % num(seconds),
+            "tick_seconds = %s" % num(tick),
+            "damage_share_per_second = %s" % num(share),
+            'hazard_scene_path = "%s"' % BURNING_GROUND_SCENE,
+        ])
+        names.append("BurningGround")
+
+    if not names:
+        return None, names
+    return s.ext("Script", S_ATTACK_EFFECT), names
 
 
-def _attack(s, row, attack_script, effect_script):
+def _attack(s, row, attack_script, effect_script, effects):
     lines = ['script = ExtResource("%s")' % attack_script,
              "damage_min = %d" % row["dmin"],
              "damage_max = %d" % row["dmax"],
@@ -394,8 +594,9 @@ def _attack(s, row, attack_script, effect_script):
     lines.append("target_types = %d" % row["targets"])
     lines.append('delivery = SubResource("Delivery")')
     if effect_script is not None:
-        lines.append('effects = Array[ExtResource("%s")]([SubResource("Splash")])'
-                     % effect_script)
+        lines.append('effects = Array[ExtResource("%s")]([%s])' % (
+            effect_script,
+            ", ".join('SubResource("%s")' % name for name in effects)))
     s.sub("Resource", "Attack", lines)
 
 
@@ -405,29 +606,44 @@ def _card(s, row):
     Its own named ability FIRST, then the upgrades above it, then the standard
     three. That order is the point: a player looking at an elemental tower
     should read what it DOES before what it costs to replace.
+
+    THE ELEMENTAL CORE IS THE EXCEPTION and is the reason this is a branch: it
+    carries all ten morphs directly, which with Sell and Show Ranges fills the
+    card exactly. So it is the one tower whose Attack and Prioritize come OFF
+    the card - neither is lost, a right click still orders an attack and the
+    Core still shoots on its own, and a 200g tower that exists to be morphed is
+    not one anybody aims by hand.
     """
     card = []
     if row["key"] in ea.ABILITIES:
         card.append(s.ext("Resource", ea.ability_path(row["key"])))
+    if row["key"] in ea.EXTRA_ABILITIES:
+        card.append(s.ext("Resource", ea.extra_ability_path(row["key"])))
     if row["key"] == ARMOR_CHOICE_TOWER:
         card.append(s.ext("Resource", A_ARMOR_CHOICE))
+    if row["key"] in STAMPEDE_TARGET_TOWERS:
+        card.append(s.ext("Resource", A_STAMPEDE_TARGET))
 
     if row["key"] == "elemental_core":
-        # Ten elements would want ten squares on a card that holds twelve, so
-        # they go behind one. See MorphMenuAbility.
-        card.append(s.ext("Resource", A_MORPH_MENU))
-    else:
         for source, target in er.upgrade_pairs():
-            if source == row["key"]:
+            if source == "elemental_core":
                 card.append(s.ext("Resource", upgrade_ability_path(source, target)))
-        # The way back down, straight after the ways up. See RETURN_MIN_VALUE.
-        if row["total"] >= RETURN_MIN_VALUE:
-            card.append(s.ext("Resource", A_RETURN_TO_CORE))
+        card.append(s.ext("Resource", A_SELL))
+        card.append(s.ext("Resource", A_SHOW_RANGES))
+        return card
+
+    for source, target in er.upgrade_pairs():
+        if source == row["key"]:
+            card.append(s.ext("Resource", upgrade_ability_path(source, target)))
+    # The way back down, straight after the ways up. See RETURN_MIN_VALUE.
+    if row["total"] >= RETURN_MIN_VALUE:
+        card.append(s.ext("Resource", A_RETURN_TO_CORE))
 
     card.append(s.ext("Resource", A_ATTACK))
     if row["targets"] == td.BOTH:
         card.append(s.ext("Resource", A_PRIORITIZE))
     card.append(s.ext("Resource", A_SELL))
+    card.append(s.ext("Resource", A_SHOW_RANGES))
     return card
 
 
@@ -497,6 +713,12 @@ def _add_animations(s, shape):
                    props=['_unit = NodePath("..")',
                           "_swing = %s" % node,
                           'shockwave_scene_path = "%s"' % entry[2]])
+        elif kind == "sparks":
+            s.node("Sparks", "Node", ".",
+                   node_paths=["_unit", "_sparks"],
+                   script=s.ext("Script", S_SPARKS),
+                   props=['_unit = NodePath("..")',
+                          "_sparks = %s" % node])
         elif kind == "spin":
             s.node("Spin%d" % (index + 1), "Node", ".",
                    node_paths=["_spinner", "_unit"],
@@ -550,12 +772,10 @@ def _upgrade_slot(source, target):
     moves a tower up its line is the same key at every tier.
 
     The Elemental Core is the exception and carries TEN of them, one per
-    element, filling its own submenu card from square 0 in the order
-    element_roster walks the elements.
+    element, laid out across its whole card by CORE_MORPH_SLOTS.
     """
     if source == "elemental_core":
-        cores = [t for src, t in er.upgrade_pairs() if src == "elemental_core"]
-        return cores.index(target)
+        return CORE_MORPH_SLOTS[BY_KEY[target]["element"]]
 
     used = [t for src, t in er.upgrade_pairs() if src == source]
     return BRANCH_SLOTS[used.index(target)]
@@ -572,30 +792,6 @@ def _path_text(row):
     if path is None:
         return PATH_TEXT.get(row["element"], "")
     return PATH_TEXT.get(path["key"], "")
-
-
-def gen_morph_menu():
-    """The Elemental Core's element list, as one submenu."""
-    s = Scene()
-    script = s.ext("Script", S_MORPH_MENU)
-    ability_script = s.ext("Script", S_UNIT_ABILITY)
-    entries = [s.ext("Resource", upgrade_ability_path("elemental_core", target))
-               for source, target in er.upgrade_pairs()
-               if source == "elemental_core"]
-    s.node("resource", None, ".", script=script, props=[
-        "ability_id = %d" % _MORPH_MENU_ID,
-        "morphs = Array[ExtResource(\"%s\")]([%s])" % (
-            ability_script, ", ".join('ExtResource("%s")' % e for e in entries)),
-        'display_name = "Choose Element"',
-        'description = "Morph this Core into an element you have researched. '
-        'The morph is free; the technology is not."',
-        "targeting = 4",
-        "slot = 0",
-        'icon = ExtResource("%s")'
-        % s.ext("Texture2D", action_icon_path("choose_element")),
-    ])
-    write(A_MORPH_MENU, as_resource(
-        s, '[gd_resource type="Resource" script_class="MorphMenuAbility" format=3]'))
 
 
 def gen_return_to_core():
@@ -684,8 +880,10 @@ PATH_TEXT = {
     "primal": "Stuns on every fourth attack. Splits into the gold making "
               "Primalist and the beast unleashing Beastmaster.",
 
-    "doom_guard": "Calls meteors. Built at full mana and strongest the moment "
-                  "it is placed, weakening every second afterwards. Cannot hit air.",
+    "moonbeam": "Calls meteors down out of the sky, leaving the ground "
+                "burning where they land. Built at full mana and strongest the "
+                "moment it is placed, weakening every second afterwards. "
+                "Cannot hit air.",
     "firelord": "A living flame. A chance on every attack to burst over "
                 "several creeps and permanently eat their armor.",
     "lich": "Chills deeper than anything else, with splash. The Ultimate kills "
@@ -697,9 +895,9 @@ PATH_TEXT = {
     "orb_keeper": "Very short reach and a very fast attack. Fills up over four "
                   "attacks and spends the lot on a stun.",
     "divineshroom": "AIR ONLY from this tier up. Heavy splash, deep slow, and "
-                    "the only armor reduction that goes below zero.",
-    "titan_vault": "Support. Strikes many creeps at once and leaves them "
-                   "taking more Spell Damage from everything.",
+                    "armor reduction that carries on past zero.",
+    "titan_vault": "Support. Hits many creeps at once, and carries an aura that "
+                   "weakens and slows everything standing near it.",
     "harbinger": "Drags a creep back down the lane it came from and burns a "
                  "share of its maximum health.",
     "leviathan": "Eats armor and turns it into its own attack damage, which it "
@@ -729,13 +927,15 @@ PATH_TEXT = {
 
 def generate(heights):
     gen_passives()
+    gen_extra_passives()
     gen_armor_choice()
+    gen_stampede_target()
     for row in er.tower_rows():
         gen_stats(row, heights)
         gen_prefab(row, heights)
     gen_upgrade_abilities()
-    gen_morph_menu()
     gen_return_to_core()
     gen_build_ability()
     print("wrote %d elemental stats, %d prefabs, %d passives, %d upgrades"
-          % (len(BY_KEY), len(BY_KEY), len(ea.ABILITIES), len(_UPGRADE_IDS)))
+          % (len(BY_KEY), len(BY_KEY),
+             len(ea.ABILITIES) + len(ea.EXTRA_ABILITIES), len(_UPGRADE_IDS)))

@@ -14,7 +14,7 @@ extends Control
 ## later would mean reworking this whole panel.
 ##
 ## Units are duck-typed. Anything exposing a stats: UnitStats and a
-## current_health: int works here with no changes to this script.
+## display_health(): int works here with no changes to this script.
 
 ## Command card shape used only when no ControlsConfig is wired. The real
 ## shape, and the letters that go with it, live there - it is how the player
@@ -31,22 +31,30 @@ const SELECTION_ROWS: int = 3
 @export_group("References")
 @export var _name_label: Label
 @export var _health_label: Label
-## Mana, for the towers that use any. Hidden for everything else, which is
-## every Basic tower and every creep - a line reading "0 / 0" on all of them
-## would be noise on the panel a player looks at most.
-@export var _mana_label: Label
+## The unit's SECOND RESOURCE, for the towers that have one - mana, or a count
+## a passive has banked. Hidden for everything else, which is every Basic tower
+## and every creep: a line reading "0 / 0" on all of them would be noise on the
+## panel a player looks at most.
+@export var _resource_label: Label
 ## Health and the secondary resource, drawn under the portrait as bars as well
 ## as written out as numbers. The bar is what is read at a glance mid-fight;
 ## the numbers are what is read when the player actually wants to know.
 @export var _health_bar: StatBar
 ## Hidden for anything with no second resource, which is every creep, the
-## builder and every Basic tower.
-@export var _mana_bar: StatBar
+## builder and every Basic tower. Its colour is not a property of the prefab:
+## the tower answers with it, so mana stays blue and a banked count is violet.
+@export var _resource_bar: StatBar
 @export var _damage_label: Label
 @export var _armor_label: Label
 ## Attack speed and range. Hidden for anything that cannot attack, so a creep's
 ## panel does not carry an empty line.
 @export var _attack_label: Label
+## How much ground one attack covers and how many creeps it strikes. Shown for
+## anything that attacks, INCLUDING when the answer to both is nothing: "no
+## splash" is a real and important property of a tower, and a line that only
+## appeared on the towers that had some would make the ones that do not read as
+## if the panel had forgotten to say.
+@export var _splash_label: Label
 ## Shown INSTEAD of the stat lines while the selected tower is busy with
 ## something on a clock - selling, upgrading, reverting to a Core. The panel
 ## says one thing at a time, and while a countdown is running that is the one
@@ -55,6 +63,10 @@ const SELECTION_ROWS: int = 3
 @export var _job_icon: TextureRect
 @export var _job_label: Label
 @export var _job_bar: StatBar
+## The row of debuff squares under the stat lines. Follows the same rules the
+## stat lines do - one unit only, and off while a countdown is running - so a
+## player is never reading a creep's chill next to a tower's sale timer.
+@export var _status_bar: StatusBar
 @export var _command_grid: GridContainer
 @export var _selection_grid: GridContainer
 @export var _command_slot_scene: PackedScene
@@ -67,6 +79,14 @@ const SELECTION_ROWS: int = 3
 @export var _cancel_ability: UnitAbility
 
 var _slots: Array[CommandSlot] = []
+## The key each square is currently drawing, in square order.
+##
+## Kept because it is also the answer to "what does this press do": the letters
+## are handed out down the card rather than nailed to a square number, so the
+## square a key lands on cannot be worked out from the key alone. What is drawn
+## and what is pressed are then the same array, which is the only way they can
+## be trusted not to disagree.
+var _slot_letters: PackedStringArray = PackedStringArray()
 var _tiles: Array[UnitTile] = []
 ## Ability whose hotkey is currently held down, for repeat firing.
 var _held_ability: UnitAbility = null
@@ -121,13 +141,23 @@ func _ready() -> void:
 		commands.ability_armed.connect(_on_ability_armed)
 		commands.command_ended.connect(_on_command_ended)
 
-	if _name_label == null || _health_label == null \
-			|| _damage_label == null || _armor_label == null:
+	if _name_label == null || _health_label == null || _damage_label == null \
+			|| _armor_label == null || _resource_label == null \
+			|| _resource_bar == null:
 		Log.err("UnitPanel is missing one or more of its labels")
 
+	add_to_group(HotkeyAction.READERS_GROUP)
 	_build_command_slots()
 	_build_selection_tiles()
 	clear()
+
+
+## Redraws the card because a key changed under it - the player rebound one, or
+## switched keyboard layout. Called on the whole group by the options screen,
+## since nothing about the selection has moved and the card would otherwise go
+## on drawing the letter it was built with.
+func refresh_hotkeys() -> void:
+	_refresh_slots()
 
 
 ## Tiles are built once and refilled, like the command slots.
@@ -249,13 +279,15 @@ func show_unit(unit: Variant) -> void:
 	_set_group_mode(false)
 
 	_name_label.text = stats.display_name
-	_health_label.text = "%d / %d" % [int(unit.current_health), stats.max_health]
-	_set_mana_text(unit as Building)
-	_set_damage_text(stats)
-	_armor_label.text = "Armor:   %s" % stats.armor_text(unit.armor_value())
+	_health_label.text = "%d / %d" % [unit.display_health(), stats.max_health]
+	_set_resource_text(unit)
+	_set_damage_text(_unit)
+	_apply_armor_label()
 	_set_attack_text(stats)
 	_refresh_bars()
 	_refresh_job()
+	if _status_bar != null:
+		_status_bar.show_unit(_unit)
 
 	_card_stack = [_unit.current_abilities()]
 	_refresh_slots()
@@ -283,10 +315,14 @@ func show_group(units: Array) -> void:
 	_show_portrait(_unit)
 
 	if _unit != null:
-		_health_label.text = "%d / %d" % [_unit.current_health, _unit.max_health()]
-	_set_mana_text(_unit as Building)
+		_health_label.text = "%d / %d" % [_unit.display_health(), _unit.max_health()]
+	_set_resource_text(_unit)
 	_refresh_bars()
 	_refresh_job()
+	if _status_bar != null:
+		# A group has no room to say whose debuff is whose, and no way to be
+		# asked - the row is one unit's or nobody's.
+		_status_bar.clear()
 
 	_fill_selection_grid(units)
 	_card_stack = [_shared_abilities(units)]
@@ -310,6 +346,8 @@ func clear() -> void:
 	_busy = false
 	if _job_row != null:
 		_job_row.visible = false
+	if _status_bar != null:
+		_status_bar.clear()
 	_show_portrait(null)
 	visible = false
 
@@ -319,13 +357,39 @@ func clear() -> void:
 ## Damage, and nothing at all for a unit that has no attack. A creep's panel
 ## would otherwise carry a "Damage: -" line that only ever says "not this one".
 ## Must run after _set_group_mode, which reveals every single-unit label.
-func _set_damage_text(stats: UnitStats) -> void:
-	if _damage_label == null:
+func _set_damage_text(unit: Unit) -> void:
+	if _damage_label == null || unit == null || unit.stats == null:
 		return
 
-	_damage_label.visible = stats.attack != null && !_busy
-	if stats.attack != null:
-		_damage_label.text = "Damage:   %s" % stats.damage_text()
+	_damage_label.visible = unit.stats.attack != null && !_busy
+	if unit.stats.attack != null:
+		_damage_label.text = _damage_line(unit)
+
+
+## The damage line for one unit, with whatever its own abilities have added to
+## it for good folded in - an Alchemist that has devoured a hundred points of
+## damage hits for a hundred more than its stats say, and the panel is where a
+## player finds that out. Asked of the UNIT rather than read off its stats, for
+## the same reason the armour line is: the number on the resource is the base,
+## and what is standing on the field is not always it.
+func _damage_line(unit: Unit) -> String:
+	var tower: Building = unit as Building
+	var bonus: int = 0 if tower == null else tower.permanent_damage_bonus()
+	return "Damage:   %s" % unit.stats.damage_text(bonus)
+
+
+## Keeps it up to date. Polled for the same reason the armour line is: a tower
+## that eats damage as it kills is a tower whose damage line moves while a
+## player is looking straight at it, and no signal is raised when it does.
+func _refresh_damage_label() -> void:
+	if _damage_label == null || !_damage_label.visible:
+		return
+	if _unit == null || !is_instance_valid(_unit) || _unit.stats == null:
+		return
+
+	var text: String = _damage_line(_unit)
+	if _damage_label.text != text:
+		_damage_label.text = text
 
 
 ## Attack speed and range, and nothing at all for a unit that cannot attack.
@@ -336,30 +400,72 @@ func _set_attack_text(stats: UnitStats) -> void:
 		return
 
 	var attack: AttackStats = stats.attack
-	_attack_label.visible = attack != null && !_busy
-	if attack == null:
+	var showing: bool = attack != null && !_busy
+	_attack_label.visible = showing
+	if _splash_label != null:
+		# Follows the attack line rather than deciding for itself, so the two
+		# can never end up with one of them left over from the last unit.
+		_splash_label.visible = showing
+	if !showing:
 		return
 
 	_attack_label.text = "Attack:   %s,  %s range" % [
 		attack.attack_speed_text(), attack.range_text()
 	]
+	_set_splash_text(attack)
+
+
+## The area-and-count line: how much ground one attack covers, and how many
+## creeps it hits beyond the one it aimed at.
+##
+## The multishot count is asked of the UNIT rather than read off the attack,
+## because nearly every tower in the roster that hits several creeps does it
+## through its ABILITY rather than through its base attack - a Titan Vault's
+## own AttackStats says nothing about the ten extra creeps it strikes.
+func _set_splash_text(attack: AttackStats) -> void:
+	if _splash_label == null:
+		return
+
+	var radius: float = attack.splash_radius()
+	var splash: String = "None"
+	if radius > 0.0:
+		splash = "%s cells" % StringUtil.trim_number(radius)
+
+	var extra: int = attack.multishot_targets + _passive_extra_targets()
+	var multishot: String = "None" if extra <= 0 else "+%d targets" % extra
+	_splash_label.text = "Splash:   %s,   Multishot:   %s" % [splash, multishot]
+
+
+## Further creeps the selected tower's own abilities add to every attack.
+func _passive_extra_targets() -> int:
+	var tower: Building = _unit as Building
+	if tower == null:
+		return 0
+	var extra: int = 0
+	for passive in tower.tower_passives():
+		extra += passive.extra_targets(tower)
+	return extra
 
 
 func _set_group_mode(group: bool) -> void:
 	if _name_label != null:
 		_name_label.visible = !group
-	if _mana_label != null && group:
-		_mana_label.visible = false
-	if _mana_bar != null && group:
-		_mana_bar.visible = false
+	if _resource_label != null && group:
+		_resource_label.visible = false
+	if _resource_bar != null && group:
+		_resource_bar.visible = false
 	if _damage_label != null:
 		_damage_label.visible = !group
 	if _armor_label != null:
 		_armor_label.visible = !group
 	if _attack_label != null:
 		_attack_label.visible = !group
+	if _splash_label != null:
+		_splash_label.visible = !group
 	if _job_row != null:
 		_job_row.visible = false
+	if _status_bar != null:
+		_status_bar.visible = !group
 	if _selection_grid != null:
 		_selection_grid.visible = group
 
@@ -447,11 +553,12 @@ func _detach_units() -> void:
 	_unit = null
 
 
-func _on_unit_health_changed(current: int, maximum: int, unit: Unit) -> void:
+func _on_unit_health_changed(_current: float, maximum: int, unit: Unit) -> void:
 	# Only the unit driving the portrait owns the big readout, but any unit's
-	# tile has to stay honest.
+	# tile has to stay honest. The rounded number comes off the unit rather
+	# than out of the signal, so every readout rounds the one way.
 	if unit == _unit && _health_label != null:
-		_health_label.text = "%d / %d" % [current, maximum]
+		_health_label.text = "%d / %d" % [unit.display_health(), maximum]
 	_refresh_tile_for(unit)
 
 
@@ -540,7 +647,7 @@ func _place_cancel(placed: Array) -> void:
 	if !_armed && !is_in_submenu():
 		return
 
-	var slot: int = _cancel_ability.slot
+	var slot: int = _cancel_ability.card_slot()
 	if slot < 0 || slot >= placed.size():
 		slot = placed.size() - 1
 	placed[slot] = _cancel_ability
@@ -568,45 +675,111 @@ func _refresh_slots() -> void:
 	placed.resize(_slots.size())
 	_place_cancel(placed)
 
+	_slot_letters = _letters_for(placed)
 	for index in range(_slots.size()):
-		_slots[index].set_ability(placed[index], _unit, _hotkey_letter(index))
+		_slots[index].set_ability(placed[index] as UnitAbility, _unit,
+			_slot_letters[index])
 
 ## One entry per square, null where the card leaves a gap.
 ##
-## Two abilities on the same card claiming the same square is an authoring
-## mistake rather than something to resolve quietly: the first one keeps the
-## square, the second is reported and dropped in wherever there is room, so the
-## card still works and the mistake is visible in the log.
+## Three kinds of claim, settled in that order:
+##   1. a square claimed AHEAD of the grid, by an ability that answers to a key
+##      of its own and so has to be somewhere fixed - Sell. It wins
+##   2. an ordinary square, which is the whole rest of the card
+##   3. no square at all, which falls into the first gap left over
+##
+## The grid is walked in SQUARE ORDER rather than in card order, and that is
+## what makes a push read properly: an ability that finds its square taken
+## takes the next one along, and the ability that wanted THAT one slides along
+## in turn. So a card with one square spent shifts by one from there and stops,
+## rather than the displaced ability leaping over its neighbours to the first
+## hole it can find. An ability keeps its own key throughout - see
+## _letter_for, which reads the square an ability CLAIMED, not the one it
+## ended up on.
+##
+## Two ORDINARY abilities colliding is still an authoring mistake and still
+## says so: nothing took that square from either of them, they were both
+## authored onto it.
 func _place_card(card: Array) -> Array:
 	var placed: Array = []
 	placed.resize(_slots.size())
 
+	var abilities: Array = _abilities_of(card)
 	var floating: Array = []
-	for entry in card:
-		var ability: UnitAbility = entry as UnitAbility
-		if ability == null:
-			continue
 
-		var wanted: int = ability.slot
-		if wanted < 0 || wanted >= placed.size():
+	for ability: UnitAbility in abilities:
+		if ability.claims_slot_first():
+			_claim_square(placed, ability)
+
+	for wanted: int in range(placed.size()):
+		for ability: UnitAbility in abilities:
+			if !ability.claims_slot_first() && ability.card_slot() == wanted:
+				_claim_square(placed, ability)
+
+	for ability: UnitAbility in abilities:
+		var wanted: int = ability.card_slot()
+		if !ability.claims_slot_first() && (wanted < 0 || wanted >= placed.size()):
 			floating.append(ability)
-		elif placed[wanted] != null:
-			Log.err("Two abilities on one card claim the same slot", {
-				"slot": wanted,
-				"kept": placed[wanted].display_name,
-				"moved": ability.display_name,
-			})
-			floating.append(ability)
-		else:
-			placed[wanted] = ability
 
 	_fill_free_slots(placed, floating)
 	return placed
 
 
-## Drops everything that named no square, or named a taken one, into the gaps
-## left over. Anything that still does not fit is reported rather than silently
-## vanishing off the card.
+## Everything on a card that is really an ability, so the passes below can walk
+## the same list three times without checking for nulls each time.
+func _abilities_of(card: Array) -> Array:
+	var abilities: Array = []
+	for entry in card:
+		var ability: UnitAbility = entry as UnitAbility
+		if ability != null:
+			abilities.append(ability)
+	return abilities
+
+
+## Puts one ability on the square it asked for, or on the next free one along.
+##
+## Counting ON from the square it wanted rather than from the top of the card,
+## and wrapping round the end, so an ability pushed out of the bottom row lands
+## beside where it used to be instead of in the top left. A card with nowhere
+## left to put it is reported: the ability is off the card, which is the one
+## outcome a player would experience as a missing button.
+func _claim_square(placed: Array, ability: UnitAbility) -> void:
+	var count: int = placed.size()
+	if count > 0:
+		var wanted: int = clampi(ability.card_slot(), 0, count - 1)
+		_report_double_claim(placed[wanted] as UnitAbility, ability, wanted)
+
+		for step in range(count):
+			var index: int = (wanted + step) % count
+			if placed[index] == null:
+				placed[index] = ability
+				return
+
+	Log.err("Card has no free square left for an ability", {
+		"ability": ability.display_name,
+		"slot": ability.card_slot(),
+	})
+
+
+## Giving way to a priority claim is the feature working, and silent. Two
+## abilities that both asked for a square the ordinary way is somebody
+## authoring the same number twice, and only that is worth a line in the log.
+func _report_double_claim(sitting: UnitAbility, ability: UnitAbility, slot: int) -> void:
+	if sitting == null || sitting.claims_slot_first() || ability.claims_slot_first():
+		return
+	Log.err("Two abilities on one card claim the same slot", {
+		"slot": slot,
+		"kept": sitting.display_name,
+		"moved": ability.display_name,
+	})
+
+
+## Drops everything that named no square at all into the gaps left over, from
+## the top of the card. An ability that named a taken one was moved already, by
+## _push_to_free_slot, which starts from the square it wanted instead.
+##
+## Anything that still does not fit is reported rather than silently vanishing
+## off the card.
 func _fill_free_slots(placed: Array, floating: Array) -> void:
 	var next: int = 0
 	for ability in floating:
@@ -621,13 +794,48 @@ func _fill_free_slots(placed: Array, floating: Array) -> void:
 		placed[next] = ability
 
 
-## Letter drawn on a square and pressed to use it. Empty when no controls
-## config is wired, which leaves the card usable by mouse and simply unbound.
-func _hotkey_letter(slot_index: int) -> String:
+## The Nth letter of the grid. Empty when no controls config is wired, which
+## leaves the card usable by mouse and simply unbound.
+func _grid_letter(index: int) -> String:
 	var config: ControlsConfig = _controls_config
 	if config == null:
 		return ""
-	return config.hotkey_letter_for_slot(slot_index)
+	return config.grid_letter(index)
+
+
+## The key each square draws, in square order.
+func _letters_for(placed: Array) -> PackedStringArray:
+	var letters: PackedStringArray = PackedStringArray()
+	letters.resize(placed.size())
+	for index in range(placed.size()):
+		letters[index] = _letter_for(placed[index] as UnitAbility, index)
+	return letters
+
+
+## The key ONE square draws, which is the ability's rather than the square's.
+##
+## An ability's key comes from the square it CLAIMED, and it keeps that key
+## wherever it ends up sitting. So a command pushed one along by Sell answers
+## to the same letter it always has, and every ability that was not pushed is
+## left exactly where it was rather than being shuffled to make room. That is
+## the whole trade: a card spends a SQUARE on a command with its own key, never
+## a key.
+##
+## The two fallbacks are the square's own letter, for the same reason: an empty
+## square and an ability that claimed no square at all have no letter of their
+## own to carry, so they take the one they are standing on.
+func _letter_for(ability: UnitAbility, square: int) -> String:
+	if ability == null:
+		return _grid_letter(square)
+
+	var own: String = ability.custom_hotkey_label()
+	if !own.is_empty():
+		return own
+
+	var claimed: int = ability.card_slot()
+	if claimed < 0 || claimed >= _slots.size():
+		return _grid_letter(square)
+	return _grid_letter(claimed)
 
 func _on_ability_activated(ability: UnitAbility) -> void:
 	if ability == null:
@@ -710,18 +918,30 @@ func _ability_for_key(key: Key) -> UnitAbility:
 	if !visible:
 		return null
 
-	var config: ControlsConfig = _controls_config
-	if config == null:
+	# Answered off what the card is DRAWING rather than off the config, because
+	# an ability carries its key to whatever square it ends up on - so the
+	# square a press lands on is not the square its number names. Reading the
+	# same array the slots were filled from is also what stops the two ever
+	# disagreeing: a key that works is a key a player can see.
+	if key == KEY_NONE:
 		return null
 
-	var index: int = config.slot_for_key(key)
-	if index < 0 || index >= _slots.size():
-		return null
+	for index in range(mini(_slots.size(), _slot_letters.size())):
+		var letter: String = _slot_letters[index]
+		if letter.is_empty():
+			continue
+		if OS.find_keycode_from_string(letter.to_upper()) != key:
+			continue
 
-	var ability: UnitAbility = _slots[index].ability
-	if ability == null || ability.targeting == UnitAbility.Targeting.PASSIVE:
-		return null
-	return ability
+		# The square answers, whatever is on it. An empty one and a passive
+		# both leave the key alone rather than letting it fall through to
+		# another square that happens to draw the same letter.
+		var ability: UnitAbility = _slots[index].ability
+		if ability == null || ability.targeting == UnitAbility.Targeting.PASSIVE:
+			return null
+		return ability
+
+	return null
 
 
 # --- Hold to repeat -----------------------------------------------------
@@ -748,7 +968,8 @@ func _release_hold() -> void:
 ## slow start leaves room to let go after one or two.
 func _process(delta: float) -> void:
 	_refresh_armor_label()
-	_refresh_mana_label()
+	_refresh_damage_label()
+	_refresh_resource_label()
 	_refresh_bars()
 	_refresh_job()
 
@@ -784,43 +1005,122 @@ func _process(delta: float) -> void:
 ## an aura can reach it, so it is re-read every frame rather than only when the
 ## selection changes. Written only on a real change, so the label is not
 ## rebuilt sixty times a second for a number that has not moved.
-## Shows or hides the mana line for whatever is on the panel.
+## Shows or hides the second-resource line for whatever is on the panel.
 ##
-## Asked of the BUILDING rather than of its stats, because one tower in the
-## game lowers its own maximum as it fires - see Building.set_max_mana. A unit
-## that is not a tower, or a tower with no mana, hides the line entirely.
-func _set_mana_text(tower: Building) -> void:
-	if _mana_label == null:
+## Asked of the UNIT rather than of its stats, because what that resource IS is
+## not always on the resource: one tower lowers its own mana ceiling as it
+## fires (Building.set_max_mana) and one line's bar counts what its ability has
+## banked instead of mana it never spends. A unit with no second resource at
+## all hides the line entirely.
+func _set_resource_text(unit: Unit) -> void:
+	if _resource_label == null:
 		return
-	_mana_label.visible = tower != null && tower.uses_mana()
-	if _mana_label.visible:
-		_mana_label.text = "%d / %d" % [tower.current_mana, tower.max_mana]
+	var resource: TowerResource = _unit_resource(unit)
+	_resource_label.visible = resource != null
+	if resource != null:
+		_resource_label.text = resource.text()
+		_resource_label.add_theme_color_override("font_color", resource.text_color)
 
 
 ## Keeps it up to date. Polled rather than driven by a signal for the same
-## reason the armour line is: mana moves on the simulation tick, from a dozen
-## different passives and from the server's own snapshot, and a signal per
-## source would mean every new one having to remember to wire itself up.
-func _refresh_mana_label() -> void:
-	if _mana_label == null || !_mana_label.visible:
+## reason the armour line is: a second resource moves on the simulation tick,
+## from a dozen different passives and from the server's own snapshot, and a
+## signal per source would mean every new one having to remember to wire itself
+## up.
+func _refresh_resource_label() -> void:
+	if _resource_label == null || !_resource_label.visible:
 		return
-	var tower: Building = _unit as Building
-	if tower == null || !is_instance_valid(tower):
-		return
-	var text: String = "%d / %d" % [tower.current_mana, tower.max_mana]
-	if _mana_label.text != text:
-		_mana_label.text = text
+	var resource: TowerResource = _unit_resource(_unit)
+	if resource != null && _resource_label.text != resource.text():
+		_resource_label.text = resource.text()
+
+
+## The second resource of whatever is on the panel, or null when there is none
+## to draw - which covers the builder, a Basic tower, an ordinary creep, and a
+## selection of more than one unit, since a group has no single bar to read.
+##
+## Asked of the UNIT rather than of a Building: mana stopped being a tower-only
+## thing when the creeps that run a trait on one arrived, and a cast to
+## Building here would have quietly hidden every one of their bars.
+func _unit_resource(unit: Unit) -> TowerResource:
+	if unit == null || !is_instance_valid(unit) || !_group.is_empty():
+		return null
+	return unit.secondary_resource()
 
 
 func _refresh_armor_label() -> void:
 	if _armor_label == null || !_armor_label.visible:
 		return
-	if _unit == null || !is_instance_valid(_unit) || _unit.stats == null:
+	_apply_armor_label()
+
+
+## Writes the armour line and the note that hangs off it, from ONE reading of
+## the unit - so the points, the type and the percentage can never be three
+## answers taken a frame apart.
+func _apply_armor_label() -> void:
+	if _armor_label == null || _unit == null || !is_instance_valid(_unit):
+		return
+	var stats: UnitStats = _unit.stats
+	if stats == null:
 		return
 
-	var text: String = "Armor:   %s" % _unit.stats.armor_text(_unit.armor_value())
+	var points: int = _armor_points()
+	var kind: UnitStats.ArmorType = _armor_type()
+	var text: String = "Armor:   %s" % stats.armor_text(points, kind)
 	if _armor_label.text != text:
 		_armor_label.text = text
+
+	# Godot only offers a tooltip while the text is non-empty, so this doubles
+	# as the switch that turns the hover on for units that have armour at all.
+	var note: String = _armor_note(points, kind)
+	if _armor_label.tooltip_text != note:
+		_armor_label.tooltip_text = note
+
+
+## Armour POINTS the unit really has right now.
+##
+## The authority asks the unit, which is the real thing. A CLIENT has no
+## StatusEffects to ask (multiplayer.md 3.4), so what its own creep answers is
+## base armour with none of the eating in it - and the effects the server sent
+## for THIS unit are exactly what is missing. They are the same records the
+## debuff row underneath is drawing, so the line and the row can no longer say
+## different things about the same three points.
+##
+## Still short of perfect on a client: armour GRANTED by an aura is not on the
+## wire at all, so a creep standing in one reads low. One field away, and not
+## worth it until somebody is looking at an aura.
+func _armor_points() -> int:
+	var points: int = _unit.armor_value()
+	if MatchSession.is_authority():
+		return points
+	return points + StatusEntry.armor_delta_in(StatusEntry.for_unit(_unit))
+
+
+## The armour TYPE the unit counts as right now, which the Ultimate Alchemist
+## can change for a few seconds. Split from the points on the same terms.
+func _armor_type() -> UnitStats.ArmorType:
+	if MatchSession.is_authority():
+		return _unit.armor_type_value()
+	return StatusEntry.armor_type_in(StatusEntry.for_unit(_unit),
+		_unit.stats.armor_type)
+
+
+## What hovering the armour line says: how much of a hit those points actually
+## take off, which is the question the number itself does not answer.
+##
+## The curve has diminishing returns built in, so 5 armour is not five times
+## what 1 armour is worth and no player could work the figure out from the
+## number on the line. Negative armour reads as a MINUS reduction rather than
+## as an increase, so the two halves are one scale running through zero.
+func _armor_note(points: int, kind: UnitStats.ArmorType) -> String:
+	if kind == UnitStats.ArmorType.INVULNERABLE:
+		return "Takes no damage."
+
+	var table: DamageTable = References.damage_table
+	if table == null:
+		return ""
+	return "%s%% damage reduction" % StringUtil.trim_number(
+		table.armor_reduction_percent(points), 1)
 
 
 ## The two bars under the portrait. Polled with the numbers they sit above and
@@ -835,21 +1135,21 @@ func _refresh_bars() -> void:
 		return
 
 	if _health_bar != null:
-		_health_bar.set_ratio(float(_unit.current_health) / float(_unit.max_health()))
+		_health_bar.set_ratio(_unit.current_health / float(_unit.max_health()))
 
-	var tower: Building = _unit as Building
 	# One answer for the bar and the number under it. Asked every frame rather
 	# than only when the selection changes, because a tower CAN gain or lose
 	# its ceiling mid-match - see Building.set_max_mana - and a bar that
 	# appeared without its number would be halfway right.
-	var shows_mana: bool = _group.is_empty() && tower != null && tower.uses_mana()
-	if _mana_label != null:
-		_mana_label.visible = shows_mana
-	if _mana_bar == null:
+	var resource: TowerResource = _unit_resource(_unit)
+	if _resource_label != null:
+		_resource_label.visible = resource != null
+	if _resource_bar == null:
 		return
-	_mana_bar.visible = shows_mana
-	if shows_mana:
-		_mana_bar.set_ratio(tower.mana_ratio())
+	_resource_bar.visible = resource != null
+	if resource != null:
+		_resource_bar.set_fill_color(resource.fill_color)
+		_resource_bar.set_ratio(resource.ratio())
 
 
 ## Swaps the stat lines for the countdown row while the selected tower is busy,
@@ -900,10 +1200,12 @@ func _apply_stat_lines() -> void:
 	if !_group.is_empty():
 		return
 
-	_set_damage_text(_unit.stats)
+	_set_damage_text(_unit)
 	_set_attack_text(_unit.stats)
 	if _armor_label != null:
 		_armor_label.visible = !_busy
+	if _status_bar != null:
+		_status_bar.visible = !_busy
 
 func _repeat_interval(config: ControlsConfig) -> float:
 	var ramp: float = config.hold_repeat_ramp_seconds

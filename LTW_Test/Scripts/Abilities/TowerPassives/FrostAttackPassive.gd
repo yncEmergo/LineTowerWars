@@ -30,7 +30,7 @@ extends TowerPassive
 func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.chill(chill_source, slow_per_hit, slow_cap, slow_seconds)
+		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
 
 
 func effect_text() -> String:

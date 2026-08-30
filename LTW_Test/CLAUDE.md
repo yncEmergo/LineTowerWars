@@ -198,6 +198,23 @@
   filesystem scan does not help - every autoload added from outside is
   "Identifier not found" until the editor is restarted. Headless runs are
   unaffected, which is what makes it confusing
+- process_priority does NOT order _physics_process. Godot 4.3 split the two:
+  process_priority orders the RENDER frame, process_physics_priority orders the
+  TICK. A node that sets only the first and expects to simulate last runs in
+  plain tree order instead, silently
+  - which for an AUTOLOAD means BEFORE the whole match scene, since autoloads
+    are added to root first. ReplicationService had exactly this and was
+    building its snapshot from the previous tick
+  - set BOTH when a node has to be last, and remember that a node whose parent
+    is the thing it is timing runs before it by default
+- A NEW SCRIPT IN AN EXISTING FOLDER is not imported by a `godot --path` run. A
+  new FOLDER is scanned; a new file dropped into a folder Godot already knows is
+  not. Its class_name never reaches the global class cache, so every script
+  naming it fails with "Identifier ... not declared in the current scope" -
+  which reads exactly like a typo in a file that is plainly correct
+  - `godot --path <project> --headless --import` fixes it, and the editor does
+    it on its own when it notices the file. Check
+    `.godot/global_script_class_cache.cfg` to confirm which it is
 
 # Testing
 - Verify cheaply, then hand the rest over
@@ -247,7 +264,7 @@
 - The multiplayer test loop that actually works is HEADLESS AND SCRIPTED, not the
   editor. Godot instances driven by hand cannot be made to do the same thing
   twice, and the MCP tools cannot drive two clients at once
-  - start the server with run_server.ps1, then launch N clients as
+  - start the server with Tools/run_server.ps1, then launch N clients as
     godot --path <project> --headless -- --probe <role>
   - drive them from a TEMPORARY autoload under Scripts/Dev that reads its role
     off the command line and does nothing at all when --probe is absent, so the
@@ -267,6 +284,12 @@
 # Project structure
 Where a kind of file goes. Some of these folders do not exist yet - there is no
 art at all so far - so this is the placement rule, not a description of the tree.
+- THE ROOT holds only what something outside the project looks up by name:
+  CLAUDE.md, README.md, project.godot and the dotfiles. Nothing else belongs
+  there - a new .md goes in /Docs/ and a new script in /Tools/
+- /Docs/ is every reference document except this one and the README, with
+  /Docs/Findings/ for written-up investigations. /Docs/README.md is the index
+  and says where a new document goes
 - /Scripts/ contains all gd scripts, split by area
 - /Scenes/ contains all scenes, split by area
 - /Resources/ contains all resources, split by kind: Config, UnitStats,
@@ -279,8 +302,22 @@ art at all so far - so this is the placement rule, not a description of the tree
     by Tools/IconGen and is overwritten the same way
 - /3DArt/ contains all meshes
 - /Audio/ contains all sound files
-- /Tools/ is BUILD TIME TOOLING and is not part of the game. Nothing at
-  runtime may reach into it, and a `.gdignore` keeps Godot's filesystem out
+- /Scripts/Tools/ and /Scenes/Tools/ are tooling that has to RUN INSIDE GODOT,
+  which is why it is not in /Tools/ with the rest - a `.gdignore` keeps Godot
+  out of that folder entirely, so a scene cannot live there
+  - so far one thing: Scenes/Tools/icon_gen_3d.tscn, which bakes a unit's icon
+    by rendering its own model and so cannot go headless. It scans the stats
+    folder rather than carrying a roster, and `-- new` bakes only what has no
+    picture yet
+  - KEPT, not scaffolding. Scripts/Dev is the folder that gets deleted; this is
+    run again every time a roster gains a unit
+- /Tools/ is BUILD TIME TOOLING that never runs inside the engine, and is not
+  part of the game. Nothing at runtime may reach into it, and a `.gdignore`
+  keeps Godot's filesystem out
+  - the CONTROL SCRIPTS live at the top of it: run_server.ps1, stop_server.ps1
+    and run_bench.ps1. They are typed FROM THE PROJECT ROOT
+    (`.\Tools\run_server.ps1`), and each works out the project folder as its own
+    parent - so one moving deeper needs that line changed, not just the call
   - Tools/ModelGen generates the placeholder art: the tower models, the
     materials they share, their projectiles, and the .tres content pointing at
     all of it. Its output is checked in and is ordinary hand-editable Godot, so
@@ -307,6 +344,20 @@ art at all so far - so this is the placement rule, not a description of the tree
   button - is a prefab scene, never a node built in code
 
 # Other
+- **THE REFERENCE DOCS LIVE IN `Docs/`, and the control scripts in `Tools/`.**
+  Only this file and README.md are still in the root, and both are there because
+  something outside the project looks for them by name: Claude Code loads this
+  one, and a git host renders that one
+  - so a comment anywhere saying "see game_rules.md" means `Docs/game_rules.md`.
+    Comments name the DOCUMENT, not the path, and there are hundreds of them -
+    they were deliberately left alone when the folder was made rather than
+    rewritten into a diff across the whole codebase
+  - `Docs/README.md` is the index: which file answers what, and where to write
+    something new. Read it before adding a .md anywhere
+  - `Docs/Findings/` is where an INVESTIGATION is written up - something that was
+    measured, dug into or ruled out, rather than a rule or a number. It is the
+    one place a dated snapshot of live values is allowed, because the date is
+    what makes it honest. See its README for the shape
 - GIT IS THE USER'S. Never commit, never push, never branch, never revert. Leave
   the work in the working tree and say what changed; the user reads it before it
   lands. Reading git - log, diff, blame, status - is fine and often useful
@@ -367,10 +418,21 @@ art at all so far - so this is the placement rule, not a description of the tree
 
 # Known weaknesses
 Real, none blocking. Recorded so they are not rediscovered as surprises.
+- UnitAbility.gd is over gdlint's public-method ceiling, and went over when
+  orders became chainable: an ability now also answers whether it can be
+  queued, whether the task it started is finished, and gets a per-tick hook to
+  steer one. Those four are the smallest honest shape for it - the alternative
+  was a polymorphic OrderTask resource per ability, which is a .tres and a
+  layer of indirection for the three abilities that would ever hold one. Worth
+  revisiting only if a fourth kind of order arrives
 - PlayerArea.gd and Unit.gd are both over gdlint's public-method ceiling,
   PlayerArea.gd by a lot. Intended fix for it: extract the grid half - occupancy,
   cell maths, flow field - into an AreaGrid it owns. Touches Building, Builder,
   BuildGrid, CommandController. Not started
+- Creep.gd gained three more public methods with tier 2's creep mana - the pool
+  itself, its second-resource reading and the per-creep clock a timed passive
+  advances. The pool is already an object the creep owns (CreepMana) rather
+  than three fields on it, which is the same shape the Building fix below wants
 - Building.gd, Creep.gd and Combat/StatusEffects.gd are over that ceiling too,
   and all three for the same reason: they gained the elemental roster's
   machinery. Building took mana, StatusEffects is a wall of small questions
@@ -378,18 +440,36 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   Building: a TowerMana object it owns, the way it already owns ability_state.
   StatusEffects is a bad candidate for splitting - the whole point of it is that
   a caller asks one object everything
-- Three naive linear scans over an area's creeps: creep separation, TargetFinder,
-  and Creep._refresh_aura. One spatial hash fixes all three
+- OrderOverlay rebuilds a unit's markers WHOLE on every change to its chain,
+  so shift-queueing five towers instantiates the ghost models five times over
+  in one frame - each rebuild frees the last, but queue_free is deferred, so
+  they briefly coexist. Harmless and invisible; the fix if it ever matters is
+  to diff the chain rather than rebuild it, which is more code than it is worth
+  while a chain is a handful of entries long
+- Two naive linear scans over an area's creeps: TargetFinder and
+  Creep._refresh_aura. One spatial hash fixes both. TargetFinder is by far the
+  worse of them and is the largest single cost in a loaded tick - a tower with
+  nothing in range rescans the whole lane every tick and finds nothing again
+  - creep separation was the third, and is no longer paid: it now runs for
+    ATTACKER creeps only and is skipped without a call for everything else.
+    Switching it back on for the whole roster puts it straight back
 - Replication sends the whole world every tick, every unit in it. Fine for a
   1v1 on a LAN, nowhere near 12 players. That is multiplayer.md
   3.3, deliberately deferred until there was something to measure
-  - a unit record grew by two floats when towers gained mana, so the same is
-    now true of a little more of it
-- A client is NOT told what status effects are on a creep. It sees the creep
-  where the server puts it, which is most of what a slow or a stun looks like,
-  but a creep's armour on a client's panel is its own rather than what has been
-  eaten out of it. Cheap to fix by sending the delta; not worth a wire field
-  until somebody notices
+  - a unit record grew by two floats when towers gained mana, and two more
+    when the Beastmaster gained an ability a player AIMS - its cooldown and
+    what it is linked to, which every unit in the world now carries a slot for.
+    Creep mana rides the mana fields rather than adding its own, so nothing
+    grew for it
+- A client is told what status effects are on the ONE unit its panel is showing
+  and on no others - it asks, and the server answers in the snapshot. So the
+  debuff row is right, and a creep somebody is not looking at still carries
+  effects the client knows nothing about. That is deliberate; the complete
+  version would cost more than the rest of the snapshot put together
+  - the ARMOUR LINE reads those same replicated entries now, so the number and
+    the type next to "Armor:" agree with the row underneath on a client. What
+    is still missing there is armour GRANTED BY AN AURA, which is on no wire at
+    all, so a creep standing in one reads low on a client
 - Godot's gl_compatibility renderer, which this project uses, silently drops
   two things that look like clean one-liners: PER-INSTANCE SHADER UNIFORMS and
   GeometryInstance3D.transparency. Neither errors, both simply do nothing. That
@@ -413,13 +493,24 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   stats and not the scenes. Main._validate_content walks the chain at boot
 
 # Look & setting
-- Broadly to be decided, with one part settled: the TOWER roster has a visual
-  language, written down under Presentation in game_rules.md. It is a rule
-  rather than a description of the current primitives, so it survives real art
-  replacing them
-  - the short version: shape and material say which LINE, one silhouette change
-    says which BRANCH, and six cumulative rules on the price tier say which
-    TIER. Basic towers carry no colour of their own, because the ten elements
-    each need one
+- Broadly to be decided. **Only placeholder visuals are wanted, and the visual
+  rules that exist were authored by Claude rather than handed down** - so
+  unlike everything else in this file, none of them is binding
+  - they are there for CONTINUITY: a roster added later should look like it
+    came from the same game as the ones before it, and rules are the only way
+    that survives thirty units nobody can hold in their head at once
+  - so CHANGE ONE WHEN IT IS WRONG, and change it in Tools/ModelGen/style.py
+    rather than in a generated file, so the whole roster moves together. What
+    it costs is the continuity it was buying, which is worth weighing and is
+    not a prohibition. PLACEHOLDER_ART.md section 0 is the long version
+  - two have already moved, which is what that looks like in practice: "a
+    flyer is translucent" retired when the first solid flyer arrived, and "a
+    creep's only lit parts are its eyes" gained a named exception for a
+    burning Boss
+- The written-down language, as it stands: the TOWER roster answers three
+  questions on three axes - shape and material say which LINE, one silhouette
+  change says which BRANCH, and six cumulative rules on the price tier say
+  which TIER. Basic towers carry no colour of their own, because the ten
+  elements each need one. Under Presentation in game_rules.md
 - Everything else - setting, period, palette beyond that constraint, whether
   any of this is grounded or fantastical - is still open

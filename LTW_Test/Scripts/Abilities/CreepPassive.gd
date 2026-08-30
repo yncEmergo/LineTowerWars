@@ -44,9 +44,47 @@ func damage_block() -> int:
 	return 0
 
 
+## Share of a harmful timed effect's DURATION this creep actually serves.
+## 1.0 is the full window, 0.1 is a tenth of it. Multiplied across passives.
+##
+## A separate question from damage_taken_ratio() because the source game states
+## it separately: every spell resistance in the roster shortens durations by a
+## different amount than it blunts damage, and the Major one is the case that
+## proves they are not the same knob - it takes a third off the damage and half
+## off the clock. See unit_data.md 6.6.
+func harmful_duration_ratio() -> float:
+	return 1.0
+
+
+## Share of a movement chill's MAGNITUDE that lands on this creep. 1.0 takes
+## the full slow, 0.5 is the "50% immune to movement chill" the spell
+## resistances carry, 0.0 is outright immunity. Multiplied across passives.
+##
+## The MAGNITUDE rather than the duration, which is the question above: the
+## source game blunts how far a slow goes and shortens how long it lasts as two
+## separate numbers, and a creep can carry one without the other.
+func chill_taken_ratio() -> float:
+	return 1.0
+
+
 ## Armour points granted to every creep inside the shared creep aura radius,
 ## this one included. The best aura in range wins; they do not add up.
 func aura_armor_bonus() -> int:
+	return 0
+
+
+## Armour points this passive adds to or takes off the creep CARRYING it,
+## summed across every passive on that creep.
+##
+## A different question to the aura above, which is what this creep hands to
+## everything standing near it: this one never leaves the creep and so adds
+## rather than taking the best. Hardened Skin is the only thing that answers
+## it so far, and it answers with a negative number that grows as the creep is
+## worn down.
+##
+## Takes the creep because the answer is about THAT one, and a shared resource
+## may hold no state of its own - the same reason on_death() does.
+func armor_delta(_creep: Creep) -> int:
 	return 0
 
 
@@ -98,9 +136,47 @@ func on_death(_creep: Creep) -> bool:
 	return false
 
 
+## Runs after a hit has actually landed, with the health the creep really lost.
+##
+## The LANDED figure rather than the attacker's roll, for the same reason
+## Hardened Skin counts that one: everything on the defender has already been
+## applied, so a passive here is reading what the player watched leave the
+## health bar. Nothing is called on a client, on an invulnerable unit or on a
+## creep already down, because in all three cases no health moved.
+##
+## Takes the creep because the answer is about THAT one, the same reason
+## on_death() does: this resource is every creep of its type at once.
+func on_damage_taken(_creep: Creep, _lost: float) -> void:
+	pass
+
+
+## Runs once per simulation tick, for a passive that is on a clock of its own
+## rather than being asked a question when something happens.
+##
+## The clock itself lives on the CREEP - see Creep.advance_passive_clock() -
+## because this resource is shared and may remember nothing. A passive that
+## only answers questions never overrides this and pays nothing for it.
+##
+## Authority only: it is called from the creep's own _physics_process, which a
+## client leaves at the door (multiplayer.md 3.4).
+func on_tick(_creep: Creep, _delta: float) -> void:
+	pass
+
+
 ## One line describing what this passive does, built from its OWN numbers so
 ## nothing can quote a figure the passive does not use. Subclasses fill this in
 ## rather than writing the sentence into their .tres by hand.
+## What counts as a HEAVY hit on this creep, in damage actually landed, or 0
+## for a creep that does not care - which is every one of them but the Ancient
+## Wendigo. The creep counts the hits that reach it and an ability reads the
+## count back, so nothing here has to remember anything per creep.
+##
+## Asked once when the creep collects its passives, so it must be a plain
+## reading of an @export and never depend on the creep's state.
+func heavy_hit_threshold() -> float:
+	return 0.0
+
+
 func effect_text() -> String:
 	return ""
 
@@ -114,7 +190,8 @@ func passive_text() -> String:
 
 ## The generated line replaces the authored description, for the same reason
 ## it does everywhere else: one number, one place.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
 	data.description = passive_text()
 	return data

@@ -1,12 +1,16 @@
-[gd_resource type="Resource" script_class="LuminousGraspPassive" format=3 uid="uid://byuk0bahhrh08"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://bpwscmm6ulckx" path="res://Scripts/Abilities/TowerPassives/LuminousGraspPassive.gd" id="1_LuminousGraspPassive"]
-[ext_resource type="Texture2D" uid="uid://re8t6n2qwikc" path="res://2DArt/Icons/lesser_titan_vault.png" id="2_lesser_titan_vault"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/LuminousGraspPassive.gd" id="1_LuminousGraspPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_titan_vault.png" id="2_lesser_titan_vault"]
 
 [resource]
 script = ExtResource("1_LuminousGraspPassive")
 ability_id = 157
 display_name = "Luminous Grasp"
-icon = ExtResource("2_lesser_titan_vault")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_lesser_titan_vault")
+additional_targets = 6
+spell_amplification = 0.12
+amplification_seconds = 5
+slow_amount = 0.14

@@ -1,25 +1,25 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://c2wn0knk6djxj"]
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
 
-[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
-[ext_resource type="Resource" uid="uid://dhpltvpj3wu7d" path="res://Resources/Abilities/Towers/lightning_power_generator_ability.tres" id="5_lightning_power_generator_ability"]
-[ext_resource type="Resource" uid="uid://doole2s2k3ox2" path="res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability.tres" id="6_upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability"]
-[ext_resource type="Resource" uid="uid://ialtvkvuwelj" path="res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability.tres" id="7_upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability"]
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/lightning_power_generator_ability.tres" id="5_lightning_power_generator_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability.tres" id="6_upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability.tres" id="7_upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="8_return_to_elemental_core_ability"]
-[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="9_6r1dt"]
-[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="10_prioritize_ability"]
-[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="11_sell_ability"]
-[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
-[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" uid="uid://68uuqxg0yj0h" path="res://2DArt/Icons/power_generator.png" id="15_power_generator"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="11_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="12_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="13_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="14_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="15_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/power_generator.png" id="16_power_generator"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
-impact_scene_path = "res://Scenes/Effects/spark_impact.tscn"
+impact_scene_path = "res://Scenes/Effects/spark_burst.tscn"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -28,22 +28,23 @@ damage_max = 80
 damage_type = 1
 attacks_per_second = 2
 attack_range = 1.56
+target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
-model_scene_path = "res://Scenes/Units/Models/Towers/lightning_power_generator_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
-gold_cost = 800
-total_gold_cost = 1000
 unit_type_id = 82
 display_name = "Power Generator"
-icon = ExtResource("15_power_generator")
+icon = ExtResource("16_power_generator")
 max_health = 150
 armor_type = 5
 armor = 5
 attack = SubResource("Attack")
-abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_lightning_power_generator_ability"), ExtResource("6_upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability"), ExtResource("7_upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability"), ExtResource("8_return_to_elemental_core_ability"), ExtResource("9_attack_ability"), ExtResource("10_prioritize_ability"), ExtResource("11_sell_ability")])
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_lightning_power_generator_ability"), ExtResource("6_upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability"), ExtResource("7_upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability"), ExtResource("8_return_to_elemental_core_ability"), ExtResource("9_attack_ability"), ExtResource("10_prioritize_ability"), ExtResource("11_sell_ability"), ExtResource("12_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/lightning_power_generator.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/lightning_power_generator_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_upgrade_ability")])
+gold_cost = 800
+total_gold_cost = 1000

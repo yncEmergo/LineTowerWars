@@ -7,10 +7,11 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_turret_to_greater_turret_ability.tres" id="5_upgrade_turret_to_greater_turret_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="6_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="7_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="8_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="9_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="10_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/turret.png" id="11_turret"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="8_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="11_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/turret.png" id="12_turret"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -33,16 +34,16 @@ delivery = SubResource("Delivery")
 script = ExtResource("1_BuildingStats")
 unit_type_id = 53
 display_name = "Turret"
-icon = ExtResource("11_turret")
+icon = ExtResource("12_turret")
 max_health = 175
 armor_type = 5
 armor = 5
 attack = SubResource("Attack")
-abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_turret_to_greater_turret_ability"), ExtResource("6_attack_ability"), ExtResource("7_sell_ability")])
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_turret_to_greater_turret_ability"), ExtResource("6_attack_ability"), ExtResource("7_sell_ability"), ExtResource("8_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/turret.tscn"
 model_scene_path = "res://Scenes/Units/Models/Towers/turret_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("8_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_upgrade_ability")])
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_upgrade_ability")])
 gold_cost = 1000
 total_gold_cost = 1190

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/devotion_aura_2.tres" id="10_devotion_aura_2"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/sea_turtle.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 154
+display_name = "Sea Turtle"
+max_health = 10085
+armor_type = 5
+armor = 4
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_devotion_aura_2")])
+scene_path = "res://Scenes/Units/Creeps/sea_turtle.tscn"
+move_speed = 2.227
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 20000
+income_gain = 1550
+unlock_seconds = 630.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.23
+bounty = 926

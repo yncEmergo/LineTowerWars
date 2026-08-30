@@ -55,6 +55,7 @@ const MULTISHOT_FALLBACK_REACH: float = 3.0
 ## How fast the turret swings around to a new target, in radians per second.
 ## Purely visual: a tower fires whether or not it has finished turning, so this
 ## can never cost damage.
+@export var turn_towards_target: bool = true
 @export var turret_turn_speed: float = 10.0
 
 ## Seconds left before the next attack may fire.
@@ -79,6 +80,25 @@ var _windup_point: Vector3 = Vector3.ZERO
 ## resource, and simulation rather than presentation, which is why the server
 ## owns it and a client is told - see ReplicationService.
 var _prioritize_air: bool = false
+## The unit this was ORDERED onto, held until that unit dies or stops being a
+## legal target - which is a different lifetime from _target above.
+##
+## _target is what this is shooting THIS tick and is dropped the moment the
+## creep steps out of reach. An order outlives that: a player who names a creep
+## has named it until it is dead, so a tower keeps shooting whatever it can
+## reach meanwhile and switches back the moment the ordered one is reachable
+## again, and a unit that can walk goes after it. It is also what an attack
+## task in an order chain waits on - see AttackAbility.
+var _ordered_target: Unit = null
+## Ticks left before this unit may search for a target again.
+##
+## Only ever set by a search that came back EMPTY, so a unit that is fighting
+## never waits: it is holding a target, or it is on cooldown, and neither of
+## those reaches the search at all. See GameConfig.idle_target_scan_ticks.
+var _scan_wait: int = 0
+## Whether this unit's first empty search has already spread its phase. Its
+## waits are the plain interval from then on.
+var _scan_phased: bool = false
 
 var _attack: AttackStats:
 	get:
@@ -113,6 +133,28 @@ func has_target() -> bool:
 	return _target != null && is_instance_valid(_target)
 
 
+## What this is shooting right now, or null. The committed swing first, since
+## once an attack starts that is what the unit is really pointed at.
+func current_target() -> Unit:
+	if _windup_target != null && is_instance_valid(_windup_target):
+		return _windup_target
+	if _target != null && is_instance_valid(_target):
+		return _target
+	return null
+
+
+## Whether a unit is close enough for this attack to land on it.
+##
+## Public because closing the distance is the ORDER's job rather than this
+## one's: a unit walking onto a target has to know when to stop, and the reach
+## it stops at is the same one every other range test here uses.
+func is_in_reach(target: Unit) -> bool:
+	var attack: AttackStats = _attack
+	if attack == null || target == null || !is_instance_valid(target):
+		return false
+	return TargetFinder.is_in_range(_origin(), target, attack.attack_range)
+
+
 ## Whether an attack is committed and its damage has not landed yet.
 func is_winding_up() -> bool:
 	return _windup_left > 0.0
@@ -132,33 +174,57 @@ func set_prioritize_air(value: bool) -> void:
 		return
 	_prioritize_air = value
 	_target = null
+	# And look again NOW rather than on this tower's own beat. The whole point
+	# of the toggle is that pressing it does something you can see.
+	_scan_wait = 0
 
 
 ## Orders this unit onto one specific target, the way an attack order works in
 ## any RTS. Answers whether the order was taken.
 ##
-## Refused when the target is out of range, and refused QUIETLY: per the rules
-## a tower told to shoot something it cannot reach keeps shooting whatever it
-## was already on, rather than standing idle waiting for the creep to wander
-## in. That is what makes the order safe to give to a whole selection at once -
-## the towers that can reach it switch, the rest carry on.
+## The order is HELD until that unit dies or stops being something this could
+## ever be aimed at. While it is in reach it is what gets shot; while it is not,
+## this unit goes on picking its own targets exactly as it always did, so a
+## tower told to shoot something across the map never stands idle - which is
+## what makes the order safe to give to a whole selection at once.
 ##
-## The commanded target is then an ordinary target: it is dropped when it dies
-## or leaves range, and the unit goes back to picking its own.
+## Holding it rather than refusing an out-of-range one outright is what lets an
+## attack be CHAINED: "shoot that one after this one" is a task with a lifetime,
+## and a unit that can walk closes the distance itself. See AttackAbility.
 ##
 ## A SKITTERING creep can be ordered onto perfectly well. Its rule is a
 ## priority inside the automatic search, and this never goes through it.
-func order_target(target: Unit) -> bool:
+func order_attack(target: Unit) -> bool:
 	var attack: AttackStats = _attack
 	if attack == null || _unit == null || !_unit.can_attack():
 		return false
 	if !_is_valid_target(target, attack):
 		return false
-	if !TargetFinder.is_in_range(_origin(), target, attack.attack_range):
-		return false
 
-	_target = target
+	_ordered_target = target
+	# Look again NOW rather than on this unit's own beat, so a creep already
+	# standing in reach is shot on the tick the order arrived.
+	_scan_wait = 0
 	return true
+
+
+## Forgets the standing order, leaving the unit to pick its own targets again.
+## What a new order without shift, and a Stop, both do.
+func clear_order() -> void:
+	_ordered_target = null
+
+
+## The unit a standing order names, or null once it has died, been sold or
+## stopped being a legal target. Read by the attack task waiting on it.
+func ordered_target() -> Unit:
+	if _ordered_target == null || !is_instance_valid(_ordered_target):
+		return null
+	if !_ordered_target.is_alive():
+		return null
+	var attack: AttackStats = _attack
+	if attack == null || !_is_valid_target(_ordered_target, attack):
+		return null
+	return _ordered_target
 
 
 ## Whether this unit could be aimed at that one at all, ignoring range.
@@ -199,6 +265,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_cooldown = maxf(0.0, _cooldown - delta)
+	_scan_wait = maxi(0, _scan_wait - 1)
 
 	# A committed attack owns the tower until it lands. It still aims, so the
 	# swing tracks, but nothing may retarget it and nothing may start a second.
@@ -207,12 +274,25 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_drop_lost_target(attack)
+	# After the drop, deliberately: a standing order is the answer to what to
+	# shoot, so it must not be thrown away by the same pass that clears a
+	# target which wandered off.
+	_apply_order(attack)
 
 	# Scanning only when the tower could actually shoot keeps the cost down: a
 	# tower on cooldown has nothing to do with a new target anyway, and it goes
 	# on aiming at the last one meanwhile.
-	if _target == null && _cooldown <= 0.0:
+	#
+	# That alone was not enough, because it only ever protects a tower that is
+	# FIRING. One with nothing in range never fires, so its cooldown never
+	# starts and never runs down - both halves stayed true on every tick for
+	# the whole match, and most of a full maze is in exactly that state. The
+	# wait is the other half: after a search comes back empty, it does not
+	# search again for a few ticks. See GameConfig.idle_target_scan_ticks.
+	if _target == null && _cooldown <= 0.0 && _scan_wait <= 0:
 		_target = _acquire(attack)
+		if _target == null:
+			_scan_wait = _next_scan_wait()
 
 	if _target == null:
 		return
@@ -220,6 +300,30 @@ func _physics_process(delta: float) -> void:
 	_aim(delta)
 	if _cooldown <= 0.0:
 		_begin_attack(attack)
+
+
+## Ticks to wait before searching again, after a search that found nothing.
+##
+## The FIRST wait of a unit's life is spread by its own id and every one after
+## it is the plain interval. Without that spread a maze whose towers all went
+## up together comes due on the same tick forever after, which turns a cost
+## that was flat into a spike every few ticks - the same total work, arriving
+## in a way that is worse for frame pacing than what it replaced.
+##
+## The id is the spread rather than a roll, because it is a number the server
+## and every client already agree on, so nothing here can make two machines
+## search on different ticks.
+func _next_scan_wait() -> int:
+	var config: GameConfig = References.game_config
+	var ticks: int = 1 if config == null else config.idle_target_scan_ticks
+	if ticks <= 1:
+		return 0
+
+	if !_scan_phased:
+		_scan_phased = true
+		var id: int = 0 if _unit == null else _unit.unit_id
+		return 1 + (id % ticks)
+	return ticks
 
 
 ## The target this unit picks for itself, which is a different search per
@@ -234,11 +338,33 @@ func _acquire(attack: AttackStats) -> Unit:
 func _drop_lost_target(attack: AttackStats) -> void:
 	if _target == null:
 		return
+	# Either way this unit just lost something it could see, which is the one
+	# moment its picture of the lane is known to be stale. Whatever was left of
+	# its idle wait is thrown away rather than delaying the replacement.
 	if !TargetFinder.is_in_range(_origin(), _target, attack.attack_range):
 		_target = null
+		_scan_wait = 0
 		return
 	if !_is_valid_target(_target, attack):
 		_target = null
+		_scan_wait = 0
+
+
+## Points this unit at what it was ORDERED onto, whenever that is reachable.
+##
+## Forgets an order whose target is gone, so nothing has to come back and tidy
+## up after a creep that died to somebody else's tower. Out of reach and still
+## alive is neither of those: the order stands, and this unit shoots whatever
+## it can meanwhile - a tower because it cannot do anything else, a unit that
+## can walk because its task is already walking it closer.
+func _apply_order(attack: AttackStats) -> void:
+	if _ordered_target == null:
+		return
+	if ordered_target() == null:
+		_ordered_target = null
+		return
+	if TargetFinder.is_in_range(_origin(), _ordered_target, attack.attack_range):
+		_target = _ordered_target
 
 
 ## Commits to an attack. The cooldown starts HERE rather than when the damage
@@ -303,6 +429,7 @@ func _release(attack: AttackStats) -> void:
 	_fire(attack, null if gone else target, point)
 	if gone:
 		_target = null
+		_scan_wait = 0
 
 
 func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:
@@ -347,7 +474,7 @@ func _send(attack: AttackStats, hit: AttackHit, target: Unit, point: Vector3) ->
 	if target == null:
 		hit.resolve(null, point)
 		if attack.delivery != null:
-			attack.delivery.spawn_impact(point, _muzzle_position())
+			attack.delivery.spawn_impact(point, muzzle_position())
 		return
 
 	if attack.delivery == null:
@@ -357,7 +484,7 @@ func _send(attack: AttackStats, hit: AttackHit, target: Unit, point: Vector3) ->
 		hit.resolve(target, target.global_position)
 		return
 
-	attack.delivery.deliver(hit, _muzzle_position(), target)
+	attack.delivery.deliver(hit, muzzle_position(), target)
 
 
 ## The further creeps this attack strikes alongside its primary target.
@@ -425,7 +552,11 @@ func _origin() -> Vector3:
 	return _unit.global_position
 
 
-func _muzzle_position() -> Vector3:
+## Where shots leave this unit, in world space. Public because an ability that
+## draws something from the tower to a creep needs the same point the attack
+## itself left from - an arc strung from the tower's feet reads as coming out
+## of the ground. See FocusedLightningPassive.
+func muzzle_position() -> Vector3:
 	if _muzzle != null:
 		return _muzzle.global_position
 	return _unit.global_position + Vector3(0.0, MUZZLE_FALLBACK_HEIGHT, 0.0)
@@ -434,7 +565,7 @@ func _muzzle_position() -> Vector3:
 ## Swings the turret around towards the target, flat on the xz plane. Models
 ## face -Z by Godot's convention, which is what the angle is built from.
 func _aim(delta: float) -> void:
-	if _turret_head == null:
+	if _turret_head == null || !turn_towards_target:
 		return
 
 	var offset: Vector3 = _target.global_position - _turret_head.global_position

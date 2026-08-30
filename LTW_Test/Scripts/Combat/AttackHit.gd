@@ -51,7 +51,7 @@ var source: Building = null
 var passives: Array[TowerPassive] = []
 ## Whether this is the creep the tower actually aimed at, as opposed to one
 ## picked up alongside it by a multishot. Splash is not covered by this: a
-## splash never runs a passive's on_hit at all.
+## splash never runs a passive's on_hit at all - see splash_onto().
 var is_primary: bool = true
 
 
@@ -125,6 +125,36 @@ func _strike(target: Unit) -> void:
 	if !target.is_alive():
 		for passive in passives:
 			passive.on_kill(tower, target)
+
+
+## Damage from one of this attack's EFFECTS rather than from the attack itself,
+## and the kill credit that comes with it. Every splash goes through here.
+##
+## The two halves of a hit are deliberately split. A passive's on_hit is stated
+## per creep the tower STRUCK - a poison stack, a share of armour eaten - and
+## running it over a splash would hand a whole crowd what was meant for one
+## creep, which is why a splash has never run one. A KILL is the other way
+## round: unit_data.md says "per creep killed" and means whoever finished it,
+## and a splash tower that finished a creep with its splash finished it. An
+## Alchemist that only counted what its own shell landed on would grow at a
+## fraction of the rate the source describes, because splash is how it kills.
+##
+## Already-dead creeps are skipped rather than damaged, so an effect walking a
+## list cannot pay a tower twice for the same body.
+func splash_onto(creep: Creep, amount: int, damage_type: DamageTable.DamageType,
+		is_area: bool = true) -> void:
+	if creep == null || !is_instance_valid(creep) || !creep.is_alive():
+		return
+
+	creep.take_damage(amount, damage_type, is_area)
+	if creep.is_alive():
+		return
+
+	var tower: Building = _live_source()
+	if tower == null:
+		return
+	for passive in passives:
+		passive.on_kill(tower, creep)
 
 
 ## The tower that fired, or null if it has been sold, destroyed or upgraded

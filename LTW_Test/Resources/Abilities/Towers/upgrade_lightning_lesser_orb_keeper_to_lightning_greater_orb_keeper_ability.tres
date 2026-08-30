@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://pj500oy83yu7"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://doe5nnbxwyaqa" path="res://Resources/UnitStats/Towers/lightning_greater_orb_keeper_stats.tres" id="2_lightning_greater_orb_keeper_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lightning_greater_orb_keeper_stats.tres" id="2_lightning_greater_orb_keeper_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 230
 tower_stats = ExtResource("2_lightning_greater_orb_keeper_stats")
 required_tech_id = 15
-ability_id = 230
 display_name = "Upgrade to Greater Orb Keeper"
 description = "Very short reach and a very fast attack. Fills up over four attacks and spends the lot on a stun."
+targeting = 1
 slot = 0

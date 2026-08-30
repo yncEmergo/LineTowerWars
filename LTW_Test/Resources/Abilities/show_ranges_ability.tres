@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ShowRangesAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/ShowRangesAbility.gd" id="1_show_ranges"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_show_ranges.png" id="2_ability_show_ranges"]
+
+[resource]
+script = ExtResource("1_show_ranges")
+ability_id = 319
+display_name = "Show Ranges"
+description = "Draw everything this tower reaches on the ground for a few seconds: how far it shoots, and how far its own ability carries."
+slot = 11
+icon = ExtResource("2_ability_show_ranges")
+reveal_seconds = 5.0

@@ -25,10 +25,18 @@ S_SELF_SPLASH = "res://Scripts/Combat/SelfSplashEffect.gd"
 
 A_ATTACK = "res://Resources/Abilities/attack_ability.tres"
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
+# The one key on the builder's card that is not a square. See HotkeyAction:
+# Build means the same thing on every card that has it, so it is allowed a key
+# of its own that the player may rebind.
+A_HOTKEY_BUILD = "res://Resources/Config/Hotkeys/build_hotkey.tres"
 A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
 A_CANCEL_UPGRADE = "res://Resources/Abilities/cancel_upgrade_ability.tres"
 A_PRIORITIZE = "res://Resources/Abilities/prioritize_ability.tres"
+# Reading tool rather than an order: it draws what the tower reaches and
+# never leaves the machine. On EVERY tower, which is why it is here rather
+# than behind a condition - the same square and the same key everywhere.
+A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 
 RING_MATERIAL = "res://Resources/Materials/Towers/selection_ring.tres"
 # Placeholder icons, baked from the models by Scenes/Dev/icon_renderer.tscn.
@@ -161,6 +169,7 @@ def gen_stats(row, heights):
     if can_choose:
         card.append(s.ext("Resource", A_PRIORITIZE))
     card.append(s.ext("Resource", A_SELL))
+    card.append(s.ext("Resource", A_SHOW_RANGES))
 
     cancel_build = s.ext("Resource", A_CANCEL_BUILD)
     cancel_sell = s.ext("Resource", A_CANCEL_SELL)
@@ -353,6 +362,7 @@ def gen_build_menu(extra=()):
         'reached by upgrading one of them."',
         "targeting = 4",
         "slot = 7",
+        'hotkey_action = ExtResource("%s")' % s.ext("Resource", A_HOTKEY_BUILD),
         'icon = ExtResource("%s")' % s.ext("Texture2D", action_icon_path("build")),
     ])
     text = s.render(

@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lightning_ultimate_orb_keeper_stats.tres" id="3_lightning_ultimate_orb_keeper_stats"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lightning_ultimate_orb_keeper_model.tscn" id="4_lightning_ultimate_orb_keeper_model"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="5_selection_ring"]
-[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="6_SpinAnimation3D"]
+[ext_resource type="Script" path="res://Scripts/Components/SparkAnimation3D.gd" id="6_SparkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
 inner_radius = 0.40
@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_lightning_ultimate_orb_keeper_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.943
+health_bar_height = 1.032
 select_radius = 0.5
-select_height = 0.298
+select_height = 0.338
 
 [node name="Visual" parent="." instance=ExtResource("4_lightning_ultimate_orb_keeper_model")]
 
@@ -37,10 +37,7 @@ _unit = NodePath("..")
 _muzzle = NodePath("../Visual/Turret/Muzzle")
 _turret_head = NodePath("../Visual/Turret")
 
-[node name="Spin1" type="Node" parent="." node_paths=PackedStringArray("_spinner", "_unit")]
-script = ExtResource("6_SpinAnimation3D")
-_spinner = NodePath("../Visual/Turret/Cage")
+[node name="Sparks" type="Node" parent="." node_paths=PackedStringArray("_unit", "_sparks")]
+script = ExtResource("6_SparkAnimation3D")
 _unit = NodePath("..")
-turns_per_second = 1.9
-idle_turns_per_second = 0.2
-spin_change_rate = 2.5
+_sparks = NodePath("../Visual/Turret/Sparks")

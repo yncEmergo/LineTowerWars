@@ -83,6 +83,18 @@ func play() -> void:
 			particles.restart()
 
 
+## Where the hit that spawned this effect CAME from, in world space. Called by
+## AttackDelivery.spawn_impact once the effect is in place and oriented.
+##
+## Does nothing for nearly every effect, which is why it is here rather than in
+## spawn_impact's signature: a flash on a creep already knows everything it
+## needs from where it was put, and only an effect that has to REACH BACK - an
+## arc strung from the muzzle to the creep - cares who fired it. See
+## LightningBolt3D, the one thing that overrides this.
+func aim_from(_point: Vector3) -> void:
+	pass
+
+
 func _collect_surfaces(node: Node) -> void:
 	var drawable: GeometryInstance3D = node as GeometryInstance3D
 	if drawable != null:

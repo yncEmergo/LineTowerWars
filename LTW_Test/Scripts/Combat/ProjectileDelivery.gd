@@ -18,6 +18,19 @@ extends AttackDelivery
 ## How high the flight bows upwards at its midpoint. 0 is a flat shot, which is
 ## what a rifle wants and a mortar does not.
 @export var arc_height: float = 0.0
+## Where the shot is SPAWNED, as an offset from the point it will land rather
+## than from the muzzle it was fired out of.
+##
+## Zero is an ordinary shot leaving the tower, which is nearly everything. A
+## high, sideways offset is a shot CALLED DOWN on the target instead: the
+## projectile appears above and to one side of the creep and dives onto it, and
+## the tower that fired is nowhere on the line. That is what a meteor is.
+##
+## An offset rather than a subclass of its own, because it changes where the
+## flight STARTS and nothing else - it still homes, still takes real time, and
+## still lands its damage on arrival. Author it with enough height to clear the
+## top of the frame or the shot is seen appearing out of nothing.
+@export var sky_launch_offset: Vector3 = Vector3.ZERO
 
 ## Cached projectile and whether loading it has been tried. Asked once per
 ## shot, so it must not go back to the loader every time a tower fires.
@@ -55,7 +68,19 @@ func deliver(hit: AttackHit, from: Vector3, target: Unit) -> void:
 		return
 
 	root.add_child(projectile)
-	projectile.launch(self, hit, from, target)
+	projectile.launch(self, hit, _launch_point(from, target), target)
+
+
+## Where this shot starts. The muzzle for an ordinary attack, and a point over
+## the target for one that is called down - see sky_launch_offset.
+##
+## Measured off where the target stands NOW rather than off the muzzle, which is
+## the whole point: a meteor should fall onto the creep from the same direction
+## every time, whichever tower called it and wherever that tower stands.
+func _launch_point(from: Vector3, target: Unit) -> Vector3:
+	if sky_launch_offset == Vector3.ZERO || target == null:
+		return from
+	return target.global_position + sky_launch_offset
 
 
 ## Called by the projectile when it arrives, so the impact visual stays a

@@ -61,7 +61,7 @@ func on_attack(tower: Building, _target: Unit) -> void:
 func on_hit(tower: Building, target: Unit, dealt: int, is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.erode_armor(armor_per_hit, 0.0)
+		status.erode_armor(self, armor_per_hit, 0.0)
 
 	var held: float = float(tower.ability_state.get(BONUS_KEY, 0.0))
 	tower.ability_state[BONUS_KEY] = minf(damage_cap, held + damage_per_hit)

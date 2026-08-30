@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bxmftjb7j31l0"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://c0mf2vouj0ap7" path="res://Resources/UnitStats/Towers/holy_ultimate_divineshroom_stats.tres" id="2_holy_ultimate_divineshroom_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/holy_ultimate_divineshroom_stats.tres" id="2_holy_ultimate_divineshroom_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 236
 tower_stats = ExtResource("2_holy_ultimate_divineshroom_stats")
 required_tech_id = 20
-ability_id = 236
 display_name = "Upgrade to Ultimate Divineshroom"
-description = "AIR ONLY from this tier up. Heavy splash, deep slow, and the only armor reduction that goes below zero."
+description = "AIR ONLY from this tier up. Heavy splash, deep slow, and armor reduction that carries on past zero."
+targeting = 1
 slot = 0

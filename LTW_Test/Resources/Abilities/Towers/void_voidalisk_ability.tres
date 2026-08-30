@@ -1,13 +1,17 @@
-[gd_resource type="Resource" script_class="VoidGrowthPassive" format=3 uid="uid://bpwtsv744ps54"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_a0w3k"]
-[ext_resource type="Script" uid="uid://dwhbok3kg7bmk" path="res://Scripts/Abilities/TowerPassives/VoidGrowthPassive.gd" id="1_VoidGrowthPassive"]
-[ext_resource type="Texture2D" uid="uid://bu0inxmko0mep" path="res://2DArt/Icons/voidalisk.png" id="2_voidalisk"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/VoidGrowthPassive.gd" id="1_VoidGrowthPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/voidalisk.png" id="2_voidalisk"]
 
 [resource]
 script = ExtResource("1_VoidGrowthPassive")
 ability_id = 161
 display_name = "Void Growth"
-icon = ExtResource("2_voidalisk")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_voidalisk")
+regen_per_second = 1
+mana_per_attack = 1
+reach_cells = 3.12
+becomes_type_id = 98
+converts_type_ids = PackedInt32Array(97)

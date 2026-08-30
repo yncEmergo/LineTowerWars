@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Effects/ImpactBurst.gd" id="1_ImpactBurst"]
+
+[sub_resource type="StandardMaterial3D" id="M_bar"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.62, 1, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="M_glow"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.52, 0.1, 0.6, 0.35)
+
+[sub_resource type="BoxMesh" id="Bar"]
+size = Vector3(0.5, 0.02, 0.09)
+material = SubResource("M_bar")
+
+[sub_resource type="CylinderMesh" id="Pool"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.02
+radial_segments = 12
+rings = 0
+material = SubResource("M_glow")
+
+[node name="RiftMarker" type="Node3D"]
+script = ExtResource("1_ImpactBurst")
+duration = 3.0
+start_scale = 1.0
+end_scale = 1.0
+grow_share = 0.9
+
+[node name="Pool" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+cast_shadow = 0
+mesh = SubResource("Pool")
+
+[node name="BarA" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 0, 0.04, 0)
+cast_shadow = 0
+mesh = SubResource("Bar")
+
+[node name="BarB" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, -0.7071, 0, 1, 0, 0.7071, 0, 0.7071, 0, 0.04, 0)
+cast_shadow = 0
+mesh = SubResource("Bar")

@@ -1,16 +1,18 @@
-[gd_resource type="Resource" script_class="VolcanicEruptionPassive" format=3 uid="uid://hwf04dfs84t"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://cdqxmm34sgvqw" path="res://Scripts/Abilities/TowerPassives/VolcanicEruptionPassive.gd" id="1_VolcanicEruptionPassive"]
-[ext_resource type="Texture2D" uid="uid://ckp7p08nq07yr" path="res://2DArt/Icons/ultimate_firelord.png" id="2_ultimate_firelord"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/VolcanicEruptionPassive.gd" id="1_VolcanicEruptionPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_firelord.png" id="2_ultimate_firelord"]
 
 [resource]
 script = ExtResource("1_VolcanicEruptionPassive")
-targets = 8
-armor_share = 0.12
-guaranteed_every = 3
-missing_armor_bonus = 0.06
 ability_id = 135
 display_name = "Magma Blast"
-icon = ExtResource("2_ultimate_firelord")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_ultimate_firelord")
+chance = 0.4
+targets = 8
+bonus_share = 1
+armor_share = 0.12
+guaranteed_every = 5
+missing_armor_bonus = 0.06

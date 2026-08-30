@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://6gs5j7cdet83"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://buih1hs2xks67" path="res://Resources/UnitStats/Towers/holy_holy_lantern_stats.tres" id="2_holy_holy_lantern_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/holy_holy_lantern_stats.tres" id="2_holy_holy_lantern_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 233
 tower_stats = ExtResource("2_holy_holy_lantern_stats")
 required_tech_id = 19
-ability_id = 233
 display_name = "Upgrade to Holy Lantern"
 description = "Strikes several creeps with one attack. Splits into the anti-air shroom and the support vault."
+targeting = 1
 slot = 0

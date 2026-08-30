@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Units/SendBuilding.gd" id="1_send_building"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/send_building_tier3_stats.tres" id="2_send_stats"]
+
+[node name="SendBuildingT3" type="Node3D"]
+script = ExtResource("1_send_building")
+stats = ExtResource("2_send_stats")
+send_tier = 3

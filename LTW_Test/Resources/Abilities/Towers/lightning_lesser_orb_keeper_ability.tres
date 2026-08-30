@@ -1,12 +1,16 @@
-[gd_resource type="Resource" script_class="CrashLightningPassive" format=3 uid="uid://dcmcqcks5x70c"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://73v4ykm8mspk" path="res://Scripts/Abilities/TowerPassives/CrashLightningPassive.gd" id="1_CrashLightningPassive"]
-[ext_resource type="Texture2D" uid="uid://kl4ogmi72khi" path="res://2DArt/Icons/lesser_orb_keeper.png" id="2_lesser_orb_keeper"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/CrashLightningPassive.gd" id="1_CrashLightningPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_orb_keeper.png" id="2_lesser_orb_keeper"]
 
 [resource]
 script = ExtResource("1_CrashLightningPassive")
 ability_id = 149
 display_name = "Crash Lightning"
-icon = ExtResource("2_lesser_orb_keeper")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_lesser_orb_keeper")
+mana_per_attack = 10
+current_health_share = 0.012
+stun_seconds = 0.67
+burst_damage = 300

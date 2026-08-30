@@ -1,14 +1,16 @@
-[gd_resource type="Resource" script_class="VolcanicEruptionPassive" format=3 uid="uid://b4m5s3r20qpyf"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://cdqxmm34sgvqw" path="res://Scripts/Abilities/TowerPassives/VolcanicEruptionPassive.gd" id="1_VolcanicEruptionPassive"]
-[ext_resource type="Texture2D" uid="uid://1nge8v8dx2np" path="res://2DArt/Icons/greater_firelord.png" id="2_greater_firelord"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/VolcanicEruptionPassive.gd" id="1_VolcanicEruptionPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_firelord.png" id="2_greater_firelord"]
 
 [resource]
 script = ExtResource("1_VolcanicEruptionPassive")
-targets = 5
-armor_share = 0.09
 ability_id = 134
 display_name = "Volcanic Eruption"
-icon = ExtResource("2_greater_firelord")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_greater_firelord")
+chance = 0.4
+targets = 5
+bonus_share = 1
+armor_share = 0.12

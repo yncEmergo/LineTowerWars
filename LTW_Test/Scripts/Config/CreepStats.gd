@@ -60,6 +60,21 @@ extends MobileUnitStats
 ## everything except a Boss, which takes two.
 @export var lives_stolen: int = 1
 
+@export_group("Creep Mana")
+## The mana pool one of this creep's traits runs on, or 0 for a creep with no
+## such trait - which is nearly all of them.
+##
+## Here rather than on the passive for the reason every other stat is: mana is
+## the CREEP's resource and the passive is a shared stateless resource that may
+## hold nothing per creep. The passive owns the RULE - what fills the pool and
+## what happens at the top - and this owns the pool. See CreepMana.
+@export var max_mana: int = 0
+## Mana the creep spawns holding. Absolute rather than the share of maximum a
+## tower authors, because the source game states these as whole numbers and one
+## of them is deliberately part full: Wind Rush starts at 10 of 14, so its
+## creep is four points from its first cast rather than fourteen.
+@export var starting_mana: int = 0
+
 @export_group("Creep Kind")
 ## Attacker creeps go after the towers standing in the area rather than walking
 ## past them, and they are the only creep their owner can command. Their attack

@@ -1,11 +1,18 @@
 class_name BuildPreview
 extends Node3D
 
-## Ghost shown while a build order is being aimed.
+## Ghost of a building that is not there yet.
 ##
 ## Uses the building's own model scene rather than a stand-in box, so what you
-## see while aiming is exactly what gets placed. The model handles looking like
-## a ghost; this only positions it and reports whether the spot is legal.
+## see is exactly what gets placed. The model handles looking like a ghost;
+## this only positions it and says what it is saying.
+##
+## TWO jobs, and they are the same picture with a different tint. While a
+## placement is being AIMED it follows the cursor and goes green or red on
+## whether the spot is legal. Once the order is GIVEN it stands still and grey
+## at the spot until the builder gets there and starts it - which is the same
+## thing whether that order was chained behind four others or given on its own.
+## See OrderOverlay.
 
 var _model: UnitModel
 
@@ -32,8 +39,8 @@ func setup(model_scene: PackedScene) -> void:
 	_model.set_mode(UnitModel.Mode.PREVIEW)
 
 
-func show_at(world_center: Vector3, valid: bool) -> void:
+func show_at(world_center: Vector3, tint: UnitModel.Tint) -> void:
 	global_position = Vector3(world_center.x, 0.0, world_center.z)
 	if is_instance_valid(_model):
-		_model.set_preview_valid(valid)
+		_model.set_preview_tint(tint)
 	visible = true

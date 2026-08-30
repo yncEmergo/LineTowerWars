@@ -47,7 +47,7 @@ func _tooltip(target: Unit) -> String:
 	if target.stats == null:
 		return ""
 	return "%s\n%d / %d" % [
-		target.stats.display_name, target.current_health, target.max_health()
+		target.stats.display_name, target.display_health(), target.max_health()
 	]
 
 
