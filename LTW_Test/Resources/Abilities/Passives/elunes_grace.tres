@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ElunesGracePassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/ElunesGracePassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 338
+display_name = "Elune's Grace"
+targeting = 0
+first_seconds = 15.0
+second_seconds = 5.0
+second_at_health = 0.5

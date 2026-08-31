@@ -152,7 +152,7 @@ func is_in_reach(target: Unit) -> bool:
 	var attack: AttackStats = _attack
 	if attack == null || target == null || !is_instance_valid(target):
 		return false
-	return TargetFinder.is_in_range(_origin(), target, attack.attack_range)
+	return TargetFinder.is_in_range(_origin(), target, _reach(attack))
 
 
 ## Whether an attack is committed and its damage has not landed yet.
@@ -329,9 +329,22 @@ func _next_scan_wait() -> int:
 ## The target this unit picks for itself, which is a different search per
 ## target class. Nothing else in here has to know which kind it got back.
 func _acquire(attack: AttackStats) -> Unit:
+	var bonus: float = _unit.attack_range_bonus()
 	if attack.hits_buildings():
-		return TargetFinder.best_building_target(_unit.area, _origin(), attack)
-	return TargetFinder.best_target(_unit.area, _origin(), attack, _prioritize_air)
+		return TargetFinder.best_building_target(_unit.area, _origin(), attack, bonus)
+	return TargetFinder.best_target(_unit.area, _origin(), attack, _prioritize_air,
+		bonus)
+
+
+## How far this unit's attack reaches RIGHT NOW: what its stats say, plus
+## whatever is lending it distance.
+##
+## Every range test in this component goes through here rather than reading the
+## attack directly, so a tower standing in a Primal disc acquires, holds and
+## fires at the same reach - three answers that disagreeing would show up as a
+## tower that picks a target it then refuses to shoot at.
+func _reach(attack: AttackStats) -> float:
+	return attack.attack_range + _unit.attack_range_bonus()
 
 
 ## Forgets a target that died, left range, or stopped being a legal target.
@@ -341,7 +354,7 @@ func _drop_lost_target(attack: AttackStats) -> void:
 	# Either way this unit just lost something it could see, which is the one
 	# moment its picture of the lane is known to be stale. Whatever was left of
 	# its idle wait is thrown away rather than delaying the replacement.
-	if !TargetFinder.is_in_range(_origin(), _target, attack.attack_range):
+	if !TargetFinder.is_in_range(_origin(), _target, _reach(attack)):
 		_target = null
 		_scan_wait = 0
 		return
@@ -363,7 +376,7 @@ func _apply_order(attack: AttackStats) -> void:
 	if ordered_target() == null:
 		_ordered_target = null
 		return
-	if TargetFinder.is_in_range(_origin(), _ordered_target, attack.attack_range):
+	if TargetFinder.is_in_range(_origin(), _ordered_target, _reach(attack)):
 		_target = _ordered_target
 
 
@@ -438,6 +451,14 @@ func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:
 	# follows, and for the same reason: a player watching one shot land should
 	# not see three different numbers come off it.
 	var rolled: int = attack.roll_damage(MatchSession.match_rng())
+	# Whatever is weakening the unit FIRING, folded in once and shared by every
+	# target this shot reaches - the same rule the roll itself follows. It is
+	# the damage twin of the attack speed the cooldown above is scaled by, and
+	# both a cursed tower and a Mountain Giant crowded by its own kind answer
+	# it. See Unit.attack_damage_ratio().
+	var ratio: float = _unit.attack_damage_ratio()
+	if !is_equal_approx(ratio, 1.0):
+		rolled = maxi(1, int(round(float(rolled) * maxf(0.0, ratio))))
 	_send(attack, _new_hit(attack, rolled, true), target, point)
 
 	for extra: Unit in _extra_targets(attack, target):
@@ -450,6 +471,10 @@ func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:
 func _new_hit(attack: AttackStats, rolled: int, primary: bool) -> AttackHit:
 	var hit: AttackHit = AttackHit.new()
 	hit.damage = rolled
+	# The reach it was actually FIRED from, lent cells included, because the one
+	# creep that dodges by distance dodges what really happened rather than what
+	# the stats file said would. See AttackHit.attack_range.
+	hit.attack_range = _reach(attack)
 	hit.damage_type = attack.damage_type
 	hit.is_aoe = attack.is_aoe_damage
 	# A creep picked up by a multishot takes no splash of its own: the splash
@@ -458,6 +483,7 @@ func _new_hit(attack: AttackStats, rolled: int, primary: bool) -> AttackHit:
 	hit.effects = attack.effects if primary else ([] as Array[AttackEffect])
 	hit.area = _unit.area
 	hit.attacker_player_id = _unit.owner_player_id
+	hit.attacker = _unit
 	hit.attacker_position = _origin()
 	hit.is_primary = primary
 

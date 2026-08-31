@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BlockedPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/BlockedPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 343
+display_name = "Blocked"
+targeting = 0
+radius_cells = 1.563
+free_count = 3
+share_each = 0.08
+max_share = 0.5

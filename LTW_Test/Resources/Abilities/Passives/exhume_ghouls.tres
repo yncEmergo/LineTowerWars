@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SpawnOnDeathPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/SpawnOnDeathPassive.gd" id="1_passive"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/ghoul_stats.tres" id="2_ghoul"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 359
+display_name = "Exhume Ghouls"
+targeting = 0
+spawned_stats = ExtResource("2_ghoul")
+count = 3
+scatter_cells = 0.35

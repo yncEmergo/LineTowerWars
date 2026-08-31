@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/ancient_wendigo_hide.tres" id="1_ancient_wendigo_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/ancient_wendigo_hide_deep.tres" id="2_ancient_wendigo_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/ancient_wendigo_hide_pale.tres" id="3_ancient_wendigo_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r8.tres" id="4_carapace_r8"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r8.tres" id="5_eye_r8"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -23,11 +23,11 @@ material = ExtResource("2_ancient_wendigo_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.1446, 0.0609, 0.1879)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_4"]
 size = Vector3(0.0434, 0.0867, 0.0506)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
 radius = 0.0829
@@ -45,11 +45,11 @@ material = ExtResource("2_ancient_wendigo_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.1446, 0.0609, 0.1879)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
 size = Vector3(0.0434, 0.0867, 0.0506)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="SphereMesh" id="SphereMesh_9"]
 radius = 0.1743
@@ -125,18 +125,18 @@ material = ExtResource("2_ancient_wendigo_hide_deep")
 
 [sub_resource type="PrismMesh" id="PrismMesh_20"]
 size = Vector3(0.0408, 0.1429, 0.0354)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="SphereMesh" id="SphereMesh_21"]
 radius = 0.0299
 height = 0.0599
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_22"]
 size = Vector3(0.049, 0.2041, 0.0408)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_23"]
 radius = 0.0829
@@ -161,7 +161,7 @@ material = ExtResource("1_ancient_wendigo_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_26"]
 size = Vector3(0.0431, 0.1244, 0.0365)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_27"]
 radius = 0.0829
@@ -186,15 +186,15 @@ material = ExtResource("1_ancient_wendigo_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_30"]
 size = Vector3(0.0431, 0.1244, 0.0365)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="BoxMesh" id="BoxMesh_31"]
 size = Vector3(0.0795, 0.0748, 0.2689)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_32"]
 size = Vector3(0.0608, 0.2105, 0.0608)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [node name="AncientWendigoModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

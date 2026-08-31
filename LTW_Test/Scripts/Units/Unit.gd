@@ -33,6 +33,11 @@ signal abilities_changed()
 const SELECT_MOBILE: StringName = &"mobile"
 const SELECT_TOWER: StringName = &"tower"
 const SELECT_SEND_BUILDING: StringName = &"send_building"
+## Technology discs, which are a class of their own rather than towers: they
+## share a footprint with one and nothing else, they cannot attack, and a
+## command card that offered Attack and Prioritize to a mixture of the two
+## would be describing neither. game_rules.md says the kinds never mix.
+const SELECT_DISC: StringName = &"disc"
 
 @export_group("References")
 ## Stats for this unit type. Assigned per prefab, so every unit type carries
@@ -96,11 +101,28 @@ var _selected: bool = false
 var _health_bar: HealthBar3D
 
 
+## What this unit's ACTIVE ability - the one a player presses - is waiting on
+## and what it has been aimed at. Its own object rather than two more fields
+## here, and BOTH of its numbers are drawn on a card, so both come down the
+## wire. See ActiveAbilityState.
+##
+## On Unit rather than on Building, which is where it started, because tier 4
+## put an aimed ability on a CREEP: the Phoenix dives, and its cooldown wants
+## the same slot on the same wire a tower's does rather than a second one
+## beside it. Every unit carries the object and almost none of them ever moves
+## it, which is what it already cost when only towers had one.
+var active_ability: ActiveAbilityState = ActiveAbilityState.new()
+
+
 func _ready() -> void:
 	if stats == null:
 		Log.err("Unit has no UnitStats assigned in its prefab", name)
 	else:
-		current_health = float(stats.max_health)
+		# max_health() rather than the stats figure, because a unit's real
+		# ceiling is not always the number in its file: one creep trait
+		# converts its armour into health, and reading the file here spawned a
+		# Necromancer permanently short of its own maximum. See Creep.
+		current_health = float(max_health())
 
 	# An invulnerable unit can never lose health, so a bar would only ever be
 	# a full green rectangle. See game_rules.md on the builder.
@@ -335,7 +357,8 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 	# number the server never agreed to and then have it snap back (3.4).
 	if !MatchSession.is_authority():
 		return
-	_set_health(current_health - float(resolve_damage(amount, damage_type, is_aoe)))
+	var landed: int = resolve_damage(amount, damage_type, is_aoe)
+	_set_health(current_health - float(_absorb(landed)))
 
 
 ## What a raw damage amount actually costs this unit, once the whole pipeline
@@ -355,7 +378,7 @@ func resolve_damage(amount: int, damage_type: DamageTable.DamageType,
 
 	return table.apply(
 		amount, damage_type, armor_type_value(), armor_value(),
-		_damage_taken_ratio(is_aoe, DamageTable.is_spell(damage_type)),
+		_damage_taken_ratio(damage_type, is_aoe),
 		_damage_block()
 	)
 
@@ -370,6 +393,25 @@ func armor_type_value() -> UnitStats.ArmorType:
 	if stats == null:
 		return UnitStats.ArmorType.UNARMORED
 	return stats.armor_type
+
+
+## Everything currently sitting on this unit, flattened into the one record a
+## debuff row, an armour line and a snapshot all read. Empty for a unit nothing
+## can be applied to, which is the builder and the send buildings.
+##
+## THE AUTHORITY'S ANSWER, always: this walks the objects the simulation keeps,
+## which only exist on the machine running it. A client asks
+## StatusEntry.for_unit instead, which branches to what the server sent - so
+## nothing outside this file has to know which machine it is on.
+##
+## Virtual rather than a cast in the two places that used to ask. Both of them
+## cast to Creep, which is how a tower's curses and everything a technology disc
+## lends it stayed off the wire entirely: they were real on the server and
+## invisible to both clients. Anything that grows a third kind of effect
+## overrides this and is replicated for free.
+func status_entries() -> Array[StatusEntry]:
+	var empty: Array[StatusEntry] = []
+	return empty
 
 
 ## Armour points this unit has RIGHT NOW: its own, plus anything granted to it
@@ -404,13 +446,39 @@ func heal(amount: float) -> void:
 ## Protected rather than public: it is one step of the pipeline above, not a
 ## question anything outside the unit should be asking. Creeps override it to
 ## fold in their passives.
-func _damage_taken_ratio(_is_aoe: bool, _is_spell: bool) -> float:
+func _damage_taken_ratio(_damage_type: DamageTable.DamageType,
+		_is_aoe: bool) -> float:
 	return 1.0
+
+
+## What actually reaches this unit's HEALTH out of a hit that has already been
+## resolved, in points. The last step of the pipeline and the only one that is
+## not a rule about the damage itself: a shield standing in front of the health
+## eats what it can and hands the rest on.
+##
+## Protected and neutral here, because only a creep can carry one. Overridden
+## by Creep, which spends its absorption pool - see StatusEffects.absorb().
+func _absorb(landed: int) -> int:
+	return landed
 
 
 ## Flat points removed from a hit last of all, after every multiplier.
 func _damage_block() -> int:
 	return 0
+
+
+## Multiplier on how hard this unit's own attack lands, below 1 being weaker.
+##
+## The damage twin of attack_speed_ratio() above, and read in the same place -
+## AttackComponent rolls the attack and then scales it by this, so anything
+## that weakens a unit reaches every attack it has rather than only the ones
+## somebody remembered to route through it.
+##
+## 1.0 here because nothing about a plain Unit is ever weakened. Creeps fold in
+## their auras and whatever a tower has left on them; towers fold in whatever a
+## creep has cursed them with.
+func attack_damage_ratio() -> float:
+	return 1.0
 
 
 ## The SECOND RESOURCE this unit runs on, drawn under its portrait as a bar and
@@ -429,6 +497,17 @@ func secondary_resource() -> TowerResource:
 ## Whether this unit is in a state where its attack may fire, if it has one.
 func can_attack() -> bool:
 	return is_alive()
+
+
+## Cells added to this unit's attack range RIGHT NOW, on top of whatever its
+## AttackStats says.
+##
+## Asked of the unit rather than read off the attack for the same reason
+## attack_speed_ratio() is: a technology disc standing nearby lends a tower
+## reach, and the stats file cannot know that. 0 for anything nothing is
+## extending, which is every unit outside a Primal disc's radius.
+func attack_range_bonus() -> float:
+	return 0.0
 
 
 ## Multiplier on how fast this unit attacks RIGHT NOW, above 1 being faster.

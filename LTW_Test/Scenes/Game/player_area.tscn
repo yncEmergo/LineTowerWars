@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier1.tscn" id="4_send_t1"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier2.tscn" id="5_send_t2"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier3.tscn" id="6_send_t3"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier4.tscn" id="7_send_t4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spawn"]
 albedo_color = Color(0.46, 0.26, 0.26, 1)
@@ -37,7 +38,7 @@ _spawn_zone = NodePath("SpawnZone")
 _build_zone = NodePath("BuildZone")
 _end_zone = NodePath("EndZone")
 _build_grid = NodePath("BuildGrid")
-_send_buildings = [NodePath("SendBuildingT1"), NodePath("SendBuildingT2"), NodePath("SendBuildingT3")]
+_send_buildings = [NodePath("SendBuildingT1"), NodePath("SendBuildingT2"), NodePath("SendBuildingT3"), NodePath("SendBuildingT4")]
 _creeps_root = NodePath("Creeps")
 
 [node name="SpawnZone" type="MeshInstance3D" parent="."]
@@ -65,5 +66,7 @@ _grid_material = ExtResource("3_grid_material")
 [node name="SendBuildingT2" parent="." instance=ExtResource("5_send_t2")]
 
 [node name="SendBuildingT3" parent="." instance=ExtResource("6_send_t3")]
+
+[node name="SendBuildingT4" parent="." instance=ExtResource("7_send_t4")]
 
 [node name="Creeps" type="Node3D" parent="."]

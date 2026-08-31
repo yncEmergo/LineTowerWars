@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/endurance_aura_3.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/armored_2.tres" id="11_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/satyr_shadowdancer.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 161
+display_name = "Satyr Shadowdancer"
+max_health = 62250
+armor_type = 3
+armor = 5
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card")])
+scene_path = "res://Scenes/Units/Creeps/satyr_shadowdancer.tscn"
+move_speed = 2.7344
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 125000
+income_gain = 6250
+unlock_seconds = 870.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.22
+bounty = 5046

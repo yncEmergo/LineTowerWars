@@ -763,6 +763,17 @@ ELEMENTAL_CORE = {
 # metallic 0.9 carapace renders BLACK whatever its albedo says. Tower trim gets
 # away with it because the top two rungs emit; a creep's hard parts must not,
 # since the eyes are the only thing in the roster allowed to be lit.
+#
+# TWELVE RUNGS, and the top six arrived with tiers 3 and 4. It used to be six,
+# which was enough while the roster stopped at 100,000 gold and is not now: the
+# ladder is measured in HALF DECADES of cost, so a 4,200,000g creep stands
+# eleven rungs above a Sheep, and a six entry ramp quietly clamped everything
+# from 3,162 gold upwards onto one rung. Nine of tier 2 were already sharing
+# it - the ladder had stopped saying anything about half the roster.
+#
+# Extending it moves those nine up the ramp, which is the ladder finally doing
+# its job rather than churn. What it does NOT move is their size: see the cap
+# below, which is the asymmetry this ladder was always documented to have.
 CREEP_CARAPACE_RAMP = [
     ((0.72, 0.69, 0.58), 0.00, 0.88),
     ((0.86, 0.83, 0.72), 0.05, 0.78),
@@ -770,6 +781,12 @@ CREEP_CARAPACE_RAMP = [
     ((0.52, 0.52, 0.56), 0.38, 0.48),
     ((0.44, 0.44, 0.48), 0.46, 0.38),
     ((0.38, 0.36, 0.39), 0.52, 0.32),
+    ((0.34, 0.32, 0.36), 0.55, 0.29),
+    ((0.31, 0.29, 0.34), 0.57, 0.26),
+    ((0.28, 0.27, 0.32), 0.59, 0.24),
+    ((0.26, 0.25, 0.30), 0.60, 0.22),
+    ((0.24, 0.23, 0.29), 0.61, 0.20),
+    ((0.22, 0.21, 0.27), 0.62, 0.18),
 ]
 
 # The creep ladder's rungs, in gold. One rung per half decade of cost, which is
@@ -803,6 +820,11 @@ def creep_rung(gold):
 #
 # It brightens rather than saturating: the top rung is still clearly amber and
 # not white, which is the failure the elemental accents were retuned to avoid.
+# Twelve of them, matching the carapace ramp above. The top six climb far more
+# gently than the bottom six on purpose: red is already at its ceiling by rung
+# 5, so the only headroom left is in green and blue - and spending it fast is
+# exactly how the elemental accents saturated to white and lost their hue at
+# the tier the player had paid most for it.
 CREEP_EYE_RAMP = [
     (0.78, 0.38, 0.10),
     (0.86, 0.45, 0.13),
@@ -810,6 +832,12 @@ CREEP_EYE_RAMP = [
     (0.97, 0.59, 0.20),
     (1.00, 0.66, 0.25),
     (1.00, 0.74, 0.34),
+    (1.00, 0.77, 0.39),
+    (1.00, 0.79, 0.44),
+    (1.00, 0.81, 0.48),
+    (1.00, 0.83, 0.52),
+    (1.00, 0.85, 0.56),
+    (1.00, 0.87, 0.60),
 ]
 
 
@@ -853,14 +881,28 @@ CREEP_MAX_RADIUS = 0.55
 # it must not outgrow - the rules give a creep one free internal cell to walk
 # through - so what a heavier creep really gains is bulk in its own model
 # rather than reach across the floor. See CreepStats.body_radius.
+#
+# THE SIZE LADDER STOPS CLIMBING HERE, and the rest of the ladder does not.
+# That asymmetry is the oldest thing written down about this roster - see the
+# ceiling above - and it is what lets the carapace and the eyes run to twelve
+# rungs without the roster growing out of the band a player can read a field
+# in. Everything above this rung is the same size as it and is told apart by
+# its hard parts, its eyes and its shape.
+#
+# It is also what kept tiers 1 and 2 still when the ramp was extended: every
+# creep that moved up the carapace ramp was already at or above this rung, so
+# not one model changed size.
+CREEP_SIZE_RUNG_CAP = 5
+
+
 def creep_mass(rung):
-    return round(0.66 * pow(1.10, rung), 4)
+    return round(0.66 * pow(1.10, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
 
 
 # Rule 1b. Multiplies every authored HEIGHT, on the same reasoning as the tower
 # ramp: the camera looks down, so height is the axis worth spending least on.
 def creep_height_scale(rung):
-    return round(0.40 * pow(1.115, rung), 4)
+    return round(0.40 * pow(1.115, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
 
 
 # A BOSS is sent one at a time and steals two lives, so it has to read as the
@@ -924,6 +966,12 @@ def creep_has_crest(rung, is_boss=False):
 # nothing at all.
 CREEP_FLAMES = {
     "infernal": (1.00, 0.52, 0.16),
+    # The second and, for now, last. A Phoenix is fire that happens to have a
+    # shape, so a Phoenix that gives off no light is reading as a large bird -
+    # which is exactly the mistake the Infernal entry exists to prevent. It
+    # clears the same bar: it IS the light, and it is a Boss sent one at a
+    # time, so there is never a field of them.
+    "phoenix": (1.00, 0.68, 0.24),
 }
 
 
@@ -1293,5 +1341,304 @@ CREEPS = {
             "pale": ((0.64, 0.25, 0.15), (0.42, 0.15, 0.09)),
         },
         "rim": (1.00, 0.60, 0.30),
+    },
+    # ------------------------------------------------------------------
+    # TIER 3. Twelve creeps in one cost bracket, and the hides are chosen
+    # against the twenty-six above them rather than only against each other -
+    # a maze at 16:00 has tier 1 creeps walking in it too, and two brackets
+    # that agreed on a colour would be worse than two creeps that did.
+    #
+    # The bracket leans COLD and DESATURATED as a group, which is the one
+    # thing it says about itself: tier 1 is farm animals and mud, tier 2 is
+    # soldiers and beasts, and this is where the roster stops being alive.
+    # ------------------------------------------------------------------
+    #
+    # Grave-bleached bone under a violet pall. It shares the Skeleton's
+    # material and none of its value - a Death Revenant is what a Skeleton
+    # Warrior looks like after two more tiers of the same idea, so the two are
+    # separated by the cold cast rather than by hue.
+    "death_revenant": {
+        "bands": 0.90,
+        "tones": {
+            "base": ((0.55, 0.53, 0.60), (0.33, 0.32, 0.39)),
+            "deep": ((0.33, 0.32, 0.40), (0.19, 0.18, 0.24)),
+            "pale": ((0.74, 0.72, 0.80), (0.50, 0.49, 0.57)),
+        },
+        "rim": (0.86, 0.84, 1.00),
+    },
+    # Dusk purple hide over dark hair. The one creep in the bracket allowed a
+    # real hue, because a Satyr with grey skin is a goat.
+    "satyr_shadowdancer": {
+        "bands": 0.55,
+        "tones": {
+            "base": ((0.42, 0.32, 0.46), (0.25, 0.18, 0.28)),
+            "deep": ((0.26, 0.19, 0.30), (0.15, 0.10, 0.18)),
+            "pale": ((0.58, 0.47, 0.62), (0.37, 0.29, 0.41)),
+        },
+        "rim": (0.92, 0.80, 1.00),
+    },
+    # Blue-black chitin. Deliberately the OTHER end of the arachnid palette
+    # from the Forest Spider olive: two spiders in one game have to be told
+    # apart at a glance and their silhouettes are nearly the same.
+    "crypt_fiend": {
+        "bands": 0.90,
+        "tones": {
+            "base": ((0.20, 0.24, 0.34), (0.11, 0.13, 0.20)),
+            "deep": ((0.12, 0.15, 0.22), (0.06, 0.08, 0.12)),
+            "pale": ((0.32, 0.38, 0.50), (0.19, 0.23, 0.32)),
+        },
+        "rim": (0.72, 0.84, 1.00),
+    },
+    # Grave linen gone green. Pale enough to read against the bracket around
+    # it, since a Necromancer is a robe and a hood and has no other outline.
+    "necromancer": {
+        "bands": 0.25,
+        "tones": {
+            "base": ((0.56, 0.60, 0.50), (0.35, 0.38, 0.31)),
+            "deep": ((0.34, 0.37, 0.30), (0.20, 0.22, 0.17)),
+            "pale": ((0.72, 0.76, 0.66), (0.50, 0.54, 0.45)),
+        },
+        "rim": (0.80, 1.00, 0.84),
+    },
+    # Cold vapour. The one GROUND creep in the game drawn as a wraith is, and
+    # that is the point: a Spirit Walker walks through your towers, so it has
+    # to read as something the maze does not touch. See creep_roster.is_vapour,
+    # which is why this is not on the wraith body plan.
+    "spirit_walker": {
+        "bands": 0.15,
+        "tones": {
+            "base": ((0.52, 0.66, 0.70), (0.32, 0.43, 0.47)),
+            "deep": ((0.32, 0.43, 0.47), (0.19, 0.26, 0.29)),
+            "pale": ((0.72, 0.86, 0.90), (0.50, 0.62, 0.66)),
+        },
+        "rim": (0.74, 0.98, 1.00),
+    },
+    # Ochre hide and red cloth. Warm on purpose, and the only warm hide in the
+    # bracket until its Boss - a Shaman standing in a pack of grey and violet
+    # is the thing a player has to find, because it is what is keeping the
+    # pack alive.
+    "shaman": {
+        "bands": 0.45,
+        "tones": {
+            "base": ((0.60, 0.44, 0.28), (0.38, 0.27, 0.16)),
+            "deep": ((0.38, 0.26, 0.16), (0.23, 0.15, 0.09)),
+            "pale": ((0.78, 0.60, 0.40), (0.55, 0.41, 0.26)),
+        },
+        "rim": (1.00, 0.86, 0.62),
+    },
+    # Sallow stitched flesh. The one hide in the roster with pink in it, and it
+    # is doing real work: an Abomination is meat, and a grey one would read as
+    # another golem at exactly the tier the roster already has three.
+    "abomination": {
+        "bands": 0.35,
+        "tones": {
+            "base": ((0.62, 0.52, 0.48), (0.40, 0.32, 0.30)),
+            "deep": ((0.40, 0.31, 0.29), (0.24, 0.18, 0.17)),
+            "pale": ((0.78, 0.68, 0.62), (0.56, 0.47, 0.43)),
+        },
+        "rim": (1.00, 0.86, 0.82),
+    },
+    # Tawny feather over white. Bright, because a flyer is read off its wings
+    # from directly above and a dark one is a hole in the lane - and this is
+    # the bracket only flyer.
+    "gryphon_rider": {
+        "bands": 0.60,
+        "tones": {
+            "base": ((0.72, 0.66, 0.54), (0.48, 0.43, 0.34)),
+            "deep": ((0.46, 0.40, 0.31), (0.28, 0.24, 0.18)),
+            "pale": ((0.90, 0.87, 0.80), (0.68, 0.65, 0.58)),
+        },
+        "rim": (1.00, 0.96, 0.84),
+    },
+    # Slate blue ogre skin. Cool and heavy, and far enough from the Mud Golem
+    # earth tones that two big grey-blue things are never confused.
+    "ogre_magi": {
+        "bands": 0.40,
+        "tones": {
+            "base": ((0.42, 0.50, 0.54), (0.26, 0.32, 0.35)),
+            "deep": ((0.26, 0.32, 0.36), (0.15, 0.19, 0.22)),
+            "pale": ((0.58, 0.66, 0.70), (0.38, 0.45, 0.49)),
+        },
+        "rim": (0.84, 0.94, 1.00),
+    },
+    # Blackened plate with a dull red under it. The bracket second warm hide
+    # and the darker of the two, so a Chaos Warden and a Shaman never trade
+    # places in a pack.
+    "chaos_wardens": {
+        "bands": 0.85,
+        "tones": {
+            "base": ((0.34, 0.20, 0.20), (0.19, 0.11, 0.11)),
+            "deep": ((0.20, 0.11, 0.11), (0.11, 0.06, 0.06)),
+            "pale": ((0.50, 0.31, 0.29), (0.31, 0.19, 0.18)),
+        },
+        "rim": (1.00, 0.56, 0.48),
+    },
+    # Abyssal near-black with a cold blue sheen. The bracket Boss, and the
+    # darkest hide in the game - which is what a creep whose health bar shows a
+    # tenth of what is really there ought to look like.
+    "behemoth": {
+        "bands": 0.80,
+        "tones": {
+            "base": ((0.18, 0.17, 0.24), (0.09, 0.09, 0.14)),
+            "deep": ((0.10, 0.10, 0.15), (0.05, 0.05, 0.08)),
+            "pale": ((0.30, 0.30, 0.40), (0.17, 0.17, 0.24)),
+        },
+        "rim": (0.60, 0.68, 1.00),
+    },
+    # ------------------------------------------------------------------
+    # TIER 4 - SUDDEN DEATH. Eleven creeps that all arrive in the same second,
+    # which is a problem no other bracket has: tiers 1 to 3 unlock one at a
+    # time over twenty minutes and a player learns each as it appears, and this
+    # whole set lands at once on a field where nothing else may be sent.
+    #
+    # So the bracket is SATURATED where tier 3 is drained. It is the one place
+    # the roster spends real colour, it is affordable because tiers 1 to 3 are
+    # gone from the field by the time any of it is walking, and it is what
+    # makes Sudden Death read as a different phase of the match rather than as
+    # more of the same creeps.
+    # ------------------------------------------------------------------
+    #
+    # Moonlit teal over dark leather. Cool, bright and fast reading - a
+    # Huntress is the cheapest thing in the bracket and the one a player sees
+    # most of.
+    "huntress": {
+        "bands": 0.50,
+        "tones": {
+            "base": ((0.28, 0.54, 0.52), (0.16, 0.33, 0.32)),
+            "deep": ((0.16, 0.33, 0.33), (0.09, 0.19, 0.20)),
+            "pale": ((0.46, 0.72, 0.70), (0.29, 0.48, 0.47)),
+        },
+        "rim": (0.68, 1.00, 0.96),
+    },
+    # Polished obsidian. Nearly black and nearly smooth, which is the whole of
+    # it: everything else in the bracket is loud, and the one that weakens
+    # every tower it passes is a slab of glass that says nothing.
+    "obsidian_statue": {
+        "bands": 1.00,
+        "tones": {
+            "base": ((0.16, 0.15, 0.20), (0.08, 0.08, 0.11)),
+            "deep": ((0.09, 0.08, 0.12), (0.04, 0.04, 0.06)),
+            "pale": ((0.28, 0.27, 0.34), (0.15, 0.15, 0.20)),
+        },
+        "rim": (0.66, 0.62, 0.86),
+    },
+    # Mossed granite. The one hide in the bracket that is deliberately DULL,
+    # because a Mountain Giant is an attacker sent for no income at all and
+    # what it is is a walking piece of the map.
+    "mountain_giant": {
+        "bands": 0.85,
+        "tones": {
+            "base": ((0.44, 0.47, 0.40), (0.27, 0.29, 0.24)),
+            "deep": ((0.27, 0.30, 0.25), (0.16, 0.18, 0.14)),
+            "pale": ((0.60, 0.63, 0.55), (0.40, 0.43, 0.36)),
+        },
+        "rim": (0.88, 0.96, 0.80),
+    },
+    # Storm lilac. Pale and cold so it is legible against the ground from
+    # above, which is the only view a flyer is ever read from.
+    "harpy_windwitch": {
+        "bands": 0.55,
+        "tones": {
+            "base": ((0.58, 0.52, 0.72), (0.37, 0.32, 0.48)),
+            "deep": ((0.36, 0.31, 0.48), (0.21, 0.18, 0.29)),
+            "pale": ((0.76, 0.72, 0.88), (0.54, 0.50, 0.66)),
+        },
+        "rim": (0.90, 0.84, 1.00),
+    },
+    # Deep sea green with a paler underside. The most saturated hide in the
+    # game and it earns it: a Naga Siren is the bracket healer and the thing a
+    # defender has to kill first.
+    "naga_siren": {
+        "bands": 0.70,
+        "tones": {
+            "base": ((0.20, 0.52, 0.44), (0.11, 0.31, 0.26)),
+            "deep": ((0.11, 0.31, 0.27), (0.06, 0.18, 0.15)),
+            "pale": ((0.40, 0.74, 0.64), (0.24, 0.50, 0.43)),
+        },
+        "rim": (0.62, 1.00, 0.88),
+    },
+    # Rust brown hide. Warm, heavy and plain, so the biggest aura carrier in
+    # the game does not also have the loudest colour in it.
+    "kodo_beast": {
+        "bands": 0.45,
+        "tones": {
+            "base": ((0.54, 0.34, 0.24), (0.34, 0.21, 0.14)),
+            "deep": ((0.33, 0.20, 0.13), (0.20, 0.12, 0.08)),
+            "pale": ((0.70, 0.50, 0.38), (0.48, 0.33, 0.24)),
+        },
+        "rim": (1.00, 0.78, 0.58),
+    },
+    # Goblin orange over oiled steel. The second BUILT thing in the roster
+    # after the Siege Engine, and it is the loud one - the Siege Engine is grey
+    # iron, so the two machines never read as the same machine.
+    "goblin_shredder": {
+        "bands": 1.00,
+        "tones": {
+            "base": ((0.66, 0.40, 0.16), (0.42, 0.25, 0.09)),
+            "deep": ((0.30, 0.28, 0.26), (0.17, 0.16, 0.15)),
+            "pale": ((0.84, 0.58, 0.28), (0.60, 0.40, 0.19)),
+        },
+        "rim": (1.00, 0.82, 0.52),
+    },
+    # Frost bone. Almost white, and the brightest thing in the game - a Frost
+    # Wyrm is a skeleton flying over a maze and it should be visible from the
+    # far end of the map.
+    "frost_wyrm": {
+        "bands": 0.95,
+        "tones": {
+            "base": ((0.72, 0.82, 0.90), (0.48, 0.58, 0.68)),
+            "deep": ((0.46, 0.56, 0.66), (0.28, 0.35, 0.43)),
+            "pale": ((0.88, 0.94, 1.00), (0.66, 0.74, 0.84)),
+        },
+        "rim": (0.78, 0.94, 1.00),
+    },
+    # Ember. The bracket Boss and the second creep in the game that gives off
+    # light - see CREEP_FLAMES. Hotter and yellower than the Infernal, which is
+    # the older of the two burning creeps and is red rock rather than flame.
+    "phoenix": {
+        "bands": 0.60,
+        "tones": {
+            "base": ((0.70, 0.28, 0.08), (0.44, 0.16, 0.04)),
+            "deep": ((0.42, 0.15, 0.04), (0.25, 0.08, 0.02)),
+            "pale": ((0.92, 0.52, 0.14), (0.68, 0.34, 0.08)),
+        },
+        "rim": (1.00, 0.78, 0.34),
+    },
+    # Char and old blood. Darker than the Phoenix standing next to it and with
+    # none of its heat, because a Demon is the one creep in the game nothing
+    # can hurt and it should look inert rather than furious.
+    "demon": {
+        "bands": 0.75,
+        "tones": {
+            "base": ((0.30, 0.13, 0.14), (0.17, 0.07, 0.08)),
+            "deep": ((0.16, 0.07, 0.08), (0.08, 0.03, 0.04)),
+            "pale": ((0.46, 0.22, 0.22), (0.28, 0.13, 0.13)),
+        },
+        "rim": (1.00, 0.44, 0.36),
+    },
+    # Bright green and gold. The one creep in the game NOBODY defends against,
+    # so it is the one hide chosen to be spotted rather than to fit in: both
+    # players want it dead and the defender has one shot to notice it.
+    "treasure_goblin": {
+        "bands": 0.40,
+        "tones": {
+            "base": ((0.36, 0.62, 0.28), (0.21, 0.39, 0.16)),
+            "deep": ((0.21, 0.38, 0.16), (0.12, 0.22, 0.09)),
+            "pale": ((0.80, 0.68, 0.30), (0.56, 0.47, 0.19)),
+        },
+        "rim": (1.00, 0.94, 0.52),
+    },
+    # Grey-green carrion. Deliberately drab and deliberately close to nothing
+    # else: a Ghoul is never sent, it only ever crawls out of a dead Obsidian
+    # Statue, so what it has to say is "there are more of these now" rather
+    # than anything about itself.
+    "ghoul": {
+        "bands": 0.40,
+        "tones": {
+            "base": ((0.46, 0.48, 0.40), (0.28, 0.30, 0.24)),
+            "deep": ((0.28, 0.29, 0.23), (0.16, 0.17, 0.13)),
+            "pale": ((0.62, 0.64, 0.55), (0.42, 0.44, 0.36)),
+        },
+        "rim": (0.86, 0.92, 0.78),
     },
 }

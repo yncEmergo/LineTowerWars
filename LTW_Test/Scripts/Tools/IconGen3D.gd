@@ -7,6 +7,7 @@ extends Node
 ## renderer at all:
 ##
 ##   godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- creeps
+##   godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- discs
 ##   godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- <key> [<key> ...]
 ##   godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- new
 ##
@@ -39,22 +40,37 @@ extends Node
 ## are separate because a stats file names its prefab by path and this only
 ## needs the KEY, which both folders agree on.
 ##
-## CREEPS ONLY, and that is a rule rather than an omission. The tower icons in
+## Each entry is [stats folder, prefab folder, camera elevation in radians].
+##
+## NO TOWERS, and that is a rule rather than an omission. The tower icons in
 ## 2DArt/Icons are named after a tower's DISPLAY NAME - `apprentice.png`, not
 ## `arcane_apprentice.png` - while every folder here is keyed by prefab. Adding
 ## the towers with a key lookup bakes a second, parallel set of two hundred
 ## files under names nothing references, which is exactly what it did once. If
 ## the towers ever need re-baking, the naming has to be settled first.
+##
+## THE DISCS ARE IN, and they sidestep that trap rather than solving it: every
+## disc is named so that its key and its display name slug are the same string
+## - `fire_disc` is "Fire Disc" - so there is only one name either way round
+## and nothing parallel can be written. That was worth authoring for.
+##
+## Their ELEVATION is their own, and it is the reason this is a three-column
+## table. A disc is a flat quad painted on the ground: seen from the creeps'
+## three quarter view it is a squashed ellipse with its glyph foreshortened
+## into a smear, and the two things an icon has to say about a disc - which
+## element, which tier - are exactly the two the foreshortening destroys. So it
+## is baked from very nearly overhead. Not EXACTLY overhead, because look_at
+## with an UP of Vector3.UP degenerates when the camera is straight above what
+## it is looking at.
 const ROSTERS: Dictionary = {
-	"creeps": ["res://Resources/UnitStats/Creeps", "res://Scenes/Units/Creeps"],
+	"creeps": ["res://Resources/UnitStats/Creeps", "res://Scenes/Units/Creeps", 0.50],
+	"discs": ["res://Resources/UnitStats/Discs", "res://Scenes/Units/Discs", 1.47],
 }
 
 const OUT: String = "res://2DArt/Icons"
 
-## Where the camera stands, as an angle up from the ground and one round from
-## the front. A three quarter view: enough top to read a silhouette from, and
-## enough front to read a face on.
-const ELEVATION: float = 0.50
+## Where the camera stands, as one round from the front. The angle UP is per
+## roster now - see ROSTERS - because a creep and a disc want opposite ones.
 const YAW: float = 0.55
 ## How much room is left around the unit inside the frame.
 const MARGIN: float = 1.18
@@ -128,9 +144,14 @@ func _scan(roster: String) -> PackedStringArray:
 ## One unit. Reports whether an image was written, so a missing prefab is a
 ## message and a smaller count rather than a crash halfway down a roster.
 func _bake(key: String) -> bool:
-	var scene: PackedScene = _prefab_for(key)
-	if scene == null:
+	var roster: String = _roster_of(key)
+	if roster.is_empty():
 		push_error("IconGen3D found no prefab for %s" % key)
+		return false
+	var scene: PackedScene = load(
+		"%s/%s.tscn" % [(ROSTERS[roster] as Array)[1], key]) as PackedScene
+	if scene == null:
+		push_error("IconGen3D could not load the prefab for %s" % key)
 		return false
 
 	for child in _stage.get_children():
@@ -146,7 +167,7 @@ func _bake(key: String) -> bool:
 		push_error("IconGen3D found no meshes on %s" % key)
 		return false
 
-	_frame(box)
+	_frame(box, float((ROSTERS[roster] as Array)[2]))
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
 	var image: Image = _viewport.get_texture().get_image()
@@ -156,24 +177,26 @@ func _bake(key: String) -> bool:
 	return true
 
 
-## The prefab for a key, whichever roster it belongs to. Both folders are tried
-## rather than the caller having to say which, so a single key on the command
-## line works without knowing where it lives.
-func _prefab_for(key: String) -> PackedScene:
+## Which roster a key belongs to, or empty when nothing has a prefab for it.
+##
+## Every folder is tried rather than the caller having to say which, so a
+## single key on the command line works without knowing where it lives. The
+## ROSTER rather than the scene, because the camera angle comes off it too.
+func _roster_of(key: String) -> String:
 	for roster: String in ROSTERS:
-		var path: String = "%s/%s.tscn" % [(ROSTERS[roster] as Array)[1], key]
-		if ResourceLoader.exists(path):
-			return load(path) as PackedScene
-	return null
+		if ResourceLoader.exists("%s/%s.tscn" % [(ROSTERS[roster] as Array)[1], key]):
+			return roster
+	return ""
 
 
-## Puts the camera where the whole unit fits, whatever size it is.
-func _frame(box: AABB) -> void:
+## Puts the camera where the whole unit fits, whatever size it is, at the
+## elevation this roster is read at.
+func _frame(box: AABB, elevation: float) -> void:
 	var centre: Vector3 = box.get_center()
 	var radius: float = box.size.length() * 0.5
 	var half_fov: float = deg_to_rad(_camera.fov) * 0.5
 	var distance: float = radius / maxf(0.05, sin(half_fov)) * MARGIN
 	var direction: Vector3 = Vector3(
-		sin(YAW) * cos(ELEVATION), sin(ELEVATION), cos(YAW) * cos(ELEVATION))
+		sin(YAW) * cos(elevation), sin(elevation), cos(YAW) * cos(elevation))
 	_camera.global_position = centre + direction * distance
 	_camera.look_at(centre, Vector3.UP)

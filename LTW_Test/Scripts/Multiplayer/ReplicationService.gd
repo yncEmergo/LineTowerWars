@@ -168,6 +168,10 @@ var _watched: Dictionary = {}
 ## CLIENT: unit id -> Array[StatusEntry], the newest the server sent. Empty for
 ## anything but the unit this client asked about.
 var _effects: Dictionary = {}
+## The answer effects_for() hands back for a unit nothing was sent about, which
+## is nearly every unit on nearly every call. Shared rather than built each
+## time; see effects_for.
+var _no_effects: Array[StatusEntry] = []
 ## CLIENT: the unit currently asked about, so the request goes out on a change
 ## of selection rather than every tick.
 var _watching: int = MatchSession.NO_UNIT
@@ -306,13 +310,14 @@ func _build_effects() -> PackedFloat32Array:
 		if done.has(id):
 			continue
 		done[id] = true
-		var creep: Creep = session.unit_for(id) as Creep
-		if creep == null:
+		var unit: Unit = session.unit_for(id)
+		if unit == null:
 			continue
-		var status: StatusEffects = creep.status_or_null()
-		if status == null:
-			continue
-		for entry in status.entries():
+		# Asked of the UNIT rather than cast to a Creep, which is what this was
+		# and what kept two whole systems off the wire: a tower carries what a
+		# creep has cursed it with and everything a technology disc lends it,
+		# and neither reached a client at all. See Unit.status_entries().
+		for entry in unit.status_entries():
 			entry.append_to(records, id)
 	return records
 
@@ -383,8 +388,8 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 		0.0 if building == null else building.phase_progress(),
 		0 if building == null else building.permanent_damage_bonus(),
 		0 if building == null else building.ability_choice(),
-		0.0 if building == null else building.active_ability.cooldown_left,
-		MatchSession.NO_UNIT if building == null else building.active_ability.link_id,
+		unit.active_ability.cooldown_left,
+		unit.active_ability.link_id,
 	])
 
 
@@ -618,6 +623,9 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 	unit.set_replicated_health(records[at + 8])
 
 	var flags: int = int(records[at + 9])
+	# Every unit carries one, since tier 4 put an aimed ability on a creep.
+	unit.active_ability.set_replicated(records[at + 15], int(records[at + 16]))
+
 	var building: Building = unit as Building
 	if building != null:
 		building.set_replicated_phase(
@@ -630,7 +638,6 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 		building.set_replicated_mana(int(records[at + 10]), int(records[at + 11]))
 		building.replicated_damage_bonus = int(records[at + 13])
 		building.replicated_ability_choice = int(records[at + 14])
-		building.active_ability.set_replicated(records[at + 15], int(records[at + 16]))
 
 	# The same two fields, read back onto whichever kind of pool this unit has.
 	# The ceiling comes down the wire as well as the count, because one tier 4
@@ -773,9 +780,19 @@ func request_watch(id: int) -> void:
 
 
 ## The debuffs the server last reported on one unit. Empty on the authority,
-## which has the real thing to read - see StatusEffects.entries().
+## which has the real thing to read - see Unit.status_entries().
+##
+## The miss returns ONE SHARED EMPTY ARRAY rather than a fresh one. It used to
+## be asked once per panel repaint, and is now asked by every tower on a client
+## for its own reach, damage and attack speed - which is per tower per tick,
+## against a dictionary that holds at most a handful of watched units. Building
+## a throwaway array for each of those misses was the whole cost of the call.
+##
+## Safe to share only because nothing mutates what comes back: every reader
+## folds it into a number or draws it. Kept as a constant-in-spirit `var`
+## because GDScript cannot make a typed Array a const.
 func effects_for(id: int) -> Array[StatusEntry]:
-	var list: Array[StatusEntry] = _effects.get(id, [] as Array[StatusEntry])
+	var list: Array[StatusEntry] = _effects.get(id, _no_effects)
 	return list
 
 

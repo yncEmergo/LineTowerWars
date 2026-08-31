@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChaosBarrierPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/ChaosBarrierPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 333
+display_name = "Chaos Barrier"
+targeting = 0
+reduction_at_full = 0.75
+drain_per_second = 0.05

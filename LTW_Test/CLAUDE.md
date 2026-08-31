@@ -440,12 +440,23 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   Building: a TowerMana object it owns, the way it already owns ability_state.
   StatusEffects is a bad candidate for splitting - the whole point of it is that
   a caller asks one object everything
+  - Building went further over when the DISCS arrived, and deliberately in the
+    shape the fix above wants: what a disc lends a tower is a TowerBuffs object
+    the tower owns, exactly as TowerStatus is, so the five methods added are
+    two accessors and three readings that fold it into an answer that already
+    existed. Splitting mana out the same way is still the intended fix and is
+    now the only one left
 - OrderOverlay rebuilds a unit's markers WHOLE on every change to its chain,
   so shift-queueing five towers instantiates the ghost models five times over
   in one frame - each rebuild frees the last, but queue_free is deferred, so
   they briefly coexist. Harmless and invisible; the fix if it ever matters is
   to diff the chain rather than rebuild it, which is more code than it is worth
   while a chain is a handful of entries long
+- Every disc runs a scan of its own on a quarter second beat: an aura disc
+  walks the area's buildings, an on-step disc walks its creeps. Cheap next to
+  the two below - it is four times a second rather than twenty, and a maze
+  holds a handful of discs rather than a hundred creeps - and it wants the same
+  spatial hash when one arrives
 - Two naive linear scans over an area's creeps: TargetFinder and
   Creep._refresh_aura. One spatial hash fixes both. TargetFinder is by far the
   worse of them and is the largest single cost in a loaded tick - a tower with
@@ -466,10 +477,22 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   debuff row is right, and a creep somebody is not looking at still carries
   effects the client knows nothing about. That is deliberate; the complete
   version would cost more than the rest of the snapshot put together
-  - the ARMOUR LINE reads those same replicated entries now, so the number and
-    the type next to "Armor:" agree with the row underneath on a client. What
-    is still missing there is armour GRANTED BY AN AURA, which is on no wire at
-    all, so a creep standing in one reads low on a client
+  - WHAT rides that channel is `Unit.status_entries()`, which is virtual, and
+    it has to stay that way. It used to be a cast to Creep in the two places
+    that asked, and that cast silently kept THREE whole systems off the wire:
+    what a technology disc lends a tower, what a creep curses one with
+    (TowerStatus), and the armour a creep's packmate aura grants it. All three
+    were real on the server and invisible to both clients, so a client drew a
+    tower standing in a Primal disc at its own range - the wrong circle around
+    a tower that really did have the reach. Anything that grows a fourth kind
+    of effect overrides that method and is replicated for free; a cast added
+    back anywhere on this path silently un-fixes the lot
+  - and WHO folds it in is the unit, never the reader. `armor_value()`,
+    `attack_speed_ratio()`, `attack_damage_ratio()` and `attack_range_bonus()`
+    each answer from the objects on the authority and from the replicated
+    entries on a client, so the panel, the range overlay and the barrels cannot
+    disagree. The panel used to carry that branch itself, which worked only
+    because it was the only reader - three more arrived with the discs
 - Godot's gl_compatibility renderer, which this project uses, silently drops
   two things that look like clean one-liners: PER-INSTANCE SHADER UNIFORMS and
   GeometryInstance3D.transparency. Neither errors, both simply do nothing. That

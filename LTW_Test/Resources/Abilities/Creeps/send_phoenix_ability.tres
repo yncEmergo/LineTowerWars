@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SendCreepAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/phoenix_stats.tres" id="2_stats"]
+
+[resource]
+script = ExtResource("1_send_creep")
+ability_id = 381
+display_name = "Phoenix"
+description = "Sends a pack into the enemy maze and raises your income permanently."
+targeting = 1
+slot = 9
+repeat_on_hold = true
+creep_stats = ExtResource("2_stats")

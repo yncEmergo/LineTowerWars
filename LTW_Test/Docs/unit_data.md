@@ -178,9 +178,13 @@ only ever target a **tower**. Two things are not valid targets, ever:
 - **The builder.**
 
 This is not "hard to kill" or "deprioritised" - they cannot be attacked, so no amount of
-attacker pressure touches them. It is a load-bearing piece of maze design, because it makes a
-disc a wall an attacker cannot open, and it means the builder is never a target that has to be
+attacker pressure touches them, and it means the builder is never a target that has to be
 protected or kited.
+
+For a disc it is one half of a pair, and the other half is that **creeps walk over a disc** -
+see section 5. So a disc is not a wall an attacker cannot open; it is a square an attacker has
+no business with at all, because there was never anything there to open. Earlier drafts of
+this file called it a wall, which contradicted section 5 and is wrong.
 
 A destroyed tower leaves **rubble for 7 seconds**, during which no new tower can be built on
 that cell.
@@ -193,11 +197,13 @@ compensate). Regeneration on a creep now comes only from an ability or an aura.
 ## 1.7 Income, lives, sudden death
 
 - **Income cap: 4,000,000.** Above that, Tier 4 income gain is reduced by 75% (12.4a).
+  **BUILT.**
 - Sudden Death starts at **25:00 game time** and *is* Tier 4: tiers 1-3 can no longer be
-  used from that point, and every Tier 4 creep unlocks at once.
+  used from that point, and every Tier 4 creep unlocks at once. **BUILT.**
 - On entering Sudden Death, any player below 1,000,000 income is raised to 1,000,000.
+  **BUILT.**
 - The creep damage-taken modifier starts at 100% and falls by **1% per minute** during
-  Sudden Death, making creeps progressively tankier.
+  Sudden Death, making creeps progressively tankier. NOT BUILT.
 - Starting lives depend on player count and ruleset; for the 1v1 prototype the relevant
   figure is the 2-player value: **80 lives (Unranked)** / **100 lives (Casual)**.
 - Catch-up gold: when a player gets a new attacker with higher income than the previous one,
@@ -1135,18 +1141,37 @@ same target 3 times in a row **stuns it for 1.8 sec**.
 
 # 5. Technology Discs
 
+**IMPLEMENTED.** All thirty-one discs exist as `BuildingStats` resources under
+`Resources/UnitStats/Discs/`, their ten effects as `DiscPassive` subclasses under
+`Scripts/Abilities/DiscPassives/`, and per 8.1 those files are now the authority - the tables
+here are the readable mirror. Change the `.tres` and the row in the same commit. They are
+generated, so in practice that means changing `Tools/ModelGen/disc_roster.py` and re-running
+the disc stage.
+
 A disc is a building that occupies exactly one tower footprint and that **creeps walk over**.
 It is used to fill the holes in a maze where a tower would not earn its place, and it pays for
 itself with an aura or an on-step trigger.
+
+**Walking over it is the load-bearing half**, and it is worth being explicit because 1.5 used
+to read as though it were not. A disc claims its square against anything else being BUILT
+there and blocks nothing at all: the route sweep does not see it, no arrangement of discs can
+seal an area, and a creep standing where one goes up is left where it is. So a disc is what
+fills the holes a maze already has, never another way of making one - which is also the only
+reason the two on-step effects in 5.2 can exist. See `game_rules.md`, Technology discs.
 
 ## 5.1 Structure and cost
 
 | Tier | Name | Cost | Requirement |
 | ---- | ---- | ---- | ----------- |
-| 0 | Technology Disc (inactive) | 2,500 | none - does nothing |
-| 1 | Technology Disc: *Element* | free morph | that element's **Basic** tech |
-| 2 | Technology Disc: Advanced *Element* | 250,000 | at least **2 of the 3** techs of that element |
-| 3 | Technology Disc: Ultimate *Element* | 1,000,000 | **all 3** techs of that element |
+| 0 | Technology Disc | 2,500 | none - unlocked from the start, does nothing |
+| 1 | *Element* Disc | free morph | that element's **Basic** tech |
+| 2 | Advanced *Element* Disc | 250,000 | at least **2 of the 3** techs of that element |
+| 3 | Ultimate *Element* Disc | 1,000,000 | **all 3** techs of that element |
+
+The source writes these "Technology Disc: Advanced Fire". The implemented names are the same
+four tiers written the way a command card can print them, and shorter for a second reason as
+well: a display name is what the icon renderer names its PNG after, and a colon is not a legal
+character in a Windows filename.
 
 - **A player may own only one Ultimate disc per element** (11.0a). This is the disc equivalent
   of "you cannot fill the whole maze with the best thing".
@@ -1154,8 +1179,13 @@ itself with an aura or an on-step trigger.
   it from 3, deliberately, to discourage swapping discs on the fly to counter an incoming
   send).
 - **A disc cannot attack and cannot BE attacked.** Its armour type is `Invulnerable` and it is
-  not a valid target for an attacking creep at all. See 1.8 - this matters for maze design: a
-  wall of discs is a wall an attacker creep cannot chew through.
+  not a valid target for an attacking creep at all. Together with the walking rule above, that
+  makes a disc a square an attacker creep can do nothing with: it cannot destroy one, and it
+  was never held up by one either.
+- The technology requirement is the one place in the game where technology is asked as a
+  **count** rather than as a named id. "Two of the three" is not something a single `tech_id`
+  can express, so a disc morph names the ELEMENT and how many of it are needed - see
+  `Scripts/Abilities/DiscUpgradeAbility.gd`.
 
 ## 5.2 Disc effects by element
 
@@ -1474,14 +1504,30 @@ Notes:
   shield on spawn, so its visible health bar is a tenth of the number above. The 9.4 sheet
   recorded the post-carapace figure (54,736), which is why the two look so different.
 
-**The Ancient Wendigo is the one row of this table that exists in the game**, and it exists
-before the rest of tier 3 because the prototype had nothing a mid tier tower could be tested
-against - every tier 1 creep dies to one shot from anything above the cheapest towers, so a
-tower's damage, its attack rate and its on-hit effects were all being read off a creep that
-was already dead. It takes the stock, pack size, food and replenish rate of a normal ground
-creep from 6.1, and it is sent from a **Tier 3 sender** of its own - the four-sender
-arrangement 6.1 describes is the one the prototype uses, and the Tier 4 square is drawn
-dead until there is something to put on it.
+**BUILT.** Every row above exists as a `.tres`, and those files are the authority.
+
+The Ancient Wendigo was built well before the rest of the tier, because the prototype had
+nothing a mid tier tower could be tested against - every tier 1 creep dies to one shot from
+anything above the cheapest towers, so a tower's damage, its attack rate and its on-hit
+effects were all being read off a creep that was already dead.
+
+Two figures in this tier are `?` CHOICES rather than readings, and both are the same gap:
+the source states the mana CEILING three of these traits fire at and never states how the
+pool gets there, because in Warcraft III it is the unit's ordinary mana regeneration and
+this game has no equivalent. So a **mana regeneration rate** is authored per creep, next to
+the ceiling it is counting towards, in `CreepStats.mana_regen_per_second` - the Spirit
+Walker's and the Shaman's. The Chaos Wardens needs none: its pool only ever drains, and
+Mana Drain is what refills it.
+
+**Chaos Barrier's resistance at full mana is also a `?` choice.** The source says "reduced
+based on current mana percentage" and states no figure at all, so what a full pool is worth
+is authored on `Resources/Abilities/Passives/chaos_barrier.tres` rather than read from
+anywhere.
+
+**War Stance's aura radius is the shared creep aura radius, not the 2,000 the source
+states.** Every creep aura in this game shares one radius so that a player learns the size
+of an aura once (game_rules.md), and 2,000 would be most of a lane. The source figure is
+recorded here; the game uses `GameConfig.creep_aura_radius_cells` like every other aura.
 
 ## 6.5 Tier 4 - Sudden Death
 
@@ -1508,10 +1554,47 @@ because the game is meant to end; and they give **very little income**, dropping
 | Demon | 4,200,000 | 0 | 0 | 1,098,835 | 50 | Hero | 260 | **1** | Boss (5) - steals 2 lives, Unfathomable Power (invulnerable, food 5) |
 | Treasure Goblin | 333,333 | 15,625 | 30,000 | - | - | - | - | 3 | Escape Portal |
 
+**BUILT.** Every row above exists as a `.tres`, and those files are the authority. So does
+the **Ghoul**, which is not in the table because nothing sends one: three crawl out of a
+dead Obsidian Statue and that is the only way any of them reaches the field.
+
 **Treasure Goblin** is the odd one out: it cannot steal lives and is removed the moment it
 takes any damage, giving its bounty to whoever hit it. It is a pure income accelerator, and
-it **cannot be used at all above 4,000,000 income** (the gold spent is refunded). Eight
+it **cannot be used at all above 4,000,000 income** (the gold spent is refunded - the
+prototype refuses the send before any gold moves, which comes to the same thing). Eight
 Treasure Goblins are worth +125,000 income.
+
+Its **speed of 522** is the one figure the sources do not carry and the developer supplied.
+Its health is **1**, which is a decision rather than a reading and is the honest shape of
+"removed the moment it takes any damage": there is nothing to kill. Its armour and armour
+type follow from that and are worth nothing.
+
+**Ghoul:** 119,075 health is the only figure any source states. `?` Its armour, armour type,
+speed, bounty and footprint are this project's, in
+`Resources/UnitStats/Creeps/ghoul_stats.tres`. It has no price, no income, no reserve and no
+card entry, exactly as the Timber Wolf has none.
+
+Three more `?` choices, all of them numbers the source states nowhere:
+
+- **Mountain Giant's attack**, which the source never gives although it names the creep an
+  attacker. It is melee reach like the Corrupted Treant's, Siege damage because what it is
+  for is taking towers apart, and slow enough that the swing reads.
+- **Phoenix's attack**, unstated for the same reason. Magic damage, because a Phoenix is
+  fire and its own Dive deals Spell Damage, and a short reach because it has to come down
+  onto a tower rather than shoot at one.
+- **How wide Dive's trail is.** The source states the damage and the duration and says
+  nothing about the width, so it is authored on `Resources/Abilities/Creeps/dive_ability.tres`
+  and is deliberately narrow: a dive is a line drawn through a maze rather than an area
+  attack that happens to travel.
+
+**Reactive Armor is READ AS BANDS, which is a choice.** As stated - "damage above 1,000
+reduced by 75%; damage above 300 reduced by 95%" - the smaller threshold carries the harsher
+reduction, which cannot both be a whole-hit multiplier: a 1,001 damage hit would then land
+for more than a 999 one. Read as bands it is coherent: everything up to the first threshold
+lands in full, everything between the two is cut by 95%, and everything past the second by
+75%. The thresholds and the shares are three exports on
+`Resources/Abilities/Passives/reactive_armor.tres`, so a different reading is an edit to
+that file rather than to any code.
 
 **Demon** is the last-resort stalemate breaker: invulnerable, ignores friendly auras, costs
 5 food, and unlocks with Sudden Death. It cannot be killed, so it always steals its 2 lives -
@@ -1519,7 +1602,8 @@ but it is slow, expensive, has a max stock of 4, and replenishes only once every
 
 **Attacking creeps** are Corrupted Treant, Siege Engine, Mountain Giant and Phoenix. Their
 initial stock is 1, and what they can and cannot target is in section 1.5 - towers only, never
-a disc and never the builder.
+a disc and never the builder. A disc is also nothing an attacker has to go THROUGH, since
+creeps walk over one; see section 5.
 
 Phoenix bounty is contradictory in the sources - 10.0a sets it to 270,000 but 10.7a says
 "changed from 147,270 to 150,000" - and 150,000 is the correct one. Its speed of 220 is

@@ -42,6 +42,15 @@ signal stock_changed()
 ## A tier with nothing implemented yet simply has no sender at all, and its
 ## button is drawn dead rather than the ones around it shuffling up.
 @export var send_tier: int = 1
+## Whether this sender is the SUDDEN DEATH one, which inverts the whole rule
+## above it: its creeps carry no start delays of their own and none of them can
+## be sent until the match clock reaches Sudden Death, at which point every
+## OTHER sender stops working for the rest of the match.
+##
+## A flag rather than a number, so the rule is not "tier 4 is special" written
+## as a 4 that somebody has to recognise. See GameConfig.sudden_death_seconds
+## and unit_data.md 1.7.
+@export var is_sudden_death_tier: bool = false
 
 ## One reserve per creep type, keyed by that type's stats resource.
 var _stocks: Dictionary = {}
@@ -262,7 +271,7 @@ func send_creeps(creep_stats: CreepStats) -> void:
 	# Income rises per send, not per creep, so a pack and a boss are priced on
 	# the same scale. See game_rules.md.
 	if state != null:
-		state.add_income(creep_stats.income_gain)
+		state.add_income(_income_for(creep_stats, state))
 
 	Log.info("Creeps sent", {
 		"type": creep_stats.display_name,
@@ -283,6 +292,8 @@ func can_send(creep_stats: CreepStats) -> bool:
 		return false
 	if is_at_population_cap():
 		return false
+	if _refused_for_income(creep_stats):
+		return false
 
 	var stock: CreepStock = stock_for(creep_stats)
 	if stock != null && !stock.has_stock():
@@ -290,6 +301,43 @@ func can_send(creep_stats: CreepStats) -> bool:
 
 	var state: PlayerState = _owner_state()
 	return state == null || state.can_afford(creep_stats.gold_cost)
+
+
+## Whether this creep is refused outright for the sender being too rich.
+##
+## One creep in the roster answers yes, and only above the income cap: a
+## Treasure Goblin is nothing but income, so a player already at the ceiling
+## has nothing to buy with it. Refused HERE rather than refunded, which is the
+## same answer the source game gives by another route - nothing is spent, so
+## there is nothing to give back. See CreepStats.refused_above_income_cap.
+func _refused_for_income(creep_stats: CreepStats) -> bool:
+	if !creep_stats.refused_above_income_cap:
+		return false
+
+	var config: GameConfig = References.game_config
+	var state: PlayerState = _owner_state()
+	if config == null || state == null || config.income_cap <= 0:
+		return false
+	return state.income >= config.income_cap
+
+
+## What one send of this creep really raises income by.
+##
+## Full price for everything, except a SUDDEN DEATH creep bought by a player
+## already over the income cap - which pays a quarter (unit_data.md 1.7). The
+## rule is here rather than on the creep because both halves of it are about
+## the sender: which tier this is, and how much income that player already has.
+##
+## The creep's own figure is what a tooltip quotes, and the two differ only
+## once a player is over the cap - which is the moment the rule is meant to
+## become visible.
+func _income_for(creep_stats: CreepStats, state: PlayerState) -> int:
+	var config: GameConfig = References.game_config
+	if config == null || !is_sudden_death_tier || config.income_cap <= 0:
+		return creep_stats.income_gain
+	if state.income < config.income_cap:
+		return creep_stats.income_gain
+	return int(round(float(creep_stats.income_gain) * config.income_share_above_cap))
 
 
 ## Whether the match clock has reached this creep's start delay yet.
@@ -301,7 +349,29 @@ func can_send(creep_stats: CreepStats) -> bool:
 func is_unlocked(creep_stats: CreepStats) -> bool:
 	if creep_stats == null:
 		return false
-	return unlock_remaining(creep_stats) <= 0.0
+	return is_open() && unlock_remaining(creep_stats) <= 0.0
+
+
+## Whether this sender may be used at all right now, before any single creep's
+## own start delay is asked about.
+##
+## The Sudden Death rule and nothing else. Every sender but one is open from
+## the first second and closes for good at Sudden Death; the last is closed
+## until then and is the only one open afterwards. game_rules.md calls this the
+## single exception to "a lower tier is never retired by a higher one".
+##
+## The cheat that waives start delays opens everything, which is the whole
+## point of it: tier 4 is otherwise twenty-five minutes away from being
+## testable at all.
+func is_open() -> bool:
+	var state: PlayerState = _owner_state()
+	if state != null && state.creeps_unlocked:
+		return true
+
+	var session: MatchSession = References.match_session
+	if session == null:
+		return !is_sudden_death_tier
+	return session.is_sudden_death() == is_sudden_death_tier
 
 
 ## Seconds still to wait before this creep can be sent, or 0 once it can.
@@ -325,6 +395,11 @@ func unlock_remaining(creep_stats: CreepStats) -> float:
 	var session: MatchSession = References.match_session
 	if session == null:
 		return 0.0
+	# The Sudden Death sender's creeps carry no start delays of their own: the
+	# whole tier arrives at once, so what a slot counts down to is the clock
+	# rather than anything on the creep.
+	if is_sudden_death_tier:
+		return maxf(0.0, session.sudden_death_remaining())
 	return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
 
 

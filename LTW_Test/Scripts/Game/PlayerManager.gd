@@ -31,6 +31,11 @@ var _areas: Dictionary = {}
 var _income_elapsed: float = 0.0
 ## Latched rather than recomputed, so match_ended fires exactly once.
 var _over: bool = false
+## Whether the one-off raise that Sudden Death brings has already been paid.
+## A latch rather than a reading of the clock, because the raise happens ONCE
+## at the moment the line is crossed - a player who spends their way back under
+## the floor afterwards is not topped up again.
+var _sudden_death_paid: bool = false
 var _income_interval: float = 0.0
 
 
@@ -328,12 +333,44 @@ func _physics_process(delta: float) -> void:
 	if is_match_over():
 		return
 
+	_check_sudden_death()
+
 	_income_elapsed += delta
 	# A while loop rather than an if, so a long stall pays every interval it
 	# covered instead of silently dropping the extras.
 	while _income_elapsed >= _income_interval:
 		_income_elapsed -= _income_interval
 		_pay_all()
+
+
+## Raises anybody under the floor to it, once, the moment Sudden Death starts.
+##
+## unit_data.md 1.7. What it is for is the shape of the tier it opens: tier 4
+## creeps cost hundreds of thousands each, so a player who has been losing
+## slowly for twenty-five minutes would reach the one tier that can end the
+## match and be unable to afford any of it. The floor makes Sudden Death a
+## fight rather than a formality.
+##
+## Income rather than gold, deliberately: it does not hand anybody a send, it
+## hands them the rate at which they can start affording one.
+func _check_sudden_death() -> void:
+	if _sudden_death_paid:
+		return
+
+	var session: MatchSession = References.match_session
+	var config: GameConfig = References.game_config
+	if session == null || config == null || !session.is_sudden_death():
+		return
+
+	_sudden_death_paid = true
+	if config.sudden_death_income_floor <= 0:
+		return
+
+	for player_id in _states:
+		var state: PlayerState = _states[player_id]
+		if state.income < config.sudden_death_income_floor:
+			state.add_income(config.sudden_death_income_floor - state.income)
+	Log.info("Sudden Death", {"income_floor": config.sudden_death_income_floor})
 
 
 func _pay_all() -> void:

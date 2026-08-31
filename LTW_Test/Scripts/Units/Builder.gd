@@ -51,7 +51,7 @@ func order_build(tower_stats: BuildingStats, world_target: Vector3) -> void:
 
 	var footprint: Vector2i = area.cells_to_internal(tower_stats.footprint_cells)
 	var cell: Vector2i = area.snap_footprint(world_target, footprint)
-	if !area.can_place(cell, footprint):
+	if !area.can_place(cell, footprint, tower_stats.blocks_movement):
 		Log.warn("Tower cannot be placed there", {"cell": cell})
 		return
 
@@ -119,7 +119,7 @@ func _start_pending_build() -> void:
 		return
 
 	# Another tower may have landed here while the builder walked over.
-	if !area.can_place(cell, footprint):
+	if !area.can_place(cell, footprint, tower_stats.blocks_movement):
 		Log.warn("Build spot was taken on the way, order dropped", {"cell": cell})
 		return
 

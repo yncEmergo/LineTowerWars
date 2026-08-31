@@ -1,0 +1,16 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/LightningDiscPassive.gd" id="1_LightningDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lightning_disc.png" id="2_lightning_disc"]
+
+[resource]
+script = ExtResource("1_LightningDiscPassive")
+ability_id = 398
+display_name = "Static Field"
+targeting = 0
+slot = 6
+icon = ExtResource("2_lightning_disc")
+radius_cells = 3.91
+heal_share = 0.01
+return_share = 5
+stun_chance = 0.15

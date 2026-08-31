@@ -37,6 +37,9 @@ var _icons: Array[StatusIcon] = []
 ## The unit whose debuffs are drawn, or null when nothing is selected.
 var _unit: Unit = null
 var _since_refresh: float = 0.0
+## How many effects the last overflow reported, so the same one is not written
+## out again on every refresh. 0 when the row is not overflowing.
+var _overflowed: int = 0
 
 
 func _ready() -> void:
@@ -108,11 +111,20 @@ func _refresh() -> void:
 		else:
 			_icons[index].clear()
 
+	# Once per overflow rather than ten times a second while one is on screen.
+	# This row refreshes on a timer, so an unguarded line here is a stream
+	# rather than a report - and towers reach it far more easily than creeps
+	# ever did, since a tower standing between two technology discs carries a
+	# row per number both of them lend it.
 	if entries.size() > _icons.size():
-		Log.info("More debuffs on a unit than the panel has squares", {
-			"effects": entries.size(),
-			"squares": _icons.size(),
-		})
+		if _overflowed != entries.size():
+			_overflowed = entries.size()
+			Log.info("More debuffs on a unit than the panel has squares", {
+				"effects": entries.size(),
+				"squares": _icons.size(),
+			})
+	else:
+		_overflowed = 0
 
 
 ## What is on the shown unit right now, from whichever source this machine has.
@@ -122,8 +134,11 @@ func _refresh() -> void:
 ## three points have been eaten over a line saying they have not is worse than
 ## either being wrong alone.
 ##
-## Only creeps carry any of this. A tower answering with nothing is not a
-## special case that needs saying - its row simply stays empty.
+## TOWERS FILL THIS TOO, which they did not used to: what a creep has cursed
+## one with, and everything a technology disc standing beside it is lending it.
+## Nothing here had to change for that - the question is asked of the unit and
+## a tower now answers it - which is the whole point of it living on
+## StatusEntry rather than here.
 func _entries() -> Array[StatusEntry]:
 	return StatusEntry.for_unit(_unit)
 

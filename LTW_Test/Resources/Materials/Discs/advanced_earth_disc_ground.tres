@@ -1,0 +1,26 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/disc_ground.gdshader" id="1_disc_ground"]
+
+[resource]
+render_priority = -1
+shader = ExtResource("1_disc_ground")
+shader_parameter/plate_color = Color(0.62, 0.6, 0.56, 1)
+shader_parameter/plate_dark_color = Color(0.44, 0.42, 0.39, 1)
+shader_parameter/groove_color = Color(0.25, 0.24, 0.22, 1)
+shader_parameter/rim_color = Color(0.3, 0.28, 0.25, 1)
+shader_parameter/radius = 0.68
+shader_parameter/ring_count = 3
+shader_parameter/ring_width = 0.028
+shader_parameter/spoke_count = 8
+shader_parameter/spoke_width = 0.05
+shader_parameter/groove_strength = 0.55
+shader_parameter/glyph_radius = 0.34
+shader_parameter/glyph_emission = 0.4
+shader_parameter/glyph_edge_width = 0.2
+shader_parameter/spin_speed = 0
+shader_parameter/opacity = 0.55
+shader_parameter/glyph_opacity = 0.85
+shader_parameter/glyph_color = Color(0.96, 0.7, 0.24, 1)
+shader_parameter/glyph_edge_color = Color(0.94, 0.88, 0.72, 1)
+shader_parameter/glyph_sides = 5

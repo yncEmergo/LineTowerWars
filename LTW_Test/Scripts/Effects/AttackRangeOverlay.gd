@@ -109,7 +109,10 @@ func _attack_circles(units: Array) -> PackedVector3Array:
 		var typed: Unit = _valid_unit(unit)
 		if typed == null || typed.stats == null || typed.stats.attack == null:
 			continue
-		_append_circle(circles, typed, typed.stats.attack.attack_range)
+		# Asked of the UNIT, so a tower a Primal disc is reaching draws the
+		# circle it really covers rather than the one its stats file records.
+		_append_circle(circles, typed,
+			typed.stats.attack.attack_range + typed.attack_range_bonus())
 	return _capped(circles, "attack")
 
 

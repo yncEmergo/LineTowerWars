@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="1_UnitModel"]
+[ext_resource type="Script" path="res://Scripts/Units/BuildingFoundation.gd" id="2_BuildingFoundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Discs/lightning_disc_ground.tres" id="3_lightning_disc_ground"]
+
+[sub_resource type="PlaneMesh" id="Ground"]
+material = ExtResource("3_lightning_disc_ground")
+size = Vector2(1.5, 1.5)
+
+[node name="LightningDiscModel" type="Node3D"]
+script = ExtResource("1_UnitModel")
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+script = ExtResource("2_BuildingFoundation")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+cast_shadow = 0
+mesh = SubResource("Ground")

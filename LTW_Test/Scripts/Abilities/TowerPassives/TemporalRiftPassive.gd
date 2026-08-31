@@ -274,7 +274,15 @@ func _hold_for(effect: Node3D, seconds: float) -> void:
 		burst.duration = seconds
 
 
+## Both of these treat an EMPTY path as the answer "this rift has no such
+## visual", exactly as validate() below already does and as
+## AttackDelivery.impact_scene() does for the same kind of optional path. An
+## empty one never reaches the loader, which reports it as the fault it usually
+## is - and mark_scene_path is authored empty on every Harbinger in the game,
+## so without this every match logged an error for content that is correct.
 func _marker_scene() -> PackedScene:
+	if marker_scene_path.is_empty():
+		return null
 	if !_marker_loaded:
 		_marker_loaded = true
 		_cached_marker = SceneUtil.load_scene(marker_scene_path, "rift marker")
@@ -282,6 +290,8 @@ func _marker_scene() -> PackedScene:
 
 
 func _mark_scene() -> PackedScene:
+	if mark_scene_path.is_empty():
+		return null
 	if !_mark_loaded:
 		_mark_loaded = true
 		_cached_mark = SceneUtil.load_scene(mark_scene_path, "rift mark")

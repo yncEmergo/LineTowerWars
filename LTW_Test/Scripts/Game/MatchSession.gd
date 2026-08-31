@@ -141,6 +141,33 @@ func elapsed_seconds() -> float:
 	return float(tick()) * tick_seconds()
 
 
+## Whether the match has reached Sudden Death.
+##
+## Derived from the clock rather than kept as a flag, so there is no state that
+## could disagree with the time and nothing to replicate: a client works the
+## same answer out of its own clock, and the server refuses a send that arrives
+## on the wrong side of the line whatever the button showed. The same shape a
+## creep unlock already has - see SendBuilding.unlock_remaining.
+##
+## What it means is in game_rules.md and unit_data.md 1.7: the whole of tier 4
+## unlocks at once and tiers 1 to 3 stop being sendable.
+func is_sudden_death() -> bool:
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return false
+	return elapsed_seconds() >= config.sudden_death_seconds
+
+
+## Seconds until Sudden Death, or 0 once it has arrived. What a dead send
+## square draws so a player waiting on tier 4 reads how long rather than only
+## that it is not ready.
+func sudden_death_remaining() -> float:
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return -1.0
+	return maxf(0.0, config.sudden_death_seconds - elapsed_seconds())
+
+
 ## Seconds per simulation tick, read from the engine rather than duplicated, so
 ## there is exactly one place the rate is set.
 static func tick_seconds() -> float:

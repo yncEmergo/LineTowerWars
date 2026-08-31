@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_BuildTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Discs/technology_disc_stats.tres" id="2_technology_disc_stats"]
+
+[resource]
+script = ExtResource("1_BuildTowerAbility")
+ability_id = 443
+tower_stats = ExtResource("2_technology_disc_stats")
+display_name = "Technology Disc"
+description = "Creeps WALK OVER a disc rather than around it, so it fills the empty squares of a maze instead of making new ones. Worth nothing until you morph it into an element you have researched."
+targeting = 5
+slot = 5

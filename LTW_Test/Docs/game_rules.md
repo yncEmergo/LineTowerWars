@@ -343,6 +343,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     mechanical meaning, so making it the loudest signal would teach a player
     something untrue. Three families, three conventions held firmly:
     - a GROUND creep stands on legs, on the floor, and is opaque
+      - being drawn as VAPOUR belongs to what a creep IS rather than to how it
+        travels: a wraith is made of it, and so is the one ground creep that
+        walks straight through your towers. It is named per creep rather than
+        derived from a body plan, so it stays a rule somebody changed
     - a FLYING creep has NO LEGS AT ALL, hangs at its cruising height, is drawn
       translucent and unlit, and is the only thing in the game with a SHADOW
       DISC pinned to the ground beneath it. The disc is the tell, not the
@@ -356,10 +360,14 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       them ever swing it at a building
   - WHICH CREEP is its body plan and its hide colour. The plans are the shapes
     a roster of creatures actually needs - four legs, two legs, eight legs, a
-    hulk, a floating wraith, a walking tree - and two creeps on the same plan
-    are pulled apart on the things that change the OUTLINE rather than the
-    detail: how far the torso stoops, whether legs are replaced by a hem,
-    what the head is, what the hands hold
+    hulk, a floating wraith, a walking tree, a winged beast, a shell, a
+    machine, a coiled serpent - and two creeps on the same plan are pulled
+    apart on the things that change the OUTLINE rather than the detail: how far
+    the torso stoops, whether legs are replaced by a hem, what the head is,
+    what the hands hold
+    - a NEW PLAN is only for a creature the existing ones would have to LIE
+      about. A naga has no legs, so drawing a pair on it was the bar the
+      serpent plan cleared; nine more bipeds were not
   - HOW STRONG IT IS is a stepped ladder on the creep's own GOLD COST, and it
     is worth more here than on towers: a creep cannot be upgraded, so a player
     has no other way to learn the ordering. It runs on cost rather than on tier
@@ -397,6 +405,12 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       it is a later tier
     - a BOSS is the one thing allowed a noticeable step, and it is still a
       fraction rather than a multiple - see the Boss rule below
+  - **the ladder RUNS OUT if nobody checks it, and it did.** It is measured in
+    half decades of gold, so the cheapest creep in the game and the most
+    expensive stand eleven rungs apart - and the ramps were authored with six.
+    Everything above the sixth rung was quietly clamped onto it, which by the
+    end of tier 2 was a third of the roster wearing one carapace and one eye
+    brightness. Adding a bracket is a reason to count the rungs it needs
   - a BOSS is forced onto the top of that ladder whatever it costs, and takes a
     size bonus on top. It is sent one at a time and steals two lives, so it has
     to read as the biggest thing in its bracket before a player has read
@@ -664,6 +678,17 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       now**, not the one it was authored with. One tower alters it for a few
       seconds and the line says so for as long as it holds, so the word next to
       the number and the debuff square underneath can never disagree
+    - **the ATTACK line answers the same way**: the speed the tower is swinging
+      at right now and the distance it is reaching right now, not the two
+      figures on its stats file. A technology disc lends a tower speed, reach
+      or damage, and a creep aura takes speed and damage away - all of it lands
+      on these lines
+      - what is EARNED is repeated on the end and what is REACHING the tower is
+        not, which is the whole difference between them: growth belongs to the
+        tower and follows it, and an aura is a fact about where it is standing
+      - all four lines are re-read while the panel is open rather than written
+        once, because a disc going up beside a tower moves them while the
+        player is looking straight at the number
     - **hovering the armour line says what those points are worth**, as the
       percentage of a hit they take off. The curve has diminishing returns in
       it, so no player could work that out from the number itself, and negative
@@ -907,6 +932,14 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     - the seam is not theoretical. The two counters are the same number
       advanced by different nodes, so they land on the same tick and which
       moves first is tree order - a coin flip, every time
+- **A TECHNOLOGY DISC IS NOT A WALL.** Creeps walk straight over one, so a disc
+  changes nothing about the shape of a maze - it only claims its square against
+  anything else being built there. See Technology discs
+  - which means no arrangement of discs can ever seal an area, and placing one
+    is never refused for the route: the check that a path still exists is not
+    even run for a footprint that does not block
+  - and a creep standing where a disc goes up is left exactly where it is,
+    where a tower would have set it back along its route
 - Path recalculation was a known performance concern, settled by giving each area
   one shared route rather than pathing every creep separately
 
@@ -1326,6 +1359,28 @@ never learns what the creep did with it.
   - WHICH type is a choice the player makes per tower, cycled on the command
     card, and the tower says what it is currently set to. There is a default,
     so a tower nobody has pressed still does something
+- Tiers 3 and 4 brought four more, and they are the first ones a CREEP applies
+  to itself or to a packmate rather than a tower applying them to a creep. They
+  live in the same set because what the panel is answering is "what is on this
+  creep", and a row that only listed the bad half would answer a different
+  question
+  - a **SHIELD** is a pool of damage standing in front of the health, spent
+    before any of it reaches the bar. It is not a resistance and must not be
+    folded in with them: it runs LAST, after every ratio and every block, or a
+    creep behind one would take a share of every hit forever instead of none of
+    the first few. Sources add
+  - a **WARD** is a window in which the creep takes nothing at all. Not the
+    invulnerable armour type, which is permanent and also refuses heals - a
+    warded creep still regenerates, is still shot at and is still slowed
+  - a **HASTE** is the mirror of a chill and is kept apart from one, so a creep
+    that is both hurried and slowed ends up between the two rather than at
+    whichever landed last
+  - **MENDING** is healing over a window. The best rate wins rather than the
+    sum, the same rule auras follow
+- Armour can also be GIVEN permanently, and given BACK. One trait hands a
+  packmate two points for the rest of its life; another returns what a tower
+  has eaten, never past what the creep started with. The gift and the erosion
+  are kept apart, so a floor meant for one cannot clamp the other
 - Every "once every N seconds" rule in the game is one immunity key with a
   countdown, in one place, rather than a timer per effect
 - A creep can RESIST what a tower leaves on it, in two ways that are separate
@@ -1337,8 +1392,14 @@ never learns what the creep did with it.
     cap together. Blunting only what lands would leave the cap where it was and
     a resistant creep would still reach the full slow, just later, which is the
     opposite of what resisting a chill means
-  - both are read off the creep's own traits ONCE, when something first touches
-    it, since a creep cannot gain or lose a trait while it walks
+  - a CEILING on how far a slow may ever go, whatever has piled up. That is a
+    different thing to blunting each chill: a resistance still lets four towers
+    add up to something large, and a ceiling refuses the total past a line
+  - a CEILING on how long any harmful effect may run, whatever it asked for.
+    One trait states both a share and a maximum, and a share alone cannot say
+    the second half
+  - all of them are read off the creep's own traits ONCE, when something first
+    touches it, since a creep cannot gain or lose a trait while it walks
 - NOT REPLICATED: a client is not told what is on a creep. It sees the creep
   where the server puts it, which is most of what a slow or a stun looks like,
   and the armour figure on a creep's panel is that creep's own. See
@@ -1350,6 +1411,17 @@ never learns what the creep did with it.
   - the honest fixes are a field on the wire or moving the clock onto the match
     clock so both machines can compute it, and neither is worth doing for one
     square until somebody is actually bothered by it
+
+**A TOWER CAN CARRY EFFECTS TOO, and tiers 3 and 4 are where that starts.**
+BUILT. Its own much smaller set, and it should stay small: a creep is the thing
+this game applies effects to and a tower is on the receiving end of a handful.
+  - a CURSE on its attack speed, left by a creep as that creep dies
+  - an AURA weakening its attack damage, re-applied every tick a creep is in
+    range, so a tower restores itself a moment after the creep walks on
+  - the "not again for N seconds" gates, so that draining one tower twice in
+    quick succession is refused whichever creep does it
+  - created on the first one applied and dropped the moment the last runs out,
+    exactly as a creep's set is, so an untouched tower costs nothing
 
 # Mana
 BUILT. A TOWER thing first and mostly, and now a few CREEPS have it too.
@@ -1471,8 +1543,116 @@ The roster, the names, the prices and the twenty cross requirements are in
 - What a technology unlocks is BUILT: the Elemental Core morphs into the
   elements whose Basic technology their owner has researched, and each path's
   4,000g upgrade is gated on that path's own technology. See The Elemental Core
-- NOT BUILT: the technology DISCS, which are a separate thing from the towers -
-  see `unit_data.md` section 5
+- So are the technology DISCS, which are a separate thing from the towers and
+  ask for technology in a different unit: a COUNT rather than a named one. See
+  Technology discs below
+
+# Technology discs
+BUILT.
+
+The roster, the prices, the technology requirements and the ten effects are in
+`unit_data.md` section 5. This says how the system behaves.
+
+- **A disc is a building that creeps WALK OVER.** That is the whole design of
+  the thing and everything else here follows from it
+  - it claims its square against anything else being built there, exactly as a
+    tower does, and it changes nothing at all about how a creep moves. The
+    route sweep does not see it, a creep standing where one goes up is left
+    alone, and placing one is never refused for want of a path
+  - so a disc goes in the holes a maze ALREADY HAS rather than making new ones,
+    and the shape of a maze and what is standing in it become two decisions
+    instead of one. That is what a disc is for
+- **It cannot attack and cannot BE attacked.** Armour type Invulnerable, which
+  is the absence of damage rather than a resistance to it, and it carries no
+  attack at all - so its card shows neither Attack nor Prioritize
+  - the two halves together make a disc a square an attacker creep can do
+    nothing with. It cannot destroy one, and it was never blocked by one
+- **The BASE disc is bought and does nothing.** It needs no technology, it is
+  available from the first second of a match, and it has no effect whatsoever
+  until it is morphed into an element
+  - so the price of the base disc is the price of the SQUARE, and the elements
+    above it are what that square is eventually worth
+- **An element is a free morph, and the two tiers above it are bought.** The
+  same shape the Elemental Core has, and reached the same way: the base disc
+  carries all ten elements on its own card, on the same ten squares the Core
+  carries its own, so the letters that choose an element are one set of letters
+  in the whole game
+- **Technology is asked as a COUNT, not as a named one.** This is the one place
+  in the game where it is
+  - the element morph wants that element's Basic technology, which is a single
+    id like every tower's - but the two upgrades above it want TWO OF THE THREE
+    and then ALL THREE, and no single id means either
+  - so a disc morph names the ELEMENT and how many of it are needed, and the
+    count is walked at the moment the button is drawn. See `unit_data.md` 5.1
+- **A player may own only ONE of each Ultimate disc.** The disc half of "you
+  cannot fill the whole maze with the best thing"
+  - counted over that player's own area rather than remembered, so a disc going
+    away by any road at all - sold, morphed down, morphed up - is counted right
+    without anything having to be told
+  - a morph already RUNNING counts. Two started in the same second would
+    otherwise both be allowed and both finish
+- **Morphing back down takes longer than anything else in the game.** A disc
+  goes back to a bare base disc, keeps its square for the whole countdown, and
+  hands back the sell share of everything spent above the base
+  - deliberately slower than a Return to Core, and it is the source game's own
+    decision rather than this project's: swapping a disc on the fly to answer
+    an incoming send is exactly what the wait is there to make expensive
+  - the base disc's own gold stays sunk in the square, exactly as the Core's
+    does, so the refund reads the same either side of the morph
+
+## What a disc does
+- Eight of the ten are AURAS reaching the friendly TOWERS around them, and two
+  are ON-STEP triggers firing on the creeps standing on the disc itself
+  - the on-step half only exists because a disc is walkable. It is the clearest
+    case of the rule paying for itself
+- An aura is re-granted on a slow beat and every grant EXPIRES on its own, so
+  nothing ever has to take one away. A disc that is sold, morphed or built just
+  out of reach simply stops calling, and what it was lending is gone a fraction
+  of a second later
+- **Where two discs of the same kind overlap, the STRONGEST wins** and the
+  weaker one is worth nothing at all there. Two Ultimate Holy discs are worth
+  one, and a weak disc can never drag a strong one down - which is a rule the
+  source game had to fix as a bug, and is here a property of how a boon is
+  stored rather than something any disc knows about
+- An aura's radius is one of the hand-picked ranges worth drawing on the
+  ground, on the test under Presentation: it is the number that decides where
+  the disc goes, which is the whole of what a disc is. An on-step disc draws
+  nothing, because its reach is the square it is already standing on
+- **What a disc lends is READABLE on the tower it lends it to**, not only on
+  the disc. The tower's own panel shows the speed, reach, damage and armour it
+  has right now, and the range circle it draws - whether from Show Ranges or
+  from an attack order being aimed - is the reach it really covers
+  - which matters more here than anywhere else in the game, because a disc's
+    whole value is what it does to something ELSE. A player who cannot see the
+    difference on the tower cannot tell whether the disc was worth its square
+  - the BUILD and UPGRADE cards are the deliberate exception and still quote
+    the plain numbers: those describe a tower that is not standing yet, and a
+    disc that is reaching the cell today may be gone by the time it is
+
+## What a disc looks like
+- **It has no model at all.** A disc is painted onto the floor and nothing
+  stands up out of it, which is the one thing a player must never have to look
+  twice at: a tower stands up, a disc lies flat, and nothing else in the game
+  does either
+- Its ground patch is the same stone as a tower's and a DIFFERENT PATTERN - a
+  true circle cut with rings and spokes against the tower's rounded square of
+  cracked slabs - so the two are told apart by shape rather than by colour,
+  which stays reserved for the elements
+- **The element is the colour of the middle, and its SIDE COUNT** - the same
+  count that element's towers are built on, so the disc roster reads on the two
+  axes the tower roster already uses and stays readable to somebody who cannot
+  tell ten hues apart
+- **The tier is how far that colour reaches, and nothing else.** A base disc
+  has none at all, which is exactly right for something with no element that
+  does nothing, and each upgrade grows it
+  - one rule where a tower's ladder is six, because a flat circle has only the
+    one thing to say everything with. A second rule laid over it would be
+    fighting the first for the same pixels
+  - the Ultimate turns, slowly, and nothing else in the roster moves. Motion is
+    the loudest signal a top down camera has and it stays reserved for the top
+    rung, exactly as it is on the elemental towers
+- A disc under construction opens OUT from a point rather than rising, since
+  rising is a thing a flat quad cannot be seen to do
 
 # Upgrading a tower
 BUILT.
@@ -1675,11 +1855,23 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     order cancels the move rather than fighting it
   - an attacker creep can only ever target a TOWER. The builder and technology
     discs cannot be attacked at all - not "are tough", not "are ignored while a
-    tower is in range": they are not valid targets, ever. A maze wall made of
-    discs is a wall an attacker cannot chew through, and that is deliberate.
-    Enforced by their being invulnerable rather than by a list of exceptions.
-    See unit_data.md
+    tower is in range": they are not valid targets, ever. Enforced by their
+    being invulnerable rather than by a list of exceptions. See unit_data.md
+    - so a disc is a square of a maze that an attacker can do NOTHING with -
+      it cannot destroy one and it cannot be blocked by one either, since a
+      disc is not a wall in the first place. That is the whole trade: a disc
+      is a square that never opens and never closes
   - what it destroys leaves rubble, see Towers and attacking
+  - **being an ATTACKER is asked before anything about how it travels.** One of
+    them flies, and a flyer reads none of the maze and goes straight down the
+    lane - so asked the other way round it sailed straight past the maze it had
+    been sent to take apart. What an attacker is is what it goes after; how it
+    gets there is a separate question
+  - one of them is also the only creep in the game with an ACTIVE ability, and
+    the only thing its owner AIMS. It dives out along the aimed direction and
+    back, burning what it passes over, and Stop calls the dive off - which pays
+    it back the armour a maze has eaten off it, so cancelling is a decision
+    rather than a mistake being undone
 - BOSS creeps are sent one at a time and steal TWO lives instead of one. BUILT.
   - the steal is still capped at what the defender has left, so a Boss can no
     more invent a life than any other creep can
@@ -1696,6 +1888,26 @@ The rules that hold whatever the roster says:
   retired by a higher one - Sudden Death is the single exception
 - Creeps unlock one at a time on the match clock, each by its own start delay,
   never as a whole tier at once. Sudden Death is again the exception
+- **SUDDEN DEATH is that exception, and it is the only time a creep is ever
+  taken AWAY from a player.** BUILT.
+  - at a fixed point on the match clock the whole of Tier 4 unlocks at once -
+    no per-creep start delay, unlike every other tier - and Tiers 1 to 3 stop
+    being sendable for the rest of the match
+  - each sender answers it for itself rather than a rule reading a tier
+    NUMBER: one of them is the Sudden Death sender and is shut until it
+    arrives, and every other one is open until it arrives and shut afterwards
+  - anybody below an income FLOOR is raised to it, once, at that moment. A
+    player who has been losing slowly for the whole match would otherwise reach
+    the one tier that can end it and be unable to afford any of it
+  - Tier 4 creeps stop paying properly above an income CAP: over it, a Tier 4
+    send grants a fraction of its stated income. Only Tier 4, and only above
+    the cap - the point is to stop Sudden Death compounding, since by then the
+    creeps are meant to be ending the match rather than paying for the next one
+  - one creep is refused outright above that cap rather than merely paying
+    less, because it is nothing BUT income and a cheaper version of it would be
+    a creep with no purpose left
+  - the clock, the floor, the cap and the share are all in
+    `game_config.tres`; the creeps are `unit_data.md` 6.5
 - Bounty is per creep, so a pack pays out once per creep in it
 - Income is per SEND rather than per creep, and the ratio of income to cost gets
   worse as creeps get stronger. That is what makes early sends compound
@@ -1714,18 +1926,18 @@ The rules that hold whatever the roster says:
   - While down it is hidden, does not move, is shot at by nothing, grants and
     receives no auras, is walked straight through and cannot be clicked
 
-**TIERS 1 AND 2 ARE IMPLEMENTED**, all twenty-four of them plus the Timber Wolf
-that only ever arrives inside a Sheep pack. The numbers are `unit_data.md` 6.2
-and 6.3's, which are the source game's; the creeps' `.tres` files are the
-authority and those sections are the mirror. The placeholder test set they
-replaced is gone.
+**THE WHOLE ROSTER IS IMPLEMENTED** - all four tiers, plus the Timber Wolf that
+only ever arrives inside a Sheep pack and the Ghoul that only ever crawls out of
+a dead Obsidian Statue. The numbers are `unit_data.md` 6.2 to 6.5's, which are
+the source game's; the creeps' `.tres` files are the authority and those
+sections are the mirror.
 
-**One tier 3 creep is built as well, the Ancient Wendigo**, out of order and for
-a reason that is about testing rather than about design: every tier 1 creep dies
-to a single shot from any tower above the cheapest tiers, so there was nothing on
-the field a real tower could be measured against. It brought the first creep
-trait whose armour is not a constant - Hardened Skin, which wears off as the
-creep is hit - and the first sender above Tier 1.
+The Ancient Wendigo was built out of order, well before the rest of tier 3, for
+a reason that was about testing rather than about design: every tier 1 creep
+dies to a single shot from any tower above the cheapest tiers, so there was
+nothing on the field a real tower could be measured against. It brought the
+first creep trait whose armour is not a constant - Hardened Skin, which wears
+off as the creep is hit - and the first sender above Tier 1.
 
 Tier 2 brought three things the roster had never needed:
 
@@ -1738,10 +1950,23 @@ Tier 2 brought three things the roster had never needed:
   before anything in the game applied a slow or a timed debuff. The elemental
   towers made them real. See Status effects
 
-Tiers 3 and 4 are not built. Nothing about the code is waiting on them - a new
-creep is a stats file, a prefab and a send ability - but two of the traits they
-need are, and each wants a system that does not exist yet: damage absorption
-shields, and creeps that spawn other creeps.
+Tiers 3 and 4 brought the rest, and most of it is machinery the roster had
+never needed:
+
+- **damage absorption shields**, for the creep that converts nine tenths of
+  itself into one. A shield is a POOL rather than a resistance and is spent
+  last of all, after every ratio and every block - see Status effects
+- **creeps that spawn other creeps**, for the one that leaves three behind
+  where it dies
+- **effects a creep leaves on a TOWER**, which is the first traffic in that
+  direction: a curse on a tower's attack speed, an aura weakening its damage,
+  and a creep that drains a tower's mana and keeps far more than it took
+- **a creep that walks THROUGH the maze** rather than around it, and one that
+  DODGES attacks from the long ranged half of it
+- **an ACTIVE ability on a creep** - the roster's only one. The Phoenix is
+  aimed by its owner, dives out along that line and back, and can be called off
+  with Stop
+- **Sudden Death**, which is the one place a tier means anything at all
 
 A SEND is a pack rather than a count: nearly every one is three of the same
 creep, a Boss is one, and the Sheep is two Sheep and one Timber Wolf. What a

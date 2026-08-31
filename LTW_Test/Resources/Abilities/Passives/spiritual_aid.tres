@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpiritualAidPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/SpiritualAidPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 326
+display_name = "Spiritual Aid"
+targeting = 0
+radius_cells = 3.906
+heal_share = 0.01
+heal_cap = 2000
+armor_bonus = 1.0
+armor_ceiling = 12.0

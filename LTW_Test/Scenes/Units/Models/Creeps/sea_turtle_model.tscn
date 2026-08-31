@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/sea_turtle_hide.tres" id="1_sea_turtle_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/sea_turtle_hide_deep.tres" id="2_sea_turtle_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/sea_turtle_hide_pale.tres" id="3_sea_turtle_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r6.tres" id="4_carapace_r6"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r6.tres" id="5_eye_r6"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -23,11 +23,11 @@ material = ExtResource("2_sea_turtle_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.0893, 0.0376, 0.1161)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_4"]
 size = Vector3(0.0268, 0.0536, 0.0312)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
 radius = 0.051
@@ -45,11 +45,11 @@ material = ExtResource("2_sea_turtle_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.0893, 0.0376, 0.1161)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
 size = Vector3(0.0268, 0.0536, 0.0312)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_9"]
 radius = 0.051
@@ -67,11 +67,11 @@ material = ExtResource("2_sea_turtle_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_11"]
 size = Vector3(0.0893, 0.0376, 0.1161)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_12"]
 size = Vector3(0.0268, 0.0536, 0.0312)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_13"]
 radius = 0.051
@@ -89,11 +89,11 @@ material = ExtResource("2_sea_turtle_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_15"]
 size = Vector3(0.0893, 0.0376, 0.1161)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_16"]
 size = Vector3(0.0268, 0.0536, 0.0312)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="SphereMesh" id="SphereMesh_17"]
 radius = 0.3295
@@ -114,7 +114,7 @@ inner_radius = 0.3097
 outer_radius = 0.3493
 rings = 16
 ring_segments = 4
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="SphereMesh" id="SphereMesh_20"]
 radius = 0.0791
@@ -151,18 +151,18 @@ bottom_radius = 0.0567
 height = 0.0797
 radial_segments = 6
 rings = 0
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="SphereMesh" id="SphereMesh_25"]
 radius = 0.0201
 height = 0.0402
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_26"]
 size = Vector3(0.0274, 0.1097, 0.0238)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_27"]
 size = Vector3(0.0744, 0.0425, 0.1169)
@@ -170,11 +170,11 @@ material = ExtResource("2_sea_turtle_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_28"]
 size = Vector3(0.0659, 0.0659, 0.2965)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_29"]
 size = Vector3(0.0527, 0.1318, 0.0461)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [node name="SeaTurtleModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

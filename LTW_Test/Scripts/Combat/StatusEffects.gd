@@ -148,6 +148,10 @@ var _immunities: Dictionary = {}
 ## See Grip and touch_aura.
 var _grips: Dictionary = {}
 
+## Seconds left of hearing no friendly aura at all. The Arcane disc, and the
+## one thing in the game that takes an effect AWAY from a creep rather than
+## putting one on it - see deny_auras.
+var _aura_denied_left: float = 0.0
 ## Seconds added to every slow APPLIED while this is running, and how long it
 ## has left. See lengthen_slows.
 var _slow_bonus: float = 0.0
@@ -177,6 +181,38 @@ var _owners: Dictionary = {}
 ## creep nothing has ever touched never even asks. See CreepPassive.
 var _duration_ratio: float = 1.0
 var _chill_ratio: float = 1.0
+## The longest any harmful effect may run on this creep whatever it asked for,
+## or 0 for no ceiling. Read off the passives with the two ratios above and for
+## the same reason - it cannot change while the creep walks.
+var _duration_cap: float = 0.0
+## The most this creep may ever be slowed, whatever has piled up on it. 1.0 is
+## no ceiling. Goblin Engineering is the only thing that lowers it.
+var _max_slow: float = 1.0
+
+## Damage waiting to be eaten before any of it reaches the creep's health, and
+## whichever ability put it there.
+##
+## A POOL rather than a countdown: a shield is spent rather than served, so it
+## is the one thing here with no clock at all. Sources ADD, because two shields
+## on one creep are two shields.
+var _shield: float = 0.0
+## Seconds left of taking no damage whatever. Elune's Grace is the only thing
+## that grants one, and it is a window rather than a pool.
+var _ward_left: float = 0.0
+## Extra share of movement speed, and how long is left of it. The mirror of a
+## chill, and kept apart from one so that being hasted and being slowed at once
+## resolves to somewhere between the two rather than to whichever landed last.
+var _haste: float = 0.0
+var _haste_left: float = 0.0
+## Health restored per second by an effect somebody put ON this creep, as
+## opposed to an aura standing over it or its own regeneration. Sources take
+## the BEST rather than adding, exactly as an aura does.
+var _mend_per_second: float = 0.0
+var _mend_left: float = 0.0
+## Armour points GIVEN to this creep for the rest of its life, which the Crypt
+## Fiend's aura hands out one at a time. Always >= 0, and kept apart from the
+## erosion above so that a floor meant for one cannot clamp the other.
+var _armor_granted: float = 0.0
 
 
 func _init(creep: Creep) -> void:
@@ -186,6 +222,10 @@ func _init(creep: Creep) -> void:
 	for passive in creep.passives():
 		_duration_ratio *= passive.harmful_duration_ratio()
 		_chill_ratio *= passive.chill_taken_ratio()
+		_max_slow = minf(_max_slow, passive.max_slow_share())
+		var cap: float = passive.harmful_duration_cap()
+		if cap > 0.0:
+			_duration_cap = cap if _duration_cap <= 0.0 else minf(_duration_cap, cap)
 
 
 # --- questions ------------------------------------------------------------
@@ -202,7 +242,11 @@ func move_ratio() -> float:
 	var worst: float = 0.0
 	for key in _chills:
 		worst = maxf(worst, (_chills[key] as Chill).amount)
-	return clampf(1.0 - worst, 0.0, 1.0)
+	# The creep's own ceiling on being slowed, applied to the PILE rather than
+	# to each chill as it lands: "cannot be slowed by more than 25%" is a
+	# statement about the total, and clamping each application instead would
+	# let four towers reach 100% a quarter at a time.
+	return clampf(1.0 - minf(worst, _max_slow), 0.0, 1.0)
 
 
 ## Whether the creep is held still and cannot act. Stun and paralyze both, from
@@ -230,7 +274,7 @@ func is_paralyzed() -> bool:
 ## yet cost a whole point and eroding it ten times has. Armour is an integer
 ## everywhere else in the game and this is where the fraction stops.
 func armor_delta() -> int:
-	return int(_armor_eroded + _armor_delta)
+	return int(_armor_eroded + _armor_granted + _armor_delta)
 
 
 ## The armour TYPE this creep counts as right now, or -1 to use its own.
@@ -266,6 +310,44 @@ func attack_damage_ratio() -> float:
 func chill_amount(source: String) -> float:
 	var entry: Chill = _chills.get(source) as Chill
 	return 0.0 if entry == null else entry.amount
+
+
+## Whether the creep is taking no damage at all right now. Elune's Grace, and
+## nothing else in the roster.
+func is_warded() -> bool:
+	return _ward_left > EPSILON
+
+
+## Whether this creep is currently deaf to every friendly aura around it.
+##
+## The Arcane disc and nothing else. Read by Creep._refresh_aura, which is the
+## one place a creep hears its packmates at all, so denying it there is the
+## whole of the effect and no aura has to know it exists.
+func is_aura_denied() -> bool:
+	return _aura_denied_left > EPSILON
+
+
+## Armour points somebody has GIVEN this creep for good, which is what a trait
+## that may only raise a creep so far has to read before granting another.
+func granted_armor() -> float:
+	return _armor_granted
+
+
+## Damage the shield in front of this creep's health still holds.
+func shield_points() -> float:
+	return _shield
+
+
+## Multiplier on this creep's movement speed from anything HASTENING it, which
+## is one packmate's trait and nothing a tower ever does. Never below 1.
+func haste_ratio() -> float:
+	return 1.0 + _haste if _haste_left > EPSILON else 1.0
+
+
+## Health restored per second by whatever is mending this creep, which is a
+## packmate's shield rather than an aura or its own regeneration.
+func mend_per_second() -> float:
+	return _mend_per_second if _mend_left > EPSILON else 0.0
 
 
 ## Whether an effect keyed like this may fire on this creep right now. The
@@ -542,6 +624,148 @@ func set_immune(key: String, seconds: float) -> void:
 
 # --- the readout ----------------------------------------------------------
 
+## Puts damage in front of the creep's health, to be eaten before any of it
+## reaches the bar. Sources ADD: two shields on one creep are two shields.
+##
+## A POOL rather than a countdown, which is the whole difference between this
+## and the ward below - a shield is spent, a ward is served. Nothing here
+## decides what a shield is worth; Abyssal Carapace converts nine tenths of a
+## Behemoth into one and the creep spends it a hit at a time.
+func absorb(source: UnitAbility, amount: float) -> void:
+	if amount <= 0.0 || !_may_write():
+		return
+	_shield += amount
+	_own(StatusEntry.Kind.SHIELDED, source)
+
+
+## Takes what it can out of the shield and answers what is LEFT to reach the
+## health. Called by the creep once a hit has been fully resolved, so what a
+## shield eats is the damage that would really have landed.
+##
+## Deliberately not a question the damage pipeline asks: a shield is not a
+## resistance and must not be folded in with the ratios, or a creep behind one
+## would take a share of every hit forever instead of none of the first few.
+func spend_shield(landed: float) -> float:
+	if landed <= 0.0 || _shield <= 0.0 || !_may_write():
+		return maxf(0.0, landed)
+
+	var eaten: float = minf(_shield, landed)
+	_shield -= eaten
+	if _shield < 0.001:
+		_shield = 0.0
+	return landed - eaten
+
+
+## Makes the creep untouchable for a window. The longer of the two wins, so a
+## short ward landing on a long one cannot cut it short.
+##
+## NOT the invulnerable armour type, which is permanent and also refuses heals.
+## A warded creep still regenerates, is still shot at and is still slowed - it
+## simply takes nothing off its health while the window runs.
+func ward(source: UnitAbility, seconds: float) -> void:
+	if seconds <= 0.0 || !_may_write():
+		return
+	if seconds > _ward_left:
+		_ward_left = seconds
+		_own(StatusEntry.Kind.WARDED, source)
+
+
+## Cuts the creep off from every friendly aura for a window, the longer of the
+## two winning exactly as a ward does.
+##
+## Half of what an Arcane disc does to whatever walks over it, and the other
+## half is an ordinary amplify_spell. Stated in unit_data.md 5.2 as one effect
+## with one duration, and it is applied as two because the two halves are
+## already separate machinery: one is a share of incoming spell damage and the
+## other is a creep not listening to its neighbours.
+##
+## It reaches the aura a creep HEARS, never the ones it gives - a Kodo Beast
+## walking over an Arcane disc goes on hastening the pack around it and simply
+## stops hearing its own. That is what "cannot benefit from friendly auras"
+## says, and doing it the other way would make the disc a debuff on a wave
+## rather than on a creep.
+func deny_auras(source: UnitAbility, seconds: float) -> void:
+	if seconds <= 0.0 || !_may_write():
+		return
+	seconds = _harmful_seconds(seconds)
+	if seconds > _aura_denied_left:
+		_aura_denied_left = seconds
+		_own(StatusEntry.Kind.AURA_DENIED, source)
+
+
+## Speeds the creep up for a window. The strongest wins for as long as either
+## would have lasted, exactly as an armour change does.
+##
+## Deliberately NOT run through _harmful_seconds: this is a gift from a
+## packmate, and a creep that shrugs off harmful effects must not also shrug
+## off a friendly one.
+func haste(source: UnitAbility, amount: float, seconds: float) -> void:
+	if amount <= 0.0 || seconds <= 0.0 || !_may_write():
+		return
+	if amount >= _haste || _haste_left <= EPSILON:
+		_haste = amount
+		_own(StatusEntry.Kind.HASTED, source)
+	_haste_left = maxf(_haste_left, seconds)
+
+
+## Heals the creep over a window. The best rate wins rather than the sum, on
+## the same reasoning auras do not stack: two Ogre Magi shielding one creep
+## should be worth one shield and a spare.
+func mend(source: UnitAbility, per_second: float, seconds: float) -> void:
+	if per_second <= 0.0 || seconds <= 0.0 || !_may_write():
+		return
+	if per_second >= _mend_per_second || _mend_left <= EPSILON:
+		_mend_per_second = per_second
+		_own(StatusEntry.Kind.REGENERATING, source)
+	_mend_left = maxf(_mend_left, seconds)
+
+
+## Drops every chill on the creep outright, which is what "removes chill and
+## slow" means: the towers that applied them start accumulating from nothing
+## again, exactly as they would have if the creep had walked out of range.
+##
+## Ultimate Lich's Frostbite is a chill like any other and goes with the rest,
+## which is what unit_data.md 6.6 asks Earth Shield to do.
+func clear_slows() -> void:
+	if !_may_write():
+		return
+	_chills.clear()
+
+
+## Halves every chill currently on the creep, cap and all, so a tower that had
+## reached its ceiling has to climb back to it. Regenerative Flesh, once per
+## creep, at half health.
+func halve_slows() -> void:
+	if !_may_write():
+		return
+	for key in _chills:
+		var entry: Chill = _chills[key] as Chill
+		entry.amount *= 0.5
+		entry.cap *= 0.5
+
+
+## Gives back armour a tower has eaten, never past what the creep started with.
+## Answers whether any was actually restored, so a trait that only fires on a
+## creep below its base armour can gate on the attempt.
+func restore_armor(amount: float) -> bool:
+	if amount <= 0.0 || _armor_eroded >= 0.0 || !_may_write():
+		return false
+	_armor_eroded = minf(0.0, _armor_eroded + amount)
+	return true
+
+
+## Adds armour for the rest of the creep's life. The Crypt Fiend's aura, which
+## hands out two points at a time to one creep near it.
+##
+## Kept apart from the erosion rather than added into it, so a tower eroding
+## down to a floor and an aura granting upwards cannot clamp each other.
+func bless_armor(source: UnitAbility, amount: float) -> void:
+	if amount <= 0.0 || !_may_write():
+		return
+	_armor_granted += amount
+	_own(StatusEntry.Kind.ARMOR_GRANTED, source)
+
+
 ## Every debuff on this creep right now, flattened into one list of records the
 ## HUD can draw without knowing that a chill is kept per source, a burn is kept
 ## merged and eroded armour is kept with no clock at all.
@@ -562,6 +786,7 @@ func entries() -> Array[StatusEntry]:
 	_append_armor(list)
 	_append_amplifications(list)
 	_append_over_time(list)
+	_append_boons(list)
 	return list
 
 
@@ -601,6 +826,9 @@ func _append_armor(list: Array[StatusEntry]) -> void:
 	if _armor_eroded < 0.0:
 		list.append(_record(StatusEntry.Kind.ARMOR_ERODED, _armor_eroded,
 			StatusEntry.PERMANENT))
+	if _armor_granted > 0.0:
+		list.append(_record(StatusEntry.Kind.ARMOR_GRANTED, _armor_granted,
+			StatusEntry.PERMANENT))
 	if _armor_delta_left > EPSILON && !is_zero_approx(_armor_delta):
 		list.append(_record(StatusEntry.Kind.ARMOR_CHANGED, _armor_delta,
 			_armor_delta_left))
@@ -622,6 +850,11 @@ func _append_amplifications(list: Array[StatusEntry]) -> void:
 	if _damage_slow_left > EPSILON:
 		list.append(_record(StatusEntry.Kind.ATTACK_WEAKENED, _damage_slow,
 			_damage_slow_left))
+	# Not strictly an amplification, and here anyway: the Arcane disc applies
+	# it in the same breath as the spell vulnerability above it, and a player
+	# reading the row wants the two halves of one disc next to each other.
+	if _aura_denied_left > EPSILON:
+		list.append(_record(StatusEntry.Kind.AURA_DENIED, 0.0, _aura_denied_left))
 
 
 ## Poison carries no countdown either: it sits on the creep until whatever put
@@ -634,6 +867,27 @@ func _append_over_time(list: Array[StatusEntry]) -> void:
 		list.append(StatusEntry.make(StatusEntry.Kind.POISONED,
 			_owner_of(StatusEntry.Kind.POISONED), _poison_damage,
 			StatusEntry.PERMANENT, _poison_stacks, _poison_max_stacks))
+
+
+## The four effects on this creep that are not a tower's doing: a shield it
+## converted out of itself, a ward, a haste and a heal a packmate handed it.
+##
+## Drawn in the same row as the rest deliberately. What the panel is answering
+## is "what is on this creep", and a creep that is untouchable for the next ten
+## seconds is by far the most important thing on it.
+func _append_boons(list: Array[StatusEntry]) -> void:
+	if _ward_left > EPSILON:
+		list.append(_record(StatusEntry.Kind.WARDED, 0.0, _ward_left))
+	# No countdown: a shield is SPENT rather than served, so what a player
+	# wants off it is how much of it is left.
+	if _shield > 0.0:
+		list.append(_record(StatusEntry.Kind.SHIELDED, _shield,
+			StatusEntry.PERMANENT))
+	if _haste_left > EPSILON:
+		list.append(_record(StatusEntry.Kind.HASTED, _haste, _haste_left))
+	if _mend_left > EPSILON:
+		list.append(_record(StatusEntry.Kind.REGENERATING, _mend_per_second,
+			_mend_left))
 
 
 ## One record for an effect kept as a plain value and a countdown, which is most
@@ -678,10 +932,14 @@ func advance(delta: float) -> bool:
 	_damage_slow_left = maxf(0.0, _damage_slow_left - delta)
 	_slow_bonus_left = maxf(0.0, _slow_bonus_left - delta)
 	_armor_type_left = maxf(0.0, _armor_type_left - delta)
+	_ward_left = maxf(0.0, _ward_left - delta)
+	_haste_left = maxf(0.0, _haste_left - delta)
+	_aura_denied_left = maxf(0.0, _aura_denied_left - delta)
 
 	_advance_chills(delta)
 	_advance_immunities(delta)
 	_advance_burn(delta)
+	_advance_mend(delta)
 	return _is_running()
 
 
@@ -768,6 +1026,21 @@ func _advance_burn(delta: float) -> void:
 		_burn_carry = 0.0
 
 
+## Heals whatever is mending the creep. The mirror of burning above, and it
+## carries its fraction between ticks for the same reason: the creep's health
+## is a float, so a trickle below a point a tick still banks where it lands.
+func _advance_mend(delta: float) -> void:
+	if _mend_left <= 0.0:
+		_mend_per_second = 0.0
+		return
+
+	_mend_left -= delta
+	if _creep != null && is_instance_valid(_creep) && _creep.is_alive():
+		_creep.heal(_mend_per_second * delta)
+	if _mend_left <= 0.0:
+		_mend_per_second = 0.0
+
+
 ## A slow's duration with whatever is currently lengthening slows on this creep
 ## folded in. Applied at the moment a slow lands and never afterwards.
 ## How long a harmful timed effect really runs on this creep, once its own
@@ -779,7 +1052,11 @@ func _advance_burn(delta: float) -> void:
 ## slow lengthening is deliberately NOT folded in: that acts on slows alone and
 ## has its own funnel below.
 func _harmful_seconds(seconds: float) -> float:
-	return maxf(seconds, 0.0) * _duration_ratio
+	var served: float = maxf(seconds, 0.0) * _duration_ratio
+	# The ceiling comes after the share, which is the order Regenerative Flesh
+	# states it in: two thirds off, and then never more than a second and a
+	# half whatever is left.
+	return served if _duration_cap <= 0.0 else minf(served, _duration_cap)
 
 
 func _lengthened(seconds: float) -> float:
@@ -804,8 +1081,14 @@ func _is_running() -> bool:
 		return true
 	if _armor_eroded < 0.0 || _poison_stacks > 0 || !_armor_types_used.is_empty():
 		return true
+	# A shield and granted armour both count for the same reason erosion does:
+	# dropping the object would quietly hand back what is stored in it.
+	if _armor_granted > 0.0 || _shield > 0.0:
+		return true
 	var timers: float = maxf(maxf(_stun_left, _paralyze_left), maxf(_burn_left, _armor_delta_left))
 	timers = maxf(timers, maxf(_spell_amp_left, _physical_amp_left))
+	timers = maxf(timers, maxf(_ward_left, maxf(_haste_left, _mend_left)))
+	timers = maxf(timers, _aura_denied_left)
 	return maxf(timers, _slow_bonus_left) > EPSILON
 
 

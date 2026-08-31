@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DiscRevertAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscRevertAbility.gd" id="1_DiscRevertAbility"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/technology_disc.png" id="2_technology_disc"]
+
+[resource]
+script = ExtResource("1_DiscRevertAbility")
+ability_id = 444
+core_stats_path = "res://Resources/UnitStats/Discs/technology_disc_stats.tres"
+display_name = "Deactivate Disc"
+description = "Take this disc back down to an inactive Technology Disc and choose another element. Everything spent on it above the disc itself is refunded at the usual sell share; the disc's own gold stays in the cell. It keeps its square for the whole countdown, and calling it off costs nothing."
+targeting = 1
+slot = 8
+icon = ExtResource("2_technology_disc")

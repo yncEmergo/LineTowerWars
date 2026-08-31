@@ -14,7 +14,7 @@ extends CreepPassive
 @export var health_per_second: float = 5.0
 
 
-func health_regen() -> float:
+func health_regen(_creep: Creep) -> float:
 	return maxf(0.0, health_per_second)
 
 

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_treasure_goblin_ability.tres" id="10_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_huntress_ability.tres" id="11_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_obsidian_statue_ability.tres" id="12_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_mountain_giant_ability.tres" id="13_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_harpy_windwitch_ability.tres" id="14_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_naga_siren_ability.tres" id="15_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_kodo_beast_ability.tres" id="16_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_goblin_shredder_ability.tres" id="17_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_frost_wyrm_ability.tres" id="18_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_phoenix_ability.tres" id="19_send"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_demon_ability.tres" id="20_send"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/send_building.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_send_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 183
+display_name = "Send Building IV"
+max_health = 1
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_send"), ExtResource("11_send"), ExtResource("12_send"), ExtResource("13_send"), ExtResource("14_send"), ExtResource("15_send"), ExtResource("16_send"), ExtResource("17_send"), ExtResource("18_send"), ExtResource("19_send"), ExtResource("20_send")])

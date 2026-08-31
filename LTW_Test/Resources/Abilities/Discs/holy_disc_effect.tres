@@ -1,0 +1,15 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/HolyDiscPassive.gd" id="1_HolyDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/holy_disc.png" id="2_holy_disc"]
+
+[resource]
+script = ExtResource("1_HolyDiscPassive")
+ability_id = 392
+display_name = "Sanctuary"
+targeting = 0
+slot = 6
+icon = ExtResource("2_holy_disc")
+radius_cells = 3.91
+armor_bonus = 3
+regen_bonus_share = 1.65

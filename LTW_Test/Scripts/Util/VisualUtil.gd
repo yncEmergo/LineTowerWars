@@ -99,6 +99,15 @@ static func measure(into: Node3D) -> AABB:
 ##   - the selection ring and every worldspace bar, which are UI wearing a mesh
 ##   - the ground patch a building stands on, which is FLOOR. Left in, it
 ##     renders as a grey smear under the tower in an icon that has no floor
+##
+## UNLESS THE FLOOR IS THE UNIT. A technology disc is painted onto the ground
+## and has no model above it at all, so the rule that keeps a tower's patch out
+## of its portrait would leave a disc with no portrait whatsoever - an empty
+## square where the thing being looked at should be.
+##
+## Answered by MEASURING rather than by asking what kind of unit it is, which
+## is what keeps it true for the next thing that turns out to be flat: if
+## dropping the patches would leave nothing to draw, they were the unit.
 static func portrait_skips(unit: Node) -> Array[Node]:
 	var skip: Array[Node] = []
 	if unit == null:
@@ -108,7 +117,23 @@ static func portrait_skips(unit: Node) -> Array[Node]:
 	if ring != null:
 		skip.append(ring)
 	_collect_skips(unit, skip)
-	return skip
+
+	if _has_mesh_outside(unit, skip):
+		return skip
+	return skip.filter(func(node: Node) -> bool: return !(node is BuildingFoundation))
+
+
+## Whether anything would still be drawn once these nodes are left out.
+static func _has_mesh_outside(node: Node, skip: Array[Node]) -> bool:
+	for child in node.get_children():
+		if child in skip:
+			continue
+		var mesh: MeshInstance3D = child as MeshInstance3D
+		if mesh != null && mesh.mesh != null:
+			return true
+		if _has_mesh_outside(child, skip):
+			return true
+	return false
 
 
 static func _collect_skips(node: Node, into: Array[Node]) -> void:

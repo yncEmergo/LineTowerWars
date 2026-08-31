@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_arcane_disc_ability.tres" id="3_morph_technology_disc_to_arcane_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_earth_disc_ability.tres" id="4_morph_technology_disc_to_earth_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_fire_disc_ability.tres" id="5_morph_technology_disc_to_fire_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_holy_disc_ability.tres" id="6_morph_technology_disc_to_holy_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_ice_disc_ability.tres" id="7_morph_technology_disc_to_ice_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_lightning_disc_ability.tres" id="8_morph_technology_disc_to_lightning_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_primal_disc_ability.tres" id="9_morph_technology_disc_to_primal_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_unholy_disc_ability.tres" id="10_morph_technology_disc_to_unholy_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_void_disc_ability.tres" id="11_morph_technology_disc_to_void_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_technology_disc_to_water_disc_ability.tres" id="12_morph_technology_disc_to_water_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="13_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="14_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="15_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="16_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="17_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/technology_disc.png" id="18_technology_disc"]
+
+[resource]
+script = ExtResource("1_BuildingStats")
+unit_type_id = 184
+display_name = "Technology Disc"
+icon = ExtResource("18_technology_disc")
+max_health = 100
+armor_type = 0
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("3_morph_technology_disc_to_arcane_disc_ability"), ExtResource("4_morph_technology_disc_to_earth_disc_ability"), ExtResource("5_morph_technology_disc_to_fire_disc_ability"), ExtResource("6_morph_technology_disc_to_holy_disc_ability"), ExtResource("7_morph_technology_disc_to_ice_disc_ability"), ExtResource("8_morph_technology_disc_to_lightning_disc_ability"), ExtResource("9_morph_technology_disc_to_primal_disc_ability"), ExtResource("10_morph_technology_disc_to_unholy_disc_ability"), ExtResource("11_morph_technology_disc_to_void_disc_ability"), ExtResource("12_morph_technology_disc_to_water_disc_ability"), ExtResource("13_sell_ability"), ExtResource("14_show_ranges_ability")])
+scene_path = "res://Scenes/Units/Discs/technology_disc.tscn"
+model_scene_path = "res://Scenes/Units/Models/Discs/technology_disc_model.tscn"
+blocks_movement = false
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("17_cancel_upgrade_ability")])
+gold_cost = 2500
+total_gold_cost = 2500

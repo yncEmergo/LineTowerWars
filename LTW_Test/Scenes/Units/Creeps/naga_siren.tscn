@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Units/Creep.gd" id="1_Creep"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/naga_siren_stats.tres" id="2_naga_siren_stats"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/Creeps/naga_siren_model.tscn" id="3_naga_siren_model"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="4_selection_ring"]
+[ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
+
+[sub_resource type="TorusMesh" id="SelectionRing"]
+inner_radius = 0.4285
+outer_radius = 0.4835
+rings = 20
+ring_segments = 4
+material = ExtResource("4_selection_ring")
+
+[node name="NagaSiren" type="Node3D" node_paths=PackedStringArray("_selection_ring")]
+script = ExtResource("1_Creep")
+stats = ExtResource("2_naga_siren_stats")
+_selection_ring = NodePath("SelectionRing")
+health_bar_height = 0.693
+select_radius = 0.429
+select_height = 0.256
+
+[node name="Visual" parent="." instance=ExtResource("3_naga_siren_model")]
+
+[node name="SelectionRing" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("SelectionRing")
+
+[node name="Walk" type="Node" parent="." node_paths=PackedStringArray("_unit", "_body", "_legs", "_arms")]
+script = ExtResource("5_WalkAnimation3D")
+_unit = NodePath("..")
+_body = NodePath("../Visual/Gait")
+_legs = [NodePath("../Visual/Tail1"), NodePath("../Visual/Tail2"), NodePath("../Visual/Tail3"), NodePath("../Visual/Tail4")]
+_arms = [NodePath("../Visual/Gait/Torso/ArmL"), NodePath("../Visual/Gait/Torso/ArmR")]
+leg_phases = PackedFloat32Array(0, 0.25, 0.5, 0.75)
+stride_length = 0.4756
+bob_height = 0.0179

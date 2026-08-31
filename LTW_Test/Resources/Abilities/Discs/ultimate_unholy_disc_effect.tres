@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/UnholyDiscPassive.gd" id="1_UnholyDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_unholy_disc.png" id="2_ultimate_unholy_disc"]
+
+[resource]
+script = ExtResource("1_UnholyDiscPassive")
+ability_id = 406
+display_name = "Corrosion"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_unholy_disc")
+radius_cells = 2.34
+armor_per_hit = 0.1

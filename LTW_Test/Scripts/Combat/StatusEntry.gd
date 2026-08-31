@@ -28,13 +28,22 @@ extends RefCounted
 ##
 ## The ORDER is the order the HUD draws them in, which is why it runs from the
 ## effects a player reacts to - held, then slowed - down to the quiet ones.
+## Five of these are the creep's OWN doing rather than a tower's, which is new
+## with tiers 3 and 4: a shield it converted out of its own health, a ward that
+## makes it briefly untouchable, a haste a packmate handed it, a heal running
+## on it and armour a packmate gave it for good. They live here with the rest
+## because the question the panel asks is "what is on this creep", and a row
+## that only lists the bad half answers a different one.
 enum Kind {
 	STUNNED,
 	PARALYZED,
 	SLOWED,
+	WARDED,
+	SHIELDED,
 	BURNING,
 	POISONED,
 	ARMOR_ERODED,
+	ARMOR_GRANTED,
 	ARMOR_CHANGED,
 	ARMOR_TYPE_ALTERED,
 	SPELL_VULNERABLE,
@@ -42,7 +51,35 @@ enum Kind {
 	ATTACK_SLOWED,
 	ATTACK_WEAKENED,
 	SLOWS_LENGTHENED,
+	HASTED,
+	REGENERATING,
 	GRIPPED,
+	## Cut off from every friendly aura around it. Appended rather than sorted
+	## into place: this enum is written into snapshots as an index, so an entry
+	## inserted anywhere but the end would renumber the ones after it and a
+	## client would draw the wrong effect for a tick. See multiplayer.md.
+	AURA_DENIED,
+	## Everything below here sits on a TOWER rather than on a creep, and all of
+	## it arrives from a technology disc - see TowerBuffs, which is the object
+	## these are flattened out of. Appended for the reason AURA_DENIED was, and
+	## the rule is worth restating because twelve at once is where it would
+	## first be tempting to tidy them into place: THE ORDER IS THE WIRE.
+	##
+	## Three of them - HASTENED, EMPOWERED, LENT - are also what a CREEP's
+	## packmate auras ride out on, since an aura granting armour and a disc
+	## granting armour are the same sentence about a different unit.
+	ATTACK_HASTENED,
+	ATTACK_EMPOWERED,
+	RANGE_EXTENDED,
+	ARMOR_LENT,
+	REGEN_RAISED,
+	MANA_GRANTED,
+	CHILLING_ATTACKS,
+	CHILL_FLOOR,
+	ERODING_ATTACKS,
+	LIFESTEALING,
+	RETURNING_DAMAGE,
+	STUNNING_ATTACKERS,
 }
 
 ## How the magnitude of a kind should be read, which is the whole of what the
@@ -60,6 +97,14 @@ enum Measure {
 	ARMOR_TYPE,
 	## A plain amount of damage, per second or stored.
 	DAMAGE,
+	## A plain number whose UNIT the template around it names - cells of reach,
+	## mana a second, a multiple of what was dealt. Distinct from DAMAGE only in
+	## what it means; both fall through to the same formatting, which is why
+	## _magnitude_text needs no arm for either.
+	##
+	## Unlike Kind, this enum is never written into a snapshot, so it may be
+	## reordered and extended freely.
+	AMOUNT,
 }
 
 ## Given to seconds_left by an effect that has no clock at all: eroded armour is
@@ -79,9 +124,12 @@ const TITLES: Dictionary = {
 	Kind.STUNNED: "Stunned",
 	Kind.PARALYZED: "Paralyzed",
 	Kind.SLOWED: "Slowed",
+	Kind.WARDED: "Warded",
+	Kind.SHIELDED: "Shielded",
 	Kind.BURNING: "Burning",
 	Kind.POISONED: "Poisoned",
 	Kind.ARMOR_ERODED: "Armor Eroded",
+	Kind.ARMOR_GRANTED: "Armor Granted",
 	Kind.ARMOR_CHANGED: "Armor Broken",
 	Kind.ARMOR_TYPE_ALTERED: "Armor Type Altered",
 	Kind.SPELL_VULNERABLE: "Spell Vulnerability",
@@ -89,7 +137,22 @@ const TITLES: Dictionary = {
 	Kind.ATTACK_SLOWED: "Attacks Slowed",
 	Kind.ATTACK_WEAKENED: "Attacks Weakened",
 	Kind.SLOWS_LENGTHENED: "Frozen Marrow",
+	Kind.HASTED: "Hastened",
+	Kind.REGENERATING: "Mending",
 	Kind.GRIPPED: "Gripped",
+	Kind.AURA_DENIED: "Aura Denied",
+	Kind.ATTACK_HASTENED: "Attacks Hastened",
+	Kind.ATTACK_EMPOWERED: "Attacks Empowered",
+	Kind.RANGE_EXTENDED: "Range Extended",
+	Kind.ARMOR_LENT: "Armor Lent",
+	Kind.REGEN_RAISED: "Regeneration Raised",
+	Kind.MANA_GRANTED: "Mana Granted",
+	Kind.CHILLING_ATTACKS: "Chilling Attacks",
+	Kind.CHILL_FLOOR: "Chill Floor",
+	Kind.ERODING_ATTACKS: "Eroding Attacks",
+	Kind.LIFESTEALING: "Lifestealing",
+	Kind.RETURNING_DAMAGE: "Returning Damage",
+	Kind.STUNNING_ATTACKERS: "Stunning Attackers",
 }
 
 ## What each kind does to the creep, with its own magnitude filled in. One "%s"
@@ -98,9 +161,12 @@ const TEMPLATES: Dictionary = {
 	Kind.STUNNED: "Cannot move, attack or act.",
 	Kind.PARALYZED: "Held in place, and can be reached by attacks that only hit ground.",
 	Kind.SLOWED: "Moves %s%% slower.",
+	Kind.WARDED: "Takes no damage at all.",
+	Kind.SHIELDED: "Absorbs the next %s damage before any of it reaches its health.",
 	Kind.BURNING: "Takes %s spell damage per second.",
 	Kind.POISONED: "Holds %s poison damage, dealt at once when it is detonated.",
 	Kind.ARMOR_ERODED: "Armor permanently reduced by %s.",
+	Kind.ARMOR_GRANTED: "Armor permanently raised by %s.",
 	Kind.ARMOR_CHANGED: "Armor reduced by %s.",
 	Kind.ARMOR_TYPE_ALTERED: "Counts as %s armor.",
 	Kind.SPELL_VULNERABLE: "Takes %s%% more spell damage.",
@@ -108,16 +174,34 @@ const TEMPLATES: Dictionary = {
 	Kind.ATTACK_SLOWED: "Attacks %s%% more slowly.",
 	Kind.ATTACK_WEAKENED: "Deals %s%% less attack damage.",
 	Kind.SLOWS_LENGTHENED: "Every slow applied lasts %ss longer.",
+	Kind.HASTED: "Moves %s%% faster.",
+	Kind.REGENERATING: "Restores %s health per second.",
 	Kind.GRIPPED: "Held by an aura, which is stronger the longer it holds on.",
+	Kind.AURA_DENIED: "Hears no friendly aura at all.",
+	Kind.ATTACK_HASTENED: "Attacks %s%% faster.",
+	Kind.ATTACK_EMPOWERED: "Deals %s%% more attack damage.",
+	Kind.RANGE_EXTENDED: "Reaches %s cells further.",
+	Kind.ARMOR_LENT: "Armor raised by %s while this lasts.",
+	Kind.REGEN_RAISED: "Regenerates %s%% more health per second.",
+	Kind.MANA_GRANTED: "Gains %s mana per second.",
+	Kind.CHILLING_ATTACKS: "Each attack slows its target by a further %s%%.",
+	Kind.CHILL_FLOOR: "Those slows accumulate to at most %s%%.",
+	Kind.ERODING_ATTACKS: "Each attack permanently eats %s armor.",
+	Kind.LIFESTEALING: "Heals for %s%% of the physical damage it deals.",
+	Kind.RETURNING_DAMAGE: "Deals %s times what an attacking creep does back to it.",
+	Kind.STUNNING_ATTACKERS: "%s%% chance to stun a creep that attacks it.",
 }
 
 const MEASURES: Dictionary = {
 	Kind.STUNNED: Measure.NONE,
 	Kind.PARALYZED: Measure.NONE,
 	Kind.SLOWED: Measure.PERCENT,
+	Kind.WARDED: Measure.NONE,
+	Kind.SHIELDED: Measure.DAMAGE,
 	Kind.BURNING: Measure.DAMAGE,
 	Kind.POISONED: Measure.DAMAGE,
 	Kind.ARMOR_ERODED: Measure.POINTS,
+	Kind.ARMOR_GRANTED: Measure.POINTS,
 	Kind.ARMOR_CHANGED: Measure.POINTS,
 	Kind.ARMOR_TYPE_ALTERED: Measure.ARMOR_TYPE,
 	Kind.SPELL_VULNERABLE: Measure.PERCENT,
@@ -125,7 +209,22 @@ const MEASURES: Dictionary = {
 	Kind.ATTACK_SLOWED: Measure.PERCENT,
 	Kind.ATTACK_WEAKENED: Measure.PERCENT,
 	Kind.SLOWS_LENGTHENED: Measure.SECONDS,
+	Kind.HASTED: Measure.PERCENT,
+	Kind.REGENERATING: Measure.DAMAGE,
 	Kind.GRIPPED: Measure.NONE,
+	Kind.AURA_DENIED: Measure.NONE,
+	Kind.ATTACK_HASTENED: Measure.PERCENT,
+	Kind.ATTACK_EMPOWERED: Measure.PERCENT,
+	Kind.RANGE_EXTENDED: Measure.AMOUNT,
+	Kind.ARMOR_LENT: Measure.POINTS,
+	Kind.REGEN_RAISED: Measure.PERCENT,
+	Kind.MANA_GRANTED: Measure.AMOUNT,
+	Kind.CHILLING_ATTACKS: Measure.PERCENT,
+	Kind.CHILL_FLOOR: Measure.PERCENT,
+	Kind.ERODING_ATTACKS: Measure.POINTS,
+	Kind.LIFESTEALING: Measure.PERCENT,
+	Kind.RETURNING_DAMAGE: Measure.AMOUNT,
+	Kind.STUNNING_ATTACKERS: Measure.PERCENT,
 }
 
 var kind: Kind = Kind.SLOWED
@@ -146,15 +245,22 @@ var max_stacks: int = 0
 
 ## Everything currently on a unit, from whichever source this machine has one.
 ##
-## Two sources, because there are two kinds of machine. The authority reads the
-## creep's own StatusEffects, which is the real thing. A CLIENT runs no
-## simulation and has none to read (multiplayer.md 3.4), so it reads what the
-## server sent for the unit it asked to be told about - which is the one unit
-## its panel is showing, and no other.
+## Two sources, because there are two kinds of machine. The authority asks the
+## UNIT, which owns the real thing. A CLIENT runs no simulation and has none to
+## read (multiplayer.md 3.4), so it reads what the server sent for the unit it
+## asked to be told about - which is the one unit its panel is showing, and no
+## other.
 ##
-## Here rather than on the panel that first wanted it, because two readouts now
-## ask the same question - the debuff row and the armour line above it - and
-## two copies of this branch is how those two end up disagreeing.
+## Here rather than on the panel that first wanted it, because several readouts
+## now ask the same question - the debuff row, the armour line above it, and
+## every number a disc moves - and two copies of this branch is how those end
+## up disagreeing.
+##
+## POLYMORPHIC on the unit rather than a cast to Creep, which is what it used to
+## be. A tower carries effects too - what a creep curses it with, and what a
+## disc lends it - and a cast meant that half of them reached no client at all.
+## Anything that grows a third kind of effect answers `status_entries()` and is
+## on the wire for free.
 static func for_unit(unit: Unit) -> Array[StatusEntry]:
 	var empty: Array[StatusEntry] = []
 	if unit == null || !is_instance_valid(unit):
@@ -162,23 +268,61 @@ static func for_unit(unit: Unit) -> Array[StatusEntry]:
 
 	if !MatchSession.is_authority():
 		return Replication.effects_for(unit.unit_id)
-
-	var creep: Creep = unit as Creep
-	if creep == null:
-		return empty
-	var status: StatusEffects = creep.status_or_null()
-	return empty if status == null else status.entries()
+	return unit.status_entries()
 
 
 ## Armour points these effects have added to or taken off a unit, which is a
-## negative number nearly every time. For a CLIENT, which has no StatusEffects
-## to ask and so reads its creep's base armour without any of this in it.
+## negative number on a creep and a positive one on a tower standing in a Holy
+## disc. For a CLIENT, whose unit answers its base armour with none of this
+## folded in - see Creep.armor_value and Building.armor_value.
 static func armor_delta_in(entries: Array[StatusEntry]) -> int:
 	var delta: float = 0.0
 	for entry in entries:
-		if entry.kind == Kind.ARMOR_ERODED || entry.kind == Kind.ARMOR_CHANGED:
+		if entry.kind == Kind.ARMOR_ERODED || entry.kind == Kind.ARMOR_CHANGED \
+				|| entry.kind == Kind.ARMOR_GRANTED || entry.kind == Kind.ARMOR_LENT:
 			delta += entry.magnitude
 	return int(round(delta))
+
+
+## Multiplier on how fast the unit these are on attacks, all of them folded
+## together. The client's half of Building.attack_speed_ratio and
+## Creep.attack_speed_ratio, and it reconstructs the authority's answer exactly
+## because each entry stands for one of the factors that answer multiplies.
+## The 0.05 floor is not a guess: it is the same clamp StatusEffects and
+## TowerStatus both apply, so a slow can never take an attack all the way to a
+## stop. Clamping per ENTRY rather than over the product is exact here because
+## each of those objects merges its slows into one number and so contributes at
+## most one of these.
+static func attack_speed_ratio_in(entries: Array[StatusEntry]) -> float:
+	var ratio: float = 1.0
+	for entry in entries:
+		if entry.kind == Kind.ATTACK_SLOWED:
+			ratio *= clampf(1.0 - entry.magnitude, 0.05, 1.0)
+		elif entry.kind == Kind.ATTACK_HASTENED:
+			ratio *= 1.0 + entry.magnitude
+	return ratio
+
+
+## The damage twin of the above, and read the same way.
+static func attack_damage_ratio_in(entries: Array[StatusEntry]) -> float:
+	var ratio: float = 1.0
+	for entry in entries:
+		if entry.kind == Kind.ATTACK_WEAKENED:
+			ratio *= clampf(1.0 - entry.magnitude, 0.0, 1.0)
+		elif entry.kind == Kind.ATTACK_EMPOWERED:
+			ratio *= 1.0 + entry.magnitude
+	return ratio
+
+
+## Cells of reach these effects add, which only a Primal disc ever does. Summed
+## rather than multiplied, because reach is granted in cells rather than as a
+## share - see TowerBuffs.Kind.RANGE.
+static func range_bonus_in(entries: Array[StatusEntry]) -> float:
+	var bonus: float = 0.0
+	for entry in entries:
+		if entry.kind == Kind.RANGE_EXTENDED:
+			bonus += entry.magnitude
+	return bonus
 
 
 ## The armour TYPE these effects have altered a unit into, or `fallback` when

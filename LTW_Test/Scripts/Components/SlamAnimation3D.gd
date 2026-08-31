@@ -160,14 +160,23 @@ func _apply(angle: float) -> void:
 ## selling the tower mid animation cannot take the effect with it. A dedicated
 ## server leaves that root null and gets no effect at all, which is correct.
 func _spawn_shockwave() -> void:
-	if !_shockwave_loaded:
-		_shockwave_loaded = true
-		_shockwave = SceneUtil.load_scene(shockwave_scene_path, "shockwave")
-	if _shockwave == null:
-		return
-
+	# The ROOT first, before the load. A dedicated server has none, and asking
+	# it to load a ring - and every mesh and material that ring reaches - only
+	# to drop it again is work it can never use. The old order also meant the
+	# server paid that cost for every swinging tower in every lane.
 	var root: Node3D = References.effects_root
 	if root == null:
+		return
+
+	if !_shockwave_loaded:
+		_shockwave_loaded = true
+		# Empty is the documented "no shockwave" rather than a mistake - see
+		# the export above - so it is tested for here rather than left to
+		# SceneUtil, which reports an empty path as the error it usually is.
+		# The builder's hammer is the one in the roster that wants none.
+		if !shockwave_scene_path.is_empty():
+			_shockwave = SceneUtil.load_scene(shockwave_scene_path, "shockwave")
+	if _shockwave == null:
 		return
 
 	var effect: Node3D = _shockwave.instantiate() as Node3D

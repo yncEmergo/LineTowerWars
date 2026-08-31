@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BoneShieldPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/BoneShieldPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 324
+display_name = "Bone Shield"
+targeting = 0
+spell_damage_ratio = 0.25
+duration_ratio = 0.5
+chill_ratio = 0.0
+health_per_armor_point = 0.04

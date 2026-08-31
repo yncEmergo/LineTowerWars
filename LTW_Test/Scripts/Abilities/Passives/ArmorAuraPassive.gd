@@ -18,7 +18,7 @@ extends CreepPassive
 @export var armor_bonus: int = 3
 
 
-func aura_armor_bonus() -> int:
+func aura_armor_bonus(_creep: Creep) -> int:
 	return armor_bonus
 
 

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/power_of_the_destroyer.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/annihilation_aura.tres" id="11_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/exhume_ghouls.tres" id="12_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/obsidian_statue.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 173
+display_name = "Obsidian Statue"
+max_health = 1111025
+armor_type = 5
+armor = 20
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card"), ExtResource("12_card")])
+scene_path = "res://Scenes/Units/Creeps/obsidian_statue.tscn"
+move_speed = 1.5625
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 1
+gold_cost = 600000
+income_gain = 12000
+population = 3
+unlock_seconds = 0.0
+max_stock = 8
+stock_regen_seconds = 16.0
+body_radius = 0.24
+bounty = 54000

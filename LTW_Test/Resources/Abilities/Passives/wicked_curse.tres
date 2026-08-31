@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WickedCursePassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/WickedCursePassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 344
+display_name = "Wicked Curse"
+targeting = 0
+radius_cells = 1.563
+max_towers = 3
+speed_share = 0.3
+duration_seconds = 10.0

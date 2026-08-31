@@ -1,8 +1,8 @@
 # ModelGen
 
-Generates the placeholder art the game ships with: the tower and creep
-models, the materials they share, the towers' projectiles and impacts, and the
-`.tres` content that points at all of it.
+Generates the placeholder art the game ships with: the tower and creep models,
+the technology discs' ground patches, the materials they all share, the towers'
+projectiles and impacts, and the `.tres` content that points at all of it.
 
 Not part of the build. Nothing at runtime knows it exists, and `.gdignore`
 keeps Godot's filesystem out of this folder entirely.
@@ -17,7 +17,11 @@ python Tools/ModelGen/generate.py models          one stage
 python Tools/ModelGen/generate.py --showcase      plus the review scenes
 ```
 
-Stages are `materials`, `effects`, `models`, `content`. It is idempotent: a run
+Stages are `materials`, `effects`, `models`, `content`. The discs are written by
+the last two alongside everything else - they have no stage of their own,
+because they share the `content` stage's ordering constraint: the builder's
+build menu has to name the disc's build ability, and that ability is the disc
+content stage's to write. It is idempotent: a run
 with nothing changed rewrites every file byte for byte, so `git status` after a
 run tells you exactly what your edit did.
 
@@ -72,6 +76,10 @@ generator.
 | `creep_roster.py` | the creep table, straight from `unit_data.md` 6.2 | balance changes |
 | `creep_models.py` | the creep body plans and the creep ladder | shapes change |
 | `creep_content.py` | creep PREFABS. **Not** their stats, see below | wiring changes |
+| `disc_style.py` | the DISC visual language, kept out of `style.py` | the look changes |
+| `disc_roster.py` | the disc table and its ten effects, from `unit_data.md` §5 | balance changes |
+| `disc_models.py` | one ground material and one flat scene per disc | the look changes |
+| `disc_content.py` | disc stats, prefabs, effects, morphs, the build button | rules changes |
 | `materials.py`, `effects.py` | the shared palette; projectiles and impacts | |
 | `showcase.py` | throwaway review scenes, opt in | |
 
@@ -126,6 +134,13 @@ meet, how to verify the result, and every trap that has already been paid for.
 The short version of the shape of the work: only the top two layers are new.
 Everything from `style.py` down is inherited.
 
+- **Technology discs** were the cheapest and the strangest: they have NO MODEL.
+  A disc is painted onto the floor, so its whole visual roster is one shader,
+  one material per disc and a two node scene to hang it on - `modelkit` is not
+  imported at all. What it inherits is `style.py`'s ten element hues and ten
+  side counts, read rather than restated, so a Fire disc and a Fire tower
+  cannot disagree about what Fire looks like. Read PLACEHOLDER_ART.md section
+  12 before building anything else that lies flat.
 - **Elemental towers** were the cheap case they were predicted to be: the same
   material roles and the same shape of ladder, plus a palette entry per
   element, a builder per shape, an ability table and a content file.

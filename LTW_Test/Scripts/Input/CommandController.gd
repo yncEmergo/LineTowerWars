@@ -49,6 +49,11 @@ var _range_reveal_left: float = 0.0
 ## Footprint of the armed placement in internal cells. Cached on arming so the
 ## per-frame preview never has to probe the prefab again.
 var _armed_footprint: Vector2i = Vector2i.ZERO
+## Whether what is armed will be a WALL. Cached alongside the footprint and for
+## the same reason, and it decides whether the preview runs the route test at
+## all - a technology disc is walkable, so no placement of one can ever be
+## refused for sealing the maze. See PlayerArea.can_place.
+var _armed_blocks: bool = true
 ## Cursor position taken from the input stream rather than polled from the
 ## viewport, so the preview follows the events the game actually received.
 var _last_mouse_position: Vector2 = Vector2.ZERO
@@ -249,6 +254,7 @@ func _begin_placement(ability: UnitAbility) -> void:
 		return
 
 	_armed_footprint = area.cells_to_internal(build.footprint_cells())
+	_armed_blocks = build.blocks_movement()
 	# Seed from the real cursor, then follow input events from here on.
 	_last_mouse_position = get_viewport().get_mouse_position()
 
@@ -264,6 +270,7 @@ func _end_placement() -> void:
 		_preview.queue_free()
 	_preview = null
 	_armed_footprint = Vector2i.ZERO
+	_armed_blocks = true
 
 
 func _process(delta: float) -> void:
@@ -283,7 +290,7 @@ func _update_preview() -> void:
 
 	var cell: Vector2i = area.snap_footprint(point, _armed_footprint)
 	var center: Vector3 = area.footprint_world_center(cell, _armed_footprint)
-	var legal: bool = area.can_place(cell, _armed_footprint) \
+	var legal: bool = area.can_place(cell, _armed_footprint, _armed_blocks) \
 		&& !_ghost_in_the_way(area, cell)
 	_preview.show_at(center,
 		UnitModel.Tint.VALID if legal else UnitModel.Tint.INVALID)

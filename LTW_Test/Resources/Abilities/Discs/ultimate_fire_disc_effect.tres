@@ -1,0 +1,16 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/FireDiscPassive.gd" id="1_FireDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_fire_disc.png" id="2_ultimate_fire_disc"]
+
+[resource]
+script = ExtResource("1_FireDiscPassive")
+ability_id = 391
+display_name = "Detonate"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_fire_disc")
+radius_cells = 0
+max_health_share = 0.33
+cooldown_seconds = 15
+creep_immunity_seconds = 3.6

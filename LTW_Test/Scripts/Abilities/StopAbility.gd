@@ -20,10 +20,12 @@ func execute(unit: Unit, _target: AbilityTarget) -> void:
 		return
 	if unit.order_queue != null:
 		unit.order_queue.clear()
-	elif unit.has_method("stop"):
-		# No chain to clear, so the plain halt is the whole of it. The branch
-		# rather than both, because clearing already stops the unit and calling
-		# it twice would only be saying the same thing again.
+	if unit.has_method("stop"):
+		# BOTH, not one or the other. Clearing a chain already halts the unit,
+		# so this used to be an else - but a halt is now the only way to call a
+		# Phoenix dive off, and a Phoenix that had been given an order at some
+		# point has a queue and would have skipped it. Calling stop() on a unit
+		# that has already stopped says the same thing twice and costs nothing.
 		unit.stop()
 
 

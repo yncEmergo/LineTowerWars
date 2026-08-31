@@ -61,8 +61,13 @@ static func creeps_in_radius(area: PlayerArea, center: Vector3, radius: float) -
 ## than the nearest, so it wants them all and chooses for itself.
 ##
 ## Only towers are ever found, and structurally rather than by filtering: the
-## builder is a MobileUnit and a sender is not in the world at all, so neither
-## is a Building this could return. unit_data.md 1.5 is the rule.
+## builder is a MobileUnit, a sender is not in the world at all, and a
+## technology disc is invulnerable, so none of them is a Building this could
+## return. unit_data.md 1.5 is the rule.
+##
+## Which also means a disc's OWN aura cannot find another disc through here,
+## and that is the answer the disc auras want: every one of them is stated as
+## reaching friendly TOWERS.
 static func buildings_in_radius(area: PlayerArea, center: Vector3,
 		radius: float) -> Array[Building]:
 	var found: Array[Building] = []
@@ -99,11 +104,11 @@ static func buildings_in_radius(area: PlayerArea, center: Vector3,
 ## slots filled by a single pass and read back here in that same order, which
 ## is the same answer for a quarter of the work - see _scan.
 static func best_target(area: PlayerArea, center: Vector3, stats: AttackStats,
-		prefer_air: bool = false) -> Creep:
+		prefer_air: bool = false, range_bonus: float = 0.0) -> Creep:
 	if area == null || stats == null:
 		return null
 
-	var found: Array[Creep] = _scan(area, center, stats)
+	var found: Array[Creep] = _scan(area, center, stats, range_bonus)
 	var air_first: bool = prefer_air && stats.can_hit_air()
 
 	if air_first && found[SLOT_FLYER] != null:
@@ -124,14 +129,15 @@ static func best_target(area: PlayerArea, center: Vector3, stats: AttackStats,
 ## reading it would be answering a question nobody asked.
 ##
 ## Only towers are ever found here, and that is structural rather than
-## filtered: the builder is a MobileUnit and the send building is invulnerable,
-## so neither is a Building this could return, and a technology disc will be
-## invulnerable for the same reason. unit_data.md 1.5 is the rule.
+## filtered: the builder is a MobileUnit, and the send building and the
+## technology discs are invulnerable, so none of the three is a Building this
+## could return. unit_data.md 1.5 is the rule, and it is why a wall of discs is
+## a wall an attacker creep cannot open.
 static func best_building_target(area: PlayerArea, center: Vector3,
-		stats: AttackStats) -> Building:
+		stats: AttackStats, range_bonus: float = 0.0) -> Building:
 	if stats == null:
 		return null
-	return _nearest_building(area, center, stats.attack_range)
+	return _nearest_building(area, center, stats.attack_range + range_bonus)
 
 
 ## The nearest building anywhere in the area, however far away it is.
@@ -159,14 +165,20 @@ static func nearest_building(area: PlayerArea, center: Vector3) -> Building:
 ##
 ## Ties still go to the creep found first, because the offer is a strict
 ## improvement and the lane is walked in the one order both machines agree on.
-static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats) -> Array[Creep]:
+static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats,
+		range_bonus: float = 0.0) -> Array[Creep]:
 	var best: Array[Creep] = []
 	var scores: Array[float] = []
 	best.resize(SLOT_COUNT)
 	scores.resize(SLOT_COUNT)
 	scores.fill(NO_SCORE)
 
-	var limit: float = stats.attack_range * stats.attack_range
+	# The reach the SHOOTER has right now rather than the one its stats file
+	# records: a Primal disc standing beside a tower lends it cells, and a
+	# search that read only the stats would have the tower refuse to shoot at
+	# something its own attack would happily reach. See Unit.attack_range_bonus.
+	var reach: float = stats.attack_range + range_bonus
+	var limit: float = reach * reach
 	for creep: Creep in area.creeps():
 		if !_is_attackable(creep) || !can_be_hit_by(creep, stats):
 			continue

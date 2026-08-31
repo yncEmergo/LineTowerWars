@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/infernal_hide.tres" id="1_infernal_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/infernal_hide_deep.tres" id="2_infernal_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/infernal_hide_pale.tres" id="3_infernal_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r8.tres" id="4_carapace_r8"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r8.tres" id="5_eye_r8"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -23,11 +23,11 @@ material = ExtResource("2_infernal_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.1815, 0.074, 0.236)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_4"]
 size = Vector3(0.0545, 0.1089, 0.0635)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
 radius = 0.1037
@@ -45,11 +45,11 @@ material = ExtResource("2_infernal_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.1815, 0.074, 0.236)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
 size = Vector3(0.0545, 0.1089, 0.0635)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_9"]
 top_radius = 0.2237
@@ -75,15 +75,15 @@ material = ExtResource("3_infernal_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_12"]
 size = Vector3(0.2431, 0.0267, 0.056)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="BoxMesh" id="BoxMesh_13"]
 size = Vector3(0.2091, 0.0267, 0.056)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="BoxMesh" id="BoxMesh_14"]
 size = Vector3(0.1751, 0.0267, 0.056)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="SphereMesh" id="SphereMesh_15"]
 radius = 0.1297
@@ -101,11 +101,11 @@ radius = 0.0285
 height = 0.0571
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_18"]
 size = Vector3(0.0545, 0.2204, 0.0441)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_19"]
 radius = 0.1011
@@ -130,7 +130,7 @@ material = ExtResource("3_infernal_hide_pale")
 
 [sub_resource type="PrismMesh" id="PrismMesh_22"]
 size = Vector3(0.0506, 0.086, 0.0455)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_23"]
 radius = 0.1011
@@ -155,7 +155,7 @@ material = ExtResource("3_infernal_hide_pale")
 
 [sub_resource type="PrismMesh" id="PrismMesh_26"]
 size = Vector3(0.0506, 0.086, 0.0455)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="StandardMaterial3D" id="M_Flames"]
 shading_mode = 0
@@ -176,11 +176,11 @@ material = SubResource("M_Flames")
 
 [sub_resource type="BoxMesh" id="BoxMesh_28"]
 size = Vector3(0.1167, 0.0486, 0.2801)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [sub_resource type="PrismMesh" id="PrismMesh_29"]
 size = Vector3(0.0778, 0.1167, 0.0681)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r8")
 
 [node name="InfernalModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

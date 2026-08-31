@@ -105,6 +105,28 @@ extends Resource
 ## exactly as an upgrade does, so a return can never be used to open a path.
 ## See ReturnToCoreAbility.
 @export var return_to_core_seconds: float = 3.0
+## Seconds a technology disc takes to morph back down to an inactive one.
+##
+## Its own figure and deliberately the longest of the three morphs, because the
+## source game made it one: 11.7a raised it from three seconds to five to
+## discourage swapping discs on the fly to answer an incoming send. A disc is
+## meant to be a decision about the shape of a maze rather than a switch, and
+## the wait is what makes that true. unit_data.md 1.8.
+@export var disc_morph_down_seconds: float = 5.0
+## How often a technology disc re-reads what is standing around it, in seconds.
+##
+## The same quarter-second beat every other aura in the game runs on, and for
+## the same reason: nothing a disc grants can change fast enough for a quarter
+## second to show, and running one every tick would have each disc walk the
+## whole maze twenty times a second. See TowerPassive.AURA_REFRESH_SECONDS.
+@export var disc_aura_refresh_seconds: float = 0.25
+## How long each of those grants is applied for.
+##
+## Comfortably longer than the beat above, so a tower standing inside a disc's
+## radius never flickers between refreshes. What it costs is that a tower whose
+## disc has just been sold keeps the boon for the rest of the window, which is
+## a fraction of a second and is the cheap half of the trade.
+@export var disc_aura_hold_seconds: float = 1.0
 ## Seconds a destroyed tower leaves its cells unbuildable. The cells are
 ## walkable again immediately - it is only the rebuild that waits, which is
 ## what stops an attacker's work being undone the instant it finishes.
@@ -213,6 +235,30 @@ extends Resource
 ## Ceiling on a player's living sent creeps, as the sum of their population
 ## costs. Displayed today; nothing enforces it yet.
 @export var population_cap: int = 100
+
+@export_group("Sudden Death")
+## Seconds into the match at which Sudden Death begins, or 0 to switch the
+## whole rule off.
+##
+## THE ONE PLACE A TIER MEANS ANYTHING. Every other creep in the game unlocks
+## on its own start delay and stays sendable for the rest of the match; at this
+## moment the whole of tier 4 unlocks at once and tiers 1 to 3 stop being
+## sendable at all. It is the only time a creep is ever taken AWAY from a
+## player. See unit_data.md 1.7 and 6.5.
+@export var sudden_death_seconds: float = 1500.0
+## The lowest income anybody enters Sudden Death with. A player under it is
+## raised to it the moment it starts, so a match that is being lost slowly can
+## still afford what the last tier costs. 0 switches the raise off.
+@export var sudden_death_income_floor: int = 1000000
+## Income above which tier 4 creeps stop paying properly. 0 removes the cap.
+@export var income_cap: int = 4000000
+## Share of a tier 4 creep's income a player over the cap actually receives.
+##
+## Only tier 4, deliberately, and only above the cap: everything below is paid
+## in full, and a tier 1 send pays in full at any income at all. What the rule
+## is for is stopping Sudden Death from compounding, since by then the creeps
+## are meant to be ending the match rather than paying for the next one.
+@export_range(0.0, 1.0, 0.05) var income_share_above_cap: float = 0.25
 @export var life_pool: int = 200
 @export var min_starting_lives: int = 25
 

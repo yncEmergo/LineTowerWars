@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/creep_hide.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/hide_color = Color(0.44, 0.47, 0.4, 1)
+shader_parameter/hide_dark_color = Color(0.27, 0.29, 0.24, 1)
+shader_parameter/band_frequency = 9
+shader_parameter/band_strength = 0.289
+shader_parameter/band_axis = Vector3(0, 1, 0)
+shader_parameter/ambient_wrap = 0.55
+shader_parameter/sheen_strength = 0.3
+shader_parameter/rim_color = Color(0.88, 0.96, 0.8, 1)
+shader_parameter/rim_strength = 0.7
+shader_parameter/rim_power = 2.4
+shader_parameter/roughness_value = 0.82

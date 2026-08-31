@@ -138,7 +138,13 @@ def gen_prefab(key, display, family, built):
                props=['_unit = NodePath("..")'])
 
     _add_walk(s, built)
-    if built["strike"]:
+    # ONLY AN ATTACKER GETS ONE, whatever the model offers. Two plans build a
+    # swinging arm for reasons of their own - the machine's crane is scenery on
+    # a Goblin Shredder and a weapon on a Siege Engine - so a prefab that wired
+    # the component wherever a `Swing` node existed handed one to a creep with
+    # no attack at all, which errors on its first frame. The MODEL says what
+    # can swing; the FAMILY says whether anything ever does.
+    if built["strike"] and family == cr.ATTACKER:
         s.node("Strike", "Node", ".", node_paths=["_unit", "_swing"],
                script=s.ext("Script", S_STRIKE),
                props=['_unit = NodePath("..")',

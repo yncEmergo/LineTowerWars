@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DiscUpgradeAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscUpgradeAbility.gd" id="1_DiscUpgradeAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Discs/ultimate_unholy_disc_stats.tres" id="2_ultimate_unholy_disc_stats"]
+
+[resource]
+script = ExtResource("1_DiscUpgradeAbility")
+ability_id = 438
+tower_stats = ExtResource("2_ultimate_unholy_disc_stats")
+display_name = "Upgrade to Ultimate Unholy Disc"
+description = "Attacks by friendly towers around it permanently eat armor."
+targeting = 1
+slot = 0
+required_element = 7
+required_element_techs = 3
+unique_per_player = true

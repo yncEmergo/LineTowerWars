@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/dragonspawn_hide.tres" id="1_dragonspawn_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/dragonspawn_hide_deep.tres" id="2_dragonspawn_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/dragonspawn_hide_pale.tres" id="3_dragonspawn_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r6.tres" id="4_carapace_r6"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r6.tres" id="5_eye_r6"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -23,11 +23,11 @@ material = ExtResource("2_dragonspawn_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.0744, 0.0314, 0.0967)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_4"]
 size = Vector3(0.0223, 0.0446, 0.026)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
 radius = 0.0446
@@ -45,11 +45,11 @@ material = ExtResource("2_dragonspawn_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.0744, 0.0314, 0.0967)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
 size = Vector3(0.0223, 0.0446, 0.026)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="SphereMesh" id="SphereMesh_9"]
 radius = 0.1042
@@ -70,7 +70,7 @@ inner_radius = 0.099
 outer_radius = 0.125
 rings = 12
 ring_segments = 4
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="BoxMesh" id="BoxMesh_12"]
 size = Vector3(0.2585, 0.1056, 0.154)
@@ -93,22 +93,22 @@ material = ExtResource("3_dragonspawn_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_15"]
 size = Vector3(0.1169, 0.0318, 0.0393)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_16"]
 size = Vector3(0.0281, 0.0842, 0.1777)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="SphereMesh" id="SphereMesh_17"]
 radius = 0.0168
 height = 0.0337
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_18"]
 size = Vector3(0.0337, 0.1403, 0.0281)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_19"]
 radius = 0.034
@@ -162,23 +162,23 @@ material = ExtResource("2_dragonspawn_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_26"]
 size = Vector3(0.1088, 0.0153, 0.0306)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="BoxMesh" id="BoxMesh_27"]
 size = Vector3(0.0476, 0.2481, 0.017)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_28"]
 size = Vector3(0.0476, 0.0546, 0.017)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="BoxMesh" id="BoxMesh_29"]
 size = Vector3(0.0616, 0.0499, 0.1467)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_30"]
 size = Vector3(0.0469, 0.1247, 0.044)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [node name="DragonspawnModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

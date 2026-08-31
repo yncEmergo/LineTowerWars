@@ -6,16 +6,17 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_lesser_cutter_ability.tres" id="4_build_lesser_cutter_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres" id="5_build_lesser_sentry_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_elemental_core_ability.tres" id="6_build_elemental_core_ability"]
-[ext_resource type="Resource" path="res://Resources/Config/Hotkeys/build_hotkey.tres" id="7_build_hotkey"]
-[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_build.png" id="8_ability_build"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/build_technology_disc_ability.tres" id="7_build_technology_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Config/Hotkeys/build_hotkey.tres" id="8_build_hotkey"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_build.png" id="9_ability_build"]
 
 [resource]
 script = ExtResource("1_BuildMenuAbility")
 ability_id = 7
-buildable = Array[ExtResource("2_UnitAbility")]([ExtResource("3_build_lesser_archer_ability"), ExtResource("4_build_lesser_cutter_ability"), ExtResource("5_build_lesser_sentry_ability"), ExtResource("6_build_elemental_core_ability")])
+buildable = Array[ExtResource("2_UnitAbility")]([ExtResource("3_build_lesser_archer_ability"), ExtResource("4_build_lesser_cutter_ability"), ExtResource("5_build_lesser_sentry_ability"), ExtResource("6_build_elemental_core_ability"), ExtResource("7_build_technology_disc_ability")])
 display_name = "Build"
 description = "Open the build menu. Every tower above these is reached by upgrading one of them."
 targeting = 4
 slot = 7
-hotkey_action = ExtResource("7_build_hotkey")
-icon = ExtResource("8_ability_build")
+hotkey_action = ExtResource("8_build_hotkey")
+icon = ExtResource("9_ability_build")

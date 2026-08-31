@@ -47,6 +47,14 @@ extends MobileUnitStats
 ## max_stock, which is what the source game gives nearly everything; the
 ## attacker creeps are the exception and start at exactly 1.
 @export var initial_stock: int = -1
+## Whether this creep is refused outright once its sender is over the income
+## cap, rather than merely paying less for being over it.
+##
+## One creep in the roster: the Treasure Goblin is nothing BUT income, so a
+## Goblin that paid a quarter would be a creep with no purpose left rather than
+## a weaker one (unit_data.md 6.5). Refused before any gold moves, so there is
+## nothing to refund.
+@export var refused_above_income_cap: bool = false
 
 @export_group("Creep")
 ## Half the creep's width. Must stay under half an internal cell, since the
@@ -74,6 +82,19 @@ extends MobileUnitStats
 ## of them is deliberately part full: Wind Rush starts at 10 of 14, so its
 ## creep is four points from its first cast rather than fourteen.
 @export var starting_mana: int = 0
+## Mana this creep gets back per second, for the traits whose pool fills on a
+## clock rather than on being hit.
+##
+## `?` A CHOICE, not a reading. The source game states the ceiling every one of
+## these traits fires at and never states how the pool gets there, because in
+## Warcraft III it is the unit's ordinary mana regeneration - a number this
+## game has no equivalent of. So it is authored per creep here, next to the
+## ceiling it has to reach, and the figure a creep carries is chosen from how
+## often its trait should fire rather than copied from anywhere.
+##
+## Zero for every creep whose pool is filled by something else: Chaotic Void
+## and Siren's Song fill on damage taken, and Chaos Barrier only ever drains.
+@export var mana_regen_per_second: float = 0.0
 
 @export_group("Creep Kind")
 ## Attacker creeps go after the towers standing in the area rather than walking

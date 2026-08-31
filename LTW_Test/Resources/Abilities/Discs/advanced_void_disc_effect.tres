@@ -1,0 +1,15 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/VoidDiscPassive.gd" id="1_VoidDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/advanced_void_disc.png" id="2_advanced_void_disc"]
+
+[resource]
+script = ExtResource("1_VoidDiscPassive")
+ability_id = 408
+display_name = "Emptiness"
+targeting = 0
+slot = 6
+icon = ExtResource("2_advanced_void_disc")
+radius_cells = 2.34
+damage_per_type = 0.02
+damage_cap = 0.16

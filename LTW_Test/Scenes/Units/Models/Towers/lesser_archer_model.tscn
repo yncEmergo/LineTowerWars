@@ -44,7 +44,7 @@ mesh = SubResource("CylinderMesh_2")
 [node name="Turret" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1512, 0)
 
-[node name="CrossBar" type="MeshInstance3D" parent="Turret"]
+[node name="Stock" type="MeshInstance3D" parent="Turret"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0328)
 mesh = SubResource("BoxMesh_3")
 

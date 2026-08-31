@@ -71,6 +71,26 @@ func owns(player_id: int, tech_id: int) -> bool:
 	return tech != null && tech.has(tech_id)
 
 
+## How many of one element three technologies this player owns, 0 to 3.
+##
+## The question the technology DISCS ask instead of owns(): an Advanced disc
+## needs two of the three and an Ultimate needs all three, and neither is a
+## single id. Counted rather than stored, because it is asked by a command card
+## being drawn rather than every tick, and a stored tally is a second copy of
+## PlayerTech that can go stale.
+func element_tech_count(player_id: int, element: TechDefinition.Element) -> int:
+	var tech: PlayerTech = _tech_of(player_id)
+	var registry: TechRegistry = _registry()
+	if tech == null || registry == null:
+		return 0
+
+	var owned: int = 0
+	for definition: TechDefinition in registry.for_element(element):
+		if tech.has(definition.tech_id):
+			owned += 1
+	return owned
+
+
 ## What the NEXT technology costs this player, whichever one it is.
 ##
 ## The price is a property of how many they have already bought rather than of
