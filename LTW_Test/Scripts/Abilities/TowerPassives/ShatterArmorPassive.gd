@@ -33,7 +33,7 @@ extends TowerPassive
 func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.erode_armor(armor_per_hit, armor_floor)
+		status.erode_armor(self, armor_per_hit, armor_floor)
 	if self_heal_share > 0.0:
 		tower.heal(int(round(float(dealt) * self_heal_share)))
 

@@ -1,16 +1,16 @@
-[gd_resource type="Resource" script_class="IceLancePassive" format=3 uid="uid://gmudypmc1l2u"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://c1a0cpyfypi6q" path="res://Scripts/Abilities/TowerPassives/IceLancePassive.gd" id="1_IceLancePassive"]
-[ext_resource type="Texture2D" uid="uid://cy8ppjchhj36l" path="res://2DArt/Icons/ultimate_crystal.png" id="2_ultimate_crystal"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/IceLancePassive.gd" id="1_IceLancePassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_crystal.png" id="2_ultimate_crystal"]
 
 [resource]
 script = ExtResource("1_IceLancePassive")
+ability_id = 143
+display_name = "Crystalized Light"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_crystal")
 max_targets = 20
 damage_per_target = 0.1
 mana_drain_per_second = 0.35
 mana_drain_seconds = 12
-ability_id = 143
-display_name = "Crystalized Light"
-icon = ExtResource("2_ultimate_crystal")
-targeting = 0
-slot = 11

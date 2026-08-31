@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="BombardmentPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/BombardmentPassive.gd" id="1_passive"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="2_attack_stats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="3_projectile"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("3_projectile")
+projectile_scene_path = "res://Scenes/Effects/missile.tscn"
+speed = 9.0
+arc_height = 1.8
+impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
+
+[sub_resource type="Resource" id="Rocket"]
+script = ExtResource("2_attack_stats")
+damage_min = 44
+damage_max = 52
+damage_type = 4
+target_class = 1
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 304
+display_name = "Bombardment"
+targeting = 0
+interval_seconds = 4.0
+radius_cells = 3.125
+rocket = SubResource("Rocket")

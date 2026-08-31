@@ -39,8 +39,8 @@ extends TowerPassive
 func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.chill(chill_source, slow_per_hit, slow_cap, slow_seconds)
-		status.erode_armor(armor_per_hit, armor_floor)
+		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
+		status.erode_armor(self, armor_per_hit, armor_floor)
 	_heal_towers(tower, dealt)
 
 
@@ -68,8 +68,8 @@ func _heal_towers(tower: Building, dealt: int) -> void:
 
 func effect_text() -> String:
 	var text: String = ("Each hit slows by %s%% up to %s%% and permanently"
-		+ " takes %s armor, down to %s - the only effect that pushes armor"
-		+ " below zero.") % [
+		+ " takes %s armor, down to %s. Armor can be pushed below zero, which"
+		+ " makes every later hit on that creep land harder.") % [
 		StringUtil.trim_number(slow_per_hit * 100.0),
 		StringUtil.trim_number(slow_cap * 100.0),
 		StringUtil.trim_number(armor_per_hit),
@@ -80,3 +80,9 @@ func effect_text() -> String:
 			StringUtil.trim_number(heal_cells),
 			StringUtil.trim_number(tower_heal_share * 100.0)]
 	return text
+
+
+## The healing radius, on the tier that heals. The tiers below reach nothing
+## and answer 0 rather than drawing a circle that does nothing.
+func display_radius(_unit: Unit) -> float:
+	return heal_cells if tower_heal_share > 0.0 else 0.0

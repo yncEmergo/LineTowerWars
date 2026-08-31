@@ -1,0 +1,16 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/BlazingInfernoPassive.gd" id="1_BlazingInfernoPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_moonbeam.png" id="2_lesser_moonbeam"]
+
+[resource]
+script = ExtResource("1_BlazingInfernoPassive")
+ability_id = 130
+display_name = "Blazing Inferno"
+targeting = 0
+slot = 6
+icon = ExtResource("2_lesser_moonbeam")
+decay_per_second = 0.0083
+max_bonus_share = 3
+explosion_share = 0.66
+explosion_cells = 1.56

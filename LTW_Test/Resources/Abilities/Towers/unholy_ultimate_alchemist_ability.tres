@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="DevourEssencePassive" format=3 uid="uid://bspfga5jgrqvh"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dliv4sp3xr6ds" path="res://Scripts/Abilities/TowerPassives/DevourEssencePassive.gd" id="1_DevourEssencePassive"]
-[ext_resource type="Texture2D" uid="uid://bldkx41pwilt" path="res://2DArt/Icons/ultimate_alchemist.png" id="2_ultimate_alchemist"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/DevourEssencePassive.gd" id="1_DevourEssencePassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_alchemist.png" id="2_ultimate_alchemist"]
 
 [resource]
 script = ExtResource("1_DevourEssencePassive")
-damage_per_kill = 5
-damage_cap = 500
-armor_type_seconds = 8
 ability_id = 175
 display_name = "Unholy Concoction"
-icon = ExtResource("2_ultimate_alchemist")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_ultimate_alchemist")
+damage_per_kill = 5
+damage_cap = 500
+overflow_cells = 2.34
+armor_type_seconds = 8

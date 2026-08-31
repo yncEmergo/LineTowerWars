@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://2mnul0bjiuw2"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://pwdfba6qnbb3" path="res://Resources/UnitStats/Towers/holy_greater_titan_vault_stats.tres" id="2_holy_greater_titan_vault_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/holy_greater_titan_vault_stats.tres" id="2_holy_greater_titan_vault_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 238
 tower_stats = ExtResource("2_holy_greater_titan_vault_stats")
 required_tech_id = 21
-ability_id = 238
 display_name = "Upgrade to Greater Titan Vault"
-description = "Support. Strikes many creeps at once and leaves them taking more Spell Damage from everything."
+description = "Support. Hits many creeps at once, and carries an aura that weakens and slows everything standing near it."
+targeting = 1
 slot = 0

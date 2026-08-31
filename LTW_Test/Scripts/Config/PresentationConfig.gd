@@ -41,6 +41,30 @@ enum OwnerColors {
 ## it is, 1 replaces it with flat colour.
 @export_range(0.0, 1.0, 0.05) var preview_foundation_tint: float = 0.55
 
+@export_group("Command Card", "card_")
+## Seconds of a one-off wait that the cooldown fill actually sweeps through.
+##
+## The fill answers "how much longer", and it can only read as an answer over a
+## span a player can feel. A creep that opens five minutes into a match would
+## otherwise sit under a fill that has not visibly moved since the match began,
+## which looks broken rather than patient - so a wait longer than this is drawn
+## covered whole, and the sweep starts when the wait comes inside the window.
+##
+## The COUNTDOWN in the middle of the square is unaffected and counts the whole
+## way down: the number is the precise answer, the fill is the glanceable one.
+@export var card_lockout_sweep_seconds: float = 60.0
+
+@export_group("Status Effects", "status_")
+## Seconds of a debuff's remaining life that its icon's wedge sweeps through.
+##
+## The mirror of the card's lockout sweep, and a window for the same reason:
+## nothing records what a debuff's duration STARTED at - a chill refreshed by a
+## second hit keeps the longer of two countdowns and has forgotten both - so
+## there is no fraction of a whole to draw. The window answers the question a
+## player actually asks of a debuff icon, which is whether it is about to fall
+## off, and anything with longer left than this simply draws clear.
+@export var status_expiry_sweep_seconds: float = 5.0
+
 @export_group("Minimap", "minimap_")
 ## Ground under everything, and what an empty map slot looks like. Black,
 ## because the world itself is black outside the player areas.

@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://doole2s2k3ox2"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://dvp80ya3lrnh8" path="res://Resources/UnitStats/Towers/lightning_lesser_annihilation_glyph_stats.tres" id="2_lightning_lesser_annihilation_glyph_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lightning_lesser_annihilation_glyph_stats.tres" id="2_lightning_lesser_annihilation_glyph_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 226
 tower_stats = ExtResource("2_lightning_lesser_annihilation_glyph_stats")
 required_tech_id = 14
-ability_id = 226
 display_name = "Upgrade to Lesser Annihilation Glyph"
 description = "The longest reach in the game. Ramps up on one target and loses everything when it switches."
+targeting = 1
 slot = 0

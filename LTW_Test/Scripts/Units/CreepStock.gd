@@ -3,9 +3,16 @@ extends RefCounted
 
 ## The reserve of sends held for one creep type.
 ##
-## It starts part full rather than empty or full: the source game hands a creep
-## half its maximum the moment it unlocks, and the attacker creeps exactly one.
-## CreepStats.starting_stock() is where that is decided, so this only ever asks.
+## It holds NOTHING until its creep unlocks, and is handed a part full reserve
+## at that moment: the source game gives a creep half its maximum the moment it
+## opens, and the attacker creeps exactly one. CreepStats.starting_stock() is
+## where that is decided, so this only ever asks.
+##
+## Dormant rather than merely empty until then, because the wait is on the
+## CREEP and not on the reserve. A reserve that ticked through the start delay
+## would hand a player a full one the second their creep opened, which is the
+## opposite of what the delay is for - and a card would count five minutes down
+## while quoting a stock nobody could spend.
 ##
 ## One of these per creep type per send building. Spending a send takes one,
 ## and they refill on their own timer, so a player cannot pour a single creep
@@ -19,6 +26,10 @@ var stats: CreepStats
 var count: int = 0
 
 var _elapsed: float = 0.0
+## Whether the creep's start delay has been served. Latched on: a reserve is
+## handed over once and never again, so a creep cannot be re-stocked by a cheat
+## that waives a wait already over.
+var _unlocked: bool = false
 ## Seconds one stock takes, with the creep's own passives already folded in.
 ## Worked out once in setup() rather than per frame, since neither the stats
 ## nor the passives on them can change while a match runs.
@@ -27,9 +38,43 @@ var _interval: float = 0.0
 
 func setup(creep_stats: CreepStats) -> void:
 	stats = creep_stats
-	count = 0 if creep_stats == null else creep_stats.starting_stock()
+	count = 0
 	_elapsed = 0.0
+	_unlocked = false
 	_interval = _compute_interval()
+
+
+## Hands over the starting reserve, once, when the creep's start delay is up.
+## Reports whether anything changed, so the card only redraws on a real one.
+##
+## Driven from outside rather than timed here: whether the wait is over is a
+## question about the match clock and about the cheats granted to one player,
+## and a reserve knows neither. See SendBuilding.
+func unlock() -> bool:
+	if _unlocked:
+		return false
+
+	_unlocked = true
+	count = 0 if stats == null else stats.starting_stock()
+	_elapsed = 0.0
+	return true
+
+
+## Fills the reserve, and COUNTS as its unlock where that has not happened yet,
+## so the wait the cheat just waived cannot come back a tick later and re-stock
+## this at its starting number instead. Reports whether anything changed.
+##
+## The one thing that ever hands over more than starting_stock(), and only a
+## developer cheat asks for it - see CommandService.
+func fill() -> bool:
+	var full: int = max_count()
+	if _unlocked && count == full:
+		return false
+
+	_unlocked = true
+	count = full
+	_elapsed = 0.0
+	return true
 
 
 func max_count() -> int:
@@ -65,6 +110,12 @@ func regen_progress() -> float:
 ## Advances the timer. Returns true when the count changed, so the UI only
 ## refreshes on a real change rather than every frame.
 func advance(delta: float) -> bool:
+	# A creep that has not opened yet regenerates nothing. Guarded here as well
+	# as by the caller, so the "no banking through the start delay" rule holds
+	# wherever this is called from.
+	if !_unlocked:
+		return false
+
 	if is_full():
 		_elapsed = 0.0
 		return false

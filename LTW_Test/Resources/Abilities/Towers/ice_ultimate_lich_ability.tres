@@ -1,12 +1,20 @@
-[gd_resource type="Resource" script_class="ChillingDeathPassive" format=3 uid="uid://dypqkdb2n2yi8"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://bs67mye3ohyp1" path="res://Scripts/Abilities/TowerPassives/ChillingDeathPassive.gd" id="1_ChillingDeathPassive"]
-[ext_resource type="Texture2D" uid="uid://chj3yllh2u1wg" path="res://2DArt/Icons/ultimate_lich.png" id="2_ultimate_lich"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/ChillingDeathPassive.gd" id="1_ChillingDeathPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_lich.png" id="2_ultimate_lich"]
 
 [resource]
 script = ExtResource("1_ChillingDeathPassive")
 ability_id = 140
 display_name = "Chilling Death"
-icon = ExtResource("2_ultimate_lich")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_ultimate_lich")
+slow_per_hit = 0.075
+slow_cap = 0.45
+slow_seconds = 7
+chill_source = "ultimate_lich"
+frostbite_share = 0.02
+frostbite_cooldown = 15
+aura_cells = 5.47
+attack_slow = 0.15

@@ -41,11 +41,6 @@ signal reached_end()
 const TRAIL_LIMIT: int = 96
 const TRAIL_SPACING: float = 0.25
 
-## Ceiling on the crowding push, as a share of the creep's own speed. Kept
-## below 1 so the push can never cancel forward movement: an uncapped sum over
-## a dense clump was shoving creeps a cell per frame into the walls.
-const SEPARATION_LIMIT: float = 0.6
-
 ## How long a creep may fail to get closer to its next step before it gives up
 ## and re-reads the route from where it actually stands.
 const STALL_SECONDS: float = 1.5
@@ -98,8 +93,27 @@ var _march_elapsed: float = 0.0
 ## Starts at the interval so the very first physics frame reads the auras
 ## rather than leaving a freshly spawned creep unbuffed for a quarter second.
 var _aura_elapsed: float = AURA_REFRESH_SECONDS
-## Fraction of a health point regeneration has built up but not handed over yet.
-var _regen_carry: float = 0.0
+## How many HEAVY physical hits have landed on this creep over its whole life -
+## it only ever grows, and nothing resets it: not a heal, not a revive, and not
+## being recycled into the next player's maze, which deliberately keeps the
+## health the creep arrived with and so should keep what has been worn off it
+## too. Hardened Skin reads its eroded armour back out of this, which is what
+## lets that passive stay the shared stateless resource every other one is.
+var _heavy_hits_taken: int = 0
+## What counts as heavy, read off this creep's own passives once. 0 for every
+## creep in the game but one, and those pay nothing for the question.
+var _heavy_hit_threshold: float = 0.0
+## The mana pool one of this creep's traits runs on, or null for a creep whose
+## stats give it none - which is nearly all of them. Built once on spawn, so a
+## creep with no mana trait allocates nothing and ticks nothing. See CreepMana.
+var _mana: CreepMana = null
+## Clocks owned by this creep's passives, keyed by the passive applying one.
+##
+## Here rather than on the passive for the reason _spent is: one
+## bombardment.tres is every Siege Engine on the field, so a countdown stored
+## there would be all of theirs at once. Sparse - a creep with no timed passive
+## never puts an entry in it. See advance_passive_clock().
+var _passive_clocks: Dictionary = {}
 ## Everything an elemental tower has left on this creep - chill, stun, eaten
 ## armour, poison, burning - or null while nothing has touched it.
 ##
@@ -125,6 +139,9 @@ func _ready() -> void:
 	if stats != null && _creep_stats == null:
 		Log.err("Creep needs CreepStats but got plain UnitStats", name)
 	_collect_passives()
+	# Null for nearly every creep, which is what keeps a pack of Sheep from
+	# carrying a pool none of them can use. See CreepMana.
+	_mana = CreepMana.of(_creep_stats)
 	if is_flying():
 		# Placed at cruising height rather than climbing from the floor, so a
 		# flyer is never briefly a ground unit standing inside a tower.
@@ -257,6 +274,35 @@ func set_back_along_path() -> void:
 	_teleport_to(area.nearest_free_point(global_position))
 
 
+## Teleports this creep back to a point it was standing on earlier.
+##
+## For anything that takes a creep's PROGRESS rather than its health: the point
+## is remembered when the effect starts and collected on seconds later, so what
+## the creep loses is exactly the ground it covered in between.
+##
+## A DIFFERENT QUESTION from set_back_along_path above, and mixing the two up
+## costs the whole effect. That one asks "something has been built on top of
+## me, where is the last place I fitted" and walks the trail for the most
+## recent point still clear - which, for a creep that is simply walking, is
+## where it is standing right now. This one already knows where it is going and
+## only has to check that the spot still exists.
+##
+## It also works for a FLYER, which the trail walk cannot: a flyer records no
+## trail at all, so asking it to walk one back would send it to wherever it
+## spawned.
+func send_back_to(point: Vector3) -> void:
+	var destination: Vector3 = point
+	if !area.is_point_free(destination):
+		# Something went up there while the creep was walking away from it.
+		# The nearest gap keeps it near where it was meant to land rather than
+		# cancelling the effect, and a creep put inside a tower would be stuck.
+		destination = area.nearest_free_point(destination)
+	_teleport_to(destination)
+	# Everything between here and where it was taken from is ground it has to
+	# cover again, so it is no longer route this creep has walked.
+	_trail = [global_position]
+
+
 # --- Passives -----------------------------------------------------------
 
 ## Reads the creep's passives off its stats once. Cached because they are asked
@@ -267,11 +313,18 @@ func _collect_passives() -> void:
 		return
 
 	_skittering = false
+	_heavy_hit_threshold = 0.0
 	for entry in _creep_stats.abilities:
 		var passive: CreepPassive = entry as CreepPassive
 		if passive != null:
 			_passives.append(passive)
 			_skittering = _skittering || passive.is_skittering()
+			# The FIRST passive to name one wins, the same rule an attack's
+			# damage type override follows: two passives disagreeing about what
+			# counts as a heavy hit is an authoring mistake rather than
+			# something to resolve on every hit.
+			if _heavy_hit_threshold <= 0.0:
+				_heavy_hit_threshold = passive.heavy_hit_threshold()
 
 
 ## Whether a once-only passive has already fired on THIS creep.
@@ -365,25 +418,93 @@ func _finish_revive() -> void:
 		_revive_light.finish()
 	_revive_light = null
 
-	var restored: int = roundi(float(max_health()) * _revive_ratio)
-	_set_health(maxi(1, restored))
-	Log.info("Creep revived", {"creep": name, "health": current_health})
-## The passives this creep offers to everything standing around it, itself
-## included. Handed out whole rather than one question at a time, so a creep
-## reading the auras in range asks each of them everything at once.
+	var restored: float = float(max_health()) * _revive_ratio
+	_set_health(maxf(1.0, restored))
+	Log.info("Creep revived", {"creep": name, "health": display_health()})
+## This creep's passives, whole.
+##
+## Handed out rather than answered one question at a time, because two things
+## want the whole list: a creep reading the auras standing around it asks each
+## of THOSE creeps' passives everything at once, and the status set asks its
+## own creep's for the resistances it has to apply.
 ##
 ## Every passive is offered, not only the ones that grant something: a passive
 ## with no aura answers each question with its neutral default, and filtering
 ## here would mean knowing which of them count.
-func aura_passives() -> Array[CreepPassive]:
+func passives() -> Array[CreepPassive]:
 	return _passives
 
 
-## Its own armour, whatever the auras standing around it are worth, and
-## whatever an elemental tower has eaten out of it.
+## Its own armour, whatever the auras standing around it are worth, whatever
+## its own passives have worn off it, and whatever an elemental tower has eaten
+## out of it.
 func armor_value() -> int:
 	var eaten: int = 0 if _status == null else _status.armor_delta()
-	return super() + _aura_armor + eaten
+	return super() + _aura_armor + eaten + _passive_armor_delta()
+
+
+## What this creep's OWN passives have done to its armour, which so far is
+## Hardened Skin wearing away and nothing else.
+##
+## Summed rather than best-of, on the same reasoning the resistances are: the
+## best-of rule belongs to AURAS, which are what several creeps standing
+## together would otherwise stack. These are the creep's own and there is only
+## ever one of each.
+func _passive_armor_delta() -> int:
+	var delta: int = 0
+	for passive in _passives:
+		delta += passive.armor_delta(self)
+	return delta
+
+
+## How many single physical hits have landed on this creep at or above its own
+## heavy-hit threshold. Read by a passive whose effect is measured in them, see
+## HardenedSkinPassive.
+func heavy_hits_taken() -> int:
+	return _heavy_hits_taken
+
+
+## Counts the hit above, then lets the ordinary pipeline run.
+##
+## ONE HIT AT A TIME, and that is the whole rule: what is counted is whether
+## THIS blow landed hard enough, never how much has added up. A creep whose
+## armour only yields to heavy hits is not worn down by a thousand small ones,
+## which is what makes stripping it a question of bringing the right towers
+## rather than of waiting.
+##
+## Measured as the health the creep ACTUALLY LOST rather than as the raw amount
+## the attacker rolled, so every armour point, every resistance and every
+## amplification standing on the creep has already been applied - a hit that is
+## heavy on paper and lands for a scratch does not count. It is also the only
+## one of the two readings that is the number the player watches leave the
+## health bar. Read off the health rather than by resolving the hit a second
+## time, because resolve_damage() is what a tooltip quotes a matchup with and
+## must stay free of side effects.
+##
+## Nothing is recorded on a client, a hit on an invulnerable unit or a creep
+## already down, because in all three cases no health moves - the guards are
+## super()'s and this needs none of its own. A revive that fires inside the same
+## call restores health, so the floor keeps the killing blow from reading as a
+## heal.
+func take_damage(amount: int, damage_type: DamageTable.DamageType,
+		is_aoe: bool = false) -> void:
+	var before: float = current_health
+	super(amount, damage_type, is_aoe)
+
+	var lost: float = maxf(0.0, before - current_health)
+	# Nothing landed, so nothing happened: a hit on a client, on an
+	# invulnerable creep or on one already down reaches here having moved no
+	# health, and neither the counter nor the passives below may act on it.
+	if lost <= 0.0:
+		return
+
+	for passive in _passives:
+		passive.on_damage_taken(self, lost)
+
+	if _heavy_hit_threshold <= 0.0 || DamageTable.is_spell(damage_type):
+		return
+	if lost >= _heavy_hit_threshold:
+		_heavy_hits_taken += 1
 
 
 ## Its own armour type, unless something has altered it. Ultimate Alchemist is
@@ -394,6 +515,49 @@ func armor_type_value() -> UnitStats.ArmorType:
 		if altered >= 0:
 			return altered as UnitStats.ArmorType
 	return super()
+
+
+## The mana pool this creep runs a trait on, or null when it has no such trait.
+##
+## Unlike status(), this never creates one on demand: whether a creep has mana
+## at all is decided by its stats and cannot change mid-match, so a caller
+## asking for a pool that is not there is asking the wrong creep.
+func mana() -> CreepMana:
+	return _mana
+
+
+## The mana pool, drawn under the portrait as a bar and a number exactly as a
+## tower's is. Null for every creep without one, which hides the line.
+##
+## Panel only, deliberately: a creep carries no worldspace resource bar. A
+## tower's mana bar hangs over one building the player placed, where a bar over
+## every creep in a pack of three would be a row of blue lines walking down the
+## lane.
+func secondary_resource() -> TowerResource:
+	if _mana == null:
+		return null
+	return _mana.as_resource()
+
+
+## Advances a clock one of this creep's passives owns and reports whether it
+## came round, having already taken the interval back off it.
+##
+## The passive states the interval and reads the answer; the count lives here,
+## because the passive is one shared resource standing in for every creep of
+## its type. The remainder is CARRIED rather than reset, so a four second
+## bombardment really does fire every four seconds instead of drifting by up to
+## a tick each time.
+func advance_passive_clock(source: UnitAbility, interval: float, delta: float) -> bool:
+	if source == null || interval <= 0.0:
+		return false
+
+	var elapsed: float = float(_passive_clocks.get(source, 0.0)) + delta
+	if elapsed < interval:
+		_passive_clocks[source] = elapsed
+		return false
+
+	_passive_clocks[source] = elapsed - interval
+	return true
 
 
 ## The status effects on this creep, created on the spot if it has none yet.
@@ -427,9 +591,9 @@ func is_pinned() -> bool:
 ## Auras do not stack: the best one in range wins. Every creep aura shares one
 ## radius, see GameConfig.creep_aura_radius_cells.
 ##
-## Naive and linear like _separation() and TargetFinder, and strictly cheaper
-## than either, since it runs four times a second rather than every frame. All
-## three want the same spatial hash before the population cap of 100 is real.
+## Naive and linear like TargetFinder, and much cheaper, since it runs four
+## times a second rather than every tick. Both want the same spatial hash
+## before the population cap of 100 is real.
 func _refresh_aura(delta: float) -> void:
 	_aura_elapsed += delta
 	if _aura_elapsed < AURA_REFRESH_SECONDS:
@@ -447,7 +611,7 @@ func _refresh_aura(delta: float) -> void:
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			area, global_position, config.creep_aura_radius_cells):
-		for passive in creep.aura_passives():
+		for passive in creep.passives():
 			_aura_armor = maxi(_aura_armor, passive.aura_armor_bonus())
 			_aura_move_ratio = maxf(_aura_move_ratio, passive.aura_move_speed_ratio())
 			_aura_attack_ratio = maxf(_aura_attack_ratio, passive.aura_attack_speed_ratio())
@@ -456,13 +620,11 @@ func _refresh_aura(delta: float) -> void:
 
 ## Heals the creep from its own regeneration passives.
 ##
-## Fractions are carried between frames rather than rounded away, so a rate
-## below one point a second still heals instead of doing nothing at all. The
-## carry is dropped at full health, so a creep cannot bank regeneration while
-## untouched and dump it the instant it is finally hit.
+## Nothing is carried between ticks: current_health is a float, so a rate below
+## one point a second banks its fraction where it lands rather than being
+## rounded away to nothing. What the player reads is display_health().
 func _regenerate(delta: float) -> void:
-	if current_health >= max_health():
-		_regen_carry = 0.0
+	if current_health >= float(max_health()):
 		return
 
 	# Its own regeneration ADDS to the aura standing over it. The passives sum
@@ -474,11 +636,19 @@ func _regenerate(delta: float) -> void:
 	if per_second <= 0.0:
 		return
 
-	_regen_carry += per_second * delta
-	var whole: int = int(_regen_carry)
-	if whole > 0:
-		_regen_carry -= float(whole)
-		heal(whole)
+	heal(per_second * delta)
+
+
+## Runs the passives that are on a clock of their own rather than answering a
+## question when something happens: so far the Siege Engine's Bombardment.
+##
+## Before the held check on purpose. A passive that is an ACTION asks whether
+## the creep is stunned itself, and one that merely counts - a mana bar
+## draining, a shield rebuilding - should keep counting while the creep stands
+## still, exactly as its regeneration does.
+func _advance_passives(delta: float) -> void:
+	for passive in _passives:
+		passive.on_tick(self, delta)
 
 
 ## Advances everything a tower has left on this creep, and drops the whole
@@ -536,9 +706,15 @@ func _physics_process(delta: float) -> void:
 		_advance_revive(delta)
 		return
 
+	# Before everything that moves it, so a task that starts this tick is
+	# walked this tick. An ordinary creep has no queue at all and pays a null
+	# check for the question - see Unit.order_queue.
+	_advance_orders(delta)
+
 	_advance_status(delta)
 	_refresh_aura(delta)
 	_regenerate(delta)
+	_advance_passives(delta)
 
 	# Held in place: stunned, or a flyer paralyzed out of the sky. It still
 	# burns, still regenerates and can still be shot - it simply does not
@@ -601,7 +777,7 @@ func _fly(delta: float) -> void:
 	# turned around does not need this rewritten.
 	var direction: Vector3 = area.global_transform.basis.z.normalized()
 	var speed: float = _move_speed()
-	var push: Vector3 = _separation().limit_length(SEPARATION_LIMIT) * speed * delta
+	var push: Vector3 = _crowding_push(speed, delta)
 
 	var moved: Vector3 = area.clamp_point(global_position + direction * speed * delta + push)
 	global_position = Vector3(
@@ -627,6 +803,14 @@ func _march(delta: float) -> void:
 	# and does not stop to fight, which can_attack() is the other half of.
 	if is_moving():
 		_walk_to_order(delta)
+		return
+
+	# Standing still because a TASK is holding it there - an attack order that
+	# has closed the distance and is now fighting. The march below is what an
+	# attacker with nobody steering it does, and this one has somebody: walking
+	# off to the nearest tower would be undoing the order it was just given.
+	if order_queue != null && !order_queue.is_empty():
+		_face_attack_target(delta)
 		return
 
 	_refresh_march_target(delta)
@@ -664,6 +848,26 @@ func _walk_to_order(delta: float) -> void:
 	var direction: Vector3 = offset / distance
 	_step(direction, delta)
 	_face_direction(direction, delta)
+
+
+## Turns a creep that is standing and fighting to face what it is hitting.
+##
+## Only for the ordered case: an attacker marching on its own already faces the
+## tower it is walking at, and one walking to a point faces where it is going.
+## This is the third state - planted by a task, with nothing steering the body -
+## and without it the creep chews on a tower while looking somewhere else.
+func _face_attack_target(delta: float) -> void:
+	if attack_component == null:
+		return
+	var target: Unit = attack_component.current_target()
+	if target == null:
+		return
+
+	var offset: Vector3 = target.global_position - global_position
+	offset.y = 0.0
+	if offset.length_squared() <= 0.0001:
+		return
+	_face_direction(offset.normalized(), delta)
 
 
 ## Re-picks the tower being marched on, on the same slow beat the auras use.
@@ -776,8 +980,37 @@ func _reset_stall() -> void:
 func _step(direction: Vector3, delta: float) -> void:
 	var speed: float = _move_speed()
 	var travel: Vector3 = direction * speed * delta
-	var push: Vector3 = _separation().limit_length(SEPARATION_LIMIT) * speed * delta
-	_move_by(travel + push)
+	_move_by(travel + _crowding_push(speed, delta))
+
+
+## The shove this creep takes from the crowd, already scaled into a movement
+## for this tick.
+##
+## Zero WITHOUT LOOKING AT ANYTHING when this kind of creep does not crowd,
+## which is the whole point: the pairwise scan behind it is the second most
+## expensive loop in a full lane, and for the ordinary roster it now never runs
+## at all. Turning it back on is a number in game_config.tres, not a code
+## change - see GameConfig.creep_separation_limit.
+func _crowding_push(speed: float, delta: float) -> Vector3:
+	var limit: float = _separation_limit()
+	if limit <= 0.0:
+		return Vector3.ZERO
+	return _separation().limit_length(limit) * speed * delta
+
+
+## Ceiling on this creep's crowding push, as a share of its own speed.
+##
+## Asked per creep rather than read once, because the answer is about WHAT the
+## creep is: an attacker crowds and everything else walks through its own kind.
+## Both halves are config values, so the rule is data and neither half is
+## written into this file. See game_rules.md.
+func _separation_limit() -> float:
+	var config: GameConfig = References.game_config
+	if config == null:
+		return 0.0
+	if is_attacker():
+		return config.attacker_separation_limit
+	return config.creep_separation_limit
 
 
 ## Applies a movement one axis at a time, so a step that is blocked as a whole
@@ -801,20 +1034,25 @@ func _move_by(offset: Vector3) -> void:
 ## are considered, and creeps are parented under their own root, so this never
 ## walks past towers.
 ##
-## Naive pairwise, which is fine for the numbers the prototype spawns. It needs
-## a spatial hash before the population cap of 100 is real.
+## Naive pairwise, and it is only affordable because of who reaches it: an
+## ATTACKER creep, of which a lane holds a handful. Run over a full lane of
+## ordinary creeps it cost more than every other creep loop put together, which
+## is why _crowding_push refuses to call it at all when the limit is zero. It
+## still wants the spatial hash the other two scans want if it is ever switched
+## back on for the whole roster.
 func _separation() -> Vector3:
-	var parent: Node = get_parent()
-	if parent == null:
+	if area == null:
 		return Vector3.ZERO
 
 	var push: Vector3 = Vector3.ZERO
 	var personal_space: float = body_radius() * 2.0
 
-	for sibling in parent.get_children():
-		var other: Creep = sibling as Creep
+	# The area's own list rather than get_parent().get_children(): it is the
+	# same creeps - this creep is parented under that area's creeps root - and
+	# asking the parent builds a fresh array of every one of them per call.
+	for other: Creep in area.creeps():
 		# A down creep is walked straight through rather than shoved around.
-		if other == null || other == self || other.is_down():
+		if other == self || other.is_down():
 			continue
 		# Only creeps on the same layer crowd each other. A pack walking under
 		# a flyer is not something either of them can feel.

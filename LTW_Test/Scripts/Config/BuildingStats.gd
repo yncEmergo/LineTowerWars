@@ -48,7 +48,7 @@ extends UnitStats
 ## and TowerPassive.on_attack. This is only the ceiling.
 @export var max_mana: int = 0
 ## Share of that ceiling a tower is built with, 0 to 1. Almost everything
-## starts empty; the Doom Guard line starts FULL and decays from there, which
+## starts empty; the Moonbeam line starts FULL and decays from there, which
 ## is the whole of its design.
 @export var starting_mana_ratio: float = 0.0
 ## Every gold piece it takes to end up with one of these, this tier included.

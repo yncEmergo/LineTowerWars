@@ -18,7 +18,16 @@ def num(v):
 
 
 def t3(x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0, scale=1.0):
-    """Transform3D from an euler rotation in radians, then a uniform scale."""
+    """Transform3D from an euler rotation in radians, then a scale.
+
+    `scale` is a single number for a uniform one, or an (x, y, z) triple for a
+    per-LOCAL-AXIS one - which is how a round primitive is squashed into
+    something lopsided without authoring a mesh for every lump. It scales the
+    basis columns, so it happens in the part's own space and a rotated part
+    still stretches along the axis it was authored on.
+    """
+    if not isinstance(scale, (tuple, list)):
+        scale = (scale, scale, scale)
     bx = [1.0, 0.0, 0.0]
     by = [0.0, 1.0, 0.0]
     bz = [0.0, 0.0, 1.0]
@@ -41,7 +50,7 @@ def t3(x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0, scale=1.0):
     basis = rot(basis, "x", rx)
     basis = rot(basis, "y", ry)
     basis = rot(basis, "z", rz)
-    basis = [[v * scale for v in col] for col in basis]
+    basis = [[v * scale[i] for v in col] for i, col in enumerate(basis)]
 
     # Godot's .tscn Transform3D() takes the basis ROW BY ROW, while `basis`
     # above is built as the three column vectors. Writing the columns straight

@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="FocusedLightningPassive" format=3 uid="uid://qg4ixg5g1y5t"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dgl50478plfko" path="res://Scripts/Abilities/TowerPassives/FocusedLightningPassive.gd" id="1_FocusedLightningPassive"]
-[ext_resource type="Texture2D" uid="uid://l2iv46ollmh8" path="res://2DArt/Icons/greater_annihilation_glyph.png" id="2_greater_annihilation_glyph"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FocusedLightningPassive.gd" id="1_FocusedLightningPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_annihilation_glyph.png" id="2_greater_annihilation_glyph"]
 
 [resource]
 script = ExtResource("1_FocusedLightningPassive")
-bonus_per_attack = 0.75
 ability_id = 147
 display_name = "Focused Lightning"
-icon = ExtResource("2_greater_annihilation_glyph")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_greater_annihilation_glyph")
+bonus_per_attack = 0.75
+max_stacks = 5

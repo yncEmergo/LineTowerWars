@@ -120,17 +120,37 @@ func card_abilities() -> Array[UnitAbility]:
 ## Damage range as shown in the UI panel, e.g. "12 - 15", or a dash for a unit
 ## with no attack at all. Read off the attack rather than stored twice, so the
 ## panel and the tower can never quote different numbers.
-func damage_text() -> String:
+##
+## `bonus` is damage the unit's own abilities have added to it PERMANENTLY, and
+## it is folded into the range rather than written beside it: the range is what
+## the tower hits for, and a player reading the line wants that number and not
+## an addition to do. The bonus is then repeated on the end, because a tower
+## that has grown is the whole point of the line it grew on and the panel is
+## the only place it is ever visible. Taken as an argument rather than read
+## here for the reason armor_text() takes its points: this resource describes
+## the TYPE, and what is standing on the field is not always it.
+func damage_text(bonus: int = 0) -> String:
 	if attack == null:
 		return "-"
-	return "%s (%s)" % [attack.damage_text(), attack.damage_type_text()]
+	var text: String = "%s (%s)" % [
+		attack.damage_text(bonus), attack.damage_type_text()
+	]
+	if bonus <= 0:
+		return text
+	return "%s   +%s" % [text, StringUtil.compact_number(bonus)]
 
 
 ## Armour type as shown in the UI panel, e.g. "Invulnerable".
 ## Lowercased before capitalising, because capitalize() would otherwise split
 ## an all-caps enum name on every letter.
 func armor_type_text() -> String:
-	var raw: String = String(ArmorType.keys()[armor_type])
+	return armor_type_name(armor_type)
+
+
+## Any armour type as shown in the UI, for the readouts that have to name one
+## this unit does not currently have.
+static func armor_type_name(kind: ArmorType) -> String:
+	var raw: String = String(ArmorType.keys()[kind])
 	return raw.replace("_", " ").to_lower().capitalize()
 
 
@@ -138,12 +158,19 @@ func armor_type_text() -> String:
 ## reading them off this resource, because a unit standing in an aura has more
 ## armour than its prefab says and the panel has to be able to show that.
 ##
+## `shown_type` is the same allowance for the TYPE, which one tower in the game
+## alters for a few seconds at a time - see ArmorTypeChoiceAbility. -1 leaves it
+## as this resource's own, which is what every caller but the panel wants.
+##
 ## Anything invulnerable shows only the word: a point value next to the absence
 ## of damage would read as though the two were on the same scale.
-func armor_text(points: int) -> String:
-	if armor_type == ArmorType.INVULNERABLE:
-		return armor_type_text()
-	return "%d  (%s)" % [points, armor_type_text()]
+func armor_text(points: int, shown_type: int = -1) -> String:
+	var kind: ArmorType = armor_type
+	if shown_type >= 0:
+		kind = shown_type as ArmorType
+	if kind == ArmorType.INVULNERABLE:
+		return armor_type_name(kind)
+	return "%d  (%s)" % [points, armor_type_name(kind)]
 
 
 ## The prefab this describes, loaded the first time something spawns one.

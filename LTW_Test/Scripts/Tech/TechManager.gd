@@ -259,6 +259,36 @@ func roll_random_ultimate(player_id: int) -> String:
 	return _buy_batch(player_id, state, affordable[index] as Array)
 
 
+## Developer cheat: hands one player every technology in the build, free.
+##
+## Here rather than beside the gold cheat in CommandService, because what a
+## grant costs the record is a technology rule - the undo history has to go
+## with it, and this is the file that knows that. CommandService still owns
+## the question of whether cheats are on at all.
+##
+## Nothing is charged and nothing is refusable, so the only reason it comes
+## back with is a machine that has nobody in that slot or no technologies.
+func grant_all(player_id: int) -> String:
+	var state: PlayerState = _state_of(player_id)
+	if state == null:
+		return "no such player"
+
+	var registry: TechRegistry = _registry()
+	if registry == null:
+		return "this build contains no technologies"
+
+	for tech in registry.all():
+		state.tech.grant(tech.tech_id)
+
+	# No press is left to take back. An undo after this would refund gold that
+	# was never charged and revoke a technology the cheat has just handed over,
+	# so the window closes exactly as it does when a build commits gold.
+	state.tech.forget_history()
+
+	Log.info("Cheat: technologies unlocked", {"player": player_id})
+	return ALLOWED
+
+
 ## Closes this player's undo window for good. Called the moment they commit
 ## gold to the field, because a tower bought under a technology must not be
 ## left standing by a technology that is given back.

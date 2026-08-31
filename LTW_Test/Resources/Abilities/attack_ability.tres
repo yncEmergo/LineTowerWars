@@ -7,7 +7,7 @@
 script = ExtResource("1_attack")
 ability_id = 3
 display_name = "Attack"
-description = "Order this unit onto one target. It picks its own without being told."
-targeting = 3
+description = "Send this unit to fight. On a target it closes in and kills it; on the ground it walks there and attacks whatever it meets. It picks its own targets without being told."
+targeting = 6
 slot = 4
 icon = ExtResource("2_ability_attack")

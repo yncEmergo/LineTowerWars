@@ -55,13 +55,12 @@ func order_build(tower_stats: BuildingStats, world_target: Vector3) -> void:
 		Log.warn("Tower cannot be placed there", {"cell": cell})
 		return
 
-	# Checked here as well as on the button, because gold can be spent between
-	# opening the menu and confirming the spot.
-	var state: PlayerState = _owner_state()
-	if state != null && !state.can_afford(tower_stats.gold_cost):
-		Log.warn("Not enough gold for tower", {"cost": tower_stats.gold_cost, "gold": state.gold})
-		return
-
+	# Gold is deliberately NOT checked here. It is taken when the tower
+	# actually starts, so a CHAIN of them can be queued on one tower's worth of
+	# gold and each is paid for as the builder reaches it - income accrues
+	# during the walk, and one that still cannot be paid for is dropped there.
+	# A plain order is refused before it ever gets here anyway, by the same
+	# can_execute that greys the button.
 	_pending_stats = tower_stats
 	_pending_cell = cell
 	_pending_footprint = footprint

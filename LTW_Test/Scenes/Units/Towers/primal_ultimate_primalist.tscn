@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_primal_ultimate_primalist_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.885
+health_bar_height = 1.002
 select_radius = 0.5
-select_height = 0.272
+select_height = 0.325
 
 [node name="Visual" parent="." instance=ExtResource("4_primal_ultimate_primalist_model")]
 

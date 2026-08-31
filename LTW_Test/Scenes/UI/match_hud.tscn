@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="Texture2D" uid="uid://bb1sxtbxor6sj" path="res://2DArt/UI/Icons/stat_player.png" id="7_stat_player"]
 [ext_resource type="Texture2D" uid="uid://bdq0ogm6osuay" path="res://2DArt/UI/Icons/stat_life.png" id="8_stat_life"]
@@ -49,6 +50,19 @@ anchors_preset = 0
 script = ExtResource("1_selection_box")
 
 [node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
+
+[node name="SendBar" parent="." instance=ExtResource("16_send_bar")]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -211.0
+offset_top = -192.0
+offset_right = -27.0
+offset_bottom = -144.0
+grow_horizontal = 1
+grow_vertical = 0
 
 [node name="MatchStatusBar" type="PanelContainer" parent="." unique_id=1375302278 node_paths=PackedStringArray("_gold_label", "_population_label", "_income_label", "_gold_icon", "_population_icon", "_timer_icon")]
 custom_minimum_size = Vector2(0, 40)

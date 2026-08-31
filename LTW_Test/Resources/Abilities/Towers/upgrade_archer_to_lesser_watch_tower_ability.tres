@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://ce1arm7p1q3la"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://cqb1wqxek3mj1" path="res://Resources/UnitStats/Towers/lesser_watch_tower_stats.tres" id="2_lesser_watch_tower_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lesser_watch_tower_stats.tres" id="2_lesser_watch_tower_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
-tower_stats = ExtResource("2_lesser_watch_tower_stats")
 ability_id = 73
+tower_stats = ExtResource("2_lesser_watch_tower_stats")
 display_name = "Upgrade to Lesser Watch Tower"
 description = "Pure single target reach. The longest range in the game and no splash at all, so every shot is spent on one creep."
+targeting = 1
 slot = 0

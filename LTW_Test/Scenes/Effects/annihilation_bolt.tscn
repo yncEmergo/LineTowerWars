@@ -1,0 +1,106 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Effects/LightningBolt3D.gd" id="1_LightningBolt3D"]
+
+[sub_resource type="StandardMaterial3D" id="M_core"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.88, 0.66, 1)
+
+[sub_resource type="StandardMaterial3D" id="M_glow"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.26, 0.08, 0.45)
+
+[sub_resource type="BoxMesh" id="Core"]
+size = Vector3(0.02, 0.02, 1)
+material = SubResource("M_core")
+
+[sub_resource type="BoxMesh" id="Sheath"]
+size = Vector3(0.05, 0.05, 1)
+material = SubResource("M_glow")
+
+[node name="AnnihilationBolt" type="Node3D" node_paths=PackedStringArray("_segments")]
+script = ExtResource("1_LightningBolt3D")
+_segments = NodePath("Segments")
+
+[node name="Segments" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Segment1" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="Segment2" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="Segment3" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="Segment4" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="Segment5" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")
+
+[node name="Segment6" type="Node3D" parent="Segments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Sheath" type="MeshInstance3D" parent="Segments/Segment6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Sheath")
+
+[node name="Core" type="MeshInstance3D" parent="Segments/Segment6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Core")

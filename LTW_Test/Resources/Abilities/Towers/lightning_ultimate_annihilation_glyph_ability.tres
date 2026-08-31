@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="FocusedLightningPassive" format=3 uid="uid://diw2s7yoqh2vs"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dgl50478plfko" path="res://Scripts/Abilities/TowerPassives/FocusedLightningPassive.gd" id="1_FocusedLightningPassive"]
-[ext_resource type="Texture2D" uid="uid://7biww1mwrsvy" path="res://2DArt/Icons/ultimate_annihilation_glyph.png" id="2_ultimate_annihilation_glyph"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/FocusedLightningPassive.gd" id="1_FocusedLightningPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_annihilation_glyph.png" id="2_ultimate_annihilation_glyph"]
 
 [resource]
 script = ExtResource("1_FocusedLightningPassive")
-bonus_per_attack = 1
-chain_targets = 2
-chain_cells = 3.91
 ability_id = 148
 display_name = "Annihilation"
-icon = ExtResource("2_ultimate_annihilation_glyph")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_ultimate_annihilation_glyph")
+bonus_per_attack = 1
+max_stacks = 5
+chain_targets = 2
+chain_cells = 3.91

@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_holy_lesser_titan_vault_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.896
+health_bar_height = 0.817
 select_radius = 0.5
-select_height = 0.277
+select_height = 0.242
 
 [node name="Visual" parent="." instance=ExtResource("4_holy_lesser_titan_vault_model")]
 

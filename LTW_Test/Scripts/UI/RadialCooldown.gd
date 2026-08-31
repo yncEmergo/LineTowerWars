@@ -7,6 +7,10 @@ extends Control
 ## clockwise-unwinds to nothing as the wait finishes, so how much is left is
 ## readable at a glance without a number.
 ##
+## It also stands for a wait that has not STARTED - an ability that cannot be
+## used at all draws it whole - which is why nothing dims a command slot any
+## more. One mark rather than two saying the same thing over each other.
+##
 ## Drawn rather than textured, because a wedge is a polygon fan and a texture
 ## would need either a shader or an art asset for something this simple.
 
@@ -17,7 +21,10 @@ const START_ANGLE: float = -PI * 0.5
 const SEGMENTS_PER_TURN: int = 48
 
 @export_group("Settings")
-@export var overlay_color: Color = Color(0.0, 0.0, 0.0, 0.62)
+## Dark enough to be read as "cannot be pressed" on its own. It carries that
+## alone now: a slot no longer greys its icon, so this is the whole of the
+## mark rather than half of it. See CommandSlot._sweep_progress().
+@export var overlay_color: Color = Color(0.0, 0.0, 0.0, 0.78)
 
 var _progress: float = 1.0
 
@@ -26,6 +33,11 @@ func _ready() -> void:
 	# Purely a readout, so it must never take the click meant for the slot
 	# underneath it.
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The fan reaches the CORNERS of the square (see _draw), which on a circle
+	# means it also reaches past its edges. Clipped rather than drawn smaller,
+	# because a wedge that stopped at the inscribed circle would leave four lit
+	# triangles in the corners of every covered slot.
+	clip_contents = true
 	visible = false
 
 

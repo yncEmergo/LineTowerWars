@@ -356,9 +356,17 @@ func _toggle_in_selection(unit: Node) -> void:
 ##
 ## The owner half of the rule is already covered by only ever searching the
 ## local player's own units.
+##
+## Some units refuse a shared selection outright, whatever class they are: the
+## four senders each draw a different card, so one holding two of them would
+## have to pick a card and quietly drop the other. Asked of BOTH sides, so
+## adding anything to a sender is refused as firmly as adding a sender to
+## anything - see Unit.allows_multi_selection().
 func _can_join_selection(unit: Node) -> bool:
 	if _selected.is_empty():
 		return true
+	if !unit.allows_multi_selection() || !_selected[0].allows_multi_selection():
+		return false
 	return unit.selection_class() == _selected[0].selection_class()
 
 
@@ -478,7 +486,10 @@ func _recall_control_group(index: int) -> void:
 
 	_set_selection(units)
 
-	if double_tap:
+	# Nothing to fly to when the group holds something that stands nowhere: a
+	# group of senders is a group of buttons, and snapping the camera at one
+	# would throw the player's view away for no reason they could see.
+	if double_tap && units[0].is_in_world():
 		_center_camera_on(units[0])
 
 
@@ -549,6 +560,10 @@ func _circle_touches_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
 
 ## Every unit on the field, whoever owns it. Clicking is allowed to land on any
 ## of them, because looking at an enemy tower or at a creep is not commanding it.
+##
+## Only units that STAND somewhere are ever in this group, so the senders are
+## absent from every pick, box and sweep below without any of them naming them.
+## See Unit.is_in_world().
 func _all_units() -> Array:
 	return get_tree().get_nodes_in_group(UNIT_GROUP)
 

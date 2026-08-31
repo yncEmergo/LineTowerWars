@@ -6,8 +6,21 @@ Three families, and between them they are the whole palette:
     <line>_plate_deep  body colour and the rim light. Three depths of the same
     <line>_plate_pale  material, so a tower has parts instead of being a lump
     trim_t<n>          one per PRICE TIER. The iron -> white gold ramp, and the
-                       primary thing a player reads a tower's tier off
+                       primary thing a player reads a BASIC tower's tier off
     energy_<line>_t<n> one per line and tier. The lit accent
+
+The elemental roster has three of its own, and the split is the point: an
+element's tier is read off its OWN MATERIAL rather than off a metal, because
+metal was the loudest thing on every one of those towers and made thirty of
+them read as one. See style.py, THE PATH LADDER.
+
+    <element>_stone       the base pair's three tones, as authored
+    <element>_stone_t<n>  the same three, moved onto a PATH TIER's rung of the
+                          value ramp. This is what trim_t<n> is for the Basic
+                          roster, in the element's own hue
+    element_ring_t<n>     the only metal an elemental tower wears, and only its
+                          200g and 800g towers do. Two rungs, deliberately as
+                          far apart as two metals get
 
 The tier is baked into a material rather than overridden per tower because
 per-instance shader uniforms do not exist under gl_compatibility - see
@@ -116,7 +129,30 @@ def _energy(line, palette, index):
     ]))
 
 
-def _stone(element, palette, tone):
+def _element_ring(index, colour):
+    """One rung of the base pair's ring metal, and the only metal an elemental
+    tower is allowed. See style.ELEMENT_RING_RAMP for why there are two of them
+    and why they are as far apart as they are.
+
+    The brass rung EMITS, faintly, and the iron one does not. That is what
+    makes the 800g ring read as a bright band in the shadow a maze casts over
+    itself rather than merely as a paler grey - the same trick the top of
+    TRIM_RAMP uses, spent on the one step in this roster that has to carry a
+    whole upgrade on its own.
+    """
+    top = index >= 1
+    write("%s/element_ring_t%d.tres" % (OUT, index), standard_material([
+        ("albedo_color", c(colour)),
+        ("metallic", num(0.85)),
+        ("metallic_specular", num(0.5 + 0.3 * index)),
+        ("roughness", num(0.52 - 0.22 * index)),
+        ("emission_enabled", "true" if top else "false"),
+        ("emission", c(colour)),
+        ("emission_energy_multiplier", num(0.35)),
+    ]))
+
+
+def _stone(element, palette, tone, ti=None):
     """One tone of one ELEMENT's material.
 
     The same plating shader the Basic lines use, with two differences that
@@ -124,10 +160,21 @@ def _stone(element, palette, tone):
     lines are scaled by the element's own `facets`, so an organic element -
     Void, Unholy, Water, Primal - is not streaked with the panel seams that
     make a Basic tower read as machinery. See style.ELEMENTS.
+
+    `ti` names a PATH TIER, and then the authored colour is moved onto that
+    tier's rung of PATH_TONE_RAMP before it is written. Those three files are
+    what the elemental roster reads its tier off now that its towers carry no
+    metal - one value ramp on the element's own material, doing the job
+    TRIM_RAMP does for the Basic one. The base pair passes None and takes the
+    palette exactly as authored.
     """
     plate, dark = palette["tones"][tone]
+    if ti is not None:
+        plate = ts.element_path_tone(plate, ti)
+        dark = ts.element_path_tone(dark, ti)
     facets = palette.get("facets", 1.0)
-    suffix = "" if tone == "base" else "_" + tone
+    suffix = ts.element_stone_suffix(0 if ti is None else ti)
+    suffix += "" if tone == "base" else "_" + tone
     write("%s/%s_stone%s.tres" % (OUT, element, suffix), shader_material(PLATING, [
         ("plate_color", c(plate)),
         ("plate_dark_color", c(dark)),
@@ -152,22 +199,61 @@ def _element_energy(element, palette, index):
 
     Its CEILING is deliberately not much higher, and that was found the hard
     way: pushed to 3.1 every Ultimate's accent saturated to white, so an
-    Ultimate Doom Guard and an Ultimate Lich glowed the same colour and the
+    Ultimate Moonbeam and an Ultimate Lich glowed the same colour and the
     element - the one thing this roster spends that the Basic one cannot - was
     gone at exactly the tier a player has paid the most for it.
     """
-    write("%s/energy_%s_t%d.tres" % (OUT, element, index),
+    _energy_material("energy_%s_t%d" % (element, index),
+                     palette["glow"], palette["dim"], index)
+
+
+def _path_energy(path, index, glow, dim):
+    """One PATH's own accent at one tier, for the part of its model that claims
+    a colour the element does not have. See style.PATH_ACCENTS.
+
+    Written through the same shader and the same tier ramp as an element's, so
+    the only thing a path accent changes is the hue: it still brightens, pulses
+    and surges exactly as everything else lit on that tower does.
+    """
+    _energy_material("energy_path_%s_t%d" % (path, index), glow, dim, index)
+
+
+def _energy_material(file_stem, glow, dim, index):
+    write("%s/%s.tres" % (OUT, file_stem),
           shader_material(ENERGY, [
-              ("glow_color", c(palette["glow"])),
-              ("dim_color", c(palette["dim"])),
+              ("glow_color", c(glow)),
+              ("dim_color", c(dim)),
               ("tier", num(ts.element_energy_tier(index))),
               ("min_brightness", num(0.85)),
-              ("max_brightness", num(2.15)),
-              ("min_pulse_speed", num(0.55)),
-              ("max_pulse_speed", num(2.6)),
+              # 1.7, not the Basic roster's 2.3 and not the 2.15 this shipped
+              # with. The whole point of clipping white at the top of that ramp
+              # is that an overcharged tower READS as overcharged, and it works
+              # on a Basic tower whose accent is a small warm detail on grey
+              # stone. On an elemental tower the accent is often the biggest
+              # object on the model - an orb, a rift, a core - and at 2.15 a
+              # third of the roster's Ultimates came out as white balls with no
+              # hue in them at all. The element is worth more than the clip.
+              ("max_brightness", num(1.7)),
+              # A THIRD of the Basic roster's rate, at both ends of the ladder,
+              # and the surge slowed with it. An elemental tower wears its
+              # accent as its BODY - a Firelord is a pool, a heart and six
+              # plumes, all of it lit - so the same pulse that reads as a warm
+              # detail flickering on a grey Basic tower reads as the whole
+              # model blinking, and a maze of them reads as a fault. What the
+              # ramp still buys at this rate is the thing it was for: an
+              # Ultimate breathes visibly faster than a Lesser. What it stops
+              # buying is a tower that demands to be looked at while nothing is
+              # happening to it.
+              ("min_pulse_speed", num(0.18)),
+              ("max_pulse_speed", num(0.85)),
               ("pulse_depth", num(0.35)),
               ("surge_tier_start", num(0.35)),
-              ("surge_speed", num(0.9)),
+              # Slowed on the same grounds, and it matters more here than the
+              # pulse does: the band is authored against a full model height
+              # and most lit pieces are far shorter than one, so it does not
+              # CLIMB a plume - it switches the whole plume on and off. At this
+              # rate that reads as something turning over inside the tower.
+              ("surge_speed", num(0.3)),
               ("surge_width", num(0.22)),
               ("surge_strength", num(0.9)),
               ("surge_height", num(1.0)),
@@ -185,12 +271,30 @@ def _elements():
     count = 0
     palettes = dict(ts.ELEMENTS)
     palettes["core"] = ts.ELEMENTAL_CORE
+    path_tiers = [ti for ti in range(len(ts.ELEMENT_PRICE_TIERS))
+                  if ts.element_stone_suffix(ti)]
     for element, palette in palettes.items():
         for tone in ts.TONES:
             _stone(element, palette, tone)
             count += 1
+            # The Core is a 200g tower and nothing else - it is the ABSENCE of
+            # an element, and it morphs rather than upgrading - so it has no
+            # path tiers and writing it three rungs of a ladder it can never
+            # stand on would leave nine files nothing ever loads.
+            if element == "core":
+                continue
+            for ti in path_tiers:
+                _stone(element, palette, tone, ti)
+                count += 1
         for index in range(len(ts.ELEMENT_PRICE_TIERS)):
             _element_energy(element, palette, index)
+            count += 1
+    for index, colour in enumerate(ts.ELEMENT_RING_RAMP):
+        _element_ring(index, colour)
+        count += 1
+    for path, tiers in ts.PATH_ACCENTS.items():
+        for index, (glow, dim) in sorted(tiers.items()):
+            _path_energy(path, index, glow, dim)
             count += 1
     return count
 
@@ -264,13 +368,20 @@ def _vapour(creep, palette, tone):
     """
     plate, dark = palette["tones"][tone]
     bands = palette.get("bands", 0.3)
+    # HOW DENSE the ghost is, and it is per creep because it is the only lever
+    # that changes a vapour creep's VALUE. The shader mixes both the colour and
+    # the alpha towards the rim by the same fresnel term, so a wraith's
+    # interior is nearly clear and reads as whatever is behind it - which means
+    # authoring darker body tones does almost nothing on its own. Raising this
+    # is what makes one ghost darker than another.
+    face = palette.get("face_alpha", 0.22)
     suffix = "" if tone == "base" else "_" + tone
     write("%s/%s_hide%s.tres" % (CREEP_OUT, creep, suffix),
           shader_material(VAPOUR, [
               ("vapour_color", c(plate)),
               ("vapour_deep_color", c(dark)),
               ("rim_color", c(palette["rim"])),
-              ("face_alpha", num(0.22)),
+              ("face_alpha", num(face)),
               ("edge_alpha", num(0.92)),
               ("edge_power", num(2.2)),
               ("opacity", num(VAPOUR_OPACITY[tone])),
@@ -297,9 +408,14 @@ def _carapace(rung, entry):
         # Only the very top rung is hot, and barely. Anything more and the
         # carapace starts competing with the eyes, which are the roster's one
         # lit signal and the only thing that may ramp brightness.
+        #
+        # 0.35 was too much and nothing showed it until a creep actually stood
+        # on this rung: a flat plate catching the sun came out salmon pink, and
+        # every claw and horn on the first tier 3 creep read as rusted iron
+        # rather than as blackened steel. Nothing below rung 5 changes.
         ("emission_enabled", "true" if top else "false"),
         ("emission", c((0.55, 0.20, 0.12))),
-        ("emission_energy_multiplier", num(0.35)),
+        ("emission_energy_multiplier", num(0.16)),
     ]))
 
 
@@ -322,7 +438,9 @@ def _creeps():
     count = 0
     for key, palette in ts.CREEPS.items():
         for tone in ts.TONES:
-            if cr.is_flying(key):
+            # The WRAITH plan's answer rather than the AIR family's: a solid
+            # flyer is opaque. See creep_roster.is_vapour.
+            if cr.is_vapour(key):
                 _vapour(key, palette, tone)
             else:
                 _hide(key, palette, tone)

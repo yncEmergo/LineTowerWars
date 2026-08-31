@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="IceLancePassive" format=3 uid="uid://bxbvcswb70vnh"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://c1a0cpyfypi6q" path="res://Scripts/Abilities/TowerPassives/IceLancePassive.gd" id="1_IceLancePassive"]
-[ext_resource type="Texture2D" uid="uid://vlixcjnauueq" path="res://2DArt/Icons/greater_crystal.png" id="2_greater_crystal"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/IceLancePassive.gd" id="1_IceLancePassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_crystal.png" id="2_greater_crystal"]
 
 [resource]
 script = ExtResource("1_IceLancePassive")
-damage_per_target = 0.075
 ability_id = 142
 display_name = "Ice Lance"
-icon = ExtResource("2_greater_crystal")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_greater_crystal")
+max_targets = 15
+damage_per_target = 0.075

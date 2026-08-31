@@ -1,13 +1,24 @@
 class_name SendBuilding
 extends Unit
 
-## The building creeps are bought from, one per player, standing on the strip
-## above that player's own area.
+## The thing creeps are bought from: one per creep TIER per player, and NOT a
+## building standing anywhere.
+##
+## It used to stand on a strip above the player's area. It does not any more.
+## Each is reached through its own button over the unit panel, which selects it
+## and puts its card on screen - so the sender is always one press away instead
+## of a camera pan away, and the strip of ground it stood on is gone with it.
+## `is_in_world()` is how the rest of the game is told: nothing clicks one,
+## boxes one, draws it on the minimap or centres the camera on it.
+##
+## What it still IS, and has to be, is an ordinary Unit. A player order names a
+## unit by `unit_id` over the wire and the server checks that the card really
+## carries the ability, so the sender has to be a registered unit with a card
+## like everything else. Only its BODY went away.
 ##
 ## Extends Unit rather than Building on purpose. Building exists for things
 ## that claim grid cells and are constructed, sold and destroyed; this one does
-## none of that. It is placed by Main at match start, never blocks a path and
-## never leaves, so inheriting a footprint, a build timer and a sell countdown
+## none of that, so inheriting a footprint, a build timer and a sell countdown
 ## would only be machinery that has to be switched off again.
 ##
 ## It cannot be destroyed because its stats give it the invulnerable armour
@@ -22,16 +33,15 @@ extends Unit
 ## Emitted when any reserve changes, so the command card can redraw its numbers.
 signal stock_changed()
 
-## Height above the strip the building's origin sits at, so its base rests on
-## the ground. Visual only.
-const GROUND_OFFSET: float = 0.0
-
 @export_group("Settings")
-## Which column of the send strip this building stands in, counting from 0 at
-## the left. The source game gives each creep TIER a send building of its own
-## and only Tier 1 exists so far, so this one stands at the left and leaves the
-## rest of the strip clear for the three that follow. See unit_data.md 6.1.
-@export var send_slot: int = 0
+## Which creep TIER this one sends, counting from 1. The source game gives each
+## tier a sender of its own because a tier is twelve creeps and twelve is
+## exactly one command card, and the four buttons over the unit panel are laid
+## out in this order. See unit_data.md 6.1.
+##
+## A tier with nothing implemented yet simply has no sender at all, and its
+## button is drawn dead rather than the ones around it shuffling up.
+@export var send_tier: int = 1
 
 ## One reserve per creep type, keyed by that type's stats resource.
 var _stocks: Dictionary = {}
@@ -42,14 +52,15 @@ func _ready() -> void:
 	_create_stocks()
 
 
-## Stands the building on the strip above its owner's area.
-## Call after the node is in the tree.
-func place_above(player_id: int, home_area: PlayerArea) -> void:
+## Hands this sender to its owner. Call after the node is in the tree.
+##
+## No placing any more: it stands nowhere, so where its node sits in the area
+## is not a position anything reads. It rides along in the area prefab purely
+## so that a player leaving the match takes their senders with them, exactly as
+## they take their towers.
+func attach_to(player_id: int, home_area: PlayerArea) -> void:
 	setup(player_id, home_area)
-	name = "SendBuilding%d" % player_id
-	global_position = home_area.send_zone_slot_center(send_slot) \
-		+ Vector3(0.0, GROUND_OFFSET, 0.0)
-	reset_physics_interpolation()
+	name = "SendBuildingT%d_P%d" % [send_tier, player_id]
 
 
 ## Whose maze this building's creeps walk: the owner's RIGHT NEIGHBOUR in the
@@ -76,9 +87,22 @@ func is_structure() -> bool:
 	return true
 
 
-## A class of its own, so a box drawn over the send strip and the maze below it
-## never hands back the send building lumped in with towers. There is one of
-## these per player, so its class only ever holds the one unit.
+## It stands nowhere, so nothing on the map may find it. Everything that picks
+## a unit out of the world reads this - see Unit.is_in_world().
+func is_in_world() -> bool:
+	return false
+
+
+## Never with anything, its own kind included. There are four senders and each
+## draws a different card, so a selection holding two of them would have to
+## pick one card to draw and quietly drop the other.
+func allows_multi_selection() -> bool:
+	return false
+
+
+## A class of its own, kept even though allows_multi_selection() already
+## refuses every mixture: the two say different things, and a class named after
+## what this is stays right if that rule is ever relaxed.
 func selection_class() -> StringName:
 	return SELECT_SEND_BUILDING
 
@@ -117,6 +141,18 @@ func set_replicated_stock(creep_stats: CreepStats, count: int) -> void:
 	stock_changed.emit()
 
 
+## Fills every reserve on this card at once, for the developer cheat that
+## waives the start delays. It hands over a FULL card rather than a starting
+## one, since having everything to hand is the whole point of asking.
+func fill_all_stocks() -> void:
+	var changed: bool = false
+	for key in _stocks:
+		if (_stocks[key] as CreepStock).fill():
+			changed = true
+	if changed:
+		stock_changed.emit()
+
+
 ## One reserve per creep the card offers, built from the abilities themselves
 ## so adding a creep to the card is all it takes to give it a reserve.
 ##
@@ -149,8 +185,19 @@ func _physics_process(delta: float) -> void:
 
 	var changed: bool = false
 	for key in _stocks:
+		# A reserve does not exist until its creep does. Woken here rather than
+		# inside the stock, because whether the wait is over is a question
+		# about the match clock and about this player's cheats, and a reserve
+		# knows neither.
+		if !is_unlocked(key as CreepStats):
+			continue
+
 		var stock: CreepStock = _stocks[key]
-		if stock.advance(delta):
+		# Never both in one tick: the reserve just handed over starts its next
+		# one from zero rather than from whatever the wait had left over.
+		if stock.unlock():
+			changed = true
+		elif stock.advance(delta):
 			changed = true
 	if changed:
 		stock_changed.emit()
@@ -254,10 +301,31 @@ func can_send(creep_stats: CreepStats) -> bool:
 func is_unlocked(creep_stats: CreepStats) -> bool:
 	if creep_stats == null:
 		return false
+	return unlock_remaining(creep_stats) <= 0.0
+
+
+## Seconds still to wait before this creep can be sent, or 0 once it can.
+##
+## The command card draws this in the middle of the slot, so a player waiting
+## on a creep reads HOW LONG rather than only that it is not ready yet. One
+## question with two callers on purpose: the greying and the number can never
+## disagree about when the wait ends.
+##
+## Answered here rather than on the ability because the ability is shared by
+## every player and this is not: the cheat that waives the wait is granted to
+## whoever pressed it, and only the building knows whose card this is.
+func unlock_remaining(creep_stats: CreepStats) -> float:
+	if creep_stats == null:
+		return 0.0
+
+	var state: PlayerState = _owner_state()
+	if state != null && state.creeps_unlocked:
+		return 0.0
+
 	var session: MatchSession = References.match_session
 	if session == null:
-		return true
-	return session.elapsed_seconds() >= creep_stats.unlock_seconds
+		return 0.0
+	return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
 
 
 ## Whether this player is at their population ceiling.

@@ -1,0 +1,210 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/BeastCharge.gd" id="1_BeastCharge"]
+
+[sub_resource type="StandardMaterial3D" id="M_hide"]
+transparency = 1
+albedo_color = Color(0.54, 0.22, 0.19, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_dark"]
+transparency = 1
+albedo_color = Color(0.31, 0.13, 0.12, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_bone"]
+transparency = 1
+albedo_color = Color(0.78, 0.7, 0.57, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="M_glow"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.3, 0.24, 1)
+
+[sub_resource type="StandardMaterial3D" id="M_dust"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.54, 0.22, 0.19, 0.55)
+
+[sub_resource type="CapsuleMesh" id="Body"]
+radius = 0.38
+height = 1.25
+radial_segments = 7
+rings = 3
+material = SubResource("M_hide")
+
+[sub_resource type="SphereMesh" id="Haunch"]
+radius = 0.26
+height = 0.42
+radial_segments = 6
+rings = 3
+material = SubResource("M_hide")
+
+[sub_resource type="CylinderMesh" id="Leg"]
+top_radius = 0.1
+bottom_radius = 0.075
+height = 0.44
+radial_segments = 5
+rings = 0
+material = SubResource("M_dark")
+
+[sub_resource type="SphereMesh" id="Head"]
+radius = 0.28
+height = 0.4
+radial_segments = 6
+rings = 3
+material = SubResource("M_hide")
+
+[sub_resource type="CapsuleMesh" id="Snout"]
+radius = 0.15
+height = 0.44
+radial_segments = 6
+rings = 2
+material = SubResource("M_hide")
+
+[sub_resource type="CylinderMesh" id="Tusk"]
+top_radius = 0.0
+bottom_radius = 0.085
+height = 0.62
+radial_segments = 5
+rings = 0
+material = SubResource("M_bone")
+
+[sub_resource type="PrismMesh" id="Plate"]
+size = Vector3(0.16, 0.17, 0.09)
+material = SubResource("M_glow")
+
+[sub_resource type="SphereMesh" id="Eye"]
+radius = 0.07
+height = 0.11
+radial_segments = 5
+rings = 2
+material = SubResource("M_glow")
+
+[sub_resource type="SphereMesh" id="Grit"]
+radius = 0.07
+height = 0.11
+radial_segments = 5
+rings = 2
+material = SubResource("M_dust")
+
+[node name="BeastCharge" type="Node3D"]
+script = ExtResource("1_BeastCharge")
+
+[node name="Visual" type="Node3D" parent="."]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0.52, 0)
+cast_shadow = 0
+mesh = SubResource("Body")
+
+[node name="HaunchL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.5, 0.3)
+cast_shadow = 0
+mesh = SubResource("Haunch")
+
+[node name="HaunchR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.5, 0.3)
+cast_shadow = 0
+mesh = SubResource("Haunch")
+
+[node name="ShoulderL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 0.5, -0.26)
+cast_shadow = 0
+mesh = SubResource("Haunch")
+
+[node name="ShoulderR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 0.5, -0.26)
+cast_shadow = 0
+mesh = SubResource("Haunch")
+
+[node name="LegFL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9759, 0.2182, 0, -0.2182, 0.9759, 0, 0, 0, 1, -0.3, 0.22, -0.3)
+cast_shadow = 0
+mesh = SubResource("Leg")
+
+[node name="LegFR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9759, -0.2182, 0, 0.2182, 0.9759, 0, 0, 0, 1, 0.3, 0.22, -0.3)
+cast_shadow = 0
+mesh = SubResource("Leg")
+
+[node name="LegBL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9759, 0.2182, 0, -0.2182, 0.9759, 0, 0, 0, 1, -0.28, 0.22, 0.34)
+cast_shadow = 0
+mesh = SubResource("Leg")
+
+[node name="LegBR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9759, -0.2182, 0, 0.2182, 0.9759, 0, 0, 0, 1, 0.28, 0.22, 0.34)
+cast_shadow = 0
+mesh = SubResource("Leg")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, -0.72)
+cast_shadow = 0
+mesh = SubResource("Head")
+
+[node name="Snout" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, -0, -0, -1, 0, 1, -0, 0, 0.34, -0.94)
+cast_shadow = 0
+mesh = SubResource("Snout")
+
+[node name="TuskL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9131, -0.0893, -0.3979, 0.4078, 0.2, 0.8909, 0, -0.9757, 0.219, -0.25, 0.34, -0.98)
+cast_shadow = 0
+mesh = SubResource("Tusk")
+
+[node name="TuskR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.9131, 0.0893, 0.3979, -0.4078, 0.2, 0.8909, 0, -0.9757, 0.219, 0.25, 0.34, -0.98)
+cast_shadow = 0
+mesh = SubResource("Tusk")
+
+[node name="Plate1" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, -0.18)
+cast_shadow = 0
+mesh = SubResource("Plate")
+
+[node name="Plate2" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0.08)
+cast_shadow = 0
+mesh = SubResource("Plate")
+
+[node name="Plate3" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0.34)
+cast_shadow = 0
+mesh = SubResource("Plate")
+
+[node name="Plate4" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0.58)
+cast_shadow = 0
+mesh = SubResource("Plate")
+
+[node name="EyeL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.56, -0.8)
+cast_shadow = 0
+mesh = SubResource("Eye")
+
+[node name="EyeR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.56, -0.8)
+cast_shadow = 0
+mesh = SubResource("Eye")
+
+[node name="Dust" type="CPUParticles3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.62)
+emitting = false
+amount = 20
+lifetime = 0.7
+mesh = SubResource("Grit")
+direction = Vector3(0, 0.5, 1)
+spread = 38.0
+initial_velocity_min = 0.6
+initial_velocity_max = 1.8
+gravity = Vector3(0, -2.2, 0)
+scale_amount_min = 0.5
+scale_amount_max = 1.4
+damping_min = 1.0
+damping_max = 2.4

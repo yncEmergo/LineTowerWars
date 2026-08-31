@@ -49,6 +49,15 @@ enum PlayerAction {
 	## outright by an authority whose GameConfig has cheats off, so it is a
 	## real order on the same road rather than a second way into the world.
 	CHEAT_GOLD,
+	## Developer cheat: waive every creep's start delay for the sender and fill
+	## every reserve, so the whole send card is available at once. Refused on
+	## the same terms as the gold one, and granted to the SENDER rather than to
+	## the match - a cheat belongs to whoever pressed it.
+	CHEAT_UNLOCK_CREEPS,
+	## Developer cheat: hand the sender every technology in the build, free of
+	## charge. Same terms again, and the sender's alone - the other player's
+	## Research Center is untouched.
+	CHEAT_UNLOCK_TECHS,
 }
 
 ## Which simulation tick the client issued this on. Not trusted for anything
@@ -72,6 +81,13 @@ var unit_ids: PackedInt32Array = PackedInt32Array()
 var target_unit_id: int = MatchSession.NO_UNIT
 var target_position: Vector3 = Vector3.ZERO
 var has_target_position: bool = false
+## Whether the player was holding shift, which CHAINS this order behind
+## whatever those units are already doing instead of replacing it.
+##
+## Intent, like everything else here: it says which of the two things was
+## asked for, and the server decides what that means against its own world.
+## An order naming an ability that cannot be chained ignores it.
+var queued: bool = false
 ## What this asks of the player, or NONE for an order given to units. The two
 ## are exclusive: a player order names no units and a unit order names no
 ## action.
@@ -84,9 +100,11 @@ var tech_id: int = 0
 
 ## The order a player just gave, before it has a slot. The server overwrites
 ## player_slot on arrival, so setting it here would only be a suggestion.
-static func create(id: int, units: Array, target: AbilityTarget) -> Command:
+static func create(id: int, units: Array, target: AbilityTarget,
+		is_queued: bool = false) -> Command:
 	var command: Command = Command.new()
 	command.ability_id = id
+	command.queued = is_queued
 
 	for unit in units:
 		var entry: Unit = unit as Unit
@@ -126,6 +144,7 @@ static func from_dict(data: Dictionary) -> Command:
 	command.target_unit_id = int(data.get("target_unit", MatchSession.NO_UNIT))
 	command.target_position = data.get("at", Vector3.ZERO)
 	command.has_target_position = bool(data.get("has_at", false))
+	command.queued = bool(data.get("q", false))
 	command.player_action = int(data.get("act", PlayerAction.NONE)) as PlayerAction
 	command.tech_id = int(data.get("tech", 0))
 	return command
@@ -144,6 +163,11 @@ func to_dict() -> Dictionary:
 		"at": target_position,
 		"has_at": has_target_position,
 	}
+	# Left out unless it is true, on the same grounds as the player-order keys
+	# below: nearly every order in a match is a plain one, and from_dict fills
+	# the common answer in from its default.
+	if queued:
+		data["q"] = true
 	# Left out entirely on a unit order rather than sent as zeroes. This is the
 	# one message sent per player action, and a player order is rare next to
 	# every move and every build, so the common case should not carry the keys
@@ -162,6 +186,7 @@ func to_target(session: MatchSession) -> AbilityTarget:
 	var target: AbilityTarget = AbilityTarget.new()
 	target.position = target_position
 	target.has_position = has_target_position
+	target.unit_id = target_unit_id
 	if session != null && target_unit_id != MatchSession.NO_UNIT:
 		target.unit = session.unit_for(target_unit_id)
 	return target
@@ -174,6 +199,7 @@ func describe() -> String:
 		return "slot %d, player action %d, tech %d, tick %d" % [
 			player_slot, player_action, tech_id, tick,
 		]
-	return "slot %d, ability %d, units %s, tick %d" % [
+	return "slot %d, ability %d, units %s, tick %d%s" % [
 		player_slot, ability_id, str(unit_ids), tick,
+		", queued" if queued else "",
 	]

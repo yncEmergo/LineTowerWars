@@ -24,7 +24,7 @@
 # and the tier structure is the same for all ten.
 
 from roster import (UNITS_PER_CELL, MAGIC, CHAOS, NORMAL, PIERCING, SIEGE,
-                    GROUND, AIR, BOTH, cells, aps)
+                    SPELL, GROUND, AIR, BOTH, cells, aps)
 
 # unit_data.md 1.4: an elemental tower's health depends only on its price tier,
 # and its armour is 5 at every one of them.
@@ -60,7 +60,9 @@ TECHNOLOGY_SELL_REFUND = 0.5
 DELIVERY = {
     # base towers
     "core": ("instant", "", 0.0, 0.0),
-    "fire_base": ("projectile", "res://Scenes/Effects/fire_bolt.tscn", 9.0, 0.9),
+    # Almost flat, on review: a Fire Pit lobbing its bolt read as a mortar,
+    # and the crater it fires out of is at eye height already.
+    "fire_base": ("projectile", "res://Scenes/Effects/fire_bolt.tscn", 9.0, 0.12),
     "ice_base": ("projectile", "res://Scenes/Effects/frost_bolt.tscn", 11.0, 0.0),
     "lightning_base": ("instant", "", 0.0, 0.0),
     "holy_base": ("projectile", "res://Scenes/Effects/holy_mote.tscn", 14.0, 0.0),
@@ -72,10 +74,18 @@ DELIVERY = {
     "primal_base": ("projectile", "res://Scenes/Effects/boulder.tscn", 7.0, 1.6),
 
     # paths
-    "doom_guard": ("projectile", "res://Scenes/Effects/meteor.tscn", 5.0, 3.4),
+    # Arc 0 and fast, because the Moonbeam's shot does not travel to its
+    # target at all - it is CALLED DOWN on it, see SKY_LAUNCH below. An arc on
+    # top of that dive would bow a falling rock upwards.
+    "moonbeam": ("projectile", "res://Scenes/Effects/meteor.tscn", 12.8, 0.0),
     "firelord": ("projectile", "res://Scenes/Effects/fire_bolt.tscn", 11.0, 0.4),
-    "lich": ("projectile", "res://Scenes/Effects/frost_bolt.tscn", 10.0, 0.5),
-    "crystal": ("projectile", "res://Scenes/Effects/ice_spike.tscn", 18.0, 0.0),
+    # A plate rather than a bolt, on review, thrown nearly flat and slower than
+    # the base pair's shot: what a Lich does is heavy and cold, not fast.
+    "lich": ("projectile", "res://Scenes/Effects/frost_disc.tscn", 8.5, 0.12),
+    # The one PIERCE in the game. It does not home, it flies through everything
+    # in its path, and it stops when it has run out of distance rather than when
+    # it has arrived. See PIERCE below and Scripts/Combat/PierceDelivery.gd.
+    "crystal": ("pierce", "res://Scenes/Effects/ice_spike.tscn", 26.0, 0.0),
     "annihilation_glyph": ("instant", "", 0.0, 0.0),
     "orb_keeper": ("instant", "", 0.0, 0.0),
     "divineshroom": ("projectile", "res://Scenes/Effects/spore_burst.tscn", 9.0, 0.8),
@@ -94,15 +104,71 @@ DELIVERY = {
     "beastmaster": ("instant", "", 0.0, 0.0),
 }
 
+# Paths whose shot is CALLED DOWN rather than fired, as an offset in world
+# units from the point it will land.
+#
+# The projectile is spawned there instead of at the muzzle, so its whole flight
+# is the dive onto the target and the tower it came from is not on the line at
+# all. Everything else about it is an ordinary projectile: it homes, it takes
+# real time, and the damage lands when it arrives.
+#
+# The numbers are read against the camera, which looks down the -Z axis pitched
+# 70 degrees over from a distance of 15 - see Resources/Config/camera_config.tres.
+# Y clears the top of the frame from anywhere in it, so the meteor is never seen
+# appearing; -X puts its origin off to the LEFT, which is what makes the fall
+# read as diagonal rather than as something dropped straight down.
+SKY_LAUNCH = {
+    "moonbeam": (-9.0, 16.0, 0.0),
+}
+
+# Ground a path's attack sets ALIGHT where it lands, as
+# (seconds, tick seconds, damage share per second, share of the splash radius).
+#
+# The damage is a SHARE of the attack's own rather than a number, so one row
+# covers all three tiers of a path and the patch can never drift out of step
+# with the attack that lit it.
+#
+# The RADIUS is a share of the attack's splash for the same reason, and it is
+# deliberately not 1. Drawn at the full splash the patch was the loudest thing
+# on the field and read as the tower's whole area of effect, which it is not -
+# the splash is instant and invisible, and only the fire left behind is drawn.
+# Half of it is a fire inside the blast rather than a fire the size of it.
+BURNING_GROUND = {
+    "moonbeam": (3.0, 0.4, 0.12, 0.5),
+}
+
+# Paths whose shot PIERCES: how far it flies before giving up, and what the
+# creeps behind the first one take.
+#
+# The distance is stated against the width of a TOWER rather than against the
+# tower's own attack range, and that is the point of it being here at all: what
+# a player reads off a piercing shot is how far down the lane it reaches, and
+# tying that to a targeting range would move it every time the range is retuned.
+# Eight tower widths is far enough to leave the tower's own reach and carry on.
+#
+# Spell Damage down the line is what makes Ice 2 "ignore armour entirely" -
+# unit_data.md 4.5 - since Spell is the one type that skips both the matrix and
+# the armour points. The FIRST creep struck is still an ordinary hit of the
+# tower's own type.
+PIERCE = {
+    "crystal": (8.0, SPELL),
+}
+
 IMPACT = {
     "fire_base": "res://Scenes/Effects/flame_impact.tscn",
-    "doom_guard": "res://Scenes/Effects/flame_impact.tscn",
+    "moonbeam": "res://Scenes/Effects/flame_impact.tscn",
     "firelord": "res://Scenes/Effects/flame_impact.tscn",
     "ice_base": "res://Scenes/Effects/frost_impact.tscn",
     "lich": "res://Scenes/Effects/frost_impact.tscn",
     "crystal": "res://Scenes/Effects/frost_impact.tscn",
-    "lightning_base": "res://Scenes/Effects/spark_impact.tscn",
-    "annihilation_glyph": "res://Scenes/Effects/spark_impact.tscn",
+    # Particles rather than a ring on the floor. An electrical hit should
+    # throw something off the creep it earths itself in, the way a blade
+    # throws blood - a flat disc says "area" and this attack has none.
+    "lightning_base": "res://Scenes/Effects/spark_burst.tscn",
+    # An ARC, drawn back to the muzzle, so every creep the Glyph strikes has
+    # a line of lightning to the tower that struck it - the aimed one and
+    # every creep its chain reached. See LightningBolt3D.
+    "annihilation_glyph": "res://Scenes/Effects/annihilation_bolt.tscn",
     "orb_keeper": "res://Scenes/Effects/spark_impact.tscn",
     "holy_base": "res://Scenes/Effects/holy_impact.tscn",
     "divineshroom": "res://Scenes/Effects/holy_impact.tscn",
@@ -132,7 +198,7 @@ IMPACT = {
 # is: a windup with nothing playing in it is a delay a player cannot see the
 # reason for.
 WINDUP = {
-    "doom_guard": 0.5,
+    "moonbeam": 0.5,
     "ancient_warden": 0.45,
     "beastmaster": 0.35,
     "alchemist": 0.3,
@@ -144,7 +210,7 @@ WINDUP = {
 ANIMATION = {
     "fire_base": [],
     "ice_base": [],
-    "lightning_base": [],
+    "lightning_base": [("sparks", "Turret/Sparks")],
     "holy_base": [],
     "void_base": [],
     "unholy_base": [],
@@ -153,12 +219,12 @@ ANIMATION = {
     "arcane_base": [],
     "primal_base": [("recoil", "Turret/Arm", 0.05)],
 
-    "doom_guard": [("recoil", "Turret/Orb", 0.05)],
+    "moonbeam": [("recoil", "Turret/Orb", 0.05)],
     "firelord": [("recoil", "Turret/Core", 0.04)],
     "lich": [("recoil", "Turret/Core", 0.04)],
     "crystal": [("recoil", "Turret/Spike", 0.08)],
-    "annihilation_glyph": [("spin", "Turret/Spinner", 1.6, 0.15)],
-    "orb_keeper": [("spin", "Turret/Cage", 1.9, 0.2)],
+    "annihilation_glyph": [("sparks", "Turret/Sparks")],
+    "orb_keeper": [("sparks", "Turret/Sparks")],
     "divineshroom": [("recoil", "Turret/Cap", 0.05)],
     "titan_vault": [("recoil", "Turret/Lens", 0.05)],
     "spellslinger": [("spin", "Turret/Sigils", 1.1, 0.25)],
@@ -183,7 +249,7 @@ ANIMATION = {
 #
 # The three tiers of a path are written out rather than interpolated, because
 # nothing in the source is regular enough to interpolate: the Ultimate Scorpion
-# attacks faster than its Greater, the Doom Guard's mana FALLS at its top tier,
+# attacks faster than its Greater, the Moonbeam's mana FALLS at its top tier,
 # and half the paths change targeting or splash at one tier and not another.
 #
 # `tech` is which technology gates the tower, by the tech_id authored in
@@ -199,7 +265,7 @@ ELEMENTS = {
         ],
         "paths": [
             {
-                "key": "doom_guard", "tech": 2, "name": "Doom Guard",
+                "key": "moonbeam", "tech": 2, "name": "Moonbeam",
                 "tiers": [
                     (4000, SIEGE, 131, 134, 3.0, 800, 275, GROUND, 100, 1.0),
                     (10000, SIEGE, 268, 271, 3.0, 975, 325, GROUND, 100, 1.0),

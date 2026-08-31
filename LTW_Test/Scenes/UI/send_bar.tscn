@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/SendBar.gd" id="1_send_bar"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/send_tier_button.tscn" id="2_send_tier_button"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar"]
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+bg_color = Color(0.09, 0.1, 0.13, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.26, 0.28, 0.35, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SendBar" type="PanelContainer" node_paths=PackedStringArray("_buttons")]
+theme_override_styles/panel = SubResource("StyleBoxFlat_bar")
+script = ExtResource("1_send_bar")
+_buttons = [NodePath("Row/SendTier1"), NodePath("Row/SendTier2"), NodePath("Row/SendTier3"), NodePath("Row/SendTier4")]
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SendTier1" parent="Row" instance=ExtResource("2_send_tier_button")]
+layout_mode = 2
+send_tier = 1
+
+[node name="SendTier2" parent="Row" instance=ExtResource("2_send_tier_button")]
+layout_mode = 2
+send_tier = 2
+
+[node name="SendTier3" parent="Row" instance=ExtResource("2_send_tier_button")]
+layout_mode = 2
+send_tier = 3
+
+[node name="SendTier4" parent="Row" instance=ExtResource("2_send_tier_button")]
+layout_mode = 2
+send_tier = 4

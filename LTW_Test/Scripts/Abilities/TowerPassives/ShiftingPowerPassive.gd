@@ -8,7 +8,7 @@ extends TowerPassive
 ## unit_data.md 4.1: bounces gain mana per target, damage rises with the mana
 ## PERCENTAGE, every other attack is dealt as Spell Damage, and flyers take
 ## more. Mana drains constantly, so the tower is only ever strong while it is
-## busy - the mirror of the Doom Guard, which is only strong while it is new.
+## busy - the mirror of the Moonbeam, which is only strong while it is new.
 ##
 ## The Ultimate adds a threshold: above most of its mana it bounces further and
 ## burns through the mana much faster, so it spikes and then falls back.

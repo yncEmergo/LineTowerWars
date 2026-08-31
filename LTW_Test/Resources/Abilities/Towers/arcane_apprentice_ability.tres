@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ArcanizePassive" format=3 uid="uid://balqoy2svyf4v"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dugqxlrklnqlw" path="res://Scripts/Abilities/TowerPassives/ArcanizePassive.gd" id="1_ArcanizePassive"]
-[ext_resource type="Texture2D" uid="uid://c7qlkqlb4k4sx" path="res://2DArt/Icons/apprentice.png" id="2_apprentice"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/ArcanizePassive.gd" id="1_ArcanizePassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/apprentice.png" id="2_apprentice"]
 
 [resource]
 script = ExtResource("1_ArcanizePassive")
 ability_id = 192
 display_name = "Arcanize"
-icon = ExtResource("2_apprentice")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_apprentice")
+mana_per_attack = 1
+full_mana_bonus = 1

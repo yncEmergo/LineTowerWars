@@ -8,6 +8,50 @@ here next to the question.
 [README.md](README.md) is the tool reference — what the files are and how to
 run it. This is the method.
 
+**The source game's own towers are in
+`ReferenceFilesFromOtherProjects/TowerVisualReferences/`**, one screenshot per
+element, and that folder's own README says which tower is which cell of which
+sheet. They are what a builder here should be argued against — not copied, since
+these are primitives and those are finished art, but a tower whose reference is a
+green orb sitting on the ground should not come out an orange orb on a pole.
+
+---
+
+## 0. Whose rules these are
+
+**Every visual rule in this document was authored by Claude, not decided by the
+user.** What the user asked for is placeholder visuals. The rules exist because
+a roster built with none is a roster that stops matching the one before it —
+they are for CONTINUITY, so the twelfth creep looks like it came from the same
+game as the first.
+
+So: **none of them is a hard rule.** Where this file, `style.py` or
+`game_rules.md` says "hard rule", "never" or "must", read it as *this is the
+convention the existing rosters were built to, and breaking it for one unit
+costs the continuity it was buying*. That is a real cost and worth arguing
+about. It is not a prohibition, and changing one is ordinary work rather than a
+violation.
+
+Two of them have already moved, which is the proof that they can:
+
+- "AIR is translucent" was written when the only flyer in the game was a ghost.
+  The first solid flyer retired it — being made of vapour belongs to the
+  `wraith` body plan now, and the family keeps the two tells that were really
+  carrying it.
+- "A creep's only lit parts are its eyes" gained a named exception when a
+  burning Boss arrived, because a creature made of fire that gives off no light
+  is reading as the wrong monster.
+
+**What IS worth holding to is where a change goes.** Change it in `style.py`
+and re-generate, so the whole roster moves together — a hand edit to one
+generated model is overwritten by the next run and leaves that unit as the only
+one disagreeing. That is the only part of the "hard" language that was ever
+load bearing.
+
+The genuinely hard rules of this project are elsewhere and are the user's: no
+physics engine, only the authority simulates, authored ids. Those are in
+`CLAUDE.md`. Nothing about how a tower looks is one of them.
+
 ---
 
 ## 1. What placeholder art is for
@@ -46,8 +90,17 @@ against:
 | Question | Axis | Creeps use |
 | --- | --- | --- |
 | What FAMILY is it? | what it does to the maze | ground walks / flying has no legs and a shadow disc / attacker is the only one with a LIT weapon |
-| What KIND within it? | body plan and hide colour | quadruped, biped, arachnid, golem, wraith, treant |
+| What KIND within it? | body plan and hide colour | quadruped, biped, arachnid, golem, wraith, treant, brute |
 | How STRONG is it? | a ladder on GOLD COST | mass, eye brightness, carapace, then plates, spines, a crest |
+
+**The creep ladder's SIZE rung is CAPPED and the others are not**, which is the
+one asymmetry in it and is worth knowing before authoring a shape. The whole
+roster lives inside a narrow band of sizes whose ceiling belongs to a top tier
+Boss, because a tier carries no mechanical meaning and a field of creeps two
+and three times each other's size is chaotic to read. `style.CREEP_MAX_HEIGHT`
+and `CREEP_MAX_RADIUS` are that band, `creep_models.generate()` reports any
+creep over it, and `game_rules.md` has the reasoning. Eyes, carapace, plates,
+spines and crest carry the rest of the ladder and may climb freely.
 
 The reasoning that got there:
 
@@ -109,6 +162,20 @@ to find:
   colour, so the hue was gone at exactly the tier the player has paid most for
   it. For a coloured roster it is the accent's FLOOR that should be raised; its
   ceiling barely moves.
+  - and the ceiling that is safe depends on HOW MUCH OF THE MODEL the accent
+    is. A brightness that reads as a hot detail on a Basic tower - where the
+    accent is a crystal the size of a thumb on grey stone - blows a whole
+    elemental Ultimate to a white ball, because on half that roster the accent
+    IS the biggest object on the model. Two rosters sharing one shader want two
+    ceilings.
+- **A ramp applied as a flat multiply is wrong at BOTH ends of a palette.**
+  Darkening every element's stone by a fifth for its cheapest path tier took
+  the ones that are near-black BY DESIGN - Fire's basalt, Void's hide - to
+  unlit lumps with no element left in them, while brightening the top tier did
+  nothing at all to Holy, which was already ivory and had nowhere to go. Scale
+  the gain by the HEADROOM the colour actually has in the direction it is being
+  pulled: full effect in the middle of the range, tapering to none at the end
+  it is heading for. `style.element_path_tone` is the worked version.
 
 ---
 
@@ -147,11 +214,27 @@ not have, so a tier can be read by counting details:
     5,000g   + crown fins
     25,000g  + a slowly turning halo
 
-Two rules worth carrying to any roster:
+Three rules worth carrying to any roster:
 
 - **Continuous AND stepped, together.** Size, trim colour and glow ramp
   smoothly so neighbours stay distinguishable; collar/bolts/crown/halo are
   steps so the expensive ones are distinguishable across a whole map.
+- **A LADDER MUST NOT BE THE LOUDEST THING ON THE MODEL**, and this is the
+  expensive lesson of the elemental roster. That roster was given this exact
+  ladder - the same rings, the same metal ramp - and it failed, twice over. The
+  metal was the loudest thing on every tower, so thirty different silhouettes
+  read as one silhouette with its top swapped; and two neighbouring rungs of a
+  six step metal ramp are nearly the same colour, so the thing being shouted at
+  the player was also the thing hardest for them to actually read.
+  - a ladder is a SECONDARY question. What a player has to read first is what
+    the tower IS, and a device that answers "how expensive" cannot be allowed
+    to sit on top of the answer to "what is this"
+  - the elemental fix was to take metal off everything above the base pair and
+    put the ladder into the element's OWN material instead - one value ramp on
+    the stone - so the loud thing on the model is the thing that says which
+    element and which path. See style.py, THE PATH LADDER
+  - it works there and would NOT work on the Basic roster, which has no colour
+    to ramp. That is the whole reason there are two ladders
 - **Motion is the loudest signal a top down camera has**, so it is reserved for
   the top of the ladder. Nothing below an Ultimate has a moving part that is
   not its own attack.
@@ -313,6 +396,37 @@ from state that persists, and hand the *feel* to the human.
 
 Each of these cost real time. None of them errors.
 
+- **A FULL `generate.py` run rewrites every roster, not the one you are on.**
+  If the generator source has moved on since the checked-in output was last
+  written, that run also lands every pending change with yours — card slots,
+  material brightness, a projectile changing class. It is the tool working
+  correctly and it is still not what you asked for. Read `git status` after the
+  first run and decide deliberately. `git checkout --` on the rest is a poor
+  fallback: reverted files can end up referencing resources that a
+  half-finished change deleted, and the project stops booting.
+- **A family rule can be two rules wearing one coat.** AIR was written as "no
+  legs, a shadow disc, and translucent" while the only flyer in the game was a
+  ghost. The first solid flyer made it obvious that translucency was the
+  WRAITH plan's, not the family's — drawn as vapour, a Wyvern reads as a
+  spirit. When a rule stops fitting the second member of its category, check
+  whether it was ever about the category.
+- **On a TRANSLUCENT creep the rim colour IS the colour.**
+  `creep_vapour.gdshader` mixes both the albedo and the alpha towards `rim` by
+  the same fresnel term, so the silhouette - the only part a player really
+  sees - is almost purely rim, and the three body tones only tint an interior
+  that is 22% opaque. Authoring a wraith three shades darker changes nothing
+  visible. What actually moves its value is its `rim` and its `face_alpha`,
+  which is why density is a per-creep number rather than one constant.
+- **A baked icon flatters a translucent creep**, for the same reason: its
+  near-clear interior composites against a transparent background rather than
+  against a dark lane, so a ghost reads several steps paler in its icon than in
+  the game. Judge a wraith by running it, not by its PNG.
+- **A creep's icon is a render of its model, so it cannot exist before the
+  model does.** A `.tres` that names a missing texture takes the WHOLE resource
+  down with it - Godot aborts the file, and every other property on it reads
+  back as a default. Author the stats without the icon, generate, bake, then
+  add the icon reference.
+
 - **`Transform3D` in a `.tscn` is written ROW BY ROW.** Handing it three column
   vectors transposes the basis, which for a rotation is its inverse: every
   authored angle comes out negated. It aimed the anti-air rack at the floor.
@@ -368,6 +482,44 @@ Each of these cost real time. None of them errors.
   forward is -Z. Getting the sign wrong stands every neck up over the animal's
   own back, and a fleece or a barrel then hides the join so it reads as a
   floating head rather than as a wrong angle.
+  - and a head hung off a body that is ALREADY leaning takes its angle
+    against that lean rather than against the world, so it needs a rotation
+    the other way to come back to level. Left at the body's own lean, the
+    creature spends the whole match looking at ground the camera never sees,
+    with the two lit dots that are its face pointing at the floor
+- **From directly above, whatever is at the FRONT of a model is its face**,
+  whether or not that is where the face is. A bar laid across the shoulders,
+  a raised brow, a pair of pale fists at the end of long arms - any of them
+  will sit between the camera and the eyes, and a creep whose eyes are covered
+  reads as having no facing at all. Leave a gap for the head to be the
+  frontmost thing, and put the brow BEHIND the eyes rather than over them.
+- **A rung nobody stands on has never actually been looked at.** The creep
+  ladder's ramps were authored for six rungs and only five were occupied, so
+  the top rung's emissive carapace had never been rendered: a flat plate
+  catching the sun came out salmon pink, and every claw and horn on the first
+  creep to reach that rung read as rusted iron. Whatever a ladder's top rung
+  is worth is a guess until something is standing on it.
+- **A RING is a strong shape and a weak tier tell.** It reads instantly, which
+  is exactly why it is a bad thing to spend a ladder on: put one on every tower
+  in a roster and the ring is what a player sees first on all of them. Where a
+  ring is doing real work is separating TWO towers that are otherwise the same
+  shape - the elemental base pair, where it survived - and there it wants two
+  metals as far apart as metals get rather than two rungs of one ramp.
+- **A cluster of same-sized parts is a bunch of grapes, whatever it is on.**
+  This was learned on fur and it is not about fur. The first Sludge Monstrosity
+  was a mound, four humps, five vents and five bubbles all within a whisker of
+  the same size, and it came out as a plate of ice cubes with no silhouette at
+  all. What fixes it is a HIERARCHY: one part that is unmistakably the body,
+  parts that are plainly smaller than it, and one of whatever the detail is -
+  not eight things the same size. It matters most on the organic builders,
+  because a machine gets away with repetition and a creature does not.
+- **A cluster of same-sized spheres is a bunch of grapes, not a creature.** Fur
+  built as five round lumps the size of the chest reads as a snowbank from
+  every angle. What makes fur read is a RAGGED OUTLINE, so the lumps have to
+  be small, flattened, and confined to one part of the body - and the tone
+  budget matters as much as the size: if the pale tone is spent on the back,
+  the fists have to come down to the body tone or the silhouette is all
+  highlights and no shape.
 - **Ids are claimed loudly.** `ability_id` and `unit_type_id` are permanent and
   never reused; scan the folder and take the highest plus one. A duplicate is a
   failed boot, which is the point — and it will happen if two people author at
@@ -387,6 +539,9 @@ Placeholder art is a design artefact, so the RULES outlive it:
 - **`unit_data.md`** — only if a NUMBER changed. It mirrors the `.tres`, and
   the `.tres` is the authority once a unit exists.
 - **This file** — if the method changed, not if the roster did.
+- **`creep_roster.py` / `roster.py`** — the row. A new roster member is a row
+  first; a new BUILDER is only for a creature the existing plans would have to
+  lie about.
 
 Do not write counts, or the current value of a tuning knob, into any `.md`.
 See CLAUDE.md.

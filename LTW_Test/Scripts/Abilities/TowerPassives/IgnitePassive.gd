@@ -39,7 +39,7 @@ func on_tick(tower: Building, delta: float) -> void:
 	var creep: Creep = HitPattern.random_in_radius(
 		tower.area, tower.global_position, radius_cells, tower.stats.attack)
 	if creep != null:
-		creep.status().burn(damage_per_second, duration_seconds)
+		creep.status().burn(self, damage_per_second, duration_seconds)
 
 
 func effect_text() -> String:

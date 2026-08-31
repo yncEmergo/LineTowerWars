@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b7p3v34mtt2qh" path="res://Scripts/Game/Main.gd" id="1_rgh2o"]
 [ext_resource type="Script" uid="uid://dj7fxuuds1a5o" path="res://Scripts/Camera/RTSCamera.gd" id="2_pbw6q"]
+[ext_resource type="Script" path="res://Scripts/Effects/SunLight.gd" id="2_sun"]
 [ext_resource type="Script" uid="uid://vqbtyt4ly280" path="res://Scripts/Input/SelectionController.gd" id="4_jw32o"]
 [ext_resource type="Script" uid="uid://bbot6m1ktkinp" path="res://Scripts/References.gd" id="5_pbw6q"]
 [ext_resource type="Resource" uid="uid://cj8d776kvb2yv" path="res://Resources/Config/game_config.tres" id="6_gcfg"]
@@ -19,6 +20,7 @@
 [ext_resource type="Resource" path="res://Resources/Config/presentation_config.tres" id="23_present"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_hud.tscn" id="27_hud"]
 [ext_resource type="Script" path="res://Scripts/Input/CheatController.gd" id="29_cheat"]
+[ext_resource type="Script" path="res://Scripts/Effects/OrderOverlay.gd" id="30_orders"]
 
 [sub_resource type="Environment" id="Environment_50glp"]
 background_mode = 1
@@ -36,6 +38,7 @@ _builder_scene = ExtResource("12_builder")
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=93314125]
 transform = Transform3D(0.76604444, 0.52654076, -0.3686878, 0, 0.57357645, 0.81915206, 0.6427876, -0.62750685, 0.43938506, 0, 0, 0)
 shadow_enabled = true
+script = ExtResource("2_sun")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1446347163]
 environment = SubResource("Environment_50glp")
@@ -51,6 +54,9 @@ script = ExtResource("2_pbw6q")
 [node name="Projectiles" type="Node3D" parent="."]
 
 [node name="Effects" type="Node3D" parent="." unique_id=2130325457]
+
+[node name="OrderOverlay" type="Node3D" parent="."]
+script = ExtResource("30_orders")
 
 [node name="MatchHUD" parent="." instance=ExtResource("27_hud")]
 
@@ -72,7 +78,7 @@ script = ExtResource("21_session")
 [node name="TechManager" type="Node" parent="."]
 script = ExtResource("28_tech")
 
-[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_tech_manager", "_effects_root", "_projectiles_root")]
+[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_tech_manager", "_effects_root", "_projectiles_root", "_order_overlay")]
 script = ExtResource("5_pbw6q")
 _units_root = NodePath("../Units")
 _rts_camera = NodePath("../Camera")
@@ -84,6 +90,7 @@ _player_manager = NodePath("../PlayerManager")
 _match_session = NodePath("../MatchSession")
 _tech_manager = NodePath("../TechManager")
 _effects_root = NodePath("../Effects")
+_order_overlay = NodePath("../OrderOverlay")
 _projectiles_root = NodePath("../Projectiles")
 _game_config = ExtResource("6_gcfg")
 _camera_config = ExtResource("7_ccfg")

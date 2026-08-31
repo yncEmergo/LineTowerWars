@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="HotkeyAction" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/HotkeyAction.gd" id="1_HotkeyAction"]
+
+[resource]
+script = ExtResource("1_HotkeyAction")
+action_id = "research_center"
+display_name = "Research Center"
+default_key = "G"

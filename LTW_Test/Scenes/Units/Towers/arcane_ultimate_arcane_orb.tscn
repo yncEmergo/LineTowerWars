@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_arcane_ultimate_arcane_orb_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 1.023
+health_bar_height = 1.055
 select_radius = 0.5
-select_height = 0.334
+select_height = 0.349
 
 [node name="Visual" parent="." instance=ExtResource("4_arcane_ultimate_arcane_orb_model")]
 

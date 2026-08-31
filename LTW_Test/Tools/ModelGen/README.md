@@ -43,6 +43,13 @@ as a family if its four tiers really are one shape at four sizes. Both stop
 being true the first time somebody nudges one file. So the rules live in
 `style.py`, the numbers live in `roster.py`, and everything else is output.
 
+**The rules themselves are not binding.** They were authored by Claude rather
+than handed down — only placeholder visuals were ever asked for — and they buy
+CONTINUITY and nothing else. Change one when it is wrong. What this tool is
+for is making sure that when you do, the whole roster moves with it instead of
+one unit quietly disagreeing with the other twenty-nine. See
+[PLACEHOLDER_ART.md](PLACEHOLDER_ART.md) section 0.
+
 **The output is checked in and is ordinary hand-editable Godot.** Open a
 generated `.tscn` in the editor and change it whenever that is quicker. Just
 know the next run overwrites it, so anything worth keeping goes back into the
@@ -63,7 +70,7 @@ generator.
 | `element_models.py` | ten element base shapes and twenty path silhouettes | shapes change |
 | `element_content.py` | elemental stats, prefabs, passives, morphs, upgrades | rules change |
 | `creep_roster.py` | the creep table, straight from `unit_data.md` 6.2 | balance changes |
-| `creep_models.py` | the six creep body plans and the creep ladder | shapes change |
+| `creep_models.py` | the creep body plans and the creep ladder | shapes change |
 | `creep_content.py` | creep PREFABS. **Not** their stats, see below | wiring changes |
 | `materials.py`, `effects.py` | the shared palette; projectiles and impacts | |
 | `showcase.py` | throwaway review scenes, opt in | |
@@ -90,6 +97,25 @@ needs too: hide, shadowed hide, lit hide, claws, eyes. It is a number a 3D
 artist can replace in one sitting and have every model in the game change
 together.
 
+## Running only part of it
+
+**`generate.py` with no stage rewrites EVERYTHING**, including the rosters you are not
+working on — and if the generator source has moved on since the checked-in output was
+last written, that run also applies every one of those pending changes at the same time.
+That is not a bug, and it is the tool doing its job, but it means a run you thought was
+"add my twelve creeps" can come back with several hundred tower files changed.
+
+So before a full run, know whether the output is in step with the source:
+
+```
+python Tools/ModelGen/generate.py     # then read git status before doing anything else
+```
+
+If the answer is no, either bring it in step deliberately as its own change, or run the
+stage you actually want. `git checkout --` on the rest is the fallback, and it is a poor
+one: the reverted files can end up referencing resources a half-finished change deleted,
+which is how a clean project stops booting.
+
 ## Adding a roster
 
 **Read [PLACEHOLDER_ART.md](PLACEHOLDER_ART.md) first.** It is the method: the
@@ -103,10 +129,18 @@ Everything from `style.py` down is inherited.
 - **Elemental towers** were the cheap case they were predicted to be: the same
   material roles and the same shape of ladder, plus a palette entry per
   element, a builder per shape, an ability table and a content file.
+- **Tier 2 of the creeps** was the cheap case again, and the three new BUILDERS it needed
+  are the useful part of the story. A new row is the default; a new builder is for a
+  creature the existing plans would have to LIE about, and each of these three cleared
+  that bar in a different way. `winged` because the wraith plan has no body, only a hood
+  and rags, and a Wyvern is an animal. `shelled` because a quadruped is a barrel with a
+  neck on the front, and a barrel from directly above is an oval where a dome with a hard
+  rim around it reads as a shell. `machine` because a Siege Engine has wheels, and the
+  leg helper derives its limb lengths from a hip height that a wagon does not have.
 - **Creeps** were the bigger one. They inherited `tscn.py`, `modelkit.py` and
   the ladder machinery unchanged, and needed on top of that a shader of their
   own (`creep_hide` and `creep_vapour`), a ladder measured in GOLD rather than
-  in price tiers, six body plans, and one thing no tower needed: an explicit
+  in price tiers, a builder per body plan, and one thing no tower needed: an explicit
   split between authoring in HEIGHT units and in WIDTH units. Read
   PLACEHOLDER_ART.md before touching a creep model — the width and height
   ramps are separate, and for a creature that quietly breaks every angled limb

@@ -1,19 +1,19 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://dbhwhumyye3wn"]
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
 
-[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
-[ext_resource type="Resource" uid="uid://ce1arm7p1q3la" path="res://Resources/Abilities/Towers/upgrade_archer_to_lesser_watch_tower_ability.tres" id="5_upgrade_archer_to_lesser_watch_tower_ability"]
-[ext_resource type="Resource" uid="uid://qax22einy01s" path="res://Resources/Abilities/Towers/upgrade_archer_to_lesser_cannon_ability.tres" id="6_upgrade_archer_to_lesser_cannon_ability"]
-[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_archer_to_lesser_watch_tower_ability.tres" id="5_upgrade_archer_to_lesser_watch_tower_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_archer_to_lesser_cannon_ability.tres" id="6_upgrade_archer_to_lesser_cannon_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
-[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="8_yvhaa"]
-[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
-[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="10_cancel_build_ability"]
-[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="11_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="12_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" uid="uid://dsmc87iv87s71" path="res://2DArt/Icons/archer.png" id="13_archer"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="10_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/archer.png" id="14_archer"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -27,22 +27,23 @@ damage_max = 3
 damage_type = 3
 attacks_per_second = 1.567
 attack_range = 3.91
+target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
-model_scene_path = "res://Scenes/Units/Models/Towers/archer_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_upgrade_ability")])
-gold_cost = 30
-total_gold_cost = 40
 unit_type_id = 27
 display_name = "Archer"
-icon = ExtResource("13_archer")
+icon = ExtResource("14_archer")
 max_health = 35
 armor_type = 5
 armor = 1
 attack = SubResource("Attack")
-abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_archer_to_lesser_watch_tower_ability"), ExtResource("6_upgrade_archer_to_lesser_cannon_ability"), ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability")])
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_archer_to_lesser_watch_tower_ability"), ExtResource("6_upgrade_archer_to_lesser_cannon_ability"), ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability"), ExtResource("10_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/archer.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/archer_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 30
+total_gold_cost = 40

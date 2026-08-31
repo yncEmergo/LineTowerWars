@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+[ext_resource type="Script" path="res://Scripts/Combat/PiercingProjectile.gd" id="1_PiercingProjectile"]
 
 [sub_resource type="StandardMaterial3D" id="M_body"]
 transparency = 1
@@ -15,22 +15,22 @@ albedo_color = Color(0.55, 0.95, 1, 1)
 
 [sub_resource type="CylinderMesh" id="Body"]
 top_radius = 0.0
-bottom_radius = 0.045
-height = 0.42
+bottom_radius = 0.075
+height = 0.62
 radial_segments = 4
 rings = 0
 material = SubResource("M_body")
 
 [sub_resource type="CylinderMesh" id="Core"]
 top_radius = 0.0
-bottom_radius = 0.0225
-height = 0.336
+bottom_radius = 0.0375
+height = 0.496
 radial_segments = 4
 rings = 0
 material = SubResource("M_core")
 
 [node name="IceSpike" type="Node3D"]
-script = ExtResource("1_Projectile")
+script = ExtResource("1_PiercingProjectile")
 
 [node name="Body" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0, 1, -0, -1, -0, 0, 0, 0.05)

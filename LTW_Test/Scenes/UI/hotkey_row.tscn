@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/HotkeyRow.gd" id="1_hotkey_row"]
+
+[node name="HotkeyRow" type="HBoxContainer" node_paths=PackedStringArray("_name_label", "_key_button")]
+theme_override_constants/separation = 14
+script = ExtResource("1_hotkey_row")
+_name_label = NodePath("NameLabel")
+_key_button = NodePath("KeyButton")
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Action"
+
+[node name="KeyButton" type="Button" parent="."]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "-"

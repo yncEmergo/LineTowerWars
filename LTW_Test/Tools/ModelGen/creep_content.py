@@ -10,8 +10,8 @@ was implemented, and unit_data.md 8.1 makes them the authority. A generator
 that rewrote them would have to hold every number in 6.2 as well as every
 passive, every pack entry and every unlock time - and the first time the two
 disagreed, the file a human edited would lose. Towers are generated because
-thirty of them come out of one balance table; creeps are not because thirteen
-of them come out of thirteen hand-made decisions.
+thirty of them come out of one balance table; creeps are not because each of
+them comes out of its own handful of hand-made decisions.
 
 So what a prefab does here is assemble what already exists:
 
@@ -171,6 +171,17 @@ def _add_walk(s, built):
         props.append("arm_swing_degrees = 5")
         props.append("lean_degrees = 0")
         props.append("roll_degrees = 3")
+    elif built.get("rolls"):
+        # WHEELS, not legs. They are handed over as hip pivots so the chassis
+        # still pitches and rolls as it travels, but a wheel swinging fore and
+        # aft reads as a broken axle rather than as rolling - so the swing is
+        # turned off and what is left is the body moving over them. See
+        # creep_models.build_machine.
+        props.append("swing_degrees = 0")
+        props.append("arm_swing_degrees = 0")
+        props.append("bob_height = %s" % num(round(built["height"] * 0.018, 4)))
+        props.append("lean_degrees = 2")
+        props.append("roll_degrees = 1")
     else:
         props.append("bob_height = %s" % num(round(built["height"] * 0.035, 4)))
     s.node("Walk", "Node", ".",

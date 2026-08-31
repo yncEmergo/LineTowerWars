@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/TraitPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 305
+display_name = "Boss"
+description = "Sent one at a time instead of as a pack, and steals 2 lives instead of 1."
+targeting = 0

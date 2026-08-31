@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/hardened_skin.tres" id="3_hardened_skin"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/regen_aura_3.tres" id="4_regen_aura_3"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ancient_wendigo.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 145
+display_name = "Ancient Wendigo"
+max_health = 222915
+armor_type = 5
+armor = 80
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_hardened_skin"), ExtResource("4_regen_aura_3")])
+scene_path = "res://Scenes/Units/Creeps/ancient_wendigo.tscn"
+move_speed = 2.2656
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 225000
+income_gain = 10125
+unlock_seconds = 990.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.24
+bounty = 8015

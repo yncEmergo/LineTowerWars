@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/attacker.tres" id="10_attacker"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/bombardment.tres" id="11_bombardment"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="4_move"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="5_stop"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="6_attack"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="8_projectile"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/siege_engine.png" id="98_icon"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("8_projectile")
+projectile_scene_path = "res://Scenes/Effects/mortar_shell.tscn"
+speed = 8.0
+arc_height = 2.2
+impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("7_attack_stats")
+damage_min = 44
+damage_max = 52
+damage_type = 4
+attacks_per_second = 0.5
+target_class = 1
+attack_range = 3.125
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 157
+display_name = "Siege Engine"
+max_health = 28800
+armor_type = 5
+armor = 4
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("4_move"), ExtResource("5_stop"), ExtResource("6_attack"), ExtResource("10_attacker"), ExtResource("11_bombardment")])
+default_ability = ExtResource("4_move")
+scene_path = "res://Scenes/Units/Creeps/siege_engine.tscn"
+move_speed = 1.562
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 75000
+income_gain = 3750
+unlock_seconds = 720.0
+max_stock = 8
+stock_regen_seconds = 16.0
+initial_stock = 1
+body_radius = 0.24
+bounty = 7312
+is_attacker = true

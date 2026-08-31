@@ -32,7 +32,11 @@ func apply(hit: AttackHit, target: Unit, impact_point: Vector3) -> void:
 		# Always area damage, whatever hit.is_aoe says. That flag labels the
 		# attack as a whole, and a splash is the definition of covering ground
 		# however the tower that threw it is set up.
-		creep.take_damage(hit.damage, hit.damage_type, true)
+		#
+		# Through the hit rather than straight at the creep, so a creep the
+		# splash finishes is a creep the tower gets the credit for. See
+		# AttackHit.splash_onto.
+		hit.splash_onto(creep, hit.damage, hit.damage_type)
 
 
 func effect_name() -> String:

@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/Projectile.gd" id="1_Projectile"]
+[ext_resource type="Script" path="res://Scripts/Components/SpinAnimation3D.gd" id="2_SpinAnimation3D"]
+
+[sub_resource type="StandardMaterial3D" id="M_face"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.74, 0.94, 1, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="M_core"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.42, 0.8, 1, 1)
+
+[sub_resource type="CylinderMesh" id="Plate"]
+top_radius = 0.14
+bottom_radius = 0.1204
+height = 0.0308
+radial_segments = 8
+rings = 0
+material = SubResource("M_face")
+
+[sub_resource type="CylinderMesh" id="Eye"]
+top_radius = 0.0644
+bottom_radius = 0.0644
+height = 0.0476
+radial_segments = 8
+rings = 0
+material = SubResource("M_core")
+
+[sub_resource type="PrismMesh" id="Tooth"]
+size = Vector3(0.0532, 0.028, 0.0868)
+material = SubResource("M_face")
+
+[node name="FrostDisc" type="Node3D"]
+script = ExtResource("1_Projectile")
+
+[node name="Spin" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Plate" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Plate")
+
+[node name="Eye" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.014, 0)
+cast_shadow = 0
+mesh = SubResource("Eye")
+
+[node name="Tooth1" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1288, 0, 0)
+cast_shadow = 0
+mesh = SubResource("Tooth")
+
+[node name="Tooth2" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(-0.5, -0, -0.866, 0, 1, 0, 0.866, 0, -0.5, -0.0644, 0, 0.1115)
+cast_shadow = 0
+mesh = SubResource("Tooth")
+
+[node name="Tooth3" type="MeshInstance3D" parent="Spin"]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, -0, -0.5, -0.0644, 0, -0.1115)
+cast_shadow = 0
+mesh = SubResource("Tooth")
+
+[node name="SpinDrive" type="Node" parent="Spin" node_paths=PackedStringArray("_spinner")]
+script = ExtResource("2_SpinAnimation3D")
+_spinner = NodePath("..")
+turns_per_second = 2.2
+axis = Vector3(0, 1, 0)

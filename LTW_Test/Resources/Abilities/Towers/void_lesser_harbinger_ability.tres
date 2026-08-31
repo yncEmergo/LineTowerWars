@@ -1,13 +1,20 @@
-[gd_resource type="Resource" script_class="TemporalRiftPassive" format=3 uid="uid://vcquurc563qe"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_750yi"]
-[ext_resource type="Script" uid="uid://dre6enavaorsh" path="res://Scripts/Abilities/TowerPassives/TemporalRiftPassive.gd" id="1_TemporalRiftPassive"]
-[ext_resource type="Texture2D" uid="uid://cbenfk6xt1aga" path="res://2DArt/Icons/lesser_harbinger.png" id="2_lesser_harbinger"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/TemporalRiftPassive.gd" id="1_TemporalRiftPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_harbinger.png" id="2_lesser_harbinger"]
 
 [resource]
 script = ExtResource("1_TemporalRiftPassive")
 ability_id = 162
 display_name = "Temporal Rift"
-icon = ExtResource("2_lesser_harbinger")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_lesser_harbinger")
+regen_per_second = 10
+radius_cells = 2.34
+delay_seconds = 3
+health_share = 0.02
+flat_damage = 300
+creep_cooldown = 9
+refund_share = 0.5
+marker_scene_path = "res://Scenes/Effects/rift_marker.tscn"

@@ -45,7 +45,6 @@ var _launch_point: Vector3 = Vector3.ZERO
 ## Flat distance at launch, which the arc and the climb are measured against.
 ## Frozen on purpose: recomputing it while homing would make the arc jitter.
 var _launch_distance: float = 1.0
-var _travelled: float = 0.0
 var _elapsed: float = 0.0
 var _landed: bool = false
 
@@ -95,8 +94,7 @@ func _advance(step: float) -> void:
 	var there: Vector2 = Vector2(_goal.x, _goal.z)
 	var next: Vector2 = here + (there - here).normalized() * step
 
-	_travelled += step
-	var progress: float = clampf(_travelled / _launch_distance, 0.0, 1.0)
+	var progress: float = _progress(next.distance_to(there))
 
 	var previous: Vector3 = global_position
 	global_position = Vector3(
@@ -105,6 +103,22 @@ func _advance(step: float) -> void:
 		next.y
 	)
 	_face_travel(global_position - previous)
+
+
+## How far along its flight the shot is, 0 to 1, measured from what is LEFT
+## rather than from what has been covered.
+##
+## The two only agree while the target stands still. A creep walking towards an
+## incoming shot brings the arrival forward, so a shot counting what it has
+## travelled arrives partway through its own descent and lands in mid air - and
+## the further a shot falls, the more of a gap that is. Counting backwards from
+## the remaining distance is self correcting: whatever the target did, zero left
+## to fly is zero height left to lose.
+##
+## `_launch_distance` stays frozen, which is what the arc needs - see the note
+## on it. This only changes which end the progress is measured from.
+func _progress(remaining: float) -> float:
+	return clampf(1.0 - remaining / _launch_distance, 0.0, 1.0)
 
 
 ## Height the arc adds partway along the flight. A half sine, so it is zero at

@@ -1,5 +1,18 @@
 # The visual language of the tower roster, as data.
 #
+# NONE OF THIS IS A HARD RULE. Every rule in this file was authored by Claude
+# rather than decided by the user, who asked for placeholder visuals and not
+# for a design. They exist for CONTINUITY - so a roster added later looks like
+# it came from the same game as the ones before it - and where this file says
+# "hard rule", "never" or "must", read it as: this is what the existing rosters
+# were built to, and breaking it for one unit costs the continuity it buys.
+# That is a real cost and worth arguing about; it is not a prohibition.
+#
+# What IS worth holding to is that a change goes HERE and is re-generated, so
+# the whole roster moves together. A hand edit to one generated model is
+# overwritten by the next run and leaves that unit the only one disagreeing.
+# See PLACEHOLDER_ART.md section 0.
+#
 # STYLE: "faceted arcane machinery". Every tower is a low segment-count solid -
 # six and eight sided cylinders, boxes, prisms, low-ring spheres - standing on
 # the shared stone foundation patch, lit by one plating shader and accented by
@@ -35,6 +48,7 @@
 # ones keep every tier distinguishable from its neighbour, and the stepped ones
 # make the expensive ones distinguishable across a whole map.
 
+import colorsys
 import math
 
 # Price tiers, in order. The index into this list is what every rule above
@@ -210,10 +224,10 @@ FEATURE_COUNT = [2, 2, 3, 4, 5, 6]
 #                   element is recognised across a map by its hue; the shape is
 #                   what tells two elements of similar hue apart up close, and
 #                   what carries the whole signal for a colourblind player
-#   WHICH PATH      one decisive silhouette at the 4,000g split, which never
-#                   changes again up that path. Exactly the Basic roster's rule
-#                   at its own 150g split
-#   WHICH TIER      the same cumulative rules, on the elemental ladder below
+#   WHICH PATH      one decisive silhouette at the 4,000g split - and above
+#                   that split, THREE silhouettes rather than one with parts
+#                   bolted onto it. See THE PATH LADDER below
+#   WHICH TIER      the ladder below, which is no longer the Basic roster's
 #
 # THE 200g AND 800g TOWERS ARE ONE SHAPE AT TWO SIZES, on purpose and unlike
 # the Basic roster's 10g/30g pair. Those two are barely the same object because
@@ -228,57 +242,242 @@ FEATURE_COUNT = [2, 2, 3, 4, 5, 6]
 ELEMENT_PRICE_TIERS = [200, 800, 4000, 10000, 30000]
 
 
-# Which rung of TRIM_RAMP an elemental tier takes.
+# ============================================================================
+# THE PATH LADDER
+# ============================================================================
 #
-# Offset by one, so the cheapest elemental tower starts on pale iron rather
-# than on the bare-iron rung the 10g Basic towers own. An elemental tower
-# ALWAYS has metal on it: it is bought with a technology, and nothing bought
-# that way should read as the cheapest thing on the field.
-def element_trim_index(ti):
-    return min(ti + 1, len(TRIM_RAMP) - 1)
+# METAL IS THE BASE PAIR'S ALONE. This is the rule the elemental roster was
+# re-cut around and it is the one to read first.
+#
+# The roster shipped wearing the Basic ladder's metal: a trim ring on the
+# plinth, a collar under the head, bolts around the shoulder, crown fins, and
+# an Ultimate's turning halo - all of them the same tier metal, on every one of
+# the thirty towers. Two things went wrong with that at once, and they made
+# each other worse. The metal was the LOUDEST thing on every tower, so thirty
+# different silhouettes read as one silhouette with its top swapped; and two
+# neighbouring rungs of a six step metal ramp are nearly the same colour, so
+# the thing being shouted was also the thing hardest to actually read.
+#
+# So metal now survives only where it is the only thing that can do the job.
+# The 200g and 800g towers are deliberately one shape at two sizes, and a ring
+# IS what separates them - so they keep it, and their two rungs are pulled as
+# far apart as two metals get: near-black iron, then polished brass.
+#
+# EVERYTHING FROM 4,000g UP CARRIES NO METAL AT ALL. No ring, no collar, no
+# bolts, no fins, no halo, and nothing else drawn in the trim material at all.
+# What those towers read their tier off instead:
+#
+#   1. STONE   the element's own material darkens and dulls at Lesser, stands
+#              as authored at Greater, and brightens and saturates at
+#              Ultimate. This is the direct replacement for TRIM_RAMP and it
+#              does the same job - one continuous value ramp that reads at any
+#              distance, on any shape, in any light - with the difference that
+#              it is the ELEMENT'S OWN colour rather than a second palette
+#              laid over the top of it
+#   2. MASS    steeper than it was, because it is carrying more now
+#   3. SHAPE   every path authors THREE silhouettes rather than one silhouette
+#              with parts added. That is the real work and it lives in
+#              element_models.py, one comment per builder saying what its three
+#              tiers are
+#   4. MOTION  an Ultimate, and only an Ultimate, gives off a slow rising aura
+#              in its own element's colour. Motion is still the loudest signal
+#              a top down camera has and it is still reserved for the top rung.
+#              It simply is not a turning metal ring any more
+#
+# Rules 1 and 2 are continuous so that neighbours stay apart, and rules 3 and 4
+# are steps so that an Ultimate is recognisable across a whole map. That is the
+# same argument the Basic ladder makes; what changed is that COLOUR does the
+# work metal used to, which the elements can afford and the Basic roster cannot.
 
 
-# Rule 1a for elements. Sits deliberately just above the Basic ramp at every
-# comparable price: a 200g elemental base tower is a touch wider than a 150g
-# Basic one, and an Ultimate of either is within a whisker of the other.
+# The base pair's two rings, and the only metal in the elemental roster.
+#
+# Chosen to be as far apart as two metals get rather than as two rungs of one
+# ramp: the 200g ring is near-black blued iron and reads as a shadow at the
+# foot of the tower, the 800g ring is polished brass and reads as a bright band
+# around it. A player who has just spent 800 gold should be able to see what it
+# bought from across the map, and one step of TRIM_RAMP - pale iron to bronze -
+# never delivered that.
+ELEMENT_RING_RAMP = [
+    (0.19, 0.2, 0.23),
+    (0.96, 0.71, 0.24),
+]
+
+
+def element_ring_index(ti):
+    return min(ti, len(ELEMENT_RING_RAMP) - 1)
+
+
+def element_has_metal(ti):
+    """Whether this tier wears any metal at all. The base pair, and nothing
+    else. Everything a builder draws in the trim material asks this first."""
+    return ti <= 1
+
+
+def element_has_collar(ti):
+    """The SECOND ring, which is the 800g tower's own tell against the 200g
+    one. Two rings and the brass step are the whole of that upgrade's read, and
+    they have to carry it alone - the pair is one shape at two sizes by
+    design."""
+    return ti == 1
+
+
+# Rule 2a. Multiplies every authored WIDTH and DEPTH.
+#
+# A LIST rather than a formula, because the two halves of this ladder want
+# different curves out of it. The base pair is one shape at two sizes and wants
+# a small step; the three path tiers are carrying the tier read now that the
+# metal has gone and want a bigger one.
+#
+# The CEILING is fixed by the grid rather than by taste - a tower has to leave
+# visible ground between itself and its neighbour or a maze reads as one
+# continuous wall - so what got steeper is the bottom of the path half rather
+# than the top of it.
+ELEMENT_MASS = [0.95, 1.0, 1.03, 1.12, 1.21]
+
+# Rule 2b, and deliberately a SEPARATE ramp from the width. The camera looks
+# down, so height is the axis it sees least of; but height also costs no
+# footprint, and an Ultimate has a whole cell of empty sky over it. So this one
+# climbs harder than the width does across the three path tiers - an Ultimate
+# stands a quarter again as tall as its Lesser where it is only a fifth wider,
+# and the SHAPE work on top of that takes the real gap to about half again.
+ELEMENT_HEIGHT = [0.52, 0.57, 0.61, 0.68, 0.76]
+
+
 def element_mass(ti):
-    return round(0.95 * pow(1.06, ti), 4)
+    return ELEMENT_MASS[ti]
 
 
-# Rule 1b for elements, on the same reasoning as height_scale: the camera looks
-# down, so height is the axis worth spending least on.
 def element_height_scale(ti):
-    return round(0.52 * pow(1.088, ti), 4)
+    return ELEMENT_HEIGHT[ti]
 
 
-# Rule 3 for elements: what goes into the energy material's `tier` uniform.
-# Starts at 0.2 rather than at 0, for the same reason the trim does.
+# What goes into the energy material's `tier` uniform. Starts at 0.2 rather
+# than at 0, because an elemental tower is bought with a technology and none of
+# them should read as the cheapest thing on the field.
 def element_energy_tier(ti):
     return round((ti + 1) / float(len(ELEMENT_PRICE_TIERS)), 3)
 
 
-# Rules 4-6 on the elemental ladder. Every rung adds a piece the one below does
-# not have, exactly as on the Basic ladder, shifted onto five rungs:
+# Rule 1: what a PATH TIER does to the element's own stone, as
+# (value gain, saturation gain).
 #
-#   200g      the base trim ring. An elemental tower is never bare
-#   800g      + a collar under the head
-#   4,000g    + bolts around the shoulder, and the PATH silhouette arrives
-#   10,000g   + crown fins
-#   30,000g   + a turning halo
-def element_has_collar(ti):
-    return ti >= 1
+# Applied in HSV so the HUE NEVER MOVES. An element has to still be that
+# element at every tier - the hue is the one thing this roster spends that the
+# Basic one cannot - so the ramp gets the two axes that are left and not the
+# one that matters.
+#
+# The LESSER is pulled down rather than the Ultimate being pushed up, and that
+# is the lesson the accents already paid for: ramping the top of a colour is
+# what saturates it towards white, and a roster whose Ultimates are all the
+# same colour has lost its hue at exactly the tier a player paid most for it.
+# There is far more room below an authored colour than above it.
+PATH_TONE_RAMP = {
+    2: (0.84, 0.9),
+    3: (1.0, 1.0),
+    4: (1.2, 1.3),
+}
 
 
-def element_has_bolts(ti):
-    return ti >= 2
+def element_path_tone(rgb, ti):
+    """One authored colour, moved onto a path tier's rung of the ramp."""
+    gains = PATH_TONE_RAMP.get(ti)
+    if gains is None:
+        return rgb
+    hue, sat, val = colorsys.rgb_to_hsv(*rgb)
+    shifted = colorsys.hsv_to_rgb(hue, _with_headroom(sat, gains[1]),
+                                  _with_headroom(val, gains[0]))
+    return tuple(round(channel, 4) for channel in shifted)
 
 
-def element_has_crown(ti):
-    return ti >= 3
+def _with_headroom(value, gain):
+    """Apply a gain scaled by the room the value actually has left.
+
+    A flat multiply is the obvious version and it is wrong at BOTH ends of the
+    palette, which one rebake showed in a single frame. Fire and Void are
+    near-black by design, so darkening them another fifth took their Lesser
+    towers to unlit lumps with no element left in them; Holy is bright ivory,
+    so brightening its Ultimate did nothing at all, because there was nothing
+    above it to move into.
+
+    So the gain gets the full effect in the middle of the range and tapers to
+    nothing as the value approaches whichever end it is being pulled towards.
+    An element that has already spent its darkness keeps it.
+    """
+    room = value if gain < 1.0 else 1.0 - value
+    scaled = 1.0 + (gain - 1.0) * min(room * 2.2, 1.0)
+    return max(0.0, min(1.0, value * scaled))
 
 
-def element_has_halo(ti):
+def element_stone_suffix(ti):
+    """Which set of stone materials a tier is drawn in.
+
+    The base pair takes the element's authored stone, unqualified, because
+    those files are also what an element IS - the tones every other palette in
+    the game was chosen against. Each path tier takes a rung of its own.
+    """
+    return "" if ti < 2 else "_t%d" % ti
+
+
+def element_has_aura(ti):
+    """Rule 4. The Ultimate's rising motes, and the roster's only motion."""
     return ti >= 4
+
+
+# --- a path's own accent ----------------------------------------------------
+#
+# An element owns a hue and every tower in it carries that hue. That is the
+# whole reason colour is reserved for the elements and it is not up for
+# negotiation. What a PATH may claim on top of it is ONE PART of its own model,
+# in a colour of its own, PER TIER - and only where the source art makes that
+# part the entire point of the tower.
+#
+# Three do. Fire (1)'s orb, which the source draws as a bare rock, then a
+# burning orb, then a green one - three different objects rather than one
+# object at three brightnesses. Lightning (1)'s emitter, which the source's own
+# top tier draws in red-orange with nothing blue left on it. And Primal (1)'s
+# geode, which is the GOLD MAKING tower and whose gold used to be drawn in the
+# tier metal - so when the metal left the path tiers, that one had to be given
+# a colour of its own or lose the only thing on it that says what it does.
+#
+# Sampled from ReferenceFilesFromOtherProjects/TowerVisualReferences, whose
+# README says which tower is which.
+#
+# Keyed by PATH and then by tier index, so only the three path tiers are ever
+# read. Each entry is (glow, dim), exactly the pair an element's palette states,
+# and it feeds the same energy shader - so a path accent pulses and surges like
+# any other lit part and only its hue is its own.
+PATH_ACCENTS = {
+    "annihilation_glyph": {
+        # RED at every tier, and it is the source game's own answer: the
+        # 30,000g Glyph in the reference sheet is a bright red-orange blade
+        # standing on grey stone, with nothing blue left on it. Only the
+        # emitter at the top takes it, and the arc it throws is drawn in the
+        # same colour - see Scenes/Effects/annihilation_bolt.tscn.
+        2: ((1.0, 0.34, 0.1), (0.42, 0.07, 0.02)),
+        3: ((1.0, 0.3, 0.08), (0.44, 0.06, 0.02)),
+        4: ((1.0, 0.26, 0.06), (0.46, 0.05, 0.01)),
+    },
+    "moonbeam": {
+        # 4,000g: the pale salmon meteor the source draws sitting on the plinth.
+        2: ((0.94, 0.7, 0.62), (0.44, 0.26, 0.22)),
+        # 10,000g: it has caught fire. The hottest of the three and the only one
+        # that is the element's own colour.
+        3: ((1.0, 0.42, 0.06), (0.52, 0.1, 0.0)),
+        # 30,000g: green, and deliberately NOT a fire colour. It is the one
+        # tower in Fire that stops being fire, which is what an Ultimate at this
+        # price should be allowed to do.
+        4: ((0.78, 0.96, 0.24), (0.18, 0.4, 0.08)),
+    },
+    "primalist": {
+        # GOLD, against Primal's blood red, and it climbs from a dull seam in a
+        # closed geode to a full molten cavity. It is the only warm pale thing
+        # in the element and it is the whole read of the tower.
+        2: ((0.86, 0.64, 0.24), (0.3, 0.19, 0.03)),
+        3: ((0.98, 0.77, 0.3), (0.38, 0.25, 0.05)),
+        4: ((1.0, 0.88, 0.44), (0.46, 0.33, 0.08)),
+    },
+}
 
 
 # How many repeated features a path shows at each of its three tiers: crystal
@@ -287,7 +486,11 @@ def element_has_halo(ti):
 # Only the last three entries are ever read, since a path starts at 4,000g. The
 # first two exist so an index into it is the tier index rather than the tier
 # index minus two, which is the kind of arithmetic that goes wrong once.
-ELEMENT_FEATURE_COUNT = [3, 3, 3, 4, 6]
+#
+# It steps HARDER than it used to across those three, for the same reason the
+# mass ramp does: counting details is one of the few tier tells left, so 3 to 5
+# to 7 is worth having where 3 to 4 to 6 was not.
+ELEMENT_FEATURE_COUNT = [3, 3, 3, 5, 7]
 
 # THE TEN ELEMENTS.
 #
@@ -348,7 +551,13 @@ ELEMENTS = {
         "rim": (0.92, 1.00, 1.00),
     },
     "lightning": {
-        "sides": 8,
+        # FOUR, on review. A discharge wants hard right angles rather than the
+        # rounded drum every other built element sits on, and the reference
+        # art's own Lightning towers are square. It shares the count with Ice,
+        # which is the one place two elements do - and they are as far apart in
+        # VALUE and in proportion as any pair in the table, so nothing is
+        # actually being told apart by the side count here.
+        "sides": 4,
         "facets": 1.0,
         "tones": {
             "base": ((0.28, 0.31, 0.42), (0.14, 0.16, 0.23)),
@@ -488,13 +697,23 @@ ELEMENTAL_CORE = {
 #                 more here than on towers, because a creep cannot be upgraded
 #                 and a player has no other way to learn the ordering
 #
-# THE FAMILY RULES, and each is a hard one rather than a tendency:
+# THE FAMILY RULES. Held firmly rather than hard - see the note at the top of
+# this file - and the firmest of the visual conventions, because this is the
+# one question a player has to answer in the second before a creep arrives:
 #
 #   GROUND    stands on legs, on the floor, opaque
-#   AIR       has NO legs at all, hangs at cruising height, is translucent, and
-#             is the only thing in the game drawn over a shadow disc pinned to
-#             the ground beneath it. From a top down camera height barely
-#             reads, so the disc - not the altitude - is what says "flying"
+#   AIR       has NO legs at all, hangs at cruising height, and is the only
+#             thing in the game drawn over a shadow disc pinned to the ground
+#             beneath it. From a top down camera height barely reads, so the
+#             disc - not the altitude - is what says "flying"
+#
+#             BEING TRANSLUCENT IS NOT PART OF THIS, and it used to be. It was
+#             written as an AIR rule when the only flyer in the game was a
+#             ghost, and tier 2 brought a Wyvern - a solid animal that happens
+#             to fly, which drawn as vapour reads as a spirit. So vapour
+#             belongs to the WRAITH body plan, which is what a Shade and a
+#             Banshee are, and the two tells above are what the family really
+#             rests on. See creep_roster.is_vapour
 #   ATTACKER  the only creep whose WEAPON is lit. Every other hard part in the
 #             roster - bone, claw, iron, a Swordsman's sword - is unlit, so the
 #             one thing on the field with a hot edge is the one thing coming
@@ -594,6 +813,40 @@ CREEP_EYE_RAMP = [
 ]
 
 
+# THE SIZE CEILING. Held firmly, and not a hard rule - see the top of this
+# file. What follows is the reasoning, which is what would have to be argued
+# with rather than simply overridden.
+#
+# The whole roster - the Sheep at 10 gold and the last Boss of Sudden Death -
+# lives inside a NARROW band of sizes, and the band is deliberately narrow:
+#
+#   - the biggest creep in the game is a TOP TIER BOSS, and it may reach these
+#     numbers and no further. Nothing else may come near them
+#   - between one TIER and the next the size difference is MINOR. A tier is a
+#     cost bracket and carries no mechanical meaning, so a tier 4 creep that
+#     towered over a tier 1 creep would be teaching a player something untrue
+#     as loudly as the roster can say anything
+#   - and a field of creeps two and three times each other's size is simply
+#     chaotic to read, which is the practical half of the same rule
+#
+# So what a size ladder is FOR here is only to keep neighbours apart, never to
+# say how strong something is. The eyes, the carapace and the added plates,
+# spines and crest carry that, and they can climb as far as they like because
+# none of them costs the player's ability to read the field.
+#
+# In WORLD units, measured off the finished model: how tall it stands, and how
+# far its widest part reaches from its centre. creep_models.generate() checks
+# every creep against these and says so when one is over, because a rule that
+# is only written down is one a model quietly stops obeying.
+# The numbers themselves come from looking at the roster on the field rather
+# than from any formula: this is a hair above where the first tier 3 creep was
+# authored before it was pulled back, which was the point at which the field
+# stopped being readable. Nothing in the roster is near them today, and that is
+# correct - the headroom is for the Behemoth and for Sudden Death's own Boss.
+CREEP_MAX_HEIGHT = 0.88
+CREEP_MAX_RADIUS = 0.55
+
+
 # Rule 1a. Multiplies every authored WIDTH and DEPTH.
 #
 # Gentler than the tower ramp, because a creep's FOOTPRINT is a gameplay number
@@ -614,6 +867,11 @@ def creep_height_scale(rung):
 # biggest thing in its bracket before a player has time to read anything else.
 # It takes its own rung's ramps and then these on top, and it is forced onto
 # the crest whatever it costs - see creep_has_crest.
+#
+# This is the ONE place a creep is allowed to be noticeably bigger than its
+# neighbours, and it is still a fraction rather than a multiple: the ceiling
+# above belongs to a top tier Boss, so a Boss climbing much harder than this
+# would put the ceiling out of the ladder's reach for everything else.
 BOSS_MASS = 1.22
 BOSS_HEIGHT = 1.18
 
@@ -643,7 +901,38 @@ def creep_has_crest(rung, is_boss=False):
     return is_boss or rung >= 4
 
 
-# THE THIRTEEN HIDES.
+# THE ONE EXCEPTION TO "A CREEP'S ONLY LIT PARTS ARE ITS EYES".
+#
+# The rule above is what keeps a field of creeps readable next to a roster of
+# towers that glow, and it is worth keeping for that and not because it is
+# binding - see the top of this file. This is the single authored way past it,
+# and it is deliberately a DICTIONARY of named creeps rather than a flag a hide
+# can set: adding one is an edit here, in the file that owns the rule, and is
+# visible as a change to the rule rather than as a property on a creep.
+#
+# What earns an entry: the creep IS the light. An Infernal is a burning thing -
+# fire is not a decoration on it, it is what the creature is made of, and a
+# player who cannot see that is reading the wrong monster. A creep that merely
+# has a hot colour, a magical trait or an impressive price earns nothing.
+#
+# It stays affordable because it is a BOSS, and a Boss is sent one at a time.
+# One burning thing on the field is a landmark; twelve would be the roster
+# handing its one loud signal to whoever sent the most creeps.
+#
+# The colour is the flame, not the hide, so it is warmer and far brighter than
+# anything in CREEPS - a mote is two pixels and reads as its own colour or as
+# nothing at all.
+CREEP_FLAMES = {
+    "infernal": (1.00, 0.52, 0.16),
+}
+
+
+def creep_flames(key):
+    """The flame colour a creep gives off, or None for every other creep."""
+    return CREEP_FLAMES.get(key)
+
+
+# THE HIDES.
 #
 # Same shape as a LINE or an ELEMENT above - three depths of one material plus
 # the rim - and chosen against each other first, because what a player has to
@@ -805,5 +1094,204 @@ CREEPS = {
             "pale": ((0.61, 0.63, 0.51), (0.38, 0.40, 0.32)),
         },
         "rim": (0.94, 1.00, 0.84),
+    },
+    # Snow white pelt with a cold blue shadow in it. The first tier 3 creep
+    # and the first cold hide that WALKS, so it is chosen against three things
+    # at once: the SHEEP, which is the roster's other near-white and is warm
+    # where this is cold, and a tenth of the size; the SWORDSMAN, which is the
+    # roster's other grey and is mid-value neutral steel where this is pale
+    # and blue; and the ICE element, which is more saturated, glows over its
+    # whole body and stands on a foundation patch. A creep landing near an
+    # element is allowed - a wendigo IS a snow animal - and everything else
+    # about the two says which is which.
+    "ancient_wendigo": {
+        "bands": 0.50,
+        "tones": {
+            "base": ((0.72, 0.75, 0.80), (0.50, 0.54, 0.59)),
+            "deep": ((0.50, 0.54, 0.60), (0.32, 0.36, 0.42)),
+            "pale": ((0.82, 0.85, 0.89), (0.60, 0.64, 0.69)),
+        },
+        "rim": (0.88, 0.96, 1.00),
+    },
+    # ---------------------------------------------------------------------
+    # TIER 2. Chosen against tier 1 as well as against each other, because a
+    # tier is a cost bracket and nothing else - all twenty-four of these walk
+    # the same lane at the same time, and a player at 12:00 can still send
+    # Sheep. Nothing here reaches an element's saturation, and nothing here
+    # carries a lit part except its eyes.
+    # ---------------------------------------------------------------------
+    # Burnished blue steel. The Swordsman is grey steel, so the Knight is the
+    # same metal with a hue in it - which is the only separation available
+    # when two creeps in one roster are both "an armoured soldier".
+    "knight": {
+        "bands": 0.60,
+        "tones": {
+            "base": ((0.42, 0.48, 0.60), (0.24, 0.28, 0.38)),
+            "deep": ((0.26, 0.31, 0.41), (0.14, 0.17, 0.24)),
+            "pale": ((0.62, 0.68, 0.80), (0.38, 0.43, 0.54)),
+        },
+        "rim": (0.86, 0.93, 1.00),
+    },
+    # Cold green white, and the only hue in the roster that is nearly
+    # colourless without being the Shade's grey. A vengeful spirit walks
+    # rather than flies, so it has to read as a ghost from its COLOUR alone -
+    # it gets none of the vapour or the shadow disc the flyers do.
+    "vengeful_spirit": {
+        "bands": 0.20,
+        "tones": {
+            "base": ((0.60, 0.74, 0.68), (0.37, 0.48, 0.44)),
+            "deep": ((0.38, 0.50, 0.46), (0.22, 0.30, 0.28)),
+            "pale": ((0.78, 0.90, 0.85), (0.54, 0.66, 0.62)),
+        },
+        "rim": (0.86, 1.00, 0.96),
+    },
+    # Moss green over grey. Skittering, like the Forest Spider two brackets
+    # down, and coloured to disappear into a maze for the same reason - but
+    # lighter and greyer, so the two are not one creep at two sizes.
+    "forest_troll": {
+        "bands": 0.50,
+        "tones": {
+            "base": ((0.40, 0.48, 0.36), (0.23, 0.29, 0.21)),
+            "deep": ((0.25, 0.31, 0.23), (0.14, 0.18, 0.13)),
+            "pale": ((0.57, 0.65, 0.51), (0.35, 0.41, 0.31)),
+        },
+        "rim": (0.90, 0.98, 0.82),
+    },
+    # Dust brown leather. A beast rather than a spirit, and the plainest hide
+    # in the bracket on purpose: the Wyvern is read off its WINGSPAN, and a
+    # loud colour on a shape that big would be the only thing on the screen.
+    "wyvern": {
+        "bands": 0.55,
+        "tones": {
+            "base": ((0.55, 0.44, 0.33), (0.34, 0.26, 0.19)),
+            "deep": ((0.35, 0.28, 0.20), (0.20, 0.16, 0.11)),
+            "pale": ((0.71, 0.60, 0.47), (0.47, 0.38, 0.29)),
+        },
+        "rim": (1.00, 0.92, 0.80),
+    },
+    # Purple, and the roster's first properly saturated hide. It is the closest
+    # a creep comes to the Void element and it survives the comparison the way
+    # the Mud Golem survives standing next to Earth: Void is near black,
+    # magenta, and GLOWS over its whole body, where this is a mid value purple
+    # with nothing lit on it but two eyes.
+    #
+    # It is also chosen against the two violets either side of it in the
+    # roster - the Vile Temptress is paler and pinker, the Faceless One is
+    # greyer - so the three separate on SATURATION, which is the axis a hide is
+    # allowed to spend. See the note above on colour.
+    "voidwalker": {
+        "bands": 0.75,
+        "tones": {
+            "base": ((0.40, 0.24, 0.54), (0.24, 0.14, 0.33)),
+            "deep": ((0.25, 0.14, 0.35), (0.14, 0.08, 0.20)),
+            "pale": ((0.56, 0.39, 0.70), (0.36, 0.24, 0.47)),
+        },
+        "rim": (0.88, 0.74, 1.00),
+    },
+    # Grey violet, wet looking. Next to the Voidwalker it unlocks after, so it
+    # is separated by VALUE - this one is mid grey where that one is nearly
+    # black, which is the same separation Ice and Void use among the towers.
+    "faceless_one": {
+        "bands": 0.40,
+        "tones": {
+            "base": ((0.45, 0.41, 0.52), (0.27, 0.24, 0.32)),
+            "deep": ((0.29, 0.26, 0.35), (0.16, 0.14, 0.20)),
+            "pale": ((0.61, 0.57, 0.68), (0.39, 0.35, 0.45)),
+        },
+        "rim": (0.92, 0.86, 1.00),
+    },
+    # Deep teal scale. The one hue nothing else in the game owns - the Water
+    # element is a lighter, bluer green and glows over its whole body, where
+    # this is a dark unlit hide.
+    "dragonspawn": {
+        "bands": 0.90,
+        "tones": {
+            "base": ((0.22, 0.42, 0.42), (0.12, 0.25, 0.26)),
+            "deep": ((0.13, 0.27, 0.28), (0.07, 0.15, 0.16)),
+            "pale": ((0.36, 0.58, 0.57), (0.20, 0.36, 0.36)),
+        },
+        "rim": (0.76, 1.00, 0.98),
+    },
+    # Olive shell over a pale hide. Two tones far apart on purpose: the shell
+    # is what the camera sees and the body under it barely shows, so the pale
+    # role is doing the work the base one does on every other creep.
+    "sea_turtle": {
+        "bands": 0.80,
+        "tones": {
+            "base": ((0.36, 0.40, 0.26), (0.21, 0.24, 0.15)),
+            "deep": ((0.22, 0.25, 0.16), (0.12, 0.14, 0.09)),
+            "pale": ((0.62, 0.64, 0.48), (0.40, 0.42, 0.30)),
+        },
+        "rim": (0.96, 1.00, 0.84),
+    },
+    # Deep purple vapour, and the second creep drawn translucent. The Shade is
+    # nearly colourless; this one has a hue, so the two flyers of the roster
+    # are told apart at the size a flyer is actually drawn.
+    #
+    # DARKER than the Voidwalker on purpose, and getting that to read took
+    # authoring it somewhere other than where it looks like it should go.
+    #
+    # ON A VAPOUR CREEP THE RIM IS THE COLOUR. creep_vapour.gdshader mixes the
+    # body towards `rim` by the fresnel term and mixes the ALPHA the same way,
+    # so the parts a player actually sees - the silhouette - are almost purely
+    # rim, and the body tones only tint the near-transparent middle. The first
+    # pass here set three properly dark purple tones under a pale lilac rim and
+    # the creep came out pale grey. If a wraith is reading as the wrong colour,
+    # its rim is the number to change.
+    "banshee": {
+        "bands": 0.10,
+        # DENSER than the Shade, which is what actually makes it the darker
+        # ghost - see the note above. It is also right on its own terms: a
+        # Banshee is eight rungs of the ladder above a Shade, and the stronger
+        # spirit being the more solid one is a thing a player can read.
+        "face_alpha": 0.58,
+        "tones": {
+            "base": ((0.26, 0.13, 0.40), (0.14, 0.07, 0.22)),
+            "deep": ((0.15, 0.07, 0.24), (0.08, 0.04, 0.13)),
+            "pale": ((0.38, 0.22, 0.55), (0.23, 0.13, 0.34)),
+        },
+        "rim": (0.62, 0.34, 0.92),
+    },
+    # Sand and hessian. Deliberately the brightest hide in the bracket while
+    # being one of its dearest, on the same reasoning as its size: the ladder
+    # says how dangerous a creep is with its carapace and its eyes, and letting
+    # a hide say it too would hand the roster a second, conflicting ladder.
+    "kobold_geomancer": {
+        "bands": 0.30,
+        "tones": {
+            "base": ((0.72, 0.63, 0.45), (0.48, 0.41, 0.28)),
+            "deep": ((0.50, 0.43, 0.29), (0.31, 0.26, 0.17)),
+            "pale": ((0.86, 0.78, 0.60), (0.62, 0.55, 0.40)),
+        },
+        "rim": (1.00, 0.94, 0.78),
+    },
+    # Iron and oiled timber. The one BUILT thing in the roster, so it is the
+    # one hide with no organic tone in it at all - flat, cold and panelled,
+    # which the high banding is doing.
+    "siege_engine": {
+        "bands": 1.00,
+        "tones": {
+            "base": ((0.40, 0.38, 0.35), (0.23, 0.22, 0.20)),
+            "deep": ((0.25, 0.24, 0.22), (0.14, 0.13, 0.12)),
+            "pale": ((0.58, 0.55, 0.50), (0.36, 0.34, 0.31)),
+        },
+        "rim": (0.94, 0.92, 0.88),
+    },
+    # Burning red rock. The bracket's Boss, and THE ONE CREEP IN THE ROSTER
+    # THAT GIVES OFF LIGHT - see CREEP_FLAMES below for why that exception is
+    # allowed to exist and why nothing else may take it.
+    #
+    # It is the one place a creep hide sits in Fire's territory rather than
+    # near it, and it survives because a Fire tower glows over its whole body
+    # from within while this is opaque rock with flames coming off the outside
+    # of it. The two are the same hue and are not the same object.
+    "infernal": {
+        "bands": 0.95,
+        "tones": {
+            "base": ((0.46, 0.15, 0.10), (0.26, 0.08, 0.05)),
+            "deep": ((0.27, 0.09, 0.06), (0.15, 0.05, 0.03)),
+            "pale": ((0.64, 0.25, 0.15), (0.42, 0.15, 0.09)),
+        },
+        "rim": (1.00, 0.60, 0.30),
     },
 }

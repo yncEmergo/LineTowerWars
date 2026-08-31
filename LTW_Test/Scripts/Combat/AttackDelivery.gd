@@ -81,6 +81,10 @@ func spawn_impact(at: Vector3, from: Vector3 = Vector3.ZERO) -> void:
 	# effects root's origin instead of on the creep. See VisualEffect3D.play().
 	var visual: VisualEffect3D = effect as VisualEffect3D
 	if visual != null:
+		# After the position and the orientation, because an effect that
+		# reaches BACK to the attacker has to know where it is standing before
+		# it can work out the line. Nothing else overrides it.
+		visual.aim_from(from)
 		visual.play()
 
 

@@ -39,6 +39,19 @@ extends Node
 @export_range(0.05, 0.95, 0.05) var raise_share: float = 0.62
 ## Seconds spent easing back to rest after the hit.
 @export var recover_seconds: float = 0.35
+## Whether the swing runs on the SIMULATION TICK rather than the render frame.
+##
+## Off for a tower, which is the common case and the better looking one: a
+## tower never moves, so its swing is free to be as smooth as the monitor and
+## a 20 Hz version of a third of a second is visibly stepped.
+##
+## On for anything that WALKS while it swings - the builder. Physics
+## interpolation assumes a transform only changes on a tick, so a limb animated
+## on the render frame is drawn at its body's tick position while the body
+## glides between ticks, and the arm detaches. The same lesson
+## StrikeAnimation3D and AttackTargetMarker both carry, reached from the two
+## opposite directions.
+@export var on_physics_tick: bool = false
 
 @export_group("Shockwave")
 ## Ring dropped on the ground when the blow lands, as a res:// path. Optional:
@@ -57,6 +70,10 @@ var _shockwave_loaded: bool = false
 
 
 func _ready() -> void:
+	# Exactly one of the two runs, whichever the export asked for.
+	set_process(!on_physics_tick)
+	set_physics_process(on_physics_tick)
+
 	if _unit == null || _swing == null:
 		Log.err("SlamAnimation3D is missing a unit or a swing node", name)
 		return
@@ -99,6 +116,14 @@ func _on_attacked(_target: Unit) -> void:
 
 
 func _process(delta: float) -> void:
+	_advance(delta)
+
+
+func _physics_process(delta: float) -> void:
+	_advance(delta)
+
+
+func _advance(delta: float) -> void:
 	if _swing == null:
 		return
 

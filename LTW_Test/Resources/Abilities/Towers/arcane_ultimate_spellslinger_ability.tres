@@ -1,12 +1,20 @@
-[gd_resource type="Resource" script_class="SpellcasterPassive" format=3 uid="uid://cg6ljcpm7lijk"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dpruk1edk4tcd" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
-[ext_resource type="Texture2D" uid="uid://bywbm2oh5ujan" path="res://2DArt/Icons/ultimate_spellslinger.png" id="2_ultimate_spellslinger"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_spellslinger.png" id="2_ultimate_spellslinger"]
 
 [resource]
 script = ExtResource("1_SpellcasterPassive")
+ability_id = 196
+display_name = "Spell Mastery"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_spellslinger")
+regen_per_second = 10
+cast_seconds = 3.34
 cast_cells = 6.25
 damage_per_second = 600
+duration_seconds = 15
 slow_per_tick = 0.125
 slow_cap = 0.5
 growth_per_target = 0.15
@@ -14,8 +22,4 @@ orb_mana_cost = 30
 orb_bonus_damage = 750
 orb_splash_cells = 1.88
 attune_share = 1
-ability_id = 196
-display_name = "Spell Mastery"
-icon = ExtResource("2_ultimate_spellslinger")
-targeting = 0
-slot = 11
+attune_interval = 0.5

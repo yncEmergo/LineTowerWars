@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bppc711rfh8su"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://du0jtppfh3vr3" path="res://Resources/UnitStats/Towers/arcane_lesser_arcane_orb_stats.tres" id="2_arcane_lesser_arcane_orb_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/arcane_lesser_arcane_orb_stats.tres" id="2_arcane_lesser_arcane_orb_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 277
 tower_stats = ExtResource("2_arcane_lesser_arcane_orb_stats")
 required_tech_id = 24
-ability_id = 277
 display_name = "Upgrade to Lesser Arcane Orb"
 description = "Attacks bounce between creeps, feeding the tower and draining away again when it stops."
+targeting = 1
 slot = 1

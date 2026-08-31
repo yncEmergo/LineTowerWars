@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://cdr6wylnfyarv"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://4g7rtmtdvnul" path="res://Resources/UnitStats/Towers/unholy_ultimate_alchemist_stats.tres" id="2_unholy_ultimate_alchemist_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/unholy_ultimate_alchemist_stats.tres" id="2_unholy_ultimate_alchemist_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 255
 tower_stats = ExtResource("2_unholy_ultimate_alchemist_stats")
 required_tech_id = 6
-ability_id = 255
 display_name = "Upgrade to Ultimate Alchemist"
 description = "Permanently gains damage for every creep it kills, and keeps it across upgrades."
+targeting = 1
 slot = 0

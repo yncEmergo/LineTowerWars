@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="BurstingLightPassive" format=3 uid="uid://gf8w55bud4lj"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://c32lb8qp604i2" path="res://Scripts/Abilities/TowerPassives/BurstingLightPassive.gd" id="1_BurstingLightPassive"]
-[ext_resource type="Texture2D" uid="uid://ddeb5jdcat2ta" path="res://2DArt/Icons/holy_lantern.png" id="2_holy_lantern"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/BurstingLightPassive.gd" id="1_BurstingLightPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/holy_lantern.png" id="2_holy_lantern"]
 
 [resource]
 script = ExtResource("1_BurstingLightPassive")
-additional_targets = 5
 ability_id = 153
 display_name = "Bursting Light"
-icon = ExtResource("2_holy_lantern")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_holy_lantern")
+additional_targets = 5

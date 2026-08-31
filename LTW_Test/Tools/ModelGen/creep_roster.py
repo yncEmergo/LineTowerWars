@@ -20,10 +20,11 @@ is visible immediately, because the wrong creep would be wearing the wrong
 armour plates. Change the `.tres` and this row in the same commit, exactly as
 unit_data.md asks.
 
-THE PLAN is this file's own: which body the creep is built on. Six of them
-cover the whole of tier 1, and a new creep is usually a new row rather than a
-new builder - the shapes that make one row differ from another are in
-creep_models.SHAPES.
+THE PLAN is this file's own: which body the creep is built on. A new creep is
+usually a new row rather than a new builder - the shapes that make one row
+differ from another are in creep_models.SHAPES. A new BUILDER is for a creature
+the existing plans would have to lie about, which is the bar the brute cleared
+and nothing in tier 1 did.
 """
 
 # Body plans. One builder each in creep_models.py.
@@ -33,6 +34,12 @@ ARACHNID = "arachnid"
 GOLEM = "golem"
 WRAITH = "wraith"
 TREANT = "treant"
+BRUTE = "brute"
+# Tier 2's three. Each is here because the plans above would have had to LIE
+# about the creature, which is the bar a new builder has to clear:
+WINGED = "winged"    # a solid flyer. WRAITH has no body, only a hood and rags
+SHELLED = "shelled"  # wider than it is tall and roofed. QUADRUPED is a barrel
+MACHINE = "machine"  # wheels, not legs, and it is the roster's only built thing
 
 # Families, and the whole of what a family is for: what the creep does to the
 # maze. See style.py under CREEPS for the visual rule each one carries.
@@ -66,6 +73,25 @@ CREEPS = [
     ("priest", "Priest", BIPED, 600, GROUND, False),
     ("corrupted_treant", "Corrupted Treant", TREANT, 750, ATTACKER, False),
     ("rot_golem", "Rot Golem", GOLEM, 1000, GROUND, True),
+    # Tier 3 starts here. The bracket is a cost bracket and nothing else, so
+    # the ladder does not restart - a 225,000g creep simply stands on the top
+    # rung of the same ladder the Sheep stands on the bottom of.
+    # Tier 2. Above 1,000g up to and including 100,000g, ending on its Boss.
+    # The ladder does not restart at a bracket - see the note above.
+    ("knight", "Knight", BIPED, 1000, GROUND, False),
+    ("vengeful_spirit", "Vengeful Spirit", BIPED, 2250, GROUND, False),
+    ("forest_troll", "Forest Troll", BIPED, 4000, GROUND, False),
+    ("wyvern", "Wyvern", WINGED, 7500, AIR, False),
+    ("voidwalker", "Voidwalker", BIPED, 10000, GROUND, False),
+    ("faceless_one", "Faceless One", BRUTE, 12500, GROUND, False),
+    ("dragonspawn", "Dragonspawn", BIPED, 15000, GROUND, False),
+    ("sea_turtle", "Sea Turtle", SHELLED, 20000, GROUND, False),
+    ("banshee", "Banshee", WRAITH, 30000, AIR, False),
+    ("kobold_geomancer", "Kobold Geomancer", BIPED, 60000, GROUND, False),
+    ("siege_engine", "Siege Engine", MACHINE, 75000, ATTACKER, False),
+    ("infernal", "Infernal", GOLEM, 100000, GROUND, True),
+    # Tier 3 starts here, and only one row of it is built.
+    ("ancient_wendigo", "Ancient Wendigo", BRUTE, 225000, GROUND, False),
 ]
 
 
@@ -79,6 +105,21 @@ def is_flying(key):
 
 def is_attacker(key):
     return by_key()[key][4] == ATTACKER
+
+
+def is_vapour(key):
+    """Whether this creep is drawn translucent rather than opaque.
+
+    THE PLAN's answer, not the family's, and tier 2 is what forced the split.
+    Being translucent used to be part of the AIR rule, because the only flyer
+    in the game was a ghost. The Wyvern is a solid animal that happens to fly,
+    and drawing it as vapour would have said "spirit" about a beast.
+
+    So the AIR family keeps the two tells that really carry it - NO LEGS and a
+    shadow disc pinned to the ground - and being made of vapour belongs to the
+    WRAITH plan, which is what a Shade and a Banshee are. See style.py.
+    """
+    return by_key()[key][2] == WRAITH
 
 
 def keys():

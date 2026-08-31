@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bsvdg8syx2nqm"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://csdbd1x2qjgut" path="res://Resources/UnitStats/Towers/water_splasher_stats.tres" id="2_water_splasher_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/water_splasher_stats.tres" id="2_water_splasher_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 256
 tower_stats = ExtResource("2_water_splasher_stats")
 required_tech_id = 10
-ability_id = 256
 display_name = "Morph into Splasher"
 description = "Throws a wave every fourth attack. Splits into the anti-air paralyzer and the slowing sludge."
-slot = 6
+targeting = 1
+slot = 5

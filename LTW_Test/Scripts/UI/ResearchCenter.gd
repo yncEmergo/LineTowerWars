@@ -63,12 +63,24 @@ func _ready() -> void:
 
 	_panel.hide()
 	set_process(false)
+	add_to_group(HotkeyAction.READERS_GROUP)
 	if _toggle_button != null:
 		_toggle_button.pressed.connect(toggle)
+		_label_toggle_button()
 	if _random_button != null:
 		_random_button.pressed.connect(_on_random_pressed)
 	if _undo_button != null:
 		_undo_button.pressed.connect(_on_undo_pressed)
+
+
+## Re-reads every key this screen draws, because the player changed one in the
+## options screen. Its own button, and each square's letter - which follows the
+## keyboard layout and is otherwise written once when the grid is built.
+func refresh_hotkeys() -> void:
+	if _toggle_button != null:
+		_label_toggle_button()
+	if _built:
+		_fill_slots()
 
 
 func open() -> void:
@@ -101,61 +113,78 @@ func is_open() -> bool:
 	return _panel != null && _panel.visible
 
 
-## Handled in _input rather than _unhandled_input so an open screen wins its
-## keys ahead of the command card, the way the game menu does. That is
-## deliberate: while it is open, a letter is a technology rather than whatever
-## the selected unit's card puts there.
+## Handled in _input rather than _unhandled_input because a square is not a
+## Control that could take a press for itself, so an open screen has to see the
+## key before the world does.
 ##
-## The BUILDER is the one exception, because it is what a player has selected
-## while they research and taking its card away for as long as this screen is
-## open would make building and researching mutually exclusive. So a key the
-## builder's card answers is left to the builder, and only a key it leaves
-## alone reaches a square here.
+## The COMMAND CARD OUTRANKS IT, always. Whatever the selected unit answers to
+## the unit keeps, this screen's own key included, and only what the card
+## leaves alone reaches a square here. It was first written to spare the
+## builder alone - a player researches with one selected, and taking its card
+## away would make building and researching mutually exclusive - but the same
+## is true of every unit: a letter that upgrades a tower or sends a creep must
+## not quietly mean something else because a screen was left open.
 ##
-## Nothing is consumed while it is closed, and a key that lands on no square is
-## left alone, so the rest of the game's keys are untouched either way.
+## Nothing is consumed while the screen is closed and no key is claimed, and a
+## key that lands on no square is left alone, so the rest of the game's keys
+## are untouched either way.
 func _input(event: InputEvent) -> void:
-	if !is_open():
-		return
-
 	var key: InputEventKey = event as InputEventKey
 	if key == null || !key.pressed || key.echo:
 		return
 
-	if key.keycode == KEY_ESCAPE:
+	if is_open() && key.keycode == KEY_ESCAPE:
 		close()
 		get_viewport().set_input_as_handled()
 		return
 
 	var config: ControlsConfig = _controls
-	if config == null:
+	if config == null || _card_answers(key):
+		return
+
+	if config.is_research_toggle_key(key.keycode, key.shift_pressed):
+		toggle()
+		get_viewport().set_input_as_handled()
+		return
+
+	if !is_open():
 		return
 
 	var index: int = config.research_slot_for_key(key.keycode, key.shift_pressed)
 	if index < 0 || index >= _slots.size() || _slots[index].tech == null:
-		return
-	if _builder_answers(key):
 		return
 
 	_on_tech_activated(_slots[index].tech)
 	get_viewport().set_input_as_handled()
 
 
-## Whether the builder's command card would answer this press, in which case
-## the press is the builder's and not this screen's.
+## Whether the selected unit's command card would answer this press, in which
+## case the press belongs to that unit and not to this screen.
 ##
-## Only unmodified letters: the command card ignores Shift, so the shifted
-## rows down here are letters no card can ever claim and stay reachable with
-## the builder selected. A square the builder leaves empty is not claimed
-## either, which is the same rule the card itself follows.
-func _builder_answers(key: InputEventKey) -> bool:
+## Only unmodified letters: the card ignores Shift, so the shifted rows down
+## here are letters no card can ever claim and stay reachable whatever is
+## selected. A square the card leaves empty is not claimed either, which is the
+## same rule the card itself follows - so with nothing selected at all, every
+## letter is this screen's.
+func _card_answers(key: InputEventKey) -> bool:
 	if key.shift_pressed:
 		return false
 
 	var panel: UnitPanel = References.unit_panel
 	if panel == null:
 		return false
-	return panel.shown_unit() is Builder && panel.claims_key(key.keycode)
+	return panel.claims_key(key.keycode)
+
+
+## Draws the toggle key on the button that does the same job, so the letter the
+## player reads is the letter ControlsConfig actually answers to. A screen with
+## no letter authored draws no letter, which is what a button-only screen
+## should look like.
+func _label_toggle_button() -> void:
+	var config: ControlsConfig = _controls
+	if config == null:
+		return
+	_toggle_button.text = config.research_toggle_label()
 
 
 ## The two buttons at the foot move on their own - the undo window runs out on

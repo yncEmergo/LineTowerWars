@@ -1,16 +1,29 @@
 class_name StopAbility
 extends UnitAbility
 
-## Cancels whatever the unit is currently doing.
+## Cancels whatever the unit is currently doing, and everything it was going
+## to do next.
 ##
-## For now that only means halting movement. As orders queue up and buildings
-## gain construction, this is the single place that clears them.
+## Two halves and they are different: stop() ends the task in progress - the
+## walk, the tower the builder was on its way to start - and clearing the order
+## queue throws away the chain waiting behind it. Stopping without the second
+## would leave the unit walking off to the next waypoint a tick later, which
+## reads as a button that did not work.
+##
+## NOT itself an order, so it is never queued: shift-Stop is still a Stop, and
+## a chain of them would be a chain of nothing. It is also the one non-order on
+## the card that wipes the chain, which is exactly what a player means by it.
 
 
 func execute(unit: Unit, _target: AbilityTarget) -> void:
 	if unit == null:
 		return
-	if unit.has_method("stop"):
+	if unit.order_queue != null:
+		unit.order_queue.clear()
+	elif unit.has_method("stop"):
+		# No chain to clear, so the plain halt is the whole of it. The branch
+		# rather than both, because clearing already stops the unit and calling
+		# it twice would only be saying the same thing again.
 		unit.stop()
 
 

@@ -1,0 +1,220 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Combat/GroundHazard.gd" id="1_GroundHazard"]
+
+[sub_resource type="StandardMaterial3D" id="M_scorch"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.1, 0.05, 0.04, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="M_floor"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.38, 0.08, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="M_rim"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.64, 0.22, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="M_flame"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.52, 0.14, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="M_core"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.86, 0.44, 0.85)
+
+[sub_resource type="CylinderMesh" id="Scorch"]
+top_radius = 0.98
+bottom_radius = 0.98
+height = 0.02
+radial_segments = 20
+rings = 0
+material = SubResource("M_scorch")
+
+[sub_resource type="CylinderMesh" id="Floor"]
+top_radius = 0.86
+bottom_radius = 0.86
+height = 0.02
+radial_segments = 20
+rings = 0
+material = SubResource("M_floor")
+
+[sub_resource type="TorusMesh" id="Rim"]
+inner_radius = 0.9
+outer_radius = 1.0
+rings = 32
+ring_segments = 5
+material = SubResource("M_rim")
+
+[sub_resource type="CylinderMesh" id="Tongue"]
+top_radius = 0.0
+bottom_radius = 0.075
+height = 0.26
+radial_segments = 5
+rings = 0
+material = SubResource("M_flame")
+
+[sub_resource type="CylinderMesh" id="Ember"]
+top_radius = 0.0
+bottom_radius = 0.05
+height = 0.17
+radial_segments = 5
+rings = 0
+material = SubResource("M_core")
+
+[node name="BurningGround" type="Node3D" node_paths=PackedStringArray("_flames")]
+script = ExtResource("1_GroundHazard")
+_flames = NodePath("Flames")
+opacity = 0.55
+
+[node name="Scorch" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+cast_shadow = 0
+mesh = SubResource("Scorch")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+cast_shadow = 0
+mesh = SubResource("Floor")
+
+[node name="Rim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+cast_shadow = 0
+mesh = SubResource("Rim")
+
+[node name="Flames" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Tongue1" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1.3077, 0, 0, 0, 1.3077, 0, 0, 0, 1.3077, 0, 0.17, 0)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember1" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1.3077, 0, 0, 0, 1.3077, 0, 0, 0, 1.3077, 0, 0.1156, 0)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue2" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.13, 0)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember2" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.0884, 0)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue3" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1391, 0.13, 0.428)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember3" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1391, 0.0884, 0.428)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue4" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3641, 0.13, 0.2645)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember4" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3641, 0.0884, 0.2645)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue5" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3641, 0.13, -0.2645)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember5" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3641, 0.0884, -0.2645)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue6" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1391, 0.13, -0.428)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember6" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1391, 0.0884, -0.428)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue7" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.7023, 0.1, 0.3393)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember7" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.7023, 0.068, 0.3393)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue8" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.1727, 0.1, 0.7607)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember8" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.1727, 0.068, 0.7607)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue9" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.4871, 0.1, 0.6092)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember9" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.4871, 0.068, 0.6092)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue10" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.78, 0.1, -0.0009)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember10" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.78, 0.068, -0.0009)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue11" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.4856, 0.1, -0.6104)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember11" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, -0.4856, 0.068, -0.6104)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue12" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.1745, 0.1, -0.7602)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember12" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.1745, 0.068, -0.7602)
+cast_shadow = 0
+mesh = SubResource("Ember")
+
+[node name="Tongue13" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.7032, 0.1, -0.3376)
+cast_shadow = 0
+mesh = SubResource("Tongue")
+
+[node name="Ember13" type="MeshInstance3D" parent="Flames"]
+transform = Transform3D(0.7692, 0, 0, 0, 0.7692, 0, 0, 0, 0.7692, 0.7032, 0.068, -0.3376)
+cast_shadow = 0
+mesh = SubResource("Ember")

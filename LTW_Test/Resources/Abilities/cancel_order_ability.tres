@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/Abilities/CancelOrderAbility.gd" id="1_cancel_order"]
 [ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_cancel.png" id="2_ability_cancel"]
+[ext_resource type="Resource" path="res://Resources/Config/Hotkeys/cancel_hotkey.tres" id="3_cancel_hotkey"]
 
 [resource]
 script = ExtResource("1_cancel_order")
@@ -10,4 +11,5 @@ display_name = "Cancel"
 description = "Back out: drop the order being aimed, or leave the menu and return to this unit's own commands."
 targeting = 1
 slot = 10
+hotkey_action = ExtResource("3_cancel_hotkey")
 icon = ExtResource("2_ability_cancel")

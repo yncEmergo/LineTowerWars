@@ -107,8 +107,9 @@ func reached_stats() -> Array[UnitStats]:
 ## What the return costs and what it hands back, off the config and off the
 ## Core's own stats, so the card cannot quote a wait the tower does not serve
 ## or a share it does not pay.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
 
 	var config: GameConfig = References.game_config
 	if config != null:

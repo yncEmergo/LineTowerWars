@@ -1,10 +1,15 @@
-[gd_resource type="Resource" script_class="LuminousGraspPassive" format=3 uid="uid://diuua5gaufi7l"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://bpwscmm6ulckx" path="res://Scripts/Abilities/TowerPassives/LuminousGraspPassive.gd" id="1_LuminousGraspPassive"]
-[ext_resource type="Texture2D" uid="uid://c3artpn857x8f" path="res://2DArt/Icons/ultimate_titan_vault.png" id="2_ultimate_titan_vault"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/LuminousGraspPassive.gd" id="1_LuminousGraspPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_titan_vault.png" id="2_ultimate_titan_vault"]
 
 [resource]
 script = ExtResource("1_LuminousGraspPassive")
+ability_id = 159
+display_name = "Titan Defense Mechanism"
+targeting = 0
+slot = 6
+icon = ExtResource("2_ultimate_titan_vault")
 additional_targets = 10
 spell_amplification = 0.15
 amplification_seconds = 7
@@ -12,8 +17,3 @@ slow_amount = 0.24
 aura_cells = 5.47
 slow_extension = 2
 damage_reduction = 0.2
-ability_id = 159
-display_name = "Titan Defense Mechanism"
-icon = ExtResource("2_ultimate_titan_vault")
-targeting = 0
-slot = 11

@@ -3,7 +3,7 @@
 [ext_resource type="Material" path="res://Resources/Materials/Towers/holy_stone.tres" id="1_holy_stone"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/holy_stone_deep.tres" id="2_holy_stone_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/holy_stone_pale.tres" id="3_holy_stone_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t1.tres" id="4_trim_t1"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/element_ring_t0.tres" id="4_element_ring_t0"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/energy_holy_t0.tres" id="5_energy_holy_t0"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
@@ -21,7 +21,7 @@ inner_radius = 0.2517
 outer_radius = 0.2993
 rings = 14
 ring_segments = 5
-material = ExtResource("4_trim_t1")
+material = ExtResource("4_element_ring_t0")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
 top_radius = 0.1425
@@ -60,7 +60,7 @@ material = ExtResource("5_energy_holy_t0")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(0.019, 0.1248, 0.019)
-material = ExtResource("4_trim_t1")
+material = ExtResource("4_element_ring_t0")
 
 [node name="HolyLightFliesModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

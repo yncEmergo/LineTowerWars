@@ -18,9 +18,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_water_lesser_sludge_monstrosity_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.705
+health_bar_height = 0.603
 select_radius = 0.5
-select_height = 0.191
+select_height = 0.145
 
 [node name="Visual" parent="." instance=ExtResource("4_water_lesser_sludge_monstrosity_model")]
 

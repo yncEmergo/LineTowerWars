@@ -217,11 +217,7 @@ func _configure_camera(config: GameConfig) -> void:
 
 	var bounds: Rect2 = config.map_bounds().grow(margin)
 
-	# The camera aims at the centre of the screen, so the top bound is the send
-	# building's own row rather than the far edge of its strip. Panning fully up
-	# then puts the sender in the middle of the view instead of off the bottom.
-	var top: float = config.send_zone_start_z() + config.send_zone_depth() * 0.5
-	camera.set_focus_bounds(Rect2(bounds.position.x, top, bounds.size.x, bounds.end.y - top))
+	camera.set_focus_bounds(bounds)
 
 
 ## Walks everything a match can reach and reports every scene path that does
@@ -232,10 +228,10 @@ func _configure_camera(config: GameConfig) -> void:
 ## stays invisible until a player presses that one button mid match, so the
 ## whole content graph is checked once, here, at boot.
 ##
-## The two roots are the two things a player commands: the builder, which
-## reaches every tower through its build menu, and the send building, which
-## reaches every creep through its card. One shared seen set across both, so a
-## resource on both cards is reported once rather than twice.
+## The roots are the things a player commands: the builder, which reaches every
+## tower through its build menu, and the senders, which reach every creep
+## through their cards. One shared seen set across all of them, so a resource
+## on two cards is reported once rather than twice.
 func _validate_content(builder: Builder) -> void:
 	var seen: Dictionary = {}
 	var complete: bool = true
@@ -246,10 +242,10 @@ func _validate_content(builder: Builder) -> void:
 		roots.append(builder.stats)
 
 	for area in _areas:
-		var send_building: SendBuilding = area.send_building()
-		if send_building != null && send_building.stats != null:
-			complete = send_building.stats.validate(seen) && complete
-			roots.append(send_building.stats)
+		for send_building in area.send_buildings():
+			if send_building.stats != null:
+				complete = send_building.stats.validate(seen) && complete
+				roots.append(send_building.stats)
 
 	# The same two roots, walked again for a different question: not "does this
 	# path resolve" but "what can a command name". Built here rather than from a

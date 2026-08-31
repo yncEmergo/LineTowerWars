@@ -1,21 +1,22 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://cs1s0hfdocjwm"]
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
 
-[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
-[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
-[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="6_SplashEffect"]
-[ext_resource type="Resource" uid="uid://dfpwuwif0kia1" path="res://Resources/Abilities/Towers/earth_avalanche_ability.tres" id="7_earth_avalanche_ability"]
-[ext_resource type="Resource" uid="uid://dfd4abkxas8db" path="res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability.tres" id="8_upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability"]
-[ext_resource type="Resource" uid="uid://btl3suxl7i0qf" path="res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_scorpion_ability.tres" id="9_upgrade_earth_avalanche_to_earth_lesser_scorpion_ability"]
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" path="res://Scripts/Combat/SplashEffect.gd" id="5_SplashEffect"]
+[ext_resource type="Script" path="res://Scripts/Combat/AttackEffect.gd" id="6_AttackEffect"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/earth_avalanche_ability.tres" id="7_earth_avalanche_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability.tres" id="8_upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_scorpion_ability.tres" id="9_upgrade_earth_avalanche_to_earth_lesser_scorpion_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="10_return_to_elemental_core_ability"]
-[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="11_attack_ability"]
-[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="12_sell_ability"]
-[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="13_cancel_build_ability"]
-[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="14_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="15_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" uid="uid://btm1qwatvbu6a" path="res://2DArt/Icons/avalanche.png" id="16_avalanche"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="11_attack_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="12_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="13_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="14_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="15_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="16_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/avalanche.png" id="17_avalanche"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -25,7 +26,7 @@ arc_height = 2.2
 impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
-script = ExtResource("6_SplashEffect")
+script = ExtResource("5_SplashEffect")
 radius = 1.95
 
 [sub_resource type="Resource" id="Attack"]
@@ -38,22 +39,22 @@ attacks_per_second = 0.4
 attack_range = 2.34
 target_types = 1
 delivery = SubResource("Delivery")
-effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
+effects = Array[ExtResource("6_AttackEffect")]([SubResource("Splash")])
 
 [resource]
 script = ExtResource("1_BuildingStats")
-model_scene_path = "res://Scenes/Units/Models/Towers/earth_avalanche_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_upgrade_ability")])
-gold_cost = 800
-total_gold_cost = 1000
 unit_type_id = 122
 display_name = "Avalanche"
-icon = ExtResource("16_avalanche")
+icon = ExtResource("17_avalanche")
 max_health = 150
 armor_type = 5
 armor = 5
 attack = SubResource("Attack")
-abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_earth_avalanche_ability"), ExtResource("8_upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability"), ExtResource("9_upgrade_earth_avalanche_to_earth_lesser_scorpion_ability"), ExtResource("10_return_to_elemental_core_ability"), ExtResource("11_attack_ability"), ExtResource("12_sell_ability")])
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_earth_avalanche_ability"), ExtResource("8_upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability"), ExtResource("9_upgrade_earth_avalanche_to_earth_lesser_scorpion_ability"), ExtResource("10_return_to_elemental_core_ability"), ExtResource("11_attack_ability"), ExtResource("12_sell_ability"), ExtResource("13_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/earth_avalanche.tscn"
+model_scene_path = "res://Scenes/Units/Models/Towers/earth_avalanche_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_upgrade_ability")])
+gold_cost = 800
+total_gold_cost = 1000

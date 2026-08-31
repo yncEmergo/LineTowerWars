@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://bkg0ku3v172v6"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://j1vm4g2ihx6w" path="res://Resources/UnitStats/Towers/fire_magma_well_stats.tres" id="2_fire_magma_well_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/fire_magma_well_stats.tres" id="2_fire_magma_well_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 209
 tower_stats = ExtResource("2_fire_magma_well_stats")
 required_tech_id = 1
-ability_id = 209
 display_name = "Upgrade to Magma Well"
 description = "Burns creeps over time. Splits into the meteor caller and the living flame."
+targeting = 1
 slot = 0

@@ -76,6 +76,44 @@ def _arrow_head(mask, tip, direction, length, half_width):
     ])
 
 
+def _tapered(mask, p0, r0, p1, r1):
+    """A capsule whose two ends are different sizes: a claw, a toe, a tusk.
+
+    Built as two circles and the quad between them rather than as a proper
+    tangent hull, which is off by a hair at these radii and by nothing anybody
+    can see once the 8x mask is downsampled.
+    """
+    mask.circle(p0[0], p0[1], r0)
+    mask.circle(p1[0], p1[1], r1)
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    length = math.hypot(dx, dy)
+    px, py = -dy / length, dx / length
+    mask.polygon([
+        (p0[0] + px * r0, p0[1] + py * r0),
+        (p1[0] + px * r1, p1[1] + py * r1),
+        (p1[0] - px * r1, p1[1] - py * r1),
+        (p0[0] - px * r0, p0[1] - py * r0),
+    ])
+
+
+def _lens(cx, cy, half_w, half_h, steps=40):
+    """An almond: two curves from one point to another, bulging apart.
+
+    Authored as a curve rather than as two circle arcs because the two numbers
+    that matter - how wide and how tall - are then the two numbers written,
+    instead of a radius and an offset that have to be solved for.
+    """
+    top = []
+    bottom = []
+    for i in range(steps + 1):
+        t = i / float(steps)
+        x = cx - half_w + 2.0 * half_w * t
+        drop = half_h * math.sin(math.pi * t) ** 0.7
+        top.append((x, cy - drop))
+        bottom.append((x, cy + drop))
+    return top + list(reversed(bottom))
+
+
 def _sword(mask, hilt, tip):
     """One sword along a line: grip, crossguard, blade, point.
 
@@ -205,6 +243,39 @@ def choose_element(mask):
     star(49.0, 48.0, 10.0, 3.0)
 
 
+def stampede_target(mask):
+    """A cloven hoof print, toes up: two heavy toes and the two dew claws
+    behind them.
+
+    A TRACK rather than an arrow or a crosshair, and that is the choice worth
+    writing down. The ability aims a beast, and the set already says objects
+    rather than diagrams - a boot for Move, a shield for armour. A print is the
+    thing this ability leaves behind, it names itself the moment anybody looks
+    at it, and toes-up already reads as "it went that way" without spending a
+    second shape on saying so.
+    """
+    toe = [(29.5, 9.0), (30.0, 28.0), (29.0, 39.0), (24.0, 43.5),
+           (16.5, 42.0), (13.0, 32.0), (15.5, 19.0), (22.5, 10.5)]
+    mask.polygon(toe)
+    mask.polygon([(64.0 - x, y) for x, y in reversed(toe)])
+    mask.circle(12.5, 53.0, 5.0)
+    mask.circle(51.5, 53.0, 5.0)
+
+
+def show_ranges(mask):
+    """An eye. The card's one button that only ever shows you something.
+
+    A ring of circles would have been the literal answer and is exactly the
+    diagram this set refuses to draw - it would also be three thin rings, which
+    is the one thing a 64 pixel white silhouette cannot hold. So: the thing you
+    do with it. The pupil is solid rather than a hole because a hole inside a
+    ring leaves two outlines a tint cannot tell apart.
+    """
+    mask.polygon(_lens(CENTER, CENTER, 24.0, 20.0))
+    mask.erase(mask.polygon, _lens(CENTER, CENTER, 17.0, 13.0))
+    mask.circle(CENTER, CENTER, 8.0)
+
+
 ## Every icon this tool writes: file stem to the function that draws it.
 ##
 ## The stem is what the .tres names, so renaming one here is a content edit
@@ -227,6 +298,8 @@ GLYPHS = {
     "ability_prioritize_air": prioritize_air,
     "ability_alter_armor": alter_armor,
     "ability_choose_element": choose_element,
+    "ability_stampede_target": stampede_target,
+    "ability_show_ranges": show_ranges,
 }
 
 

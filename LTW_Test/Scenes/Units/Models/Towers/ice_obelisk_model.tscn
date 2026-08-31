@@ -3,7 +3,7 @@
 [ext_resource type="Material" path="res://Resources/Materials/Towers/ice_stone.tres" id="1_ice_stone"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/ice_stone_deep.tres" id="2_ice_stone_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/ice_stone_pale.tres" id="3_ice_stone_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t1.tres" id="4_trim_t1"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/element_ring_t0.tres" id="4_element_ring_t0"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/energy_ice_t0.tres" id="5_energy_ice_t0"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
@@ -21,7 +21,7 @@ inner_radius = 0.2232
 outer_radius = 0.2707
 rings = 14
 ring_segments = 5
-material = ExtResource("4_trim_t1")
+material = ExtResource("4_element_ring_t0")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
 top_radius = 0.1235

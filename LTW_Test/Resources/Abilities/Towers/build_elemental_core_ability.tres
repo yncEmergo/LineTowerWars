@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="BuildTowerAbility" format=3 uid="uid://hlscggtf7ewk"]
+[gd_resource type="Resource" script_class="BuildTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://vwhllnr2eapp" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_BuildTowerAbility"]
-[ext_resource type="Resource" uid="uid://cd1yjq2fe2143" path="res://Resources/UnitStats/Towers/elemental_core_stats.tres" id="2_elemental_core_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/BuildTowerAbility.gd" id="1_BuildTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/elemental_core_stats.tres" id="2_elemental_core_stats"]
 
 [resource]
 script = ExtResource("1_BuildTowerAbility")
-tower_stats = ExtResource("2_elemental_core_stats")
 ability_id = 288
+tower_stats = ExtResource("2_elemental_core_stats")
 display_name = "Elemental Core"
 description = "The technology base tower. Morphs free into any element you have researched, and is worth nothing until you have."
 targeting = 5

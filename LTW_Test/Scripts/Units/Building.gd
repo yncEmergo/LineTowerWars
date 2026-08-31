@@ -30,6 +30,11 @@ const JOB_BAR_GAP: float = 0.16
 const JOB_BAR_FILL: Color = Color(0.93, 0.74, 0.24, 1.0)
 const JOB_BAR_EMPTY: Color = Color(0.16, 0.13, 0.06, 1.0)
 
+## Gap between the health bar and the second-resource bar sitting UNDER it, on
+## the same reasoning as the one above. The two stacks read outwards from the
+## health bar: what the tower is doing above it, what it is running on below.
+const RESOURCE_BAR_GAP: float = 0.16
+
 @export_group("References")
 ## Meshes that rise during construction. Separate from the root so the health
 ## bar does not get squashed along with them.
@@ -56,6 +61,33 @@ var max_mana: int = -1
 ## state is genuinely the tower's: how much damage it has eaten, which creep it
 ## has been ramping up on, when it last idled. See TowerPassive.
 var ability_state: Dictionary = {}
+## What this tower's ACTIVE ability - the one a player presses - is waiting on
+## and what it has been aimed at. Its own object rather than two more fields
+## here, and unlike ability_state above BOTH of its numbers are drawn on a
+## card, so both come down the wire. See ActiveAbilityState.
+var active_ability: ActiveAbilityState = ActiveAbilityState.new()
+## Permanent attack damage this tower's passives have banked, as the SERVER
+## last reported it, and meaningful on a CLIENT only.
+##
+## A client runs no simulation, so nothing of its own ever fills ability_state
+## for a bonus bought by KILLING - the kill happens on the server. Without this
+## a player would be looking at their own Alchemist's damage line and its stack
+## bar reading zero all match. See ReplicationService, which sets it, and
+## DevourEssencePassive, which reads it instead of its own key off a client.
+##
+## One number for the whole tower rather than one per passive: a tower with two
+## passives that both bank damage does not exist and would need its own record
+## anyway.
+var replicated_damage_bonus: int = 0
+## Which option a CYCLED ability on this tower is set to, as the SERVER last
+## reported it, and meaningful on a CLIENT only.
+##
+## Same reason as the line above and the Prioritize flag beside it in the
+## snapshot: it is a setting the player changed, the change is the server's to
+## make, and a card that went on drawing the old answer would read as a button
+## that does nothing. One number per tower, because no tower carries two
+## abilities that cycle.
+var replicated_ability_choice: int = 0
 
 ## The tower's own passives, read off its stats once. Cached because they are
 ## asked on every tick and every hit, and because the card can swap underneath
@@ -102,6 +134,10 @@ var _construction_damage: int = 0
 ## with the job, since a tower that sold once is a tower somebody is fiddling
 ## with and will probably sell again.
 var _job_bar: Bar3D = null
+## Worldspace bar under this tower's health bar, on the towers that run on a
+## second resource. Built in _ready rather than lazily, unlike the job bar:
+## a tower that has one has it from the moment it is standing.
+var _resource_bar: ResourceBar3D = null
 
 var _building_stats: BuildingStats:
 	get:
@@ -118,6 +154,8 @@ func _ready() -> void:
 		Log.err("Building needs BuildingStats but got plain UnitStats", name)
 	_collect_passives()
 	_reset_mana()
+	if secondary_resource() != null:
+		_create_resource_bar()
 
 
 ## Reads this building's passives off its stats once. They are asked on every
@@ -167,6 +205,56 @@ func has_full_mana() -> bool:
 	return max_mana > 0 && current_mana >= max_mana
 
 
+## The SECOND RESOURCE this tower runs on, or null for one that runs on
+## nothing but its health - which is every Basic tower.
+##
+## A passive's own count comes FIRST, and that order is the rule rather than a
+## preference: a tower whose ability BANKS something is saying that the bank is
+## what decides what it is worth right now, which is the whole of what the
+## second bar means (game_rules.md). The Alchemist line is the case - it holds
+## mana it can never spend on anything, and the number worth a bar is the one
+## its ability actually reads.
+func secondary_resource() -> TowerResource:
+	for passive in _tower_passives:
+		var banked: TowerResource = passive.tower_resource(self)
+		if banked != null:
+			return banked
+	if !uses_mana():
+		return null
+	return TowerResource.mana(current_mana, max_mana)
+
+
+## Which option this tower's cycled ability is set to, or 0 for a tower with no
+## such ability - which is nearly every tower. See UnitAbility.choice_index.
+##
+## The one place the two answers are chosen between, so nothing that draws the
+## setting has to know whether it is running on the server or watching one.
+func ability_choice() -> int:
+	if !MatchSession.is_authority():
+		return replicated_ability_choice
+	if stats == null:
+		return 0
+	for entry in stats.abilities:
+		var index: int = entry.choice_index(self)
+		if index >= 0:
+			return index
+	return 0
+
+
+## Attack damage this tower's passives have added to it for good, on top of
+## whatever its stats say. 0 for every tower that grows into nothing.
+##
+## Summed here rather than at each reader, because the damage line, the stack
+## bar and the snapshot all want the same answer. Each passive is asked for its
+## own figure and is the one that knows whether a client may trust its own copy
+## of it - see replicated_damage_bonus.
+func permanent_damage_bonus() -> int:
+	var total: int = 0
+	for passive in _tower_passives:
+		total += passive.permanent_bonus(self)
+	return total
+
+
 ## Adds mana, never past the ceiling and never below zero. Fractional amounts
 ## are carried between calls, so a regeneration slower than one point a tick
 ## still fills rather than doing nothing at all.
@@ -198,7 +286,7 @@ func spend_mana(amount: int) -> bool:
 
 
 ## Empties the tower and answers what was in it, for the abilities that spend
-## whatever they have rather than a fixed price - the Ultimate Doom Guard's
+## whatever they have rather than a fixed price - the Ultimate Moonbeam's
 ## flames and the Hurricane Elemental's fork both scale with what was left.
 func drain_mana() -> int:
 	if !MatchSession.is_authority():
@@ -221,11 +309,13 @@ func set_max_mana(value: int) -> int:
 ## that replaced it, after the replacement is standing.
 ##
 ## Mana is carried across but CLAMPED to the new ceiling, and only when the new
-## tier does not author a starting ratio of its own - a Lesser Doom Guard is
+## tier does not author a starting ratio of its own - a Lesser Moonbeam is
 ## built full on purpose and must not inherit an empty Magma Well.
-func inherit_ability_state(banked: Dictionary, mana: int) -> void:
+func inherit_ability_state(banked: Dictionary, mana: int,
+		active: ActiveAbilityState = null) -> void:
 	for key in banked:
 		ability_state[key] = banked[key]
+	active_ability.inherit(active)
 	if _building_stats != null && _building_stats.starting_mana_ratio > 0.0:
 		return
 	current_mana = clampi(mana, 0, max_mana)
@@ -777,6 +867,19 @@ func _refresh_job_bar() -> void:
 	_job_bar.set_ratio(job.progress)
 
 
+## Builds the second-resource bar and hangs it UNDER the health bar.
+##
+## Offset from where the health bar sits rather than from the bar itself, for
+## the same reason the job bar is: the player may have health bars switched
+## off, and a tower's second resource is not theirs to switch off with them.
+func _create_resource_bar() -> void:
+	_resource_bar = ResourceBar3D.new()
+	_resource_bar.name = "ResourceBar"
+	_resource_bar.watch(self)
+	add_child(_resource_bar)
+	_resource_bar.position = Vector3(0.0, health_bar_height - RESOURCE_BAR_GAP, 0.0)
+
+
 func _create_job_bar() -> void:
 	_job_bar = Bar3D.new()
 	_job_bar.name = "JobBar"
@@ -852,14 +955,16 @@ func _complete_upgrade() -> void:
 	var kept_gold: int = invested_gold
 	# A RETURN pays out here rather than at the press, on the same terms a sale
 	# does, and hands nothing else down: what arrives is a bare Core, so an
-	# Alchemist's banked damage and a Doom Guard's mana are gone with the tower
+	# Alchemist's banked damage and a Moonbeam's mana are gone with the tower
 	# that earned them. Only an UPGRADE is the same tower one tier further on.
 	var kept_state: Dictionary = ability_state
 	var kept_mana: int = current_mana
+	var kept_active: ActiveAbilityState = active_ability
 	if returning:
 		kept_gold = _refund_return(target)
 		kept_state = {}
 		kept_mana = 0
+		kept_active = null
 	var home: PlayerArea = area
 	var player: int = owner_player_id
 
@@ -887,7 +992,7 @@ func _complete_upgrade() -> void:
 	# damage it has eaten, an Apprentice keeps its mana when it becomes a
 	# Sorcerer. A passive whose new tier does not use a key simply never reads
 	# it, which costs nothing.
-	upgraded.inherit_ability_state(kept_state, kept_mana)
+	upgraded.inherit_ability_state(kept_state, kept_mana, kept_active)
 	Log.info("Morph finished", {"tower": upgraded.name, "value": kept_gold})
 
 
@@ -939,6 +1044,18 @@ func transform_into(target_stats: BuildingStats) -> void:
 	if !MatchSession.is_authority():
 		return
 
+	# NOTHING IS HANDED DOWN. An upgrade is the same tower one tier further on
+	# and carries its mana and whatever its ability had banked; a conversion is
+	# a DIFFERENT tower, arriving because somebody else's ability reached over
+	# and made it - so what stands here afterwards starts empty, at zero mana,
+	# the way a freshly built one would.
+	#
+	# It matters more than it looks. A Voidling that has already grown keeps a
+	# full bar and a spent flag; passing those on would give the Voidalisk it
+	# becomes a bar it never had to fill and a flag saying it had already used
+	# it - born finished, on the same tick.
+	ability_state = {}
+	current_mana = 0
 	_upgrade_target = target_stats
 	_complete_upgrade()
 
@@ -1038,8 +1155,8 @@ func _construction_progress() -> float:
 ## Health climbs from 1 to full across the build, minus anything taken on the
 ## way, so the bar reads as a construction progress bar.
 func _apply_construction_health() -> void:
-	var target: int = int(round(lerpf(1.0, float(max_health()), _construction_progress())))
-	_set_health(target - _construction_damage)
+	var target: float = lerpf(1.0, float(max_health()), _construction_progress())
+	_set_health(target - float(_construction_damage))
 
 
 func _apply_visual_height(progress: float) -> void:
@@ -1084,6 +1201,19 @@ func _physics_process(delta: float) -> void:
 	if _under_construction:
 		_advance_construction(delta)
 		return
+
+	# A tower's only order is Attack, and its whole task is waiting for the
+	# creep it was aimed at to die. Below the construction gate, because a
+	# tower still going up cannot be aimed at anything.
+	_advance_orders(delta)
+
+	# Regeneration runs for anything STANDING, whatever else it is doing. A
+	# tower mid-upgrade or mid-sale is still a body in the maze that creeps
+	# are hitting, and both jobs can be called off, so neither is a reason to
+	# stop healing. Only a building still going up is excluded, because its
+	# health is the construction ramp's to drive - see _apply_construction_health.
+	_regenerate(delta)
+
 	if _upgrading:
 		_advance_upgrade(delta)
 		return
@@ -1094,6 +1224,34 @@ func _physics_process(delta: float) -> void:
 	# it is standing, the sale can be called off, and stopping its aura for
 	# three seconds would be a hole in a maze nobody asked for.
 	_advance_passives(delta)
+	active_ability.advance(delta)
+
+
+## Health every standing building gets back per second, all sources summed.
+##
+## Its base is a share of its own maximum rather than a flat rate, so the rule
+## is one number for a roster whose health spans two orders of magnitude. See
+## GameConfig.building_health_regen_ratio and unit_data.md 1.4.
+##
+## Its own function rather than a line inside _regenerate for the same reason
+## armor_value() is asked of the unit rather than read off its stats: the Holy
+## line's aura grants tower regeneration on top of this, and the config cannot
+## know what is standing nearby. Nothing adds to it yet.
+func _health_regen_per_second() -> float:
+	if _config == null:
+		return 0.0
+	return float(max_health()) * _config.building_health_regen_ratio
+
+
+## Heals the building back up on its own clock.
+##
+## No fraction is carried between ticks, because current_health IS a float - a
+## tenth of a point regenerated is a tenth of a point held, and what the player
+## reads is display_health() rounding it back up. A building already full or
+## already down needs no guard here: heal() turns the first into a clamp that
+## changes nothing and refuses the second outright.
+func _regenerate(delta: float) -> void:
+	heal(_health_regen_per_second() * delta)
 
 
 ## Runs the tower's own passives: their mana, and whatever each of them does on
@@ -1139,7 +1297,7 @@ func _finish_construction() -> void:
 	_under_construction = false
 	_apply_visual_height(1.0)
 	_apply_animation_state()
-	_set_health(max_health() - _construction_damage)
+	_set_health(float(max_health() - _construction_damage))
 	construction_finished.emit()
 	# Swaps the cancel button for the finished building's real card.
 	abilities_changed.emit()

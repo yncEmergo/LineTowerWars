@@ -13,11 +13,18 @@ extends Control
 ## written to disk right there. No Apply button and no Cancel, because there is
 ## nothing to roll back and nothing a server would have to agree to.
 ##
-## Both rows of choices and the tab strip read their answer off the POSITION of
+## Every row of choices, and the tab strip, reads its answer off the POSITION of
 ## the button pressed, the same way the command card reads a hotkey off the slot
 ## it sits in: the buttons of a row are authored in enum order and the index of
 ## the one pressed IS the value. A new choice is a new button and a new enum
 ## entry, and no wiring at all.
+##
+## The Hotkeys page is the exception, and has to be: its rows are one per
+## rebindable command and that list is authored on ControlsConfig, so they are
+## built here from it rather than laid out in the scene. Rebinding is still not
+## a decision this screen makes alone - a key can be refused, and taking one
+## takes it off whatever held it, which only a screen that can see every row
+## could do.
 
 ## Emitted when the screen closes itself - the Back button, or Escape arriving
 ## through GameMenu. Whoever opened it puts focus back where it belongs.
@@ -30,11 +37,33 @@ signal closed
 @export var _page_stack: Container
 ## Windowed / Windowed Fullscreen / Fullscreen, in UserSettings.WindowMode order.
 @export var _window_mode_row: BoxContainer
+## Turns the sun's shadows off outright, for a machine that cannot afford them
+## even with the cast distance trimmed. See SunLight.
+@export var _shadows_button: BaseButton
 ## Always / Only when damaged / Never, in HealthBarDisplay order.
 @export var _health_bar_row: BoxContainer
 ## Silences everything at once, independently of the six levels.
 @export var _mute_button: BaseButton
+## European / American, in UserSettings.KeyboardLayout order.
+@export var _keyboard_layout_row: BoxContainer
+## Parent for one HotkeyRow per rebindable action. Filled at runtime, because
+## which commands are rebindable is authored on ControlsConfig and this screen
+## should not hold a second copy of that list.
+@export var _hotkey_list: BoxContainer
+@export var _hotkey_row_scene: PackedScene
+## Says what a rebind did, or why it was refused. The refusal is the reason it
+## exists: a key the game already answers has to be turned down, and a button
+## that simply does not change is indistinguishable from a broken one.
+@export var _hotkey_message: Label
+## Forgets every binding the player made, everywhere on this page.
+@export var _reset_hotkeys_button: Button
 @export var _back_button: Button
+
+var _hotkey_rows: Array[HotkeyRow] = []
+
+var _controls: ControlsConfig:
+	get:
+		return References.controls_config
 
 
 func _ready() -> void:
@@ -43,11 +72,18 @@ func _ready() -> void:
 	_connect_row(_tab_row, _on_tab_pressed)
 	_connect_row(_window_mode_row, _on_window_mode_pressed)
 	_connect_row(_health_bar_row, _on_health_bar_pressed)
+	_connect_row(_keyboard_layout_row, _on_keyboard_layout_pressed)
 
+	if _shadows_button != null:
+		_shadows_button.toggled.connect(_on_shadows_toggled)
 	if _mute_button != null:
 		_mute_button.toggled.connect(_on_mute_toggled)
+	if _reset_hotkeys_button != null:
+		_reset_hotkeys_button.pressed.connect(_on_reset_hotkeys_pressed)
 	if _back_button != null:
 		_back_button.pressed.connect(close)
+
+	_build_hotkey_rows()
 
 	_select_page(0)
 
@@ -63,6 +99,10 @@ func open() -> void:
 func close() -> void:
 	if !visible:
 		return
+	# A row left waiting for a press would go on eating keys behind a screen
+	# that is no longer up.
+	for row: HotkeyRow in _hotkey_rows:
+		row.cancel()
 	release_focus()
 	hide()
 	closed.emit()
@@ -87,9 +127,14 @@ func _connect_row(row: BoxContainer, handler: Callable) -> void:
 ## write back as a player choice: setting button_pressed does not emit pressed.
 func _sync_from_settings() -> void:
 	_press_in_row(_window_mode_row, int(UserSettings.window_mode))
+	if _shadows_button != null:
+		_shadows_button.set_pressed_no_signal(UserSettings.shadows_enabled)
 	_press_in_row(_health_bar_row, int(UserSettings.health_bar_display))
+	_press_in_row(_keyboard_layout_row, int(UserSettings.keyboard_layout))
 	if _mute_button != null:
 		_mute_button.set_pressed_no_signal(UserSettings.audio_muted)
+	_refresh_hotkey_rows()
+	_say("")
 
 
 ## Every button in the row is unpressed by hand before the chosen one is
@@ -147,6 +192,14 @@ func _on_window_mode_pressed(index: int) -> void:
 	UserSettings.set_window_mode(index as UserSettings.WindowMode)
 
 
+## The other setting with something live behind it. A sun standing in a match
+## right now is told; one built afterwards reads the choice itself on the way
+## up. Same shape as the health bars below, and for the same reason.
+func _on_shadows_toggled(pressed: bool) -> void:
+	UserSettings.set_shadows_enabled(pressed)
+	get_tree().call_group(SunLight.GROUP, "refresh_shadows")
+
+
 ## The one setting on this screen with something live behind it. Bars created
 ## after this point read the new value themselves; the ones already standing in
 ## the world are told, which is the whole reason HealthBar3D keeps a group.
@@ -157,6 +210,112 @@ func _on_health_bar_pressed(index: int) -> void:
 
 func _on_mute_toggled(pressed: bool) -> void:
 	UserSettings.set_audio_muted(pressed)
+
+
+## Which board the two grids read their bottom row off. Y and Z trade places
+## and nothing else moves, so every letter already on screen has to be redrawn
+## and no other setting has to be touched.
+func _on_keyboard_layout_pressed(index: int) -> void:
+	UserSettings.set_keyboard_layout(index as UserSettings.KeyboardLayout)
+	_announce_hotkeys_changed()
+
+
+# --- hotkeys ---------------------------------------------------------------
+
+## One row per rebindable action, in the order ControlsConfig lists them.
+##
+## Built once, from the config rather than from the scene, so authoring a new
+## rebindable command is a .tres and nothing else. A build with no controls
+## config wired leaves the page empty rather than guessing at a list.
+func _build_hotkey_rows() -> void:
+	var config: ControlsConfig = _controls
+	if _hotkey_list == null || config == null:
+		Log.err("OptionsMenu cannot build its hotkey list, it will be empty")
+		return
+	if _hotkey_row_scene == null:
+		Log.err("OptionsMenu has no hotkey row scene, the hotkey list will be empty")
+		return
+
+	for action: HotkeyAction in config.hotkey_actions:
+		if action == null:
+			continue
+		var row: HotkeyRow = _hotkey_row_scene.instantiate() as HotkeyRow
+		if row == null:
+			Log.err("Hotkey row scene does not have a HotkeyRow script")
+			return
+		_hotkey_list.add_child(row)
+		row.setup(action)
+		row.key_chosen.connect(_on_key_chosen)
+		row.key_cleared.connect(_on_key_cleared)
+		_hotkey_rows.append(row)
+
+
+## A row asked for a key.
+##
+## Two things can stop it: a key the game already answers wherever you are,
+## which is refused outright, and a key another action holds, which is taken
+## off that action rather than shared. One key means one command - a hotkey
+## menu that let two of them agree would only be lying about what a press does.
+func _on_key_chosen(action: HotkeyAction, key: Key) -> void:
+	var config: ControlsConfig = _controls
+	if config == null || action == null:
+		return
+
+	var reason: String = config.reserved_key_reason(key)
+	if !reason.is_empty():
+		_say(reason)
+		_refresh_hotkey_rows()
+		return
+
+	var pressed: String = OS.get_keycode_string(key)
+	var held_by: HotkeyAction = config.action_holding_key(key, action)
+	UserSettings.set_hotkey_override(action.action_id, pressed)
+	if held_by == null:
+		_say("%s is now %s." % [action.display_name, pressed])
+	else:
+		UserSettings.set_hotkey_override(held_by.action_id, "")
+		_say("%s is now %s, and %s has no key." % [
+			action.display_name, pressed, held_by.display_name,
+		])
+	_announce_hotkeys_changed()
+
+
+## A row asked for NO key. An ability with none falls back to the square it
+## sits in, which is where every other ability in the game already lives.
+func _on_key_cleared(action: HotkeyAction) -> void:
+	if action == null:
+		return
+	UserSettings.set_hotkey_override(action.action_id, "")
+	_say("%s has no key." % action.display_name)
+	_announce_hotkeys_changed()
+
+
+## Forgets every binding rather than writing the defaults in, so an action
+## whose default changes later follows it - see UserSettings.
+func _on_reset_hotkeys_pressed() -> void:
+	UserSettings.clear_all_hotkey_overrides()
+	_say("Every key is back to its default.")
+	_announce_hotkeys_changed()
+
+
+## Redraws the rows here, and everything BEHIND this screen that draws or
+## answers a key: the command card and the Research Center. Neither would
+## notice on its own, because nothing about the selection has moved.
+func _announce_hotkeys_changed() -> void:
+	_refresh_hotkey_rows()
+	get_tree().call_group(HotkeyAction.READERS_GROUP, "refresh_hotkeys")
+
+
+## Every row, not only the one that changed: taking a key gives it up wherever
+## it was, so a rebind can move two rows at once.
+func _refresh_hotkey_rows() -> void:
+	for row: HotkeyRow in _hotkey_rows:
+		row.refresh()
+
+
+func _say(text: String) -> void:
+	if _hotkey_message != null:
+		_hotkey_message.text = text
 
 
 ## Focus lands on the tab that is open rather than on the first control of the

@@ -23,10 +23,16 @@
 // lifts it off the ground. It is the single most important thing in either
 // shader.
 //
-// OPAQUE, and that is a family rule rather than an oversight. The FLYING
-// creeps are drawn with creep_vapour.gdshader instead, which is the
-// translucent one - see style.py under CREEPS for why the material is one of
-// the things that says which family a creep is in.
+// OPAQUE, and that is a family convention rather than an oversight. The
+// creeps built on the WRAITH body plan are drawn with creep_vapour.gdshader
+// instead, which is the translucent one - see style.py under CREEPS for why
+// the material is one of the things that says what a creep is.
+//
+// Like every visual rule in this project it is a continuity convention Claude
+// authored rather than design handed down, and is not binding. This one has
+// already moved once: it used to belong to the FLYING family and moved to the
+// wraith plan when the first solid flyer arrived. See PLACEHOLDER_ART.md
+// section 0.
 //
 // TUNING BELONGS IN THE MATERIAL. Every uniform is a knob on the
 // Resources/Materials/Creeps/*_hide.tres files, written by Tools/ModelGen.

@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_arcane_lesser_spellslinger_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.939
+health_bar_height = 0.847
 select_radius = 0.5
-select_height = 0.297
+select_height = 0.255
 
 [node name="Visual" parent="." instance=ExtResource("4_arcane_lesser_spellslinger_model")]
 

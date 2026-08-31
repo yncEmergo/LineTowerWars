@@ -8,18 +8,23 @@ extends CreepPassive
 ## attack says. Multishot is deliberately not area damage - it picks several
 ## single targets rather than covering ground.
 ##
+## PHYSICAL area damage only, which is what the roster's Armored trait states:
+## "physical splash damage taken reduced by 10%". A spell that covers ground is
+## resisted by a SPELL resistance and by nothing else, which is the whole point
+## of spell damage sitting outside the armour matrix - see unit_data.md 1.1.
+##
 ## Applied after the damage matrix and before the creep's armour points, so it
 ## and the armour compound rather than one hiding the other.
 
 @export_group("Settings")
-## Share of area damage the creep takes. 0.5 is half.
+## Share of physical area damage the creep takes. 0.5 is half; the roster's
+## Armored (1) and (2) are 0.9 and 0.8.
 @export_range(0.0, 1.0, 0.05) var damage_ratio: float = 0.5
 
 
-func damage_taken_ratio(is_aoe: bool, _is_spell: bool) -> float:
-	return damage_ratio if is_aoe else 1.0
+func damage_taken_ratio(is_aoe: bool, is_spell: bool) -> float:
+	return damage_ratio if is_aoe && !is_spell else 1.0
 
 
 func effect_text() -> String:
-	return "Takes %d%% less damage from attacks that hit an area." \
-		% roundi((1.0 - damage_ratio) * 100.0)
+	return "Takes %d%% less physical damage from attacks that hit an area." 		% roundi((1.0 - damage_ratio) * 100.0)

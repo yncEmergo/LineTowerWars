@@ -55,12 +55,33 @@ func bonus_damage(tower: Building, _target: Unit, rolled: int) -> int:
 ## The chain hits at FULL damage, which is what the source states, and takes
 ## the attack's own damage type rather than becoming Spell Damage: this is the
 ## same bolt arriving somewhere else, not an ability going off.
+##
+## And it LOOKS like the same bolt, because it spawns the attack's own impact
+## effect on each creep it reaches - which for this tower is an arc strung back
+## to the muzzle. The tower is drawing lightning to everything it hit, so
+## everything it hit should have lightning drawn to it, and reusing the
+## delivery's own effect is what keeps the chained bolts identical to the aimed
+## one without this passive knowing what an arc looks like.
 func on_hit(tower: Building, target: Unit, dealt: int, is_primary: bool) -> void:
 	if !is_primary || chain_targets <= 0 || target == null || tower.stats == null:
 		return
+
+	var attack: AttackStats = tower.stats.attack
+	var from: Vector3 = _muzzle_of(tower)
 	for creep: Creep in HitPattern.chain(tower.area, target, chain_targets,
-			chain_cells, tower.stats.attack):
-		creep.take_damage(dealt, tower.stats.attack.damage_type)
+			chain_cells, attack):
+		creep.take_damage(dealt, attack.damage_type)
+		if attack.delivery != null:
+			attack.delivery.spawn_impact(creep.global_position, from)
+
+
+## Where the tower's own shots leave from, so a chained arc starts where the
+## aimed one did. Falls back to the tower itself, which is only ever reached by
+## a tower with no attack component - and one of those never gets here.
+static func _muzzle_of(tower: Building) -> Vector3:
+	if tower.attack_component == null:
+		return tower.global_position
+	return tower.attack_component.muzzle_position()
 
 
 func effect_text() -> String:

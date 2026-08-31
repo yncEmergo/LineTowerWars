@@ -11,9 +11,10 @@ extends UnitAbility
 ##
 ## A CYCLE rather than a submenu of six buttons. The choice is one of a short
 ## list, the card is already crowded, and a player who wants Light presses the
-## key until the square says Light - which is one habit rather than a menu to
-## learn. The active choice is drawn in the square's own name, so it is visible
-## without hovering.
+## key until the tooltip says Light - which is one habit rather than a menu to
+## learn. The active choice is written in the tooltip's own title, in brackets
+## after the name, so the answer to "what is this tower set to" is one hover
+## rather than a guess.
 ##
 ## The choice is per TOWER and lives on the tower, not here: this resource is
 ## every Ultimate Alchemist on the field at once, and two of them set to
@@ -28,10 +29,16 @@ const CHOICE_KEY: String = "alchemist_armor_type"
 
 ## The types that may be chosen, in the order the button cycles them.
 ##
-## Invulnerable is left out because it would make a creep untouchable, and
-## Unarmored is left out because it is the neutral row and altering something
-## into it is never worth a press. What is left is the five real matchups.
+## Unarmored is FIRST, and so is what a freshly built tower alters creeps into
+## until somebody presses the key. It is the neutral row rather than a nothing:
+## turning a Fortified creep unarmored is a real answer, and starting on a type
+## that is never a trap is what makes the default safe to leave alone.
+##
+## Invulnerable is the one type left out, and it is left out for good: altering
+## a creep into it would make the creep untouchable by the whole lane for the
+## length of the debuff, which is the opposite of what the ability is for.
 const CHOICES: Array[UnitStats.ArmorType] = [
+	UnitStats.ArmorType.UNARMORED,
 	UnitStats.ArmorType.LIGHT,
 	UnitStats.ArmorType.MEDIUM,
 	UnitStats.ArmorType.HEAVY,
@@ -42,11 +49,21 @@ const CHOICES: Array[UnitStats.ArmorType] = [
 
 ## The armour type this tower is currently set to apply. Static so the passive
 ## that applies it does not have to find this resource on the card first.
+##
+## Asked of the TOWER rather than of its ability_state, because a client has no
+## ability_state to read - the press is the server's to run - and would sit
+## drawing the default while the server applied something else. The tower knows
+## which of the two answers is its own; see Building.ability_choice.
 static func chosen_type(tower: Building) -> UnitStats.ArmorType:
 	if tower == null:
 		return CHOICES[0]
-	var index: int = int(tower.ability_state.get(CHOICE_KEY, 0))
-	return CHOICES[posmod(index, CHOICES.size())] as UnitStats.ArmorType
+	return CHOICES[posmod(tower.ability_choice(), CHOICES.size())] as UnitStats.ArmorType
+
+
+## What that type is called, e.g. "Fortified". Static and public because the
+## tooltip is not the only thing that ever has to name it.
+static func type_name(armor_type: UnitStats.ArmorType) -> String:
+	return String(UnitStats.ArmorType.keys()[armor_type]).to_lower().capitalize()
 
 
 func execute(unit: Unit, _target: AbilityTarget) -> void:
@@ -54,8 +71,8 @@ func execute(unit: Unit, _target: AbilityTarget) -> void:
 	if tower == null:
 		return
 	tower.ability_state[CHOICE_KEY] = int(tower.ability_state.get(CHOICE_KEY, 0)) + 1
-	# The square draws the new choice in its own name, so the card has to be
-	# rebuilt for the press to be visible at all.
+	# The square is rebuilt so its tooltip is, since the tooltip is where the
+	# new choice is written and a stale one would be worse than none.
 	tower.abilities_changed.emit()
 
 
@@ -64,10 +81,25 @@ func can_execute(unit: Unit) -> bool:
 	return tower != null && tower.can_attack()
 
 
-## Named with the active choice in it, so the card shows what the tower will do
-## without anything having to be hovered.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+## Where this tower's choice really lives. Read on the AUTHORITY only, which is
+## what Building.ability_choice() guarantees before it asks.
+func choice_index(unit: Unit) -> int:
+	var tower: Building = unit as Building
+	if tower == null:
+		return -1
+	return int(tower.ability_state.get(CHOICE_KEY, 0))
+
+
+## Named with the ACTIVE CHOICE after it, so a hover answers what this tower
+## will do rather than only what the button is for. The tower comes in because
+## the choice is per tower and this resource is shared; with nobody behind it
+## the answer is the default, which is what a fresh tower is set to anyway.
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
+	data.title = "%s  (%s)" % [
+		display_name, type_name(chosen_type(unit as Building))
+	]
 	data.description = ("%s\nPress to cycle through %s."
 		% [description, _choice_list()])
 	return data
@@ -76,9 +108,5 @@ func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
 func _choice_list() -> String:
 	var names: PackedStringArray = PackedStringArray()
 	for entry in CHOICES:
-		names.append(_type_name(entry))
+		names.append(type_name(entry))
 	return ", ".join(names)
-
-
-static func _type_name(armor_type: UnitStats.ArmorType) -> String:
-	return String(UnitStats.ArmorType.keys()[armor_type]).to_lower().capitalize()

@@ -51,6 +51,7 @@ CORRUPTION = S % "CorruptionPassive"
 POISON = S % "PoisonPassive"
 DEVOUR_ESSENCE = S % "DevourEssencePassive"
 VOID_GROWTH = S % "VoidGrowthPassive"
+VOID_CONVERSION = S % "VoidConversionPassive"
 TEMPORAL_RIFT = S % "TemporalRiftPassive"
 FEASTING_VOID = S % "FeastingVoidPassive"
 CRUSHING_WAVE = S % "CrushingWavePassive"
@@ -60,6 +61,57 @@ TORRENT = S % "TorrentPassive"
 # unit_data.md 1.3: the base slow duration. Every chill that does not state its
 # own takes it, which is nearly all of them.
 SLOW_SECONDS = 4.0
+
+# Towers the VOID line can eat, by unit_type_id.
+#
+# By ID rather than by a stats reference on purpose - see VoidSpreadPassive: an
+# ability holding its own tower's stats would be a reference cycle, and holding
+# the ones it converts would drag every one of them into memory with the card.
+#
+# Written out rather than looked up from the roster tables, because these are
+# AUTHORED CHOICES about which towers the Void may take and not a query. The
+# ids are permanent by design, so a literal here cannot go stale; what it does
+# do is put the whole rule on one screen next to the ability that runs it.
+#
+# The 10g stubs and their 30g upgrades are the only Basic towers on the list,
+# and no elemental tower is on it at all. Which of the six a Voidling actually
+# takes is decided at runtime by price and then by distance, so a 10g tower is
+# always eaten before a 30g one standing the same distance away.
+BASIC_10G = (26, 36, 46)
+BASIC_30G = (27, 37, 47)
+VOIDLING = 97
+VOIDALISK = 98
+GREATER_HARBINGER = 100
+ULTIMATE_HARBINGER = 101
+
+# Where the Harbinger's rift draws itself: an X on the ground at the spot the
+# creep is going back to, standing for as long as the delay lasts.
+#
+# The passive also takes a mark for the creep to CARRY, and nothing authors one.
+# It was tried and dropped on review - a badge riding a walking creep read as
+# noise rather than as a warning - and the hook is left because carrying
+# something is the right shape for the idea, not because this needs one.
+RIFT_MARKER = "res://Scenes/Effects/rift_marker.tscn"
+
+# What Primal 2 actually sends down the lane. A creature rather than a shot, so
+# it is not in the projectile table with the sixteen elemental bolts - see
+# effects.beast_charge.
+BEAST = "res://Scenes/Effects/beast_charge.tscn"
+
+# How fast the beast runs, in cells per second, and how wide a band it
+# flattens as a half-width in cells.
+#
+# ONE PAIR FOR THE WHOLE LINE, unlike every other number in this file: the same
+# animal is sent at every tier and the Ultimate's is not a faster one, it is one
+# that runs further and hits harder. So the flight time is NOT constant across
+# the three - the Ultimate's beast is on the field for a little over two seconds
+# and the other two for about half of that, because unit_data.md gives them half
+# the distance.
+#
+# The band is two cells across, which is wider than the model. That is
+# deliberate and the model is the half that gives: see effects.beast_charge.
+BEAST_SPEED = 4.7
+BEAST_RADIUS = 1.0
 
 
 def _p(script, name, **fields):
@@ -79,26 +131,28 @@ ABILITIES = {
     "fire_magma_well": _p(IGNITE, "Ignite", interval_seconds=2.1,
                           radius_cells=cells(400), damage_per_second=13.0,
                           duration_seconds=8.0),
-    "fire_lesser_doom_guard": _p(
+    "fire_lesser_moonbeam": _p(
         BLAZING_INFERNO, "Blazing Inferno", decay_per_second=0.0083,
         max_bonus_share=3.0, explosion_share=0.66, explosion_cells=cells(200)),
-    "fire_greater_doom_guard": _p(
+    "fire_greater_moonbeam": _p(
         BLAZING_INFERNO, "Blazing Inferno", decay_per_second=0.0083,
         max_bonus_share=3.0, explosion_share=0.80, explosion_cells=cells(250)),
-    "fire_ultimate_doom_guard": _p(
+    "fire_ultimate_moonbeam": _p(
         FRENZIED_FLAMES, "Frenzied Flames", regen_per_second=10.0,
         max_damage_per_second=1575.0, duration_seconds=3.0,
         radius_cells=cells(300)),
+    # No radius: the eruption reaches whatever the tower's own splash already
+    # covers, so the tier's Splash column is the one number that says how far.
     "fire_lesser_firelord": _p(
         VOLCANIC_ERUPTION, "Volcanic Eruption", chance=0.4, targets=3,
-        radius_cells=cells(300), bonus_share=1.0, armor_share=0.07),
+        bonus_share=1.0, armor_share=0.07),
     "fire_greater_firelord": _p(
         VOLCANIC_ERUPTION, "Volcanic Eruption", chance=0.4, targets=5,
-        radius_cells=cells(300), bonus_share=1.0, armor_share=0.09),
+        bonus_share=1.0, armor_share=0.12),
     "fire_ultimate_firelord": _p(
         VOLCANIC_ERUPTION, "Magma Blast", chance=0.4, targets=8,
-        radius_cells=cells(300), bonus_share=1.0, armor_share=0.12,
-        guaranteed_every=3, missing_armor_bonus=0.06),
+        bonus_share=1.0, armor_share=0.12,
+        guaranteed_every=5, missing_armor_bonus=0.06),
 
     # --- 4.5 Ice ----------------------------------------------------------
     "ice_obelisk": _p(FROST_ATTACK, "Frost Attack", slow_per_hit=0.0375,
@@ -184,22 +238,29 @@ ABILITIES = {
 
     # --- 4.9 Void ---------------------------------------------------------
     "void_voidling": _p(VOID_GROWTH, "Void Growth", regen_per_second=1.0,
-                        mana_per_attack=1.0, reach_cells=cells(400)),
+                        mana_per_attack=1.0, reach_cells=cells(400),
+                        becomes_type_id=VOIDLING,
+                        converts_type_ids=BASIC_10G + BASIC_30G),
     "void_voidalisk": _p(VOID_GROWTH, "Void Growth", regen_per_second=1.0,
-                         mana_per_attack=1.0, reach_cells=cells(400)),
+                         mana_per_attack=1.0, reach_cells=cells(400),
+                         becomes_type_id=VOIDALISK,
+                         converts_type_ids=(VOIDLING,)),
     "void_lesser_harbinger": _p(
         TEMPORAL_RIFT, "Temporal Rift", regen_per_second=10.0,
         radius_cells=cells(300), delay_seconds=3.0, health_share=0.02,
-        flat_damage=300, creep_cooldown=9.0, refund_share=0.5),
+        flat_damage=300, creep_cooldown=9.0, refund_share=0.5,
+        marker_scene_path=RIFT_MARKER),
     "void_greater_harbinger": _p(
         TEMPORAL_RIFT, "Temporal Rift", regen_per_second=10.0,
         radius_cells=cells(300), delay_seconds=3.2, health_share=0.03,
-        flat_damage=800, creep_cooldown=9.0, refund_share=0.5),
+        flat_damage=800, creep_cooldown=9.0, refund_share=0.5,
+        marker_scene_path=RIFT_MARKER),
     "void_ultimate_harbinger": _p(
         TEMPORAL_RIFT, "Whispers of the Void", regen_per_second=10.0,
         radius_cells=cells(300), delay_seconds=3.6, health_share=0.05,
         flat_damage=4250, creep_cooldown=9.0, refund_share=0.5,
-        slow_amount=0.45, convert_seconds=60.0, convert_cells=cells(500)),
+        slow_amount=0.45,
+        marker_scene_path=RIFT_MARKER),
     "void_lesser_leviathan": _p(
         FEASTING_VOID, "Feasting Void", armor_per_hit=0.17,
         damage_per_hit=1.5, damage_cap=90.0, idle_reset=3.0),
@@ -354,20 +415,49 @@ ABILITIES = {
     "primal_lesser_beastmaster": _p(
         BLOODTHIRST, "Bloodthirst", additional_targets=1,
         multishot_cells=cells(400), mana_per_target=5.0,
-        beast_cells=cells(700), beast_damage=240, stun_seconds=0.5,
+        beast_scene_path=BEAST, beast_cells=cells(700), beast_speed=BEAST_SPEED,
+        beast_radius=BEAST_RADIUS, beast_damage=240, stun_seconds=0.5,
         stun_cooldown=8.0),
     "primal_greater_beastmaster": _p(
         BLOODTHIRST, "Bloodthirst", additional_targets=1,
         multishot_cells=cells(400), mana_per_target=5.0,
-        beast_cells=cells(700), beast_damage=570, stun_seconds=0.7,
+        beast_scene_path=BEAST, beast_cells=cells(700), beast_speed=BEAST_SPEED,
+        beast_radius=BEAST_RADIUS, beast_damage=570, stun_seconds=0.7,
         stun_cooldown=8.0),
     "primal_ultimate_beastmaster": _p(
         BLOODTHIRST, "Stampede", additional_targets=1,
         multishot_cells=cells(500), mana_per_target=5.0,
-        beast_cells=cells(1200), beast_damage=1865, stun_seconds=1.2,
+        beast_scene_path=BEAST, beast_cells=cells(1200), beast_speed=BEAST_SPEED,
+        beast_radius=BEAST_RADIUS, beast_damage=1865, stun_seconds=1.2,
         stun_cooldown=8.0, range_bonus_per_cell=0.128, max_range_bonus=1.0),
 }
 
 # What each tower's ability .tres is called on disk.
 def ability_path(key):
     return "res://Resources/Abilities/Towers/%s_ability.tres" % key
+
+
+# And its SECOND one, where it has one. A different stem rather than a suffix
+# on the same name, so the two never sort next to each other and get mistaken
+# for one file and its backup.
+def extra_ability_path(key):
+    return "res://Resources/Abilities/Towers/%s_second_ability.tres" % key
+
+
+# --- the second ability ------------------------------------------------------
+#
+# ONE tower in the roster carries two named abilities, and it is the Ultimate
+# Harbinger. Its rift is paid for with mana and its spread runs on a clock, so
+# they cannot share a square: a repeating wait is something a player plans
+# around, and the only place the game can show a wait is a slot of its own.
+#
+# A separate table rather than a second entry in ABILITIES, because that one is
+# keyed by tower and being one-row-per-tower is what makes it checkable against
+# unit_data.md paragraph by paragraph. This is the exception, written where it
+# can be seen to be one.
+EXTRA_ABILITIES = {
+    "void_ultimate_harbinger": _p(
+        VOID_CONVERSION, "Void Conversion", period_seconds=60.0,
+        reach_cells=cells(500), becomes_type_id=ULTIMATE_HARBINGER,
+        converts_type_ids=(GREATER_HARBINGER,)),
+}

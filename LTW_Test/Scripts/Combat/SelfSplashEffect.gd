@@ -42,8 +42,10 @@ func apply(hit: AttackHit, target: Unit, _impact_point: Vector3) -> void:
 		if creep == target:
 			continue
 		# Always area damage, whatever hit.is_aoe says - covering ground is
-		# what this is, however the tower that threw it is set up.
-		creep.take_damage(hit.damage, hit.damage_type, true)
+		# what this is, however the tower that threw it is set up. Through the
+		# hit, so a kill by the blast counts as this tower's; see
+		# AttackHit.splash_onto.
+		hit.splash_onto(creep, hit.damage, hit.damage_type)
 
 
 func effect_name() -> String:

@@ -3,14 +3,9 @@
 [ext_resource type="Script" path="res://Scripts/Game/PlayerArea.gd" id="1_player_area"]
 [ext_resource type="Script" path="res://Scripts/Game/BuildGrid.gd" id="2_build_grid"]
 [ext_resource type="Material" path="res://Resources/Materials/build_grid_material.tres" id="3_grid_material"]
-[ext_resource type="PackedScene" path="res://Scenes/Units/send_building.tscn" id="4_send_building"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_send"]
-albedo_color = Color(0.3, 0.28, 0.34, 1)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_send"]
-material = SubResource("StandardMaterial3D_send")
-size = Vector2(8, 3)
+[ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier1.tscn" id="4_send_t1"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier2.tscn" id="5_send_t2"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier3.tscn" id="6_send_t3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spawn"]
 albedo_color = Color(0.46, 0.26, 0.26, 1)
@@ -36,19 +31,14 @@ size = Vector2(8, 1)
 [sub_resource type="PlaneMesh" id="PlaneMesh_grid"]
 size = Vector2(8, 30)
 
-[node name="PlayerArea" type="Node3D" node_paths=PackedStringArray("_send_zone", "_spawn_zone", "_build_zone", "_end_zone", "_build_grid", "_send_building", "_creeps_root")]
+[node name="PlayerArea" type="Node3D" node_paths=PackedStringArray("_spawn_zone", "_build_zone", "_end_zone", "_build_grid", "_send_buildings", "_creeps_root")]
 script = ExtResource("1_player_area")
-_send_zone = NodePath("SendZone")
 _spawn_zone = NodePath("SpawnZone")
 _build_zone = NodePath("BuildZone")
 _end_zone = NodePath("EndZone")
 _build_grid = NodePath("BuildGrid")
-_send_building = NodePath("SendBuilding")
+_send_buildings = [NodePath("SendBuildingT1"), NodePath("SendBuildingT2"), NodePath("SendBuildingT3")]
 _creeps_root = NodePath("Creeps")
-
-[node name="SendZone" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -1.5)
-mesh = SubResource("PlaneMesh_send")
 
 [node name="SpawnZone" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 1.5)
@@ -70,7 +60,10 @@ material_override = ExtResource("3_grid_material")
 script = ExtResource("2_build_grid")
 _grid_material = ExtResource("3_grid_material")
 
-[node name="SendBuilding" parent="." instance=ExtResource("4_send_building")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -1.5)
+[node name="SendBuildingT1" parent="." instance=ExtResource("4_send_t1")]
+
+[node name="SendBuildingT2" parent="." instance=ExtResource("5_send_t2")]
+
+[node name="SendBuildingT3" parent="." instance=ExtResource("6_send_t3")]
 
 [node name="Creeps" type="Node3D" parent="."]

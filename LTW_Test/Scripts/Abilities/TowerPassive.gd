@@ -64,7 +64,7 @@ func execute(_unit: Unit, _target: AbilityTarget) -> void:
 ## the passive - so two passives that both regenerate simply add up and neither
 ## has to know about the other.
 ##
-## NEGATIVE drains, which is what the Doom Guard line's decaying mana is.
+## NEGATIVE drains, which is what the Moonbeam line's decaying mana is.
 func mana_per_second(_tower: Building) -> float:
 	return 0.0
 
@@ -122,6 +122,25 @@ func extra_target_range(_tower: Building) -> float:
 	return 0.0
 
 
+## How many creeps a PIERCING shot from this tower may go through in total, or
+## 0 for no opinion - which is a shot that pierces until it runs out of
+## distance. The largest answer among the tower's passives wins.
+##
+## Asked of the ability rather than of the tower, unlike every hook above,
+## because a piercing shot is already in the air when this is read and its
+## tower may have been sold since. Neither this nor the ramp depends on
+## anything the tower is doing, so neither needs it. See PiercingProjectile.
+func pierce_targets() -> int:
+	return 0
+
+
+## Extra damage each creep behind the first one takes, as a share per body the
+## shot has already gone through. 0 is a flat lance that deals the same to
+## everything it passes.
+func pierce_ramp() -> float:
+	return 0.0
+
+
 ## Runs once per creep actually struck, after that creep has taken the damage.
 ##
 ## `dealt` is what the hit cost the creep AFTER the whole pipeline, which is
@@ -144,6 +163,18 @@ func permanent_bonus(_tower: Building) -> int:
 	return 0
 
 
+## The SECOND RESOURCE this passive gives the tower, or null for one that gives
+## it none - which is nearly all of them.
+##
+## game_rules.md says a tower's second bar is "the thing besides health that
+## decides what this tower is worth right now", and that it is usually mana and
+## not always. This is the not-always: a passive that BANKS something answers
+## with a count of it, and the panel and the worldspace bar draw that instead
+## of a mana bar the tower was never going to spend. See TowerResource.
+func tower_resource(_tower: Building) -> TowerResource:
+	return null
+
+
 ## One line describing what this passive does, built from its OWN numbers, so
 ## nothing can quote a figure the passive does not use. Same contract
 ## CreepPassive.effect_text() has.
@@ -160,8 +191,9 @@ func passive_text() -> String:
 
 ## The generated line replaces the authored description, one number in one
 ## place, exactly as it does for a creep passive.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
 	data.description = passive_text()
 	return data
 
@@ -171,13 +203,39 @@ func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
 ## Whether this tower's aura is due to be re-read, counting the time towards it
 ## along the way. `key` is what it counts under, so a tower carrying two auras
 ## keeps two clocks.
-static func aura_due(tower: Building, key: String, delta: float) -> bool:
+static func aura_due(tower: Building, key: String, delta: float,
+		interval: float = AURA_REFRESH_SECONDS) -> bool:
 	var left: float = float(tower.ability_state.get(key, 0.0)) - delta
 	if left > 0.0:
 		tower.ability_state[key] = left
 		return false
-	tower.ability_state[key] = AURA_REFRESH_SECONDS
+	tower.ability_state[key] = maxf(0.01, interval)
 	return true
+
+
+## The beat a STACKING aura runs on, from GameConfig.
+##
+## It has to be the same number as the stack interval: one touch adds one
+## stack, so how often a tower touches IS how fast its aura grips. Beating
+## faster than the interval would make a single tower climb as quickly as two.
+static func aura_stack_interval() -> float:
+	var config: GameConfig = References.game_config
+	return 0.5 if config == null else maxf(0.05, config.aura_stack_seconds)
+
+
+## Reaches one creep with a stacking aura for one beat, and answers the share
+## of full strength the caller should be applying right now.
+##
+## Every stacking aura in the roster goes through here, which is what makes
+## them one mechanic rather than three that happen to look alike. The KEY is
+## the ability's own resource path, so two towers running the same aura feed
+## one grip on the creep and two different auras never interfere.
+##
+## The window every effect is applied for is AURA_HOLD_SECONDS, comfortably
+## longer than the beat, so a creep standing still never flickers between
+## beats - see the note on that constant.
+static func grip_aura(passive: TowerPassive, creep: Creep) -> float:
+	return creep.status().touch_aura(passive)
 
 
 ## The status effects on a struck unit, or null when it is not a creep at all.

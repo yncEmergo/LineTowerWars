@@ -1,7 +1,7 @@
 class_name BlazingInfernoPassive
 extends TowerPassive
 
-## Fire 1, Lesser and Greater Doom Guard: the tower that is at its strongest
+## Fire 1, Lesser and Greater Moonbeam: the tower that is at its strongest
 ## the moment it is built and is worth less every second afterwards.
 ##
 ## unit_data.md 4.3: it starts at full mana, loses a fixed share of it per
@@ -10,7 +10,7 @@ extends TowerPassive
 ##
 ## The decay is the whole design, so it is a NEGATIVE mana_per_second rather
 ## than a countdown of its own - Building.gain_mana already clamps at zero, and
-## nothing anywhere refills a Doom Guard.
+## nothing anywhere refills a Moonbeam.
 
 @export_group("Blazing Inferno")
 ## Share of MAXIMUM mana lost per second. 0.0083 is the 0.83%/sec of the

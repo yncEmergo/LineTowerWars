@@ -26,9 +26,6 @@ extends Resource
 @export var spawn_depth_cells: int = 3
 @export var build_depth_cells: int = 30
 @export var end_depth_cells: int = 1
-## Strip above the walkable area that the send building stands on. Outside the
-## walkable space and outside the grid, so nothing ever paths through it.
-@export var send_zone_depth_cells: float = 3.0
 ## Empty space between neighbouring player areas along x.
 @export var area_gap_cells: float = 4.0
 
@@ -40,13 +37,30 @@ extends Resource
 @export var area_columns: int = 6
 @export var area_rows: int = 2
 ## Empty space between one row of areas and the next along z, measured from the
-## end zone of the row above to the send strip of the row below.
+## end zone of the row above to the creep spawn of the row below.
 @export var area_row_gap_cells: float = 6.0
 
 @export_group("Creeps")
 ## Creeps appear within this many cells of the very top of the spawn zone, at a
 ## random x across the full width. See game_rules.md.
 @export var creep_spawn_margin_cells: float = 1.5
+## Ceiling on the crowding push an ordinary creep takes from the ones around
+## it, as a share of its own speed. Below 1 so a push can never cancel forward
+## movement: an uncapped sum over a dense clump shoved creeps a cell a frame
+## into the walls.
+##
+## ZERO, and that is a rule rather than a value nobody got round to setting:
+## the roster is sent in packs and one lane holds a hundred of them, so
+## ordinary creeps walk through their own kind. Shoving a hundred bodies apart
+## pairwise was the second most expensive loop in the whole tick and invisible
+## under that many creeps anyway. Anything above zero switches it back on for
+## them, at that price. See game_rules.md.
+@export var creep_separation_limit: float = 0.0
+## The same ceiling for an ATTACKER creep, which is the one kind that still
+## crowds. There are few of them, they are commanded one at a time, and a stack
+## of them standing inside each other on one tower is something their owner
+## would be looking straight at.
+@export var attacker_separation_limit: float = 0.6
 ## Radius of EVERY creep aura, in player cells. One value for the whole game
 ## rather than a per creep one, so an aura is the same size whichever creep
 ## brings it and a player only ever has to learn the shape once. Auras also do
@@ -69,13 +83,6 @@ extends Resource
 @export var multishot_reach_cells: float = 3.0
 
 @export_group("Buildings")
-## Send buildings a player's strip has room for, filled left to right.
-##
-## Four because the source game gives each creep TIER its own send building,
-## and twelve creeps is exactly one 4 x 3 command card. Only the first of them
-## exists so far; the number is here now so the one that does stands where it
-## will still stand once the other three are built. See unit_data.md 6.1.
-@export var send_building_slots: int = 4
 ## Seconds a building takes to go up, and the same figure an UPGRADE takes.
 ##
 ## One value for every tower at every tier, which is what unit_data.md 1.4
@@ -103,13 +110,72 @@ extends Resource
 ## what stops an attacker's work being undone the instant it finishes.
 ## unit_data.md 1.5.
 @export var rubble_seconds: float = 7.0
+## Share of its maximum health a standing building regenerates per second.
+##
+## One figure for every building at every tier, on the same terms as
+## build_seconds: unit_data.md 1.4 states it once for the whole tower roster,
+## so restating it on every stats file would only be a hundred places to edit
+## it. Towers are the only buildings anything can damage, so in practice this
+## IS the tower rule - it simply costs nothing to let it read as the rule for
+## a building.
+##
+## A SHARE rather than points per second, so one figure keeps meaning the same
+## thing across a roster whose health spans two orders of magnitude.
+@export_range(0.0, 1.0, 0.001) var building_health_regen_ratio: float = 0.015
 
 @export_group("Combat")
+## How many ticks a unit waits before searching for a target AGAIN after a
+## search that found nothing. 1 is every tick, which is what this used to be.
+##
+## It exists because of what most of a full maze is doing at any moment: a
+## tower with nothing in range never fires, so its cooldown never starts, and
+## the "only search when the cooldown is ready" throttle never applies to it.
+## It searched the whole lane every tick for the whole match and found nothing
+## every time, which was the largest single cost in a loaded tick.
+##
+## The price is reaction time: a creep walking into range is noticed up to this
+## many ticks late. Read it against physics_ticks_per_second in project.godot
+## for what that is in seconds. A tower that HAS a target, or is on cooldown,
+## is not affected at all - this only ever delays a search that was going to
+## come back empty.
+@export var idle_target_scan_ticks: int = 4
 ## How near the primary target a creep has to be to be picked up by multishot,
 ## in player cells. One value for the whole game rather than a per tower one,
 ## so "next to the target" means the same everywhere. See game_rules.md.
 ## NOT BUILT: multishot itself does not exist yet.
 @export var multishot_range_cells: float = 1.5
+
+@export_group("Auras")
+## A TOWER AURA DOES NOT LAND AT FULL STRENGTH. It builds on a creep in equal
+## steps and drains off again once the creep is out of it, so walking through
+## the edge of one is worth a fraction of standing in the middle of it.
+##
+## The numbers are here rather than on each aura because they are the SHAPE of
+## the mechanic rather than the strength of any one tower: what an aura does is
+## its own business, how fast it grips is the game's.
+##
+## Shared by every stacking aura in the roster, which is what makes them read
+## as one mechanic a player learns once instead of three that happen to be
+## similar.
+##
+## How many steps a creep can hold. Each is worth an equal share of the aura's
+## full strength, so five stacks is 20% per stack.
+@export var aura_max_stacks: int = 5
+## Seconds between one tower adding a stack and it being able to add another.
+##
+## PER TOWER, deliberately: a creep standing in two of the same aura gains two
+## stacks in that time and reaches full strength twice as fast. Massing the
+## same support tower is meant to be worth something.
+@export var aura_stack_seconds: float = 0.5
+## How long a creep must go untouched by an aura before it starts losing
+## stacks. What makes the grip LINGER: crossing a gap between two auras, or
+## briefly outrunning one, does not send the creep back to nothing.
+##
+## A creep sitting at full stacks still counts as touched, so an aura that can
+## give it nothing more is still holding on to it.
+@export var aura_idle_seconds: float = 1.0
+## Seconds per stack lost once that idle window has passed.
+@export var aura_decay_seconds: float = 0.5
 
 @export_group("Economy")
 ## Gold every player starts with, see game_rules.md.
@@ -179,21 +245,9 @@ func area_stride_x() -> float:
 	return area_width() + area_gap_cells * cell_size
 
 
-## Distance from one row's area origin to the next row's. Counts the send strip
-## too, since that hangs above the origin rather than below it, so the gap
-## really is empty ground.
+## Distance from one row's area origin to the next row's.
 func area_stride_z() -> float:
-	return send_zone_depth() + area_depth() + area_row_gap_cells * cell_size
-
-
-func send_zone_depth() -> float:
-	return send_zone_depth_cells * cell_size
-
-
-## The send strip sits above the area, so its z values are negative. The area's
-## own origin stays at the top of the walkable space.
-func send_zone_start_z() -> float:
-	return -send_zone_depth()
+	return area_depth() + area_row_gap_cells * cell_size
 
 
 func build_zone_start_z() -> float:
@@ -236,15 +290,15 @@ func map_slot_count() -> int:
 	return maxi(0, area_columns) * maxi(0, area_rows)
 
 
-## The whole map as an xz rectangle, from the top of the first row's send strip
-## to the bottom of the last row's end zone.
+## The whole map as an xz rectangle, from the top of the first row's creep
+## spawn to the bottom of the last row's end zone.
 ##
 ## Always the FULL grid of slots, whatever the player count: the map is the
 ## same size in a 1v1 as in a full house and the unused lanes are simply black.
 ## Both the camera's panning bounds and the minimap's frame come from here, so
 ## the two can never disagree about how big the world is.
 func map_bounds() -> Rect2:
-	var top: float = send_zone_start_z()
+	var top: float = 0.0
 	var bottom: float = float(maxi(1, area_rows) - 1) * area_stride_z() + area_depth()
 	var width: float = float(maxi(1, area_columns) - 1) * area_stride_x() + area_width()
 	return Rect2(0.0, top, width, bottom - top)

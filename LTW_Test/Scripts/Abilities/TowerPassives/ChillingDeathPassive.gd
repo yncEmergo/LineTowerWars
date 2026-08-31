@@ -54,12 +54,20 @@ const AURA_KEY: String = "chilling_death_aura"
 ##
 ## It is applied for longer than the gap between refreshes, so a creep standing
 ## in it never flickers; one walking out keeps it for the rest of the window.
+## The aura that blunts what the creeps around it hit for. It BUILDS rather
+## than landing whole - see GameConfig's aura section - so its beat is the
+## stacking interval and its strength is scaled by the grip on each creep.
 func on_tick(tower: Building, delta: float) -> void:
-	if !aura_due(tower, AURA_KEY, delta) || !tower.can_attack() || tower.area == null:
+	if aura_cells <= 0.0 || !tower.can_attack() || tower.area == null:
 		return
+	if !aura_due(tower, AURA_KEY, delta, aura_stack_interval()):
+		return
+
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
-		creep.status().weaken_attack(attack_slow, 0.0, AURA_HOLD_SECONDS)
+		var share: float = grip_aura(self, creep)
+		if share > 0.0:
+			creep.status().weaken_attack(self, attack_slow * share, 0.0, AURA_HOLD_SECONDS)
 
 
 func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
@@ -67,7 +75,7 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 	if status == null:
 		return
 
-	status.chill(chill_source, slow_per_hit, slow_cap, slow_seconds)
+	status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
 	if status.chill_amount(chill_source) < slow_cap || status.is_immune(FROSTBITE_KEY):
 		return
 
@@ -79,7 +87,8 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 func effect_text() -> String:
 	return ("Each hit slows by %s%% up to %s%% for %ss. A target at full chill"
 		+ " is Frostbitten for %s%% of its maximum health as Spell Damage,"
-		+ " once every %ss. Creeps within %s cells attack %s%% slower.") % [
+		+ " once every %ss. Creeps within %s cells attack up to %s%% slower,"
+		+ " building up the longer they stay in range.") % [
 		StringUtil.trim_number(slow_per_hit * 100.0),
 		StringUtil.trim_number(slow_cap * 100.0),
 		StringUtil.trim_number(slow_seconds),
@@ -88,3 +97,9 @@ func effect_text() -> String:
 		StringUtil.trim_number(aura_cells),
 		StringUtil.trim_number(attack_slow * 100.0),
 	]
+
+
+## The attack-speed aura, which is the reason an Ultimate Lich is placed where
+## the creeps walk rather than where it can shoot furthest.
+func display_radius(_unit: Unit) -> float:
+	return aura_cells

@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lightning_power_generator_stats.tres" id="3_lightning_power_generator_stats"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lightning_power_generator_model.tscn" id="4_lightning_power_generator_model"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="5_selection_ring"]
+[ext_resource type="Script" path="res://Scripts/Components/SparkAnimation3D.gd" id="6_SparkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
 inner_radius = 0.40
@@ -18,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_lightning_power_generator_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.738
+health_bar_height = 0.742
 select_radius = 0.5
-select_height = 0.206
+select_height = 0.208
 
 [node name="Visual" parent="." instance=ExtResource("4_lightning_power_generator_model")]
 
@@ -35,3 +36,8 @@ script = ExtResource("2_AttackComponent")
 _unit = NodePath("..")
 _muzzle = NodePath("../Visual/Turret/Muzzle")
 _turret_head = NodePath("../Visual/Turret")
+
+[node name="Sparks" type="Node" parent="." node_paths=PackedStringArray("_unit", "_sparks")]
+script = ExtResource("6_SparkAnimation3D")
+_unit = NodePath("..")
+_sparks = NodePath("../Visual/Turret/Sparks")

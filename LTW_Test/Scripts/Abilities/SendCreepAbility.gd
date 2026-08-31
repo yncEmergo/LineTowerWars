@@ -72,11 +72,24 @@ func charge_progress(unit: Unit) -> float:
 	return stock.regen_progress()
 
 
+## Seconds until this creep's start delay is served, so a slot the player
+## cannot press yet says how long rather than only that it is greyed out.
+##
+## Read off the BUILDING, which is the authority on both the match clock and
+## the cheat that waives the wait - the ability itself is shared by everyone
+## and could not tell one player's wait from another's.
+func lockout_seconds(unit: Unit) -> float:
+	if unit == null || creep_stats == null || !unit.has_method("unlock_remaining"):
+		return -1.0
+	return unit.unlock_remaining(creep_stats)
+
+
 ## Describes the creep, not the send. Name, price, income and stats all come
 ## off the creep's own stats file, so the card can never quote a number the
 ## send does not actually charge or spawn.
-func tooltip_data(hotkey_label: String = "") -> AbilityTooltipData:
-	var data: AbilityTooltipData = super(hotkey_label)
+func tooltip_data(hotkey_label: String = "",
+		unit: Unit = null) -> AbilityTooltipData:
+	var data: AbilityTooltipData = super(hotkey_label, unit)
 	var info: CreepStats = creep_stats
 	if info == null:
 		return data

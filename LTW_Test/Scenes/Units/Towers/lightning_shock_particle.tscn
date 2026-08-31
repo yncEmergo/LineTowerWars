@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://Resources/UnitStats/Towers/lightning_shock_particle_stats.tres" id="3_lightning_shock_particle_stats"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/lightning_shock_particle_model.tscn" id="4_lightning_shock_particle_model"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="5_selection_ring"]
+[ext_resource type="Script" path="res://Scripts/Components/SparkAnimation3D.gd" id="6_SparkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
 inner_radius = 0.40
@@ -35,3 +36,8 @@ script = ExtResource("2_AttackComponent")
 _unit = NodePath("..")
 _muzzle = NodePath("../Visual/Turret/Muzzle")
 _turret_head = NodePath("../Visual/Turret")
+
+[node name="Sparks" type="Node" parent="." node_paths=PackedStringArray("_unit", "_sparks")]
+script = ExtResource("6_SparkAnimation3D")
+_unit = NodePath("..")
+_sparks = NodePath("../Visual/Turret/Sparks")

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/fire_ultimate_moonbeam_stats.tres" id="2_fire_ultimate_moonbeam_stats"]
+
+[resource]
+script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 212
+tower_stats = ExtResource("2_fire_ultimate_moonbeam_stats")
+required_tech_id = 2
+display_name = "Upgrade to Ultimate Moonbeam"
+description = "Calls meteors down out of the sky, leaving the ground burning where they land. Built at full mana and strongest the moment it is placed, weakening every second afterwards. Cannot hit air."
+targeting = 1
+slot = 0

@@ -26,6 +26,12 @@ const FILE_PATH: String = "user://settings.cfg"
 const SECTION_VIDEO: String = "video"
 const SECTION_AUDIO: String = "audio"
 const SECTION_GAMEPLAY: String = "gameplay"
+const SECTION_HOTKEYS: String = "hotkeys"
+
+## The one key in the hotkeys section that is NOT a binding, so reading the
+## bindings back can skip it rather than inventing an action called
+## "keyboard_layout".
+const KEYBOARD_LAYOUT_KEY: String = "keyboard_layout"
 
 ## Settings-file key per channel, in AudioChannel order. Spelled out rather than
 ## derived from the enum name so renaming a channel never orphans what a player
@@ -42,6 +48,11 @@ const AUDIO_NAMES: Array[String] = [
 
 const DEFAULT_VOLUME: float = 0.8
 const DEFAULT_AUDIO_MUTED: bool = false
+## Shadows on by default: the game is meant to be looked at, and with the sun's
+## cast distance trimmed to what the camera can actually see they are no longer
+## the several-times-the-scene cost they used to be. This is the escape hatch
+## for a machine that still cannot afford them - see SunLight.
+const DEFAULT_SHADOWS_ENABLED: bool = true
 
 ## How the game window is presented.
 ##
@@ -66,6 +77,22 @@ enum HealthBarDisplay {
 	NEVER = 2,
 }
 
+## Which letters the two grids draw on their bottom row. Pinned for the same
+## reason as the enums above.
+##
+## The rows themselves are authored EUROPEAN on ControlsConfig and this swaps Y
+## and Z out of them, which is the whole difference between the two boards for
+## a game whose keys are letters. Godot reports a keycode that already follows
+## the player's own layout, so the key printed Y answers KEY_Y on either board -
+## what changes is which of the two letters sits where the bottom left of the
+## command card wants it.
+enum KeyboardLayout {
+	## QWERTZ. Y is the bottom left letter key.
+	EUROPEAN = 0,
+	## QWERTY. Z is.
+	AMERICAN = 1,
+}
+
 ## The mixer channels the options screen offers. Pinned for the same reason.
 ##
 ## There is no AudioServer bus behind any of them yet - see set_volume().
@@ -78,15 +105,32 @@ enum AudioChannel {
 	ATMO = 5,
 }
 
+## What each layout is called on screen, in KeyboardLayout order. Here rather
+## than typed into the scene, for the same reason AUDIO_NAMES is.
+const KEYBOARD_LAYOUT_NAMES: Array[String] = ["European", "American"]
+
 const DEFAULT_WINDOW_MODE: WindowMode = WindowMode.WINDOWED
 const DEFAULT_HEALTH_BAR_DISPLAY: HealthBarDisplay = HealthBarDisplay.ALWAYS
+const DEFAULT_KEYBOARD_LAYOUT: KeyboardLayout = KeyboardLayout.EUROPEAN
 
 static var window_mode: WindowMode = DEFAULT_WINDOW_MODE
+static var shadows_enabled: bool = DEFAULT_SHADOWS_ENABLED
 static var health_bar_display: HealthBarDisplay = DEFAULT_HEALTH_BAR_DISPLAY
 static var audio_muted: bool = DEFAULT_AUDIO_MUTED
+static var keyboard_layout: KeyboardLayout = DEFAULT_KEYBOARD_LAYOUT
 
 ## Linear 0-1 per channel, indexed by AudioChannel. Read through volume().
 static var _volumes: PackedFloat32Array = PackedFloat32Array()
+
+## What the player bound each rebindable action to, by HotkeyAction.action_id.
+##
+## An action is in here ONLY once the player has touched it, which is what
+## separates the two answers that look alike: no entry means "whatever the
+## action was authored with", while an entry holding an empty string means the
+## player deliberately took its key away. Read through hotkey_override(), which
+## keeps that distinction, and reset by REMOVING the entry rather than by
+## writing the default into it.
+static var _hotkeys: Dictionary = {}
 
 
 ## Runs the first time anything touches this class, which is early enough that
@@ -116,12 +160,35 @@ static func load_from_disk() -> void:
 		DEFAULT_WINDOW_MODE, WindowMode.size()) as WindowMode
 	health_bar_display = _read_enum(file, SECTION_GAMEPLAY, "health_bar_display",
 		DEFAULT_HEALTH_BAR_DISPLAY, HealthBarDisplay.size()) as HealthBarDisplay
+	shadows_enabled = bool(file.get_value(SECTION_VIDEO, "shadows",
+		DEFAULT_SHADOWS_ENABLED))
 	audio_muted = bool(file.get_value(SECTION_AUDIO, "muted", DEFAULT_AUDIO_MUTED))
 
 	for channel: int in range(AUDIO_KEYS.size()):
 		var raw: float = float(file.get_value(SECTION_AUDIO, AUDIO_KEYS[channel],
 			DEFAULT_VOLUME))
 		_volumes[channel] = clampf(raw, 0.0, 1.0)
+
+	keyboard_layout = _read_enum(file, SECTION_HOTKEYS, KEYBOARD_LAYOUT_KEY,
+		DEFAULT_KEYBOARD_LAYOUT, KeyboardLayout.size()) as KeyboardLayout
+	_read_hotkeys(file)
+
+
+## Every binding in the file, whatever this build happens to contain.
+##
+## Deliberately not filtered against the actions that exist: an id the game no
+## longer carries costs one dictionary entry nobody reads, while dropping it
+## would throw a player's binding away the moment a build they are testing is
+## missing a .tres. It goes back out on the next save exactly as it came in.
+static func _read_hotkeys(file: ConfigFile) -> void:
+	_hotkeys.clear()
+	if !file.has_section(SECTION_HOTKEYS):
+		return
+
+	for action_id: String in file.get_section_keys(SECTION_HOTKEYS):
+		if action_id == KEYBOARD_LAYOUT_KEY:
+			continue
+		_hotkeys[action_id] = str(file.get_value(SECTION_HOTKEYS, action_id, ""))
 
 
 ## Writes every value out. Called by each setter rather than by a save button:
@@ -130,10 +197,14 @@ static func load_from_disk() -> void:
 static func save_to_disk() -> void:
 	var file: ConfigFile = ConfigFile.new()
 	file.set_value(SECTION_VIDEO, "window_mode", int(window_mode))
+	file.set_value(SECTION_VIDEO, "shadows", shadows_enabled)
 	file.set_value(SECTION_GAMEPLAY, "health_bar_display", int(health_bar_display))
 	file.set_value(SECTION_AUDIO, "muted", audio_muted)
 	for channel: int in range(AUDIO_KEYS.size()):
 		file.set_value(SECTION_AUDIO, AUDIO_KEYS[channel], _volumes[channel])
+	file.set_value(SECTION_HOTKEYS, KEYBOARD_LAYOUT_KEY, int(keyboard_layout))
+	for action_id: String in _hotkeys:
+		file.set_value(SECTION_HOTKEYS, action_id, str(_hotkeys[action_id]))
 
 	var result: Error = file.save(FILE_PATH)
 	if result != OK:
@@ -171,6 +242,16 @@ static func set_window_mode(mode: WindowMode) -> void:
 		return
 	window_mode = mode
 	apply_window_mode()
+	save_to_disk()
+
+
+## The sun already standing in a match is refreshed by the CALLER, for the same
+## reason the health bars are: this class holds no tree and has never heard of a
+## light. OptionsMenu does that part, through SunLight.GROUP.
+static func set_shadows_enabled(value: bool) -> void:
+	if value == shadows_enabled:
+		return
+	shadows_enabled = value
 	save_to_disk()
 
 
@@ -214,6 +295,72 @@ static func set_audio_muted(value: bool) -> void:
 	if value == audio_muted:
 		return
 	audio_muted = value
+	save_to_disk()
+
+
+## Which board the two grids read their bottom row off. Live only in the sense
+## that ControlsConfig asks every time it looks a letter up, so nothing already
+## drawn has to be told - the next refresh of a card carries the new letters.
+static func set_keyboard_layout(layout: KeyboardLayout) -> void:
+	if layout == keyboard_layout:
+		return
+	keyboard_layout = layout
+	save_to_disk()
+
+
+## What a layout is called on screen.
+static func keyboard_layout_name(layout: KeyboardLayout) -> String:
+	var index: int = int(layout)
+	if index < 0 || index >= KEYBOARD_LAYOUT_NAMES.size():
+		return "Layout %d" % index
+	return KEYBOARD_LAYOUT_NAMES[index]
+
+
+## Whether the player has bound this action themselves. False leaves the
+## action's own authored default standing - see HotkeyAction.current_key().
+static func has_hotkey_override(action_id: String) -> bool:
+	return !action_id.is_empty() && _hotkeys.has(action_id)
+
+
+## What the player bound an action to, or empty for one they cleared. Ask
+## has_hotkey_override() first: empty is also what an untouched action answers
+## here, and the two mean opposite things.
+static func hotkey_override(action_id: String) -> String:
+	if !_hotkeys.has(action_id):
+		return ""
+	return str(_hotkeys[action_id])
+
+
+## Binds an action, or - with an empty key - takes its key away entirely.
+##
+## Whether the key is one the game can ACCEPT is not decided here. This class
+## holds no grid and has never heard of a command card; ControlsConfig owns that
+## question and the options screen asks it before anything reaches this far.
+static func set_hotkey_override(action_id: String, key: String) -> void:
+	if action_id.is_empty():
+		Log.err("UserSettings was told to bind an action with no id")
+		return
+	if _hotkeys.has(action_id) && str(_hotkeys[action_id]) == key:
+		return
+	_hotkeys[action_id] = key
+	save_to_disk()
+
+
+## Puts an action back on its authored default by FORGETTING the player's
+## choice, which is not the same as binding that default explicitly: the day the
+## default moves, a forgotten action follows it and a re-bound one does not.
+static func clear_hotkey_override(action_id: String) -> void:
+	if !_hotkeys.has(action_id):
+		return
+	_hotkeys.erase(action_id)
+	save_to_disk()
+
+
+## The same for every action at once, for the options screen's reset.
+static func clear_all_hotkey_overrides() -> void:
+	if _hotkeys.is_empty():
+		return
+	_hotkeys.clear()
 	save_to_disk()
 
 

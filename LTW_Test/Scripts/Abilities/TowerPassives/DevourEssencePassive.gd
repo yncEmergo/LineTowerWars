@@ -10,7 +10,15 @@ extends TowerPassive
 ## feeds the one next to it rather than wasting kills.
 ##
 ## The bonus is PER TOWER and permanent, so it lives in Building.ability_state
-## and rides across an upgrade with everything else there.
+## and rides across an upgrade with everything else there. What is carried is
+## the DAMAGE, never a stack count: a Lesser tower's fifty kills are worth +100,
+## and the Greater tower it becomes still holds +100 even though its own kills
+## are worth three apiece. So the stacks a card shows are read BACK out of the
+## damage rather than counted alongside it, and the two can never disagree.
+##
+## That count is also the tower's SECOND RESOURCE - see tower_resource(). The
+## Alchemist spends no mana on anything, so the bar under its health is free to
+## say the one number that decides what it is worth.
 ##
 ## The Ultimate also alters the ARMOUR TYPE of what it hits, to a type the
 ## player picks off the command card - see ArmorTypeChoiceAbility, which is the
@@ -34,8 +42,30 @@ const BONUS_KEY: String = "devoured_damage"
 @export var armor_type_seconds: float = 0.0
 
 
+## What this tower has eaten so far.
+##
+## A CLIENT takes the server's word for it rather than reading its own key.
+## The bonus is bought by KILLING, and a kill only ever happens on the
+## authority - a client's copy of this tower would sit at zero all match, with
+## its damage line and its stack bar both saying so. See
+## Building.replicated_damage_bonus.
 func permanent_bonus(tower: Building) -> int:
+	if !MatchSession.is_authority():
+		return tower.replicated_damage_bonus
 	return int(tower.ability_state.get(BONUS_KEY, 0))
+
+
+## Kills devoured out of the most this tower could ever devour.
+##
+## Derived from the banked damage rather than counted, for the reason in the
+## docstring above: the damage is what survives an upgrade. Both halves are
+## divided by the same per-kill value, so the bar reads the same share of full
+## either side of one.
+func tower_resource(tower: Building) -> TowerResource:
+	if damage_per_kill <= 0:
+		return null
+	return TowerResource.counted(permanent_bonus(tower) / damage_per_kill,
+		damage_cap / damage_per_kill)
 
 
 func bonus_damage(tower: Building, _target: Unit, _rolled: int) -> int:
@@ -55,7 +85,8 @@ func on_hit(tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> vo
 	# A creep may only ever be altered to a given type once, which
 	# StatusEffects enforces - so the answer being refused is normal and not
 	# worth reporting.
-	status.alter_armor_type(ArmorTypeChoiceAbility.chosen_type(tower), armor_type_seconds)
+	status.alter_armor_type(self, ArmorTypeChoiceAbility.chosen_type(tower),
+		armor_type_seconds)
 
 
 ## Adds to what this tower has eaten, and passes the excess on.
@@ -112,3 +143,9 @@ func effect_text() -> String:
 			+ " the type chosen on the command card - once per type per creep.") \
 			% StringUtil.trim_number(armor_type_seconds)
 	return text
+
+
+## How far the overflow reaches for the next Alchemist, which is what decides
+## whether two of them are worth standing together.
+func display_radius(_unit: Unit) -> float:
+	return overflow_cells

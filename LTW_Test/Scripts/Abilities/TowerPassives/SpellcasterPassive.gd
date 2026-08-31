@@ -119,10 +119,10 @@ func _advance_frostfire(tower: Building, delta: float) -> void:
 	var hit_count: int = int(tower.ability_state.get(GROWTH_KEY, 0))
 	tower.ability_state[GROWTH_KEY] = 0
 	var scaled: float = damage_per_second * (1.0 + growth_per_target * float(hit_count))
-	creep.status().burn(scaled, duration_seconds)
+	creep.status().burn(self, scaled, duration_seconds)
 	# Deeper with every tick it burns, which is why the chill is applied at its
 	# full cap in one go rather than per tick: nothing here runs per tick.
-	creep.status().chill(resource_path, slow_cap, slow_cap, duration_seconds)
+	creep.status().chill(self, resource_path, slow_cap, slow_cap, duration_seconds)
 
 
 ## Re-applies the tower's own output to the creep it is attuned to.

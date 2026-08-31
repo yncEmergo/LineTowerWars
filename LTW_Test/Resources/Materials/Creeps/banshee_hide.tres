@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/creep_vapour.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/vapour_color = Color(0.26, 0.13, 0.4, 1)
+shader_parameter/vapour_deep_color = Color(0.14, 0.07, 0.22, 1)
+shader_parameter/rim_color = Color(0.62, 0.34, 0.92, 1)
+shader_parameter/face_alpha = 0.58
+shader_parameter/edge_alpha = 0.92
+shader_parameter/edge_power = 2.2
+shader_parameter/opacity = 0.85
+shader_parameter/band_frequency = 6
+shader_parameter/band_strength = 0.24
+shader_parameter/band_drift = 0.35

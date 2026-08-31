@@ -1,12 +1,23 @@
-[gd_resource type="Resource" script_class="SpellcasterPassive" format=3 uid="uid://bq5duw3fqjwck"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://dpruk1edk4tcd" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
-[ext_resource type="Texture2D" uid="uid://b221kl78kq6ik" path="res://2DArt/Icons/lesser_spellslinger.png" id="2_lesser_spellslinger"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/SpellcasterPassive.gd" id="1_SpellcasterPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_spellslinger.png" id="2_lesser_spellslinger"]
 
 [resource]
 script = ExtResource("1_SpellcasterPassive")
 ability_id = 194
 display_name = "Spellcaster"
-icon = ExtResource("2_lesser_spellslinger")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_lesser_spellslinger")
+regen_per_second = 10
+cast_seconds = 3.34
+cast_cells = 4.69
+damage_per_second = 90
+duration_seconds = 15
+slow_per_tick = 0.08
+slow_cap = 0.4
+growth_per_target = 0.1
+orb_mana_cost = 50
+orb_bonus_damage = 110
+orb_splash_cells = 1.41

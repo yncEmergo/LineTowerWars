@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="BreakPassive" format=3 uid="uid://cb1i2h3ijj5ge"]
+[gd_resource type="Resource" format=3]
 
-[ext_resource type="Script" uid="uid://ptwbo4slab2q" path="res://Scripts/Abilities/TowerPassives/BreakPassive.gd" id="1_BreakPassive"]
-[ext_resource type="Texture2D" uid="uid://dtshlerp8wud3" path="res://2DArt/Icons/coreway.png" id="2_coreway"]
+[ext_resource type="Script" path="res://Scripts/Abilities/TowerPassives/BreakPassive.gd" id="1_BreakPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/coreway.png" id="2_coreway"]
 
 [resource]
 script = ExtResource("1_BreakPassive")
-stun_seconds = 1
 ability_id = 201
 display_name = "Break"
-icon = ExtResource("2_coreway")
 targeting = 0
-slot = 11
+slot = 6
+icon = ExtResource("2_coreway")
+mana_per_attack = 1
+stun_seconds = 1

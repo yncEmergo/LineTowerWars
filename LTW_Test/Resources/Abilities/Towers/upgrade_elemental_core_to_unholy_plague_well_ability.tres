@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3 uid="uid://u4vjhn4yvssn"]
+[gd_resource type="Resource" script_class="UpgradeTowerAbility" format=3]
 
-[ext_resource type="Script" uid="uid://coscxp6mur8bg" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
-[ext_resource type="Resource" uid="uid://c5or0blyf71at" path="res://Resources/UnitStats/Towers/unholy_plague_well_stats.tres" id="2_unholy_plague_well_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UpgradeTowerAbility.gd" id="1_UpgradeTowerAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Towers/unholy_plague_well_stats.tres" id="2_unholy_plague_well_stats"]
 
 [resource]
 script = ExtResource("1_UpgradeTowerAbility")
+ability_id = 248
 tower_stats = ExtResource("2_unholy_plague_well_stats")
 required_tech_id = 4
-ability_id = 248
 display_name = "Morph into Plague Well"
 description = "Corrupts what it hits, so a corrupted creep explodes when it dies. Splits into poison and permanent damage."
-slot = 5
+targeting = 1
+slot = 3
