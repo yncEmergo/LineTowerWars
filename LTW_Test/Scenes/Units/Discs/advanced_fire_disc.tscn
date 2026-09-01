@@ -19,7 +19,7 @@ stats = ExtResource("2_advanced_fire_disc_stats")
 _selection_ring = NodePath("SelectionRing")
 health_bar_height = 0.4
 select_radius = 0.5
-select_height = 0.01
+select_height = 0.016
 
 [node name="Visual" parent="." instance=ExtResource("3_advanced_fire_disc_model")]
 

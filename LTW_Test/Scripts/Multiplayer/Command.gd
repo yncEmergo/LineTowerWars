@@ -45,6 +45,10 @@ enum PlayerAction {
 	UNDO_RESEARCH,
 	## Roll one of the twenty Ultimate towers and buy what it still needs.
 	RANDOM_ULTIMATE,
+	## Take one of the three Ultimates a DRAFT is offering, named by tech_id.
+	## The one order a paused match still accepts, because it is what the
+	## match is paused FOR. See StartingTech.
+	PICK_DRAFT_TECH,
 	## Developer cheat: hand the sender GameConfig.cheat_gold_amount. Refused
 	## outright by an authority whose GameConfig has cheats off, so it is a
 	## real order on the same road rather than a second way into the world.

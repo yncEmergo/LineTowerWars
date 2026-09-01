@@ -16,6 +16,15 @@ clients join, build, send creeps at each other, steal lives and finish with a pl
 The server is the only machine that simulates — clients send orders and draw what comes
 back, so two views cannot disagree.
 
+**The host sets up the match in the lobby**, and everybody in the room watches the rules
+change as they do it. What each player starts with, which creeps are in the game at all,
+whether the lanes are shuffled, and whether players are named or only coloured. A RANKED
+match is played on the standard rules and locks the lot, so two results are comparable. The
+one thing a ranked host still chooses is how the opening technology is dealt: spend the free
+research yourself, take one Ultimate rolled for everybody, or DRAFT — three Ultimates rolled
+for the whole match, the same three offered to every player, with the world held still until
+they have all chosen.
+
 **The Basic tower roster is real.** All three lines, both branches of each, every tier — the
 numbers are copied from Warcraft III Line Tower Wars 12.4a as [unit_data.md](Docs/unit_data.md)
 records them. The builder places only the cheapest tower of a line and everything above it is
@@ -118,9 +127,10 @@ armour, repair rate, mana, damage scaled by how varied the maze around it is, a 
 armour bite added to what nearby towers already do, and the Lightning disc's static, which
 heals a tower off its own damage and throws an attacker's damage back at it. The other two fire
 on the creeps standing on the disc, which is the walkable rule paying for itself. A disc has no
-model: it is painted onto the floor, its ground pattern is deliberately not a tower's, and its
-element is the colour and side count of the middle while its tier is how far that colour
-reaches. Two of the three disc tiers ask for technology as a COUNT rather than a named one —
+model: it is drawn as three flat layers — the same square foundation a tower claims its square
+with, a round worked plate set into it that says the building is a disc, and a coloured circle
+in the middle whose colour is the element and whose size is the tier. Round on square is the
+whole trick, and an upgrade grows only the circle. Two of the three disc tiers ask for technology as a COUNT rather than a named one —
 two of an element's three, then all three — which is the only place in the game that does.
 
 Making that work meant building four things the game did not have: **status effects** on creeps

@@ -54,6 +54,11 @@ signal stock_changed()
 
 ## One reserve per creep type, keyed by that type's stats resource.
 var _stocks: Dictionary = {}
+## The card this sender really shows, once the creeps this match left out have
+## been taken off it. Built once - the settings cannot change mid match - and
+## null until then. See current_abilities().
+var _allowed_abilities: Array = []
+var _card_filtered: bool = false
 
 
 func _ready() -> void:
@@ -90,6 +95,36 @@ func target_area() -> PlayerArea:
 	if destination == null:
 		return area
 	return destination
+
+
+## The card, minus every creep this match was set up without.
+##
+## THE ONLY PLACE the creep set is enforced, and that is on purpose: the card
+## is what a player presses and it is also what the server checks an order
+## against (CommandService._is_on_card), so a creep that is not on it can
+## neither be clicked nor ordered by a client that tried anyway. There is no
+## second refusal in send_creeps to keep in step with this one.
+##
+## The square a removed creep sat in is left EMPTY rather than closed up:
+## every ability authors its own slot, so the rest of the card stays exactly
+## where a player learned it.
+##
+## Built once and kept. The settings are fixed for the whole match, and this is
+## asked several times a frame by the card that draws it.
+func current_abilities() -> Array:
+	var entries: Array = super()
+	if _card_filtered:
+		return _allowed_abilities
+
+	var settings: MatchSettings = MatchSession.match_settings()
+	_allowed_abilities = []
+	for entry in entries:
+		var send: SendCreepAbility = entry as SendCreepAbility
+		if send != null && !settings.allows_creep(send.creep_stats):
+			continue
+		_allowed_abilities.append(entry)
+	_card_filtered = true
+	return _allowed_abilities
 
 
 func is_structure() -> bool:

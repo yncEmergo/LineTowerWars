@@ -930,6 +930,59 @@ the first thing to delete once a colour rides on `MatchPlayer`. Consequences wor
 - The palette is content, so it belongs in a config `.tres`, not in a script.
 - Somebody joining needs a free colour by default, or they sit colourless until they pick.
 
+### 8.2 Match settings
+
+**Built.** The host chooses the rules of a match in the lobby, before anybody loads: what
+everybody starts with, which creeps are in it, whether the lanes are shuffled, how the
+opening technology is dealt, and whether players are named or only coloured. What each of
+them MEANS is `game_rules.md` under Match settings; what follows is where it lives.
+
+- `MatchSettings` is a flat, serialisable Resource, next to `MatchPlayer` and for the same
+  reason: it rides on a `LobbyInfo` while the lobby is open and on the `MatchSetup` once the
+  match begins, and both travel as Dictionaries.
+- It is **not a second GameConfig.** `MatchSettings.defaults()` is the one place the two
+  meet: a fresh lobby copies the numbers out of `game_config.tres` and the host edits the
+  copy. Editing the file still changes what every new match starts from; a match that was
+  started carries what was agreed.
+- The host's panel calls `Lobby.set_settings()`, which is one request carrying the WHOLE
+  block rather than one changed field - ten values on a cold path, and the server never has
+  to merge two half-states. The server checks the sender hosts the lobby, refuses it once the
+  countdown is running, runs `sanitise()` and pushes the lobby back. So the host's own edit
+  takes the same round trip everybody else's copy does, and a clamped value is drawn as the
+  clamped one rather than as what was typed.
+- `sanitise()` is where the RANKED LOCK is enforced, not the greyed-out controls: a ranked
+  block is put back onto the defaults whatever arrived, keeping only the technology mode. The
+  clamps beside it are the ordinary distrust, bounded by `MenuConfig` - a lobby rule rather
+  than a match one.
+- The lane shuffle happens in `LobbyInfo.to_match_setup`, on a generator seeded from the
+  match seed, and every machine is TOLD the result. Nothing derives it.
+
+**The technology draft is the one thing here that touches the simulation**, and it is worth
+knowing how:
+
+- `StartingTech` is a node in both match scenes, next to `TechManager`, reached through
+  `References`. Not an autoload: it receives no rpc of its own, because a draft pick is an
+  ordinary player order and travels through `Commands` like a Research Center press.
+- **The authority rolls the three Ultimates and clients are told**, in the snapshot, under
+  its own key. Both machines COULD derive the same three from the seed and that is exactly
+  the second simulation 3.4 forbids - it would agree until it did not, and the symptom would
+  be a client drawing three buttons the server refuses two of.
+- **Holding the world still is `SceneTree.paused`**, set by `MatchSession.set_paused` on both
+  machines - the authority from its own draft, a client from the snapshot that says who is
+  left. Every gameplay loop in the project lives in `_physics_process`, so the engine's own
+  pause switches all of them off at once and nothing new has to remember to ask.
+  - what must keep running says so for itself: `Net`, `Lobby`, `MatchStart`, `Commands` and
+    `Replication` all set `PROCESS_MODE_ALWAYS`, because the order that ENDS the pause and
+    the snapshot that announces it both travel that way. On the HUD only the draft screen and
+    the menu that lets a player leave do, which is what stops a held player from building or
+    sending their way past the choice.
+  - the MATCH CLOCK is given back what the hold took. The tick counter is the physics frame
+    and the engine goes on counting those while nothing is processing them, so without that
+    correction a ten second draft would be ten seconds every creep unlock had silently
+    already served.
+- A player who drops during the draft stops being waited for (D13), so one crashed client
+  cannot hold everybody else for the rest of the match.
+
 ---
 
 ## 9. Backend / rating — deferred (D7)

@@ -78,7 +78,7 @@ generator.
 | `creep_content.py` | creep PREFABS. **Not** their stats, see below | wiring changes |
 | `disc_style.py` | the DISC visual language, kept out of `style.py` | the look changes |
 | `disc_roster.py` | the disc table and its ten effects, from `unit_data.md` §5 | balance changes |
-| `disc_models.py` | one ground material and one flat scene per disc | the look changes |
+| `disc_models.py` | the plate and element materials, and one flat scene per disc | the look changes |
 | `disc_content.py` | disc stats, prefabs, effects, morphs, the build button | rules changes |
 | `materials.py`, `effects.py` | the shared palette; projectiles and impacts | |
 | `showcase.py` | throwaway review scenes, opt in | |
@@ -135,12 +135,13 @@ The short version of the shape of the work: only the top two layers are new.
 Everything from `style.py` down is inherited.
 
 - **Technology discs** were the cheapest and the strangest: they have NO MODEL.
-  A disc is painted onto the floor, so its whole visual roster is one shader,
-  one material per disc and a two node scene to hang it on - `modelkit` is not
-  imported at all. What it inherits is `style.py`'s ten element hues and ten
-  side counts, read rather than restated, so a Fire disc and a Fire tower
-  cannot disagree about what Fire looks like. Read PLACEHOLDER_ART.md section
-  12 before building anything else that lies flat.
+  A disc is three flat layers - the shared square tower foundation, a round
+  plate, and a coloured circle - so its whole visual roster is two shaders,
+  eleven materials and a three node scene. `modelkit` is not imported at all.
+  What it inherits is `style.py`'s ten element hues, read rather than restated,
+  so a Fire disc and a Fire tower cannot disagree about what Fire looks like.
+  Read PLACEHOLDER_ART.md section 12 before building anything else that lies
+  flat.
 - **Elemental towers** were the cheap case they were predicted to be: the same
   material roles and the same shape of ladder, plus a palette entry per
   element, a builder per shape, an ability table and a content file.

@@ -446,6 +446,13 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
     two accessors and three readings that fold it into an answer that already
     existed. Splitting mana out the same way is still the intended fix and is
     now the only one left
+- MatchSession.gd is over gdlint's public-method ceiling, and was already over
+  it before the match settings arrived - it answers for the roster, the RNG,
+  the clock and the unit registry, and those four are what "what is true of
+  THIS match" means. The settings and the pause added four more: what the
+  match agreed to, and whether the world is moving. Splitting the unit
+  registry out is the obvious cut if it is ever worth making; the other three
+  belong together
 - OrderOverlay rebuilds a unit's markers WHOLE on every change to its chain,
   so shift-queueing five towers instantiates the ghost models five times over
   in one frame - each rebuild frees the last, but queue_free is deferred, so

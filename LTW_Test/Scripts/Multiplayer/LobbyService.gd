@@ -69,6 +69,10 @@ var _current: LobbyInfo = null
 
 
 func _ready() -> void:
+	# Unaffected by the world being held still - a lobby is not part of any
+	# match, and a countdown must not stop because somebody else's match is
+	# waiting on a draft.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Only ever running while a countdown is, which on a client is never.
 	set_process(false)
 	MatchStart.match_abandoned.connect(_on_match_abandoned)
@@ -133,6 +137,20 @@ func cancel_start() -> void:
 	request_cancel_start.rpc_id(NetworkService.SERVER_PEER_ID)
 
 
+## Asks for the match rules to be changed (8.2). The host's panel, and the
+## server checks that claim rather than believing it - exactly as it does for
+## Start, and for the same reason: the panel is on the other machine.
+##
+## The whole settings block travels every time rather than one changed field.
+## It is ten values on a cold path, and sending the lot means the server never
+## has to merge two half-states and a client can never be looking at a mixture
+## of what it asked for and what was allowed.
+func set_settings(settings: MatchSettings) -> void:
+	if !_require_connection() || settings == null:
+		return
+	request_settings.rpc_id(NetworkService.SERVER_PEER_ID, settings.to_dict())
+
+
 # --- server: requests arriving from clients -------------------------------
 
 ## Sent once on connecting. The name is a courtesy, not a credential: it is
@@ -163,6 +181,9 @@ func request_create(lobby_name: String, max_players: int) -> void:
 	lobby.lobby_name = LobbyIdentity.sanitise(lobby_name, _max_lobby_name_length())
 	lobby.max_players = _clamp_size(max_players)
 	lobby.host_id = peer_id
+	# The defaults, which is a ranked match on whatever GameConfig says. The
+	# host edits this copy; the file it came from is never touched.
+	lobby.settings = MatchSettings.defaults(References.game_config)
 	lobby.add_member(MatchPlayer.create(1, _name_of(peer_id), peer_id))
 
 	_lobbies[lobby.lobby_id] = lobby
@@ -251,6 +272,38 @@ func request_start() -> void:
 		return
 
 	_begin_countdown(lobby)
+
+
+## The host changing the rules. Refused once the lobby is locked, because the
+## roster and the rules become final at the same moment: a countdown that could
+## still change what everybody is about to play is not a countdown to anything.
+@rpc("any_peer", "reliable")
+func request_settings(payload: Dictionary) -> void:
+	if !multiplayer.is_server():
+		return
+	var peer_id: int = multiplayer.get_remote_sender_id()
+	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
+	if lobby == null:
+		_refuse(peer_id, "Only the host can change the match settings.")
+		return
+	if lobby.is_in_progress || lobby.is_starting:
+		_refuse(peer_id, "The match is already starting.")
+		return
+
+	var settings: MatchSettings = MatchSettings.from_dict(payload)
+	# Nothing a client states is taken as read: a ranked match is put back onto
+	# the defaults here, whatever arrived, and every number is clamped.
+	settings.sanitise(References.game_config, References.menu_config)
+	lobby.settings = settings
+	Log.info("Lobby settings changed", {
+		"id": lobby.lobby_id, "settings": settings.describe(),
+	})
+
+	# Pushed to the room so every player sees the change, and broadcast to the
+	# browser because the list carries the settings too - a lobby row could
+	# say "ranked" one day without anything else moving.
+	_push_lobby(lobby)
+	_broadcast_list()
 
 
 @rpc("any_peer", "reliable")

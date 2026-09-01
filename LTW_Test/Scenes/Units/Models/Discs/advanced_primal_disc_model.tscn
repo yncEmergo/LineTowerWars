@@ -1,18 +1,29 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="1_UnitModel"]
-[ext_resource type="Script" path="res://Scripts/Units/BuildingFoundation.gd" id="2_BuildingFoundation"]
-[ext_resource type="Material" path="res://Resources/Materials/Discs/advanced_primal_disc_ground.tres" id="3_advanced_primal_disc_ground"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="2_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Discs/disc_plate.tres" id="3_disc_plate"]
+[ext_resource type="Material" path="res://Resources/Materials/Discs/primal_disc_glyph.tres" id="4_primal_disc_glyph"]
 
-[sub_resource type="PlaneMesh" id="Ground"]
-material = ExtResource("3_advanced_primal_disc_ground")
-size = Vector2(1.5, 1.5)
+[sub_resource type="PlaneMesh" id="Plate"]
+material = ExtResource("3_disc_plate")
+size = Vector2(0.78, 0.78)
+
+[sub_resource type="PlaneMesh" id="Glyph"]
+material = ExtResource("4_primal_disc_glyph")
+size = Vector2(0.44, 0.44)
 
 [node name="AdvancedPrimalDiscModel" type="Node3D"]
 script = ExtResource("1_UnitModel")
 
-[node name="Ground" type="MeshInstance3D" parent="."]
-script = ExtResource("2_BuildingFoundation")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+[node name="Base" parent="." instance=ExtResource("2_tower_foundation")]
+
+[node name="Plate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.013, 0)
 cast_shadow = 0
-mesh = SubResource("Ground")
+mesh = SubResource("Plate")
+
+[node name="Glyph" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+cast_shadow = 0
+mesh = SubResource("Glyph")

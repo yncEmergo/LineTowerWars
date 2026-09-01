@@ -21,6 +21,11 @@ extends Resource
 @export var local_slot: int = 0
 ## Seed for the one shared match RNG, so every machine rolls the same numbers.
 @export var rng_seed: int = 0
+## The rules this match is played under, chosen by the host in the lobby
+## (multiplayer.md 8.2). Never null - a match with no settings is one nothing
+## could work out a starting life total from - so a stand-in is created here
+## and replaced by whatever the lobby agreed.
+@export var settings: MatchSettings = MatchSettings.new()
 
 
 ## The single-player stand-in, used when Main.tscn is run straight from the
@@ -28,6 +33,9 @@ extends Resource
 ## which matters because it is how the game is tested.
 static func from_config(config: GameConfig) -> MatchSetup:
 	var setup: MatchSetup = MatchSetup.new()
+	# Before the null check, so even the broken path carries a settings block
+	# that reads back as something rather than as a match with no income.
+	setup.settings = MatchSettings.defaults(config)
 	if config == null:
 		Log.err("MatchSetup cannot stand in for a lobby without a GameConfig")
 		setup.players.append(MatchPlayer.create(1, "Player 1"))
@@ -48,6 +56,7 @@ static func from_dict(data: Dictionary) -> MatchSetup:
 	setup.match_id = str(data.get("match_id", ""))
 	setup.local_slot = int(data.get("local_slot", 0))
 	setup.rng_seed = int(data.get("rng_seed", 0))
+	setup.settings = MatchSettings.from_dict(data.get("settings", {}) as Dictionary)
 
 	var raw_players: Array = data.get("players", []) as Array
 	for entry in raw_players:
@@ -65,6 +74,7 @@ func to_dict() -> Dictionary:
 		"match_id": match_id,
 		"local_slot": local_slot,
 		"rng_seed": rng_seed,
+		"settings": settings.to_dict(),
 		"players": player_dicts,
 	}
 

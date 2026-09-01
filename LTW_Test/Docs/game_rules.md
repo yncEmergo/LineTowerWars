@@ -1634,25 +1634,58 @@ The roster, the prices, the technology requirements and the ten effects are in
   stands up out of it, which is the one thing a player must never have to look
   twice at: a tower stands up, a disc lies flat, and nothing else in the game
   does either
-- Its ground patch is the same stone as a tower's and a DIFFERENT PATTERN - a
-  true circle cut with rings and spokes against the tower's rounded square of
-  cracked slabs - so the two are told apart by shape rather than by colour,
-  which stays reserved for the elements
-- **The element is the colour of the middle, and its SIDE COUNT** - the same
-  count that element's towers are built on, so the disc roster reads on the two
-  axes the tower roster already uses and stays readable to somebody who cannot
-  tell ten hues apart
-- **The tier is how far that colour reaches, and nothing else.** A base disc
-  has none at all, which is exactly right for something with no element that
-  does nothing, and each upgrade grows it
+- **It is drawn as THREE FLAT LAYERS**, and each answers exactly one question
+  - the FOUNDATION is the same square patch every tower stands on, unchanged
+    and shared. It says a BUILDING is here and that this square is claimed, and
+    it says it in the same words a tower does - which is right, because that is
+    the one thing the two have in common
+  - the PLATE is a round worked disc set into that square, the same on every
+    one of them. It says the building is a DISC
+  - the GLYPH is a coloured circle in the middle. It says which ELEMENT and
+    which TIER, and nothing else in the roster says either
+  - **round on square is the whole trick.** The foundation and the plate are
+    the same stone and must be, because colour belongs to the elements - so
+    what separates them is that one is a square patch of ground and the other
+    is a machined circle sitting on it. That reads from directly overhead at
+    any zoom, and the square shows at every corner so the two never merge
+- **The element is the COLOUR of that circle and nothing else.** One shape for
+  all ten
+  - an earlier cut gave each element the side count its towers are built on, so
+    the roster would answer on two axes the way the towers do. It was dropped:
+    a disc is the one thing in the game whose whole job is to be read in
+    peripheral vision while the player is watching a creep wave, and counting
+    sides at that size is something the eye will not do
+  - what that costs is a second channel for a colourblind player, which the
+    towers have and the discs now do not. If it turns out to matter the answer
+    is not to bring the polygons back, but something read as fast as colour
+- **The tier is how big that circle is, and nothing else.** A base disc has
+  none at all, which is exactly right for something with no element that does
+  nothing, and each upgrade grows it
   - one rule where a tower's ladder is six, because a flat circle has only the
     one thing to say everything with. A second rule laid over it would be
     fighting the first for the same pixels
-  - the Ultimate turns, slowly, and nothing else in the roster moves. Motion is
-    the loudest signal a top down camera has and it stays reserved for the top
-    rung, exactly as it is on the elemental towers
-- A disc under construction opens OUT from a point rather than rising, since
-  rising is a thing a flat quad cannot be seen to do
+  - the ceiling is set by the plate rather than by taste: the top rung has to
+    leave a ring of stone showing, or the disc stops being a disc with a colour
+    in it and becomes a coloured blob with nothing to read the size against
+  - it also retired the one motion rule the discs had. Movement is reserved for
+    the top rung everywhere else in the game, and a rotating circle is a still
+    circle, so the Ultimate no longer turns. Nothing replaces it
+- **An UPGRADE grows the circle and moves nothing else.** The foundation and
+  the plate stay exactly where they are while the colour opens out of the
+  middle of them, which is a picture of precisely what was bought
+- **MORPHING BACK DOWN runs that backwards**: the circle shrinks away and
+  nothing grows at all. What is being bought back is the empty square, so a
+  countdown that grew anything would be a picture of the opposite trade
+  - it is also the one morph that shows no preview of what is arriving. Every
+    other one stands the new thing up and rises it, because the player is
+    waiting for something they have not got yet; a disc morphing down is
+    already standing on the foundation and the plate that will be left, so
+    there is nothing to show them but the colour leaving
+- A base disc being BUILT opens the whole thing out from a point instead, which
+  is the right answer for it: nothing about it is arriving in the middle of
+  something already standing there
+  - rising is a thing a flat quad cannot be seen to do at all, which is why
+    none of the three rises
 
 # Upgrading a tower
 BUILT.
@@ -2049,12 +2082,75 @@ is another entry in its file rather than a rule anywhere.
   - Each creep type carries its own population value; the exceptions are in the
     roster
 
+# Match settings
+BUILT.
+
+The HOST chooses what kind of match this is, IN THE LOBBY, before anybody loads.
+The source game asks these questions once everybody is already in the world
+because Warcraft III gave it nowhere else to ask them; this build has a lobby,
+so the answer is known before a single area is placed.
+
+- Everybody in the lobby SEES the settings; only the host may CHANGE them
+  - the server refuses a change from anybody else, so the greyed-out panel a
+    joiner is looking at is a courtesy rather than the rule
+  - and it refuses one from the host too once the start countdown is running:
+    the roster and the rules become final at the same moment
+- The DEFAULTS live in `game_config.tres`, and the lobby takes a copy of them
+  - so editing that file still changes what every new match starts from, and a
+    match that was started carries what was actually agreed rather than what
+    the file happened to say later
+- RANKED is a match played on those defaults and nothing else. Every other
+  setting is forced back to its default and locked, so two ranked results are
+  comparable
+  - the ONE exception is the technology mode, which the host still chooses. It
+    changes what the match is about rather than how generous it is, and all
+    three answers cost the same free technologies
+
+What can be set, in three groups:
+
+- RESOURCES: lives per player, starting gold, starting free research points,
+  starting income, and the income interval
+  - lives follow the PLAYER COUNT on their own - the pool split between however
+    many are in the lobby, see Life steal - and the reading moves as people come
+    and go. A host who types a number over it keeps that number whoever turns up
+- CREEPS: the whole roster, or without flyers, or without attackers, or without
+  either
+  - a creep the match left out is not on anybody's send card AT ALL, which is
+    also what makes the server refuse an order for one: an ability that is not
+    on a unit's card is refused for every unit in the game the same way
+  - the square it would have sat in is left empty rather than closed up, so the
+    rest of the card stays where a player learned it
+- RANDOM LANES: the roster is dealt into the lanes at random when the match
+  starts, so who sends into whom is not the order people happened to join in
+- TECHNOLOGY MODE: how the free opening technologies are handed out
+  - PICK: the player spends them in the Research Center themselves, whenever
+    they like. The game as it is without this setting
+  - RANDOM: one Ultimate is rolled for the whole match and handed to everybody,
+    so every player opens on the same tower
+  - DRAFT: three Ultimates are rolled for the whole match, every player is
+    offered the SAME three, and each takes one
+    - **the world is held still until they all have.** Nothing moves, nothing is
+      spent, no clock runs and no creep unlocks - and the match clock is given
+      back exactly what the wait took, so the draft costs nobody a start delay
+    - a player who leaves during it stops being waited for, so one crashed
+      client cannot hold everybody else for the rest of the match
+  - whichever way it is dealt, the opening is what the match gave you: it cannot
+    be handed back through the undo window the way a bought technology can
+- MODIFIER: Anonymous shows players by their COLOUR instead of by name, in the
+  match only. The lobby still shows real names - the anonymity is a rule of the
+  match, and hiding who you are about to play would only stop people finding
+  each other
+
+Nothing here is per player: it is what the whole match agreed to, and it is
+fixed for the life of that match.
+
 # Economy
 - Gold is spent on towers and on sending creeps
 - Income is paid out on a fixed interval
   - One shared clock, so every player is paid on the same beat
-- Starting gold and starting income are match rules, and live in
-  `Resources/Config/game_config.tres`
+- Starting gold, starting income and the payout interval are MATCH SETTINGS: the
+  host chooses them in the lobby and `Resources/Config/game_config.tres` holds
+  the defaults they start from. See Match settings
 - Sending a creep permanently increases the sender's income
   - The raise applies from the next tick onwards, never retroactively, so
     sending just before a tick is worth no more than sending just after one
@@ -2088,6 +2184,9 @@ BUILT.
 - Starting lives depend on the player count: fewer players means more lives each
   - The prototype derives them from a formula so any player count works, kept in
     `Resources/Config/game_config.tres`
+  - That is what a lobby shows until somebody changes it, and the reading moves
+    as players come and go. A host may type a number over it in a custom game,
+    and then it stays put whoever turns up. See Match settings
   - The SOURCE GAME instead sets them per player count and per ruleset, and those
     figures are in `unit_data.md` section 1.7. Adopting them is pending a ruleset
     concept, which does not exist yet
@@ -2160,8 +2259,6 @@ that gets edited with it. What is recorded is WHICH decision was never yours.
 - Creep separation strength is a tuning value you change while testing. Whatever
   it currently reads is a test state, not a decision - and the waypoint bug it was
   once masking is gone, so it is worth a real call at some point
-- Starting gold in `game_config.tres` is set far above its script default as a
-  deliberate test value, so building is quick to try
 
 # Open questions
 - Recycling rule generalisation for 3+ players (deferred)

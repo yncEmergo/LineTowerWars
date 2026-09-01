@@ -109,6 +109,21 @@ enum OwnerColors {
 	Color("fffc01"), Color("feba0e"), Color("20c000"), Color("e55bb0"),
 	Color("959697"), Color("7ebff1"), Color("106246"), Color("4e2a04"),
 ])
+## What each of those colours is CALLED, in the same order.
+##
+## Needed because a colour can be shown but not read out: the ANONYMOUS match
+## modifier names players by their colour instead of by who they are
+## (MatchSettings.Modifier), and a row in the player table is text.
+##
+## A second list rather than a name authored beside each colour, because
+## PackedColorArray is what every other reader wants and splitting it into a
+## resource per player would cost twelve files for one string each. The two are
+## indexed the same way and player_color_name() falls back to the slot number
+## when they disagree, so a short list is a plain reading rather than a crash.
+@export var player_color_names: PackedStringArray = PackedStringArray([
+	"Red", "Blue", "Teal", "Purple", "Yellow", "Orange",
+	"Green", "Pink", "Gray", "Light Blue", "Dark Green", "Brown",
+])
 
 
 ## The colour a unit belonging to this slot is drawn in on the minimap.
@@ -139,3 +154,12 @@ func player_color(slot: int) -> Color:
 		Log.err("PresentationConfig has no player colours, nothing could be told apart")
 		return minimap_own_color
 	return player_colors[maxi(0, slot - 1) % player_colors.size()]
+
+
+## The name of the colour belonging to a slot, for the ANONYMOUS modifier.
+## Slots are 1-based, and it wraps exactly as player_color() does so the name
+## and the colour can never come from different places in the list.
+func player_color_name(slot: int) -> String:
+	if player_color_names.is_empty():
+		return "Player %d" % slot
+	return player_color_names[maxi(0, slot - 1) % player_color_names.size()]

@@ -21,6 +21,9 @@ extends Control
 @export var _subtitle_label: Label
 ## Parent for the slot rows, refilled whenever the lobby changes.
 @export var _slot_list: VBoxContainer
+## The match rules. Shown to everybody and editable by the host alone
+## (multiplayer.md 8.2); it looks after that itself.
+@export var _settings_panel: LobbySettingsPanel
 @export var _status_label: Label
 @export var _start_button: Button
 @export var _leave_button: Button
@@ -83,8 +86,21 @@ func show_lobby(lobby: LobbyInfo) -> void:
 		_subtitle_label.text = "Free for all  -  %s players" % _lobby.players_text()
 
 	_build_slots()
+	# After the slots, because the automatic life total follows the player
+	# count and the panel is told what that is.
+	if _settings_panel != null:
+		_settings_panel.show_lobby(_lobby, _is_host_here())
 	_update_start_button()
 	_update_status()
+
+
+## Whether this machine may edit the rules.
+##
+## The stand-in lobby - this scene opened on its own from the editor - has no
+## server and therefore no host, and answering "nobody" there would make the
+## whole panel dead in the one situation somebody is looking at it on purpose.
+func _is_host_here() -> bool:
+	return Lobby.current() == null || Lobby.is_host()
 
 
 # --- lobby updates --------------------------------------------------------
@@ -227,6 +243,7 @@ func _stand_in_lobby() -> LobbyInfo:
 	)
 	lobby.add_member(MatchPlayer.create(1, host_name, 0))
 	lobby.host_id = 0
+	lobby.settings = MatchSettings.defaults(References.game_config)
 	return lobby
 
 

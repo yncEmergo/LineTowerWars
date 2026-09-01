@@ -45,6 +45,23 @@ extends Resource
 @export var default_lobby_name_pattern: String = "%s's Game"
 @export var max_lobby_name_length: int = 32
 
+@export_group("Match settings")
+## Ceilings on what the host may set a match to in the lobby, checked on the
+## SERVER when the settings arrive (MatchSettings.sanitise).
+##
+## Here rather than on GameConfig, because they are not match rules: GameConfig
+## says what a match STARTS from, and these say how far a host may push it in
+## the room. A ranked match never reaches any of them - it is played on the
+## defaults - so these only ever bound a custom game.
+@export var max_lives_per_player: int = 500
+@export var max_starting_gold: int = 10000000
+@export var max_free_technologies: int = 30
+@export var max_starting_income: int = 1000000
+## Seconds. A floor as well as a ceiling: an income interval of zero is a
+## payout every tick, which is not a fast match but a broken one.
+@export var min_income_interval: float = 1.0
+@export var max_income_interval: float = 300.0
+
 @export_group("Starting a match")
 ## Seconds between the host pressing Start and the match handshake beginning
 ## (D24). Everyone in the lobby watches the same number, because the countdown

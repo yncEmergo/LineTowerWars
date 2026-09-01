@@ -91,6 +91,13 @@ func _ready() -> void:
 	var probe: Builder = null if builders.is_empty() else builders[0]
 	_validate_content(probe)
 
+	# After the registries, necessarily: the opening names technologies, and
+	# _validate_content is where the technology registry is built.
+	if References.starting_tech != null:
+		References.starting_tech.apply(setup)
+	else:
+		Log.err("Main found no StartingTech on References, the technology mode does nothing")
+
 	var local_builder: Builder = _find_builder(builders, setup.local_slot)
 	if local_builder != null && References.rts_camera != null:
 		References.rts_camera.center_on(local_builder.global_position)
@@ -99,7 +106,8 @@ func _ready() -> void:
 		"players": setup.player_count(),
 		"local_slot": setup.local_slot,
 		"seed": setup.rng_seed,
-		"starting_lives": config.starting_lives(setup.player_count()),
+		"starting_lives": setup.settings.lives_for(setup.player_count(), config),
+		"settings": setup.settings.describe(),
 	})
 
 	# 2.5: every machine built this world from the same setup, and this is how

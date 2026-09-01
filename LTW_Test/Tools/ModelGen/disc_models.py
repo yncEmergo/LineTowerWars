@@ -1,26 +1,38 @@
 """The technology discs' materials and model scenes.
 
 The shortest models stage in the tool by a long way, and that is the design
-rather than a gap: a disc has no model. It is a thing set into the ground, and
-what a player sees is one flat quad running
-Resources/Shaders/disc_ground.gdshader. So this file writes one material per
-disc - which is the whole of what makes a Fire disc look different from an
-Advanced Ice one - and one two-node scene to hang it on.
+rather than a gap: a disc has no model. It is drawn as three flat layers, and
+this file writes the two of them that are not already in the game.
 
-Read disc_style.py first. It holds the language; this holds the two files that
+Read disc_style.py first. It holds the language; this holds the files that
 speak it.
 
 THE CONTRACT A DISC MODEL MEETS, which the prefab wiring depends on:
 
     <root>          a Node3D running UnitModel.gd, exactly like a tower model
-    Ground          a MeshInstance3D running BuildingFoundation.gd
+    Base            the shared SQUARE foundation, tower_foundation.tscn
+    Plate           the round mechanism plate, one material for all thirty-one
+    Glyph           the element circle. ABSENT on the inactive disc
 
-`Ground` is the whole model, and it carries BuildingFoundation.gd for a real
-reason rather than for tidiness. That script is what turns a patch into a
-GHOST when a build order is being aimed - and it writes its tint into a
-`preview_tint` uniform, which disc_ground.gdshader declares under exactly that
-name. So a disc previews green and red like everything else in the game
-without one line being written for it.
+`Base` is instanced rather than rebuilt, so a disc claims its square with the
+byte-identical patch a tower claims one with. It carries BuildingFoundation.gd
+by being that scene, which is what turns it into a GHOST while a build order is
+being aimed; the other two layers are ordinary meshes and `UnitModel` swaps
+them for the flat ghost material on its own.
+
+`Glyph` IS A SEPARATE NODE FOR A REASON, and it is not tidiness. The tier is
+the SIZE of that circle, and an upgrade has to grow it while the plate under it
+stays exactly where it was - so the tier is the mesh's own size and the growth
+is that node's scale. A radius uniform could not do it: the material is shared
+by every disc of a type, so animating it would grow all of them, and the
+project renders with gl_compatibility where per-instance uniforms silently do
+nothing at all. See Disc._apply_visual_height.
+
+WHY THERE ARE ONLY ELEVEN MATERIALS and not thirty-one. Nothing about the plate
+varies, so it is one file; and every tier of an element is the same circle at a
+different SIZE, so the glyph is one file per element. The first cut wrote one
+material per disc because the tier lived in a uniform, and moving the tier onto
+the mesh took twenty of them away.
 
 There is no Turret and no Muzzle. A tower model has both even when it has
 nothing to aim, because one wiring across thirty towers beats nine special
@@ -38,25 +50,28 @@ from tscn import Scene, c, num, t3
 
 MAT_OUT = "Resources/Materials/Discs"
 SCENE_OUT = "Scenes/Units/Models/Discs"
-SHADER = "res://Resources/Shaders/disc_ground.gdshader"
+PLATE_SHADER = "res://Resources/Shaders/disc_plate.gdshader"
+GLYPH_SHADER = "res://Resources/Shaders/disc_glyph.gdshader"
 UNIT_MODEL_SCRIPT = "res://Scripts/Units/UnitModel.gd"
-FOUNDATION_SCRIPT = "res://Scripts/Units/BuildingFoundation.gd"
+FOUNDATION = "res://Scenes/Units/Models/tower_foundation.tscn"
 
-# Side of the quad the disc is drawn on, in cells. Wider than the one cell it
-# occupies for the same reason the tower foundation's is: the plate's border is
-# soft and slightly chewed, and a quad cut exactly to the footprint would clip
-# it into a hard square.
-QUAD_SIZE = 1.5
+PLATE_MATERIAL = "res://%s/disc_plate.tres" % MAT_OUT
 
-# How far off the floor the quad sits. The same height a tower foundation
-# takes, because the two are the same layer of the world and neither is ever on
-# the same cell as the other. See BuildGrid.GROUND_OFFSET for the three heights
-# this one sits in the middle of.
-QUAD_HEIGHT = 0.01
+# How far off the floor each layer sits, low to high.
+#
+# All three are under BuildGrid.GROUND_OFFSET, so the grid lines stay readable
+# across a disc - and far enough apart not to z-fight, which two transparent
+# quads at one height do visibly and constantly.
+#
+# The foundation carries 0.01 inside its own scene and is not re-set here, so
+# a disc's patch sits at exactly the height a tower's does.
+PLATE_HEIGHT = 0.013
+GLYPH_HEIGHT = 0.016
 
-# Draw order, matching the tower foundation: under the build grid so its lines
-# stay readable across a disc, over the opaque zone quads.
-RENDER_PRIORITY = -1
+# Draw order. The foundation is at -1 like every tower's; these two sit above
+# it and below the build grid.
+PLATE_PRIORITY = 0
+GLYPH_PRIORITY = 1
 
 
 def write(path, text):
@@ -64,8 +79,8 @@ def write(path, text):
     io.open(path, "w", encoding="utf-8", newline="\n").write(text)
 
 
-def material_path(key):
-    return "res://%s/%s_ground.tres" % (MAT_OUT, key)
+def glyph_material_path(element):
+    return "res://%s/%s_disc_glyph.tres" % (MAT_OUT, element)
 
 
 def model_path(key):
@@ -76,100 +91,112 @@ def pascal(key):
     return "".join(part.capitalize() for part in key.split("_"))
 
 
-def _material(row):
-    """One disc's material: the shared plate, then its own glyph.
-
-    The plate half is IDENTICAL on all thirty-one and is written out every time
-    rather than being one shared material with the glyph overridden per disc.
-    That is not a choice - the project renders with gl_compatibility, where
-    per-instance shader uniforms silently do nothing at all, so a per-disc
-    value has to be a per-disc material. It is the same reason there is one
-    energy material per tower line and tier. See style.py.
-    """
-    plate = ds.DISC_PLATE
-    grooves = ds.DISC_GROOVES
-    tier = row["tier"]
-
-    params = [
-        ("plate_color", c(plate["plate"])),
-        ("plate_dark_color", c(plate["plate_dark"])),
-        ("groove_color", c(plate["groove"])),
-        ("rim_color", c(plate["rim"])),
-        ("radius", num(grooves["radius"])),
-        ("ring_count", num(float(grooves["ring_count"]))),
-        ("ring_width", num(grooves["ring_width"])),
-        ("spoke_count", num(float(grooves["spoke_count"]))),
-        ("spoke_width", num(grooves["spoke_width"])),
-        ("groove_strength", num(grooves["strength"])),
-        ("glyph_radius", num(ds.glyph_radius(tier))),
-        ("glyph_emission", num(ds.glyph_emission(tier))),
-        ("glyph_edge_width", num(ds.DISC_GLYPH_EDGE_WIDTH)),
-        ("spin_speed", num(ds.glyph_spin(tier))),
-        ("opacity", num(ds.DISC_PLATE_OPACITY)),
-        ("glyph_opacity", num(ds.DISC_GLYPH_OPACITY)),
-    ]
-
-    # The inactive disc has no element, so it is written with no glyph colour
-    # at all rather than with a grey one. glyph_radius is 0 on it and nothing
-    # reads the colour, but authoring a colour for a thing that does not exist
-    # is how a grey glyph eventually appears on somebody's screen.
-    if row["element"] is not None:
-        glow, rim = ds.glyph_colors(row["element"])
-        params.append(("glyph_color", c(glow)))
-        params.append(("glyph_edge_color", c(rim)))
-        params.append(("glyph_sides", num(float(ds.glyph_sides(row["element"])))))
-
+def _material(shader, priority, params):
     lines = [
         '[gd_resource type="ShaderMaterial" format=3]',
         "",
-        '[ext_resource type="Shader" path="%s" id="1_disc_ground"]' % SHADER,
+        '[ext_resource type="Shader" path="%s" id="1_shader"]' % shader,
         "",
         "[resource]",
-        "render_priority = %d" % RENDER_PRIORITY,
-        'shader = ExtResource("1_disc_ground")',
+        "render_priority = %d" % priority,
+        'shader = ExtResource("1_shader")',
     ]
     for key, value in params:
         lines.append("shader_parameter/%s = %s" % (key, value))
     return "\n".join(lines) + "\n"
 
 
+def _plate_material():
+    """The one plate material, shared by every disc in the game."""
+    plate = ds.DISC_PLATE
+    grooves = ds.DISC_GROOVES
+    return _material(PLATE_SHADER, PLATE_PRIORITY, [
+        ("plate_color", c(plate["plate"])),
+        ("plate_dark_color", c(plate["plate_dark"])),
+        ("groove_color", c(plate["groove"])),
+        ("edge_color", c(plate["edge"])),
+        # The quad is cut to the plate's own diameter, so the shape fills it.
+        ("radius", num(0.94)),
+        ("edge_width", num(grooves["edge_width"])),
+        ("ring_count", num(float(grooves["ring_count"]))),
+        ("ring_width", num(grooves["ring_width"])),
+        ("spoke_count", num(float(grooves["spoke_count"]))),
+        ("spoke_width", num(grooves["spoke_width"])),
+        ("groove_strength", num(grooves["strength"])),
+        ("opacity", num(plate["opacity"])),
+    ])
+
+
+def _glyph_material(element):
+    """One element's circle. The colour is the whole of what it says."""
+    glow, rim = ds.glyph_colors(element)
+    return _material(GLYPH_SHADER, GLYPH_PRIORITY, [
+        ("glyph_color", c(glow)),
+        ("edge_color", c(rim)),
+        ("rim_width", num(ds.DISC_GLYPH_RIM)),
+        ("emission_strength", num(ds.DISC_GLYPH_EMISSION)),
+        ("opacity", num(ds.DISC_GLYPH_OPACITY)),
+    ])
+
+
 def _model(row):
-    """One disc's model scene: the UnitModel root and the ground quad."""
-    key = row["key"]
+    """One disc's model scene: the three layers, or two on the inactive one."""
     s = Scene()
     model_script = s.ext("Script", UNIT_MODEL_SCRIPT)
-    ground_script = s.ext("Script", FOUNDATION_SCRIPT)
-    material = s.ext("Material", material_path(key))
+    foundation = s.ext("PackedScene", FOUNDATION)
+    plate_material = s.ext("Material", PLATE_MATERIAL)
 
-    s.sub("PlaneMesh", "Ground", [
-        'material = ExtResource("%s")' % material,
-        "size = Vector2(%s, %s)" % (num(QUAD_SIZE), num(QUAD_SIZE)),
+    s.sub("PlaneMesh", "Plate", [
+        'material = ExtResource("%s")' % plate_material,
+        "size = Vector2(%s, %s)" % (num(ds.PLATE_DIAMETER), num(ds.PLATE_DIAMETER)),
     ])
 
-    s.node(pascal(key) + "Model", "Node3D", ".", script=model_script)
-    s.node("Ground", "MeshInstance3D", ".", script=ground_script, props=[
-        "transform = %s" % t3(y=QUAD_HEIGHT),
-        # A flat decal lying on the floor has no business casting one.
+    s.node(pascal(row["key"]) + "Model", "Node3D", ".", script=model_script)
+    s.node("Base", None, ".", instance=foundation)
+    s.node("Plate", "MeshInstance3D", ".", props=[
+        "transform = %s" % t3(y=PLATE_HEIGHT),
+        # Flat decals lying on the floor have no business casting one.
         "cast_shadow = 0",
-        'mesh = SubResource("Ground")',
+        'mesh = SubResource("Plate")',
     ])
+
+    # The inactive disc gets NO glyph node at all rather than a zero sized one.
+    # It has no element and does nothing, and an empty mesh is a thing that
+    # eventually gets drawn by accident.
+    diameter = ds.glyph_diameter(row["tier"])
+    if row["element"] is not None and diameter > 0.0:
+        glyph_material = s.ext("Material", glyph_material_path(row["element"]))
+        s.sub("PlaneMesh", "Glyph", [
+            'material = ExtResource("%s")' % glyph_material,
+            "size = Vector2(%s, %s)" % (num(diameter), num(diameter)),
+        ])
+        s.node("Glyph", "MeshInstance3D", ".", props=[
+            "transform = %s" % t3(y=GLYPH_HEIGHT),
+            "cast_shadow = 0",
+            'mesh = SubResource("Glyph")',
+        ])
+
     return s.render("[gd_scene format=3]")
 
 
 def generate():
-    """Writes every disc material and model, and hands back the one number the
-    content stage needs from here.
+    """Writes the plate material, the ten element materials and every disc
+    model, and hands back the one number the content stage needs from here.
 
     A tower model reports its HEIGHT, which sizes the prefab's health bar and
-    its click box. A disc is flat, so the height it reports is the quad's own
-    offset and nothing else - which is exactly right for the click box, and
-    means nothing at all for the health bar because a disc is invulnerable and
-    never grows one.
+    its click box. A disc is flat, so what it reports is the top layer's own
+    offset - exactly right for the click box, and meaningless for the health
+    bar because a disc is invulnerable and never grows one.
     """
+    write(PLATE_MATERIAL.replace("res://", ""), _plate_material())
+    for element in dr.ELEMENT_ORDER:
+        write(glyph_material_path(element).replace("res://", ""),
+              _glyph_material(element))
+
     heights = {}
     for row in dr.disc_rows():
-        write(material_path(row["key"]).replace("res://", ""), _material(row))
         write(model_path(row["key"]).replace("res://", ""), _model(row))
-        heights[row["key"]] = QUAD_HEIGHT
-    print("wrote %d disc materials and models" % len(heights))
+        heights[row["key"]] = GLYPH_HEIGHT
+    print("wrote %d disc models, 1 plate material, %d element materials"
+          % (len(heights), len(dr.ELEMENT_ORDER)))
     return heights

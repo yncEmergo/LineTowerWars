@@ -38,6 +38,10 @@ extends Resource
 ## Everyone in the lobby, in join order, slots renumbered 1..n as people come
 ## and go so this is always a valid basis for a MatchSetup.
 @export var members: Array[MatchPlayer] = []
+## The rules this lobby will be played under, chosen by the host and shown to
+## everybody (multiplayer.md 8.2). Never null: a lobby with no settings is a
+## match nobody could start, so one is stood in rather than left empty.
+@export var settings: MatchSettings = MatchSettings.new()
 
 
 static func from_dict(data: Dictionary) -> LobbyInfo:
@@ -49,6 +53,7 @@ static func from_dict(data: Dictionary) -> LobbyInfo:
 	lobby.is_in_progress = bool(data.get("is_in_progress", false))
 	lobby.is_starting = bool(data.get("is_starting", false))
 	lobby.ping_ms = int(data.get("ping_ms", -1))
+	lobby.settings = MatchSettings.from_dict(data.get("settings", {}) as Dictionary)
 
 	var raw_members: Array = data.get("members", []) as Array
 	for entry in raw_members:
@@ -71,6 +76,7 @@ func to_dict() -> Dictionary:
 		"is_starting": is_starting,
 		"ping_ms": ping_ms,
 		"members": member_dicts,
+		"settings": settings.to_dict(),
 	}
 
 
@@ -89,10 +95,41 @@ func to_match_setup(id: String, seed_value: int) -> MatchSetup:
 	setup.match_id = id
 	setup.rng_seed = seed_value
 	setup.local_slot = 0
+	setup.settings = settings.duplicate_settings()
 	for player in members:
 		if player != null:
 			setup.players.append(MatchPlayer.from_dict(player.to_dict()))
+
+	if setup.settings.random_lanes:
+		_shuffle_lanes(setup, seed_value)
 	return setup
+
+
+## Deals the roster out into the lanes at random, so who sends into whom is not
+## the order people happened to join in.
+##
+## Server side, once, on a generator seeded from the MATCH seed rather than on
+## the global randi(): the roll is then reproducible from the one number the
+## match already carries, which is what makes a strange draw something that can
+## be looked into rather than only complained about. Every machine is told the
+## result rather than rolling it, so nothing here has to agree with anything.
+##
+## The slots are handed out afterwards, in the new order, because a slot IS the
+## lane - the areas, the build grid and PlayerState all index by it.
+func _shuffle_lanes(setup: MatchSetup, seed_value: int) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value
+	for index in range(setup.players.size() - 1, 0, -1):
+		var other: int = rng.randi_range(0, index)
+		var held: MatchPlayer = setup.players[index]
+		setup.players[index] = setup.players[other]
+		setup.players[other] = held
+
+	var slot: int = 1
+	for player in setup.players:
+		if player != null:
+			player.slot = slot
+			slot += 1
 
 
 func player_count() -> int:

@@ -89,6 +89,10 @@ var _ready_ids: PackedInt32Array = PackedInt32Array()
 
 
 func _ready() -> void:
+	# The network layer does not stop when the world is held still: a player
+	# leaving during the draft has to be noticed, or everybody else waits for
+	# them for the rest of the match.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(false)
 	Net.peer_left.connect(_on_peer_left)
 	Net.status_changed.connect(_on_network_status_changed)
@@ -343,6 +347,9 @@ func _roster_of_ready() -> MatchSetup:
 	reduced.match_id = _setup.match_id
 	reduced.rng_seed = _setup.rng_seed
 	reduced.local_slot = 0
+	# The rules the lobby agreed to, carried across whole. A match that starts
+	# short of a player is still the match that was set up.
+	reduced.settings = _setup.settings
 	var slot: int = 1
 	for player in _setup.players:
 		if player == null || !_ready_ids.has(player.network_id):

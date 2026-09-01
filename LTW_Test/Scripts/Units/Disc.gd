@@ -55,22 +55,84 @@ func _upgrade_time() -> float:
 	return 5.0 if config == null else config.disc_morph_down_seconds
 
 
-## A disc GROWS OUT rather than up, so that going up reads at all.
+## Name of the layer an upgrade grows. See _apply_visual_height.
+const GLYPH_NODE: StringName = &"Glyph"
+
+
+## A disc GROWS OUT rather than up, and an UPGRADE grows only its colour.
 ##
 ## Building scales the visual on Y over a construction, which is exactly right
 ## for something that rises out of the ground and says nothing whatsoever about
 ## a flat quad lying on it: a plane scaled on Y is the same plane, so a disc
 ## driven by the inherited rule would look finished the instant it was ordered.
+## So the same ramp is spent on the axes a disc actually has.
 ##
-## So the same ramp is spent on the axes a disc actually has. It opens out from
-## a point to its full square over the countdown, which reads from the top down
-## camera the game is played at, and it reads as the SAME event a rising tower
-## reads as - something arriving, not something already there.
+## WHICH LAYER it is spent on is the interesting half. A disc is three flat
+## layers - a square foundation, a round plate, and the element circle - and
+## only the last of them is what an upgrade buys: the tier IS the size of that
+## circle. So an upgrade grows the circle out of the middle of a plate that
+## never moves, which is a picture of exactly what was paid for.
+##
+## A RETURN runs it backwards. Morphing down to a bare disc is the element
+## being taken AWAY, so the circle shrinks out of a plate that does not move
+## and nothing grows at all - a countdown that grew anything would be a picture
+## of the opposite trade.
+##
+## The inactive disc has no circle to grow, so its BUILD opens the whole thing
+## out from a point instead. That is the right answer for it too: nothing about
+## it is arriving in the middle of something already standing there.
 ##
 ## Deliberately not a fade, which would be the obvious answer and is not
 ## available: opacity would have to be written per building, and gl_compatibility
 ## has no per-instance shader uniforms. See CLAUDE.md.
 func _apply_visual_height(progress: float) -> void:
 	var root: Node3D = _rising_visual()
+	var glyph: Node3D = root.get_node_or_null(NodePath(GLYPH_NODE)) as Node3D
+
+	if glyph == null:
+		# No circle to move. That is the inactive disc being BUILT, and opening
+		# the whole thing out from a point is the right answer for it - nothing
+		# about it is arriving in the middle of something already standing.
+		#
+		# A RETURN never lands here: the disc keeps its own model for the whole
+		# countdown, so there is always a circle. If one ever did, leaving the
+		# scale alone is the honest answer - a morph DOWN has nothing to grow.
+		if !is_returning():
+			root.scale = Vector3(
+				lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress), 1.0,
+				lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress))
+		return
+
+	# A RETURN runs the same ramp BACKWARDS. Morphing down to a bare disc takes
+	# the element away, so what the countdown should show is the colour
+	# shrinking out of a plate that stays exactly where it is - and never
+	# anything growing, which would be a picture of the opposite trade.
 	var spread: float = lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress)
-	root.scale = Vector3(spread, 1.0, spread)
+	if is_returning():
+		spread = lerpf(1.0, CONSTRUCTION_START_HEIGHT, progress)
+
+	# The layers under it are left exactly as authored either way. Scaling the
+	# root as well would move the foundation and the plate along with the
+	# circle, which is the thing this override exists to stop.
+	root.scale = Vector3.ONE
+	glyph.scale = Vector3(spread, 1.0, spread)
+
+
+## A RETURN shows no preview of what is arriving, unlike every other morph.
+##
+## Building stands the target's model up in place of this one and rises it over
+## the countdown, which is right when something is being BOUGHT: the player is
+## waiting for a thing they have not got yet and should be looking at it. A
+## return is the other direction. What arrives is a bare disc - the same square
+## foundation and the same round plate this one is already standing on, minus
+## its colour - so swapping the model in would replace the disc with a picture
+## of itself and then grow that picture from a point.
+##
+## So this one keeps its OWN visuals for the whole countdown and lets
+## _apply_visual_height shrink the colour out of them. Nothing is hidden and
+## nothing is instanced, which also makes calling the return off free: there is
+## no preview to clear and the circle simply goes back to full size.
+func _show_upgrade_preview(target_stats: BuildingStats) -> void:
+	if is_returning():
+		return
+	super(target_stats)

@@ -201,11 +201,15 @@ extends Resource
 
 @export_group("Economy")
 ## Gold every player starts with, see game_rules.md.
-@export var starting_gold: int = 20
+##
+## THE DEFAULT A LOBBY OFFERS rather than the number every match uses: the host
+## chooses this one in the room and MatchSettings carries what they agreed. The
+## same is true of the four values below it - see MatchSettings.defaults.
+@export var starting_gold: int = 40
 ## Income every player starts with, paid out on every tick.
 @export var starting_income: int = 20
 ## Seconds between income payouts.
-@export var income_interval: float = 8.0
+@export var income_interval: float = 10.0
 ## Share of a building's invested gold returned when it is sold, which for an
 ## upgraded tower is the whole chain rather than the last rung it climbed.
 ##

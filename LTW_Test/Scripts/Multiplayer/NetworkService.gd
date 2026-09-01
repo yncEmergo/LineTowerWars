@@ -68,6 +68,10 @@ var _connect_countdown: float = 0.0
 
 
 func _ready() -> void:
+	# The socket does not stop because the world is held still. Every other
+	# network autoload says the same thing, and this is the one they all sit
+	# on top of - see StartingTech's draft.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)

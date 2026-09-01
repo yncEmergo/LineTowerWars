@@ -115,6 +115,11 @@ const TECH_HEADER: int = 3
 ## most one creep per player can be reading at a time.
 const EFFECT_STRIDE: int = StatusEntry.RECORD_SIZE
 
+## The draft block is described by StartingTech.draft_record rather than by a
+## stride here, because it is the only part of a snapshot this service neither
+## builds nor reads a field of: it asks the object that owns the draft for a
+## record and hands the same record back on the other side.
+##
 ## Fields before one unit's queued orders: its id, and how many follow.
 ## Self-describing rather than a fixed stride, for the reason TECH_HEADER is:
 ## a chain is a different length for every unit and changes as it is worked
@@ -201,6 +206,10 @@ func _ready() -> void:
 	# a tick stale - exactly what the comment above says it must not be.
 	process_priority = 1000
 	process_physics_priority = 1000
+	# And keeps running while the world is held still (StartingTech's draft):
+	# a paused client is still told what the server can see, and the message
+	# that ENDS the pause is the snapshot itself.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_physics_process(false)
 	Net.status_changed.connect(_on_network_status_changed)
 
@@ -265,6 +274,7 @@ func _build_snapshot() -> Dictionary:
 	return {
 		"t": session.tick(), "u": units, "p": players, "s": stocks,
 		"r": techs, "e": _build_effects(), "o": orders,
+		"d": _draft_record(),
 	}
 
 
@@ -418,6 +428,27 @@ func _append_techs(into: PackedInt32Array, state: PlayerState, slot: int) -> voi
 	into.append_array(ids)
 
 
+## The technology DRAFT, if one is running: which Ultimates are on offer and
+## who has yet to take one. Empty in every other match, which is nearly all of
+## them - the key costs one empty array a tick for the two seconds it is not.
+##
+## On the wire at all because a client rolls NOTHING (3.4). It could derive the
+## same three Ultimates from the seed, and that is exactly the second
+## simulation the rules forbid: it would agree until it did not, and the
+## symptom would be three buttons the server refuses two of.
+func _draft_record() -> PackedInt32Array:
+	var draft: StartingTech = References.starting_tech
+	if draft == null:
+		return PackedInt32Array()
+	return draft.draft_record()
+
+
+func _apply_draft(record: PackedInt32Array) -> void:
+	var draft: StartingTech = References.starting_tech
+	if draft != null:
+		draft.set_replicated_draft(record)
+
+
 func _append_stocks(into: PackedInt32Array, manager: PlayerManager, slot: int) -> void:
 	var area: PlayerArea = manager.area_for(slot)
 	if area == null:
@@ -458,6 +489,10 @@ func _apply_incoming() -> void:
 		return
 	_applied_tick = tick
 
+	# Before the units, deliberately: this is the one field that can say the
+	# world is being held still, and a client that applied a world first and
+	# learned it was paused afterwards would run a tick it should not have.
+	_apply_draft(payload.get("d", PackedInt32Array()) as PackedInt32Array)
 	_apply_units(payload.get("u", PackedFloat32Array()) as PackedFloat32Array)
 	_apply_players(payload.get("p", PackedInt32Array()) as PackedInt32Array)
 	_apply_stocks(payload.get("s", PackedInt32Array()) as PackedInt32Array)

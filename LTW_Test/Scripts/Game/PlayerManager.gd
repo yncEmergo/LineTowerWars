@@ -57,15 +57,27 @@ func create_states(setup: MatchSetup, config: GameConfig) -> void:
 		Log.err("PlayerManager cannot create states without a MatchSetup")
 		return
 
-	var starting_lives: int = config.starting_lives(setup.player_count())
+	# What a player STARTS with is the lobby's answer rather than the file's:
+	# GameConfig is where the defaults live, and the settings are the copy of
+	# them the host actually agreed to (multiplayer.md 8.2). Lives still fall
+	# out of the player count unless the host typed a number over it, which is
+	# what lives_for decides.
+	var settings: MatchSettings = setup.settings
+	if settings == null:
+		Log.err("PlayerManager was given a setup with no settings, using the defaults")
+		settings = MatchSettings.defaults(config)
+
+	var starting_lives: int = settings.lives_for(setup.player_count(), config)
 	for player in setup.players:
 		if player == null:
 			continue
 		var state: PlayerState = PlayerState.new()
-		state.setup(player.slot, config.starting_gold, config.starting_income, starting_lives)
+		state.setup(
+			player.slot, settings.starting_gold, settings.starting_income, starting_lives
+		)
 		_states[player.slot] = state
 
-	_income_interval = config.income_interval
+	_income_interval = settings.income_interval
 	_income_elapsed = 0.0
 	_over = false
 
