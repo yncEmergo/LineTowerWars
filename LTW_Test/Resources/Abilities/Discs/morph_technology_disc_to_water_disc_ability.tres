@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DiscUpgradeAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscUpgradeAbility.gd" id="1_DiscUpgradeAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Discs/water_disc_stats.tres" id="2_water_disc_stats"]
+
+[resource]
+script = ExtResource("1_DiscUpgradeAbility")
+ability_id = 422
+tower_stats = ExtResource("2_water_disc_stats")
+display_name = "Morph into Water Disc"
+description = "Friendly towers around it regenerate mana."
+targeting = 1
+slot = 5
+required_element = 9
+required_element_techs = 1

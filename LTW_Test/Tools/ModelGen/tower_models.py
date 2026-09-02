@@ -178,7 +178,14 @@ def build_archer(m):
     base = plinth(m, 0.26, 0.23, 0.12, 4)
     m.put("Stump", m.cyl(m.deep, 0.14, 0.19, 0.22, 4), y=base + 0.11)
     m.pivot("Turret", ".", y=base + 0.24)
-    m.put("CrossBar", m.box(m.body, 0.30, 0.05, 0.06), parent="Turret", z=-0.04)
+    # NAMED "Stock" rather than for its shape, because roster.ANIMATION names
+    # one recoil node for the WHOLE BRANCH and every tier has to answer to it.
+    # A bare bar is not a stock, but the node the recoil kicks is a contract
+    # the branch keeps - exactly as "Turret/Muzzle" is kept by every tower in
+    # the game whatever the muzzle looks like. Calling it CrossBar left the
+    # 10g Archer's Recoil1 pointing at nothing, which errored once per tower
+    # spawned, on the server as well as on both clients.
+    m.put("Stock", m.box(m.body, 0.30, 0.05, 0.06), parent="Turret", z=-0.04)
     m.pivot("Muzzle", "Turret", z=-0.18)
     return base + 0.30
 

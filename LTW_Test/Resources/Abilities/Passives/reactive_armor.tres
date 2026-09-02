@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ReactiveArmorPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/ReactiveArmorPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 351
+display_name = "Reactive Armor"
+targeting = 0
+first_threshold = 300.0
+middle_ratio = 0.05
+second_threshold = 1000.0
+top_ratio = 0.25

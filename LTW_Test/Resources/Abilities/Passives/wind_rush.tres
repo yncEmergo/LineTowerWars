@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="WindRushPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/WindRushPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 329
+display_name = "Wind Rush"
+targeting = 0
+radius_cells = 3.125
+speed_bonus = 0.4
+duration_seconds = 3.0

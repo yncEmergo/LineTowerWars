@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SlowCapPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/SlowCapPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 350
+display_name = "Goblin Engineering"
+targeting = 0
+slow_cap = 0.25

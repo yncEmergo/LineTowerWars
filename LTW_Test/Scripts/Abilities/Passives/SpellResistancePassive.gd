@@ -39,8 +39,9 @@ extends CreepPassive
 @export_range(0.0, 1.0, 0.05) var chill_ratio: float = 1.0
 
 
-func damage_taken_ratio(_is_aoe: bool, is_spell: bool) -> float:
-	return damage_ratio if is_spell else 1.0
+func damage_taken_ratio(_creep: Creep, damage_type: DamageTable.DamageType,
+		_is_aoe: bool) -> float:
+	return damage_ratio if DamageTable.is_spell(damage_type) else 1.0
 
 
 func harmful_duration_ratio() -> float:

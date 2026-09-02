@@ -29,6 +29,10 @@ extends RefCounted
 ## The most it holds, and what it holds now.
 var maximum: int = 0
 var current: int = 0
+## Fraction of a point regeneration has built up but not handed over yet, so a
+## pool filling slower than a point a tick still fills rather than doing
+## nothing at all. The same trick creep health regeneration and burning use.
+var _carry: float = 0.0
 
 
 ## Builds the pool a creep's stats describe, or null when they describe none.
@@ -63,6 +67,38 @@ func gain(amount: int) -> bool:
 	if amount != 0 && MatchSession.is_authority():
 		current = clampi(current + amount, 0, maximum)
 	return is_full()
+
+
+## Fills the pool on a clock, at the rate the creep's own stats state.
+##
+## Separate from gain() because the two are different things: gain() is a rule
+## firing - a hit landed, so bank a point - and this is a resource filling. It
+## also answers nothing, since a trait on a clock reads is_full() on its own
+## tick rather than being told the moment the pool tops up.
+func regenerate(per_second: float, delta: float) -> void:
+	if per_second <= 0.0 || is_full() || !MatchSession.is_authority():
+		return
+
+	_carry += per_second * delta
+	var whole: int = int(_carry)
+	if whole <= 0:
+		return
+	_carry -= float(whole)
+	current = clampi(current + whole, 0, maximum)
+
+
+## Drains a share of the pool per second, which one trait does to itself while
+## it runs. The mirror of regenerate() and it carries its fraction the same way.
+func decay(share_per_second: float, delta: float) -> void:
+	if share_per_second <= 0.0 || current <= 0 || !MatchSession.is_authority():
+		return
+
+	_carry -= float(maximum) * share_per_second * delta
+	var whole: int = int(-_carry)
+	if whole <= 0:
+		return
+	_carry += float(whole)
+	current = clampi(current - whole, 0, maximum)
 
 
 ## Takes mana, refusing to go below zero. Reports whether there was enough,

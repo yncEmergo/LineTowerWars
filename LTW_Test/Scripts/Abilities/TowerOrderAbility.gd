@@ -71,6 +71,12 @@ func footprint_cells() -> Vector2i:
 	return tower_stats.footprint_cells
 
 
+## Whether what this places is a WALL, off the stats for the same reason the
+## footprint is: the build preview has to answer it about a ghost.
+func blocks_movement() -> bool:
+	return tower_stats == null || tower_stats.blocks_movement
+
+
 ## Visual-only scene taken from the tower's stats, so a ghost is the same mesh
 ## that gets placed.
 func model_scene() -> PackedScene:

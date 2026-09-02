@@ -61,11 +61,6 @@ var max_mana: int = -1
 ## state is genuinely the tower's: how much damage it has eaten, which creep it
 ## has been ramping up on, when it last idled. See TowerPassive.
 var ability_state: Dictionary = {}
-## What this tower's ACTIVE ability - the one a player presses - is waiting on
-## and what it has been aimed at. Its own object rather than two more fields
-## here, and unlike ability_state above BOTH of its numbers are drawn on a
-## card, so both come down the wire. See ActiveAbilityState.
-var active_ability: ActiveAbilityState = ActiveAbilityState.new()
 ## Permanent attack damage this tower's passives have banked, as the SERVER
 ## last reported it, and meaningful on a CLIENT only.
 ##
@@ -96,6 +91,23 @@ var _tower_passives: Array[TowerPassive] = []
 ## Fraction of a mana point regeneration has built up but not handed over yet,
 ## so a rate below one point a tick still fills.
 var _mana_carry: float = 0.0
+## Everything a CREEP has left on this tower - a curse on its attack speed, an
+## aura weakening its damage, the gates that stop one creep draining it twice -
+## or null while nothing has touched it.
+##
+## Created on demand and dropped again the moment it runs dry, exactly as a
+## creep's StatusEffects is, so the ordinary tower standing in a maze nothing
+## has cursed costs nothing at all. See Combat/TowerStatus.gd.
+var _status: TowerStatus = null
+## What a technology DISC is currently lending this tower, or null while none
+## is reaching it.
+##
+## Created and dropped on exactly the terms _status is, and kept apart from it
+## for the same reason the two are separate classes: a curse is something done
+## TO a tower and a boon is something lent to it, they arrive from opposite
+## ends of the field, and merging them would put "how fast do I attack" behind
+## one number nobody could read the two halves out of. See Combat/TowerBuffs.gd.
+var _buffs: TowerBuffs = null
 var _under_construction: bool = false
 var _construction_elapsed: float = 0.0
 var _selling: bool = false
@@ -185,6 +197,116 @@ func _reset_mana() -> void:
 ## for every Basic tower, which is what makes them cost nothing.
 func tower_passives() -> Array[TowerPassive]:
 	return _tower_passives
+
+
+## What a creep has left on this tower, created on the spot if it has nothing
+## yet. Only ever called by something ABOUT to apply an effect, which is why it
+## always answers with an object - a caller that had to check for null first
+## would eventually forget to.
+func status() -> TowerStatus:
+	if _status == null:
+		_status = TowerStatus.new()
+	return _status
+
+
+## What is on this tower right now, or null when nothing is. The read side.
+func status_or_null() -> TowerStatus:
+	return _status
+
+
+## What a disc is lending this tower, created on the spot if nothing is yet.
+## The mirror of status() above, and only ever called by a disc ABOUT to grant
+## something.
+func buffs() -> TowerBuffs:
+	if _buffs == null:
+		_buffs = TowerBuffs.new()
+	return _buffs
+
+
+## What is lent to this tower right now, or null when nothing is. The read side.
+func buffs_or_null() -> TowerBuffs:
+	return _buffs
+
+
+## Everything on this tower: what a creep has cursed it with, and what a disc
+## is lending it. See Unit.status_entries() for why this is virtual.
+##
+## Both halves in one list because to everything that reads it they are the same
+## question - "what is on this tower" - and the two objects behind them are an
+## implementation detail of who writes them.
+func status_entries() -> Array[StatusEntry]:
+	var list: Array[StatusEntry] = []
+	if _status != null:
+		list.append_array(_status.entries())
+	if _buffs != null:
+		list.append_array(_buffs.entries())
+	return list
+
+
+## Everything reaching this tower right now, as the ONE list both machines can
+## answer from.
+##
+## The authority reads the objects; a client has neither and reads what the
+## server sent for the unit it is watching. Every reader below goes through this
+## rather than branching for itself, which is what makes the panel, the range
+## circle and the barrels all agree.
+##
+## What a client is entitled to is only ever the unit its panel is SHOWING - the
+## snapshot carries the effects of watched units and no others (multiplayer.md
+## 5.4). So a tower nobody is looking at answers its own bare numbers on a
+## client, exactly as it did before any of this, and the one being looked at is
+## right. That is the same trade the creep armour line has always made.
+func _reaching() -> Array[StatusEntry]:
+	return StatusEntry.for_unit(self)
+
+
+## How fast this tower attacks, with everything reaching it folded in. Below 1
+## is slower. See TowerStatus and unit_data.md 6.6, Wicked Curse, for what
+## takes it down, and TowerBuffs for the Earth disc that puts it up.
+func attack_speed_ratio() -> float:
+	var ratio: float = super()
+	if !MatchSession.is_authority():
+		return ratio * StatusEntry.attack_speed_ratio_in(_reaching())
+	if _status != null:
+		ratio *= _status.attack_speed_ratio()
+	if _buffs != null:
+		ratio *= _buffs.attack_speed_ratio()
+	return ratio
+
+
+## How hard this tower hits, with everything reaching it folded in. Below 1 is
+## weaker. unit_data.md 6.6, Annihilation Aura, takes it down; a Void disc puts
+## it up.
+func attack_damage_ratio() -> float:
+	var ratio: float = super()
+	if !MatchSession.is_authority():
+		return ratio * StatusEntry.attack_damage_ratio_in(_reaching())
+	if _status != null:
+		ratio *= _status.attack_damage_ratio()
+	if _buffs != null:
+		ratio *= _buffs.attack_damage_ratio()
+	return ratio
+
+
+## How far this tower reaches beyond what its own attack says, in cells. A
+## Primal disc standing nearby is the only thing in the game that answers.
+##
+## This is the one of the four a player can SEE being wrong: the range overlay
+## draws a circle off it, so a client that could not read the disc drew the
+## wrong circle around a tower that really did have the reach.
+func attack_range_bonus() -> float:
+	if !MatchSession.is_authority():
+		return StatusEntry.range_bonus_in(_reaching())
+	return 0.0 if _buffs == null else _buffs.attack_range_bonus()
+
+
+## Armour points this tower has right now: its own, plus whatever a Holy disc
+## is lending it. Overridden here rather than read off the stats for exactly
+## the reason Unit.armor_value() says it can be - the panel asks the tower.
+func armor_value() -> int:
+	if !MatchSession.is_authority():
+		return super() + StatusEntry.armor_delta_in(_reaching())
+	return super() + (0 if _buffs == null else _buffs.armor_bonus())
 
 
 ## Whether this tower uses mana at all, which is what decides whether the panel
@@ -336,6 +458,13 @@ func footprint() -> Vector2i:
 	return area.cells_to_internal(_building_stats.footprint_cells)
 
 
+## Whether creeps have to walk around this building. Off its stats rather than
+## off its class, because the same answer is needed for a building that does
+## not exist yet - see BuildingStats.blocks_movement.
+func blocks_movement() -> bool:
+	return _building_stats == null || _building_stats.blocks_movement
+
+
 ## Anchors the building to a grid cell and starts construction.
 ## Call after the node is in the tree.
 ##
@@ -357,7 +486,7 @@ func place(player_id: int, home_area: PlayerArea, grid_cell: Vector2i, spent_gol
 		]
 
 	var size: Vector2i = footprint()
-	home_area.occupy(grid_cell, size)
+	home_area.occupy(grid_cell, size, blocks_movement())
 	global_position = home_area.footprint_world_center(grid_cell, size)
 	reset_physics_interpolation()
 
@@ -1213,6 +1342,10 @@ func _physics_process(delta: float) -> void:
 	# stop healing. Only a building still going up is excluded, because its
 	# health is the construction ramp's to drive - see _apply_construction_health.
 	_regenerate(delta)
+	# Runs for anything STANDING, on the same reasoning regeneration does: a
+	# tower mid-upgrade is still a body in the maze, and a curse it is waiting
+	# out must keep counting down while it is.
+	_advance_status(delta)
 
 	if _upgrading:
 		_advance_upgrade(delta)
@@ -1225,6 +1358,18 @@ func _physics_process(delta: float) -> void:
 	# three seconds would be a hole in a maze nobody asked for.
 	_advance_passives(delta)
 	active_ability.advance(delta)
+
+
+## Advances whatever a creep has left on this tower, and drops the object once
+## nothing is running - so a tower that was cursed once and has waited it out
+## goes back to costing nothing per tick.
+func _advance_status(delta: float) -> void:
+	if _status != null && !_status.advance(delta):
+		_status = null
+	# Dropped on the same terms, so a tower whose disc has been sold stops
+	# paying for the object a moment after it stops benefiting from it.
+	if _buffs != null && !_buffs.advance(delta):
+		_buffs = null
 
 
 ## Health every standing building gets back per second, all sources summed.
@@ -1240,7 +1385,13 @@ func _physics_process(delta: float) -> void:
 func _health_regen_per_second() -> float:
 	if _config == null:
 		return 0.0
-	return float(max_health()) * _config.building_health_regen_ratio
+	var per_second: float = float(max_health()) * _config.building_health_regen_ratio
+	# A Holy disc states its gift as a SHARE of what the tower already
+	# regenerates - "+165% health regeneration" - so it multiplies this rather
+	# than adding points to it. unit_data.md 5.2.
+	if _buffs != null:
+		per_second *= 1.0 + _buffs.regen_share()
+	return per_second
 
 
 ## Heals the building back up on its own clock.
@@ -1262,10 +1413,9 @@ func _regenerate(delta: float) -> void:
 ## deliberately applied BEFORE the ticks, so a passive that spends at full mana
 ## sees the point that filled it on the same tick it arrives.
 func _advance_passives(delta: float) -> void:
-	if _tower_passives.is_empty():
-		return
-
-	var per_second: float = 0.0
+	# The Water disc regenerates the mana of towers that have no passive of
+	# their own at all, so the sum starts outside the early return below.
+	var per_second: float = 0.0 if _buffs == null else _buffs.mana_per_second()
 	for passive in _tower_passives:
 		per_second += passive.mana_per_second(self)
 	if per_second != 0.0:

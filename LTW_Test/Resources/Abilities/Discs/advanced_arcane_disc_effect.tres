@@ -1,0 +1,16 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/ArcaneDiscPassive.gd" id="1_ArcaneDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/advanced_arcane_disc.png" id="2_advanced_arcane_disc"]
+
+[resource]
+script = ExtResource("1_ArcaneDiscPassive")
+ability_id = 384
+display_name = "Null Field"
+targeting = 0
+slot = 6
+icon = ExtResource("2_advanced_arcane_disc")
+radius_cells = 0
+duration_seconds = 20
+spell_amp = 0.1
+trigger_seconds = 1

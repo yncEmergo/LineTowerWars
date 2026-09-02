@@ -20,10 +20,15 @@ keeping goes back into the generator.
 
 It writes into:
     Resources/Materials/Towers/     the shared palette
+    Resources/Materials/Discs/      one ground material per disc
     Resources/UnitStats/Towers/     one BuildingStats per tower
+    Resources/UnitStats/Discs/      one BuildingStats per disc
     Resources/Abilities/Towers/     build and upgrade abilities
+    Resources/Abilities/Discs/      disc effects and morphs
     Scenes/Units/Towers/            prefabs
+    Scenes/Units/Discs/             disc prefabs
     Scenes/Units/Models/Towers/     models
+    Scenes/Units/Models/Discs/      disc floor patches
     Scenes/Effects/                 projectiles and impacts
 
 ADDING A ROSTER. The layers are stacked so that only the top one is new work:
@@ -35,10 +40,18 @@ ADDING A ROSTER. The layers are stacked so that only the top one is new work:
     <x>_models.py the shapes. This is the real work for a new roster
     <x>_content.py the stats and abilities that point at those models
 
-All three rosters are in. Elemental towers were the cheap case - same material
+All four rosters are in. Elemental towers were the cheap case - same material
 roles, same shape of ladder - and creeps were the bigger one, needing their own
 shader, their own ladder and a builder per body plan, while still inheriting
 every layer below style.py unchanged.
+
+The DISCS are the odd one and the cheapest of the lot, because they have no
+models at all: a disc is a flat patch painted onto the floor, so its whole
+visual roster is one shader, one material per disc and a two-node scene to hang
+it on. It inherits nothing from modelkit and everything from style.py - the ten
+element hues and the ten side counts are read straight out of the same table
+the elemental towers use, so a Fire disc and a Fire tower cannot disagree about
+what Fire looks like.
 
 The creep stage writes PREFABS ONLY. Creep stats, passives and pack entries
 were authored by hand and unit_data.md 8.1 makes them the authority; see
@@ -49,6 +62,8 @@ import sys
 
 import creep_content
 import creep_models
+import disc_content
+import disc_models
 import effects
 import element_content
 import element_models
@@ -73,13 +88,15 @@ def run(stages, with_showcase):
         # so content cannot run without the dimensions models just measured.
         if built is None:
             built = _models()
-        # The Basic roster LAST, because its build menu has to name the
-        # Elemental Core alongside the three 10g towers - and that ability is
-        # the elemental content stage's to write.
         element_content.generate(built["towers"])
+        disc_content.generate(built["discs"])
+        # The Basic roster LAST, because its build menu has to name everything
+        # else the builder can place: the Elemental Core and the Technology
+        # Disc, both of which are other stages' abilities to write.
         tower_content.generate(
             built["towers"],
-            [element_content.build_ability_path("elemental_core")])
+            [element_content.build_ability_path("elemental_core"),
+             disc_content.build_ability_path()])
         creep_content.generate(built["creeps"])
     if with_showcase:
         showcase.generate()
@@ -101,7 +118,8 @@ def _models():
     heights = tower_models.generate()
     heights.update(element_models.generate())
     print("wrote %d tower models" % len(heights))
-    return {"towers": heights, "creeps": creep_models.generate()}
+    return {"towers": heights, "creeps": creep_models.generate(),
+            "discs": disc_models.generate()}
 
 
 if __name__ == "__main__":

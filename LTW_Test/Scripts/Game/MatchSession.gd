@@ -35,6 +35,13 @@ static var _fallback_rng: RandomNumberGenerator = null
 var _setup: MatchSetup = null
 var _rng: RandomNumberGenerator = null
 var _start_frame: int = 0
+## Set while the whole scene tree is held still - the technology DRAFT is the
+## only thing that does it so far. Kept here rather than only on the tree
+## because the match clock has to be corrected for it; see set_paused.
+var _paused: bool = false
+## The frame the hold began on, so resuming can give the clock back what the
+## hold took.
+var _pause_frame: int = 0
 var _abilities: AbilityRegistry = AbilityRegistry.new()
 var _unit_types: UnitTypeRegistry = UnitTypeRegistry.new()
 var _techs: TechRegistry = TechRegistry.new()
@@ -46,6 +53,7 @@ var _next_unit_id: int = 1
 ## builders and player states all read from here.
 func begin(match_setup: MatchSetup) -> void:
 	_setup = match_setup
+	_paused = false
 	_units.clear()
 	_next_unit_id = 1
 	_start_frame = Engine.get_physics_frames()
@@ -61,6 +69,26 @@ func begin(match_setup: MatchSetup) -> void:
 
 func setup() -> MatchSetup:
 	return _setup
+
+
+## The rules this match is played under, chosen in the lobby. Never null: a
+## match with no settings has no starting gold and no income interval, so a
+## stand-in from GameConfig is better than a crash and far better than silence.
+func settings() -> MatchSettings:
+	if _setup != null && _setup.settings != null:
+		return _setup.settings
+	Log.warn("MatchSession was asked for settings it has none of, standing in the defaults")
+	return MatchSettings.defaults(References.game_config)
+
+
+## The same answer, reachable without already holding the session - the shape
+## match_rng() uses, and for the same reason: the things that ask are scattered
+## and most of them hold nothing.
+static func match_settings() -> MatchSettings:
+	var session: MatchSession = References.match_session
+	if session != null:
+		return session.settings()
+	return MatchSettings.defaults(References.game_config)
 
 
 ## The match RNG, reachable without already holding the session.
@@ -107,13 +135,33 @@ func player_count() -> int:
 	return _setup.player_count()
 
 
+## What this player is CALLED on screen, which is not always who they are.
+##
+## The ANONYMOUS modifier answers with the slot's colour instead - "Red",
+## "Blue" - and it is answered here rather than at the panel that draws it, so
+## that a second reader cannot forget the rule. The lobby is deliberately not
+## routed through this: the anonymity is a rule of the match, and hiding who
+## you are about to play would only stop people finding each other.
 func display_name_for(slot: int) -> String:
+	if _setup != null && _setup.settings != null:
+		if _setup.settings.modifier == MatchSettings.Modifier.ANONYMOUS:
+			return _color_name_for(slot)
 	if _setup == null:
 		return "Player %d" % slot
 	var player: MatchPlayer = _setup.player_for(slot)
 	if player == null:
 		return "Player %d" % slot
 	return player.display_name
+
+
+## The name of the colour a slot is drawn in. Presentation, so it comes off
+## PresentationConfig - and a dedicated server, which wires none, falls back to
+## the slot number rather than refusing to answer.
+func _color_name_for(slot: int) -> String:
+	var presentation: PresentationConfig = References.presentation_config
+	if presentation == null:
+		return "Player %d" % slot
+	return presentation.player_color_name(slot)
 
 
 ## Simulation ticks since this match began, counting from 0.
@@ -126,6 +174,12 @@ func display_name_for(slot: int) -> String:
 ## This is what a command will be stamped with, and what the server and a
 ## client compare when they disagree. See multiplayer.md.
 func tick() -> int:
+	# Frozen while the world is held still. The engine goes on counting physics
+	# frames whether or not anything is processing them, so without this the
+	# clock would run through a pause and every creep unlock would come out of
+	# it having silently served time. See set_paused.
+	if _paused:
+		return _pause_frame - _start_frame
 	return Engine.get_physics_frames() - _start_frame
 
 
@@ -139,6 +193,69 @@ func tick() -> int:
 ## that arrives too early whatever the button showed.
 func elapsed_seconds() -> float:
 	return float(tick()) * tick_seconds()
+
+
+## Whether the world is being held still. See set_paused.
+func is_paused() -> bool:
+	return _paused
+
+
+## Holds the whole match still, or lets it go again.
+##
+## **The tree is what is paused**, not a flag every loop has to check: every
+## gameplay loop in the project lives in `_physics_process`, so Godot's own
+## pause switches all of them off at once and nothing new has to remember to
+## ask. What must keep running says so for itself - the network autoloads, and
+## whatever screen the player is being held FOR.
+##
+## The match CLOCK is given back what the hold took, because the tick counter
+## is the physics frame and the engine goes on counting those while nothing is
+## processing them. Without this, a ten second draft would be ten seconds every
+## creep unlock in the match had silently already served.
+##
+## Called on both machines - the authority from the draft it is running, a
+## client from what the snapshot says is still outstanding - so a client is
+## held for as long as the server is, give or take the snapshot that says so.
+func set_paused(paused: bool) -> void:
+	if _paused == paused:
+		return
+	_paused = paused
+
+	var tree: SceneTree = get_tree()
+	if tree != null:
+		tree.paused = paused
+	if paused:
+		_pause_frame = Engine.get_physics_frames()
+	else:
+		_start_frame += Engine.get_physics_frames() - _pause_frame
+	Log.info("Match " + ("paused" if paused else "resumed"), {"tick": tick()})
+
+
+## Whether the match has reached Sudden Death.
+##
+## Derived from the clock rather than kept as a flag, so there is no state that
+## could disagree with the time and nothing to replicate: a client works the
+## same answer out of its own clock, and the server refuses a send that arrives
+## on the wrong side of the line whatever the button showed. The same shape a
+## creep unlock already has - see SendBuilding.unlock_remaining.
+##
+## What it means is in game_rules.md and unit_data.md 1.7: the whole of tier 4
+## unlocks at once and tiers 1 to 3 stop being sendable.
+func is_sudden_death() -> bool:
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return false
+	return elapsed_seconds() >= config.sudden_death_seconds
+
+
+## Seconds until Sudden Death, or 0 once it has arrived. What a dead send
+## square draws so a player waiting on tier 4 reads how long rather than only
+## that it is not ready.
+func sudden_death_remaining() -> float:
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return -1.0
+	return maxf(0.0, config.sudden_death_seconds - elapsed_seconds())
 
 
 ## Seconds per simulation tick, read from the engine rather than duplicated, so

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/PrimalDiscPassive.gd" id="1_PrimalDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/advanced_primal_disc.png" id="2_advanced_primal_disc"]
+
+[resource]
+script = ExtResource("1_PrimalDiscPassive")
+ability_id = 402
+display_name = "Far Sight"
+targeting = 0
+slot = 6
+icon = ExtResource("2_advanced_primal_disc")
+radius_cells = 2.34
+range_bonus_cells = 1.56

@@ -283,7 +283,7 @@ func show_unit(unit: Variant) -> void:
 	_set_resource_text(unit)
 	_set_damage_text(_unit)
 	_apply_armor_label()
-	_set_attack_text(stats)
+	_set_attack_text(_unit)
 	_refresh_bars()
 	_refresh_job()
 	if _status_bar != null:
@@ -366,16 +366,23 @@ func _set_damage_text(unit: Unit) -> void:
 		_damage_label.text = _damage_line(unit)
 
 
-## The damage line for one unit, with whatever its own abilities have added to
-## it for good folded in - an Alchemist that has devoured a hundred points of
-## damage hits for a hundred more than its stats say, and the panel is where a
-## player finds that out. Asked of the UNIT rather than read off its stats, for
-## the same reason the armour line is: the number on the resource is the base,
-## and what is standing on the field is not always it.
+## The damage line for one unit, with everything currently changing it folded
+## in. Two different things, and both belong here:
+##
+##   what the unit has EARNED and keeps - an Alchemist that has devoured a
+##   hundred points of damage hits for a hundred more than its stats say, and
+##   the panel is where a player finds that out
+##   what is REACHING it right now - a Void disc lending it damage, an
+##   Obsidian Statue drifting past taking some away
+##
+## Asked of the UNIT rather than read off its stats, for the same reason the
+## armour line is: the number on the resource is the base, and what is standing
+## on the field is not always it.
 func _damage_line(unit: Unit) -> String:
 	var tower: Building = unit as Building
 	var bonus: int = 0 if tower == null else tower.permanent_damage_bonus()
-	return "Damage:   %s" % unit.stats.damage_text(bonus)
+	return "Damage:   %s" % unit.stats.damage_text(
+		bonus, unit.attack_damage_ratio())
 
 
 ## Keeps it up to date. Polled for the same reason the armour line is: a tower
@@ -395,11 +402,11 @@ func _refresh_damage_label() -> void:
 ## Attack speed and range, and nothing at all for a unit that cannot attack.
 ## Written as APS rather than spelled out, because APS is what the player calls
 ## it. Must run after _set_group_mode, which reveals every single-unit label.
-func _set_attack_text(stats: UnitStats) -> void:
-	if _attack_label == null:
+func _set_attack_text(unit: Unit) -> void:
+	if _attack_label == null || unit == null || unit.stats == null:
 		return
 
-	var attack: AttackStats = stats.attack
+	var attack: AttackStats = unit.stats.attack
 	var showing: bool = attack != null && !_busy
 	_attack_label.visible = showing
 	if _splash_label != null:
@@ -409,10 +416,31 @@ func _set_attack_text(stats: UnitStats) -> void:
 	if !showing:
 		return
 
-	_attack_label.text = "Attack:   %s,  %s range" % [
-		attack.attack_speed_text(), attack.range_text()
+	# Both asked of the UNIT, on the same terms the damage and armour lines are:
+	# an Earth disc makes a tower swing faster and a Primal disc makes it reach
+	# further, and neither is anything its stats file can know about.
+	#
+	# Written only when it has actually moved, the way the damage line is: this
+	# runs every frame now that it is polled, and assigning a Label its own text
+	# back re-lays the panel out for nothing.
+	var text: String = "Attack:   %s,  %s range" % [
+		attack.attack_speed_text(unit.attack_speed_ratio()),
+		attack.range_text(unit.attack_range_bonus())
 	]
+	if _attack_label.text != text:
+		_attack_label.text = text
 	_set_splash_text(attack)
+
+
+## Keeps it up to date, polled for the reason the damage and armour lines are:
+## a disc going up beside a tower moves both halves of this line while a player
+## is looking straight at it, and no signal is raised when it does.
+func _refresh_attack_label() -> void:
+	if _attack_label == null || !_attack_label.visible:
+		return
+	if _unit == null || !is_instance_valid(_unit):
+		return
+	_set_attack_text(_unit)
 
 
 ## The area-and-count line: how much ground one attack covers, and how many
@@ -433,7 +461,11 @@ func _set_splash_text(attack: AttackStats) -> void:
 
 	var extra: int = attack.multishot_targets + _passive_extra_targets()
 	var multishot: String = "None" if extra <= 0 else "+%d targets" % extra
-	_splash_label.text = "Splash:   %s,   Multishot:   %s" % [splash, multishot]
+	# Guarded like the two lines above it, and for the same reason: this is
+	# reached from the attack line, which is polled every frame now.
+	var text: String = "Splash:   %s,   Multishot:   %s" % [splash, multishot]
+	if _splash_label.text != text:
+		_splash_label.text = text
 
 
 ## Further creeps the selected tower's own abilities add to every attack.
@@ -969,6 +1001,7 @@ func _release_hold() -> void:
 func _process(delta: float) -> void:
 	_refresh_armor_label()
 	_refresh_damage_label()
+	_refresh_attack_label()
 	_refresh_resource_label()
 	_refresh_bars()
 	_refresh_job()
@@ -1077,32 +1110,24 @@ func _apply_armor_label() -> void:
 		_armor_label.tooltip_text = note
 
 
-## Armour POINTS the unit really has right now.
+## Armour POINTS the unit really has right now, and the TYPE it counts as.
 ##
-## The authority asks the unit, which is the real thing. A CLIENT has no
-## StatusEffects to ask (multiplayer.md 3.4), so what its own creep answers is
-## base armour with none of the eating in it - and the effects the server sent
-## for THIS unit are exactly what is missing. They are the same records the
-## debuff row underneath is drawing, so the line and the row can no longer say
-## different things about the same three points.
+## Both simply ASK THE UNIT now, on either machine. The branch that used to be
+## here - authority reads the unit, a client adds the replicated records itself
+## - moved into Creep.armor_value() and Building.armor_value(), because the
+## panel was not the only reader that needed it: the range circle, the barrels
+## and the damage line all ask the unit too, and every one of them would have
+## wanted its own copy of the same three lines.
 ##
-## Still short of perfect on a client: armour GRANTED by an aura is not on the
-## wire at all, so a creep standing in one reads low. One field away, and not
-## worth it until somebody is looking at an aura.
+## What that also fixed is the note this used to carry, that armour GRANTED by
+## an aura was on no wire at all and so read low on a client. It is on the wire
+## now, as an ARMOR_LENT record like the one a Holy disc lends a tower.
 func _armor_points() -> int:
-	var points: int = _unit.armor_value()
-	if MatchSession.is_authority():
-		return points
-	return points + StatusEntry.armor_delta_in(StatusEntry.for_unit(_unit))
+	return _unit.armor_value()
 
 
-## The armour TYPE the unit counts as right now, which the Ultimate Alchemist
-## can change for a few seconds. Split from the points on the same terms.
 func _armor_type() -> UnitStats.ArmorType:
-	if MatchSession.is_authority():
-		return _unit.armor_type_value()
-	return StatusEntry.armor_type_in(StatusEntry.for_unit(_unit),
-		_unit.stats.armor_type)
+	return _unit.armor_type_value()
 
 
 ## What hovering the armour line says: how much of a hit those points actually
@@ -1201,7 +1226,7 @@ func _apply_stat_lines() -> void:
 		return
 
 	_set_damage_text(_unit)
-	_set_attack_text(_unit.stats)
+	_set_attack_text(_unit)
 	if _armor_label != null:
 		_armor_label.visible = !_busy
 	if _status_bar != null:

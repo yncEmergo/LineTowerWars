@@ -113,13 +113,24 @@ func tooltip_data(hotkey_label: String = "",
 
 	var config: GameConfig = References.game_config
 	if config != null:
-		data.add_stat("Return time", "%.1fs" % config.return_to_core_seconds)
+		data.add_stat("Return time", "%.1fs" % _return_seconds(config))
 		data.add_stat("Refunded", "%d%%" % int(round(config.sell_refund_ratio * 100.0)))
 
 	var core: BuildingStats = core_stats()
 	if core != null:
 		data.add_stat("Stays sunk", str(core.total_gold_cost))
 	return data
+
+
+## How long the morph this ability starts actually takes, for the card to quote.
+##
+## A question rather than a constant because the disc roster runs the same
+## machinery on a different clock - five seconds rather than three, see
+## DiscRevertAbility - and a card that quoted a wait the building does not serve
+## would be the worst kind of wrong. The BUILDING is what decides the real one;
+## this only has to agree with it.
+func _return_seconds(config: GameConfig) -> float:
+	return config.return_to_core_seconds
 
 
 ## A path that does not resolve is a dead button, and this one sits on most of

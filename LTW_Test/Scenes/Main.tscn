@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://se5c6bgai77e" path="res://Scripts/Game/PlayerManager.gd" id="14_players"]
 [ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="21_session"]
 [ext_resource type="Script" path="res://Scripts/Tech/TechManager.gd" id="28_tech"]
+[ext_resource type="Script" path="res://Scripts/Tech/StartingTech.gd" id="31_starting_tech"]
 [ext_resource type="Resource" uid="uid://dntbwmi5dakuc" path="res://Resources/Config/controls_config.tres" id="16_ctrl"]
 [ext_resource type="Resource" path="res://Resources/Config/damage_table.tres" id="17_dmgt"]
 [ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="20_menucfg"]
@@ -78,7 +79,10 @@ script = ExtResource("21_session")
 [node name="TechManager" type="Node" parent="."]
 script = ExtResource("28_tech")
 
-[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_tech_manager", "_effects_root", "_projectiles_root", "_order_overlay")]
+[node name="StartingTech" type="Node" parent="."]
+script = ExtResource("31_starting_tech")
+
+[node name="References" type="Node" parent="." unique_id=1238662933 node_paths=PackedStringArray("_units_root", "_rts_camera", "_selection_controller", "_command_controller", "_selection_box_overlay", "_unit_panel", "_player_manager", "_match_session", "_tech_manager", "_starting_tech", "_effects_root", "_projectiles_root", "_order_overlay")]
 script = ExtResource("5_pbw6q")
 _units_root = NodePath("../Units")
 _rts_camera = NodePath("../Camera")
@@ -89,6 +93,7 @@ _unit_panel = NodePath("../MatchHUD/UnitPanel")
 _player_manager = NodePath("../PlayerManager")
 _match_session = NodePath("../MatchSession")
 _tech_manager = NodePath("../TechManager")
+_starting_tech = NodePath("../StartingTech")
 _effects_root = NodePath("../Effects")
 _order_overlay = NodePath("../OrderOverlay")
 _projectiles_root = NodePath("../Projectiles")

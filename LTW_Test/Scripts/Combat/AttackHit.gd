@@ -46,6 +46,22 @@ var attacker_position: Vector3 = Vector3.ZERO
 ## The tower that fired, or null. May have been sold mid flight, so every read
 ## of it goes through _live_source().
 var source: Building = null
+## WHOEVER fired, tower or creep, on the same terms and with the same warning:
+## it may be gone by the time this lands, so every read is guarded.
+##
+## `source` above is this narrowed to a Building, and stays separate because
+## nearly everything that reads it wants a tower and would otherwise cast on
+## every line. What this one is for is the traffic going the OTHER way: a
+## static tower returns a multiple of the damage back at the creep that hit it,
+## and there is no other way to know which creep that was. See TowerBuffs.
+var attacker: Unit = null
+## How far the attack that fired this shot reaches, in cells.
+##
+## Carried on the hit rather than looked up from the source, because one creep
+## in the roster dodges by REACH - Quickness only works against towers shooting
+## from 900 away or more - and a splash or a rocket has no tower to ask. Zero
+## for anything that was not fired by an attack, which dodges nothing.
+var attack_range: float = 0.0
 ## The source tower's passives, copied so they survive it being sold. They are
 ## shared resources and hold no state, so copying them costs a reference each.
 var passives: Array[TowerPassive] = []
@@ -114,17 +130,43 @@ func _apply_type_override(target: Unit) -> void:
 ## hit as far as every ability that reads it is concerned - and measuring it
 ## the other way would make a poison stack shrink against a dying creep.
 func _strike(target: Unit) -> void:
+	if _dodged(target):
+		return
+
 	var dealt: int = target.resolve_damage(damage, damage_type, is_aoe)
 	target.take_damage(damage, damage_type, is_aoe)
+	_return_fire(target, dealt)
 
 	var tower: Building = _live_source()
 	if tower == null:
 		return
 	for passive in passives:
 		passive.on_hit(tower, target, dealt, is_primary)
+	# What a disc is lending the tower lands AFTER its own passives, so a tower
+	# that already chills applies its own chill and the disc's under two
+	# separate caps rather than one merged into the other. See TowerBuffs.
+	var boons: TowerBuffs = tower.buffs_or_null()
+	if boons != null:
+		boons.on_tower_hit(tower, target, damage_type, dealt)
 	if !target.is_alive():
 		for passive in passives:
 			passive.on_kill(tower, target)
+
+
+## What a STATIC tower does back to the creep that just hit it.
+##
+## Here rather than in Building.take_damage because take_damage is handed an
+## amount and a type and no attacker at all - by design, since the defender is
+## where everything about the defender is worked out and nothing else in the
+## game has ever needed to know who was swinging. A Lightning disc does, and
+## this is the one place both ends of a hit are in scope at once.
+func _return_fire(target: Unit, dealt: int) -> void:
+	var tower: Building = target as Building
+	if tower == null || attacker == null || !is_instance_valid(attacker):
+		return
+	var boons: TowerBuffs = tower.buffs_or_null()
+	if boons != null:
+		boons.on_tower_hurt(tower, attacker, dealt)
 
 
 ## Damage from one of this attack's EFFECTS rather than from the attack itself,
@@ -159,6 +201,28 @@ func splash_onto(creep: Creep, amount: int, damage_type: DamageTable.DamageType,
 
 ## The tower that fired, or null if it has been sold, destroyed or upgraded
 ## since. Every use of `source` goes through here.
+## Whether the target simply got out of the way, which one creep in the roster
+## can and nothing else does.
+##
+## Only the DIRECT hit is dodgeable. A splash, a burn or an on-hit effect
+## lands whatever happened to the shot that carried it - dodging an area is not
+## a thing the source game lets anything do, and a creep that shrugged off
+## every effect on the map at fifty percent would not be a dodge.
+##
+## Rolled on the match RNG, for the reason every roll in the simulation is: two
+## machines running the same match have to miss the same shots or their worlds
+## part company on the first one.
+func _dodged(target: Unit) -> bool:
+	var creep: Creep = target as Creep
+	if creep == null || attack_range <= 0.0:
+		return false
+
+	var chance: float = creep.dodge_chance_against(attack_range)
+	if chance <= 0.0:
+		return false
+	return MatchSession.match_rng().randf() < chance
+
+
 func _live_source() -> Building:
 	if source == null || !is_instance_valid(source):
 		return null

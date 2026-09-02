@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/EarthDiscPassive.gd" id="1_EarthDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/earth_disc.png" id="2_earth_disc"]
+
+[resource]
+script = ExtResource("1_EarthDiscPassive")
+ability_id = 386
+display_name = "Quickening"
+targeting = 0
+slot = 6
+icon = ExtResource("2_earth_disc")
+radius_cells = 2.34
+attack_speed_bonus = 0.08

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BuildingStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/advanced_arcane_disc_effect.tres" id="3_advanced_arcane_disc_effect"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/morph_advanced_arcane_disc_to_ultimate_arcane_disc_ability.tres" id="4_morph_advanced_arcane_disc_to_ultimate_arcane_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Discs/revert_disc_ability.tres" id="5_revert_disc_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="6_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="7_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="8_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="9_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="10_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/advanced_arcane_disc.png" id="11_advanced_arcane_disc"]
+
+[resource]
+script = ExtResource("1_BuildingStats")
+unit_type_id = 186
+display_name = "Advanced Arcane Disc"
+icon = ExtResource("11_advanced_arcane_disc")
+max_health = 100
+armor_type = 0
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("3_advanced_arcane_disc_effect"), ExtResource("4_morph_advanced_arcane_disc_to_ultimate_arcane_disc_ability"), ExtResource("5_revert_disc_ability"), ExtResource("6_sell_ability"), ExtResource("7_show_ranges_ability")])
+scene_path = "res://Scenes/Units/Discs/advanced_arcane_disc.tscn"
+model_scene_path = "res://Scenes/Units/Models/Discs/advanced_arcane_disc_model.tscn"
+blocks_movement = false
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("8_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_upgrade_ability")])
+gold_cost = 250000
+total_gold_cost = 252500

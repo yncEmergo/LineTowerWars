@@ -5,5 +5,6 @@
 [resource]
 script = ExtResource("1_game_config")
 build_seconds = 1.5
-starting_gold = 2000000
+starting_gold = 40
+income_interval = 10.0
 cheats_enabled = true

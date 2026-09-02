@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DeathHealPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/DeathHealPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 325
+display_name = "Unholy Sacrifice"
+targeting = 0
+radius = 2.34
+heal_amount = 4875

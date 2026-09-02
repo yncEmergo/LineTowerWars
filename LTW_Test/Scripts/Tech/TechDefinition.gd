@@ -144,7 +144,16 @@ func path_number() -> int:
 
 
 func element_name() -> String:
-	var index: int = int(element)
+	return element_name_of(element)
+
+
+## The same answer for an element nothing has a definition of to hand.
+##
+## Static because a technology DISC names an element rather than a technology -
+## its upgrades are gated on how many of that element three are owned - so it
+## has an enum value and no resource to ask. See DiscUpgradeAbility.
+static func element_name_of(which: Element) -> String:
+	var index: int = int(which)
 	if index < 0 || index >= ELEMENT_NAMES.size():
 		return "Element %d" % index
 	return ELEMENT_NAMES[index]

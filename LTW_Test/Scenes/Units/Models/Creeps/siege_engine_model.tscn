@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/siege_engine_hide.tres" id="1_siege_engine_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/siege_engine_hide_deep.tres" id="2_siege_engine_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/siege_engine_hide_pale.tres" id="3_siege_engine_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r7.tres" id="4_carapace_r7"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r7.tres" id="5_eye_r7"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
@@ -21,7 +21,7 @@ bottom_radius = 0.0416
 height = 0.0857
 radial_segments = 6
 rings = 0
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.3082, 0.1382, 0.457)
@@ -41,7 +41,7 @@ material = ExtResource("2_siege_engine_hide_deep")
 
 [sub_resource type="PrismMesh" id="PrismMesh_7"]
 size = Vector3(0.3237, 0.1541, 0.1097)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(0.2158, 0.152, 0.0823)
@@ -52,7 +52,7 @@ radius = 0.0216
 height = 0.0432
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r7")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_10"]
 top_radius = 0.0223
@@ -60,7 +60,7 @@ bottom_radius = 0.0312
 height = 0.0724
 radial_segments = 5
 rings = 0
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_11"]
 top_radius = 0.0223
@@ -68,7 +68,7 @@ bottom_radius = 0.0312
 height = 0.0724
 radial_segments = 5
 rings = 0
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_12"]
 top_radius = 0.0268
@@ -88,22 +88,22 @@ bottom_radius = 0.051
 height = 0.0765
 radial_segments = 7
 rings = 0
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="SphereMesh" id="SphereMesh_15"]
 radius = 0.0612
 height = 0.1224
 radial_segments = 7
 rings = 3
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r7")
 
 [sub_resource type="BoxMesh" id="BoxMesh_16"]
 size = Vector3(0.0493, 0.0691, 0.1828)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="PrismMesh" id="PrismMesh_17"]
 size = Vector3(0.037, 0.1105, 0.0308)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [node name="SiegeEngineModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

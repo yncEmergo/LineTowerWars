@@ -57,6 +57,22 @@ func basic_for(element: TechDefinition.Element) -> TechDefinition:
 	return (_by_element[element] as Dictionary).get(TechDefinition.Kind.BASIC) as TechDefinition
 
 
+## The three technologies of one element, in no particular order. Empty for an
+## element this build contains none of.
+##
+## The whole element rather than one of its kinds, which is what the technology
+## DISCS ask: their two upgrades are gated on OWNING TWO OF THE THREE and on
+## owning all three, and there is no single id that means either. See
+## DiscUpgradeAbility.
+func for_element(element: TechDefinition.Element) -> Array[TechDefinition]:
+	var found: Array[TechDefinition] = []
+	if !_by_element.has(element):
+		return found
+	for tech in (_by_element[element] as Dictionary).values():
+		found.append(tech as TechDefinition)
+	return found
+
+
 ## Every technology in the build, ascending by id.
 ##
 ## Ascending because two machines must agree on the order: a random Ultimate is

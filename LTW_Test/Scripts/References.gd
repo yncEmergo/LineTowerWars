@@ -30,6 +30,11 @@ extends Node
 ## Center press takes. Wired by both match scenes, because the server enforces
 ## it and a client asks it what to grey out.
 @export var _tech_manager: TechManager
+## How this match hands out its opening technology, and the draft that holds
+## the world still while players choose. Wired by both match scenes, for the
+## same reason TechManager is: the server runs it and a client is told about
+## it in the snapshot.
+@export var _starting_tech: StartingTech
 ## Parent for short lived world effects: move markers, and later hit effects
 ## and floating damage numbers.
 ##
@@ -123,6 +128,12 @@ static var tech_manager: TechManager:
 		if instance == null:
 			return null
 		return instance._tech_manager
+
+static var starting_tech: StartingTech:
+	get:
+		if instance == null:
+			return null
+		return instance._starting_tech
 
 static var effects_root: Node3D:
 	get:

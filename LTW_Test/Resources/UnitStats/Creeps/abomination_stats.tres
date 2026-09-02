@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/regenerative_flesh.tres" id="10_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/abomination.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 166
+display_name = "Abomination"
+max_health = 231850
+armor_type = 4
+armor = 10
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card")])
+scene_path = "res://Scenes/Units/Creeps/abomination.tscn"
+move_speed = 3.9062
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 275000
+income_gain = 11687
+unlock_seconds = 1050.0
+max_stock = 32
+stock_regen_seconds = 8.0
+body_radius = 0.22
+bounty = 9625

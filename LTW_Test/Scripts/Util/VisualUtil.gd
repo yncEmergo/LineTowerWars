@@ -99,6 +99,12 @@ static func measure(into: Node3D) -> AABB:
 ##   - the selection ring and every worldspace bar, which are UI wearing a mesh
 ##   - the ground patch a building stands on, which is FLOOR. Left in, it
 ##     renders as a grey smear under the tower in an icon that has no floor
+##
+## A TECHNOLOGY DISC keeps its own layers here and loses only its foundation,
+## exactly as a tower does. That is worth knowing because it was briefly the
+## other way round: while a disc was one flat patch and nothing else, this rule
+## left it with no portrait at all. It has a round plate and a coloured circle
+## of its own now, so the ordinary rule is the right one again.
 static func portrait_skips(unit: Node) -> Array[Node]:
 	var skip: Array[Node] = []
 	if unit == null:

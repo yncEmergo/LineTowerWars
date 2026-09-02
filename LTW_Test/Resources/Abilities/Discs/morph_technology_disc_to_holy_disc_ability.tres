@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DiscUpgradeAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscUpgradeAbility.gd" id="1_DiscUpgradeAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Discs/holy_disc_stats.tres" id="2_holy_disc_stats"]
+
+[resource]
+script = ExtResource("1_DiscUpgradeAbility")
+ability_id = 416
+tower_stats = ExtResource("2_holy_disc_stats")
+display_name = "Morph into Holy Disc"
+description = "Friendly towers around it gain armor and repair themselves faster."
+targeting = 1
+slot = 2
+required_element = 3
+required_element_techs = 1

@@ -31,7 +31,8 @@ extends CreepPassive
 ## already resolved before this runs and cannot be undone by it - a Voidwalker
 ## is healed out of trouble, never out of death. Bringing one back is what a
 ## revive is for, and this is not one.
-func on_damage_taken(creep: Creep, _lost: float) -> void:
+func on_damage_taken(creep: Creep, _lost: float,
+		_damage_type: DamageTable.DamageType) -> void:
 	var pool: CreepMana = creep.mana()
 	if pool == null:
 		Log.err("Chaotic Void is on a creep whose stats give it no mana",

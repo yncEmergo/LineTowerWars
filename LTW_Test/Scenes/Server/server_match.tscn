@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://Scripts/Game/PlayerManager.gd" id="3_players"]
 [ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="4_session"]
 [ext_resource type="Script" path="res://Scripts/Tech/TechManager.gd" id="10_tech"]
+[ext_resource type="Script" path="res://Scripts/Tech/StartingTech.gd" id="11_starting_tech"]
 [ext_resource type="PackedScene" path="res://Scenes/Game/player_area.tscn" id="5_area"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/builder.tscn" id="6_builder"]
 [ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="7_gcfg"]
@@ -33,12 +34,16 @@ script = ExtResource("4_session")
 [node name="TechManager" type="Node" parent="."]
 script = ExtResource("10_tech")
 
-[node name="References" type="Node" parent="." node_paths=PackedStringArray("_units_root", "_player_manager", "_match_session", "_tech_manager", "_projectiles_root")]
+[node name="StartingTech" type="Node" parent="."]
+script = ExtResource("11_starting_tech")
+
+[node name="References" type="Node" parent="." node_paths=PackedStringArray("_units_root", "_player_manager", "_match_session", "_tech_manager", "_starting_tech", "_projectiles_root")]
 script = ExtResource("2_references")
 _units_root = NodePath("../Units")
 _player_manager = NodePath("../PlayerManager")
 _match_session = NodePath("../MatchSession")
 _tech_manager = NodePath("../TechManager")
+_starting_tech = NodePath("../StartingTech")
 _projectiles_root = NodePath("../Projectiles")
 _game_config = ExtResource("7_gcfg")
 _damage_table = ExtResource("8_dmgt")

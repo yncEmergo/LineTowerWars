@@ -82,10 +82,22 @@ var _spent: Dictionary = {}
 var _aura_armor: int = 0
 var _aura_move_ratio: float = 1.0
 var _aura_attack_ratio: float = 1.0
+var _aura_damage_ratio: float = 1.0
 var _aura_regen: float = 0.0
 ## Whether any of this creep's passives says towers should ignore it. Read once
 ## rather than per target scan, since a creep cannot gain a passive mid-walk.
 var _skittering: bool = false
+## Whether this creep walks THROUGH towers, reading none of the occupancy grid
+## and going straight down the lane. Half of what Ethereal means, and read once
+## with the rest for the same reason.
+var _ethereal: bool = false
+## Whether this creep is deaf to every aura, its own included. One creep in the
+## roster is - see CreepPassive.ignores_auras.
+var _aura_deaf: bool = false
+## The best chance any of its passives gives it of dodging, and the shortest
+## reach a tower must have for that to apply. Both 0 for everything but one
+## creep, and read once so a target scan pays nothing for the question.
+var _dodge_chance: float = 0.0
 ## The tower an unordered attacker creep is marching on, and the countdown to
 ## re-picking it. Null for every creep that is not an attacker.
 var _march_target: Building = null
@@ -128,6 +140,13 @@ var _revive_countdown: float = -1.0
 var _revive_ratio: float = 0.0
 ## The shaft of light standing over the spot while it waits.
 var _revive_light: ReviveLight = null
+## What has hurt this creep and by how much, for the one trait that resists
+## whichever damage type has hurt it most. Null for every other creep, and
+## built by the passive rather than here - see CreepWarding.
+var _warding: CreepWarding = null
+## The dive this creep is in the middle of, or null - which is every creep in
+## the game but a Phoenix that has just been aimed. See CreepDive.
+var _dive: CreepDive = null
 
 var _creep_stats: CreepStats:
 	get:
@@ -135,10 +154,15 @@ var _creep_stats: CreepStats:
 
 
 func _ready() -> void:
-	super()
+	# BEFORE super(), which is where a unit fills its health bar: a creep's
+	# real ceiling is worked out from its passives - one of them converts its
+	# armour into health - so a creep that had not collected them yet would be
+	# started at the number in its stats file and spend its whole life short of
+	# its own maximum. See max_health() below.
 	if stats != null && _creep_stats == null:
 		Log.err("Creep needs CreepStats but got plain UnitStats", name)
 	_collect_passives()
+	super()
 	# Null for nearly every creep, which is what keeps a pack of Sheep from
 	# carrying a pool none of them can use. See CreepMana.
 	_mana = CreepMana.of(_creep_stats)
@@ -159,6 +183,12 @@ func spawn(sender_id: int, target_area: PlayerArea, world_pos: Vector3) -> void:
 	reset_physics_interpolation()
 	_trail = [global_position]
 	_replan()
+	# After the creep is placed and routed, so a trait that reads its own
+	# maximum health or hands it a shield is looking at a finished creep. Only
+	# a fresh SEND reaches here - a recycled creep goes through _recycle_into
+	# and must not be handed a second shield for leaking.
+	for passive in _passives:
+		passive.on_spawn(self)
 
 
 ## Creeps take no orders, so a right click on one does nothing and a selection
@@ -185,6 +215,31 @@ func is_skittering() -> bool:
 	return _skittering
 
 
+## Whether this creep walks through towers rather than around them. Ethereal,
+## and nothing else in the roster.
+func is_ethereal() -> bool:
+	return _ethereal
+
+
+## Whether this creep reads the maze at all. A flyer and an ethereal creep both
+## go straight down the lane and neither has a route to walk, so everything
+## that asks about one asks this rather than naming either.
+func ignores_maze() -> bool:
+	return is_flying() || _ethereal
+
+
+## The chance an attack from a tower reaching this far simply misses, 0 to 1.
+## The BEST passive wins rather than the sum, so two dodges on one creep could
+## never make it untouchable.
+func dodge_chance_against(attack_range: float) -> float:
+	if _dodge_chance <= 0.0:
+		return 0.0
+	var best: float = 0.0
+	for passive in _passives:
+		best = maxf(best, passive.dodge_chance(attack_range))
+	return best
+
+
 ## An attacker creep takes orders and goes after towers; nothing else does
 ## either. Both follow from the same stats flag, so they can never disagree.
 func is_attacker() -> bool:
@@ -198,20 +253,129 @@ func _ground_height() -> float:
 	return _creep_stats.fly_height if is_flying() else 0.0
 
 
+## The ledger of what has hurt this creep and by how much, created the first
+## time something asks for it.
+##
+## Lazily like the status set and for the same reason: one trait in the roster
+## reads it and every other creep in a maze should allocate nothing. The
+## passive fills it and reads it back; nothing here knows what it is for.
+func warding() -> CreepWarding:
+	if _warding == null:
+		_warding = CreepWarding.new()
+	return _warding
+
+
 ## Its own speed, with whatever aura is standing over it and whatever a tower
 ## has chilled it with folded in.
 ##
 ## The two multiply rather than one winning: an aura is the pack helping itself
 ## and a chill is a tower fighting it, and a creep that is both buffed and
 ## slowed should end up somewhere between the two.
+## How fast this creep is actually travelling right now, in cells per second.
+##
+## The public face of _move_speed() below, and the only thing that needs one:
+## one trait in the roster picks the SLOWEST creep near it, which is a question
+## about what a creep is doing rather than about what its file says. See
+## WindRushPassive.
+## Whether the creep is in the middle of an aimed dive, which suspends
+## everything else it would be doing. One creep in the roster can be.
+func is_diving() -> bool:
+	return _dive != null
+
+
+## Starts a dive along the direction of a point. Answers whether one really
+## began, so the ability can hold its cooldown for an order that was aimed at
+## the spot the creep is standing on.
+##
+## The numbers all come from the ABILITY rather than from here, which is the
+## same split every other trait follows: the resource owns what a dive is worth
+## and the creep owns the one in progress. See DiveAbility.
+func begin_dive(point: Vector3, reach: float, seconds: float,
+		damage_per_second: float, damage_radius: float) -> bool:
+	var dive: CreepDive = CreepDive.toward(self, point, reach, seconds,
+		damage_per_second, damage_radius)
+	if dive == null:
+		return false
+
+	# A dive replaces whatever the creep was doing outright: a Phoenix marching
+	# on a tower and then aimed somewhere else is aimed somewhere else.
+	if order_queue != null:
+		order_queue.clear()
+	_march_target = null
+	_dive = dive
+	return true
+
+
+## Calls a dive off where it stands and hands the creep its armour back.
+##
+## The armour is the SOURCE'S own reward for stopping one (unit_data.md 6.6),
+## and it is what makes cancelling a real decision rather than a mistake being
+## undone: a Phoenix that has been shot at all the way down a maze can trade
+## the rest of its dive for the armour a maze has eaten off it.
+##
+## Answers whether anything was actually called off, so a plain Stop on a
+## Phoenix that is not diving says nothing about armour.
+func cancel_dive() -> bool:
+	if _dive == null:
+		return false
+
+	_dive = null
+	var effects: StatusEffects = status_or_null()
+	if effects != null:
+		# In FULL rather than by a number: there is no ceiling to overshoot,
+		# since restore_armor never takes the creep above what it started with.
+		effects.restore_armor(INF)
+	return true
+
+
+## A dive writing the creep where the arc says it is. Only CreepDive calls it,
+## and it is the one place in the game a creep position is set rather than
+## stepped towards - see that class for why.
+func dive_to(point: Vector3, facing: Vector3) -> void:
+	global_position = area.clamp_point(point) if area != null else point
+	global_position.y = _ground_height()
+	if facing.length_squared() > 0.0001:
+		face_instantly(global_position + facing)
+
+
+## Halting a creep also calls off a dive, which is what makes Stop the way a
+## player ends one - and what pays the armour back for doing so.
+func stop() -> void:
+	super()
+	cancel_dive()
+
+
+func current_move_speed() -> float:
+	if _creep_stats == null:
+		return 0.0
+	return _move_speed()
+
+
 func _move_speed() -> float:
 	var ratio: float = 1.0 if _status == null else _status.move_ratio()
-	return _creep_stats.move_speed * _aura_move_ratio * ratio
+	var hasted: float = 1.0 if _status == null else _status.haste_ratio()
+	return _creep_stats.move_speed * _aura_move_ratio * ratio * hasted
+
+
+## How hard this creep's own attack lands, which only the attacker creeps have
+## anything for. Its packmates' aura, whatever a tower has weakened it with,
+## and whatever its own passives say, all multiplied - the same shape
+## attack_speed_ratio() above has.
+func attack_damage_ratio() -> float:
+	var own: float = 1.0
+	for passive in _passives:
+		own *= passive.attack_damage_ratio(self)
+	if !MatchSession.is_authority():
+		return own * StatusEntry.attack_damage_ratio_in(StatusEntry.for_unit(self))
+	var weakened: float = 1.0 if _status == null else _status.attack_damage_ratio()
+	return _aura_damage_ratio * weakened * own
 
 
 ## Attack speed is an aura's business too, and only an attacker creep has an
 ## attack for it to act on. See Combat/AttackComponent.gd.
 func attack_speed_ratio() -> float:
+	if !MatchSession.is_authority():
+		return StatusEntry.attack_speed_ratio_in(StatusEntry.for_unit(self))
 	var slowed: float = 1.0 if _status == null else _status.attack_speed_ratio()
 	return _aura_attack_ratio * slowed
 
@@ -235,9 +399,9 @@ func can_attack() -> bool:
 ## A creep with no route left counts as furthest away, so one standing stalled
 ## can never jump to the front of every tower's list at once.
 func steps_to_exit() -> int:
-	# A flyer has no route to read, so it answers with the rows it has left to
-	# cross - which is the same question in the same units.
-	if is_flying():
+	# Nothing that ignores the maze has a route to read, so it answers with the
+	# rows it has left to cross - which is the same question in the same units.
+	if ignores_maze():
 		return _rows_to_exit()
 	if _path.is_empty() || _path_index >= _path.size():
 		return NO_ROUTE_STEPS
@@ -313,12 +477,22 @@ func _collect_passives() -> void:
 		return
 
 	_skittering = false
+	_ethereal = false
+	_aura_deaf = false
+	_dodge_chance = 0.0
 	_heavy_hit_threshold = 0.0
 	for entry in _creep_stats.abilities:
 		var passive: CreepPassive = entry as CreepPassive
 		if passive != null:
 			_passives.append(passive)
 			_skittering = _skittering || passive.is_skittering()
+			_ethereal = _ethereal || passive.is_ethereal()
+			_aura_deaf = _aura_deaf || passive.ignores_auras()
+			# Asked with an unreachable range, so what comes back is the BEST
+			# this creep could ever dodge - a gate rather than an answer. The
+			# real question is asked with the attacker's own reach, and only
+			# on a creep this said yes for. See dodge_chance_against().
+			_dodge_chance = maxf(_dodge_chance, passive.dodge_chance(INF))
 			# The FIRST passive to name one wins, the same rule an attack's
 			# damage type override follows: two passives disagreeing about what
 			# counts as a heavy hit is an authoring mistake rather than
@@ -336,8 +510,18 @@ func has_spent(passive: CreepPassive) -> bool:
 	return _spent.has(passive)
 
 
+## How many times a once-only passive has fired on THIS creep.
+##
+## A count rather than a flag, because one trait in the roster has two separate
+## uses of its own - Elune's Grace wards on the first hit and again at half
+## health - and two records for one passive would otherwise want two keys
+## somebody has to invent and keep unique.
+func spend_count(passive: CreepPassive) -> int:
+	return int(_spent.get(passive, 0))
+
+
 func spend(passive: CreepPassive) -> void:
-	_spent[passive] = true
+	_spent[passive] = spend_count(passive) + 1
 
 
 ## Whether this creep is dead but not yet gone: out of health and waiting on a
@@ -439,8 +623,29 @@ func passives() -> Array[CreepPassive]:
 ## its own passives have worn off it, and whatever an elemental tower has eaten
 ## out of it.
 func armor_value() -> int:
+	var own: int = super() + _passive_armor_delta()
+	if !MatchSession.is_authority():
+		# A client has neither the StatusEffects nor the aura scan, and both of
+		# them are in the records the server sent for this creep. Its own
+		# passives are not, and need not be: they follow from its stats, which
+		# every machine has.
+		return own + StatusEntry.armor_delta_in(StatusEntry.for_unit(self))
 	var eaten: int = 0 if _status == null else _status.armor_delta()
-	return super() + _aura_armor + eaten + _passive_armor_delta()
+	return own + _aura_armor + eaten
+
+
+## Its authored ceiling, with whatever its own passives do to it.
+##
+## Only one trait in the roster moves it - Bone Shield converts every point of
+## base armour into 4% more health - and it has to be answered HERE rather than
+## in the stats file, because the answer is worked out from another stat.
+func max_health() -> int:
+	var ratio: float = 1.0
+	for passive in _passives:
+		ratio *= passive.max_health_ratio(self)
+	if is_equal_approx(ratio, 1.0):
+		return super()
+	return maxi(1, int(round(float(super()) * ratio)))
 
 
 ## What this creep's OWN passives have done to its armour, which so far is
@@ -499,7 +704,7 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 		return
 
 	for passive in _passives:
-		passive.on_damage_taken(self, lost)
+		passive.on_damage_taken(self, lost, damage_type)
 
 	if _heavy_hit_threshold <= 0.0 || DamageTable.is_spell(damage_type):
 		return
@@ -507,14 +712,75 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 		_heavy_hits_taken += 1
 
 
+## Everything on this creep: what towers have left on it, and what its
+## packmates' auras are lending it while it walks beside them. See
+## Unit.status_entries() for why this is virtual.
+##
+## The AURA HALF is the part that was on no wire at all before, which is the
+## gap the armour line has carried a note about since it was written: a creep
+## standing in one read low on a client because nothing told it. The four
+## numbers an aura moves are the same four a technology disc moves on a tower,
+## so they go out as the same records.
+##
+## They carry NO SOURCE, unlike everything else here. An aura value is a
+## maximum taken over every passive of every packmate in range, and which of
+## them won is not kept - so a row draws its title's first letter rather than an
+## icon. Worth a per-aura source field on this class the day that reads badly;
+## it is not worth five today.
+func status_entries() -> Array[StatusEntry]:
+	var list: Array[StatusEntry] = []
+	if _status != null:
+		list.append_array(_status.entries())
+
+	if _aura_armor > 0:
+		list.append(StatusEntry.make(StatusEntry.Kind.ARMOR_LENT,
+			StatusEntry.NO_SOURCE, float(_aura_armor), StatusEntry.PERMANENT))
+	if _aura_move_ratio > 1.0:
+		list.append(StatusEntry.make(StatusEntry.Kind.HASTED,
+			StatusEntry.NO_SOURCE, _aura_move_ratio - 1.0, StatusEntry.PERMANENT))
+	if _aura_attack_ratio > 1.0:
+		list.append(StatusEntry.make(StatusEntry.Kind.ATTACK_HASTENED,
+			StatusEntry.NO_SOURCE, _aura_attack_ratio - 1.0, StatusEntry.PERMANENT))
+	if _aura_damage_ratio > 1.0:
+		list.append(StatusEntry.make(StatusEntry.Kind.ATTACK_EMPOWERED,
+			StatusEntry.NO_SOURCE, _aura_damage_ratio - 1.0, StatusEntry.PERMANENT))
+	if _aura_regen > 0.0:
+		list.append(StatusEntry.make(StatusEntry.Kind.REGENERATING,
+			StatusEntry.NO_SOURCE, _aura_regen, StatusEntry.PERMANENT))
+	return list
+
+
 ## Its own armour type, unless something has altered it. Ultimate Alchemist is
 ## the only thing that does, and only for a few seconds at a time.
 func armor_type_value() -> UnitStats.ArmorType:
+	if !MatchSession.is_authority():
+		# A tower's alteration is on the wire; the creep's own trait below is
+		# not and does not need to be. Asked here rather than in the panel, so
+		# resolve_damage's tooltip and the Armor line cannot disagree.
+		return StatusEntry.armor_type_in(
+			StatusEntry.for_unit(self), _own_armor_type())
 	if _status != null:
 		var altered: int = _status.armor_type_override()
 		if altered >= 0:
 			return altered as UnitStats.ArmorType
-	return super()
+	return _own_armor_type()
+
+
+## What this creep would count as with nothing altering it: its own trait, or
+## the type on its stats.
+##
+## Split out because both branches above need it - a tower's alteration WINS
+## over the creep's own trait, so the trait is the fallback either way, and the
+## client's branch has to hand that same fallback to armor_type_in. A Kodo that
+## has gone into War Stance permanently counts as Hero armour, and a few
+## seconds of an Alchemist's choice on top of that is exactly what the
+## Alchemist is for.
+func _own_armor_type() -> UnitStats.ArmorType:
+	for passive in _passives:
+		var wanted: int = passive.armor_type_override(self)
+		if wanted >= 0:
+			return wanted as UnitStats.ArmorType
+	return super.armor_type_value()
 
 
 ## The mana pool this creep runs a trait on, or null when it has no such trait.
@@ -607,15 +873,32 @@ func _refresh_aura(delta: float) -> void:
 	_aura_armor = 0
 	_aura_move_ratio = 1.0
 	_aura_attack_ratio = 1.0
+	_aura_damage_ratio = 1.0
 	_aura_regen = 0.0
+
+	# One creep in the roster hears none of them, its own included, which is
+	# what Unfathomable Power means and why a Demon cannot be walked in a pack
+	# to be made faster. Answered before the search rather than inside it, so
+	# it costs a scan of the lane rather than a question per aura.
+	#
+	# An Arcane disc does the same thing to whatever walks over it, for a few
+	# seconds at a time rather than for good. Same gate, because it is the same
+	# question and this is the only place a creep hears an aura at all - which
+	# is what lets the disc take one away without any aura knowing it exists.
+	if _aura_deaf || (_status != null && _status.is_aura_denied()):
+		return
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			area, global_position, config.creep_aura_radius_cells):
 		for passive in creep.passives():
-			_aura_armor = maxi(_aura_armor, passive.aura_armor_bonus())
-			_aura_move_ratio = maxf(_aura_move_ratio, passive.aura_move_speed_ratio())
-			_aura_attack_ratio = maxf(_aura_attack_ratio, passive.aura_attack_speed_ratio())
-			_aura_regen = maxf(_aura_regen, passive.aura_health_regen())
+			_aura_armor = maxi(_aura_armor, passive.aura_armor_bonus(creep))
+			_aura_move_ratio = maxf(_aura_move_ratio,
+				passive.aura_move_speed_ratio(creep))
+			_aura_attack_ratio = maxf(_aura_attack_ratio,
+				passive.aura_attack_speed_ratio(creep))
+			_aura_damage_ratio = maxf(_aura_damage_ratio,
+				passive.aura_attack_damage_ratio(creep))
+			_aura_regen = maxf(_aura_regen, passive.aura_health_regen(creep))
 
 
 ## Heals the creep from its own regeneration passives.
@@ -632,7 +915,7 @@ func _regenerate(delta: float) -> void:
 	# best one in range, since auras never stack.
 	var per_second: float = _aura_regen
 	for passive in _passives:
-		per_second += passive.health_regen()
+		per_second += passive.health_regen(self)
 	if per_second <= 0.0:
 		return
 
@@ -647,6 +930,13 @@ func _regenerate(delta: float) -> void:
 ## draining, a shield rebuilding - should keep counting while the creep stands
 ## still, exactly as its regeneration does.
 func _advance_passives(delta: float) -> void:
+	# The pool fills before the traits that spend it are asked, so a creep
+	# whose mana tops up this tick fires on the same one rather than a tick
+	# later. Nothing at all for the great majority of creeps, which have no
+	# pool - see CreepMana.of().
+	if _mana != null && _creep_stats != null:
+		_mana.regenerate(_creep_stats.mana_regen_per_second, delta)
+
 	for passive in _passives:
 		passive.on_tick(self, delta)
 
@@ -664,16 +954,37 @@ func _advance_status(delta: float) -> void:
 ## Ratios multiply, so two resistances compound rather than one hiding the
 ## other. Order independent by construction, which is what lets the damage
 ## pipeline ask for all of them as a single number.
-func _damage_taken_ratio(is_aoe: bool, is_spell: bool) -> float:
+func _damage_taken_ratio(damage_type: DamageTable.DamageType,
+		is_aoe: bool) -> float:
 	var ratio: float = 1.0
 	for passive in _passives:
-		ratio *= passive.damage_taken_ratio(is_aoe, is_spell)
+		ratio *= passive.damage_taken_ratio(self, damage_type, is_aoe)
 	# An amplification a tower left on the creep multiplies alongside its own
 	# resistances rather than replacing them, so a spell-resistant creep under
 	# a Titan Vault is still spell-resistant - just less so.
 	if _status != null:
-		ratio *= _status.damage_taken_ratio(is_spell)
+		ratio *= _status.damage_taken_ratio(DamageTable.is_spell(damage_type))
 	return ratio
+
+
+## What actually reaches this creep's health out of a hit that has already been
+## resolved: its own bands, then a ward, then whatever a shield can eat.
+##
+## THE ORDER IS THE RULE and is worth stating. A band is a resistance the creep
+## always has and is read against the landed figure, so it runs first. A ward
+## takes the whole hit, so nothing after it can matter. A shield is a POOL and
+## runs last, because a shield that ate the part a band was going to blunt
+## would be spent several times faster than it should be.
+func _absorb(landed: int) -> int:
+	var left: float = float(landed)
+	for passive in _passives:
+		left *= passive.landed_damage_ratio(self, left)
+
+	if _status == null:
+		return maxi(0, int(round(left)))
+	if _status.is_warded():
+		return 0
+	return maxi(0, int(round(_status.spend_shield(left))))
 
 
 ## Blocks add up, for the same reason.
@@ -711,6 +1022,7 @@ func _physics_process(delta: float) -> void:
 	# check for the question - see Unit.order_queue.
 	_advance_orders(delta)
 
+	active_ability.advance(delta)
 	_advance_status(delta)
 	_refresh_aura(delta)
 	_regenerate(delta)
@@ -725,18 +1037,38 @@ func _physics_process(delta: float) -> void:
 	# Arriving is the same event for all three kinds, and it is checked before
 	# any of them moves, so a creep ordered onto the end zone leaks exactly as
 	# one that walked there did.
+	# Before the exit check, so a dive that ends on the end zone leaks on the
+	# tick after it lands rather than being cut short mid-arc. Nothing else a
+	# creep does runs while one is in the air.
+	if _dive != null:
+		if !_dive.advance(self, delta):
+			_dive = null
+		return
+
 	if area.is_at_exit(global_position):
 		_reach_end()
 		return
 
-	if is_flying():
-		_fly(delta)
+	# AN ATTACKER IS ASKED FIRST, before anything about how it travels. What
+	# an attacker does is go after towers and never advance on its own
+	# (game_rules.md), and that is true of one that flies as much as of one
+	# that walks - the Phoenix is the first creep in the game that is both, and
+	# asking "does it ignore the maze" first sent it gliding straight past the
+	# maze it had been sent to take apart.
+	if is_attacker():
+		if !ignores_maze():
+			_record_trail()
+		_march(delta)
+		return
+
+	# A flyer and an ethereal creep both read none of the maze and go straight
+	# down the lane. What separates them is only how high they are drawn and
+	# what may shoot them, neither of which is a movement question.
+	if ignores_maze():
+		_glide(delta)
 		return
 
 	_record_trail()
-	if is_attacker():
-		_march(delta)
-		return
 	_walk_route(delta)
 
 
@@ -760,19 +1092,23 @@ func _walk_route(delta: float) -> void:
 	_watch_for_stall(to_step.length(), delta)
 
 
-## A flyer: straight down the lane at cruising height, reading none of the
-## occupancy grid.
+## Straight down the lane, reading none of the occupancy grid: what a FLYER
+## does at cruising height and what an ETHEREAL creep does on the floor.
 ##
-## There is no route and nothing to commit to, which is the whole of what
-## flying is - a tower dropped in front of one changes nothing, because the
-## grid it was dropped into is not consulted. It still separates, but only
-## against other flyers: shoving a flyer sideways because a pack is walking
-## underneath it would be a collision between things that never touch.
+## There is no route and nothing to commit to, which is the whole of what both
+## of them are - a tower dropped in front of one changes nothing, because the
+## grid it was dropped into is not consulted. What still separates them is that
+## a flyer is out of reach of half the maze and an ethereal creep is not: it
+## walks through towers rather than over them, and anything may shoot it.
+##
+## It still separates, but only against other creeps of its own kind: shoving a
+## flyer sideways because a pack is walking underneath it would be a collision
+## between things that never touch.
 ##
 ## Height is a climb rather than a snap so a creep recycled into a new lane
 ## rises into place instead of appearing at altitude, and it is visual only:
 ## every distance in the game is measured flat.
-func _fly(delta: float) -> void:
+func _glide(delta: float) -> void:
 	# The area's own forward rather than world +z, so an area that is ever
 	# turned around does not need this rewritten.
 	var direction: Vector3 = area.global_transform.basis.z.normalized()
@@ -782,7 +1118,7 @@ func _fly(delta: float) -> void:
 	var moved: Vector3 = area.clamp_point(global_position + direction * speed * delta + push)
 	global_position = Vector3(
 		moved.x,
-		move_toward(global_position.y, _creep_stats.fly_height, CLIMB_SPEED * delta),
+		move_toward(global_position.y, _ground_height(), CLIMB_SPEED * delta),
 		moved.z
 	)
 	_face_direction(direction, delta)
@@ -1017,13 +1353,24 @@ func _separation_limit() -> float:
 ## still slides along the building instead of stopping dead. A creep pressed
 ## against a tower by the crowd behind it keeps travelling down the wall.
 func _move_by(offset: Vector3) -> void:
+	# Anything that ignores the maze reads none of the occupancy grid, so it
+	# takes the whole step and keeps its own height. Reached by the FLYING
+	# ATTACKER, which is the one creep that marches on a tower without sliding
+	# along the ones in the way - and which this would otherwise have set down
+	# on the floor, where half a maze that cannot reach it could shoot it.
+	var height: float = _ground_height()
+	if ignores_maze():
+		global_position = Vector3(global_position.x + offset.x, height,
+			global_position.z + offset.z)
+		return
+
 	var moved: Vector3 = global_position
 
-	var along_x: Vector3 = Vector3(moved.x + offset.x, 0.0, moved.z)
+	var along_x: Vector3 = Vector3(moved.x + offset.x, height, moved.z)
 	if area.is_point_free(along_x):
 		moved = along_x
 
-	var along_z: Vector3 = Vector3(moved.x, 0.0, moved.z + offset.z)
+	var along_z: Vector3 = Vector3(moved.x, height, moved.z + offset.z)
 	if area.is_point_free(along_z):
 		moved = along_z
 
@@ -1056,7 +1403,7 @@ func _separation() -> Vector3:
 			continue
 		# Only creeps on the same layer crowd each other. A pack walking under
 		# a flyer is not something either of them can feel.
-		if other.is_flying() != is_flying():
+		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
 			continue
 
 		var offset: Vector3 = global_position - other.global_position
@@ -1078,9 +1425,10 @@ func _separation() -> Vector3:
 ## A creep with nowhere left to go simply stops, which cannot normally happen:
 ## placement that would seal the area is refused before the tower is built.
 func _replan() -> void:
-	# A flyer reads no route at all, so there is nothing here for it to take -
-	# and asking would log a warning every time it flew over a sealed maze.
-	if is_flying():
+	# Nothing that ignores the maze reads a route at all, so there is nothing
+	# here for it to take - and asking would log a warning every time one
+	# crossed a sealed maze.
+	if ignores_maze():
 		return
 
 	_path = area.route_to_exit(global_position)
@@ -1164,7 +1512,14 @@ func _reach_end() -> void:
 	reached_end.emit()
 
 	var stolen: bool = _steal_life()
-	var destination: PlayerArea = _next_maze()
+	# A creep that steals NOTHING is not recycled either: it has reached the
+	# end of the only maze it was ever going to matter in, and walking it into
+	# the next player's lane would be a free bounty nobody paid for. The
+	# Treasure Goblin is the only thing in the roster this describes, and it is
+	# what "cannot steal lives" comes to in a game where a leak is a transfer.
+	var destination: PlayerArea = null
+	if _creep_stats == null || _creep_stats.lives_stolen > 0:
+		destination = _next_maze()
 	Log.info("Creep leaked", {
 		"creep": name,
 		"owner": owner_player_id,

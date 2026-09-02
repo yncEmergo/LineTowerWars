@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="11_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="12_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/dive_ability.tres" id="13_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/boss_4.tres" id="14_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/flying.tres" id="15_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/attacker.tres" id="16_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/volatile_death.tres" id="17_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/legendary_spell_resistance.tres" id="18_card"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
+[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="8_instant"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/phoenix.png" id="98_icon"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("8_instant")
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("7_attack_stats")
+damage_min = 900
+damage_max = 1100
+damage_type = 0
+attacks_per_second = 1.0
+target_class = 1
+attack_range = 1.95
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 180
+display_name = "Phoenix"
+max_health = 782700
+armor_type = 6
+armor = 20
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card"), ExtResource("12_card"), ExtResource("13_card"), ExtResource("14_card"), ExtResource("15_card"), ExtResource("16_card"), ExtResource("17_card"), ExtResource("18_card")])
+default_ability = ExtResource("10_card")
+scene_path = "res://Scenes/Units/Creeps/phoenix.tscn"
+move_speed = 1.7188
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 1
+gold_cost = 3000000
+income_gain = 0
+unlock_seconds = 0.0
+max_stock = 16
+stock_regen_seconds = 8.0
+initial_stock = 1
+body_radius = 0.24
+bounty = 150000
+lives_stolen = 2
+is_attacker = true
+is_flying = true

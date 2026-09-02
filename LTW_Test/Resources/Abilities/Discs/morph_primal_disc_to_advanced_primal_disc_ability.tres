@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DiscUpgradeAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscUpgradeAbility.gd" id="1_DiscUpgradeAbility"]
+[ext_resource type="Resource" path="res://Resources/UnitStats/Discs/advanced_primal_disc_stats.tres" id="2_advanced_primal_disc_stats"]
+
+[resource]
+script = ExtResource("1_DiscUpgradeAbility")
+ability_id = 435
+tower_stats = ExtResource("2_advanced_primal_disc_stats")
+display_name = "Upgrade to Advanced Primal Disc"
+description = "Friendly towers around it reach further."
+targeting = 1
+slot = 0
+required_element = 6
+required_element_techs = 2

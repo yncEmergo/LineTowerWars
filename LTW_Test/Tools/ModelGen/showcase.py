@@ -169,15 +169,19 @@ def generate_creeps():
     lf = chr(10)
     keys = cr.keys()
     lift = dict((k, cr.FLY_HEIGHT) for k in keys if cr.is_flying(k))
+    # SEVEN A ROW and the camera pulled well back, both of which moved when
+    # tiers 3 and 4 landed: the roster is nearly twice as long as it was, and
+    # the old framing showed four rows of it. A review scene that only shows
+    # half a roster is a review that quietly stops catching anything.
+    per_row = 7
     # The match camera's own pitch, from directly over the middle of the grid.
-    text = build(_grid(keys, 5),
-                 (5.6, 2.5, -1.222, 40), "Creeps", 3.1416,
+    text = build(_grid(keys, per_row),
+                 (9.5, 4.0, -1.222, 46), "Creeps", 3.1416,
                  (1.15, 1.25), lift).render("[gd_scene format=3]")
     io.open("Scenes/Dev/creep_showcase.tscn", "w",
             encoding="utf-8", newline=lf).write(text)
-    # Side on, for the silhouettes. Two rows so each one is big enough to
-    # argue with.
-    text = build(_grid(keys, 5), (2.3, 5.2, -0.36, 34),
+    # Side on, for the silhouettes.
+    text = build(_grid(keys, per_row), (4.2, 8.4, -0.36, 40),
                  "Creeps", 1.5708, (1.05, 1.75),
                  lift).render("[gd_scene format=3]")
     io.open("Scenes/Dev/creep_lineup.tscn", "w",

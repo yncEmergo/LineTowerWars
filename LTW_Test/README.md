@@ -16,6 +16,15 @@ clients join, build, send creeps at each other, steal lives and finish with a pl
 The server is the only machine that simulates — clients send orders and draw what comes
 back, so two views cannot disagree.
 
+**The host sets up the match in the lobby**, and everybody in the room watches the rules
+change as they do it. What each player starts with, which creeps are in the game at all,
+whether the lanes are shuffled, and whether players are named or only coloured. A RANKED
+match is played on the standard rules and locks the lot, so two results are comparable. The
+one thing a ranked host still chooses is how the opening technology is dealt: spend the free
+research yourself, take one Ultimate rolled for everybody, or DRAFT — three Ultimates rolled
+for the whole match, the same three offered to every player, with the world held still until
+they have all chosen.
+
 **The Basic tower roster is real.** All three lines, both branches of each, every tier — the
 numbers are copied from Warcraft III Line Tower Wars 12.4a as [unit_data.md](Docs/unit_data.md)
 records them. The builder places only the cheapest tower of a line and everything above it is
@@ -30,11 +39,12 @@ and there a ring is the whole of what separates a pair that is otherwise one sha
 sizes. Both systems are written down under Presentation in [game_rules.md](Docs/game_rules.md),
 and they are what a 3D artist should be handed with the models.
 
-**Tiers 1 and 2 of the creep roster are real.** All twenty-four of them, at the source game's
-own numbers, plus the Timber Wolf that only ever arrives inside a Sheep pack. They unlock one
-at a time on the match clock, cost population that is now enforced, and come in three kinds:
-ordinary creeps that walk the maze, flyers that ignore it entirely, and attackers that go after
-the towers and are the only creeps their owner can command. A Boss steals two lives.
+**The whole creep roster is real** — all four tiers at the source game's own numbers, plus the
+Timber Wolf that only ever arrives inside a Sheep pack and the Ghoul that only ever crawls out
+of a dead Obsidian Statue. They unlock one at a time on the match clock, cost population that
+is now enforced, and come in three kinds: ordinary creeps that walk the maze, flyers that
+ignore it entirely, and attackers that go after the towers and are the only creeps their owner
+can command. A Boss steals two lives.
 
 **Tier 2 brought three things the roster had never needed.** A creep with MANA, which banks a
 point per hit taken and spends the lot on a heal — mana had been a tower-only thing until then.
@@ -43,13 +53,29 @@ attack running alongside its own and the only ranged thing any creep has. And th
 halves of a SPELL RESISTANCE — a share off every harmful effect's clock and a share off a
 chill's bite — which had been written down since before anything in the game applied either.
 
-**One tier 3 creep is real too, the Ancient Wendigo**, built out of order because a tier 1
-creep dies to a single shot from anything above the cheapest towers - so there was nothing on
-the field a real tower's damage, rate or on-hit effects could be measured against. It brought
-the first armour that is not a constant: Hardened Skin starts it absurdly high and wears off
-as the creep is hit, down to a floor it never falls below. It is sent from a **Tier 3 sender** of its own, since a
-tier is exactly one command card and the source game gives each one a building. Tiers 3 and 4
-are otherwise still only written down, in [unit_data.md](Docs/unit_data.md) section 6.
+**The Ancient Wendigo was built long before the rest of tier 3**, because a tier 1 creep dies
+to a single shot from anything above the cheapest towers — so there was nothing on the field a
+real tower's damage, rate or on-hit effects could be measured against. It brought the first
+armour that is not a constant: Hardened Skin starts it absurdly high and wears off as the creep
+is hit, down to a floor it never falls below.
+
+**Tiers 3 and 4 brought most of the machinery a creep roster needs.** Damage absorption
+SHIELDS, for the Boss that converts nine tenths of itself into one and walks a maze showing a
+tenth of its health. Creeps that SPAWN OTHER CREEPS. The first effects that go the other way —
+a dying Harpy curses the towers that killed it, an Obsidian Statue weakens every tower it
+drifts past, and a Chaos Warden drains a tower's mana and keeps five times what it took. A
+creep that walks straight THROUGH the maze, one that DODGES anything shooting from far enough
+away, one that braces against whichever damage type has hurt it most and can move that brace
+every three seconds. And the roster's only ACTIVE ability: the Phoenix is aimed by its owner,
+dives out along that line and back burning what it passes over, and Stop calls the dive off —
+which pays back the armour a maze has eaten off it.
+
+**SUDDEN DEATH is the one place a tier means anything.** At a fixed point on the match clock
+the whole of tier 4 unlocks at once, with no per-creep start delay, and tiers 1 to 3 stop being
+sendable for the rest of the match — the only time a creep is ever taken away from a player.
+Anybody under an income floor is raised to it, once, so a player who has been losing slowly can
+still afford the tier that ends the match; and tier 4 sends stop paying properly above an
+income cap, so Sudden Death does not compound.
 
 **The send buildings no longer exist as buildings.** They used to stand on a strip above the
 creep spawn; that strip and its models are gone. Each tier's sender is reached through a row of
@@ -87,6 +113,25 @@ elemental tower worth 800 gold or more can also go back the way it came, returni
 Core on the same cell and refunding everything above the Core's own price. Six
 pieces of six abilities are approximated or left out, and [game_rules.md](Docs/game_rules.md) lists
 all six rather than leaving them to be found.
+
+**The technology DISCS are real too, and they are not towers.** All thirty-one of them: a
+2,500g base disc that is unlocked from the first second of a match and does absolutely nothing,
+morphing free into any element its owner has researched and then twice more into an Advanced
+and an Ultimate. **Creeps walk straight over a disc.** It claims its square against anything
+else being built there and blocks nothing at all, so a disc goes in the holes a maze already
+has rather than making new ones — which is what makes the shape of a maze and what is standing
+in it two decisions instead of one. It cannot attack and cannot be attacked either, so an
+attacker creep can do nothing with the square at all. All ten effects are built, and most of
+them are the first thing in the game to reach a TOWER with anything good: attack speed, reach,
+armour, repair rate, mana, damage scaled by how varied the maze around it is, a chill and an
+armour bite added to what nearby towers already do, and the Lightning disc's static, which
+heals a tower off its own damage and throws an attacker's damage back at it. The other two fire
+on the creeps standing on the disc, which is the walkable rule paying for itself. A disc has no
+model: it is drawn as three flat layers — the same square foundation a tower claims its square
+with, a round worked plate set into it that says the building is a disc, and a coloured circle
+in the middle whose colour is the element and whose size is the tier. Round on square is the
+whole trick, and an upgrade grows only the circle. Two of the three disc tiers ask for technology as a COUNT rather than a named one —
+two of an element's three, then all three — which is the only place in the game that does.
 
 Making that work meant building four things the game did not have: **status effects** on creeps
 — chill, stun, paralyze, permanent armour erosion, burning, poison, amplification — **mana** on
@@ -227,7 +272,7 @@ picture yet. It is kept rather than deleted, unlike `Scripts/Dev`, because every
 needs it again.
 
 `Tools/` is build-time tooling that never runs inside the engine, and is not part of the
-game; a `.gdignore` keeps Godot out of it. [Tools/ModelGen](Tools/ModelGen/README.md) generates the tower and creep models, the materials
+game; a `.gdignore` keeps Godot out of it. [Tools/ModelGen](Tools/ModelGen/README.md) generates the tower, creep and disc art, the materials
 they share and the content that points at them — run it from the project root with
 `python Tools/ModelGen/generate.py`. It writes creep PREFABS but not creep stats, which were
 authored by hand and stay the authority. [Tools/IconGen](Tools/IconGen/README.md) draws the
@@ -236,8 +281,8 @@ output is checked in and is ordinary hand-editable Godot, so they are a convenie
 than a dependency.
 
 **Before building placeholder visuals for another roster** read
-[PLACEHOLDER_ART.md](Tools/ModelGen/PLACEHOLDER_ART.md). It is the method all three rosters
-were built to: what the three readability axes are, how each roster answered them, the
+[PLACEHOLDER_ART.md](Tools/ModelGen/PLACEHOLDER_ART.md). It is the method every roster so far
+was built to: what the three readability axes are, how each roster answered them, the
 contracts a model must meet, and every trap already paid for.
 
 **None of the visual rules is binding.** They were authored by Claude rather than handed

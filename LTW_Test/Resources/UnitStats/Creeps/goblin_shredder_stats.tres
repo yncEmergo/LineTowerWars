@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/goblin_engineering.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/reactive_armor.tres" id="11_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/goblin_shredder.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 178
+display_name = "Goblin Shredder"
+max_health = 802720
+armor_type = 3
+armor = 16
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card")])
+scene_path = "res://Scenes/Units/Creeps/goblin_shredder.tscn"
+move_speed = 3.125
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 1000000
+income_gain = 20000
+unlock_seconds = 0.0
+max_stock = 64
+stock_regen_seconds = 4.0
+body_radius = 0.24
+bounty = 33000

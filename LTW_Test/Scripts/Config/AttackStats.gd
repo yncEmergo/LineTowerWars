@@ -166,8 +166,20 @@ func can_hit_air() -> bool:
 ## what is written is what the tower standing on the field actually rolls -
 ## which is the same rule the armour line follows. 0 for everything that has
 ## grown into nothing, which is nearly every unit in the game.
-func damage_text(bonus: int = 0) -> String:
-	return "%d - %d" % [damage_min + bonus, damage_max + bonus]
+func damage_text(bonus: int = 0, ratio: float = 1.0) -> String:
+	return "%d - %d" % [_scaled(damage_min, bonus, ratio),
+		_scaled(damage_max, bonus, ratio)]
+
+
+## One end of the damage range as the tower actually deals it.
+##
+## The order is the pipeline's, not a convenience: AttackComponent scales the
+## ROLL by the ratio and AttackHit adds the passive bonus to what comes out, so
+## a tower standing in a Void disc with an Alchemist's banked damage hits for
+## (roll x 1.24) + 300 rather than for (roll + 300) x 1.24. Written the other
+## way round the panel would quote a number the tower never deals.
+func _scaled(damage: int, bonus: int, ratio: float) -> int:
+	return int(round(float(damage) * maxf(0.0, ratio))) + bonus
 
 
 ## Damage type as shown in the UI panel, e.g. "Piercing".
@@ -177,8 +189,16 @@ func damage_type_text() -> String:
 
 ## Attack speed as shown in the UI panel, e.g. "0.75 APS". Named APS rather
 ## than spelled out, because that is what the player reads it as.
-func attack_speed_text() -> String:
-	return "%s APS" % StringUtil.trim_number(attacks_per_second)
+##
+## `ratio` is everything currently making the unit swing faster or slower, and
+## it is taken as an argument for exactly the reason armor_text() takes its
+## points: this resource describes the TYPE, and a tower standing in an Earth
+## disc - or cursed by a Harpy - is not it. 1.0 is a tower nothing is reaching,
+## which is what a build tooltip describing a tower that does not exist yet
+## wants.
+func attack_speed_text(ratio: float = 1.0) -> String:
+	return "%s APS" % StringUtil.trim_number(
+		attacks_per_second * maxf(0.0, ratio))
 
 
 ## Range as shown in the UI panel, in player cells.
@@ -198,8 +218,10 @@ func splash_radius() -> float:
 	return widest
 
 
-func range_text() -> String:
-	return StringUtil.trim_number(attack_range)
+## `bonus` is reach lent to the unit in cells, on the same terms as the ratio
+## above: a Primal disc standing nearby is the only thing that grants any.
+func range_text(bonus: float = 0.0) -> String:
+	return StringUtil.trim_number(attack_range + maxf(0.0, bonus))
 
 
 ## What this attack can shoot at, as shown in the UI, e.g. "Ground, Air".

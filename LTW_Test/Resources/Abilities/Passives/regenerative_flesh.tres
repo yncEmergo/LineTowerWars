@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RegenerativeFleshPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/RegenerativeFleshPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 330
+display_name = "Regenerative Flesh"
+targeting = 0
+duration_ratio = 0.35
+duration_cap = 1.4
+shrug_at_health = 0.5
+per_missing_percent = 2.4
+regen_cap = 240.0

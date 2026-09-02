@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbyssalCarapacePassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/AbyssalCarapacePassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 337
+display_name = "Abyssal Carapace"
+targeting = 0
+health_share = 0.1

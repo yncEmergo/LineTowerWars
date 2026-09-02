@@ -1,9 +1,20 @@
 # Adding a roster of placeholder visuals
 
 How the Basic tower roster got its look, written down so the next roster gets
-the same one. The elemental towers and the creeps have both been built to it
-since; where a roster answered one of its questions, the answer is recorded
-here next to the question.
+the same one. The elemental towers, the creeps and the technology discs have
+all been built to it since; where a roster answered one of its questions, the
+answer is recorded here next to the question.
+
+**The discs are the roster that broke the mould, and that is the interesting
+case.** A disc has no model at all - it is three flat layers painted onto the
+floor - so almost none of section 7 applies to it and the whole of sections 4
+and 5 had to be answered a different way. Two of the rules below did not
+survive it: motion for the top rung became meaningless, and the roster answers
+"which element" on ONE axis where the towers use two. What carried over is
+everything else, the three axes and the rule that colour belongs to the
+elements above all. Read section 12 before assuming a new roster has to be made
+of primitives, and read it as the record of what a rule costs when it is
+wrong.
 
 [README.md](README.md) is the tool reference — what the files are and how to
 run it. This is the method.
@@ -269,6 +280,16 @@ The elemental roster added one layer the Basic one did not need:
 <x>_abilities.py  what each unit's named ability IS, and its numbers
 ```
 
+The disc roster took a layer AWAY. It has no `disc_abilities.py` - its ten
+effects and their thirty sets of numbers are small enough to sit in
+`disc_roster.py` beside the prices - and its `disc_models.py` writes no
+primitives at all, only one material and a two node scene per disc. It also
+carries a `disc_style.py` of its own rather than a section of `style.py`, on
+exactly the grounds the three rosters up there are kept apart: a disc cannot
+accidentally take a tower rule if it never sees one. What it DOES reach into
+`style.py` for is the ten element hues and the ten side counts, so a Fire disc
+and a Fire tower cannot disagree about what Fire looks like.
+
 It is a table rather than a `.tres` per tower written by hand, for the same
 reason `roster.py` is: those numbers come out of `unit_data.md` and want to be
 readable next to each other. It is also where the UNIT CONVERSION happens - the
@@ -404,6 +425,12 @@ Each of these cost real time. None of them errors.
   first run and decide deliberately. `git checkout --` on the rest is a poor
   fallback: reverted files can end up referencing resources that a
   half-finished change deleted, and the project stops booting.
+- **A PLAN CAN OFFER A PART THE FAMILY NEVER USES.** The machine builder makes
+  a swinging arm because the first machine in the roster was an attacker; the
+  second was not, and the prefab stage wired a strike component to it because a
+  `Swing` node existed. It errored on the creep's first frame. What a MODEL
+  offers and what a FAMILY actually does are two questions, and the content
+  stage has to ask the second one.
 - **A family rule can be two rules wearing one coat.** AIR was written as "no
   legs, a shadow disc, and translucent" while the only flyer in the game was a
   ghost. The first solid flyer made it obvious that translucency was the
@@ -493,6 +520,20 @@ Each of these cost real time. None of them errors.
   will sit between the camera and the eyes, and a creep whose eyes are covered
   reads as having no facing at all. Leave a gap for the head to be the
   frontmost thing, and put the brow BEHIND the eyes rather than over them.
+- **A LADDER CAN RUN OUT SILENTLY, and this one did.** The creep ladder is
+  measured in half decades of GOLD and its ramps were authored with six rungs,
+  which covered the roster it was built for. It did not cover the next two
+  brackets: `creep_rung` clamps at the end of the ramp, so everything above
+  3,162 gold quietly landed on one rung, and by the end of tier 2 a third of
+  the roster shared one carapace colour and one eye brightness. Nothing errors,
+  nothing looks wrong in a diff, and the ladder simply stops saying anything
+  about the expensive half of the game. **Adding a bracket is a reason to count
+  the rungs it needs**, and extending a ramp afterwards moves every unit that
+  was clamped - which is the ladder doing its job rather than churn, but is
+  worth deciding on purpose.
+  - the SIZE ramps are the exception and must NOT be extended with the rest.
+    They are capped on purpose (`style.CREEP_SIZE_RUNG_CAP`), which is also
+    what let this be fixed without a single existing model changing size.
 - **A rung nobody stands on has never actually been looked at.** The creep
   ladder's ramps were authored for six rungs and only five were occupied, so
   the top rung's emissive carapace had never been rendered: a flat plate
@@ -545,3 +586,106 @@ Placeholder art is a design artefact, so the RULES outlive it:
 
 Do not write counts, or the current value of a tuning knob, into any `.md`.
 See CLAUDE.md.
+
+---
+
+## 12. A roster with no model at all
+
+The technology discs, and the reason this section exists is that they are the
+first thing here that is NOT made of primitives. If the next roster is a rune,
+a marker, a zone or anything else that lies on the floor rather than standing
+on it, this is the shape of the work.
+
+**What a disc is:** three flat quads and nothing else. No `modelkit`, no
+primitives, no `Turret`, no `Muzzle`, no height ramp, no width ramp.
+`disc_models.py` writes two shaders' worth of material and a three node scene,
+and that is the whole models stage.
+
+**Why:** the camera looks down. A thing set INTO the ground would show almost
+nothing of a raised shape anyway, and drawing one would have cost the single
+most valuable thing the disc roster has to say - that a tower stands up and a
+disc lies flat. That is the first question a player asks of a maze square and
+it now has a one glance answer no amount of silhouette work could match.
+
+### The three layers, and why they are three
+
+    Base    the shared square tower foundation, instanced unchanged
+    Plate   a round worked disc set into it, identical on all thirty-one
+    Glyph   a coloured circle. Colour is the element, size is the tier
+
+The first cut had ONE layer doing all of it: a round patch with its own ground
+pattern, the element as a coloured polygon inside it. Three things were wrong
+with that and the fix for all three was to split it.
+
+- **A disc did not read as a claimed square.** Every tower in the game marks
+  its cell with the same square patch; a disc marked its cell with something
+  else entirely, so the one thing the two DO have in common was the one thing
+  the art denied. Instancing the tower foundation says "a building is here" in
+  the words the rest of the game already uses.
+- **ROUND ON SQUARE is a stronger read than two different rounds.** The
+  foundation and the plate are the same stone - they have to be, because colour
+  belongs to the elements - so shape is the only thing that can separate them,
+  and a machined circle on a square patch separates instantly. The plate's
+  diameter is tuned so the square shows at every corner; close that gap and the
+  two layers merge back into one lump.
+- **An upgrade could not grow only what it bought.** The tier is the size of
+  the coloured part, and with one quad the colour was a radius UNIFORM - which
+  cannot be animated per building, because the material is shared by every disc
+  of a type and `gl_compatibility` has no per-instance uniforms. Putting the
+  glyph on its own node made the tier the MESH's size and the growth that
+  node's scale, and an upgrade now opens the colour out of the middle of a
+  plate that never moves.
+
+### The three axes came out
+
+- WHICH KIND is answered by being flat, before colour or shape or size. It is
+  the loudest thing about a disc and the thing that matters most.
+- WHICH ELEMENT is the glyph's COLOUR, and nothing else. The first cut also
+  gave each element the side count its towers are built on, so the roster would
+  answer on two axes the way the towers do. **It was dropped on review and that
+  is the lesson worth carrying:** a disc is read in peripheral vision while the
+  player is watching a creep wave, and counting sides at that size is something
+  the eye will not do. Colour it reads instantly.
+  - what it cost is a second channel for a colourblind player, which the towers
+    have and the discs do not. If that matters, the answer is not the polygons
+    back - it is something read as fast as colour, like pips around the rim.
+- WHICH TIER is the glyph's SIZE and nothing else. **One rule where the tower
+  ladders are six**, and that is the real lesson: a flat circle has one thing
+  to say everything with, so a second rule laid over the first would be
+  fighting it for the same pixels. Resist adding one.
+- **MOTION FOR THE TOP RUNG DIED HERE**, and it is worth knowing why rather
+  than rediscovering it. The discs obeyed the rule by turning an Ultimate's
+  glyph slowly; the moment the glyph became a circle that became a still
+  circle. It was not replaced by a pulse or a second colour, because the tier
+  is the size and that is the single rule. A visual rule can be true of every
+  roster in the game and still be meaningless for the next one - see section 0.
+
+### The traps this one paid for
+
+- **A flat quad cannot rise.** `Building` scales a visual on Y over a
+  construction, which for a plane is no change at all - so a disc looked
+  finished the instant it was ordered. It spends the same ramp on X and Z
+  instead, and on the GLYPH rather than the whole model where there is one.
+  Anything else that lies flat will hit this.
+- **A fade would have been the obvious answer and is not available.** Opacity
+  has to be written per building, and `gl_compatibility` has no per-instance
+  shader uniforms. That constraint is why the tier lives on the mesh, and it is
+  the same one that gives the towers one energy material per line and tier.
+- **The portrait rule nearly hid the whole unit.** `VisualUtil.portrait_skips`
+  drops a `BuildingFoundation` from icons and portraits, correctly - a tower's
+  ground patch is floor. While a disc WAS one foundation and nothing else, that
+  left it with a blank portrait and an unbakeable icon. The three layer version
+  fixes it by having layers that are not the foundation, which is a better
+  answer than special-casing the rule was.
+- **The icon camera needed its own angle.** Seen from the creeps' three quarter
+  view a flat disc is a squashed ellipse with its glyph foreshortened into a
+  smear - destroying exactly the two things the icon has to say. `IconGen3D`
+  carries an elevation per roster for this, and discs are baked from very
+  nearly overhead. Not exactly overhead: `look_at` with an UP of `Vector3.UP`
+  degenerates when the camera is straight above its target.
+- **The build preview came free by INSTANCING rather than rebuilding.** The
+  foundation layer IS `tower_foundation.tscn`, so it ghosts green and red with
+  no work at all, and `UnitModel` swaps the other two layers for the flat ghost
+  material the way it does any tower mesh. The first cut wrote a `preview_tint`
+  uniform into its own shader to imitate that, which worked and was a parallel
+  path to keep in step. Reach for the existing scene first.

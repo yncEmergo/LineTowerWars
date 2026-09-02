@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/WaterDiscPassive.gd" id="1_WaterDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/water_disc.png" id="2_water_disc"]
+
+[resource]
+script = ExtResource("1_WaterDiscPassive")
+ability_id = 410
+display_name = "Wellspring"
+targeting = 0
+slot = 6
+icon = ExtResource("2_water_disc")
+radius_cells = 2.34
+mana_regen_per_second = 2

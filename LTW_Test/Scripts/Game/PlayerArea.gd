@@ -37,11 +37,34 @@ extends Node3D
 ## ever iterates creeps, and so an area's creeps die with it.
 @export var _creeps_root: Node3D
 
+## What one byte of `_occupied` means. A cell is free, taken by a building that
+## creeps have to walk AROUND, or taken by one they walk STRAIGHT OVER.
+##
+## The third state is the whole of the technology disc. A disc claims its cell
+## against anything else being built there and reads on the grid exactly as a
+## tower does, and it is not a wall: the flow field routes through it, a creep
+## standing where one goes up is left alone, and a maze made of discs is no
+## maze at all. See game_rules.md, Technology discs.
+const CELL_FREE: int = 0
+const CELL_BLOCKED: int = 1
+const CELL_WALKABLE: int = 2
+
 var player_id: int = 1
 
-## One byte per internal cell, 1 when a building occupies it. Indexed
+## One byte per internal cell, one of the CELL_ values above. Indexed
 ## iz * internal_width() + ix, so row major from the creep spawn downwards.
+##
+## This is the BUILDING question: whether anything at all stands on a cell.
 var _occupied: PackedByteArray = PackedByteArray()
+## The same grid reduced to the MOVEMENT question: 1 where a creep may not
+## walk, 0 everywhere else, so a walkable building reads as open ground.
+##
+## Kept alongside rather than derived on demand, because every consumer of it -
+## the flow field sweep, the route walk, the free-point test a creep runs on
+## its own position every tick - wants a plain "is this blocked" array and
+## would otherwise each have to build one. Written only by _set_footprint, so
+## the two can never drift.
+var _blocking: PackedByteArray = PackedByteArray()
 ## Every creep walking this area, kept in step with the creeps root rather than
 ## asked for it. See creeps().
 var _creeps: Array[Creep] = []
@@ -71,6 +94,8 @@ func setup(id: int) -> void:
 	position = _config.area_origin(id)
 	_occupied = PackedByteArray()
 	_occupied.resize(internal_width() * internal_depth())
+	_blocking = PackedByteArray()
+	_blocking.resize(_occupied.size())
 	_apply_layout()
 	_rebuild_flow_field()
 	_watch_creeps()
@@ -287,13 +312,20 @@ func mark_rubble(cell: Vector2i, footprint: Vector2i) -> void:
 ## Whether a footprint may be built at a cell. Checks the buildable zone, then
 ## occupancy, then rubble, then that creeps would still have a route. Order
 ## matters: the path flood fill is the expensive one, so it runs last.
-func can_place(cell: Vector2i, footprint: Vector2i) -> bool:
+##
+## `blocks` is what the building about to stand here does to the maze, and a
+## walkable one skips the route test entirely rather than passing it: a disc is
+## not a wall, so there is no arrangement of them that could ever seal an area
+## and no reason to sweep the grid to find that out again per placement.
+func can_place(cell: Vector2i, footprint: Vector2i, blocks: bool = true) -> bool:
 	if !_fits_build_zone(cell, footprint):
 		return false
 	if !_footprint_free(cell, footprint):
 		return false
 	if _rubble_in(cell, footprint):
 		return false
+	if !blocks:
+		return true
 	return _path_exists(cell, footprint)
 
 
@@ -310,26 +342,39 @@ func _rubble_in(cell: Vector2i, footprint: Vector2i) -> bool:
 	return false
 
 
-func occupy(cell: Vector2i, footprint: Vector2i) -> void:
-	_set_footprint(cell, footprint, 1)
+## Claims a footprint for a building that has just gone up.
+##
+## `blocks` says which kind it is. A walkable one changes nothing about how
+## creeps move, so neither the flow field nor the creeps standing on the cell
+## have anything to be told - a disc going up under a creep leaves it exactly
+## where it was, which is the whole point of one.
+func occupy(cell: Vector2i, footprint: Vector2i, blocks: bool = true) -> void:
+	_set_footprint(cell, footprint, CELL_BLOCKED if blocks else CELL_WALKABLE)
+	if !blocks:
+		return
 	_rebuild_flow_field()
 	# Creeps never block placement, so anything standing where the building
 	# just went up is moved aside instead. See game_rules.md.
 	_displace_creeps_in(cell, footprint)
 
 
+## Gives a footprint back. Unconditional about the flow field, unlike occupy():
+## what is being released is not always known to have blocked, and a sweep that
+## changes nothing is cheaper than a wrong one.
 func release(cell: Vector2i, footprint: Vector2i) -> void:
-	_set_footprint(cell, footprint, 0)
+	_set_footprint(cell, footprint, CELL_FREE)
 	_rebuild_flow_field()
 
 
 func _set_footprint(cell: Vector2i, footprint: Vector2i, value: int) -> void:
 	var width: int = internal_width()
+	var walled: int = 1 if value == CELL_BLOCKED else 0
 	for dz in range(footprint.y):
 		for dx in range(footprint.x):
 			var index: int = (cell.y + dz) * width + cell.x + dx
 			if index >= 0 && index < _occupied.size():
 				_occupied[index] = value
+				_blocking[index] = walled
 
 
 func _fits_build_zone(cell: Vector2i, footprint: Vector2i) -> bool:
@@ -363,7 +408,7 @@ func _path_exists(cell: Vector2i, footprint: Vector2i) -> bool:
 	if width <= 0 || depth <= 0:
 		return false
 
-	var blocked: PackedByteArray = _occupied.duplicate()
+	var blocked: PackedByteArray = _blocking.duplicate()
 	if cell.x >= 0 && cell.y >= 0:
 		for dz in range(footprint.y):
 			for dx in range(footprint.x):
@@ -411,7 +456,7 @@ func _path_exists(cell: Vector2i, footprint: Vector2i) -> bool:
 # into a busy maze reroutes a hundred creeps for the cost of one sweep.
 
 func _rebuild_flow_field() -> void:
-	_flow.build(_occupied, internal_width(), internal_depth(), build_zone_row_end())
+	_flow.build(_blocking, internal_width(), internal_depth(), build_zone_row_end())
 
 
 ## Internal cell containing a world point, unclamped, so a caller can tell an
@@ -440,7 +485,7 @@ func route_to_exit(world_pos: Vector3) -> Array[Vector2i]:
 	if !_flow.is_built():
 		var empty: Array[Vector2i] = []
 		return empty
-	return _flow.path_from(world_to_internal_cell(world_pos), _occupied)
+	return _flow.path_from(world_to_internal_cell(world_pos), _blocking)
 
 
 ## Whether something standing here has reached the end zone.
@@ -448,13 +493,16 @@ func is_at_exit(world_pos: Vector3) -> bool:
 	return _flow.is_exit(world_to_internal_cell(world_pos))
 
 
-## Whether a world point is inside the area and not inside a building. Creeps
-## test their next position with this rather than carrying a collider.
+## Whether a world point is inside the area and not inside a WALL. Creeps test
+## their next position with this rather than carrying a collider.
+##
+## A walkable building is free ground to this: it reads the movement grid, so a
+## creep steps onto a technology disc exactly as it steps onto bare floor.
 func is_point_free(world_pos: Vector3) -> bool:
 	var cell: Vector2i = world_to_internal_cell(world_pos)
 	if cell.x < 0 || cell.y < 0 || cell.x >= internal_width() || cell.y >= internal_depth():
 		return false
-	return _occupied[cell.y * internal_width() + cell.x] == 0
+	return _blocking[cell.y * internal_width() + cell.x] == 0
 
 
 ## Parent for this area's creeps, taken from the prefab. Rebuilt on the spot if
@@ -530,9 +578,9 @@ func _displace_creeps_in(cell: Vector2i, footprint: Vector2i) -> void:
 		return
 
 	for creep: Creep in _creeps:
-		# A flyer reads none of this grid, so a tower going up under one is
-		# nothing that happened to it.
-		if creep.is_flying():
+		# A flyer reads none of this grid and neither does an ethereal creep,
+		# so a tower going up under one is nothing that happened to it.
+		if creep.ignores_maze():
 			continue
 
 		var at: Vector2i = world_to_internal_cell(creep.global_position)
@@ -567,8 +615,12 @@ func random_spawn_point(margin: float, rng: RandomNumberGenerator) -> Vector3:
 	))
 
 
-## Nearest point not inside a building, searched outwards ring by ring from the
+## Nearest point not inside a WALL, searched outwards ring by ring from the
 ## cell the point falls in. Used when a tower lands on top of a creep.
+##
+## The movement grid, like is_point_free above: a creep pushed aside by a new
+## tower may perfectly well end up standing on a technology disc, and refusing
+## that would send it further than it had to go for no reason at all.
 func nearest_free_point(world_pos: Vector3) -> Vector3:
 	var origin: Vector2i = world_to_internal_cell(world_pos)
 	var width: int = internal_width()
@@ -584,7 +636,7 @@ func nearest_free_point(world_pos: Vector3) -> Vector3:
 				var cell: Vector2i = Vector2i(origin.x + dx, origin.y + dz)
 				if cell.x < 0 || cell.y < 0 || cell.x >= width || cell.y >= depth:
 					continue
-				if _occupied[cell.y * width + cell.x] == 0:
+				if _blocking[cell.y * width + cell.x] == 0:
 					return internal_cell_center(cell)
 
 	Log.warn("No free cell anywhere in the area", {"player": player_id})

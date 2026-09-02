@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/kobold_geomancer_hide.tres" id="1_kobold_geomancer_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/kobold_geomancer_hide_deep.tres" id="2_kobold_geomancer_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/kobold_geomancer_hide_pale.tres" id="3_kobold_geomancer_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r7.tres" id="4_carapace_r7"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r7.tres" id="5_eye_r7"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -23,11 +23,11 @@ material = ExtResource("2_kobold_geomancer_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(0.0489, 0.0206, 0.0636)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="PrismMesh" id="PrismMesh_4"]
 size = Vector3(0.0147, 0.0293, 0.0171)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_5"]
 radius = 0.0298
@@ -45,11 +45,11 @@ material = ExtResource("2_kobold_geomancer_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.0489, 0.0206, 0.0636)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
 size = Vector3(0.0147, 0.0293, 0.0171)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="SphereMesh" id="SphereMesh_9"]
 radius = 0.0914
@@ -85,7 +85,7 @@ inner_radius = 0.0868
 outer_radius = 0.1097
 rings = 12
 ring_segments = 4
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="BoxMesh" id="BoxMesh_14"]
 size = Vector3(0.1871, 0.0827, 0.1205)
@@ -119,11 +119,11 @@ radius = 0.0182
 height = 0.0364
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r7")
 
 [sub_resource type="PrismMesh" id="PrismMesh_19"]
 size = Vector3(0.0344, 0.1435, 0.0287)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_20"]
 radius = 0.0276
@@ -180,7 +180,7 @@ inner_radius = 0.0235
 outer_radius = 0.0415
 rings = 10
 ring_segments = 4
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="SphereMesh" id="SphereMesh_28"]
 radius = 0.0207
@@ -191,11 +191,11 @@ material = ExtResource("3_kobold_geomancer_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_29"]
 size = Vector3(0.0482, 0.039, 0.1148)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [sub_resource type="PrismMesh" id="PrismMesh_30"]
 size = Vector3(0.0367, 0.0976, 0.0344)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r7")
 
 [node name="KoboldGeomancerModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

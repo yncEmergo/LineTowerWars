@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QuicknessPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/QuicknessPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 339
+display_name = "Quickness"
+targeting = 0
+chance = 0.5
+from_range_cells = 7.031

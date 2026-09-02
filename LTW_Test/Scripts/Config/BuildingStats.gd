@@ -34,6 +34,19 @@ extends UnitStats
 ## Footprint in player cells. Towers are always 1 x 1 per game_rules.md,
 ## which is 2 x 2 internal cells.
 @export var footprint_cells: Vector2i = Vector2i.ONE
+## Whether creeps have to walk AROUND this building rather than over it.
+##
+## True for every tower, and the reason a maze is a maze at all. FALSE for the
+## technology discs, which claim their cell against anything else being built
+## there and are not a wall: creeps walk straight over one, which is what makes
+## a disc the thing you put in the holes of a maze rather than another wall of
+## it. See game_rules.md, Technology discs, and PlayerArea.CELL_WALKABLE.
+##
+## A flag rather than a subclass question, because it is read at PLACEMENT
+## time, from the stats, before anything has been spawned - the build preview
+## has to know whether to run the route test on a footprint that is still only
+## a ghost.
+@export var blocks_movement: bool = true
 ## Price of THIS tower alone: what a build costs, or what one upgrade costs.
 @export var gold_cost: int = 0
 ## Mana this building holds at most, or 0 for one that uses none.

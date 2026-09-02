@@ -129,11 +129,18 @@ func card_abilities() -> Array[UnitAbility]:
 ## the only place it is ever visible. Taken as an argument rather than read
 ## here for the reason armor_text() takes its points: this resource describes
 ## the TYPE, and what is standing on the field is not always it.
-func damage_text(bonus: int = 0) -> String:
+##
+## `ratio` is everything currently making the unit hit harder or softer - a
+## Void disc lending it damage, an Obsidian Statue drifting past taking some
+## away - and is folded in WITHOUT a tail of its own. That is the difference
+## between the two: a bonus is something the tower has EARNED and keeps, and is
+## worth naming; a ratio is a condition of where it happens to be standing, and
+## the honest answer to "what does this tower hit for" is just the number.
+func damage_text(bonus: int = 0, ratio: float = 1.0) -> String:
 	if attack == null:
 		return "-"
 	var text: String = "%s (%s)" % [
-		attack.damage_text(bonus), attack.damage_type_text()
+		attack.damage_text(bonus, ratio), attack.damage_type_text()
 	]
 	if bonus <= 0:
 		return text

@@ -61,6 +61,10 @@ var _session: MatchSession:
 
 
 func _ready() -> void:
+	# Keeps running while the world is held still (StartingTech's draft). The
+	# order that ENDS the pause travels down this road, so a road that paused
+	# with everything else would never carry it.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Only the server has a queue to drain.
 	set_physics_process(false)
 
@@ -188,6 +192,13 @@ func _validate_and_apply(command: Command) -> void:
 	# whole of the question, and that was answered the moment it arrived.
 	if command.is_player_order():
 		_apply_player_order(command)
+		return
+
+	# Nothing may be ordered of a UNIT while the world is held still for the
+	# draft. A legitimate client cannot press anything - its whole HUD is
+	# paused - so this only ever answers one that was modified.
+	if _is_drafting():
+		_reject(command, "the match is paused")
 		return
 
 	var ability: UnitAbility = session.abilities().ability_for(command.ability_id)
@@ -323,7 +334,17 @@ func _run_on(unit: Unit, ability: UnitAbility, command: Command) -> bool:
 ## the prerequisite here, for the same reason there is no copy of the gold
 ## check for a tower.
 func _apply_player_order(command: Command) -> void:
+	# A match held still for the DRAFT accepts exactly one order: the choice it
+	# is being held for. Every other screen is frozen on a legitimate client,
+	# so this is what a modified one is refused with.
+	if _is_drafting() && command.player_action != Command.PlayerAction.PICK_DRAFT_TECH:
+		_reject(command, "the draft is not finished")
+		return
+
 	match command.player_action:
+		Command.PlayerAction.PICK_DRAFT_TECH:
+			_apply_draft_pick(command)
+			return
 		Command.PlayerAction.CHEAT_GOLD:
 			_apply_cheat_gold(command)
 			return
@@ -346,6 +367,32 @@ func _apply_player_order(command: Command) -> void:
 		command_applied.emit(command)
 	else:
 		_reject(command, reason)
+
+
+## One player taking an Ultimate from the three a draft is offering.
+##
+## Its own branch rather than another case in TechManager, because which three
+## are on offer and who is still to choose is StartingTech's - what the pick
+## COSTS is TechManager's, and StartingTech asks it for that itself.
+func _apply_draft_pick(command: Command) -> void:
+	var draft: StartingTech = References.starting_tech
+	if draft == null:
+		_reject(command, "this scene has no StartingTech")
+		return
+
+	var reason: String = draft.pick(command.player_slot, command.tech_id)
+	if reason.is_empty():
+		command_applied.emit(command)
+	else:
+		_reject(command, reason)
+
+
+## Whether the match is being held still for a draft. Asked before anything
+## else a command could ask for, since a paused world must not be moved by an
+## order that was pressed on a screen that should have been frozen.
+func _is_drafting() -> bool:
+	var draft: StartingTech = References.starting_tech
+	return draft != null && draft.is_drafting()
 
 
 ## A developer cheat, applied by the authority exactly as every other player

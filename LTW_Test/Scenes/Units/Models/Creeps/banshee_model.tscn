@@ -3,8 +3,8 @@
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/banshee_hide.tres" id="1_banshee_hide"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/banshee_hide_deep.tres" id="2_banshee_hide_deep"]
 [ext_resource type="Material" path="res://Resources/Materials/Creeps/banshee_hide_pale.tres" id="3_banshee_hide_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r5.tres" id="4_carapace_r5"]
-[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r5.tres" id="5_eye_r5"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/carapace_r6.tres" id="4_carapace_r6"]
+[ext_resource type="Material" path="res://Resources/Materials/Creeps/eye_r6.tres" id="5_eye_r6"]
 [ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
 [ext_resource type="Script" path="res://Scripts/Effects/GroundShadow3D.gd" id="7_GroundShadow3D"]
 
@@ -65,11 +65,11 @@ radius = 0.0234
 height = 0.0468
 radial_segments = 5
 rings = 2
-material = ExtResource("5_eye_r5")
+material = ExtResource("5_eye_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_7"]
 size = Vector3(0.0361, 0.1488, 0.0298)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_8"]
 radius = 0.0298
@@ -80,7 +80,7 @@ material = ExtResource("1_banshee_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_9"]
 size = Vector3(0.0149, 0.0476, 0.0119)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_10"]
 radius = 0.0298
@@ -91,7 +91,7 @@ material = ExtResource("1_banshee_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_11"]
 size = Vector3(0.0149, 0.0476, 0.0119)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_12"]
 top_radius = 0.0309
@@ -143,11 +143,11 @@ material = ExtResource("2_banshee_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_18"]
 size = Vector3(0.0393, 0.0309, 0.1193)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [sub_resource type="PrismMesh" id="PrismMesh_19"]
 size = Vector3(0.0281, 0.0702, 0.0253)
-material = ExtResource("4_carapace_r5")
+material = ExtResource("4_carapace_r6")
 
 [node name="BansheeModel" type="Node3D"]
 script = ExtResource("6_UnitModel")

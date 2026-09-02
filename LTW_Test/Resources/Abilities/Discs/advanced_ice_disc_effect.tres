@@ -1,0 +1,15 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiscPassives/IceDiscPassive.gd" id="1_IceDiscPassive"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/advanced_ice_disc.png" id="2_advanced_ice_disc"]
+
+[resource]
+script = ExtResource("1_IceDiscPassive")
+ability_id = 396
+display_name = "Frostbind"
+targeting = 0
+slot = 6
+icon = ExtResource("2_advanced_ice_disc")
+radius_cells = 2.34
+chill_per_hit = 0.015
+chill_cap = 0.3

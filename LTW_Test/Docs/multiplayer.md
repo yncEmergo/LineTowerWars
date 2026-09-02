@@ -470,10 +470,23 @@ half, and `OrderQueue.orders()` answers which of the two this machine may read -
 with it, `queued`, which says the player was holding shift; like everything else in a command it
 is INTENT, and what it means is decided by the server against its own world.
 
-What a snapshot does NOT carry is the STATUS EFFECTS on a creep. A client sees the creep where
-the server puts it, which is most of what a slow or a stun looks like; what it cannot see is
-armour that has been eaten out of an opponent's creep, so the figure on that creep's panel is
-its own. Cheap to add as one more field when somebody notices.
+**WHAT IS ON A UNIT rides its own channel**, not the unit record - the watched-unit block in
+§5.4, which is the one thing in phase A that is not "the whole world every tick". A client
+names the unit its panel is showing and is told that unit's effects and no others.
+
+What goes into it is `Unit.status_entries()`, and it is VIRTUAL rather than a cast to `Creep`,
+which is what it used to be. That cast quietly kept three whole systems off the wire: what a
+technology disc lends a tower, what a creep curses one with (`TowerStatus`), and the armour a
+packmate's aura grants a creep. All three were real on the server and invisible to both
+clients - so a client drew the range circle of a tower standing in a Primal disc at the
+tower's own reach, around a tower that really did have the longer one. Anything that grows a
+fourth kind of effect overrides that one method and is replicated for free.
+
+**Folding those records back into a number is the UNIT's job, never the reader's.**
+`armor_value()`, `attack_speed_ratio()`, `attack_damage_ratio()` and `attack_range_bonus()`
+each answer from the live objects on the authority and from the replicated entries on a
+client, so the panel, the range overlay and the barrels cannot disagree about the same tower.
+The panel used to carry that branch itself, which worked only while it was the only reader.
 
 **`MatchSession.is_authority()`** - static, and the single question every simulation loop
 asks:
@@ -723,14 +736,21 @@ discovered later. Four mechanisms, in order of importance:
 4. **Events, not state, for discrete things.** Deaths, damage, life loss and gold changes are
    messages, not fields polled every tick.
 
-**One of these is already here, for one channel.** A creep's STATUS EFFECTS are sent only
+**One of these is already here, for one channel.** A unit's STATUS EFFECTS are sent only
 for the units clients have said they are looking at: a client names the unit its panel is
 showing (`Replication.request_watch`), the server keeps a unit id per peer, and the snapshot
 carries the effects of those units alone. That is mechanism 2 in miniature, and it earns the
 exception phase A otherwise refuses - a creep in a maze carries several effect records and a
-maze carries hundreds of creeps, against at most one creep per player that anybody can be
+maze carries hundreds of creeps, against at most one unit per player that anybody can be
 reading. The client half is dumb in the usual way: what arrived IS the answer, so a unit that
 drops off the list has nothing on it any more.
+
+A TOWER rides this channel too, which is worth saying because the interest management has a
+consequence there that it does not have for a creep: a tower nobody is looking at answers its
+own bare numbers on a client, so its barrels turn on an unbuffed reach while the server shoots
+on the real one. Presentation only - the server is the only machine that fires - and it is the
+same trade the creep armour line has always made. The complete version arrives with phase B,
+when the server names what each tower fired at anyway.
 
 **Consequence worth noting:** because the client runs the same simulation as a prediction,
 the simulation's freedom from physics and unseeded randomness keeps its value. The difference from lockstep is that drift
@@ -909,6 +929,59 @@ the first thing to delete once a colour rides on `MatchPlayer`. Consequences wor
   client asking for a taken colour is refused, exactly like a full lobby.
 - The palette is content, so it belongs in a config `.tres`, not in a script.
 - Somebody joining needs a free colour by default, or they sit colourless until they pick.
+
+### 8.2 Match settings
+
+**Built.** The host chooses the rules of a match in the lobby, before anybody loads: what
+everybody starts with, which creeps are in it, whether the lanes are shuffled, how the
+opening technology is dealt, and whether players are named or only coloured. What each of
+them MEANS is `game_rules.md` under Match settings; what follows is where it lives.
+
+- `MatchSettings` is a flat, serialisable Resource, next to `MatchPlayer` and for the same
+  reason: it rides on a `LobbyInfo` while the lobby is open and on the `MatchSetup` once the
+  match begins, and both travel as Dictionaries.
+- It is **not a second GameConfig.** `MatchSettings.defaults()` is the one place the two
+  meet: a fresh lobby copies the numbers out of `game_config.tres` and the host edits the
+  copy. Editing the file still changes what every new match starts from; a match that was
+  started carries what was agreed.
+- The host's panel calls `Lobby.set_settings()`, which is one request carrying the WHOLE
+  block rather than one changed field - ten values on a cold path, and the server never has
+  to merge two half-states. The server checks the sender hosts the lobby, refuses it once the
+  countdown is running, runs `sanitise()` and pushes the lobby back. So the host's own edit
+  takes the same round trip everybody else's copy does, and a clamped value is drawn as the
+  clamped one rather than as what was typed.
+- `sanitise()` is where the RANKED LOCK is enforced, not the greyed-out controls: a ranked
+  block is put back onto the defaults whatever arrived, keeping only the technology mode. The
+  clamps beside it are the ordinary distrust, bounded by `MenuConfig` - a lobby rule rather
+  than a match one.
+- The lane shuffle happens in `LobbyInfo.to_match_setup`, on a generator seeded from the
+  match seed, and every machine is TOLD the result. Nothing derives it.
+
+**The technology draft is the one thing here that touches the simulation**, and it is worth
+knowing how:
+
+- `StartingTech` is a node in both match scenes, next to `TechManager`, reached through
+  `References`. Not an autoload: it receives no rpc of its own, because a draft pick is an
+  ordinary player order and travels through `Commands` like a Research Center press.
+- **The authority rolls the three Ultimates and clients are told**, in the snapshot, under
+  its own key. Both machines COULD derive the same three from the seed and that is exactly
+  the second simulation 3.4 forbids - it would agree until it did not, and the symptom would
+  be a client drawing three buttons the server refuses two of.
+- **Holding the world still is `SceneTree.paused`**, set by `MatchSession.set_paused` on both
+  machines - the authority from its own draft, a client from the snapshot that says who is
+  left. Every gameplay loop in the project lives in `_physics_process`, so the engine's own
+  pause switches all of them off at once and nothing new has to remember to ask.
+  - what must keep running says so for itself: `Net`, `Lobby`, `MatchStart`, `Commands` and
+    `Replication` all set `PROCESS_MODE_ALWAYS`, because the order that ENDS the pause and
+    the snapshot that announces it both travel that way. On the HUD only the draft screen and
+    the menu that lets a player leave do, which is what stops a held player from building or
+    sending their way past the choice.
+  - the MATCH CLOCK is given back what the hold took. The tick counter is the physics frame
+    and the engine goes on counting those while nothing is processing them, so without that
+    correction a ten second draft would be ten seconds every creep unlock had silently
+    already served.
+- A player who drops during the draft stops being waited for (D13), so one crashed client
+  cannot hold everybody else for the rest of the match.
 
 ---
 

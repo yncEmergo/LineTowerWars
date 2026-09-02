@@ -432,8 +432,15 @@ def build_biped(m, p):
                   own shoulders where a Priest is upright
         robe      whether the legs are replaced by a hem, which changes the
                   bottom half of the silhouette completely
-        head      skull, hood, helm or bare
+        head      skull, hood, helm, bare, horned or mask
         weapon    what the right arm carries, and how far out it sticks
+
+    Tier 3 and 4 put NINE more creeps on this plan, which is the crowding this
+    docstring was already warning about. Two heads and two weapons were added
+    for them rather than reusing the four that existed, on the grounds that a
+    horned satyr wearing a helm and a huntress carrying a sword are both the
+    plan LYING about a creature - which is the same bar a new body plan has to
+    clear, one level down.
     """
     hip = p["hip_y"]
     stance = p["stance"]
@@ -534,6 +541,49 @@ def _biped_head(m, p, shoulder_y):
               parent="Gait/Torso/Head", y=m.up(head_r * 0.8))
         eyes(m, "Gait/Torso/Head", m.up(-head_r * 0.1), -head_r * 0.84,
              head_r * 0.56, head_r * 0.18)
+    elif p["head"] == "horned":
+        # A bare skull with two long horns sweeping FORWARD past the face,
+        # which is the one head in the plan whose outline reaches in front of
+        # its own eyes. From directly above that is what a player reads first,
+        # so it has to be the thing that says which creep this is - and the
+        # horns are placed low and wide enough that the eyes still show
+        # between them. See the trap about brows in PLACEHOLDER_ART.
+        m.put("Head", m.ball(m.pale, head_r, 1.0, 6, 3),
+              parent="Gait/Torso/Head")
+        horn = m.prism(m.trim, head_r * 0.30, m.up(head_r * 1.9),
+                       head_r * 0.26)
+        for side, name in ((-1.0, "HornL"), (1.0, "HornR")):
+            m.put(name, horn, parent="Gait/Torso/Head",
+                  x=side * head_r * 0.72, y=m.up(head_r * 0.55),
+                  z=head_r * 0.1, rz=side * -0.45, rx=-1.05)
+        m.put("Muzzle", m.cyl(m.deep, head_r * 0.34, head_r * 0.6,
+                              head_r * 0.7, 6, "z"),
+              parent="Gait/Torso/Head", y=m.up(-head_r * 0.22),
+              z=-head_r * 0.75, rx=1.5708)
+        eyes(m, "Gait/Torso/Head", m.up(head_r * 0.12), -head_r * 0.72,
+             head_r * 0.52, head_r * 0.2)
+    elif p["head"] == "mask":
+        # A flat plate hung in front of the face with the eyes cut into it. No
+        # skull shape at all, which is the point: a masked creep has no
+        # expression and no profile, and reads as a thing wearing a face
+        # rather than as a person with one.
+        m.put("Head", m.ball(m.deep, head_r * 0.82, 1.0, 6, 3),
+              parent="Gait/Torso/Head")
+        m.put("Mask", m.box(m.pale, head_r * 1.35, m.up(head_r * 1.5),
+                            head_r * 0.28),
+              parent="Gait/Torso/Head", z=-head_r * 0.72, rx=-0.12)
+        m.put("MaskRim", m.box(m.trim, head_r * 1.5, m.up(head_r * 0.24),
+                               head_r * 0.36),
+              parent="Gait/Torso/Head", y=m.up(head_r * 0.7),
+              z=-head_r * 0.72)
+        fin = m.prism(m.trim, head_r * 0.22, m.up(head_r * 0.9),
+                      head_r * 0.2)
+        for side, name in ((-1.0, "PlumeL"), (1.0, "PlumeR")):
+            m.put(name, fin, parent="Gait/Torso/Head",
+                  x=side * head_r * 0.78, y=m.up(head_r * 0.6),
+                  z=-head_r * 0.4, rz=side * 0.55)
+        eyes(m, "Gait/Torso/Head", m.up(head_r * 0.05), -head_r * 0.9,
+             head_r * 0.5, head_r * 0.19)
     else:  # bare
         m.put("Head", m.ball(m.pale, head_r, 1.05, 6, 3),
               parent="Gait/Torso/Head")
@@ -636,6 +686,48 @@ def _biped_weapon(m, p, path, arm_len):
         # weapon edge, and those are the only two lit things in the roster.
         m.put("Bead", m.ball(m.pale, p["arm_r"] * 0.75, 1.0, 5, 2),
               parent=hold, y=shaft * 0.8)
+    elif kind == "spear":
+        # A long shaft carried UPRIGHT with a leaf blade on top. The one
+        # weapon in the plan whose outline is mostly vertical, so from above it
+        # is a point beside the creep rather than a bar across it - which is
+        # what lets a Huntress read as fast where a swordsman reads as heavy.
+        shaft = p["weapon_len"]
+        m.put("Shaft", m.cyl(m.deep, p["arm_r"] * 0.32, p["arm_r"] * 0.38,
+                             shaft, 5),
+              parent=hold, y=shaft * 0.26)
+        m.put("Head", m.prism(m.trim, p["arm_r"] * 1.3, shaft * 0.28,
+                              p["arm_r"] * 0.42),
+              parent=hold, y=shaft * 0.86)
+        m.put("Collar", m.torus(m.trim, p["arm_r"] * 0.5, p["arm_r"] * 0.8,
+                                8, 4),
+              parent=hold, y=shaft * 0.7, rx=1.5708)
+        m.put("Butt", m.prism(m.trim, p["arm_r"] * 0.5, shaft * 0.14,
+                              p["arm_r"] * 0.34),
+              parent=hold, y=-shaft * 0.3, rx=3.1416)
+    elif kind == "scythe":
+        # A shaft with the blade laid ACROSS the top and swept back, so the
+        # silhouette from above is an L rather than a line. Nothing else on
+        # the plan reaches sideways at head height, which is the whole reason
+        # it is here: it is the only weapon a player can identify from the
+        # camera without seeing the creep holding it.
+        shaft = p["weapon_len"]
+        m.put("Haft", m.cyl(m.deep, p["arm_r"] * 0.36, p["arm_r"] * 0.42,
+                            shaft, 5),
+              parent=hold, y=shaft * 0.3)
+        m.put("Socket", m.cyl(m.trim, p["arm_r"] * 0.55, p["arm_r"] * 0.7,
+                              shaft * 0.12, 5),
+              parent=hold, y=shaft * 0.8)
+        # Laid on its side, so its authored height is a WIDTH and takes up().
+        # The blade would get shorter every time the roster got lower without
+        # it - the rotated-part trap this file has paid for twice.
+        m.put("Blade", m.prism(m.trim, p["arm_r"] * 4.4,
+                               m.up(p["arm_r"] * 1.5), p["arm_r"] * 0.4),
+              parent=hold, y=shaft * 0.84, x=-p["arm_r"] * 2.2,
+              z=-p["arm_r"] * 0.9, rz=-1.5708, rx=0.25)
+        m.put("Tip", m.prism(m.trim, p["arm_r"] * 0.9,
+                             m.up(p["arm_r"] * 1.4), p["arm_r"] * 0.34),
+              parent=hold, y=shaft * 0.84, x=-p["arm_r"] * 4.2,
+              z=-p["arm_r"] * 1.6, rz=-2.0)
     elif kind == "whip":
         # Four falling segments, each thinner and further back than the last.
         # A whip has no silhouette of its own, so what makes it read is the
@@ -1202,14 +1294,24 @@ def _brute_arms(m, p, shoulder, shoulder_y):
     """Arms that hang past the knee and end in a fist, hung off the leaning
     torso so they reach forward as well as down.
 
-    Nothing here takes the eye material. A lit weapon edge is the ATTACKER
-    family's one tell and this creep walks past your towers, not at them.
+    Nothing here takes the eye material UNLESS the creep is an attacker, and
+    then exactly one part of it does - the edge of the slab in its right hand.
+    A lit weapon edge is the ATTACKER family's one tell, and a brute that
+    walks past your towers must not have one. See the `club` key.
     """
     arm = p["arm"]
+    club = p.get("club", 0.0)
     for side, name in ((-1.0, "ArmL"), (1.0, "ArmR")):
         path = "Gait/Torso/" + name
         m.pivot(name, "Gait/Torso", x=side * shoulder, y=shoulder_y,
                 rz=side * p["arm_flare"])
+        # The right arm of an ARMED brute swings, so everything below its
+        # shoulder hangs off a pivot of its own - the same contract the treant
+        # meets, and the reason the shoulder itself stays outside it.
+        if club and side > 0.0:
+            m.pivot("Swing", path)
+            path = path + "/Swing"
+            m.strike = path
         m.put("Upper", m.capsule(m.body, p["arm_r"], arm * 0.52, 5, 2),
               parent=path, y=-arm * 0.26)
         m.put("Fore", m.capsule(m.body, p["arm_r"] * 0.94, arm * 0.50, 5, 2),
@@ -1227,6 +1329,36 @@ def _brute_arms(m, p, shoulder, shoulder_y):
                   x=p["arm_r"] * (index - 1) * 0.80,
                   y=-arm * 1.02 - m.up(p["arm_r"] * 0.7),
                   z=-p["arm_r"] * 0.5, rx=3.1416)
+        if club and side > 0.0:
+            _brute_club(m, p, path, arm, club)
+
+
+def _brute_club(m, p, path, arm, club):
+    """A torn slab of the map held in one fist, with a hot edge along it.
+
+    THE ATTACKER FAMILY'S ONE TELL and the only lit thing on this creature:
+    the eye material laid along the leading edge of a slab that is otherwise
+    the carapace material. A player looking at a lane full of heavyweights has
+    to be able to pick out the one that came for their towers, and this is
+    what says it.
+
+    Held ACROSS the body rather than straight down the arm, for the reason
+    every weapon in this file is: a slab authored along the arm's own axis is
+    drawn inside the creature and is invisible from the only angle that
+    matters.
+    """
+    m.put("Club", m.box(m.trim, club * 0.42, m.up(club), club * 0.5),
+          parent=path, x=p["arm_r"] * 1.3, y=-arm * 1.24, rz=0.3)
+    m.put("ClubEdge", m.box(m.glow, club * 0.46, m.up(club * 0.14),
+                            club * 0.56),
+          parent=path, x=p["arm_r"] * 1.3 + club * 0.14,
+          y=-arm * 1.24 - m.up(club * 0.52), rz=0.3, shadow=False)
+    for index in range(3):
+        m.put("ClubSpike%d" % (index + 1),
+              m.prism(m.trim, club * 0.16, m.up(club * 0.34), club * 0.14),
+              parent=path, x=p["arm_r"] * 1.3 - club * 0.26,
+              y=-arm * 1.24 + m.up(club * (index - 1) * 0.34),
+              z=club * 0.1, rz=1.9)
 
 
 def build_winged(m, p):
@@ -1290,6 +1422,12 @@ def build_winged(m, p):
           (head_r * 0.34, m.up(head_r * 1.4), head_r * 0.3), 0.6)
 
     _winged_wings(m, p, body_r)
+    _winged_talons(m, p, body_r, length)
+    # Nothing here decides whether a flyer burns - style.creep_flames does, off
+    # the creep's own key, and answers None for all but one of them. The
+    # Phoenix is that one, and a Phoenix giving off no light is reading as a
+    # large bird. See flames().
+    flames(m, "Gait", m.up(body_r * 0.4), body_r * 1.1)
 
     # The tail, and it is the counterweight the silhouette needs: without it a
     # wyvern from above is a head between two wings and reads as a moth.
@@ -1317,6 +1455,43 @@ def build_winged(m, p):
     return m.up(body_r + head_r * 1.6)
 
 
+def _winged_talons(m, p, body_r, length):
+    """A pair of hot talons folded under the body, on the pivot the strike
+    animation swings.
+
+    Only on an ATTACKER, and it is that family's one tell: the eye material on
+    something that is not an eye. A Wyvern has none of this and neither does a
+    Gryphon Rider - they go past your maze - and the Phoenix, which comes for
+    it, is the only flyer in the game with anything lit under it.
+
+    Under the CHEST rather than under the middle of the body, so from directly
+    above the talons sit just behind the head where a player is already
+    looking. Slung under the belly they would be hidden by the wings from the
+    only angle the game is played from.
+    """
+    talon = p.get("talons", 0.0)
+    if not talon:
+        return
+
+    m.pivot("Claws", "Gait", y=m.up(-body_r * 0.5), z=-length * 0.2)
+    m.pivot("Swing", "Gait/Claws")
+    path = "Gait/Claws/Swing"
+    for side, name in ((-1.0, "L"), (1.0, "R")):
+        m.put("Shank" + name, m.capsule(m.deep, p["wing_r"] * 0.9,
+                                        m.up(talon * 0.9), 5, 2),
+              parent=path, x=side * body_r * 0.5,
+              y=m.up(-talon * 0.45), rz=side * 0.18)
+        for index in range(3):
+            m.put("Talon%d%s" % (index + 1, name),
+                  m.prism(m.glow, talon * 0.16, m.up(talon * 0.62),
+                          talon * 0.14),
+                  parent=path,
+                  x=side * body_r * 0.5 + talon * (index - 1) * 0.24,
+                  y=m.up(-talon * 1.25), z=-talon * 0.1, rx=3.1416,
+                  shadow=False)
+    m.strike = path
+
+
 def _winged_wings(m, p, body_r):
     """One beating wing per side, at the model root so the gait can swing it.
 
@@ -1332,20 +1507,36 @@ def _winged_wings(m, p, body_r):
         m.put("Spar", m.cyl(m.trim, p["wing_r"] * 0.4, p["wing_r"], span,
                             5, "z"),
               parent=name, x=side * span * 0.5, rz=1.5708)
+        # THREE PANELS THAT SWEEP AND TAPER, rather than three of one size.
+        # The chord falls away hard towards the tip and each panel sits further
+        # back than the last, so from directly above the wing is a swept
+        # triangle. The first pass stepped them barely at all and every flyer
+        # in the roster came out with a pair of rectangular planks - which
+        # reads as an aeroplane, and got worse the moment there were four
+        # flyers rather than one.
+        #
+        # The outer panel drops to the BODY tone as well. A whole wing in the
+        # pale tone is the brightest object on the model by a distance, and on
+        # the two near-white flyers it was the only thing a player could see.
+        chords = (1.0, 0.58, 0.26)
+        sweeps = (0.10, 0.30, 0.62)
+        tones = (m.pale, m.pale, m.body)
         for index in range(3):
-            share = index / 2.0
             m.put("Panel%d" % (index + 1),
-                  m.box(m.pale, span * 0.34, m.up(p["wing_r"] * 0.5),
-                        chord * (1.0 - 0.28 * share)),
+                  m.box(tones[index], span * 0.34,
+                        m.up(p["wing_r"] * 0.5), chord * chords[index]),
                   parent=name,
                   x=side * span * (0.2 + 0.32 * index),
-                  y=m.up(-p["wing_r"] * 0.2),
-                  z=chord * (0.12 + 0.14 * share))
+                  y=m.up(-p["wing_r"] * (0.2 + 0.18 * index)),
+                  z=chord * sweeps[index])
         # A finger bone along the trailing edge, so the wing has a hard rim
         # instead of fading into the hide behind it.
-        m.put("Finger", m.cyl(m.trim, p["wing_r"] * 0.3, p["wing_r"] * 0.5,
+        # The trailing edge follows the sweep rather than running straight
+        # across it, so the hard rim is on the shape the panels actually make.
+        m.put("Finger", m.cyl(m.trim, p["wing_r"] * 0.22, p["wing_r"] * 0.5,
                               span * 0.8, 4, "z"),
-              parent=name, x=side * span * 0.5, z=chord * 0.5, rz=1.5708)
+              parent=name, x=side * span * 0.5, y=m.up(-p["wing_r"] * 0.3),
+              z=chord * 0.42, rz=1.5708, ry=-side * 0.30)
         m.legs.append(name)
     m.phases.extend([0.0, 0.5])
 
@@ -1560,6 +1751,147 @@ def _machine_arm(m, p, width, length):
     m.arms.append(path)
     m.strike = path
 
+def build_serpent(m, p):
+    """A humanoid torso rising out of a coil, with a long tail behind it: the
+    Naga Siren.
+
+    The plan every other one would have had to LIE about, which is the bar a
+    new builder has to clear. A naga has no legs at all, so the biped plan
+    would have drawn a pair on a creature that does not have them; the wraith
+    plan has no body under its hood; and the quadruped and shelled plans are
+    animals lying down. What is actually there is a person from the waist up
+    and a snake from the waist down.
+
+    WHAT THE GAIT SWINGS IS THE TAIL. The segments are hip pivots as far as the
+    walk component is concerned - the same wiring the Shade tatters and the
+    Wyvern wings use - so a Naga travelling undulates instead of sliding. They
+    sit at the MODEL ROOT rather than inside Gait for the same reason a leg
+    does: a tail hung under the bobbing node would lift its own tip off the
+    floor twice a cycle.
+
+    From directly above, what says "not a person" is the COIL: a wide flat
+    spiral where every other upright creep in the roster has two feet and a
+    gap between them.
+    """
+    coil_r = p["coil"]
+    coil_h = p["coil_h"]
+
+    # The coil, drawn as three rings of falling radius rather than as one
+    # cone. A cone from above is a disc and reads as a plinth; three rings
+    # step, so the outline is ridged and reads as something wound up.
+    for index in range(3):
+        share = index / 2.0
+        m.put("Coil%d" % (index + 1),
+              m.torus(m.body, coil_r * (0.44 - 0.16 * share),
+                      coil_r * (1.0 - 0.22 * share), 14, 5),
+              parent=".", y=coil_h * (0.16 + 0.34 * index))
+    m.put("Belly", m.cyl(m.deep, coil_r * 0.5, coil_r * 0.86,
+                         coil_h * 0.9, 9),
+          parent=".", y=coil_h * 0.45)
+
+    m.pivot("Gait", ".", y=coil_h)
+    torso = p["torso"]
+    m.pivot("Torso", "Gait", rx=p["stoop"])
+    m.put("Waist", m.ball(m.deep, p["waist"], 0.86, 6, 3), parent="Gait")
+    m.put("Chest", m.capsule(m.body, p["chest_r"], torso, 7, 3),
+          parent="Gait/Torso", y=torso * 0.42)
+    m.put("Scales", m.torus(m.trim, p["waist"] * 0.9, p["waist"] * 1.25,
+                            12, 4),
+          parent="Gait", y=m.up(p["waist"] * 0.15))
+
+    shoulder = p["shoulder"]
+    shoulder_y = torso * 0.8
+    m.put("Shoulders", m.box(m.pale, shoulder * 1.5,
+                             m.up(p["chest_r"] * 0.62), p["chest_r"] * 0.95),
+          parent="Gait/Torso", y=shoulder_y)
+
+    # The head, with a fan of fins behind it. The fins are what a player sees
+    # from above and they are deliberately BEHIND the eyes rather than over
+    # them, which is the trap PLACEHOLDER_ART records: whatever is at the
+    # front of a model is read as its face.
+    head_r = p["head_r"]
+    m.pivot("Head", "Gait/Torso", y=shoulder_y + p["neck"] + m.up(head_r * 0.5))
+    path = "Gait/Torso/Head"
+    m.put("Neck", m.cyl(m.deep, head_r * 0.4, head_r * 0.5, p["neck"], 5),
+          parent="Gait/Torso", y=shoulder_y + p["neck"] * 0.5)
+    m.put("Skull", m.ball(m.pale, head_r, 1.0, 6, 3), parent=path)
+    m.put("Jaw", m.box(m.deep, head_r * 0.8, m.up(head_r * 0.3),
+                       head_r * 0.9),
+          parent=path, y=m.up(-head_r * 0.55), z=-head_r * 0.2)
+    fin = m.prism(m.trim, p["fin"] * 0.3, m.up(p["fin"]), p["fin"] * 0.26)
+    for index in range(3):
+        share = index - 1.0
+        m.put("Fin%d" % (index + 1), fin, parent=path,
+              x=share * head_r * 0.62, y=m.up(head_r * 0.6),
+              z=head_r * 0.5, rz=share * 0.5, rx=0.55)
+    eyes(m, path, m.up(head_r * 0.06), -head_r * 0.82, head_r * 0.58,
+         head_r * 0.2)
+
+    _serpent_arms(m, p, shoulder, shoulder_y)
+    _serpent_tail(m, p, coil_r, coil_h)
+
+    plates(m, "Gait/Torso", [
+        (-shoulder * 0.84, shoulder_y + m.up(p["chest_r"] * 0.2), 0.0, 0.0),
+        (shoulder * 0.84, shoulder_y + m.up(p["chest_r"] * 0.2), 0.0, 0.0),
+    ], (p["chest_r"] * 0.4, m.up(p["chest_r"] * 0.32), p["chest_r"] * 0.95))
+    spines(m, "Gait/Torso", 4, p["chest_r"] * 0.88, -p["chest_r"] * 0.04,
+           torso * 0.5, (p["chest_r"] * 0.28, m.up(p["chest_r"] * 0.8),
+                         p["chest_r"] * 0.26), m.up(p["chest_r"] * 0.32))
+    crest(m, path, m.up(head_r * 0.74), head_r * 0.1, head_r * 0.7,
+          (head_r * 0.34, m.up(head_r * 1.4), head_r * 0.28), 0.55)
+
+    return coil_h + torso + p["neck"] + m.up(head_r * 1.8)
+
+
+def _serpent_arms(m, p, shoulder, shoulder_y):
+    """Two arms held out and forward, ending in webbed hands.
+
+    Empty on purpose. Nothing in this plan carries a weapon: a Naga Siren
+    heals its pack and is not an attacker, so anything in its hands would be
+    the ATTACKER family's tell being lent to a creep that never earns it.
+    """
+    arm = p["arm"]
+    for side, name in ((-1.0, "ArmL"), (1.0, "ArmR")):
+        path = "Gait/Torso/" + name
+        m.pivot(name, "Gait/Torso", x=side * shoulder, y=shoulder_y,
+                rz=side * p["arm_flare"], rx=-0.3)
+        m.put("Upper", m.capsule(m.body, p["arm_r"], arm * 0.55, 5, 2),
+              parent=path, y=-arm * 0.28)
+        m.put("Fore", m.capsule(m.pale, p["arm_r"] * 0.86, arm * 0.5, 5, 2),
+              parent=path, y=-arm * 0.8)
+        m.put("Hand", m.box(m.pale, p["arm_r"] * 1.9, m.up(p["arm_r"] * 0.5),
+                            p["arm_r"] * 1.5),
+              parent=path, y=-arm * 1.08)
+        m.arms.append(path)
+
+
+def _serpent_tail(m, p, coil_r, coil_h):
+    """The tail, laid back behind the coil in falling segments.
+
+    Registered as LEGS, which is what makes it move: the walk component swings
+    a leg fore and aft about its hip, and a chain of those with stepped phases
+    reads as an undulation travelling down the tail. The Shade tatters and the
+    Wyvern wings are wired the same way and for the same reason - a plan with
+    no legs still has to look like it is going somewhere.
+    """
+    count = p["tail_segments"]
+    length = p["tail"] / float(count)
+    for index in range(count):
+        share = index / float(count)
+        name = "Tail%d" % (index + 1)
+        m.pivot(name, ".", y=coil_h * (0.28 - 0.16 * share),
+                z=coil_r * 0.7 + p["tail"] * share)
+        m.put("Segment",
+              m.cyl(m.body, p["tail_r"] * (0.8 - 0.7 * share),
+                    p["tail_r"] * (1.0 - 0.7 * share), length, 6, "z"),
+              parent=name, z=length * 0.5, rx=1.5708)
+        m.legs.append(name)
+        m.phases.append(share)
+    m.put("TailFin", m.prism(m.trim, p["tail_r"] * 2.2,
+                             m.up(p["tail_r"] * 2.4), p["tail_r"] * 1.2),
+          parent="Tail%d" % count, z=length * 1.1, rx=-1.5708)
+
+
 PLANS = {
     cr.QUADRUPED: build_quadruped,
     cr.BIPED: build_biped,
@@ -1571,6 +1903,7 @@ PLANS = {
     cr.WINGED: build_winged,
     cr.SHELLED: build_shelled,
     cr.MACHINE: build_machine,
+    cr.SERPENT: build_serpent,
 }
 
 
@@ -1897,6 +2230,334 @@ SHAPES = {
         "post": 0.105, "arm_len": 0.310, "arm_r": 0.042, "arm_tilt": 0.85,
         "bucket": 0.080,
         "select": 0.38,
+    },
+    # ------------------------------------------------------------------
+    # TIER 3. Every one of these stands on the ladder's top few rungs, so the
+    # carapace and the eyes say almost the same thing about all twelve - which
+    # means the SHAPE is doing nearly all of the work here, more than in any
+    # bracket below. The size ramps say nothing at all: see
+    # style.CREEP_SIZE_RUNG_CAP, which stops climbing at rung 5 on purpose.
+    # ------------------------------------------------------------------
+    #
+    # Tall, gaunt and hooded-less: a skull over a long cloak, holding a scythe
+    # laid across its own shoulder. The scythe IS the silhouette - it is the
+    # only weapon in the plan that reaches sideways at head height.
+    "death_revenant": {
+        "hip_y": 0.50, "stance": 0.058, "digit": "boot",
+        "thigh_r": 0.026, "shin_r": 0.021, "thigh_share": 0.56,
+        "waist": 0.078, "torso": 0.30, "chest_r": 0.104, "stoop": -0.04,
+        "robe": 0.175, "belt": True, "cloak": 0.86, "ribs": True,
+        "shoulder": 0.120, "neck": 0.030, "head_r": 0.086, "head": "skull",
+        "tusks": False,
+        "arm": 0.160, "arm_r": 0.026, "arm_flare": 0.26,
+        "weapon": "scythe", "weapon_len": 0.34, "shield": 0.0,
+        "select": 0.30,
+    },
+    # Low, wide-stanced and horned, with an axe held out. The one biped whose
+    # head reaches in FRONT of its own face, which is what the horned head was
+    # added for.
+    "satyr_shadowdancer": {
+        "hip_y": 0.42, "stance": 0.098, "digit": "claw",
+        "thigh_r": 0.036, "shin_r": 0.029, "thigh_share": 0.46,
+        "waist": 0.092, "torso": 0.25, "chest_r": 0.126, "stoop": 0.30,
+        "robe": 0.0, "belt": True, "cloak": 0.0,
+        "shoulder": 0.138, "neck": 0.018, "head_r": 0.092, "head": "horned",
+        "tusks": False,
+        "arm": 0.170, "arm_r": 0.032, "arm_flare": 0.38,
+        "weapon": "axe", "weapon_len": 0.24, "shield": 0.0,
+        "select": 0.30,
+    },
+    # The second arachnid, and it has to be told apart from the first from
+    # directly above: taller hips, a longer abdomen carried further back, and
+    # legs that reach much further. A Forest Spider crouches, this one stands.
+    "crypt_fiend": {
+        "hip_y": 0.38, "leg_span": 0.130, "leg_first": -0.15,
+        "leg_step": 0.105, "leg_r": 0.030,
+        "femur": 0.270, "femur_angle": 1.05, "tibia_angle": 2.60,
+        "abdomen": 0.215, "abdomen_z": 0.250, "thorax": 0.140,
+        "select": 0.40,
+    },
+    # Hooded, robed and stooped over a staff. The Kobold Geomancer's shape at
+    # nearly twice the size with a rib cage showing, which is deliberate: the
+    # cheapest caster in the game and the most expensive one should read as the
+    # same idea grown up.
+    "necromancer": {
+        "hip_y": 0.44, "stance": 0.058, "digit": "boot",
+        "thigh_r": 0.028, "shin_r": 0.023, "thigh_share": 0.55,
+        "waist": 0.096, "torso": 0.29, "chest_r": 0.116, "stoop": 0.18,
+        "robe": 0.205, "belt": True, "cloak": 0.74, "ribs": True,
+        "shoulder": 0.126, "neck": 0.014, "head_r": 0.094, "head": "hood",
+        "tusks": False,
+        "arm": 0.140, "arm_r": 0.027, "arm_flare": 0.14,
+        "weapon": "staff", "weapon_len": 0.40, "shield": 0.0,
+        "select": 0.28,
+    },
+    # Upright, masked and empty handed. Drawn as VAPOUR, which is the whole
+    # point of it and which no other ground creep in the game is - see
+    # creep_roster.VAPOUR_KEYS. Its outline is deliberately simple, because on
+    # a translucent creep the RIM is what a player actually sees and a busy
+    # silhouette turns into noise.
+    "spirit_walker": {
+        "hip_y": 0.46, "stance": 0.062, "digit": "boot",
+        "thigh_r": 0.028, "shin_r": 0.022, "thigh_share": 0.56,
+        "waist": 0.086, "torso": 0.30, "chest_r": 0.112, "stoop": -0.08,
+        "robe": 0.200, "belt": False, "cloak": 0.66,
+        "shoulder": 0.126, "neck": 0.040, "head_r": 0.090, "head": "mask",
+        "tusks": False,
+        "arm": 0.155, "arm_r": 0.026, "arm_flare": 0.34,
+        "weapon": "", "weapon_len": 0.0, "shield": 0.0,
+        "select": 0.28,
+    },
+    # Masked, belted and carrying a short heavy staff, standing squarely. The
+    # other masked creep in the bracket is a robed column; this one has legs,
+    # shoulders and a stance, so the mask is the only thing they share.
+    "shaman": {
+        "hip_y": 0.40, "stance": 0.092, "digit": "claw",
+        "thigh_r": 0.034, "shin_r": 0.028, "thigh_share": 0.50,
+        "waist": 0.100, "torso": 0.26, "chest_r": 0.134, "stoop": 0.14,
+        "robe": 0.0, "belt": True, "cloak": 0.58,
+        "shoulder": 0.142, "neck": 0.026, "head_r": 0.088, "head": "mask",
+        "tusks": False,
+        "arm": 0.150, "arm_r": 0.030, "arm_flare": 0.20,
+        "weapon": "staff", "weapon_len": 0.30, "shield": 0.0,
+        "select": 0.30,
+    },
+    # The third brute, and the widest. Almost no pelt, a huge gut and arms
+    # longer than anything else in the roster: where the Wendigo is a hunched
+    # back of fur, this is a bare slab of meat that reaches.
+    "abomination": {
+        "hip_y": 0.370, "stance": 0.150,
+        "thigh_r": 0.082, "shin_r": 0.070, "thigh_share": 0.48,
+        "waist": 0.176, "hunch": -0.30,
+        "barrel": 0.420, "chest_r": 0.238,
+        "shoulder": 0.268, "shoulder_r": 0.104,
+        "pelt": 0.036, "pelt_count": 3,
+        "head_r": 0.108, "head_tilt": 0.34, "muzzle": 0.086,
+        "arm": 0.510, "arm_r": 0.082, "arm_flare": 0.50,
+        "select": 0.400,
+    },
+    # A flyer built for BREADTH rather than length: the widest wings in the
+    # game on a short body, which is what separates a bird from the Wyvern's
+    # long-tailed reptile at a glance from directly above.
+    "gryphon_rider": {
+        "fly_height": cr.FLY_HEIGHT, "shadow": 0.30, "hover": 0.95,
+        "body_r": 0.118, "body_len": 0.38, "chest": 1.22,
+        "neck": 0.115, "neck_tilt": -0.35, "head_tilt": 0.30,
+        "head_r": 0.090, "snout": 0.105,
+        "wing_span": 0.440, "wing_chord": 0.250, "wing_r": 0.030,
+        "wing_droop": 0.12,
+        "tail": 0.185, "tail_r": 0.062, "tail_tilt": 0.18,
+        "select": 0.48,
+    },
+    # The fourth brute. Squat and top heavy, standing nearly upright with a
+    # shoulder span far wider than its hips - the ogre proportion, and the
+    # opposite of the Abomination's forward lean.
+    "ogre_magi": {
+        "hip_y": 0.330, "stance": 0.155,
+        "thigh_r": 0.086, "shin_r": 0.074, "thigh_share": 0.46,
+        "waist": 0.180, "hunch": -0.12,
+        "barrel": 0.400, "chest_r": 0.234,
+        "shoulder": 0.290, "shoulder_r": 0.124,
+        "pelt": 0.048, "pelt_count": 4,
+        "head_r": 0.120, "head_tilt": 0.16, "muzzle": 0.092,
+        "arm": 0.440, "arm_r": 0.084, "arm_flare": 0.44,
+        "select": 0.420,
+    },
+    # Armoured, helmed and shielded: the bracket's only soldier, and it is the
+    # Knight's shape three tiers on. Tall where the Knight crouches, with a
+    # longer blade and a heavier shield.
+    "chaos_wardens": {
+        "hip_y": 0.48, "stance": 0.094, "digit": "boot",
+        "thigh_r": 0.042, "shin_r": 0.035, "thigh_share": 0.50,
+        "waist": 0.104, "torso": 0.30, "chest_r": 0.146, "stoop": 0.06,
+        "robe": 0.0, "belt": True, "cloak": 0.78,
+        "shoulder": 0.156, "neck": 0.022, "head_r": 0.094, "head": "helm",
+        "tusks": False,
+        "arm": 0.155, "arm_r": 0.036, "arm_flare": 0.22,
+        "weapon": "sword", "weapon_len": 0.33, "shield": 0.128,
+        "select": 0.32,
+    },
+    # The bracket's Boss, on the golem plan and taking the Boss ramps on top of
+    # its own rung. Deeper and heavier than the Infernal, with the head sunk
+    # right down between its shoulders - a Behemoth should read as having no
+    # neck at all.
+    "behemoth": {
+        "hip_y": 0.400, "stance": 0.170,
+        "thigh_r": 0.086, "shin_r": 0.074, "thigh_share": 0.5,
+        "chest_w": 0.400, "chest_h": 0.390, "chest_d": 0.290,
+        "head_r": 0.104, "head_sink": 1.14, "ribs": True,
+        "arm": 0.470, "arm_r": 0.082,
+        "select": 0.360,
+    },
+    # ------------------------------------------------------------------
+    # TIER 4 - SUDDEN DEATH. Eleven creeps that arrive in the same second and
+    # are only ever seen beside each other, so this bracket is spread across
+    # more body plans than any other: four flyers, three heavyweights, a
+    # machine, a serpent, a beast and two small ones.
+    # ------------------------------------------------------------------
+    #
+    # Small, light and empty handed but for a purse. The only creep in the
+    # roster nobody defends against, so it is authored to be SPOTTED: short,
+    # bright and with nothing else in the bracket its size.
+    "treasure_goblin": {
+        "hip_y": 0.30, "stance": 0.052, "digit": "boot",
+        "thigh_r": 0.026, "shin_r": 0.021, "thigh_share": 0.55,
+        "waist": 0.082, "torso": 0.21, "chest_r": 0.104, "stoop": 0.24,
+        "robe": 0.0, "belt": True, "cloak": 0.44,
+        "shoulder": 0.104, "neck": 0.014, "head_r": 0.084, "head": "bare",
+        "tusks": True,
+        "arm": 0.120, "arm_r": 0.024, "arm_flare": 0.16,
+        "weapon": "", "weapon_len": 0.0, "shield": 0.0,
+        "select": 0.24,
+    },
+    # Long legged, lightly built and carrying a spear held upright. The only
+    # creep in the game with that weapon, and the only tier 4 biped with a
+    # weapon at all.
+    "huntress": {
+        "hip_y": 0.52, "stance": 0.062, "digit": "boot",
+        "thigh_r": 0.028, "shin_r": 0.022, "thigh_share": 0.54,
+        "waist": 0.076, "torso": 0.27, "chest_r": 0.100, "stoop": 0.04,
+        "robe": 0.0, "belt": True, "cloak": 0.60,
+        "shoulder": 0.112, "neck": 0.042, "head_r": 0.082, "head": "bare",
+        "tusks": False,
+        "arm": 0.150, "arm_r": 0.025, "arm_flare": 0.24,
+        "weapon": "spear", "weapon_len": 0.44, "shield": 0.0,
+        "select": 0.26,
+    },
+    # A golem with almost no legs and an enormous chest: the Obsidian Statue is
+    # the squattest thing in the game, which is what a slab of rock that
+    # weakens whatever it drifts past should be. It is a Boss, so it takes the
+    # Boss ramps as well.
+    "obsidian_statue": {
+        "hip_y": 0.230, "stance": 0.160,
+        "thigh_r": 0.092, "shin_r": 0.084, "thigh_share": 0.5,
+        "chest_w": 0.410, "chest_h": 0.430, "chest_d": 0.270,
+        "head_r": 0.096, "head_sink": 1.20, "ribs": False,
+        "arm": 0.360, "arm_r": 0.076,
+        "select": 0.360,
+    },
+    # The bracket's brute, and the roster's third ATTACKER - so it is the third
+    # creep in the game allowed a lit edge, on the slab in its right fist. Wide
+    # shoulders, a short pelt of moss and the longest reach of the three.
+    "mountain_giant": {
+        "hip_y": 0.390, "stance": 0.158,
+        "thigh_r": 0.088, "shin_r": 0.076, "thigh_share": 0.48,
+        "waist": 0.178, "hunch": -0.26,
+        "barrel": 0.415, "chest_r": 0.232,
+        "shoulder": 0.278, "shoulder_r": 0.116,
+        "pelt": 0.042, "pelt_count": 4,
+        "head_r": 0.110, "head_tilt": 0.22, "muzzle": 0.078,
+        "arm": 0.490, "arm_r": 0.086, "arm_flare": 0.40,
+        "club": 0.190,
+        "select": 0.420,
+    },
+    # A narrow flyer with a long tail and a short span: deliberately the
+    # OPPOSITE proportion to the Gryphon Rider it unlocks beside, so the two
+    # air creeps of the bracket never read as one shape at two colours.
+    "harpy_windwitch": {
+        "fly_height": cr.FLY_HEIGHT, "shadow": 0.26, "hover": 1.05,
+        "body_r": 0.104, "body_len": 0.42, "chest": 1.05,
+        "neck": 0.140, "neck_tilt": -0.50, "head_tilt": 0.38,
+        "head_r": 0.084, "snout": 0.090,
+        "wing_span": 0.360, "wing_chord": 0.200, "wing_r": 0.026,
+        "wing_droop": 0.26,
+        "tail": 0.260, "tail_r": 0.048, "tail_tilt": 0.24,
+        "select": 0.40,
+    },
+    # The serpent. A wide low coil with a person rising out of it, and the tail
+    # laid back behind - the only creep in the game with no legs that is not
+    # in the air.
+    "naga_siren": {
+        "coil": 0.230, "coil_h": 0.190,
+        "waist": 0.098, "torso": 0.27, "chest_r": 0.128, "stoop": -0.06,
+        "shoulder": 0.136, "neck": 0.034, "head_r": 0.090, "fin": 0.105,
+        "arm": 0.155, "arm_r": 0.028, "arm_flare": 0.30,
+        "tail": 0.360, "tail_r": 0.072, "tail_segments": 4,
+        "select": 0.36,
+    },
+    # The third quadruped, and by a long way the heaviest: a barrel on four
+    # short pillars with a huge horned head. The Sheep and the Timber Wolf are
+    # both slight, so this needs no help telling itself apart from them.
+    "kodo_beast": {
+        "hip_y": 0.34, "leg_span": 0.185, "leg_reach": 0.180, "digit": "claw",
+        "thigh_r": 0.070, "shin_r": 0.060, "thigh_share": 0.5,
+        "body_r": 0.245, "body_len": 0.56, "chest": 1.05, "chest_rise": 0.02,
+        "fleece": False, "hump": True,
+        "neck": 0.130, "neck_y": 0.04, "neck_z": 0.46, "neck_tilt": -0.60,
+        "head_tilt": 0.35, "head_r": 0.140, "snout": 0.150, "ear": 0.9,
+        "tail": 0.170, "tail_r": 0.058, "tail_tilt": -0.70,
+        "select": 0.40,
+    },
+    # The second machine, and it is authored AGAINST the first: taller, on
+    # bigger wheels, with a short chassis and a long arm carried high. A Siege
+    # Engine is a low cart, this is a walking rig.
+    "goblin_shredder": {
+        "wheel_r": 0.145, "wheel_w": 0.070, "wheel_span": 0.175,
+        "wheel_reach": 0.150,
+        "deck_y": 0.300, "chassis_w": 0.265, "chassis_h": 0.190,
+        "chassis_len": 0.350, "plow": 0.110,
+        "post": 0.135, "arm_len": 0.340, "arm_r": 0.048, "arm_tilt": 0.55,
+        "bucket": 0.100,
+        "select": 0.38,
+    },
+    # A skeletal flyer: long, thin and with the longest neck and tail in the
+    # roster. The span is modest and the LENGTH is the silhouette, which is the
+    # third distinct flyer proportion in the bracket.
+    "frost_wyrm": {
+        "fly_height": cr.FLY_HEIGHT, "shadow": 0.30, "hover": 0.70,
+        "body_r": 0.110, "body_len": 0.50, "chest": 1.02,
+        "neck": 0.210, "neck_tilt": -0.62, "head_tilt": 0.42,
+        "head_r": 0.092, "snout": 0.165,
+        "wing_span": 0.395, "wing_chord": 0.215, "wing_r": 0.028,
+        "wing_droop": 0.20,
+        "tail": 0.340, "tail_r": 0.050, "tail_tilt": 0.28,
+        "select": 0.46,
+    },
+    # The bracket's Boss, its fourth flyer and its ATTACKER, so it carries the
+    # lit talons no other flyer has - and it is one of the two creeps in the
+    # game that gives off light at all (style.CREEP_FLAMES). Broad and short,
+    # so a burning thing arriving over a maze fills as much of the screen as
+    # the ceiling allows.
+    "phoenix": {
+        "fly_height": cr.FLY_HEIGHT, "shadow": 0.32, "hover": 1.15,
+        "body_r": 0.122, "body_len": 0.40, "chest": 1.18,
+        "neck": 0.125, "neck_tilt": -0.40, "head_tilt": 0.32,
+        "head_r": 0.092, "snout": 0.120,
+        "wing_span": 0.395, "wing_chord": 0.255, "wing_r": 0.032,
+        "wing_droop": 0.10,
+        "tail": 0.290, "tail_r": 0.054, "tail_tilt": 0.22,
+        "talons": 0.130,
+        # Pulled to sit just under style.CREEP_MAX_RADIUS once the Boss mass
+        # ramp is applied. It is the widest click box in the game and it is
+        # meant to be - the ceiling belongs to a top tier Boss, and this is
+        # one - but the first pass went past it and the generator said so.
+        "select": 0.42,
+    },
+    # The last creep in the game, and the only one that cannot be killed. A
+    # golem, taking the Boss ramps, authored as the biggest silhouette the size
+    # ceiling allows - what it has to say from across a lane is "nothing you
+    # build will stop this".
+    "demon": {
+        "hip_y": 0.420, "stance": 0.168,
+        "thigh_r": 0.088, "shin_r": 0.076, "thigh_share": 0.5,
+        "chest_w": 0.390, "chest_h": 0.400, "chest_d": 0.280,
+        "head_r": 0.106, "head_sink": 0.92, "ribs": True,
+        "arm": 0.480, "arm_r": 0.084,
+        "select": 0.355,
+    },
+    # Three of these crawl out of a dead Obsidian Statue. Hunched right over,
+    # clawed, and with the lowest hips of any biped in the game - a Ghoul goes
+    # on all fours as far as this plan can.
+    "ghoul": {
+        "hip_y": 0.32, "stance": 0.082, "digit": "claw",
+        "thigh_r": 0.032, "shin_r": 0.026, "thigh_share": 0.48,
+        "waist": 0.094, "torso": 0.22, "chest_r": 0.122, "stoop": 0.52,
+        "robe": 0.0, "belt": False, "cloak": 0.0, "ribs": True,
+        "shoulder": 0.130, "neck": 0.008, "head_r": 0.086, "head": "bare",
+        "tusks": True,
+        "arm": 0.185, "arm_r": 0.032, "arm_flare": 0.36,
+        "weapon": "", "weapon_len": 0.0, "shield": 0.0,
+        "select": 0.28,
     },
 }
 

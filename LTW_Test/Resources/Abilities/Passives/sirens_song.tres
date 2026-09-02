@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SirensSongPassive" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/Passives/SirensSongPassive.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+ability_id = 346
+display_name = "Siren's Song"
+targeting = 0
+mana_per_hit = 1
+heal_share = 0.15
+ceiling_gain = 50
+radius_cells = 2.344
+armor_restored = 1.6
+creep_gate_seconds = 5.0

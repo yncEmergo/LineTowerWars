@@ -97,15 +97,15 @@ size = Vector3(0.1446, 0.017, 0.2445)
 material = ExtResource("3_wyvern_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_13"]
-size = Vector3(0.1446, 0.017, 0.2102)
+size = Vector3(0.1446, 0.017, 0.1418)
 material = ExtResource("3_wyvern_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_14"]
-size = Vector3(0.1446, 0.017, 0.176)
-material = ExtResource("3_wyvern_hide_pale")
+size = Vector3(0.1446, 0.017, 0.0636)
+material = ExtResource("1_wyvern_hide")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_15"]
-top_radius = 0.0102
+top_radius = 0.0075
 bottom_radius = 0.017
 height = 0.3401
 radial_segments = 4
@@ -125,15 +125,15 @@ size = Vector3(0.1446, 0.017, 0.2445)
 material = ExtResource("3_wyvern_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_18"]
-size = Vector3(0.1446, 0.017, 0.2102)
+size = Vector3(0.1446, 0.017, 0.1418)
 material = ExtResource("3_wyvern_hide_pale")
 
 [sub_resource type="BoxMesh" id="BoxMesh_19"]
-size = Vector3(0.1446, 0.017, 0.176)
-material = ExtResource("3_wyvern_hide_pale")
+size = Vector3(0.1446, 0.017, 0.0636)
+material = ExtResource("1_wyvern_hide")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_20"]
-top_radius = 0.0102
+top_radius = 0.0075
 bottom_radius = 0.017
 height = 0.3401
 radial_segments = 4
@@ -240,19 +240,19 @@ transform = Transform3D(-0, -1, -0, 1, -0, 0, 0, 0, 1, -0.2126, 0, 0)
 mesh = SubResource("CylinderMesh_11")
 
 [node name="Panel1" type="MeshInstance3D" parent="WingL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.085, -0.0068, 0.0293)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.085, -0.0068, 0.0244)
 mesh = SubResource("BoxMesh_12")
 
 [node name="Panel2" type="MeshInstance3D" parent="WingL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2211, -0.0068, 0.0464)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2211, -0.0129, 0.0733)
 mesh = SubResource("BoxMesh_13")
 
 [node name="Panel3" type="MeshInstance3D" parent="WingL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3571, -0.0068, 0.0636)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3571, -0.019, 0.1516)
 mesh = SubResource("BoxMesh_14")
 
 [node name="Finger" type="MeshInstance3D" parent="WingL"]
-transform = Transform3D(-0, -1, -0, 1, -0, 0, 0, 0, 1, -0.2126, 0, 0.1222)
+transform = Transform3D(-0, -1, -0, 0.9553, -0, 0.2955, -0.2955, 0, 0.9553, -0.2126, -0.0102, 0.1027)
 mesh = SubResource("CylinderMesh_15")
 
 [node name="WingR" type="Node3D" parent="."]
@@ -263,19 +263,19 @@ transform = Transform3D(-0, -1, -0, 1, -0, 0, 0, 0, 1, 0.2126, 0, 0)
 mesh = SubResource("CylinderMesh_16")
 
 [node name="Panel1" type="MeshInstance3D" parent="WingR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, -0.0068, 0.0293)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, -0.0068, 0.0244)
 mesh = SubResource("BoxMesh_17")
 
 [node name="Panel2" type="MeshInstance3D" parent="WingR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2211, -0.0068, 0.0464)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2211, -0.0129, 0.0733)
 mesh = SubResource("BoxMesh_18")
 
 [node name="Panel3" type="MeshInstance3D" parent="WingR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3571, -0.0068, 0.0636)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3571, -0.019, 0.1516)
 mesh = SubResource("BoxMesh_19")
 
 [node name="Finger" type="MeshInstance3D" parent="WingR"]
-transform = Transform3D(-0, -1, -0, 1, -0, 0, 0, 0, 1, 0.2126, 0, 0.1222)
+transform = Transform3D(-0, -1, 0, 0.9553, -0, -0.2955, 0.2955, 0, 0.9553, 0.2126, -0.0102, 0.1027)
 mesh = SubResource("CylinderMesh_20")
 
 [node name="Tail" type="Node3D" parent="."]

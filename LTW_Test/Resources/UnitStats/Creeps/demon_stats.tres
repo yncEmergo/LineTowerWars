@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/boss_5.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/unfathomable_power.tres" id="11_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/demon.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 181
+display_name = "Demon"
+max_health = 1098835
+armor_type = 0
+armor = 50
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card")])
+scene_path = "res://Scenes/Units/Creeps/demon.tscn"
+move_speed = 2.0312
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 1
+gold_cost = 4200000
+income_gain = 0
+population = 5
+unlock_seconds = 0.0
+max_stock = 4
+stock_regen_seconds = 32.0
+initial_stock = 2
+body_radius = 0.24
+bounty = 0
+lives_stolen = 2

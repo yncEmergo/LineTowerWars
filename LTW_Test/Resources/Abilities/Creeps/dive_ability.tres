@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DiveAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/DiveAbility.gd" id="1_dive"]
+
+[resource]
+script = ExtResource("1_dive")
+ability_id = 360
+display_name = "Dive"
+targeting = 2
+slot = 3
+reach_cells = 5.469
+duration_seconds = 4.0
+cooldown_seconds = 16.0
+damage_per_second = 150.0
+damage_radius_cells = 1.5

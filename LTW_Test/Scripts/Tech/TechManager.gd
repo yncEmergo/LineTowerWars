@@ -71,6 +71,26 @@ func owns(player_id: int, tech_id: int) -> bool:
 	return tech != null && tech.has(tech_id)
 
 
+## How many of one element three technologies this player owns, 0 to 3.
+##
+## The question the technology DISCS ask instead of owns(): an Advanced disc
+## needs two of the three and an Ultimate needs all three, and neither is a
+## single id. Counted rather than stored, because it is asked by a command card
+## being drawn rather than every tick, and a stored tally is a second copy of
+## PlayerTech that can go stale.
+func element_tech_count(player_id: int, element: TechDefinition.Element) -> int:
+	var tech: PlayerTech = _tech_of(player_id)
+	var registry: TechRegistry = _registry()
+	if tech == null || registry == null:
+		return 0
+
+	var owned: int = 0
+	for definition: TechDefinition in registry.for_element(element):
+		if tech.has(definition.tech_id):
+			owned += 1
+	return owned
+
+
 ## What the NEXT technology costs this player, whichever one it is.
 ##
 ## The price is a property of how many they have already bought rather than of
@@ -259,6 +279,38 @@ func roll_random_ultimate(player_id: int) -> String:
 	return _buy_batch(player_id, state, affordable[index] as Array)
 
 
+## Hands a player everything one Ultimate still needs, free of charge and with
+## nothing left to take back.
+##
+## What the RANDOM and DRAFT technology modes both end in (MatchSettings):
+## which Ultimate was chosen is StartingTech's business, and what that costs
+## the record is this file's, exactly as a Research Center press is.
+##
+## Free in the honest sense - the batch is bought at the price it would cost,
+## which at the start of a match is nothing, because the requirement is exactly
+## the free allowance. A player who somehow could not afford it is refused
+## rather than handed a debt.
+##
+## The undo history is closed afterwards: the opening is what this match dealt
+## you, not a purchase to reconsider.
+func grant_ultimate(player_id: int, path: TechDefinition) -> String:
+	var state: PlayerState = _state_of(player_id)
+	if state == null:
+		return "no such player"
+	if path == null || !path.is_path():
+		return "not a technology that leads to an Ultimate"
+
+	var missing: Array[TechDefinition] = _missing_of(state.tech, path)
+	if missing.is_empty():
+		return ALLOWED
+
+	var reason: String = _buy_batch(player_id, state, missing)
+	if reason != ALLOWED:
+		return reason
+	state.tech.forget_history()
+	return ALLOWED
+
+
 ## Developer cheat: hands one player every technology in the build, free.
 ##
 ## Here rather than beside the gold cheat in CommandService, because what a
@@ -320,9 +372,11 @@ func _batch_cost(owned: int, count: int) -> int:
 	return total
 
 
+## How many technologies this match hands out for nothing. The MATCH's answer
+## rather than the file's - the host sets it in the lobby, and GameConfig is
+## only where the default it started from lives.
 func _free_count() -> int:
-	var config: GameConfig = _config
-	return 0 if config == null else maxi(0, config.free_technologies)
+	return maxi(0, MatchSession.match_settings().free_technologies)
 
 
 func _cost_step() -> int:
@@ -386,7 +440,7 @@ func _buy_batch(player_id: int, state: PlayerState, batch: Array) -> String:
 		ids.append(tech.tech_id)
 
 	state.tech.push_purchase(TechPurchase.create(ids, cost, _undo_deadline()))
-	Log.info("Random Ultimate researched", {
+	Log.info("Ultimate researched", {
 		"player": player_id, "count": ids.size(), "cost": cost,
 	})
 	return ALLOWED

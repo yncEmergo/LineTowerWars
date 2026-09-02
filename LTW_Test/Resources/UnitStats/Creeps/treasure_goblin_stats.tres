@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/escape_portal.tres" id="10_card"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/treasure_goblin.png" id="98_icon"]
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 171
+display_name = "Treasure Goblin"
+max_health = 1
+armor_type = 1
+armor = 0
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card")])
+scene_path = "res://Scenes/Units/Creeps/treasure_goblin.tscn"
+move_speed = 4.0781
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 333333
+income_gain = 15625
+unlock_seconds = 0.0
+max_stock = 16
+stock_regen_seconds = 2.0
+initial_stock = 8
+refused_above_income_cap = true
+body_radius = 0.16
+bounty = 30000
+lives_stolen = 0

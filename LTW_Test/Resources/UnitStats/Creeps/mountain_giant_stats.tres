@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="CreepStats" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="10_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="11_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="12_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/attacker.tres" id="13_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/stoneskin_fortitude.tres" id="14_card"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Passives/blocked.tres" id="15_card"]
+[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
+[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="8_instant"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/mountain_giant.png" id="98_icon"]
+
+[sub_resource type="Resource" id="Delivery"]
+script = ExtResource("8_instant")
+
+[sub_resource type="Resource" id="Attack"]
+script = ExtResource("7_attack_stats")
+damage_min = 600
+damage_max = 700
+damage_type = 4
+attacks_per_second = 0.67
+target_class = 1
+attack_range = 1.17
+delivery = SubResource("Delivery")
+
+[resource]
+script = ExtResource("1_creep_stats")
+icon = ExtResource("98_icon")
+unit_type_id = 174
+display_name = "Mountain Giant"
+max_health = 282470
+armor_type = 5
+armor = 15
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card"), ExtResource("12_card"), ExtResource("13_card"), ExtResource("14_card"), ExtResource("15_card")])
+default_ability = ExtResource("10_card")
+scene_path = "res://Scenes/Units/Creeps/mountain_giant.tscn"
+move_speed = 2.2656
+turn_speed = 8.0
+arrive_threshold = 0.05
+pack_size = 3
+gold_cost = 600000
+income_gain = 0
+unlock_seconds = 0.0
+max_stock = 16
+stock_regen_seconds = 4.0
+initial_stock = 1
+body_radius = 0.24
+bounty = 36000
+is_attacker = true
