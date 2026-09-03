@@ -13,4 +13,4 @@ icon = ExtResource("2_ultimate_annihilation_glyph")
 bonus_per_attack = 1
 max_stacks = 5
 chain_targets = 2
-chain_cells = 3.91
+chain_cells = 4.0

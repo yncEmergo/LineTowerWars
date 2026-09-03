@@ -6,5 +6,5 @@
 script = ExtResource("1_passive")
 ability_id = 353
 display_name = "Boss"
-description = "Sent one at a time instead of as a pack, and steals 2 lives instead of 1."
+description = "Sent one at a time instead of as a pack, and steals {lives} lives instead of 1."
 targeting = 0

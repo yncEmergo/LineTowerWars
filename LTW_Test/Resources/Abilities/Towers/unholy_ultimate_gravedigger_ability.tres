@@ -14,5 +14,5 @@ additional_targets = 2
 stack_share = 0.35
 stacks_to_explode = 10
 explosion_cooldown = 3
-explosion_cells = 1.56
+explosion_cells = 1.5
 explodes_on_death = true

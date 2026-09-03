@@ -90,6 +90,28 @@ var _prioritize_air: bool = false
 ## again, and a unit that can walk goes after it. It is also what an attack
 ## task in an order chain waits on - see AttackAbility.
 var _ordered_target: Unit = null
+## Whether the standing order has been REACHED - whether this unit has ever
+## stood in range of it since the order was given.
+##
+## **Close once, then hold.** A unit walks straight at a target it has not got
+## to yet, however long its cooldown happens to be: it has to be there anyway,
+## arriving early costs nothing, and an order that left it standing about for a
+## whole attack period would read as an order that never registered. From the
+## moment it arrives it stops following between attacks, and running the creep
+## down again is the player's to order. See AttackAbility._chase.
+##
+## Reaching rather than SWINGING, which is what this used to ask. The two are
+## the same on the way in and come apart on the way out: a unit that arrived and
+## has not swung yet is still a unit that has arrived, and letting it set off
+## again would be the trailing this exists to stop.
+##
+## The UNIT rather than a flag, and that is forced. A new order arrives through
+## OrderQueue.replace, which clears the old one first - so a flag would be wiped
+## by the very gesture it is there to answer, and re-clicking the creep you are
+## already fighting would hand back a free walk every time. Naming the unit
+## survives that: what is asked is "is this the one I am already standing at",
+## and a different quarry answers no on its own with nothing to reset.
+var _reached_target: Unit = null
 ## Ticks left before this unit may search for a target again.
 ##
 ## Only ever set by a search that came back EMPTY, so a unit that is fighting
@@ -210,8 +232,30 @@ func order_attack(target: Unit) -> bool:
 
 ## Forgets the standing order, leaving the unit to pick its own targets again.
 ## What a new order without shift, and a Stop, both do.
+## Deliberately leaves _reached_target alone: a new order on the SAME creep has
+## to keep knowing this unit is already standing at it, and one on a different
+## creep answers no by naming a different unit.
 func clear_order() -> void:
 	_ordered_target = null
+
+
+## Whether this unit could START an attack right now: nothing committed and
+## nothing left on the clock.
+##
+## Public because CLOSING THE DISTANCE is the order's job rather than this
+## one's, and when to close is the same question as when it could swing - a
+## unit that walks after its target through a cooldown it cannot use is
+## following it for no reason it could act on.
+func is_ready_to_attack() -> bool:
+	return _windup_left <= 0.0 && _cooldown <= 0.0
+
+
+## Whether this unit is already standing at what it has been ordered onto.
+## See _reached_target.
+func has_reached_order() -> bool:
+	if _ordered_target == null || !is_instance_valid(_reached_target):
+		return false
+	return _ordered_target == _reached_target
 
 
 ## The unit a standing order names, or null once it has died, been sold or
@@ -378,6 +422,9 @@ func _apply_order(attack: AttackStats) -> void:
 		return
 	if TargetFinder.is_in_range(_origin(), _ordered_target, _reach(attack)):
 		_target = _ordered_target
+		# Arrived. From here on this unit only sets off after this one again
+		# when it could actually swing - see AttackAbility._chase.
+		_reached_target = _ordered_target
 
 
 ## Commits to an attack. The cooldown starts HERE rather than when the damage

@@ -25,7 +25,7 @@ damage_max = 52
 damage_type = 4
 attacks_per_second = 0.5
 target_class = 1
-attack_range = 3.125
+attack_range = 3.0
 delivery = SubResource("Delivery")
 
 [resource]
@@ -40,7 +40,7 @@ attack = SubResource("Attack")
 abilities = Array[ExtResource("2_ability")]([ExtResource("4_move"), ExtResource("5_stop"), ExtResource("6_attack"), ExtResource("10_attacker"), ExtResource("11_bombardment")])
 default_ability = ExtResource("4_move")
 scene_path = "res://Scenes/Units/Creeps/siege_engine.tscn"
-move_speed = 1.562
+move_speed = 1.5
 turn_speed = 8.0
 arrive_threshold = 0.05
 pack_size = 3

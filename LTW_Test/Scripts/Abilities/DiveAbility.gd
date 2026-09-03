@@ -32,9 +32,9 @@ extends UnitAbility
 
 @export_group("Dive")
 ## How far out the arc reaches at its turn, in player cells. The source states
-## 700, which is 5.47 cells at the divisor every other reach uses - see
-## unit_data.md 3.
-@export var reach_cells: float = 5.469
+## 700, which snaps to 5.5 at the quarter every reach in the game is
+## stated in - unit_data.md 3.
+@export var reach_cells: float = 5.5
 ## Seconds the whole dive takes, out and back.
 @export var duration_seconds: float = 4.0
 ## Seconds before it may be dived again.

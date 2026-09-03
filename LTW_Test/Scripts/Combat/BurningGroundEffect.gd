@@ -96,7 +96,7 @@ func effect_name() -> String:
 
 func description_text() -> String:
 	return ("Leaves the ground burning for %s seconds, dealing %s%% of the"
-		+ " damage dealt per second to everything within %s cells.") % [
+		+ " damage dealt per second to everything within %s.") % [
 		StringUtil.trim_number(duration_seconds),
 		StringUtil.trim_number(damage_share_per_second * 100.0),
 		StringUtil.trim_number(radius),

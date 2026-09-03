@@ -154,14 +154,34 @@ func display_name_for(slot: int) -> String:
 	return player.display_name
 
 
+## Which colour in the palette a slot owns: what that player CHOSE in the
+## lobby, and the slot's own place in the palette when nobody chose anything.
+##
+## The one place slot and colour are joined, which is what keeps them separate
+## everywhere else. A colour is per-match identity carried on MatchPlayer, and
+## the lane shuffle moves a slot without moving it - so a reader that indexed
+## the palette by slot would draw one player in another player's colour the
+## moment the lanes were dealt.
+##
+## The fallback is what a SINGLE PLAYER run and a bare test scene get: no lobby
+## ever handed out a colour there, and slot order is the same deal a lobby
+## would have made anyway.
+func color_index_for(slot: int) -> int:
+	if _setup != null:
+		var player: MatchPlayer = _setup.player_for(slot)
+		if player != null && player.color_index != MatchPlayer.NO_COLOR:
+			return player.color_index
+	return maxi(0, slot - 1)
+
+
 ## The name of the colour a slot is drawn in. Presentation, so it comes off
-## PresentationConfig - and a dedicated server, which wires none, falls back to
-## the slot number rather than refusing to answer.
+## PresentationConfig - and anything that wires none falls back to the slot
+## number rather than refusing to answer.
 func _color_name_for(slot: int) -> String:
 	var presentation: PresentationConfig = References.presentation_config
 	if presentation == null:
 		return "Player %d" % slot
-	return presentation.player_color_name(slot)
+	return presentation.player_color_name(color_index_for(slot))
 
 
 ## Simulation ticks since this match began, counting from 0.

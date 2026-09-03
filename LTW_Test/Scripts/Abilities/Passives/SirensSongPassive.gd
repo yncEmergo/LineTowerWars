@@ -36,9 +36,9 @@ const GATE_KEY: String = "sirens_song"
 @export var ceiling_gain: int = 50
 
 @export_group("Pack")
-## How far the armour reaches, in player cells. The source states 300, which is
-## 2.34 cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 2.344
+## How far the armour reaches, in player cells. The source states 300, which
+## snaps to 2.25 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 2.25
 ## Armour points handed back to each creep caught.
 @export var armor_restored: float = 1.6
 ## Seconds before the same creep may be helped again, by any Naga Siren.
@@ -80,10 +80,12 @@ func _restore_pack(creep: Creep) -> void:
 
 
 func effect_text() -> String:
-	return ("Any damage taken gives %d mana. At full mana it heals %d%% of its"
-		+ " maximum health, raises its own mana ceiling by %d, and gives back"
-		+ " %s armor to every creep within %s cells that has had some eaten.") % [
+	return ("Any damage taken gives %d mana. At full mana it heals %d%% of"
+		+ " its maximum health, raises its own mana ceiling by %d, and restores"
+		+ " %s armor to every creep within %s that is below its own base"
+		+ " armor - at most once every %s seconds per creep.") % [
 		mana_per_hit, roundi(heal_share * 100.0), ceiling_gain,
 		StringUtil.trim_number(armor_restored),
 		StringUtil.trim_number(radius_cells),
+		StringUtil.trim_number(creep_gate_seconds),
 	]

@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="5_menu_config"]
 [ext_resource type="Resource" path="res://Resources/Config/boot_config.tres" id="6_boot_config"]
 [ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="7_game_config"]
+[ext_resource type="Resource" path="res://Resources/Config/presentation_config.tres" id="8_presentation_config"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_log"]
 
@@ -29,6 +30,7 @@ _network_config = ExtResource("4_network_config")
 _menu_config = ExtResource("5_menu_config")
 _boot_config = ExtResource("6_boot_config")
 _game_config = ExtResource("7_game_config")
+_presentation_config = ExtResource("8_presentation_config")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

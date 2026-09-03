@@ -8,6 +8,6 @@ script = ExtResource("1_UpgradeTowerAbility")
 ability_id = 96
 tower_stats = ExtResource("2_turret_stats")
 display_name = "Upgrade to Turret"
-description = "Dedicated anti-air. Cannot hit ground AT ANY TIER, so it defends against flyers and nothing else."
+description = "Dedicated anti-air. Cannot hit ground at any tier."
 targeting = 1
 slot = 0

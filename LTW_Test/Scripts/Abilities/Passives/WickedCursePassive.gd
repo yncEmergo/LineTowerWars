@@ -20,9 +20,9 @@ extends CreepPassive
 ## See Combat/TowerStatus.gd.
 
 @export_group("Settings")
-## How far the curse reaches, in player cells. The source states 200, which is
-## 1.56 cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 1.563
+## How far the curse reaches, in player cells. The source states 200, which
+## snaps to 1.5 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 1.5
 ## The most towers one death may curse.
 @export var max_towers: int = 3
 ## Share taken off their attack speed.
@@ -54,7 +54,7 @@ func on_death(creep: Creep) -> bool:
 
 
 func effect_text() -> String:
-	return ("As it dies, curses up to %d towers within %s cells, slowing their"
+	return ("As it dies, curses up to %d towers within %s, slowing their"
 		+ " attacks by %d%% for %s seconds.") % [
 		max_towers, StringUtil.trim_number(radius_cells),
 		roundi(speed_share * 100.0), StringUtil.trim_number(duration_seconds),

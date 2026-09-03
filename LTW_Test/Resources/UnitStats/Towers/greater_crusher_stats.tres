@@ -21,7 +21,7 @@ script = ExtResource("4_InstantDelivery")
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SelfSplashEffect")
-radius = 2.73
+radius = 2.75
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -31,7 +31,7 @@ damage_type = 2
 is_aoe_damage = true
 attacks_per_second = 0.2
 windup_seconds = 0.55
-attack_range = 1.17
+attack_range = 1.25
 target_types = 3
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])

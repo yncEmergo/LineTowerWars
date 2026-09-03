@@ -12,6 +12,6 @@ slot = 6
 icon = ExtResource("2_voidalisk")
 regen_per_second = 1
 mana_per_attack = 1
-reach_cells = 3.12
+reach_cells = 3.0
 becomes_type_id = 98
 converts_type_ids = PackedInt32Array(97)

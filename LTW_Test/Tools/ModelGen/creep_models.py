@@ -66,10 +66,21 @@ class CreepModel(Model):
     """A Model that also knows which rung of the ladder it stands on, and
     whether it is a Boss - the two things every ladder rule needs."""
 
-    def __init__(self, key, gold, is_boss):
+    def __init__(self, key, gold, plan, is_boss):
         rung = ts.creep_rung(gold)
         mass = ts.creep_mass(rung)
         height = ts.creep_height_scale(rung)
+        # The rung says how far up the ladder it stands; the plan corrects for
+        # a body shape that reads the wrong size whatever it costs; the tweak
+        # is the one creep neither of those got right. In that order, because
+        # each is narrower than the one before it - see style.creep_plan_size
+        # and creep_roster.SIZE_TWEAK.
+        plan_mass, plan_height = ts.creep_plan_size(plan)
+        mass *= plan_mass
+        height *= plan_height
+        tweak = cr.size_tweak(key)
+        mass *= tweak
+        height *= tweak
         if is_boss:
             mass *= ts.BOSS_MASS
             height *= ts.BOSS_HEIGHT
@@ -2568,7 +2579,7 @@ def generate():
     os.makedirs(OUT, exist_ok=True)
     built = {}
     for key, _display, plan, gold, _family, boss in cr.CREEPS:
-        m = CreepModel(key, gold, boss)
+        m = CreepModel(key, gold, plan, boss)
         shape = SHAPES[key]
         # Authored unscaled, so the rung's ramps are applied here rather than
         # inside every one of the six builders. HEIGHT, not width - this is how

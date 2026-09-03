@@ -7,5 +7,5 @@ script = ExtResource("1_passive")
 ability_id = 341
 display_name = "Annihilation Aura"
 targeting = 0
-radius_cells = 2.344
+radius_cells = 2.25
 damage_share = 0.15

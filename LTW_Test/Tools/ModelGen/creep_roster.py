@@ -188,5 +188,36 @@ def is_vapour(key):
     return by_key()[key][2] == WRAITH or key in VAPOUR_KEYS
 
 
+# THE INDIVIDUAL EXCEPTIONS TO THE SIZE LADDER.
+#
+# One uniform multiplier over what the rung and the plan already decided, for
+# the creep that still comes out wrong after both. It is HERE and not in
+# style.py because it is not a rule about anything - it is one creature that
+# reads badly on the field, and the only honest description of it is its own
+# name and a number.
+#
+# Keep this table SHORT. Two or three entries is a roster with a couple of
+# awkward shapes in it; a dozen means the ramp or a plan multiplier is wrong
+# and is being papered over one creep at a time, and the fix then belongs in
+# style.py where it moves the whole roster at once.
+#
+#   forest_spider   the arachnid plan was already pulled in, and the tier 1
+#                   rung then lifted it back out - it is the cheapest thing
+#                   in the send list that a player has to read past
+#   wyvern          a wingspan is counted in its reach, so it covered more
+#                   floor than creeps twenty times its price
+#
+# A key absent from here is 1.0, which is what almost every creep is.
+SIZE_TWEAK = {
+    "forest_spider": 0.92,
+    "wyvern": 0.80,
+}
+
+
+def size_tweak(key):
+    """This creep's own size multiplier, over its rung's and its plan's."""
+    return SIZE_TWEAK.get(key, 1.0)
+
+
 def keys():
     return [row[0] for row in CREEPS]

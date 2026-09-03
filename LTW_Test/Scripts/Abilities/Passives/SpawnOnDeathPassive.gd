@@ -87,5 +87,5 @@ func validate(seen: Dictionary) -> bool:
 
 func effect_text() -> String:
 	var name_text: String = "creeps" if spawned_stats == null \
-		else spawned_stats.display_name
+		else StringUtil.plural(spawned_stats.display_name, count)
 	return "Leaves %d %s behind where it dies." % [count, name_text]

@@ -81,12 +81,12 @@ func effect_text() -> String:
 		+ " damage dealt as poison, up to %d stacks from any tower of this"
 		+ " line. At full stacks the stored damage is dealt as Spell Damage,"
 		+ " once every %ss.") % [
-		additional_targets, "creep" if additional_targets == 1 else "creeps",
+		additional_targets, StringUtil.plural("creep", additional_targets),
 		int(round(stack_share * 100.0)),
 		stacks_to_explode, StringUtil.trim_number(explosion_cooldown),
 	]
 	if explosion_cells > 0.0:
-		text += " It bursts over %s cells rather than into the creep alone." \
+		text += " It bursts over %s rather than into the creep alone." \
 			% StringUtil.trim_number(explosion_cells)
 	if explodes_on_death:
 		text += " A poisoned creep that dies bursts as well."

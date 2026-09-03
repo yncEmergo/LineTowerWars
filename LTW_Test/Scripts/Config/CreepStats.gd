@@ -155,9 +155,23 @@ func pack_population() -> int:
 	return total
 
 
-## Unlock time as shown in the UI, e.g. "3:30".
+## When this creep first becomes sendable, as a match clock time.
+##
+## Its OWN start delay, which is the answer for every creep but the Sudden
+## Death tier - those carry no delay of their own and arrive together on the
+## match clock instead, so the sender overrides this. See
+## SendBuilding.unlock_text and unit_data.md 6.5.
 func unlock_text() -> String:
-	var whole: int = maxi(0, int(unlock_seconds))
+	return clock_text(unlock_seconds)
+
+
+## Seconds as a match clock reads them, e.g. "3:30".
+##
+## Static so the sender can format a time this creep knows nothing about, and
+## here rather than in StringUtil because a match clock is a rule of this game
+## rather than a way of writing a number.
+static func clock_text(seconds: float) -> String:
+	var whole: int = maxi(0, int(seconds))
 	@warning_ignore("integer_division")
 	var minutes: int = whole / 60
 	return "%d:%02d" % [minutes, whole % 60]

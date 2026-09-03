@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.4762
-outer_radius = 0.5312
+inner_radius = 0.4745
+outer_radius = 0.5295
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -18,7 +18,7 @@ script = ExtResource("1_Creep")
 stats = ExtResource("2_kodo_beast_stats")
 _selection_ring = NodePath("SelectionRing")
 health_bar_height = 0.735
-select_radius = 0.476
+select_radius = 0.475
 select_height = 0.277
 
 [node name="Visual" parent="." instance=ExtResource("3_kodo_beast_model")]
@@ -36,5 +36,5 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/LegFL"), NodePath("../Visual/LegFR"), NodePath("../Visual/LegBL"), NodePath("../Visual/LegBR")]
 _arms = []
 leg_phases = PackedFloat32Array(0, 0.5, 0.5, 0)
-stride_length = 0.539
+stride_length = 0.5417
 bob_height = 0.0194

@@ -33,7 +33,7 @@ extends TowerPassive
 ## range.
 @export var neighbour_penalty: int = 20
 ## How far that reaches, in player cells.
-@export var neighbour_cells: float = 1.17
+@export var neighbour_cells: float = 1.25
 
 
 ## Mana is gained per ATTACK rather than per creep hit, which matters because

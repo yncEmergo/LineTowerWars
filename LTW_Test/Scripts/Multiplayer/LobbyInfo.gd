@@ -166,13 +166,49 @@ func has_member(peer_id: int) -> bool:
 	return member_for(peer_id) != null
 
 
-## Adds a player and gives them the next free slot. Server side only - a client
-## never edits its own copy, it is told what the roster is.
+## Adds a player, gives them the next free slot and the first free COLOUR.
+## Server side only - a client never edits its own copy, it is told what the
+## roster is.
+##
+## A colour is handed out here rather than left for the player to pick, so
+## nobody ever sits in a lobby colourless and a match can be started without
+## anybody having opened the dropdown. What they get is the first free entry in
+## the palette, which is what makes the first player in red and the second blue
+## without either of them choosing.
 func add_member(player: MatchPlayer) -> void:
 	if player == null || has_member(player.network_id):
 		return
 	members.append(player)
 	renumber_slots()
+	if player.color_index == MatchPlayer.NO_COLOR || is_color_taken(
+			player.color_index, player.network_id):
+		player.color_index = first_free_color()
+
+
+## Whether somebody OTHER than `except_peer` already has this colour.
+##
+## Unique within a lobby, which is what makes the colour worth having: two reds
+## in one match cannot be told apart on a minimap, and in an ANONYMOUS match
+## they would be two players with the same name.
+func is_color_taken(color_index: int, except_peer: int = 0) -> bool:
+	for player in members:
+		if player == null || player.network_id == except_peer:
+			continue
+		if player.color_index == color_index:
+			return true
+	return false
+
+
+## The lowest colour nobody in the lobby holds, or NO_COLOR when the palette is
+## exhausted - which needs a palette shorter than the lobby and is why the
+## caller has to cope rather than assume.
+func first_free_color() -> int:
+	var presentation: PresentationConfig = References.presentation_config
+	var count: int = 0 if presentation == null else presentation.color_count()
+	for index in range(count):
+		if !is_color_taken(index):
+			return index
+	return MatchPlayer.NO_COLOR
 
 
 func remove_member(peer_id: int) -> void:
@@ -189,6 +225,11 @@ func remove_member(peer_id: int) -> void:
 ##
 ## The cost is that leaving a lobby can move somebody else's slot, which is
 ## fine while a slot is just a lane number and nobody has chosen one.
+##
+## COLOURS ARE DELIBERATELY NOT RENUMBERED WITH THEM. A colour is chosen and a
+## slot is dealt, so somebody leaving must leave a gap in the palette rather
+## than shuffling the colour out from under everybody below them. It is also
+## why picking a colour cannot move a player up or down this list.
 func renumber_slots() -> void:
 	var slot: int = 1
 	for player in members:

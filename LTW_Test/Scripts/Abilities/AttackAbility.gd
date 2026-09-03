@@ -10,10 +10,11 @@ extends UnitAbility
 ##
 ## **It is an attack-MOVE, and that is the whole shape of it.** Aimed at a
 ## creep, a unit that can walk closes the distance and then kills it. Aimed at
-## the ground, it walks there and fights whatever comes into reach on the way,
-## resuming the walk once that is dead. A TOWER cannot walk, so for a tower the
-## movement half simply does not happen and what is left is the plain "shoot
-## that one" order it always had.
+## the ground, it walks there and fights whatever comes into reach on the way -
+## and what it finds it COMMITS to, chasing that one until it is dead or gone
+## before the walk resumes. A TOWER cannot walk, so for a tower the movement
+## half simply does not happen and what is left is the plain "shoot that one"
+## order it always had.
 ##
 ## What a given unit may be aimed at is the ATTACK's question and not this
 ## one's: a tower refuses anything that is not a creep it can reach, and an
@@ -31,7 +32,9 @@ extends UnitAbility
 ##
 ## As an ORDER it chains: shift queues one behind another, and the task is over
 ## when the named creep dies, or when an attack-move has reached its point with
-## nothing left in reach.
+## nothing left in reach. A chain behind it waits the whole time, which is the
+## point of the commitment above - the next order must not start while the unit
+## is still in a fight it was sent into.
 
 
 func execute(unit: Unit, target: AbilityTarget) -> void:
@@ -76,9 +79,18 @@ func advance_task(unit: Unit, target: AbilityTarget, _delta: float) -> void:
 	# An attack-MOVE stops for anything at all, which is the difference between
 	# the two: a named target is the only thing worth stopping for above, and
 	# down here everything is.
-	if attack.has_target():
-		_hold(unit)
+	#
+	# **What it finds it COMMITS to**, by making it a standing order exactly as
+	# if the player had clicked it. Without that the walk resumes the moment the
+	# creep steps out of reach, so the unit lands one hit, watches it leave and
+	# carries on - which is what an attack-move looked like. Chasing it is then
+	# the branch above, and the task is not finished until it is dead or gone.
+	var found: Unit = attack.current_target()
+	if found != null:
+		attack.order_attack(found)
+		_chase(unit, attack, found)
 		return
+
 	if target.has_position && !unit.has_arrived_at(target.position):
 		unit.move_to(target.position)
 
@@ -111,8 +123,26 @@ func shows_attack_range() -> bool:
 
 ## Walks onto a named target until it is in reach, then stands and fights.
 ## Nothing else is worth stopping for: the player named this one.
+##
+## **Once it has ARRIVED it only closes again while it could actually SWING.**
+## A unit that has reached this target plants itself where it stands and stays
+## there for the whole windup and the cooldown behind it, setting off after the
+## creep again only when the next attack is ready. Trailing one through a
+## cooldown it cannot use is following something for no reason it could act on,
+## and it takes the hit-and-run out of the player's hands - which is where it
+## belongs.
+##
+## Approaching for the FIRST time is not gated, and that is the distinction
+## has_reached_order draws - CLOSE ONCE, THEN HOLD. The unit has to be in reach
+## anyway, so arriving early costs nothing and an order that left it standing
+## about for a whole attack period would read as an order that never registered.
+## Once it has arrived it stops setting off again until it could swing, and
+## re-issuing the order on that same creep does not hand the walk back.
 func _chase(unit: Unit, attack: AttackComponent, ordered: Unit) -> void:
 	if attack.is_in_reach(ordered):
+		_hold(unit)
+		return
+	if attack.has_reached_order() && !attack.is_ready_to_attack():
 		_hold(unit)
 		return
 	unit.move_to(ordered.global_position)

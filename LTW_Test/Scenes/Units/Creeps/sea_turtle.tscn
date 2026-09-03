@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.4285
-outer_radius = 0.4835
+inner_radius = 0.4271
+outer_radius = 0.4821
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -18,7 +18,7 @@ script = ExtResource("1_Creep")
 stats = ExtResource("2_sea_turtle_stats")
 _selection_ring = NodePath("SelectionRing")
 health_bar_height = 0.607
-select_radius = 0.429
+select_radius = 0.427
 select_height = 0.213
 
 [node name="Visual" parent="." instance=ExtResource("3_sea_turtle_model")]
@@ -36,5 +36,5 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/LegFL"), NodePath("../Visual/LegFR"), NodePath("../Visual/LegBL"), NodePath("../Visual/LegBR")]
 _arms = []
 leg_phases = PackedFloat32Array(0, 0.5, 0.5, 0)
-stride_length = 0.3171
+stride_length = 0.3186
 bob_height = 0.0149

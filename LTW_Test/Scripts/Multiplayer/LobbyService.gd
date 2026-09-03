@@ -151,10 +151,44 @@ func set_settings(settings: MatchSettings) -> void:
 	request_settings.rpc_id(NetworkService.SERVER_PEER_ID, settings.to_dict())
 
 
+## Tells the server this machine is now called something else.
+##
+## The same rpc arrival uses, because it is the same claim: a client states its
+## name and the server sanitises it. Sending it again simply overwrites what is
+## held against this peer id, which is what a rename IS - there is no separate
+## state to keep in step.
+func rename_player() -> void:
+	if !_require_connection():
+		return
+	register_player.rpc_id(NetworkService.SERVER_PEER_ID, LobbyIdentity.display_name())
+
+
+## Asks for this player's colour to be changed. Anybody may, for THEMSELVES -
+## unlike the settings, which are the host's alone - because a colour is that
+## player's own identity and nobody else's business.
+##
+## The server owns the answer: it refuses one somebody else already holds, and
+## the dropdown draws what comes back rather than what was clicked. Two players
+## reaching for the same colour in the same second is exactly the case that
+## makes that worth the round trip.
+func set_color(color_index: int) -> void:
+	if !_require_connection():
+		return
+	request_color.rpc_id(NetworkService.SERVER_PEER_ID, color_index)
+
+
 # --- server: requests arriving from clients -------------------------------
 
-## Sent once on connecting. The name is a courtesy, not a credential: it is
-## sanitised here and the peer id remains the identity.
+## Sent on connecting, and again whenever this player changes their name. The
+## name is a courtesy, not a credential: it is sanitised here and the peer id
+## remains the identity.
+##
+## A RENAME is the same message rather than one of its own, because the whole
+## of it is "this is what I am called now" - so the second one overwrites the
+## first and there is no second path to keep in step. What it costs is that a
+## player already sitting in a lobby has to have that roster corrected too,
+## which is the block below: their `MatchPlayer` carries the name every other
+## client is drawing, and the browser rows carry the host's.
 @rpc("any_peer", "reliable")
 func register_player(display_name: String) -> void:
 	if !multiplayer.is_server():
@@ -163,6 +197,16 @@ func register_player(display_name: String) -> void:
 	_names_of_peer[peer_id] = LobbyIdentity.sanitise(display_name)
 	Log.info("Player registered", {"peer": peer_id, "name": _names_of_peer[peer_id]})
 	_push_list_to(peer_id)
+
+	var lobby: LobbyInfo = _lobbies.get(_lobby_of_peer.get(peer_id, ""), null) as LobbyInfo
+	if lobby == null:
+		return
+	var player: MatchPlayer = lobby.member_for(peer_id)
+	if player == null:
+		return
+	player.display_name = _names_of_peer[peer_id]
+	_push_lobby(lobby)
+	_broadcast_list()
 
 
 @rpc("any_peer", "reliable")
@@ -228,6 +272,47 @@ func request_join(lobby_id: String) -> void:
 
 	_push_lobby(lobby)
 	_broadcast_list()
+
+
+## One player changing their own colour. Refused rather than clamped when it is
+## taken, because a clamp would silently hand them a colour they did not ask
+## for and the dropdown would then disagree with the row beside it.
+##
+## The roster is pushed to everybody afterwards, not only to the asker: a
+## colour is what the other players read each other by, so all of them have to
+## see it move.
+@rpc("any_peer", "reliable")
+func request_color(color_index: int) -> void:
+	if !multiplayer.is_server():
+		return
+	var peer_id: int = multiplayer.get_remote_sender_id()
+
+	var lobby: LobbyInfo = _lobbies.get(_lobby_of_peer.get(peer_id, ""), null) as LobbyInfo
+	if lobby == null:
+		_refuse(peer_id, "You are not in a lobby.")
+		return
+	# The countdown makes the roster final (D24), and a colour is part of it.
+	if lobby.is_starting || lobby.is_in_progress:
+		_refuse(peer_id, "The match is already starting.")
+		return
+
+	var presentation: PresentationConfig = References.presentation_config
+	var count: int = 0 if presentation == null else presentation.color_count()
+	if color_index < 0 || color_index >= count:
+		_refuse(peer_id, "That is not a color.")
+		return
+	if lobby.is_color_taken(color_index, peer_id):
+		_refuse(peer_id, "Somebody already has that color.")
+		return
+
+	var player: MatchPlayer = lobby.member_for(peer_id)
+	if player == null:
+		return
+	player.color_index = color_index
+	Log.info("Lobby color chosen", {
+		"id": lobby.lobby_id, "peer": peer_id, "color": color_index,
+	})
+	_push_lobby(lobby)
 
 
 @rpc("any_peer", "reliable")

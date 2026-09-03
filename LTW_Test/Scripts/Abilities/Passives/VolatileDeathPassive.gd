@@ -17,9 +17,9 @@ extends CreepPassive
 ## worth depends on what it lands on.
 
 @export_group("Settings")
-## How far the blast reaches, in player cells. The source states 250, which is
-## 1.95 cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 1.953
+## How far the blast reaches, in player cells. The source states 250, which
+## snaps to 2 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 2.0
 ## Damage dealt to each tower caught.
 @export var damage: int = 1000
 ## What kind of damage it is, which decides how the defender armour reads it.
@@ -40,5 +40,7 @@ func on_death(creep: Creep) -> bool:
 
 
 func effect_text() -> String:
-	return "As it dies, deals %d damage to every tower within %s cells." \
-		% [damage, StringUtil.trim_number(radius_cells)]
+	return "As it dies, deals %d %s damage to every tower within %s." % [
+		damage, DamageTable.damage_type_text(damage_type),
+		StringUtil.trim_number(radius_cells),
+	]

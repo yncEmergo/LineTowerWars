@@ -8,4 +8,4 @@ ability_id = 339
 display_name = "Quickness"
 targeting = 0
 chance = 0.5
-from_range_cells = 7.031
+from_range_cells = 7.0

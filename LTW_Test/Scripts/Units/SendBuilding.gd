@@ -438,6 +438,29 @@ func unlock_remaining(creep_stats: CreepStats) -> float:
 	return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
 
 
+## When this creep first becomes sendable, as a match clock time.
+##
+## The creep's own start delay for every sender but the Sudden Death one,
+## whose creeps carry none: the whole tier arrives on the match clock, so
+## what its tooltip has to quote is that clock and not the zero sitting on
+## each of those files. Without this every tier 4 creep reads "0:00", which
+## is the one time in the game the number and the greyed-out slot beside it
+## disagreed.
+##
+## The same split unlock_remaining() above already makes, and for the same
+## reason: the creep owns its delay, the sender owns the rule.
+func unlock_text(creep_stats: CreepStats) -> String:
+	if creep_stats == null:
+		return ""
+	if !is_sudden_death_tier:
+		return creep_stats.unlock_text()
+
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return creep_stats.unlock_text()
+	return CreepStats.clock_text(config.sudden_death_seconds)
+
+
 ## Whether this player is at their population ceiling.
 ##
 ## AT it, not over it: a send is refused from the cap upwards, and a player at

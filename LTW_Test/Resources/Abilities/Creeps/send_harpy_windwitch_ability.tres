@@ -9,6 +9,6 @@ ability_id = 376
 display_name = "Harpy Windwitch"
 description = "Sends a pack into the enemy maze and raises your income permanently."
 targeting = 1
-slot = 4
+slot = 3
 repeat_on_hold = true
 creep_stats = ExtResource("2_stats")

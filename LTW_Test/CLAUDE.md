@@ -190,6 +190,13 @@
   every tower ever sold leaked its entry in the unit registry
 - _set, _get, _notification and friends are Object's own virtuals. A private
   helper named _set() fails to parse with "signature doesn't match the parent"
+  - the STATIC version of that trap is worse, because it does not fail at all.
+    A class name is an expression evaluating to the SCRIPT, which is a
+    Resource - so `MyClass.set_name(x)` binds to Resource's own inherited
+    setter rather than to the static you declared. It parses, it runs, it
+    returns null and it does nothing. Cost a debugging cycle on
+    LobbyIdentity.set_name, now choose_name. Give a static a verb the engine
+    does not already own
 - gdlint runs in the editor. It does not understand @abstract, so that parse warning
   is noise. It also caps public methods per class at 20 and returns per function
   at 6
@@ -374,6 +381,11 @@ art at all so far - so this is the placement rule, not a description of the tree
   copied. Once a unit is implemented its .tres is the authority and unit_data.md
   is the mirror - change both in the same commit, until the generator in its
   section 8 makes that automatic.
+- content.md is the PROCEDURE for adding or changing a tower, creep, disc or
+  ability: which files one is made of, which of them ModelGen generates and so
+  must never be hand-edited, how to pick the next id, and what refuses bad
+  content at boot. Read it before authoring content; it carries no rules and no
+  numbers, only the steps.
 - multiplayer.md is what the networked build is and where each part of it lives.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.

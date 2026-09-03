@@ -24,7 +24,7 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return ("Attacks by friendly towers within %s cells permanently reduce"
+	return ("Attacks by friendly towers within %s permanently reduce"
 		+ " the target's armor by %s, down to 0.") % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(armor_per_hit, 3)]

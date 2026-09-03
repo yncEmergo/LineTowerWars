@@ -22,6 +22,10 @@ func extra_targets(_tower: Building) -> int:
 	return additional_targets
 
 
+## The ADDITIONAL count and nothing else, which is how the source states a
+## multishot and how every other one in the roster reads. It used to add "for
+## N in total" on the end, which is the sum a reader can do and not a second
+## fact about the tower.
 func effect_text() -> String:
-	return "Each attack strikes %d additional creeps, for %d in total." % [
-		additional_targets, additional_targets + 1]
+	return "Each attack strikes %d additional %s." % [
+		additional_targets, StringUtil.plural("creep", additional_targets)]

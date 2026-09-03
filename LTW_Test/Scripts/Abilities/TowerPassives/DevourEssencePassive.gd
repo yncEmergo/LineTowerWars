@@ -35,7 +35,7 @@ const BONUS_KEY: String = "devoured_damage"
 ## The most this tower may ever eat.
 @export var damage_cap: int = 100
 ## How far the overflow reaches for another tower of the same line, in cells.
-@export var overflow_cells: float = 2.34
+@export var overflow_cells: float = 2.25
 
 @export_group("Unholy Concoction")
 ## Seconds an altered armour type lasts, or 0 on the tiers that alter none.
@@ -134,7 +134,7 @@ func _nearest_sibling(tower: Building) -> Building:
 func effect_text() -> String:
 	var text: String = ("Permanently gains +%d attack damage per creep killed,"
 		+ " up to +%s, and keeps it across upgrades. Overflow goes to the"
-		+ " nearest tower of this line within %s cells.") % [
+		+ " nearest tower of this line within %s.") % [
 		damage_per_kill, StringUtil.compact_number(damage_cap),
 		StringUtil.trim_number(overflow_cells),
 	]

@@ -21,7 +21,7 @@ at the end, and both now have something real to be measured against rather than 
 
 | Looking for | Go to |
 | --- | --- |
-| What is decided and must not be re-opened | §1, D1-D26 |
+| What is decided and must not be re-opened | §1, D1-D27 |
 | The API surface, with real checked signatures | §2 |
 | How the whole thing is meant to work | §5 |
 | What is genuinely still open | §1 → *Still open* |
@@ -50,6 +50,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D9 | **PickleGD: keep the link, do not install yet.** | 2026-08-21 | Not a transport. Likely useful for cold-path payloads, wrong for the hot path. See §7. |
 | D10 | **The network session may be a plain autoload**, standing on its own rather than going through `References`. | 2026-08-21 | User's call: `References` is a convenience, not a hard rule, and a global-like entity is exactly what a session that outlives scene changes needs. Unblocks 0.1. |
 | D11 | **Simulation tick is 20 Hz**, in a config `.tres`. | 2026-08-21 | Squarely in the RTS band. 50 ms, and an exact 3:1 divisor of a 60 Hz render frame. See §5.5. |
+| D27 | **Developer cheats are refused in a NETWORKED match** unless the server's own config deliberately allows them. | 2026-09-02 | User's call. A cheat is a real player order the authority grants (§2), so the master switch alone would let one player in a real match hand themselves the gold to end it - and the file that refuses it is the SERVER's, not the one they are looking at. A second flag rather than a flat refusal, because the networked build has to be testable: a headless two client run needs the same shortcuts a single player run gets. `GameConfig.cheats_allowed(Net.is_online())` is the one place the two are put together. |
 | D26 | **A dropped player gets a 10 second hold** before being declared gone, and a DELIBERATE leave skips it entirely. | 2026-08-23 | User's call, from the three sketched in §11.1. Sits on top of the ~5.6 s ENet already takes to notice a hard-killed client, so a crash resolves in about fifteen seconds and a brief hiccup costs nothing. Implementable only because a goodbye and a silence are different messages, not merely different speeds - `MatchStart.leave_match()` in §2 is what makes the goodbye actually arrive. |
 | D25 | **The send ring, lives and life steal are part of the networked build**, not a separate gameplay task. | 2026-08-23 | User's call. All three were already specified in `game_rules.md` and none is networking, but "see each other's lives drop" is untestable without them, and D14's disconnect rule needs lives that can drain. Built and verified before any command went over a wire. |
 | D24 | **Start runs a 5 second countdown**, shown to everyone in the lobby. Nobody may join during it; any player leaving cancels it; the host may cancel it at any point. The browser lists such a lobby as **"Starting..."** and unjoinable. | 2026-08-23 | User's rule. Gives everyone a moment to see the match is about to begin, and makes "who is in this match" final before the handshake rather than during it. Fully specified; §8.1. |
@@ -71,13 +72,10 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 Only genuinely open questions live here. Anything answered has become a decision above, or
 is described as built in §2.
 
-- **Where the player stats belong on screen, and what a player is called there.** The panel
-  exists top right - name, life, income, value, placement - but `game_rules.md` never placed
-  it, and it wants an ANONYMOUS mode where a player is known by their COLOUR instead. That
-  needs a game mode selection, which does not exist, and player colours, which are L1. Until
-  both land it is the display name in a placeholder layout.
-- **The population cap is displayed but not enforced.** It is drawn in the status bar;
-  nothing refuses a send that would exceed it. Whether it should is a rules call.
+- **Where the player stats panel belongs on screen.** It exists top right - name, life,
+  income, value, placement - but `game_rules.md` never placed it, so the layout is a
+  placeholder. What a player is CALLED there is settled: ordinarily the display name, and in
+  an ANONYMOUS match their colour, which is a lobby setting (§8.2).
 - **Whether one server process should host more than one match.** It hosts one, refuses a
   second with a sentence, and frees itself when that one empties - D19 doing its job until
   D16 splits them. Nothing is blocked on it.
@@ -408,6 +406,20 @@ WHO sent it, and the server already answers that by overwriting the slot from th
 Everything past it is refused by `TechManager`, which is where the rules live, exactly as a
 build order's rules live in the area it would be placed in.
 
+**The DEVELOPER CHEATS travel this same road**, and that is the point of them: a cheat is a
+`PlayerAction` like a Research Center press, so the AUTHORITY grants it and a client's press
+takes the round trip every other order takes. Adding the gold where the key was pressed would
+have redrawn a number the server never agreed to.
+
+Which means a cheat is a real order that a real server really applies, so it is refused in a
+NETWORKED match by default: `GameConfig.cheats_allowed(Net.is_online())` wants a second flag
+on top of the master switch, and the server checks it in `_cheat_target` whatever the client
+asking was built from. The point is not that a cheat could be forged - it cannot, the slot is
+overwritten from the peer id - but that one player with a permissive local build and a
+permissive server could hand themselves the gold to end a match. Turning it on is a decision
+made on the SERVER, deliberately, for a headless test. What the cheats DO is in the root
+README under Running it.
+
 Signals: `command_applied(Command)`, `command_rejected(Command, String)` - both server side.
 Wire: `submit_command` is `@rpc("any_peer", "reliable")`. `Command`
 (`Scripts/Multiplayer/Command.gd`) is a RefCounted, not a Resource: it is created, sent and
@@ -568,14 +580,17 @@ and the server holds the full grace period for a player who was being polite.
 **What is deliberately NOT here** - prediction, phase B replication, projectile
 replication, an end screen - is §13, with the reason for each.
 
-### The two remaining stubs
+### The one remaining stub
 
 Everything else in the menus is real: `set_lobbies()`, `refresh()`, `_on_join_pressed()` and
 `LobbyRoom.show_lobby()` are all driven by server pushes, and the list is sent unprompted, so
-`refresh()` is a repaint rather than a request. Two things are still stubs, on purpose:
+`refresh()` is a repaint rather than a request. One thing is still a stub, on purpose, and one line that used to be here is no longer one:
 
-- `LobbyIdentity.display_name()` — still the OS user name. One line to change when a real
-  identity arrives (Steam, §10). The SERVER already treats whatever it says as untrusted.
+- `LobbyIdentity.display_name()` — now a name the player TYPED, kept in `UserSettings` and
+  asked for by the browser before it will open a connection (§2, and `game_rules.md` under
+  The player's name). The OS user name is only what the prompt suggests. Still one line to
+  change when a real identity arrives (Steam, §10), and the SERVER still treats whatever it
+  says as untrusted — `sanitise()` runs on arrival and the peer id remains the identity.
 - `MenuNavigation.pending_lobby` — kept only so `lobby_room.tscn` can be run on its own from
   the editor. The live path reads `Lobby.current()` instead.
 
@@ -915,20 +930,43 @@ Counting down  | Starting...  | disabled=true  | alpha=0.55
 Running        | In progress  | disabled=true  | alpha=0.55
 ```
 
-**Player colours.** *Planned, not scheduled.* Every player needs a colour chosen in the lobby,
-because anything showing several players at once needs them told apart at a glance. The
-minimap gets by without one on its default scheme - yours white and everyone else's red,
-which is enough in a free for all with no teams - but that cannot say WHICH opponent is in
-your maze. Its other two schemes do colour per player, and until this is built they index a
-fixed palette on `PresentationConfig` by slot: local to one machine, chosen by nobody, and
-the first thing to delete once a colour rides on `MatchPlayer`. Consequences worth knowing before it is built:
+**Player colours.** **Built.** Every player has one, chosen from a dropdown on their own row,
+because anything showing several players at once needs them told apart at a glance. What the
+RULE is is `game_rules.md` under Player colours; what follows is where it lives.
 
-- A colour is per-match identity, so it belongs on `MatchPlayer` next to `slot` and
-  `network_id`, and travels in the same `to_dict()`.
-- It must be **unique within a lobby**, which means the server assigns and validates it. A
-  client asking for a taken colour is refused, exactly like a full lobby.
-- The palette is content, so it belongs in a config `.tres`, not in a script.
-- Somebody joining needs a free colour by default, or they sit colourless until they pick.
+- A colour is per-match identity, so it rides on `MatchPlayer.color_index` next to `slot` and
+  `network_id` and travels in the same `to_dict()`. It is an INDEX into the palette rather
+  than a `Color`, so what the wire carries cannot disagree with what a machine draws.
+- **It is not the slot, and that is the whole point of storing it.** A slot is dealt out by
+  the server and re-dealt by `renumber_slots()` and by the lane shuffle; a colour is chosen
+  and kept. Anything that indexed the palette by slot drew one player in another's colour the
+  moment the lanes were dealt - which is exactly what the old stand-in did.
+- The DROPDOWN lists coloured squares rather than colour names, because a colour is a thing
+  to recognise rather than to read. The name rides along as each item's tooltip, so it is
+  still sayable out loud. The squares are built once from the palette and cached statically -
+  Godot has no solid-colour texture and an `OptionButton` item wants a `Texture2D`, and a PNG
+  per entry would be twelve assets to redraw the moment somebody edits one hue.
+- **Unique within a lobby, so the server assigns and validates.** `LobbyInfo.add_member` hands
+  out `first_free_color()` on join, and `request_color` refuses one somebody else holds -
+  exactly as it refuses a full lobby, and for the same reason the settings take a round trip:
+  the dropdown draws what came BACK, so a refused pick snaps to what that player really has.
+  Anybody may change their OWN colour, unlike the settings, which are the host's alone.
+- **A NAME is changed the same way and by the same rpc.** `register_player` is sent on
+  arrival and again on a rename, because the whole of it is "this is what I am called now" -
+  so the second overwrites the first and there is no second path to keep in step. What it
+  costs is that a player already sitting in a lobby has to have that roster corrected too,
+  since their `MatchPlayer` carries the name every other client is drawing.
+- Leaving frees a colour and leaves a GAP rather than renumbering the ones below it, which is
+  what makes "picking a colour never moves you in the lobby" true in both directions.
+- The palette is content and lives on `PresentationConfig` in a config `.tres`. The dedicated
+  server wires it too, which it did not have to before: it is the machine that decides which
+  colours exist and whether a request names one.
+- **The one place slot and colour meet is `MatchSession.color_index_for`**, which answers what
+  a slot chose and falls back to slot order when nothing did - a single player run, or a bare
+  test scene. Every reader goes through it, so the minimap and an anonymous match's player
+  table cannot disagree.
+- NOT BUILT: teams, and any use of a colour on a unit in the world. A colour reaches the
+  minimap and the player table and nothing else.
 
 ### 8.2 Match settings
 
@@ -1181,6 +1219,5 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 | **Target acquisition on the client** | `AttackComponent` asks `is_authority()` nowhere, so every client runs the full target search for every tower in every lane, exactly as the server does. Only the damage is gated, in `Unit.take_damage` - a client's answer decides where its barrels point and where it spawns a shot, and nothing else. | It falls inside the presentation exception the row above uses, and for the same reason: a client has to know what a tower is shooting to draw it shooting. What is DIFFERENT is the price. Flying a projectile is a few vectors; acquiring a target is a scan of the whole lane, per tower, and it is the largest cost in a loaded tick on either machine. So the client pays a server's simulation bill to draw barrels, most of them in lanes nobody is looking at. The fix is not a gate on its own - a gated client would draw nothing - but the server naming what each tower fired at, which is the same spawn-event shape phase B wants and should land with it. |
 | **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |
 | **An end screen** | The match decides itself and stops; players leave through the in-game menu. | Deliberately the smallest thing that works. |
-| **Player colours** | Needed before the minimap can name WHICH opponent a square belongs to, and before the anonymous mode `game_rules.md` wants. Shape and consequences in §8.1. | The minimap already has the two schemes that would use them, running off a fixed local palette indexed by slot - so it draws colours nobody chose and two machines need not agree on. |
-| **Game mode selection** | Where anonymity, and anything else chosen before a match, would be picked. | Nothing depends on it yet. |
+| **Player colours on the units themselves** | A colour reaches the minimap and the player table. Nothing in the 3D world is tinted by it, so two players' towers look identical in a lane. | The colour is chosen, replicated and read through one call (§8.1), so this is a materials question rather than a networking one - and it collides with the tower visual language, which spends colour on the ELEMENTS. `game_rules.md` under Presentation is where that has to be settled first. |
 | **More than one match per process** | One process hosts one match, refuses a second with a sentence, and frees itself when that one empties - D19 doing its job until D16 splits them. | Splitting is an address change, so it is safe to defer. |

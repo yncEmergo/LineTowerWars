@@ -126,6 +126,16 @@ var _burn_left: float = 0.0
 ## Fraction of a health point burning has built up but not dealt yet, so a
 ## trickle below 1 point a tick still hurts.
 var _burn_carry: float = 0.0
+## Mana taken off this creep per second while it lasts, and how long is left.
+## The BEST rate wins rather than the sum, on the same reasoning mend() and
+## haste() use: this is a state a creep is in - its regeneration crystalized -
+## rather than damage arriving, so two towers holding it there hold it once.
+##
+## Only a creep whose traits run on a pool has any to lose. One is taken off
+## the pool by CreepMana.siphon, which carries its fraction the way burning
+## does, so a third of a point a second still drains at a 20 Hz tick.
+var _mana_drain_per_second: float = 0.0
+var _mana_drain_left: float = 0.0
 ## Poison stored on this creep, and how many stacks of it. Unholy 1.
 var _poison_damage: float = 0.0
 var _poison_stacks: int = 0
@@ -209,10 +219,19 @@ var _haste_left: float = 0.0
 ## the BEST rather than adding, exactly as an aura does.
 var _mend_per_second: float = 0.0
 var _mend_left: float = 0.0
-## Armour points GIVEN to this creep for the rest of its life, which the Crypt
-## Fiend's aura hands out one at a time. Always >= 0, and kept apart from the
-## erosion above so that a floor meant for one cannot clamp the other.
-var _armor_granted: float = 0.0
+## Armour points GIVEN to this creep for the rest of its life, kept PER
+## SOURCE. Always >= 0, and kept apart from the erosion above so that a floor
+## meant for one cannot clamp the other.
+##
+## Per source because the two traits that grant it are unrelated and only one
+## of them has a ceiling: Spiritual Aid may raise any one creep by at most
+## twelve points over its whole life, and the Crypt Fiend's Ethereal Aura has
+## no limit at all. A single shared total would have a Crypt Fiend's gifts
+## spend the Spirit Walker's allowance, which is a rule neither trait states.
+var _armor_granted: Dictionary = {}
+## Their sum, kept alongside so armor_delta() does not walk the dictionary on
+## every hit.
+var _armor_granted_total: float = 0.0
 
 
 func _init(creep: Creep) -> void:
@@ -274,7 +293,7 @@ func is_paralyzed() -> bool:
 ## yet cost a whole point and eroding it ten times has. Armour is an integer
 ## everywhere else in the game and this is where the fraction stops.
 func armor_delta() -> int:
-	return int(_armor_eroded + _armor_granted + _armor_delta)
+	return int(_armor_eroded + _armor_granted_total + _armor_delta)
 
 
 ## The armour TYPE this creep counts as right now, or -1 to use its own.
@@ -327,10 +346,17 @@ func is_aura_denied() -> bool:
 	return _aura_denied_left > EPSILON
 
 
-## Armour points somebody has GIVEN this creep for good, which is what a trait
-## that may only raise a creep so far has to read before granting another.
-func granted_armor() -> float:
-	return _armor_granted
+## Armour points somebody has GIVEN this creep for good.
+##
+## Takes the SOURCE, because the one trait that asks is asking about its own
+## allowance rather than about how thick the creep has become: Spiritual Aid
+## reads this to decide whether it may grant another point, and a Crypt Fiend
+## standing in the same pack must not spend that allowance for it. Null asks
+## for the whole, which is what a readout would want.
+func granted_armor(source: UnitAbility = null) -> float:
+	if source == null:
+		return _armor_granted_total
+	return float(_armor_granted.get(source.resource_path, 0.0))
 
 
 ## Damage the shield in front of this creep's health still holds.
@@ -568,6 +594,23 @@ func burn(source: UnitAbility, per_second: float, seconds: float) -> void:
 	_burn_left = maxf(_burn_left, _harmful_seconds(seconds))
 
 
+## Crystalizes the creep's mana regeneration: `per_second` points off its pool
+## for `seconds`, or nothing at all for a creep that has no pool.
+##
+## Ice 2's Ultimate, and the only thing in the game that reaches a creep's mana.
+## Refused for a creep with none rather than sitting on it invisibly, so the
+## debuff row never shows a player an effect that is doing nothing.
+func drain_mana(source: UnitAbility, per_second: float, seconds: float) -> void:
+	if !_may_write() || per_second <= 0.0 || seconds <= 0.0:
+		return
+	if _creep == null || !is_instance_valid(_creep) || _creep.mana() == null:
+		return
+	if per_second >= _mana_drain_per_second || _mana_drain_left <= EPSILON:
+		_mana_drain_per_second = per_second
+		_own(StatusEntry.Kind.MANA_DRAINED, source)
+	_mana_drain_left = maxf(_mana_drain_left, _harmful_seconds(seconds))
+
+
 ## Stores poison on the creep and answers how many stacks it now carries.
 ##
 ## The CEILING is enforced here rather than by the caller, and that is the
@@ -755,14 +798,19 @@ func restore_armor(amount: float) -> bool:
 
 
 ## Adds armour for the rest of the creep's life. The Crypt Fiend's aura, which
-## hands out two points at a time to one creep near it.
+## hands out two points at a time to one creep near it, and the Spirit Walker's
+## Spiritual Aid, which hands out one.
 ##
 ## Kept apart from the erosion rather than added into it, so a tower eroding
-## down to a floor and an aura granting upwards cannot clamp each other.
+## down to a floor and an aura granting upwards cannot clamp each other. Kept
+## per SOURCE for the reason `_armor_granted` records: the two traits that
+## grant it do not share a ceiling.
 func bless_armor(source: UnitAbility, amount: float) -> void:
-	if amount <= 0.0 || !_may_write():
+	if amount <= 0.0 || source == null || !_may_write():
 		return
-	_armor_granted += amount
+	var key: String = source.resource_path
+	_armor_granted[key] = float(_armor_granted.get(key, 0.0)) + amount
+	_armor_granted_total += amount
 	_own(StatusEntry.Kind.ARMOR_GRANTED, source)
 
 
@@ -826,8 +874,8 @@ func _append_armor(list: Array[StatusEntry]) -> void:
 	if _armor_eroded < 0.0:
 		list.append(_record(StatusEntry.Kind.ARMOR_ERODED, _armor_eroded,
 			StatusEntry.PERMANENT))
-	if _armor_granted > 0.0:
-		list.append(_record(StatusEntry.Kind.ARMOR_GRANTED, _armor_granted,
+	if _armor_granted_total > 0.0:
+		list.append(_record(StatusEntry.Kind.ARMOR_GRANTED, _armor_granted_total,
 			StatusEntry.PERMANENT))
 	if _armor_delta_left > EPSILON && !is_zero_approx(_armor_delta):
 		list.append(_record(StatusEntry.Kind.ARMOR_CHANGED, _armor_delta,
@@ -863,6 +911,9 @@ func _append_amplifications(list: Array[StatusEntry]) -> void:
 func _append_over_time(list: Array[StatusEntry]) -> void:
 	if _burn_left > EPSILON:
 		list.append(_record(StatusEntry.Kind.BURNING, _burn_per_second, _burn_left))
+	if _mana_drain_left > EPSILON:
+		list.append(_record(StatusEntry.Kind.MANA_DRAINED,
+			_mana_drain_per_second, _mana_drain_left))
 	if _poison_stacks > 0:
 		list.append(StatusEntry.make(StatusEntry.Kind.POISONED,
 			_owner_of(StatusEntry.Kind.POISONED), _poison_damage,
@@ -940,6 +991,7 @@ func advance(delta: float) -> bool:
 	_advance_immunities(delta)
 	_advance_burn(delta)
 	_advance_mend(delta)
+	_advance_mana_drain(delta)
 	return _is_running()
 
 
@@ -1041,6 +1093,23 @@ func _advance_mend(delta: float) -> void:
 		_mend_per_second = 0.0
 
 
+## Takes the crystalized mana off the pool. The third of the over-time effects
+## and the quietest: the carry lives on CreepMana rather than here, because the
+## pool is what a regeneration is also writing into and the two have to net.
+func _advance_mana_drain(delta: float) -> void:
+	if _mana_drain_left <= 0.0:
+		_mana_drain_per_second = 0.0
+		return
+
+	_mana_drain_left -= delta
+	if _creep != null && is_instance_valid(_creep) && _creep.is_alive():
+		var pool: CreepMana = _creep.mana()
+		if pool != null:
+			pool.siphon(_mana_drain_per_second, delta)
+	if _mana_drain_left <= 0.0:
+		_mana_drain_per_second = 0.0
+
+
 ## A slow's duration with whatever is currently lengthening slows on this creep
 ## folded in. Applied at the moment a slow lands and never afterwards.
 ## How long a harmful timed effect really runs on this creep, once its own
@@ -1083,12 +1152,17 @@ func _is_running() -> bool:
 		return true
 	# A shield and granted armour both count for the same reason erosion does:
 	# dropping the object would quietly hand back what is stored in it.
-	if _armor_granted > 0.0 || _shield > 0.0:
+	if _armor_granted_total > 0.0 || _shield > 0.0:
 		return true
 	var timers: float = maxf(maxf(_stun_left, _paralyze_left), maxf(_burn_left, _armor_delta_left))
 	timers = maxf(timers, maxf(_spell_amp_left, _physical_amp_left))
 	timers = maxf(timers, maxf(_ward_left, maxf(_haste_left, _mend_left)))
-	timers = maxf(timers, _aura_denied_left)
+	timers = maxf(timers, maxf(_aura_denied_left, _mana_drain_left))
+	# The two that weaken the creep's OWN attack. Nothing in the roster leaves
+	# either of them standing alone today - both arrive from an aura, whose
+	# grip is caught above - but a countdown missing from this list is an
+	# effect that vanishes on the tick after it lands, with nothing to see.
+	timers = maxf(timers, maxf(_attack_slow_left, _damage_slow_left))
 	return maxf(timers, _slow_bonus_left) > EPSILON
 
 

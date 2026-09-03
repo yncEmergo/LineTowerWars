@@ -84,8 +84,8 @@ func on_damage_taken(creep: Creep, _lost: float,
 func effect_text() -> String:
 	return ("Harmful effects last %d%% less and never more than %s seconds."
 		+ " Regenerates %s health per second for every percent of health it is"
-		+ " missing, up to %s. The first time it falls below %d%% health, the"
-		+ " slow on it is halved.") % [
+		+ " missing, up to %s per second. The first time it falls below %d%%"
+		+ " health, the slow on it is halved.") % [
 		roundi((1.0 - duration_ratio) * 100.0),
 		StringUtil.trim_number(duration_cap),
 		StringUtil.trim_number(per_missing_percent),

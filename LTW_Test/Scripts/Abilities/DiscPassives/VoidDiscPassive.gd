@@ -50,7 +50,7 @@ func _distinct_types(towers: Array[Building]) -> int:
 
 
 func effect_text() -> String:
-	return ("Friendly towers within %s cells deal %s%% more damage for each"
+	return ("Friendly towers within %s deal %s%% more damage for each"
 		+ " different type of tower standing in that radius, up to %s%%.") % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(damage_per_type * 100.0),

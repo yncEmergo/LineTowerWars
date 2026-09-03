@@ -43,7 +43,7 @@ const AURA_KEY: String = "chilling_death_aura"
 
 @export_group("Aura")
 ## Radius of the attack-speed aura, in player cells.
-@export var aura_cells: float = 5.47
+@export var aura_cells: float = 5.5
 ## Share taken off the attack speed of every creep inside it.
 @export var attack_slow: float = 0.15
 
@@ -87,7 +87,7 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 func effect_text() -> String:
 	return ("Each hit slows by %s%% up to %s%% for %ss. A target at full chill"
 		+ " is Frostbitten for %s%% of its maximum health as Spell Damage,"
-		+ " once every %ss. Creeps within %s cells attack up to %s%% slower,"
+		+ " once every %ss. Creeps within %s attack up to %s%% slower,"
 		+ " building up the longer they stay in range.") % [
 		StringUtil.trim_number(slow_per_hit * 100.0),
 		StringUtil.trim_number(slow_cap * 100.0),

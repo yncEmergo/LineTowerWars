@@ -306,10 +306,15 @@ func effect_text() -> String:
 
 
 ## What gets shown wherever this passive is listed: the generated line if it
-## has one, and the authored description otherwise.
-func passive_text() -> String:
+## has one, and the authored description - placeholders filled - otherwise.
+##
+## Takes the creep's STATS rather than the creep, because everything a trait
+## description quotes is a property of the TYPE, and the two places that ask
+## for this have one of those and not always the other: the send tooltip is
+## describing a creep nobody has spawned yet.
+func passive_text(context: UnitStats = null) -> String:
 	var text: String = effect_text()
-	return text if !text.is_empty() else description
+	return text if !text.is_empty() else description_text(context)
 
 
 ## The generated line replaces the authored description, for the same reason
@@ -317,7 +322,7 @@ func passive_text() -> String:
 func tooltip_data(hotkey_label: String = "",
 		unit: Unit = null) -> AbilityTooltipData:
 	var data: AbilityTooltipData = super(hotkey_label, unit)
-	data.description = passive_text()
+	data.description = passive_text(null if unit == null else unit.stats)
 	return data
 
 

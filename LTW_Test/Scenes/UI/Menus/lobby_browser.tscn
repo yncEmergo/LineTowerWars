@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="5_network_config"]
 [ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_list_entry.tscn" id="5_entry"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/name_prompt.tscn" id="6_name_prompt"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -25,7 +26,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="LobbyBrowser" type="Control" node_paths=PackedStringArray("_lobby_list", "_empty_label", "_status_label", "_join_button", "_create_button", "_refresh_button", "_back_button", "_create_panel", "_lobby_name_input", "_player_count_spin", "_create_confirm_button", "_create_cancel_button")]
+[node name="LobbyBrowser" type="Control" node_paths=PackedStringArray("_lobby_list", "_empty_label", "_status_label", "_join_button", "_create_button", "_refresh_button", "_back_button", "_name_button", "_name_prompt", "_create_panel", "_lobby_name_input", "_player_count_spin", "_create_confirm_button", "_create_cancel_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -41,6 +42,8 @@ _join_button = NodePath("Margin/Column/Footer/JoinButton")
 _create_button = NodePath("Margin/Column/Footer/CreateButton")
 _refresh_button = NodePath("Margin/Column/Footer/RefreshButton")
 _back_button = NodePath("Margin/Column/Header/BackButton")
+_name_button = NodePath("Margin/Column/Header/NameButton")
+_name_prompt = NodePath("NamePrompt")
 _create_panel = NodePath("CreatePanel")
 _lobby_name_input = NodePath("CreatePanel/Center/Dialog/DialogColumn/NameRow/NameInput")
 _player_count_spin = NodePath("CreatePanel/Center/Dialog/DialogColumn/PlayersRow/PlayersSpin")
@@ -91,6 +94,21 @@ theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 30
 text = "CUSTOM GAMES"
 vertical_alignment = 1
+
+[node name="PlayerLabel" type="Label" parent="Margin/Column/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "PLAYING AS"
+
+[node name="NameButton" type="Button" parent="Margin/Column/Header"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 14
+clip_text = true
+text = "Set name"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Header"]
 custom_minimum_size = Vector2(140, 0)
@@ -305,3 +323,7 @@ text = "Cancel"
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 text = "Create"
+
+[node name="NamePrompt" parent="." instance=ExtResource("6_name_prompt")]
+visible = false
+layout_mode = 1

@@ -151,6 +151,24 @@ func _next_living(from: int, excluded: int) -> int:
 	return from
 
 
+## Who currently sends INTO this player: the previous living player round the
+## ring, which is the mirror of sends_into() above.
+##
+## Falls back to `defender_id` when the ring holds nobody else, exactly as
+## _next_living does, so a caller reading their own slot back is being told
+## "there is no other player" rather than being handed a wrong one.
+func attacker_of(defender_id: int) -> int:
+	var count: int = _player_count()
+	for step in range(1, count + 1):
+		var slot: int = ((defender_id - 1 - step + count) % count) + 1
+		if slot == defender_id:
+			continue
+		var state: PlayerState = state_for(slot)
+		if state != null && !state.is_eliminated():
+			return slot
+	return defender_id
+
+
 func _player_count() -> int:
 	return maxi(1, _states.size())
 
@@ -301,6 +319,7 @@ func _settle_standings() -> void:
 		Log.info("Player eliminated", {"slot": slot, "placement": state.placement})
 		erase_player(slot)
 		player_eliminated.emit(slot)
+		_pay_catch_up_gold(slot)
 
 	if _over || !is_match_over():
 		return
@@ -311,6 +330,50 @@ func _settle_standings() -> void:
 			state.set_standing(value_for(slot), 1)
 			Log.info("Match over", {"winner": slot})
 			match_ended.emit(slot)
+
+
+## Hands the player who was being attacked by `dead_slot` a one time lump for
+## the attacker they have just been given instead.
+##
+## CATCH-UP GOLD. Losing an attacker is not a reprieve: the ring closes and the
+## next player round it takes over, and that player has been fighting somebody
+## else all match and may be several tiers of income ahead. The lump is a
+## multiple of what the NEW attacker earns per income tick, so it scales with
+## how big a step up they are, and it is paid once at the hand-over.
+##
+## Called after the elimination has been settled, which is what makes both
+## lookups answer with the ring as it now stands: the dead player is already
+## out of it, so sends_into() names the defender they were attacking and
+## attacker_of() names whoever inherited them.
+##
+## It pays nothing in a 1v1. The ring holds one player, both walks fall back to
+## that same slot, and a player cannot be handed a share of their own income -
+## which is right, because a 1v1 whose second player is gone is over.
+func _pay_catch_up_gold(dead_slot: int) -> void:
+	var config: GameConfig = References.game_config
+	if config == null || config.catch_up_gold_share <= 0.0 || living_count() < 2:
+		return
+
+	var defender_slot: int = sends_into(dead_slot)
+	var attacker_slot: int = attacker_of(defender_slot)
+	if defender_slot == dead_slot || attacker_slot == defender_slot:
+		return
+
+	var defender: PlayerState = state_for(defender_slot)
+	var attacker: PlayerState = state_for(attacker_slot)
+	if defender == null || attacker == null || defender.is_eliminated():
+		return
+
+	var bonus: int = int(round(float(attacker.income) * config.catch_up_gold_share))
+	if bonus <= 0:
+		return
+
+	defender.gain(bonus)
+	Log.info("Catch-up gold paid", {
+		"defender": defender_slot,
+		"new_attacker": attacker_slot,
+		"gold": bonus,
+	})
 
 
 ## Ascending, so two machines settle eliminations in the same order when two

@@ -111,10 +111,17 @@ func tooltip_data(hotkey_label: String = "",
 	# press puts on the field beside when it can first be pressed.
 	data.add_stat("Health", str(info.max_health))
 	data.add_stat("Armor", info.armor_text(info.armor))
-	data.add_stat("Speed", "%.2f" % info.move_speed)
+	data.add_stat("Speed", StringUtil.trim_number(info.move_speed))
 	data.add_stat("Bounty", str(info.bounty))
 	data.add_stat("Sent", _pack_text(info))
-	data.add_stat("Unlocks", info.unlock_text())
+	# Off the BUILDING where there is one, for the reason lockout_seconds() is:
+	# a Sudden Death creep carries no start delay of its own and would read
+	# "0:00" off its own file. Falls back to the creep for a tooltip asked
+	# about an ability that is on nobody's card yet.
+	var unlocks: String = info.unlock_text()
+	if unit != null && unit.has_method("unlock_text"):
+		unlocks = unit.unlock_text(info)
+	data.add_stat("Unlocks", unlocks)
 	_add_passives(data, info)
 	return data
 
@@ -173,7 +180,7 @@ func _add_passives(data: AbilityTooltipData, info: CreepStats) -> void:
 			continue
 
 		var creep_passive: CreepPassive = passive as CreepPassive
-		var text: String = passive.description
+		var text: String = passive.description_text(info)
 		if creep_passive != null:
-			text = creep_passive.passive_text()
+			text = creep_passive.passive_text(info)
 		data.add_special(passive.display_name, text)

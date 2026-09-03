@@ -9,8 +9,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/StrikeAnimation3D.gd" id="7_StrikeAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.61
-outer_radius = 0.665
+inner_radius = 0.6079
+outer_radius = 0.6629
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -19,9 +19,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_phoenix_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.529
-select_radius = 0.61
-select_height = 0.175
+health_bar_height = 0.528
+select_radius = 0.608
+select_height = 0.174
 
 [node name="Visual" parent="." instance=ExtResource("3_phoenix_model")]
 
@@ -42,9 +42,9 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/WingL"), NodePath("../Visual/WingR")]
 _arms = [NodePath("../Visual/Tail")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.5612
+stride_length = 0.564
 hover_cycles_per_second = 1.15
-bob_height = 0.0314
+bob_height = 0.0313
 swing_degrees = 9
 arm_swing_degrees = 5
 lean_degrees = 0

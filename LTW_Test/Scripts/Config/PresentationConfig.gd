@@ -99,11 +99,19 @@ enum OwnerColors {
 ## One colour per slot, in slot order. The Warcraft III player colours, since
 ## that is the game being copied.
 ##
-## A STAND-IN. A colour is meant to be per-match identity chosen in the lobby,
-## travelling on MatchPlayer next to slot and network_id - see multiplayer.md
-## 8.1. Until it does, a slot's colour is simply its place in this list, which
-## is local to each machine and therefore cannot be what a player picked. Read
-## it through player_color() rather than indexing it.
+## PER-MATCH IDENTITY, chosen in the lobby. A player picks one of these and it
+## rides on MatchPlayer.color_index all the way into the match, so every machine
+## draws the same player the same colour - see multiplayer.md 8.1.
+##
+## THE ORDER IS THE DEFAULT DEAL. A lobby hands out the first free entry, so
+## the first player in is red, the second blue, and so on down the list; and
+## the order is the source game's own, which is what makes it read as an RTS
+## palette rather than as twelve arbitrary hues. Reordering it re-colours every
+## default. Read it through player_color() rather than indexing it.
+##
+## The INDEX is not the slot. A player keeps the colour they chose when the
+## lane shuffle moves their slot, and a lobby somebody has left has a gap in
+## its colours and none in its slots.
 @export var player_colors: PackedColorArray = PackedColorArray([
 	Color("ff0303"), Color("0042ff"), Color("1ce6b9"), Color("540081"),
 	Color("fffc01"), Color("feba0e"), Color("20c000"), Color("e55bb0"),
@@ -126,40 +134,51 @@ enum OwnerColors {
 ])
 
 
-## The colour a unit belonging to this slot is drawn in on the minimap.
+## How many colours a lobby has to hand out. The server checks a request
+## against this, so a palette that is edited is the whole of what decides which
+## colours exist.
+func color_count() -> int:
+	return player_colors.size()
+
+
+## The colour a unit whose owner picked `color_index` is drawn in on the
+## minimap.
 ##
-## is_local is passed in rather than worked out here, because who "you" are is
-## the PlayerManager's answer and a config resource has no business asking it.
-func minimap_color_for(slot: int, is_local: bool) -> Color:
+## Both arguments are worked out by the caller rather than here: who "you" are
+## is the PlayerManager's answer and which colour a slot owns is the match's,
+## and a config resource has no business asking either. See
+## MatchSession.color_index_for.
+func minimap_color_for(color_index: int, is_local: bool) -> Color:
 	match minimap_owner_colors:
 		OwnerColors.SELF_WHITE_ENEMIES_RED:
 			return minimap_own_color if is_local else minimap_enemy_color
 		OwnerColors.SELF_WHITE_OTHERS_COLORED:
-			return minimap_own_color if is_local else player_color(slot)
+			return minimap_own_color if is_local else player_color(color_index)
 		OwnerColors.ALL_COLORED:
-			return player_color(slot)
+			return player_color(color_index)
 
 	Log.err("PresentationConfig has an owner colour scheme it does not know",
 		minimap_owner_colors)
 	return minimap_own_color
 
 
-## The colour belonging to a slot. Slots are 1-based.
+## One colour out of the palette, 0-based.
 ##
-## Wraps rather than failing when the palette is shorter than the match, so a
-## trimmed list costs two players the same colour instead of costing one of
-## them any colour at all.
-func player_color(slot: int) -> Color:
+## Wraps rather than failing when the index is off the end, so a palette that
+## has been trimmed since a match was set up costs two players the same colour
+## instead of costing one of them any colour at all.
+func player_color(color_index: int) -> Color:
 	if player_colors.is_empty():
 		Log.err("PresentationConfig has no player colours, nothing could be told apart")
 		return minimap_own_color
-	return player_colors[maxi(0, slot - 1) % player_colors.size()]
+	return player_colors[maxi(0, color_index) % player_colors.size()]
 
 
-## The name of the colour belonging to a slot, for the ANONYMOUS modifier.
-## Slots are 1-based, and it wraps exactly as player_color() does so the name
-## and the colour can never come from different places in the list.
-func player_color_name(slot: int) -> String:
+## What that colour is CALLED, which is how a player is named in an ANONYMOUS
+## match and what the lobby's colour dropdown lists. It wraps exactly as
+## player_color() does, so the name and the colour can never come from
+## different places in the list.
+func player_color_name(color_index: int) -> String:
 	if player_color_names.is_empty():
-		return "Player %d" % slot
-	return player_color_names[maxi(0, slot - 1) % player_color_names.size()]
+		return "Color %d" % (maxi(0, color_index) + 1)
+	return player_color_names[maxi(0, color_index) % player_color_names.size()]

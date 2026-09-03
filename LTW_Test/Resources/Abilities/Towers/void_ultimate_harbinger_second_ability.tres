@@ -11,6 +11,6 @@ targeting = 0
 slot = 5
 icon = ExtResource("2_ultimate_harbinger")
 period_seconds = 60
-reach_cells = 3.91
+reach_cells = 4.0
 becomes_type_id = 101
 converts_type_ids = PackedInt32Array(100)

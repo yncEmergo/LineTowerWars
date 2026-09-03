@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/ground_grass.gdshader" id="1_ground_grass"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_ground_grass")
+shader_parameter/grass_color = Color(0.3, 0.4, 0.29, 1)
+shader_parameter/grass_dark_color = Color(0.19, 0.27, 0.2, 1)
+shader_parameter/grass_dry_color = Color(0.4, 0.42, 0.26, 1)
+shader_parameter/dry_amount = 0.3
+shader_parameter/patch_frequency = 0.3
+shader_parameter/blade_frequency = 9.0
+shader_parameter/blade_stretch = 2.0
+shader_parameter/blade_weight = 0.35
+shader_parameter/grain_contrast = 0.75
+shader_parameter/bump_strength = 0.25
+shader_parameter/roughness_value = 0.94

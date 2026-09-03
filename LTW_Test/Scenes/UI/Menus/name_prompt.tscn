@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/NamePrompt.gd" id="1_prompt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+content_margin_left = 26.0
+content_margin_top = 22.0
+content_margin_right = 26.0
+content_margin_bottom = 22.0
+bg_color = Color(0.1, 0.11, 0.145, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.35, 0.7)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="NamePrompt" type="Control" node_paths=PackedStringArray("_title_label", "_name_input", "_hint_label", "_confirm_button", "_cancel_button")]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_prompt")
+_title_label = NodePath("Center/Dialog/DialogColumn/DialogTitle")
+_name_input = NodePath("Center/Dialog/DialogColumn/NameRow/NameInput")
+_hint_label = NodePath("Center/Dialog/DialogColumn/HintLabel")
+_confirm_button = NodePath("Center/Dialog/DialogColumn/DialogButtons/ConfirmButton")
+_cancel_button = NodePath("Center/Dialog/DialogColumn/DialogButtons/CancelButton")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dialog" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialog")
+
+[node name="DialogColumn" type="VBoxContainer" parent="Center/Dialog"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DialogTitle" type="Label" parent="Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 22
+text = "Choose a Player Name"
+
+[node name="BlurbLabel" type="Label" parent="Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 14
+text = "This is what everybody else sees you as."
+autowrap_mode = 3
+
+[node name="NameRow" type="HBoxContainer" parent="Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="Center/Dialog/DialogColumn/NameRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_vertical = 1
+text = "Name"
+vertical_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="Center/Dialog/DialogColumn/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 32
+
+[node name="HintLabel" type="Label" parent="Center/Dialog/DialogColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "Letters and numbers only, plus spaces, - and _."
+autowrap_mode = 3
+
+[node name="DialogButtons" type="HBoxContainer" parent="Center/Dialog/DialogColumn"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="CancelButton" type="Button" parent="Center/Dialog/DialogColumn/DialogButtons"]
+visible = false
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+text = "Cancel"
+
+[node name="ConfirmButton" type="Button" parent="Center/Dialog/DialogColumn/DialogButtons"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Confirm"

@@ -13,4 +13,4 @@ icon = ExtResource("2_lesser_moonbeam")
 decay_per_second = 0.0083
 max_bonus_share = 3
 explosion_share = 0.66
-explosion_cells = 1.56
+explosion_cells = 1.5

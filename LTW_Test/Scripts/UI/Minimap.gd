@@ -2,11 +2,15 @@ class_name Minimap
 extends Control
 
 ## The whole map in one square: every lane, everything standing in one, and
-## where the camera is looking. Left click jumps the camera there.
+## where the camera is looking. Left click jumps the camera there, right click
+## orders the selection there.
 ##
-## PRESENTATION ONLY. It reads the world and draws it and decides nothing, so
-## it needs no authority check - a dedicated server never loads the HUD and
-## never runs this at all. See multiplayer.md.
+## It DRAWS nothing but what the world already says, and it needs no authority
+## check for any of that - a dedicated server never loads the HUD and never
+## runs this at all. The right click is the one thing here that changes the
+## world, and it changes it the only way anything may: it leaves through
+## CommandController and Commands.submit, so the server decides it exactly as
+## it decides the same click on the ground. See multiplayer.md.
 ##
 ## It frames GameConfig.map_bounds rather than the areas that happen to exist,
 ## which is what keeps the picture identical in a 1v1 and in a full house: the
@@ -158,8 +162,11 @@ func _draw_units() -> void:
 			continue
 
 		var side: float = building_px if unit.is_structure() else unit_px
+		# The COLOUR its owner chose, not its slot: the two are separate and
+		# the lane shuffle moves one of them. See MatchSession.color_index_for.
 		var color: Color = _presentation.minimap_color_for(
-			unit.owner_player_id, unit.is_owned_by_local_player()
+			session.color_index_for(unit.owner_player_id),
+			unit.is_owned_by_local_player()
 		)
 
 		var center: Vector2 = _to_minimap(unit.global_position)
@@ -234,25 +241,52 @@ func _fit_inside(rect: Rect2) -> Rect2:
 	return fitted
 
 
-# --- Click to look ------------------------------------------------------
+# --- Click to look, right click to order ---------------------------------
 
 ## Left click puts the camera where it was clicked, and holding keeps steering
 ## it. Presentation, so it goes straight to the camera rather than through
 ## Commands: where a player is looking is not a rule the server enforces.
+##
+## Right click is the ONE thing on this square that is not presentation. It is
+## the same order the same button gives on the world, aimed at a point the
+## player can see here but may have nowhere near the screen, so it leaves
+## through CommandController exactly as that click does - this file works out
+## WHERE was clicked and decides nothing about what it means.
 func _gui_input(event: InputEvent) -> void:
 	var camera: RTSCamera = References.rts_camera
 	if camera == null || _config == null || !_refresh_projection():
 		return
 
 	if event is InputEventMouseButton:
-		var button: InputEventMouseButton = event as InputEventMouseButton
-		if button.button_index != MOUSE_BUTTON_LEFT:
-			return
-		_dragging = button.pressed
-		if button.pressed:
-			camera.center_on(_to_world(button.position))
-		accept_event()
-
+		_on_button(event as InputEventMouseButton, camera)
 	elif event is InputEventMouseMotion && _dragging:
 		camera.center_on(_to_world((event as InputEventMouseMotion).position))
 		accept_event()
+
+
+func _on_button(button: InputEventMouseButton, camera: RTSCamera) -> void:
+	if button.button_index == MOUSE_BUTTON_RIGHT:
+		if button.pressed:
+			_order_at(button.position)
+		accept_event()
+		return
+
+	if button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	_dragging = button.pressed
+	if button.pressed:
+		camera.center_on(_to_world(button.position))
+	accept_event()
+
+
+## Hands a point on the square to the command controller as a world point.
+##
+## Nothing is checked here - whether anything is selected, whether it can walk,
+## whether the spot is even in that unit's own lane are all questions the order
+## path already answers, and answering them twice is how the two come to
+## disagree.
+func _order_at(point: Vector2) -> void:
+	var controller: CommandController = References.command_controller
+	if controller == null:
+		return
+	controller.issue_ground_command(_to_world(point))

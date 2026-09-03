@@ -16,5 +16,5 @@ slow_seconds = 7
 chill_source = "ultimate_lich"
 frostbite_share = 0.02
 frostbite_cooldown = 15
-aura_cells = 5.47
+aura_cells = 5.5
 attack_slow = 0.15

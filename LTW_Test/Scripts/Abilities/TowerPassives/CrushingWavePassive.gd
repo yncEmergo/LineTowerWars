@@ -17,7 +17,7 @@ const COUNT_KEY: String = "wave_count"
 ## Spell Damage the wave deals.
 @export var damage: int = 12
 ## Radius it covers, in player cells.
-@export var radius_cells: float = 1.17
+@export var radius_cells: float = 1.25
 
 
 func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> void:
@@ -33,7 +33,7 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 
 func effect_text() -> String:
 	return ("Every %d%s attack unleashes a Crushing Wave dealing %s Spell"
-		+ " Damage within %s cells.") % [
+		+ " Damage within %s.") % [
 		every, StringUtil.ordinal_suffix(every),
 		StringUtil.compact_number(damage),
 		StringUtil.trim_number(radius_cells),

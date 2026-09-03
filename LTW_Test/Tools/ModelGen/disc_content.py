@@ -429,7 +429,7 @@ def gen_revert():
              'description = "Take this disc back down to an inactive '
              'Technology Disc and choose another element. Everything spent on '
              'it above the disc itself is refunded at the usual sell share; '
-             "the disc's own gold stays in the cell. It keeps its square for "
+             "the disc's own gold stays in the square. It keeps its square for "
              'the whole countdown, and calling it off costs nothing."',
              # IMMEDIATE: the inactive disc arrives on the cell this one is
              # already standing on, so there is nothing to aim at.

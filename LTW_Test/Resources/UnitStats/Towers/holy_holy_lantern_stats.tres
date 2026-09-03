@@ -29,7 +29,7 @@ damage_min = 35
 damage_max = 36
 damage_type = 3
 attacks_per_second = 0.556
-attack_range = 6.64
+attack_range = 6.75
 target_types = 3
 delivery = SubResource("Delivery")
 

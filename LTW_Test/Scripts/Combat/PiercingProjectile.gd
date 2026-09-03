@@ -52,6 +52,13 @@ var _passed: int = 0
 ## shared resources holding no state, and the tower may be sold mid flight.
 var _limit: int = 0
 var _ramp: float = 0.0
+## The passive whose mana drain this shot carries, and its two numbers. Kept as
+## the ABILITY rather than as a bare rate because a status effect is named on
+## the wire by whatever applied it, and the debuff row draws that ability's
+## icon. Null for every tier that crystalizes nothing, which is all but one.
+var _drain_source: TowerPassive = null
+var _drain_rate: float = 0.0
+var _drain_seconds: float = 0.0
 var _flying: bool = false
 ## Where the shot left, and the height it settles to, for the level out above.
 var _launch_height: float = 0.0
@@ -78,6 +85,11 @@ func launch(delivery: PierceDelivery, hit: AttackHit, from: Vector3,
 	for passive: TowerPassive in hit.passives:
 		_limit = maxi(_limit, passive.pierce_targets())
 		_ramp = maxf(_ramp, passive.pierce_ramp())
+		var rate: float = passive.mana_drain_rate()
+		if rate > _drain_rate:
+			_drain_rate = rate
+			_drain_seconds = passive.mana_drain_window()
+			_drain_source = passive
 
 	_flying = true
 	play()
@@ -141,6 +153,7 @@ func _strike_between(from: Vector3, to: Vector3) -> void:
 ## trailing hit is dealt as.
 func _strike(creep: Creep, at: Vector3) -> void:
 	_struck[creep] = true
+	_crystalize(creep)
 	# Once per creep passed rather than once per shot: a spike going through
 	# five creeps should show five bursts, which is the only way a player can
 	# see how much a piercing shot actually did. Turned to face back along the
@@ -157,6 +170,28 @@ func _strike(creep: Creep, at: Vector3) -> void:
 	creep.take_damage(int(round(scaled)),
 		_delivery.trailing_type(_hit.damage_type), false)
 	_passed += 1
+
+
+## Crystalizes this creep's mana regeneration, if the shot carries a drain and
+## the creep has a pool to lose any from.
+##
+## Applied to EVERY creep the spike passes, the primary included, which is why
+## it is here rather than in the on_hit hook: that hook runs for the creep the
+## tower aimed at and for nothing behind it, and a lance that drained only its
+## first target would be worth almost nothing.
+##
+## Before the damage rather than after, so a creep the shot kills outright is
+## not handed a debuff on its way out. The write itself is refused on a client
+## by StatusEffects, so that is not checked here.
+##
+## The POOL is checked here even though drain_mana refuses one without it,
+## because status() builds a StatusEffects on the spot for whatever asks. Most
+## of the roster has no mana, and a lance goes through twenty creeps a shot, so
+## asking first is what keeps this from allocating one for each of them.
+func _crystalize(creep: Creep) -> void:
+	if _drain_source == null || creep == null || creep.mana() == null:
+		return
+	creep.status().drain_mana(_drain_source, _drain_rate, _drain_seconds)
 
 
 ## Whether the shot has gone through as many creeps as it is allowed to. A

@@ -2,6 +2,22 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/Menus/LobbySlot.gd" id="1_slot"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_swatch"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.05, 0.055, 0.07, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.32, 0.4, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
 content_margin_left = 16.0
 content_margin_top = 10.0
@@ -18,7 +34,7 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[node name="LobbySlot" type="PanelContainer" node_paths=PackedStringArray("_index_label", "_name_label", "_state_label")]
+[node name="LobbySlot" type="PanelContainer" node_paths=PackedStringArray("_index_label", "_name_label", "_state_label", "_color_option", "_color_swatch")]
 offset_right = 560.0
 offset_bottom = 44.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
@@ -26,6 +42,8 @@ script = ExtResource("1_slot")
 _index_label = NodePath("Row/IndexLabel")
 _name_label = NodePath("Row/NameLabel")
 _state_label = NodePath("Row/StateLabel")
+_color_option = NodePath("Row/ColorOption")
+_color_swatch = NodePath("Row/SwatchFrame/ColorSwatch")
 
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -38,6 +56,16 @@ theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 16
 text = "1."
 
+[node name="SwatchFrame" type="PanelContainer" parent="Row"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_swatch")
+
+[node name="ColorSwatch" type="ColorRect" parent="Row/SwatchFrame"]
+layout_mode = 2
+color = Color(0.16, 0.17, 0.22, 1)
+
 [node name="NameLabel" type="Label" parent="Row"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -45,6 +73,14 @@ theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
 theme_override_font_sizes/font_size = 17
 text = "Open slot"
 clip_text = true
+
+[node name="ColorOption" type="OptionButton" parent="Row"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 14
+fit_to_longest_item = false
+visible = false
 
 [node name="StateLabel" type="Label" parent="Row"]
 custom_minimum_size = Vector2(110, 0)

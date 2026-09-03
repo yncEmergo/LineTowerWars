@@ -20,9 +20,9 @@ extends CreepPassive
 ## on the field rather than by a lane.
 
 @export_group("Settings")
-## How far it looks, in player cells. The source states 200, which is 1.56
-## cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 1.563
+## How far it looks, in player cells. The source states 200, which snaps to
+## 1.5 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 1.5
 ## How many of its own kind may stand together before this bites at all.
 @export var free_count: int = 3
 ## Share taken off attack damage per crowding neighbour past that.
@@ -52,8 +52,8 @@ func attack_damage_ratio(creep: Creep) -> float:
 
 
 func effect_text() -> String:
-	return ("Deals %d%% less damage for every one of its own kind past %d"
-		+ " standing within %s cells, up to %d%% less.") % [
+	return ("Deals %d%% less damage for each of its own kind beyond %d"
+		+ " standing within %s, up to %d%% less.") % [
 		roundi(share_each * 100.0), free_count,
 		StringUtil.trim_number(radius_cells), roundi(max_share * 100.0),
 	]

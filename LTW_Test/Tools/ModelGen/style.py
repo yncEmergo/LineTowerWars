@@ -895,14 +895,70 @@ CREEP_MAX_RADIUS = 0.55
 CREEP_SIZE_RUNG_CAP = 5
 
 
+# HOW FAR THE RAMP CLIMBS BEFORE IT STOPS, which is the number that decides
+# whether the band above is a band or a spread. It was authored steep and the
+# roster grew into the answer: at the old 1.10/1.115 a rung 0 creep came out
+# barely half the size of a capped one, and half is not a band - a Skeleton
+# next to a Knight read as a different game's unit rather than a cheaper one.
+#
+# So the ramp was FLATTENED AROUND ITS TOP: the bases below are chosen so that
+# a capped creep lands within a half percent of where it already stood, and
+# everything under the cap rises to meet it. The top of the roster is what the
+# ceiling and every authored shape were tuned against, so it is the end worth
+# holding still; the bottom is the end that was wrong.
+#
+# What the ladder still says is unchanged - a dearer creep is a bigger creep,
+# monotonically, all the way to the cap. It says it across a quarter rather
+# than across a half, and the eyes, carapace, plates, spines and crest carry
+# the rest of it exactly as before.
 def creep_mass(rung):
-    return round(0.66 * pow(1.10, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
+    return round(0.83 * pow(1.05, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
 
 
 # Rule 1b. Multiplies every authored HEIGHT, on the same reasoning as the tower
 # ramp: the camera looks down, so height is the axis worth spending least on.
 def creep_height_scale(rung):
-    return round(0.40 * pow(1.115, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
+    return round(0.53 * pow(1.055, min(rung, CREEP_SIZE_RUNG_CAP)), 4)
+
+
+# Rule 1c. WHAT THE BODY PLAN IS WORTH, on top of the rung.
+#
+# A plan is authored to look like the creature it is, and two of them come out
+# of that reading the wrong size for the field. This is the correction, and it
+# is a rule rather than a per creep nudge because it is true of the PLAN: the
+# whole plan reads that way and every creep built on it wants the same answer.
+#
+#   BIPED     a humanoid is TALL AND NARROW, and narrow is what the camera
+#             reads as small - the widest Basic humanoid was slimmer than a
+#             tier 1 spider. So the correction goes almost entirely into
+#             WIDTH: a humanoid gains bulk rather than height, which is what
+#             puts it in the band with the monsters without making it the
+#             tallest thing on the field. Height was already close
+#   ARACHNID  a spider SPRAWLS, and its legs are counted in its footprint, so
+#             it reaches wider than anything of its price and reads as far
+#             heavier than it is. Pulled in on both axes
+#
+# (mass, height). Every plan is listed, including the ones that want nothing,
+# so that adding a plan without deciding this is a KeyError at generate time
+# rather than a silent 1.0.
+CREEP_PLAN_SIZE = {
+    "quadruped": (1.00, 1.00),
+    "biped": (1.18, 1.06),
+    "arachnid": (0.80, 0.80),
+    "golem": (1.00, 1.00),
+    "wraith": (1.00, 1.00),
+    "treant": (1.00, 1.00),
+    "brute": (1.00, 1.00),
+    "winged": (1.00, 1.00),
+    "shelled": (1.00, 1.00),
+    "machine": (1.00, 1.00),
+    "serpent": (1.00, 1.00),
+}
+
+
+def creep_plan_size(plan):
+    """The plan's (mass, height) multipliers. Raises on an unlisted plan."""
+    return CREEP_PLAN_SIZE[plan]
 
 
 # A BOSS is sent one at a time and steals two lives, so it has to read as the

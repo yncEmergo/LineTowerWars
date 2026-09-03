@@ -27,5 +27,5 @@ func effect_text() -> String:
 	var config: GameConfig = References.game_config
 	if config != null:
 		radius = config.creep_aura_radius_cells
-	return "Grants +%d armor to every creep within %s cells." \
+	return "Grants +%d armor to every creep within %s." \
 		% [armor_bonus, StringUtil.trim_number(radius)]

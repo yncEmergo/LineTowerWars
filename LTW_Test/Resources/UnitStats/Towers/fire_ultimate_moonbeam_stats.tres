@@ -26,11 +26,11 @@ impact_scene_path = "res://Scenes/Effects/flame_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("5_SplashEffect")
-radius = 3.12
+radius = 3.0
 
 [sub_resource type="Resource" id="BurningGround"]
 script = ExtResource("6_BurningGroundEffect")
-radius = 1.56
+radius = 1.5
 duration_seconds = 3
 tick_seconds = 0.4
 damage_share_per_second = 0.12
@@ -44,7 +44,7 @@ damage_type = 4
 is_aoe_damage = true
 attacks_per_second = 0.333
 windup_seconds = 0.5
-attack_range = 9.38
+attack_range = 9.5
 target_types = 1
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("7_AttackEffect")]([SubResource("Splash"), SubResource("BurningGround")])

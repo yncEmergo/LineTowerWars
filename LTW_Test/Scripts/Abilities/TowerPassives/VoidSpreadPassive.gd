@@ -35,7 +35,7 @@ extends TowerPassive
 ## never listed.
 @export var converts_type_ids: PackedInt32Array = PackedInt32Array()
 ## How far it reaches for something to convert, in player cells.
-@export var reach_cells: float = 3.12
+@export var reach_cells: float = 3.0
 
 
 ## Finds a tower worth taking and takes it. Answers whether it converted one,
@@ -113,9 +113,13 @@ func _becomes() -> BuildingStats:
 
 ## What this turns things into, for a tooltip. Falls back to a generic phrase
 ## rather than to an id, which would mean nothing to a player.
+##
+## A bare noun, never one carrying its own article: the sentences this sits in
+## put one in front of it, and a fallback reading "another Void tower" made one
+## of them say "into a another Void tower".
 func _becomes_name() -> String:
 	var stats: BuildingStats = _becomes()
-	return "another Void tower" if stats == null else stats.display_name
+	return "Void tower" if stats == null else stats.display_name
 
 
 ## How far it reaches for something to convert, which is the one number that

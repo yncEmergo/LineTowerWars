@@ -28,5 +28,5 @@ func ignores_auras() -> bool:
 
 
 func effect_text() -> String:
-	return ("Cannot be damaged by anything, and is deaf to every friendly aura"
-		+ " - its own included.")
+	return ("Cannot be damaged by anything, and receives no friendly aura,"
+		+ " its own included.")

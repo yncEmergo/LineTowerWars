@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.3572
-outer_radius = 0.4122
+inner_radius = 0.42
+outer_radius = 0.475
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -17,9 +17,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_dragonspawn_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.94
-select_radius = 0.357
-select_height = 0.38
+health_bar_height = 1.01
+select_radius = 0.42
+select_height = 0.415
 
 [node name="Visual" parent="." instance=ExtResource("3_dragonspawn_model")]
 
@@ -36,5 +36,5 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/LegL"), NodePath("../Visual/LegR")]
 _arms = [NodePath("../Visual/Gait/Torso/ArmL"), NodePath("../Visual/Gait/Torso/ArmR")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.7927
-bob_height = 0.0266
+stride_length = 0.8444
+bob_height = 0.029

@@ -31,11 +31,16 @@ read. The old Warcraft III names are recorded in 2.4 and nowhere else.
 
 ## What this file is for, now and later
 
-**Now:** a hand-maintained reference, written ahead of the content it describes. Almost
-none of it is implemented yet, which is exactly why it can hold numbers - a `.md` is the
-right and only home for a design that has no code behind it (see the "no live values in
-markdown" rule in CLAUDE.md; this file and `game_rules.md` are its two exceptions, because
-these numbers ARE the design rather than a restatement of what some script happens to do).
+**Now:** a hand-maintained MIRROR. This file was written ahead of the content it describes
+and for a long time almost none of it was implemented; that has stopped being true. The
+towers, the creeps and the discs all exist, so for nearly every row here the `.tres` is now
+the authority and the row is the readable copy of it - see 8.1. What is left of the original
+job is the handful of rows still marked NOT BUILT, and the fact that this remains the only
+place the whole balance can be read at once.
+
+It may still hold numbers where nothing else may (see the "no live values in markdown" rule
+in CLAUDE.md; this file and `game_rules.md` are its two exceptions), because these numbers
+ARE the design being copied rather than a restatement of what some script happens to do.
 
 **Once a unit is implemented, its `.tres` becomes the authority** and the row here becomes a
 mirror of it. Where the two disagree the `.tres` wins, and this file is wrong and must be
@@ -46,11 +51,13 @@ row here, in the same commit.
 the single readable overview of the complete balance of the game - so that nobody, human or
 otherwise, has to open thirty resource files to answer one question - but that its tables
 are GENERATED from those resources rather than typed alongside them. Section 8 has the
-proposed shape. This was assessed in an earlier working session and again here, and the
-conclusion both times was that it is straightforward and worth doing: the stats already live
-in typed resources keyed by an authored id, and `ContentConfig` already names the folders to
-scan, which is the whole of what a generator needs. It is not blocked on anything - only on
-there being enough implemented content to make it worth writing.
+proposed shape.
+
+**That is now the largest piece of tooling work outstanding, and the reason it was deferred
+has expired.** It was held back for "not enough implemented content to make it pay"; the
+rosters are complete, every table below now shadows a `.tres`, and each of them can drift
+silently the next time a balance number is touched. Section 8.2 has the shape and nothing
+blocks it.
 
 ## How to read a row
 
@@ -207,7 +214,13 @@ compensate). Regeneration on a creep now comes only from an ability or an aura.
 - Starting lives depend on player count and ruleset; for the 1v1 prototype the relevant
   figure is the 2-player value: **80 lives (Unranked)** / **100 lives (Casual)**.
 - Catch-up gold: when a player gets a new attacker with higher income than the previous one,
-  they receive `(income difference) x 1.5` once.
+  they receive `(income difference) x 1.5` once. **BUILT, to a DIFFERENT RULE.** The
+  prototype pays it when a player is ELIMINATED and the ring hands their victim a new
+  attacker, and it pays `(the new attacker's current income) x 1`, whether or not that is a
+  step up. The user's call, and simpler in two ways: it fires on one event rather than on a
+  comparison nothing was tracking, and it needs no memory of who the previous attacker was.
+  The multiple is `catch_up_gold_share` in `game_config.tres`. See `game_rules.md`, Life
+  steal and recycling.
 
 ## 1.8 Selling and morphing
 
@@ -407,9 +420,18 @@ the readable mirror. Change the `.tres` and the row here in the same commit.
 Three things had to be decided to turn these rows into resources, because the source records
 none of them. They are decisions rather than data, so they are written down here once:
 
-- **Range and splash are divided by 128** to reach player cells, 128 being the Warcraft III
-  build tile. A 150 range Cutter reaches just over one cell, an 800 range Sentry reaches most
-  of the width of a lane, and a 1,000 range Turret very nearly all of it.
+- **Range and splash are divided by 128 and then SNAPPED TO THE NEAREST QUARTER CELL**,
+  128 being the Warcraft III build tile. A 150 range Cutter reaches just over one cell, an
+  800 range Sentry reaches most of the width of a lane, and a 1,000 range Turret very nearly
+  all of it.
+  - The quarter is the grain EVERY reach in the game is stated in, and it is what the tables
+    below convert to rather than the raw division: 400 is 3, 700 is 5.5, 1,250 is 9.75. The
+    raw figures were 3.125, 5.47 and 9.77, and a roster written that way is a wall of numbers
+    nobody can hold or compare. It costs up to an eighth of a cell, which is less than the
+    width of a creep.
+  - The conversion is `cells()` in `Tools/ModelGen/roster.py` and it is the ONLY place it
+    happens. The tables here keep the source figure, so a patch note can still be replayed
+    onto them.
 - **Attack speed is INVERTED.** This document states the cooldown in seconds, the way the
   source game does; `AttackStats.attacks_per_second` is its reciprocal, because the UI shows
   APS and a bigger number reading as faster is the less confusing of the two. Never copy one
@@ -551,9 +573,9 @@ come from the price tier alone (1.4). Two more are made only here:
   ability DESCRIBES is what leaves the tower: the Moonbeam calls a meteor down, the
   Crystal fires a needle, the Beastmaster's attack is instant.
 - **Every ability's numbers are authored in the game's own units**, not the
-  source's: a 400 AoE is written as 3.12 cells and "-3.75% per hit" as 0.0375.
-  The conversion happens once, in the generator's table, so a `.tres` can be
-  read against its script without a divisor in the way.
+  source's: a 400 AoE is written as the 3 cells it snaps to and "-3.75% per
+  hit" as 0.0375. The conversion happens once, in the generator's table, so a
+  `.tres` can be read against its script without a divisor in the way.
 
 Six pieces of these abilities are approximated or left out, and `game_rules.md`
 lists all six under "What of the elemental abilities is NOT built" rather than
@@ -1305,28 +1327,28 @@ been removed, so do not implement it.
 
 # 6. Creeps
 
-**TIERS 1 AND 2 ARE IMPLEMENTED, AND SO IS THE ANCIENT WENDIGO OUT OF TIER 3.** Every
-creep in 6.2 and 6.3 exists as a `CreepStats` resource under
-`Resources/UnitStats/Creeps/`, and per 8.1 those files are now the authority - the tables
-here are the readable mirror. Change the `.tres` and the row in the same commit. Tiers 3
-and 4 are still only written down here.
+**THE WHOLE ROSTER IS IMPLEMENTED.** Every creep in 6.2 to 6.5 exists as a `CreepStats`
+resource under `Resources/UnitStats/Creeps/`, and per 8.1 those files are now the
+authority - the tables here are the readable mirror. Change the `.tres` and the row in the
+same commit.
 
-The Wendigo was built out of order on purpose: every tier 1 creep is one-shot by a tower
-above the cheapest tiers, so there was nothing on the field a real tower could be measured
-against. See the note under 6.4.
-
-Three decisions had to be made to turn those rows into resources, the same way section 3
+Four decisions had to be made to turn those rows into resources, the same way section 3
 records the ones the towers needed:
 
-- **Movement speed is divided by 128**, the same divisor section 3 already uses for range
-  and splash. A 210 speed Sheep walks 1.64 cells a second and crosses a 34 cell lane in
-  about twenty seconds.
-- **Every creep aura radius is 700**, which is 5.47 cells at that divisor. It is stored once
-  on `GameConfig` rather than per creep, because the rules give every creep aura in the game
-  one radius - see `game_rules.md`.
+- **Movement speed is divided by 128 and snapped to the nearest quarter cell**, the same
+  conversion section 3 uses for range and splash. A 210 speed Sheep walks 1.75 cells a second
+  and crosses a 34 cell lane in about twenty seconds. So the whole roster moves at a speed a
+  player can hold: 1.25 up to 4, in quarters.
+- **Every creep aura radius is 700**, which snaps to 5.5 cells. It is stored once on
+  `GameConfig` rather than per creep, because the rules give every creep aura in the game one
+  radius - see `game_rules.md`.
 - **Spell damage is a damage TYPE** in `Config/DamageTable.gd`, sitting outside the armour
-  matrix rather than being a second pipeline. Nothing deals it yet, since no tower ability
-  exists; the Mud Golem's resistance to it is real and testable.
+  matrix rather than being a second pipeline.
+- **A creep trait's card text is GENERATED from the trait's own numbers**, never authored
+  beside them - see `CreepPassive.effect_text`. So a balance change to a `.tres` moves the
+  tooltip with it, and a card can never quote a figure its passive does not use. The only
+  authored descriptions left are the three `TraitPassive` entries below, which have no
+  numbers to generate from.
 
 Three traits are answered by the creep's stats file rather than by a passive on its card -
 flying, attacking and being a Boss - because each decides something structural before any
@@ -1379,12 +1401,27 @@ stock on unlock is half of maximum.
 | flying | ~16 | ~8 sec |
 | boss | ~8 | ~16 sec |
 | attacker (Corrupted Treant, Siege Engine) | 8 | 16 sec |
-| Tier 4 normal | ~64 | ~4 sec |
+| Tier 4 normal | 32 | ~4 sec |
+| Tier 4 flyer | 16 | ~4 sec |
+| Tier 4 boss | 8 | ~8 sec |
 | Mountain Giant | 16 | ~4 sec |
-| Frost Wyrm | ~32 | ~4 sec |
-| Phoenix | ~16 | ~8 sec |
+| Obsidian Statue | 32 | 16 sec |
 | Demon | 4 (initial 2) | 32 sec |
 | Treasure Goblin | 16 (initial 8) | 2 sec |
+
+**Tier 4's reserves are a CEILING rather than a figure per creep**, and it is the project
+owner's rather than the source's: 32 for an ordinary tier 4 creep, 16 for a flyer and for
+the Treasure Goblin, 8 for a Boss. A creep the source states lower keeps its own number -
+the Demon's 4 and the Mountain Giant's 16 - so the ceiling only ever takes a reserve down.
+The 9.4 sheet's tier 4 figures ran up to 64, which made the tier's reserves the one place a
+player never had to think about a limit.
+
+**Which creeps count as a Boss for that is a MECHANICAL question, not a shape one.** Only
+the two that carry the Boss trait do - the Phoenix and the Demon. The Obsidian Statue is
+sent one at a time and costs three population, so it looks like one, but it steals a single
+life and is a Boss in neither the roster nor any rule: it takes the ordinary 32. Its
+replenish stays at the slower 16 sec it was given, which is the one figure it keeps from
+having been read as a Boss.
 
 **Food.** Population is charged **per creep, not per send**, so one normal send of 3 costs 3
 food. Every creep in the 9.4 sheet costs **1 food**, bosses included - the Phoenix tooltip
@@ -1417,7 +1454,7 @@ There are no other exceptions. The default food cap is 100 and is a game-mode se
 **Corrupted Treant attack: 4-5 damage, 0.5 sec speed.** `?` The speed is an ESTIMATE from
 play and is **unverified** - the game does not state it and the developer has not been asked
 yet. Two more figures the source records nowhere and this project therefore chose: its
-**range is 150** (1.17 cells, enough to reach a tower's corner without walking into it) and
+**range is 150** (1.25 cells, enough to reach a tower's corner without walking into it) and
 its damage type is **Normal**. All three are in
 `Resources/UnitStats/Creeps/corrupted_treant_stats.tres`.
 
@@ -1448,7 +1485,7 @@ Siege Engine attack damage: **44-52**. Bombardment fires a rocket at a random to
 400 radius every 4 sec.
 
 The Siege Engine needed the same three decisions the Corrupted Treant did, and for the
-same reason - the source states none of them. Its attack **range is 400** (3.125 cells at
+same reason - the source states none of them. Its attack **range is 400** (3 cells at
 the divisor every other reach uses), its **speed is 0.5 attacks a second**, and its damage
 type is **Siege**, which is what its 150% against a Fortified tower is for. `?` All three
 are choices, not readings, and they are in
@@ -1485,8 +1522,8 @@ Notes:
 - **Necromancer** converts its base armour into maximum health: 4% of max health per armour
   point. It ends up with 0 effective armour and +20% health, so 121,800 base becomes 146,160.
 - **Ancient Wendigo**'s armour is not a typo. Hardened Skin starts it at 80 armour, and a
-  **single hit** that lands for 50 or more strips 1 point, down to a floor of 6. **BUILT**, and
-  it needed two decisions the source does not state.
+  **single hit** that lands for 50 or more strips 1 point, down to a floor of 6. It needed
+  two decisions the source does not state.
   - **PER HIT, never cumulative.** Small hits do not add up: a thousand of them leave the
     armour exactly as thick as they found it, and only blows over the line count. That is what
     makes a fresh Wendigo a wall - at 80 armour almost nothing lands hard enough - and what
@@ -1505,11 +1542,6 @@ Notes:
   recorded the post-carapace figure (54,736), which is why the two look so different.
 
 **BUILT.** Every row above exists as a `.tres`, and those files are the authority.
-
-The Ancient Wendigo was built well before the rest of the tier, because the prototype had
-nothing a mid tier tower could be tested against - every tier 1 creep dies to one shot from
-anything above the cheapest towers, so a tower's damage, its attack rate and its on-hit
-effects were all being read off a creep that was already dead.
 
 Two figures in this tier are `?` CHOICES rather than readings, and both are the same gap:
 the source states the mana CEILING three of these traits fire at and never states how the
@@ -1624,7 +1656,7 @@ Numbered traits are the same effect at increasing strength.
 | Devotion Aura (1/2/3/4) | +1 / +3 / +4 / +5 armour to allied creeps within 700 AoE. |
 | Endurance Aura (1/2/3/4) | +10% / +15% / +20% to BOTH attack speed and movement speed within 700 AoE; the Tier 4 one splits into +30% attack speed and +25% move speed. Only an attacking creep has an attack for the first half to act on. |
 | Regen Aura (1/2/3/4) | +2 / +10 / +30 / +120 health regeneration per sec within 700 AoE. Replaced the old Ancient Aura in 10.0a. The Tier 1 figure is the Priest's, confirmed in game. |
-| Unholy Sacrifice (1/2/3/4) | On death, heals nearby allied creeps for 3 / 310 / 4,875 / 12,750. |
+| Unholy Sacrifice (1/2/3/4) | On death, heals allied creeps within 1 cell for 3 / 310 / 4,875 / 12,750. The RADIUS is this project's: the source states none, and one cell is deliberately tighter than any other burst in the roster, so the heal is worth something only to creeps that really were walking together. |
 | Armored (1/2) | Physical **splash** damage taken reduced by 10% / 20%. |
 | Lesser Spell Resistance | Spell Damage -33%, harmful spell durations -75%, 50% immune to movement chill. **All three halves are built** - the duration and chill ones arrived with tier 2, see 6.3. |
 | Spell Resistance | Spell Damage -50%, harmful spell durations -90%, 50% immune to movement chill. |
@@ -1751,13 +1783,19 @@ Stated in full at the top of this file. In short: the `.tres` is the authority o
 exists, this file is the readable mirror, and a number written in two places diverges the
 first time one of them is edited - which is why the mirror should stop being written by hand.
 
-## 8.2 Making it generated rather than hand-maintained - yes, this is worth doing
+## 8.2 Making it generated rather than hand-maintained - do this next
 
-**Assessed twice, both times the same answer: it is straightforward and worth doing.** It
-fits how this project is already built. The stats live in typed resources (`UnitStats`,
+**Assessed three times, every time the same answer, and the last reason to wait has gone.**
+It fits how this project is already built. The stats live in typed resources (`UnitStats`,
 `BuildingStats`, `CreepStats`, `AttackStats`, `UnitAbility`), each keyed by an authored id,
 and `ContentConfig` already names the folders to scan - which is exactly what a generator
-needs. Nothing blocks it except there not yet being enough content to make it pay.
+needs.
+
+It was deferred for "not enough content to make it pay". The Basic towers, the elemental
+towers, the discs and all four creep tiers are now implemented, so every stat table in this
+file shadows a resource, every one of them can go quietly wrong the next time a number is
+tuned, and keeping the whole lot honest by hand is the tedious work the no-live-values rule
+exists to avoid everywhere else. Nothing blocks it.
 
 Proposed shape:
 

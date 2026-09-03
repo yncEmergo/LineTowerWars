@@ -61,9 +61,9 @@ func max_health_ratio(creep: Creep) -> float:
 
 
 func effect_text() -> String:
-	return ("Takes %d%% less spell damage, cannot be slowed, and harmful effects"
-		+ " last %d%% less. Converts all of its armor into health, %s%% of its"
-		+ " maximum per point.") % [
+	return ("Takes %d%% less spell damage, cannot be slowed, and harmful"
+		+ " effects last %d%% less. Converts all of its own armor into health,"
+		+ " %s%% of its maximum per point.") % [
 		roundi((1.0 - spell_damage_ratio) * 100.0),
 		roundi((1.0 - duration_ratio) * 100.0),
 		StringUtil.trim_number(health_per_armor_point * 100.0),

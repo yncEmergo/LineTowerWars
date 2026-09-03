@@ -24,9 +24,9 @@ extends CreepPassive
 @export_group("Settings")
 ## Seconds between shields.
 @export var interval_seconds: float = 14.0
-## How far it reaches, in player cells. The source states 400, which is 3.125
-## cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 3.125
+## How far it reaches, in player cells. The source states 400, which snaps
+## to 3 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 3.0
 ## Share of the target MAXIMUM health restored over the whole window.
 @export_range(0.0, 1.0, 0.01) var heal_share: float = 0.10
 ## Seconds that healing is spread over.
@@ -50,11 +50,16 @@ func on_tick(creep: Creep, delta: float) -> void:
 
 
 ## The most slowed creep in range, itself included, and null when nothing near
-## it is slowed at all - in which case the shield is held rather than wasted.
+## it is slowed at all.
 ##
 ## Deliberately NOT "anything in range". The whole worth of this is taking a
 ## creep out of a chill, and spending it on an unslowed packmate for the heal
-## alone would throw away the fourteen second wait for a top-up.
+## alone would be a top-up on something no maze is holding.
+##
+## A turn that finds nothing is SPENT rather than held: the clock has already
+## come round by the time this is asked, so the next attempt is a whole
+## interval away. That is deliberate and is what keeps the trait from firing
+## on the very tick a maze first chills the pack.
 func _pick_target(creep: Creep) -> Creep:
 	var best: Creep = null
 	var best_slow: float = 0.0
@@ -72,7 +77,7 @@ func _pick_target(creep: Creep) -> Creep:
 
 func effect_text() -> String:
 	return ("Every %s seconds, strips every slow off the most slowed creep"
-		+ " within %s cells and heals it for %d%% of its maximum health over %s"
+		+ " within %s and heals it for %d%% of its maximum health over %s"
 		+ " seconds.") % [
 		StringUtil.trim_number(interval_seconds),
 		StringUtil.trim_number(radius_cells),

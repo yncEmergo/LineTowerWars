@@ -9,6 +9,6 @@ ability_id = 372
 display_name = "Treasure Goblin"
 description = "Sends a pack into the enemy maze and raises your income permanently."
 targeting = 1
-slot = 0
+slot = 11
 repeat_on_hold = true
 creep_stats = ExtResource("2_stats")

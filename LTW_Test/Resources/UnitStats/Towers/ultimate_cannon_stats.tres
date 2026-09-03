@@ -23,7 +23,7 @@ impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SplashEffect")
-radius = 2.34
+radius = 2.25
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -32,7 +32,7 @@ damage_max = 1153
 damage_type = 4
 is_aoe_damage = true
 attacks_per_second = 0.5
-attack_range = 4.69
+attack_range = 4.75
 target_types = 1
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])

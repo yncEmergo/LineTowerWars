@@ -47,5 +47,7 @@ func on_damage_taken(creep: Creep, _lost: float,
 
 
 func effect_text() -> String:
-	return "Any damage taken gives %d mana. At full mana, heals %d%% of maximum health and resets." \
-		% [mana_per_hit, roundi(heal_share * 100.0)]
+	return ("Any damage taken gives %d mana. At full mana it heals %d%% of"
+		+ " its maximum health and empties the pool.") % [
+		mana_per_hit, roundi(heal_share * 100.0),
+	]

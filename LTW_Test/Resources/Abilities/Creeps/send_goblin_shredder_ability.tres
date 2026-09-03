@@ -9,6 +9,6 @@ ability_id = 379
 display_name = "Goblin Shredder"
 description = "Sends a pack into the enemy maze and raises your income permanently."
 targeting = 1
-slot = 7
+slot = 6
 repeat_on_hold = true
 creep_stats = ExtResource("2_stats")

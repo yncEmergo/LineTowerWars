@@ -457,7 +457,7 @@ func _set_splash_text(attack: AttackStats) -> void:
 	var radius: float = attack.splash_radius()
 	var splash: String = "None"
 	if radius > 0.0:
-		splash = "%s cells" % StringUtil.trim_number(radius)
+		splash = "%s" % StringUtil.trim_number(radius)
 
 	var extra: int = attack.multishot_targets + _passive_extra_targets()
 	var multishot: String = "None" if extra <= 0 else "+%d targets" % extra

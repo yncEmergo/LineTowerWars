@@ -10,5 +10,5 @@ display_name = "Far Sight"
 targeting = 0
 slot = 6
 icon = ExtResource("2_ultimate_primal_disc")
-radius_cells = 2.34
-range_bonus_cells = 1.95
+radius_cells = 2.25
+range_bonus_cells = 2.0

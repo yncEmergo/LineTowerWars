@@ -22,7 +22,7 @@ extends TowerPassive
 ## How long the flames last.
 @export var duration_seconds: float = 3.0
 ## Radius they cover, in player cells.
-@export var radius_cells: float = 2.34
+@export var radius_cells: float = 2.25
 
 
 func mana_per_second(_tower: Building) -> float:
@@ -45,7 +45,7 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 
 func effect_text() -> String:
 	return ("Regenerates %s mana per second. Every attack spends all of it to"
-		+ " spew flames over %s cells for %ss, dealing up to %s Spell Damage"
+		+ " spew flames over %s for %ss, dealing up to %s Spell Damage"
 		+ " per second scaled by the mana spent.") % [
 		StringUtil.trim_number(regen_per_second),
 		StringUtil.trim_number(radius_cells),

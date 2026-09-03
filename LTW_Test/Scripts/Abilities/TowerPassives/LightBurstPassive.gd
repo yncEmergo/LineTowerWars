@@ -33,7 +33,7 @@ extends TowerPassive
 ## the tiers that heal nothing.
 @export var tower_heal_share: float = 0.0
 ## How far that healing reaches, in player cells.
-@export var heal_cells: float = 2.34
+@export var heal_cells: float = 2.25
 
 
 func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
@@ -68,15 +68,14 @@ func _heal_towers(tower: Building, dealt: int) -> void:
 
 func effect_text() -> String:
 	var text: String = ("Each hit slows by %s%% up to %s%% and permanently"
-		+ " takes %s armor, down to %s. Armor can be pushed below zero, which"
-		+ " makes every later hit on that creep land harder.") % [
+		+ " takes %s armor, down to %s. Armor can be pushed below zero.") % [
 		StringUtil.trim_number(slow_per_hit * 100.0),
 		StringUtil.trim_number(slow_cap * 100.0),
 		StringUtil.trim_number(armor_per_hit),
 		StringUtil.trim_number(armor_floor),
 	]
 	if tower_heal_share > 0.0:
-		text += " Heals towers within %s cells for %s%% of the damage dealt." % [
+		text += " Heals towers within %s for %s%% of the damage dealt." % [
 			StringUtil.trim_number(heal_cells),
 			StringUtil.trim_number(tower_heal_share * 100.0)]
 	return text

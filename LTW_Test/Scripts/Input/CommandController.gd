@@ -57,6 +57,14 @@ var _armed_blocks: bool = true
 ## Cursor position taken from the input stream rather than polled from the
 ## viewport, so the preview follows the events the game actually received.
 var _last_mouse_position: Vector2 = Vector2.ZERO
+## Whether what is armed is armed only because SHIFT IS STILL DOWN, having
+## already been fired once. Letting go of shift ends it - see _process.
+##
+## Without that the ability would outlive the gesture that meant it: the player
+## places the last tower of a row, lets go, clicks somewhere to pick something
+## up, and places a tower there instead. Holding the key is the whole of the
+## intent, so it is also the whole of the lifetime.
+var _held_by_chain: bool = false
 
 # Everything shared comes through References rather than a second @export
 # pointing at the same node.
@@ -79,6 +87,28 @@ func _ready() -> void:
 		Log.err("CommandController found no camera on References, commands are disabled")
 	if _effects_root == null:
 		Log.err("CommandController found no effects root on References, markers are disabled")
+
+	# Everything this node puts on screen belongs to the SELECTION it was aimed
+	# from, so a selection that changes underneath it takes the lot away.
+	var selection: SelectionController = _selection_controller
+	if selection != null:
+		selection.selection_changed.connect(_on_selection_changed)
+
+
+## A different selection ends whatever was being aimed at the old one.
+##
+## Two things go with it and both were bugs without this. The card is left on
+## its lone CANCEL for a unit that armed nothing - ordering the builder and
+## then switching to a send building showed one dead square instead of its
+## creeps - and the range circles are left on the ground around units nobody is
+## looking at any more.
+##
+## Guarded rather than called blind, so an ordinary click that only changes
+## what is selected does not push a redraw through the panel for nothing.
+func _on_selection_changed(_units: Array) -> void:
+	if !is_armed() && !is_instance_valid(_range_overlay):
+		return
+	cancel()
 
 
 func is_armed() -> bool:
@@ -133,6 +163,7 @@ func activate_ability(ability: UnitAbility) -> void:
 func cancel() -> void:
 	var was_armed: bool = _armed != null
 	_armed = null
+	_held_by_chain = false
 	_end_placement()
 	_set_range_circles(false)
 	if was_armed:
@@ -142,6 +173,9 @@ func cancel() -> void:
 
 func _arm(ability: UnitAbility) -> void:
 	_armed = ability
+	# Chosen from the card, so it lives until it is fired or called off rather
+	# than until a key comes up.
+	_held_by_chain = false
 	if ability.targeting == UnitAbility.Targeting.PLACEMENT:
 		_begin_placement(ability)
 	if ability.shows_attack_range():
@@ -274,8 +308,16 @@ func _end_placement() -> void:
 
 
 func _process(delta: float) -> void:
+	# Before everything below, because it may take the preview away.
+	if _held_by_chain && !_is_chaining():
+		cancel()
+
 	if _preview != null:
 		_update_preview()
+	if is_instance_valid(_range_overlay):
+		# Costs nothing unless the selection holds something that walks; the
+		# overlay answers that question itself.
+		_range_overlay.follow_units()
 	_tick_range_reveal(delta)
 
 
@@ -291,9 +333,39 @@ func _update_preview() -> void:
 	var cell: Vector2i = area.snap_footprint(point, _armed_footprint)
 	var center: Vector3 = area.footprint_world_center(cell, _armed_footprint)
 	var legal: bool = area.can_place(cell, _armed_footprint, _armed_blocks) \
-		&& !_ghost_in_the_way(area, cell)
+		&& !_ghost_in_the_way(area, cell) \
+		&& _can_pay_for_armed(area)
 	_preview.show_at(center,
 		UnitModel.Tint.VALID if legal else UnitModel.Tint.INVALID)
+
+
+## Whether there is still gold for the tower being aimed, once everything
+## already ordered and not yet started has been counted as spent.
+##
+## The ghost under the CURSOR answers the same question the ghosts already on
+## the ground do, and goes red on the same terms. A single order says it too:
+## the moment the gold for one drops away - a queued tower ahead of it starting
+## and paying, a send going out - the thing you are aiming turns red before it
+## is placed rather than after.
+##
+## Deliberately does NOT refuse the click. Betting on income arriving during the
+## walk is a legitimate thing to ask for and is exactly what shift is already
+## allowed to do (see BuildTowerAbility.can_queue), so this is a warning rather
+## than a gate. A plain order is still refused by the card, which greys the
+## button on the gold in hand.
+func _can_pay_for_armed(area: PlayerArea) -> bool:
+	var build: BuildTowerAbility = _armed as BuildTowerAbility
+	var manager: PlayerManager = References.player_manager
+	if build == null || area == null || manager == null:
+		return true
+
+	var state: PlayerState = manager.state_for(area.player_id)
+	if state == null:
+		return true
+
+	var overlay: OrderOverlay = References.order_overlay
+	var reserved: int = 0 if overlay == null else overlay.reserved_gold(area.player_id)
+	return state.gold - reserved >= build.gold_cost()
 
 
 ## Whether a tower this player has already QUEUED is standing where the next
@@ -361,11 +433,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Left click while an ability is armed.
 ##
-## Holding shift does two things at once, and both are what an RTS player
-## expects of it: the order is CHAINED behind whatever the selection is already
-## doing, and the ability STAYS ARMED so the next click gives another one. That
-## second half is what makes a row of towers one press of the button and five
-## clicks, rather than five trips back to the card.
+## Holding shift CHAINS the order and LEAVES THE ABILITY ARMED, exactly as it
+## was: the card keeps showing it, the ghost keeps following the cursor and the
+## reach stays drawn, so a row of towers is one press of the button and one
+## click per tower rather than a trip back to the card between each.
+##
+## **The arm lasts exactly as long as SHIFT IS HELD**, which is the whole of the
+## rule and is what WC3 does. Letting go releases it - the chain carries on, it
+## was given to the unit and has nothing to do with the card any more, and the
+## player is free to start something else on the same unit. Without that the
+## ability outlives the gesture that meant it: place the last tower of a row,
+## let go, click to pick something up, and place a tower there instead. See
+## _process, which is where the key coming up is noticed.
 func _confirm_armed(screen_pos: Vector2) -> void:
 	var ability: UnitAbility = _armed
 	var queued: bool = _is_chaining()
@@ -376,10 +455,11 @@ func _confirm_armed(screen_pos: Vector2) -> void:
 		_execute_on_selection(ability, target, queued)
 		_show_order_feedback(ability, target, was_placement)
 
-	# Stays armed only for an order that could actually be chained, and only
-	# when one was really given: a click that landed on nothing must still put
-	# the card back rather than leaving the player aiming at nothing.
-	if queued && target != null && ability.is_queueable():
+	# Stays armed only for an order that could really be chained, and only when
+	# one was really given: a click that landed on nothing must put the card
+	# back rather than leaving the player aiming at nothing.
+	_held_by_chain = queued && target != null && ability.is_queueable()
+	if _held_by_chain:
 		return
 
 	_armed = null
@@ -430,6 +510,98 @@ func try_attack_click(screen_pos: Vector2) -> bool:
 
 	return _order_attack_on(_selected_units(), target, _is_chaining())
 
+
+## A right click on the MINIMAP, which hands over a WORLD point rather than a
+## screen one: the square is a picture of ground the camera may be nowhere
+## near, so there is no cursor to project and nothing under it to pick.
+##
+## Same meaning as a right click on the world otherwise - it cancels whatever
+## is armed, it chains behind the current orders while shift is held, and each
+## unit resolves its own default ability. What it does NOT do is attack: a dot
+## on the minimap is a few pixels wide and every unit in a lane sits inside the
+## same handful of them, so a click there cannot honestly claim to have picked
+## one.
+func issue_ground_command(world_pos: Vector3) -> void:
+	if is_armed():
+		cancel()
+		return
+
+	var units: Array = _selected_units()
+	if units.is_empty():
+		return
+
+	var queued: bool = _is_chaining()
+	var marker_at: Variant = null
+
+	# One order per AREA, because the point is resolved inside each unit's own
+	# one - see _reachable_point_in. A selection standing in two lanes at once
+	# is rare but real: your creeps walk in somebody else's maze while your
+	# builder is at home in yours.
+	var by_area: Dictionary = _group_by_area(units)
+	for area in by_area:
+		var destination: Vector3 = _reachable_point_in(area as PlayerArea, world_pos)
+		var target: AbilityTarget = AbilityTarget.at_position(destination)
+		var by_ability: Dictionary = _group_by_default_ability(by_area[area], queued)
+		for ability in by_ability:
+			Commands.submit(ability as UnitAbility, by_ability[ability], target, queued)
+		if marker_at == null && !by_ability.is_empty():
+			marker_at = destination
+
+	# One marker for the whole click even when two lanes were ordered, because
+	# only one ever exists at a time. The first is the one nearest to hand:
+	# groups keep selection order, so it belongs to whatever was picked first.
+	if marker_at != null:
+		_show_move_marker(marker_at as Vector3)
+
+
+## Where a unit standing in `area` really ends up when it is sent to a point
+## that may be anywhere on the map, including in another player's lane, in the
+## black beside it, or on top of a wall.
+##
+## The area answers both halves. A unit may never leave its own, so the point
+## is clamped into it first - which is the same rule MobileUnit.move_to applies
+## on arrival, asked here as well so the marker is dropped where the walk will
+## really end rather than where the mouse was. Then, only if that spot is
+## inside a wall, the nearest cell that is not.
+func _reachable_point_in(area: PlayerArea, world_pos: Vector3) -> Vector3:
+	if area == null:
+		return world_pos
+
+	var inside: Vector3 = area.clamp_point(world_pos)
+	if area.is_point_free(inside):
+		return inside
+	return area.nearest_free_point(inside)
+
+
+## The selection split by the area each unit is standing in. A unit that stands
+## in none is left out: it has nowhere a ground point could mean anything.
+func _group_by_area(units: Array) -> Dictionary:
+	var by_area: Dictionary = {}
+	for unit in units:
+		if !is_instance_valid(unit) || unit.area == null:
+			continue
+		if !by_area.has(unit.area):
+			by_area[unit.area] = []
+		by_area[unit.area].append(unit)
+	return by_area
+
+
+## The units of a selection grouped by the default ability each one resolves
+## to, dropping any that could not be given it. One entry is one command.
+func _group_by_default_ability(units: Array, queued: bool) -> Dictionary:
+	var by_ability: Dictionary = {}
+	for unit in units:
+		if !is_instance_valid(unit):
+			continue
+		var ability: UnitAbility = _default_ability_for(unit)
+		if ability == null || !_can_order(ability, unit, queued):
+			continue
+		if !by_ability.has(ability):
+			by_ability[ability] = []
+		by_ability[ability].append(unit)
+	return by_ability
+
+
 ## Right click with nothing armed. Each unit resolves its own default, so a
 ## mixed selection does the right thing per unit rather than one blanket order.
 ##
@@ -456,17 +628,7 @@ func _issue_default_command(screen_pos: Vector2) -> void:
 	# Each unit resolves its OWN default, so a mixed selection is several
 	# orders. Grouped by ability so it is still one message per ability rather
 	# than one per unit.
-	var by_ability: Dictionary = {}
-	for unit in units:
-		if !is_instance_valid(unit):
-			continue
-		var ability: UnitAbility = _default_ability_for(unit)
-		if ability == null || !_can_order(ability, unit, queued):
-			continue
-		if !by_ability.has(ability):
-			by_ability[ability] = []
-		by_ability[ability].append(unit)
-
+	var by_ability: Dictionary = _group_by_default_ability(units, queued)
 	for ability in by_ability:
 		Commands.submit(ability as UnitAbility, by_ability[ability], target, queued)
 

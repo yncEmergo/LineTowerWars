@@ -10,6 +10,6 @@ targeting = 0
 mana_per_hit = 1
 heal_share = 0.15
 ceiling_gain = 50
-radius_cells = 2.344
+radius_cells = 2.25
 armor_restored = 1.6
 creep_gate_seconds = 5.0

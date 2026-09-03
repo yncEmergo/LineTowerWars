@@ -141,6 +141,25 @@ func pierce_ramp() -> float:
 	return 0.0
 
 
+## Mana a PIERCING shot from this tower takes off every creep it goes through,
+## per second, and for how long. 0 for the tiers that crystalize nothing, which
+## is all but one of them.
+##
+## Asked of the ability without a tower, for the reason the two pierce hooks
+## above are: the shot is already in the air when this is read and its tower may
+## have been sold since. The largest answer among the tower's passives wins.
+##
+## It lands on every creep the shot passes rather than on the one aimed at,
+## which is the whole point of putting it on a lance - and it is refused for a
+## creep with no mana pool by StatusEffects.drain_mana rather than here.
+func mana_drain_rate() -> float:
+	return 0.0
+
+
+func mana_drain_window() -> float:
+	return 0.0
+
+
 ## Runs once per creep actually struck, after that creep has taken the damage.
 ##
 ## `dealt` is what the hit cost the creep AFTER the whole pipeline, which is

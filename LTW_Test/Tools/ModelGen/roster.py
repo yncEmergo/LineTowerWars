@@ -11,6 +11,8 @@
 # (unit_data.md 7.2) - and that is one choice per branch, not per tower.
 
 UNITS_PER_CELL = 128.0
+# Every reach the game states is a multiple of this. See cells().
+QUARTER = 0.25
 
 # DamageTable.DamageType
 MAGIC, CHAOS, NORMAL, PIERCING, SIEGE = 0, 1, 2, 3, 4
@@ -105,8 +107,8 @@ IMPACT = {
 BRANCH_TEXT = {
     "archer": "Cheap ranged opener. Piercing shots that reach a long way for the price, "
               "at ground and air alike.",
-    "watch": "Pure single target reach. The longest range in the game and no splash "
-             "at all, so every shot is spent on one creep.",
+    "watch": "Pure single target reach. The longest range in the game, and no "
+             "splash at all.",
     "cannon": "Siege mortar. Slow, and the shell damages everything around where it "
               "lands. Cannot hit air at any tier.",
     "cutter": "Cheap grinder. Almost no reach, and the fastest attack in the game.",
@@ -118,8 +120,7 @@ BRANCH_TEXT = {
               "air alike.",
     "defender": "Long ranged magic splash. Damages everything around the target "
                 "wherever it stands, ground or air.",
-    "turret": "Dedicated anti-air. Cannot hit ground AT ANY TIER, so it defends "
-              "against flyers and nothing else.",
+    "turret": "Dedicated anti-air. Cannot hit ground at any tier.",
 }
 
 # key, display, line, branch, tier, gold, total, dtype, dmin, dmax,
@@ -234,7 +235,22 @@ def upgrade_ability_ids():
 
 
 def cells(units):
-    return round(units / UNITS_PER_CELL, 2)
+    """A Warcraft III map distance as a REACH the game states, in cells.
+
+    Snapped to the nearest QUARTER CELL rather than handed over as the raw
+    division. Dividing 400 by 128 gives 3.125, and a roster written that way
+    reads as a wall of numbers nobody can hold - 2.34, 4.69, 7.03, 9.77. The
+    quarter is the grain the whole game is now stated in, so a player reading
+    "4.75" can picture it and two towers a quarter apart really are different.
+
+    It costs up to an eighth of a cell against the source figure, which is
+    below the width of a creep and far below anything a maze is built to.
+
+    The tables above keep the SOURCE number, so unit_data.md still mirrors
+    them and a patch note can still be replayed onto them; this is the one
+    place the conversion happens and so the one place to change it.
+    """
+    return round(units / UNITS_PER_CELL / QUARTER) * QUARTER
 
 
 def aps(cooldown):

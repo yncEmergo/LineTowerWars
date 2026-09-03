@@ -9,6 +9,6 @@ ability_id = 374
 display_name = "Obsidian Statue"
 description = "Sends a pack into the enemy maze and raises your income permanently."
 targeting = 1
-slot = 2
+slot = 1
 repeat_on_hold = true
 creep_stats = ExtResource("2_stats")

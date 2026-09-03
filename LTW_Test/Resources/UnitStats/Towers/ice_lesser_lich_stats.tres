@@ -27,7 +27,7 @@ impact_scene_path = "res://Scenes/Effects/frost_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("5_SplashEffect")
-radius = 1.17
+radius = 1.25
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -36,7 +36,7 @@ damage_max = 166
 damage_type = 0
 is_aoe_damage = true
 attacks_per_second = 0.667
-attack_range = 4.69
+attack_range = 4.75
 target_types = 3
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("6_AttackEffect")]([SubResource("Splash")])

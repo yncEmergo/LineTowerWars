@@ -31,9 +31,9 @@ extends CreepPassive
 const TOUCH_SECONDS: float = 0.5
 
 @export_group("Settings")
-## How far it reaches, in player cells. The source states 300, which is 2.34
-## cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 2.344
+## How far it reaches, in player cells. The source states 300, which snaps
+## to 2.25 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 2.25
 ## Share taken off the attack damage of every tower in range.
 @export_range(0.0, 1.0, 0.01) var damage_share: float = 0.15
 
@@ -47,5 +47,5 @@ func on_tick(creep: Creep, _delta: float) -> void:
 
 
 func effect_text() -> String:
-	return "Towers within %s cells deal %d%% less attack damage." \
+	return "Towers within %s deal %d%% less attack damage." \
 		% [StringUtil.trim_number(radius_cells), roundi(damage_share * 100.0)]

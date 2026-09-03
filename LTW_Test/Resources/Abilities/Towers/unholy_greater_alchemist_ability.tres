@@ -12,4 +12,4 @@ slot = 6
 icon = ExtResource("2_greater_alchemist")
 damage_per_kill = 3
 damage_cap = 200
-overflow_cells = 2.34
+overflow_cells = 2.25

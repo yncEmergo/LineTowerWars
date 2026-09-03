@@ -18,6 +18,12 @@ extends Node
 ## The config is read here as well as on the authority. That is not the check
 ## that matters - the server's is - it only keeps a disabled cheat from
 ## sending a packet that would come back as a rejection line in the log.
+##
+## SINGLE PLAYER ONLY unless somebody deliberately says otherwise, which is
+## GameConfig.cheats_allowed rather than a rule of this file's. A cheat is a
+## real player order the authority grants, so in a networked match one player
+## could hand themselves the gold to end it - and the file that would have
+## refused it is the SERVER's copy, not the one they are looking at.
 
 ## Numpad 1: hands the player gold.
 const GOLD_KEY: Key = KEY_KP_1
@@ -38,7 +44,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 
 	var config: GameConfig = _config
-	if config == null || !config.cheats_enabled:
+	if config == null || !config.cheats_allowed(Net.is_online()):
 		return
 
 	var action: Command.PlayerAction = _action_for(key)

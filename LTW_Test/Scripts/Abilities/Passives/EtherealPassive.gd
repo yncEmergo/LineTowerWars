@@ -35,5 +35,6 @@ func health_regen(_creep: Creep) -> float:
 
 
 func effect_text() -> String:
-	return ("Walks straight through towers, ignoring the maze entirely, and"
-		+ " regenerates %s health per second. Any tower can still shoot it.") 		% StringUtil.trim_number(health_per_second)
+	return ("Walks through towers rather than around them, and regenerates %s"
+		+ " health per second. Every tower can still shoot it.") \
+		% StringUtil.trim_number(health_per_second)

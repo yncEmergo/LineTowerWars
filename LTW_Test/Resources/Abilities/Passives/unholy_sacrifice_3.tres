@@ -7,5 +7,5 @@ script = ExtResource("1_passive")
 ability_id = 325
 display_name = "Unholy Sacrifice"
 targeting = 0
-radius = 2.34
+radius = 1.0
 heal_amount = 4875

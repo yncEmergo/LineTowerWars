@@ -12,7 +12,12 @@ extends CreepPassive
 
 @export_group("Settings")
 ## Radius the heal reaches, in player cells.
-@export var radius: float = 1.5
+##
+## `?` A CHOICE. The source states no radius for Unholy Sacrifice at any tier,
+## and ONE CELL is deliberately the tightest burst in the roster: the heal is
+## meant to be worth something to creeps that really were walking beside the
+## one that died, rather than to a whole wave standing loosely together.
+@export var radius: float = 1.0
 ## Health restored to each creep caught, before any cap.
 @export var heal_amount: int = 20
 
@@ -32,5 +37,5 @@ func on_death(creep: Creep) -> bool:
 
 
 func effect_text() -> String:
-	return "Heals every creep within %s cells for %d as it dies." \
+	return "Heals every creep within %s for %d as it dies." \
 		% [StringUtil.trim_number(radius), heal_amount]

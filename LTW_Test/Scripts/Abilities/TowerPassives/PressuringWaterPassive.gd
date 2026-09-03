@@ -24,7 +24,7 @@ const IMMUNE_KEY: String = "paralyze"
 ## How long it holds one, in seconds.
 @export var paralyze_seconds: float = 1.5
 ## How far it reaches for one, in player cells.
-@export var paralyze_cells: float = 3.12
+@export var paralyze_cells: float = 3.0
 ## Seconds before the same creep may be paralyzed again.
 @export var paralyze_cooldown: float = 9.0
 
@@ -42,7 +42,7 @@ const IMMUNE_KEY: String = "paralyze"
 ## Mana one forked target costs.
 @export var mana_per_fork: int = 10
 ## How far each hop of the fork reaches, in player cells.
-@export var fork_cells: float = 3.12
+@export var fork_cells: float = 3.0
 
 
 ## The count is advanced when the attack COMMITS, so two shots in the air
@@ -113,7 +113,7 @@ func _try_paralyze(tower: Building) -> void:
 
 func effect_text() -> String:
 	var text: String = ("%d%% chance per attack to paralyze an air creep within"
-		+ " %s cells for %ss, pinning it in place where ground towers can reach"
+		+ " %s for %ss, pinning it in place where ground towers can reach"
 		+ " it. Once every %ss per creep.") % [
 		int(round(paralyze_chance * 100.0)),
 		StringUtil.trim_number(paralyze_cells),

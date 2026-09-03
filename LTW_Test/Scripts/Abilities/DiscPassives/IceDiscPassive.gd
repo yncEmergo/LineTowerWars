@@ -26,7 +26,7 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return ("Attacks by friendly towers within %s cells chill their target"
+	return ("Attacks by friendly towers within %s chill their target"
 		+ " %s%% per hit, up to %s%%.") % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(chill_per_hit * 100.0),

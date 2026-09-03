@@ -27,7 +27,7 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return ("Friendly towers within %s cells gain %s armor and regenerate"
+	return ("Friendly towers within %s gain %s armor and regenerate"
 		+ " %s%% faster.") % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(armor_bonus),

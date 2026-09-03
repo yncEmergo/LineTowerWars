@@ -10,6 +10,6 @@ display_name = "Emptiness"
 targeting = 0
 slot = 6
 icon = ExtResource("2_advanced_void_disc")
-radius_cells = 2.34
+radius_cells = 2.25
 damage_per_type = 0.02
 damage_cap = 0.16

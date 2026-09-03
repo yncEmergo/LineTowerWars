@@ -80,6 +80,11 @@ enum Kind {
 	LIFESTEALING,
 	RETURNING_DAMAGE,
 	STUNNING_ATTACKERS,
+	## Back on a CREEP again, and appended here rather than beside BURNING for
+	## the reason stated twice above: the order IS the wire, so a kind inserted
+	## anywhere but the end renumbers every one after it and a client draws the
+	## wrong effect. Only a creep whose traits run on mana can carry it.
+	MANA_DRAINED,
 }
 
 ## How the magnitude of a kind should be read, which is the whole of what the
@@ -153,6 +158,7 @@ const TITLES: Dictionary = {
 	Kind.LIFESTEALING: "Lifestealing",
 	Kind.RETURNING_DAMAGE: "Returning Damage",
 	Kind.STUNNING_ATTACKERS: "Stunning Attackers",
+	Kind.MANA_DRAINED: "Mana Crystalized",
 }
 
 ## What each kind does to the creep, with its own magnitude filled in. One "%s"
@@ -180,7 +186,7 @@ const TEMPLATES: Dictionary = {
 	Kind.AURA_DENIED: "Hears no friendly aura at all.",
 	Kind.ATTACK_HASTENED: "Attacks %s%% faster.",
 	Kind.ATTACK_EMPOWERED: "Deals %s%% more attack damage.",
-	Kind.RANGE_EXTENDED: "Reaches %s cells further.",
+	Kind.RANGE_EXTENDED: "Reaches %s further.",
 	Kind.ARMOR_LENT: "Armor raised by %s while this lasts.",
 	Kind.REGEN_RAISED: "Regenerates %s%% more health per second.",
 	Kind.MANA_GRANTED: "Gains %s mana per second.",
@@ -190,6 +196,7 @@ const TEMPLATES: Dictionary = {
 	Kind.LIFESTEALING: "Heals for %s%% of the physical damage it deals.",
 	Kind.RETURNING_DAMAGE: "Deals %s times what an attacking creep does back to it.",
 	Kind.STUNNING_ATTACKERS: "%s%% chance to stun a creep that attacks it.",
+	Kind.MANA_DRAINED: "Loses %s mana per second.",
 }
 
 const MEASURES: Dictionary = {
@@ -225,6 +232,7 @@ const MEASURES: Dictionary = {
 	Kind.LIFESTEALING: Measure.PERCENT,
 	Kind.RETURNING_DAMAGE: Measure.AMOUNT,
 	Kind.STUNNING_ATTACKERS: Measure.PERCENT,
+	Kind.MANA_DRAINED: Measure.AMOUNT,
 }
 
 var kind: Kind = Kind.SLOWED
@@ -437,6 +445,13 @@ func _magnitude_text() -> String:
 			return StringUtil.trim_number(absf(magnitude), 1)
 		Measure.ARMOR_TYPE:
 			return _armor_type_text()
+		# Two decimals rather than one, because an AMOUNT is the measure whose
+		# unit the template names and some of them are counted in fractions -
+		# a mana drain of 0.35 a second reads as 0.3 at one decimal, which is
+		# not the number that was authored. Trailing zeros are stripped either
+		# way, so nothing that was already whole grows a decimal point.
+		Measure.AMOUNT:
+			return StringUtil.trim_number(absf(magnitude), 2)
 	return StringUtil.trim_number(absf(magnitude), 1)
 
 

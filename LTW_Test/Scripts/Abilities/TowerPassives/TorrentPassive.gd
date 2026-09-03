@@ -21,7 +21,7 @@ const TARGET_KEY: String = "torrent_target"
 
 @export_group("Torrent")
 ## Radius of the aura, in player cells.
-@export var aura_cells: float = 3.12
+@export var aura_cells: float = 3.0
 ## Seconds between one step of the slow and the next.
 @export var step_seconds: float = 1.5
 ## Movement taken per step, as a share.
@@ -105,21 +105,21 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 
 
 func effect_text() -> String:
-	var text: String = ("Creeps within %s cells are slowed up to %s%% every %ss,"
-		+ " to a maximum of %s%%. The aura builds up the longer a creep stays"
-		+ " in it and fades once it leaves.") % [
+	var text: String = ("Creeps within %s are slowed a further %s%% every"
+		+ " %ss they stay in it, up to %s%%, and shed it again once they"
+		+ " leave.") % [
 		StringUtil.trim_number(aura_cells),
 		StringUtil.trim_number(slow_per_step * 100.0),
 		StringUtil.trim_number(step_seconds),
 		StringUtil.trim_number(slow_cap * 100.0),
 	]
 	if stun_every > 0:
-		var how: String = "attacking the same target %d times in a row" \
-			if stun_needs_same_target else "every %d%s attack"
+		var how: String = "Attacking the same target %d times in a row stuns" \
+			if stun_needs_same_target else "Every %d%s attack stuns"
 		var counted: Array = [stun_every] if stun_needs_same_target \
 			else [stun_every, StringUtil.ordinal_suffix(stun_every)]
-		text += " Stuns for %ss by %s." % [
-			StringUtil.trim_number(stun_seconds), how % counted]
+		text += " %s for %ss." % [
+			how % counted, StringUtil.trim_number(stun_seconds)]
 	if physical_amplification > 0.0:
 		text += " Creeps in the aura also take +%s%% damage from physical attacks." \
 			% StringUtil.trim_number(physical_amplification * 100.0)

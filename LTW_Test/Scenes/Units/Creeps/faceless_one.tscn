@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.4524
-outer_radius = 0.5074
+inner_radius = 0.4508
+outer_radius = 0.5058
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -17,9 +17,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_faceless_one_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.786
-select_radius = 0.452
-select_height = 0.303
+health_bar_height = 0.788
+select_radius = 0.451
+select_height = 0.304
 
 [node name="Visual" parent="." instance=ExtResource("3_faceless_one_model")]
 
@@ -36,5 +36,5 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/LegL"), NodePath("../Visual/LegR")]
 _arms = [NodePath("../Visual/Gait/Torso/ArmL"), NodePath("../Visual/Gait/Torso/ArmR")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.6024
-bob_height = 0.0212
+stride_length = 0.6054
+bob_height = 0.0213

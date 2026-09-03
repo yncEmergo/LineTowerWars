@@ -7,6 +7,6 @@ script = ExtResource("1_passive")
 ability_id = 355
 display_name = "Volatile Death"
 targeting = 0
-radius_cells = 1.953
+radius_cells = 2.0
 damage = 1000
 damage_type = 2

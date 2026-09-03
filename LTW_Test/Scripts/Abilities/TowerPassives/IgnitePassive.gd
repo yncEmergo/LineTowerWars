@@ -20,7 +20,7 @@ const TIMER_KEY: String = "ignite_timer"
 @export var interval_seconds: float = 2.1
 ## How far the tower reaches to pick one, in player cells. Its own attack range
 ## is deliberately not used: unit_data.md states a separate AoE for this.
-@export var radius_cells: float = 3.12
+@export var radius_cells: float = 3.0
 ## Spell Damage a second the fire deals.
 @export var damage_per_second: float = 5.0
 ## How long it burns for.
@@ -43,7 +43,7 @@ func on_tick(tower: Building, delta: float) -> void:
 
 
 func effect_text() -> String:
-	return ("Sets a creep within %s cells alight every %ss, dealing %s Spell"
+	return ("Sets a creep within %s alight every %ss, dealing %s Spell"
 		+ " Damage per second for %ss.") % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(interval_seconds),

@@ -25,5 +25,4 @@ func max_slow_share() -> float:
 
 
 func effect_text() -> String:
-	return "Can never be slowed by more than %d%%, however many towers chill it." \
-		% roundi(slow_cap * 100.0)
+	return "Is never slowed by more than %d%% in total." % roundi(slow_cap * 100.0)

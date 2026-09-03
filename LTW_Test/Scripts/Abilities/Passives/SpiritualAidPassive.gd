@@ -20,9 +20,9 @@ extends CreepPassive
 ## Nothing here holds any mana: this resource is every Spirit Walker at once.
 
 @export_group("Settings")
-## How far the aid reaches, in player cells. The source states 500, which is
-## 3.91 cells at the divisor every other reach uses - see unit_data.md 3.
-@export var radius_cells: float = 3.906
+## How far the aid reaches, in player cells. The source states 500, which
+## snaps to 4 at the quarter every reach is stated in - see unit_data.md 3.
+@export var radius_cells: float = 4.0
 ## Share of the target MAXIMUM health restored.
 @export_range(0.0, 1.0, 0.005) var heal_share: float = 0.01
 ## The most one heal may ever be worth, however large the target is.
@@ -47,8 +47,11 @@ func on_tick(creep: Creep, _delta: float) -> void:
 	# The ceiling is read off the TARGET rather than counted here, for the
 	# reason every "once per creep" rule in this game is: this resource stands
 	# in for every Spirit Walker on the field, so a tally kept here would be
-	# all of theirs added together.
-	if target.status().granted_armor() < armor_ceiling:
+	# all of theirs added together. Asked for THIS trait's own share of what
+	# the creep has been given, so a Crypt Fiend walking in the same pack
+	# cannot spend the twelve points this one is allowed - see
+	# StatusEffects.granted_armor.
+	if target.status().granted_armor(self) < armor_ceiling:
 		target.status().bless_armor(self, armor_bonus)
 
 
@@ -63,7 +66,7 @@ func _pick_target(creep: Creep) -> Creep:
 	var best_room: float = -1.0
 	for other: Creep in TargetFinder.creeps_in_radius(
 			creep.area, creep.global_position, radius_cells):
-		var room: float = armor_ceiling - other.status().granted_armor()
+		var room: float = armor_ceiling - other.status().granted_armor(self)
 		if room > best_room:
 			best = other
 			best_room = room
@@ -71,7 +74,7 @@ func _pick_target(creep: Creep) -> Creep:
 
 
 func effect_text() -> String:
-	return ("At full mana, heals a creep within %s cells for %s%% of its maximum"
+	return ("At full mana, heals a creep within %s for %s%% of its maximum"
 		+ " health, up to %d, and permanently grants it +%s armor - up to %s"
 		+ " points on any one creep.") % [
 		StringUtil.trim_number(radius_cells),

@@ -56,5 +56,5 @@ func effect_name() -> String:
 ## whole difference between this and an ordinary splash and a player reading
 ## the card has no other way to find it out.
 func description_text() -> String:
-	return "Deals full damage to everything within %s cells of the tower itself." \
+	return "Deals full damage to everything within %s of the tower itself." \
 		% StringUtil.trim_number(radius)

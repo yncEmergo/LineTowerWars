@@ -41,6 +41,15 @@ const GROUND_OFFSET: float = 0.03
 const QUAD_MARGIN: float = 0.5
 
 var _material: ShaderMaterial
+## The selection the circles were built from, and whether the second group was
+## wanted. Kept so the overlay can redraw itself as those units MOVE - see
+## follow_units.
+var _units: Array = []
+var _with_abilities: bool = false
+## Whether anything in that selection can walk. False for a maze full of
+## towers, which is the common case and the one that then costs nothing per
+## frame.
+var _follows: bool = false
 
 
 func _ready() -> void:
@@ -67,21 +76,64 @@ func _ready() -> void:
 ## runs when an order is armed rather than every frame, and rebuilding is what
 ## keeps a sold or dead tower from leaving its range behind.
 func show_attack_ranges(units: Array) -> void:
-	_draw(_attack_circles(units), PackedVector3Array())
+	_remember(units, false)
+	_redraw()
 
 
 ## Attack reach AND every ability range those units carry, the second group in
 ## its own colour. What Show Ranges puts on the ground.
 func show_all_ranges(units: Array) -> void:
-	_draw(_attack_circles(units), _ability_circles(units))
+	_remember(units, true)
+	_redraw()
+
+
+## Rebuilds the circles where the units are NOW, and does nothing at all unless
+## one of them can walk.
+##
+## A tower's circle is nailed to the ground it was drawn on and never has to
+## move again, which is why this was missed: with only towers selected the
+## overlay is right forever. An attacker creep or the builder walks out of its
+## own circle within a second, leaving a ring on the ground it has left.
+##
+## Called every RENDER frame rather than every tick, because that is what it
+## has to keep up with - the body it is drawn under is interpolated between
+## ticks, and a circle that only moved on the tick would step while the unit it
+## belongs to glides. `get_global_transform_interpolated` is what makes the two
+## agree; see _append_circle.
+func follow_units() -> void:
+	if !_follows || !visible:
+		return
+	_redraw()
 
 
 func hide_ranges() -> void:
 	visible = false
+	_units = []
+	_follows = false
 	if _material == null:
 		return
 	_material.set_shader_parameter("attack_count", 0)
 	_material.set_shader_parameter("ability_count", 0)
+
+
+## Takes a copy of the selection, and works out once whether it is worth
+## following. Duck typed, like everything else that asks a unit whether it
+## moves: what matters is that it can be walked somewhere, not what class it is.
+func _remember(units: Array, with_abilities: bool) -> void:
+	_units = units.duplicate()
+	_with_abilities = with_abilities
+	_follows = false
+	for unit in _units:
+		if is_instance_valid(unit) && unit.has_method("move_to"):
+			_follows = true
+			return
+
+
+func _redraw() -> void:
+	var ability: PackedVector3Array = PackedVector3Array()
+	if _with_abilities:
+		ability = _ability_circles(_units)
+	_draw(_attack_circles(_units), ability)
 
 
 ## Hands both groups to the shader and sizes the quad to hold them, or hides
@@ -108,6 +160,10 @@ func _attack_circles(units: Array) -> PackedVector3Array:
 	for unit in units:
 		var typed: Unit = _valid_unit(unit)
 		if typed == null || typed.stats == null || typed.stats.attack == null:
+			continue
+		# A reach its own stats file says is not worth drawing - the builder's
+		# hammer. See AttackStats.shows_range.
+		if !typed.stats.attack.shows_range:
 			continue
 		# Asked of the UNIT, so a tower a Primal disc is reaching draws the
 		# circle it really covers rather than the one its stats file records.
@@ -142,7 +198,10 @@ func _valid_unit(unit: Variant) -> Unit:
 func _append_circle(circles: PackedVector3Array, unit: Unit, radius: float) -> void:
 	if radius <= 0.0:
 		return
-	var origin: Vector3 = unit.global_position
+	# The INTERPOLATED position, not global_position. A unit that walks is drawn
+	# between two ticks, and a circle placed at the tick position would sit a
+	# step behind the body it belongs to. A tower answers the same either way.
+	var origin: Vector3 = unit.get_global_transform_interpolated().origin
 	circles.append(Vector3(origin.x, origin.z, radius))
 
 

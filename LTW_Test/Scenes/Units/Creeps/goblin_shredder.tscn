@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.4524
-outer_radius = 0.5074
+inner_radius = 0.4508
+outer_radius = 0.5058
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -17,9 +17,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_goblin_shredder_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.699
-select_radius = 0.452
-select_height = 0.259
+health_bar_height = 0.7
+select_radius = 0.451
+select_height = 0.26
 
 [node name="Visual" parent="." instance=ExtResource("3_goblin_shredder_model")]
 
@@ -36,9 +36,9 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/WheelFL"), NodePath("../Visual/WheelFR"), NodePath("../Visual/WheelBL"), NodePath("../Visual/WheelBR")]
 _arms = [NodePath("../Visual/Gait/Frame/Swing")]
 leg_phases = PackedFloat32Array(0, 0.5, 0.5, 0)
-stride_length = 0.4756
+stride_length = 0.478
 swing_degrees = 0
 arm_swing_degrees = 0
-bob_height = 0.0093
+bob_height = 0.0094
 lean_degrees = 2
 roll_degrees = 1

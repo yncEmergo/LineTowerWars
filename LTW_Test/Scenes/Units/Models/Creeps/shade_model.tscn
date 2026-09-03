@@ -14,115 +14,115 @@ transparency = 1
 albedo_color = Color(0.02, 0.03, 0.05, 0.42)
 
 [sub_resource type="CylinderMesh" id="ShadowDisc"]
-top_radius = 0.1757
-bottom_radius = 0.1757
+top_radius = 0.2013
+bottom_radius = 0.2013
 height = 0.005
 radial_segments = 16
 rings = 0
 material = SubResource("ShadowMaterial")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.1158
-bottom_radius = 0.0521
-height = 0.1989
+top_radius = 0.1327
+bottom_radius = 0.0597
+height = 0.236
 radial_segments = 7
 rings = 0
 material = ExtResource("1_shade_hide")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_2"]
-top_radius = 0.0579
-bottom_radius = 0.1398
-height = 0.0984
+top_radius = 0.0663
+bottom_radius = 0.1601
+height = 0.1128
 radial_segments = 8
 rings = 0
 material = ExtResource("3_shade_hide_pale")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 0.0503
-bottom_radius = 0.1006
-height = 0.1258
+top_radius = 0.0577
+bottom_radius = 0.1153
+height = 0.1441
 radial_segments = 7
 rings = 0
 material = ExtResource("1_shade_hide")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_4"]
-top_radius = 0.0084
-bottom_radius = 0.0461
-height = 0.0461
+top_radius = 0.0096
+bottom_radius = 0.0528
+height = 0.0528
 radial_segments = 7
 rings = 0
 material = ExtResource("1_shade_hide")
 
 [sub_resource type="SphereMesh" id="SphereMesh_5"]
-radius = 0.0688
-height = 0.1375
+radius = 0.0788
+height = 0.1576
 radial_segments = 6
 rings = 2
 material = ExtResource("2_shade_hide_deep")
 
 [sub_resource type="SphereMesh" id="SphereMesh_6"]
-radius = 0.0184
-height = 0.0369
+radius = 0.0211
+height = 0.0423
 radial_segments = 5
 rings = 2
 material = ExtResource("5_eye_r2")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_7"]
-radius = 0.0256
-height = 0.1477
+radius = 0.0293
+height = 0.1693
 radial_segments = 5
 rings = 2
 material = ExtResource("1_shade_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_8"]
-size = Vector3(0.0128, 0.0409, 0.0102)
+size = Vector3(0.0146, 0.0469, 0.0117)
 material = ExtResource("4_carapace_r2")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_9"]
-radius = 0.0256
-height = 0.1477
+radius = 0.0293
+height = 0.1693
 radial_segments = 5
 rings = 2
 material = ExtResource("1_shade_hide")
 
 [sub_resource type="PrismMesh" id="PrismMesh_10"]
-size = Vector3(0.0128, 0.0409, 0.0102)
+size = Vector3(0.0146, 0.0469, 0.0117)
 material = ExtResource("4_carapace_r2")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_11"]
-top_radius = 0.0255
-bottom_radius = 0.0046
-height = 0.1094
+top_radius = 0.0292
+bottom_radius = 0.0053
+height = 0.1298
 radial_segments = 5
 rings = 0
 material = ExtResource("2_shade_hide_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_12"]
-top_radius = 0.0255
-bottom_radius = 0.0046
-height = 0.1094
+top_radius = 0.0292
+bottom_radius = 0.0053
+height = 0.1298
 radial_segments = 5
 rings = 0
 material = ExtResource("2_shade_hide_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_13"]
-top_radius = 0.0255
-bottom_radius = 0.0046
-height = 0.1094
+top_radius = 0.0292
+bottom_radius = 0.0053
+height = 0.1298
 radial_segments = 5
 rings = 0
 material = ExtResource("2_shade_hide_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_14"]
-top_radius = 0.0255
-bottom_radius = 0.0046
-height = 0.1094
+top_radius = 0.0292
+bottom_radius = 0.0053
+height = 0.1298
 radial_segments = 5
 rings = 0
 material = ExtResource("2_shade_hide_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_15"]
-size = Vector3(0.0324, 0.0255, 0.0984)
+size = Vector3(0.0372, 0.0292, 0.1128)
 material = ExtResource("4_carapace_r2")
 
 [node name="ShadeModel" type="Node3D"]
@@ -130,7 +130,7 @@ script = ExtResource("6_UnitModel")
 
 [node name="Shadow" type="MeshInstance3D" parent="."]
 script = ExtResource("7_GroundShadow3D")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5968, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7079, 0)
 cast_shadow = 0
 mesh = SubResource("ShadowDisc")
 
@@ -138,108 +138,108 @@ mesh = SubResource("ShadowDisc")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Column" type="MeshInstance3D" parent="Gait"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0497, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.059, 0)
 mesh = SubResource("CylinderMesh_1")
 
 [node name="Mantle" type="MeshInstance3D" parent="Gait"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0347, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0398, 0)
 mesh = SubResource("CylinderMesh_2")
 
 [node name="Head" type="Node3D" parent="Gait"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1158, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1327, 0)
 
 [node name="Hood" type="MeshInstance3D" parent="Gait/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.021, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.024, 0)
 mesh = SubResource("CylinderMesh_3")
 
 [node name="HoodPeak" type="MeshInstance3D" parent="Gait/Head"]
-transform = Transform3D(1, 0, 0, 0, 0.9211, 0.3894, 0, -0.3894, 0.9211, 0, 0.1006, 0.0218)
+transform = Transform3D(1, 0, 0, 0, 0.9211, 0.3894, 0, -0.3894, 0.9211, 0, 0.1153, 0.025)
 mesh = SubResource("CylinderMesh_4")
 
 [node name="Hollow" type="MeshInstance3D" parent="Gait/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0168, -0.0335)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0192, -0.0384)
 mesh = SubResource("SphereMesh_5")
 
 [node name="Eye1" type="MeshInstance3D" parent="Gait/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0226, -0.0151, -0.088)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0259, -0.0173, -0.1009)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_6")
 
 [node name="Eye2" type="MeshInstance3D" parent="Gait/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0226, -0.0151, -0.088)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0259, -0.0173, -0.1009)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_6")
 
 [node name="ArmL" type="Node3D" parent="Gait"]
-transform = Transform3D(0.9553, 0.2593, 0.1417, -0.2955, 0.8384, 0.458, 0, -0.4794, 0.8776, -0.1118, 0.0521, 0)
+transform = Transform3D(0.9553, 0.2593, 0.1417, -0.2955, 0.8384, 0.458, 0, -0.4794, 0.8776, -0.1281, 0.0597, 0)
 
 [node name="Sleeve" type="MeshInstance3D" parent="Gait/ArmL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.046, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0546, 0)
 mesh = SubResource("CapsuleMesh_7")
 
 [node name="Claw1L" type="MeshInstance3D" parent="Gait/ArmL"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, -0.0179, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, -0.0205, -0.1267, 0)
 mesh = SubResource("PrismMesh_8")
 
 [node name="Claw2L" type="MeshInstance3D" parent="Gait/ArmL"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0, -0.1267, 0)
 mesh = SubResource("PrismMesh_8")
 
 [node name="Claw3L" type="MeshInstance3D" parent="Gait/ArmL"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0.0179, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0.0205, -0.1267, 0)
 mesh = SubResource("PrismMesh_8")
 
 [node name="ArmR" type="Node3D" parent="Gait"]
-transform = Transform3D(0.9553, -0.2593, -0.1417, 0.2955, 0.8384, 0.458, 0, -0.4794, 0.8776, 0.1118, 0.0521, 0)
+transform = Transform3D(0.9553, -0.2593, -0.1417, 0.2955, 0.8384, 0.458, 0, -0.4794, 0.8776, 0.1281, 0.0597, 0)
 
 [node name="Sleeve" type="MeshInstance3D" parent="Gait/ArmR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.046, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0546, 0)
 mesh = SubResource("CapsuleMesh_9")
 
 [node name="Claw1R" type="MeshInstance3D" parent="Gait/ArmR"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, -0.0179, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, -0.0205, -0.1267, 0)
 mesh = SubResource("PrismMesh_10")
 
 [node name="Claw2R" type="MeshInstance3D" parent="Gait/ArmR"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0, -0.1267, 0)
 mesh = SubResource("PrismMesh_10")
 
 [node name="Claw3R" type="MeshInstance3D" parent="Gait/ArmR"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0.0179, -0.1073, 0)
+transform = Transform3D(1, 0, 0, 0, -1, 0, -0, -0, -1, 0.0205, -0.1267, 0)
 mesh = SubResource("PrismMesh_10")
 
 [node name="Tatter1" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0696, 0.0602)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0826, 0.069)
 
 [node name="Rag" type="MeshInstance3D" parent="Tatter1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0547, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0649, 0)
 mesh = SubResource("CylinderMesh_11")
 
 [node name="Tatter2" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0602, -0.0696, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069, -0.0826, 0)
 
 [node name="Rag" type="MeshInstance3D" parent="Tatter2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0547, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0649, 0)
 mesh = SubResource("CylinderMesh_12")
 
 [node name="Tatter3" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0696, -0.0602)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0826, -0.069)
 
 [node name="Rag" type="MeshInstance3D" parent="Tatter3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0547, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0649, 0)
 mesh = SubResource("CylinderMesh_13")
 
 [node name="Tatter4" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0602, -0.0696, -0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069, -0.0826, -0)
 
 [node name="Rag" type="MeshInstance3D" parent="Tatter4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0547, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0649, 0)
 mesh = SubResource("CylinderMesh_14")
 
 [node name="Plate1" type="MeshInstance3D" parent="Gait"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.109, 0.0486, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1249, 0.0557, 0)
 mesh = SubResource("BoxMesh_15")
 
 [node name="Plate2" type="MeshInstance3D" parent="Gait"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.109, 0.0486, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1249, 0.0557, 0)
 mesh = SubResource("BoxMesh_15")

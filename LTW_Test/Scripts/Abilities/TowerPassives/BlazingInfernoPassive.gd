@@ -22,7 +22,7 @@ extends TowerPassive
 ## Share of the damage dealt that the tower explodes for, as Spell Damage.
 @export var explosion_share: float = 0.66
 ## Radius of that explosion, in player cells.
-@export var explosion_cells: float = 1.56
+@export var explosion_cells: float = 1.5
 
 
 func mana_per_second(tower: Building) -> float:
@@ -48,7 +48,7 @@ func effect_text() -> String:
 	return ("Built at full mana and loses %s%% of it per second, never"
 		+ " regaining any. Attacks deal up to +%d%% damage scaled by the mana"
 		+ " left. While any remains, each attack explodes for %d%% of the"
-		+ " damage dealt as Spell Damage within %s cells.") % [
+		+ " damage dealt as Spell Damage within %s.") % [
 		StringUtil.trim_number(decay_per_second * 100.0),
 		int(round(max_bonus_share * 100.0)),
 		int(round(explosion_share * 100.0)),

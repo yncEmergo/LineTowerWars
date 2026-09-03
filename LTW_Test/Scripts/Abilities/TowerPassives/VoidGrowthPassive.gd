@@ -53,13 +53,14 @@ func on_tick(tower: Building, _delta: float) -> void:
 
 
 func effect_text() -> String:
-	return ("Regenerates %s mana per second and gains %s per attack. The moment"
-		+ " the bar is full it transforms one nearby tower within %s cells into"
-		+ " a %s, for free and at no mana cost - the bar is the timer, not the"
-		+ " price. It happens ONCE: if nothing it can take is standing in range"
-		+ " when the bar fills, the chance is gone.") % [
+	var becomes: String = _becomes_name()
+	return ("Regenerates %s mana per second and gains %s per attack. The"
+		+ " moment its mana fills it transforms one tower within %s into"
+		+ " %s %s, at no cost. It does this once: if there is no tower it can"
+		+ " take in range at that moment, nothing happens and it does not"
+		+ " try again.") % [
 		StringUtil.trim_number(regen_per_second),
 		StringUtil.trim_number(mana_per_attack),
 		StringUtil.trim_number(reach_cells),
-		_becomes_name(),
+		StringUtil.article(becomes), becomes,
 	]

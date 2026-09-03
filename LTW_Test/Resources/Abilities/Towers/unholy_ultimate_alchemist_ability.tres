@@ -12,5 +12,5 @@ slot = 6
 icon = ExtResource("2_ultimate_alchemist")
 damage_per_kill = 5
 damage_cap = 500
-overflow_cells = 2.34
+overflow_cells = 2.25
 armor_type_seconds = 8

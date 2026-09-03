@@ -14,7 +14,7 @@ extends DiscPassive
 
 @export_group("Far Sight")
 ## Cells added to the attack range of every tower in range.
-@export var range_bonus_cells: float = 0.78
+@export var range_bonus_cells: float = 0.75
 
 
 func _reach_towers(disc: Building) -> void:
@@ -23,6 +23,6 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return "Friendly towers within %s cells gain %s cells of attack range." % [
+	return "Friendly towers within %s reach %s further." % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(range_bonus_cells)]

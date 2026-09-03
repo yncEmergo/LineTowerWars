@@ -23,7 +23,8 @@ extends Node3D
 ##   ghosts     always, whether or not the builder is selected. A queued tower
 ##              is a decision the player made about a piece of ground, and it
 ##              also RESERVES that ground - see is_reserved, which is what
-##              stops the next placement being aimed on top of it
+##              stops the next placement being aimed on top of it. A ghost also
+##              says whether it can still be PAID for - see _apply_affordability
 ##   waypoints  only while the unit is selected, as in WC3. There is one
 ##              builder and a handful of attacker creeps, and a lane wearing
 ##              every dot any of them is walking to would be unreadable
@@ -34,6 +35,18 @@ var _reserved: Dictionary = {}
 var _waypoints: Dictionary = {}
 ## unit -> Array[BuildPreview], the towers it has been told to place.
 var _ghosts: Dictionary = {}
+## unit -> Array[int], what each of those ghosts costs INCLUDING everything
+## queued in front of it. Running totals rather than prices, because that is
+## the question a ghost answers: not "can I afford this tower" but "will there
+## still be gold for it by the time the builder gets to it".
+var _costs: Dictionary = {}
+## The players whose gold this is listening to, so a ghost turns red the moment
+## the money goes somewhere else rather than on the next change to the chain.
+##
+## Connected lazily rather than in _ready: the player states are built by Main
+## after its children are, so there is nothing to listen to yet when this node
+## starts. By the time a unit has an order there always is.
+var _watched_gold: Dictionary = {}
 ## The units currently selected, so a waypoint knows whether to draw.
 var _selected: Dictionary = {}
 
@@ -67,8 +80,11 @@ func refresh_unit(unit: Unit) -> void:
 	_waypoints[unit] = []
 	_ghosts[unit] = []
 	_reserved[unit] = []
+	_costs[unit] = []
 	for order: QueuedOrder in drawn:
 		_add_visual(unit, order)
+	_watch_gold(unit.owner_player_id)
+	_apply_affordability(unit)
 
 	# Freed by _forget when the unit goes, so the markers can never outlive
 	# what they belong to. The bound callable is built once and compared, not
@@ -110,7 +126,14 @@ func _add_visual(unit: Unit, order: QueuedOrder) -> void:
 	if build != null:
 		_add_ghost(unit, build, order.target_position)
 		return
-	_add_waypoint(unit, order.target_position)
+
+	# An attack-MOVE names a point like a walk does and means something else
+	# entirely there, so it is drawn in the attack's own red. Read off the
+	# ability's class, the same way the ghost above is.
+	var kind: OrderWaypointMarker.Kind = OrderWaypointMarker.Kind.MOVE
+	if order.ability is AttackAbility:
+		kind = OrderWaypointMarker.Kind.ATTACK
+	_add_waypoint(unit, order.target_position, kind)
 
 
 func _add_ghost(unit: Unit, build: BuildTowerAbility, at: Vector3) -> void:
@@ -133,8 +156,17 @@ func _add_ghost(unit: Unit, build: BuildTowerAbility, at: Vector3) -> void:
 	_ghosts[unit].append(ghost)
 	_reserved[unit].append(Rect2i(cell, footprint))
 
+	# The RUNNING total, so each ghost carries what the whole chain up to and
+	# including itself will cost. There is one builder per player and nothing
+	# else in the game chains an order that spends gold, so one running total
+	# per unit really is the whole of the sum - no other chain can be spending
+	# out of the same purse at the same time.
+	var spent: Array = _costs[unit]
+	var before: int = 0 if spent.is_empty() else int(spent[spent.size() - 1])
+	spent.append(before + build.gold_cost())
 
-func _add_waypoint(unit: Unit, at: Vector3) -> void:
+
+func _add_waypoint(unit: Unit, at: Vector3, kind: OrderWaypointMarker.Kind) -> void:
 	# Clamped for the same reason MobileUnit.has_arrived_at clamps: an order
 	# aimed past the edge of the area walks the unit as close as it can get,
 	# so that is where the marker belongs. A dot outside the fence would be
@@ -146,8 +178,90 @@ func _add_waypoint(unit: Unit, at: Vector3) -> void:
 	var marker: OrderWaypointMarker = OrderWaypointMarker.new()
 	marker.name = "OrderWaypoint"
 	add_child(marker)
-	marker.place_at(point)
+	marker.place_at(point, kind)
 	_waypoints[unit].append(marker)
+
+
+# --- affordability --------------------------------------------------------
+
+## Colours every ghost by whether there will still be gold for it.
+##
+## Grey means the money is there once everything queued in FRONT of it has been
+## paid for; red means it will not be, and the builder will drop it when it
+## gets there. Thirty gold and five ten-gold towers is three grey and two red,
+## which is the whole point of showing it: the player is told before the walk
+## rather than by a warning in a log afterwards.
+##
+## Deliberately NOT the same red as an illegal placement. It is the same
+## answer - this will not happen - and a second colour for it would be a
+## distinction the player has to learn for no gain.
+func _apply_affordability(unit: Unit) -> void:
+	var ghosts: Array = _ghosts.get(unit, [])
+	if ghosts.is_empty():
+		return
+
+	var gold: int = _gold_of(unit)
+	var spent: Array = _costs.get(unit, [])
+	for index: int in ghosts.size():
+		var ghost: BuildPreview = ghosts[index]
+		if !is_instance_valid(ghost):
+			continue
+		var affordable: bool = index >= spent.size() || int(spent[index]) <= gold
+		ghost.set_tint(UnitModel.Tint.PENDING if affordable else UnitModel.Tint.INVALID)
+
+
+## Gold this player's queued towers have already spoken for, which is what is
+## left over for the one being AIMED right now.
+##
+## Public because the placement preview asks it: the ghost under the cursor has
+## to answer the same question the ghosts already on the ground do, and it is
+## not in a queue yet for anything to have counted it. See
+## CommandController._update_preview.
+func reserved_gold(player_id: int) -> int:
+	var total: int = 0
+	for unit: Unit in _costs:
+		if !is_instance_valid(unit) || unit.owner_player_id != player_id:
+			continue
+		# The last running total IS the sum of that chain, so nothing has to be
+		# added up a second time.
+		var spent: Array = _costs[unit]
+		if !spent.is_empty():
+			total += int(spent[spent.size() - 1])
+	return total
+
+
+func _gold_of(unit: Unit) -> int:
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return 0
+	var state: PlayerState = manager.state_for(unit.owner_player_id)
+	return 0 if state == null else state.gold
+
+
+## Starts listening to one player's purse, once. Gold moves for reasons that
+## have nothing to do with the chain - a send, an upgrade, income arriving -
+## and every one of them can change what a ghost has to say.
+func _watch_gold(player_id: int) -> void:
+	if _watched_gold.has(player_id):
+		return
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return
+	var state: PlayerState = manager.state_for(player_id)
+	if state == null:
+		return
+
+	_watched_gold[player_id] = true
+	state.gold_changed.connect(_on_gold_changed)
+
+
+## Recolours every chain there is. One builder per player means this is at most
+## a handful of ghosts, so working out which player's gold moved would cost
+## more than simply asking all of them again.
+func _on_gold_changed(_gold: int) -> void:
+	for unit: Unit in _ghosts:
+		if is_instance_valid(unit):
+			_apply_affordability(unit)
 
 
 # --- visibility and cleanup -----------------------------------------------
@@ -177,6 +291,7 @@ func _forget(unit: Unit) -> void:
 	_waypoints.erase(unit)
 	_ghosts.erase(unit)
 	_reserved.erase(unit)
+	_costs.erase(unit)
 
 
 func _free_all(nodes: Array) -> void:

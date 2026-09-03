@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/Game/PlayerArea.gd" id="1_player_area"]
 [ext_resource type="Script" path="res://Scripts/Game/BuildGrid.gd" id="2_build_grid"]
 [ext_resource type="Material" path="res://Resources/Materials/build_grid_material.tres" id="3_grid_material"]
+[ext_resource type="Material" path="res://Resources/Materials/ground_grass_material.tres" id="8_grass"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier1.tscn" id="4_send_t1"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier2.tscn" id="5_send_t2"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/send_building_tier3.tscn" id="6_send_t3"]
@@ -15,11 +16,8 @@ albedo_color = Color(0.46, 0.26, 0.26, 1)
 material = SubResource("StandardMaterial3D_spawn")
 size = Vector2(8, 3)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_build"]
-albedo_color = Color(0.27, 0.36, 0.28, 1)
-
 [sub_resource type="PlaneMesh" id="PlaneMesh_build"]
-material = SubResource("StandardMaterial3D_build")
+material = ExtResource("8_grass")
 size = Vector2(8, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_end"]

@@ -11,6 +11,6 @@ targeting = 0
 slot = 6
 icon = ExtResource("2_magma_well")
 interval_seconds = 2.1
-radius_cells = 3.12
+radius_cells = 3.0
 damage_per_second = 13
 duration_seconds = 8

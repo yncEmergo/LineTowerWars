@@ -269,7 +269,7 @@ def icon_name(display):
     """The file the icon renderer writes for a tower, which is named after its
     DISPLAY NAME rather than its key.
 
-    That is Scenes/Dev/icon_renderer.tscn's convention and it is kept rather
+    That is Scenes/Tools/icon_gen_3d.tscn's convention and it is kept rather
     than changed, because it is already what every Basic tower and every creep
     icon in 2DArt/Icons is called. It works because a display name is unique
     across the whole game - "Lesser Moonbeam" belongs to Fire and to nothing
@@ -819,7 +819,7 @@ def gen_return_to_core():
              'description = "Take this tower back down to a bare Elemental '
              'Core and choose another element. Everything sunk into it above '
              "the Core is refunded at the usual sell share; the Core's own "
-             "gold stays in the cell. The tower keeps blocking until it "
+             "gold stays in the square. The tower keeps blocking until it "
              'finishes, and calling it off costs nothing."',
              # IMMEDIATE: the Core arrives on the cell the tower already
              # stands on, so there is nothing to aim at.
@@ -910,8 +910,7 @@ PATH_TEXT = {
                            "your ground towers can reach them.",
     "sludge_monstrosity": "An aura that grinds every creep near it slower, "
                           "whether or not it is shooting them.",
-    "ancient_warden": "Heavy siege splash that permanently eats armor. What "
-                      "you put at the front of a maze.",
+    "ancient_warden": "Heavy siege splash that permanently eats armor.",
     "scorpion": "Pure single target. Worth the most on the first shot after "
                 "standing idle, and criticals against a hurt target.",
     "spellslinger": "A caster: it burns and slows on its own clock as well as "

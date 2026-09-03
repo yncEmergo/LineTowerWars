@@ -28,9 +28,9 @@ extends CreepPassive
 const GATE_KEY: String = "mana_drain"
 
 @export_group("Settings")
-## How far it reaches, in player cells. The source states 180, which is 1.41
-## cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 1.406
+## How far it reaches, in player cells. The source states 180, which snaps
+## to 1.5 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 1.5
 ## Share of the tower current mana taken.
 @export_range(0.0, 1.0, 0.01) var drain_share: float = 0.33
 ## Multiplier on what was taken, for what the creep gains.
@@ -83,7 +83,7 @@ func _pick_tower(creep: Creep) -> Building:
 
 func effect_text() -> String:
 	return ("Once out of mana, drains %d%% of the mana of a tower within %s"
-		+ " cells and gains %d%% of what it took, up to %d. The same tower"
+		+ " and gains %d%% of what it took, up to %d mana. The same tower"
 		+ " cannot be drained again for %s seconds.") % [
 		roundi(drain_share * 100.0), StringUtil.trim_number(radius_cells),
 		roundi(gain_multiplier * 100.0), gain_cap,

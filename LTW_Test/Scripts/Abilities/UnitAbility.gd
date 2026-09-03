@@ -305,12 +305,52 @@ func lockout_seconds(_unit: Unit) -> float:
 ## only be read off the unit. Null for a tooltip with nobody behind it, and
 ## nearly every ability ignores it.
 func tooltip_data(hotkey_label: String = "",
-		_unit: Unit = null) -> AbilityTooltipData:
+		unit: Unit = null) -> AbilityTooltipData:
 	var data: AbilityTooltipData = AbilityTooltipData.new()
 	data.title = display_name
 	data.hotkey = hotkey_label
-	data.description = description
+	data.description = description_text(null if unit == null else unit.stats)
 	return data
+
+
+## The authored description with every {placeholder} in it replaced by the
+## number it names.
+##
+## THE NUMBER IS NEVER TYPED INTO THE TEXT. A description that says "steals 2
+## lives" is a second copy of a figure that really lives on a stats file, and
+## the day somebody changes the file the card goes on saying 2 - silently, with
+## nothing to catch it. So the .tres writes "{lives}" and this fills it in from
+## whatever the unit is actually carrying.
+##
+## The generated lines every passive already builds - CreepPassive.effect_text
+## and TowerPassive.effect_text - are the same rule reached the other way: they
+## have so many numbers that a sentence assembled from them is easier to read
+## than a sentence full of braces. This is for the handful of descriptions that
+## are mostly prose with one figure in them.
+##
+## A placeholder with nothing behind it is left standing rather than blanked,
+## so an unwired one is visible in play instead of reading as a finished
+## sentence with a hole in it.
+func description_text(context: UnitStats = null) -> String:
+	var values: Dictionary = description_values(context)
+	if values.is_empty() || !description.contains("{"):
+		return description
+
+	var text: String = description
+	for key: String in values:
+		text = text.replace("{%s}" % key, str(values[key]))
+	return text
+
+
+## What this ability's placeholders stand for, as name -> value.
+##
+## Takes the stats of the unit the description is being shown FOR, because
+## every value worth placeholdering belongs to that unit rather than to this
+## resource - which is shared, and is the whole reason the number cannot simply
+## be stored here. Empty for the great majority of abilities, which have no
+## placeholder in their text at all.
+func description_values(_context: UnitStats = null) -> Dictionary:
+	return {}
 
 
 ## Plain text fallback, used when the rich tooltip cannot be built. Godot also

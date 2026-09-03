@@ -25,5 +25,5 @@ ability_id = 304
 display_name = "Bombardment"
 targeting = 0
 interval_seconds = 4.0
-radius_cells = 3.125
+radius_cells = 3.0
 rocket = SubResource("Rocket")

@@ -43,7 +43,7 @@ const RELEASED_KEY: String = "beast_released"
 @export var additional_targets: int = 1
 ## How far this tower's multishot reaches, in player cells. Named rather than
 ## taking the game's shared reach, because the source states its own.
-@export var multishot_cells: float = 3.12
+@export var multishot_cells: float = 3.0
 ## Mana gained per creep struck.
 @export var mana_per_target: float = 5.0
 
@@ -53,7 +53,7 @@ const RELEASED_KEY: String = "beast_released"
 ## tower's price never drags a model into memory - see CLAUDE.md.
 @export_file("*.tscn") var beast_scene_path: String = ""
 ## How far it runs, in player cells.
-@export var beast_cells: float = 5.47
+@export var beast_cells: float = 5.5
 ## How fast it runs, in cells per second. Authored against the distance rather
 ## than tuned by feel: it is slow enough to be walked into and walked out of,
 ## which is the whole difference between this and an instant line.
@@ -219,11 +219,11 @@ func _trample_line(tower: Building, direction: Vector3) -> void:
 
 
 func effect_text() -> String:
-	var text: String = ("Strikes %d additional creep within %s cells and gains"
-		+ " %s mana per creep hit. At full mana it sends a beast %s cells down"
+	var text: String = ("Strikes %d additional %s within %s and gains"
+		+ " %s mana per creep hit. At full mana it sends a beast %s down"
 		+ " the lane, dealing %s Siege damage to every ground creep in its path"
 		+ " and stunning them for %ss - once every %ss per creep.") % [
-		additional_targets,
+		additional_targets, StringUtil.plural("creep", additional_targets),
 		StringUtil.trim_number(multishot_cells),
 		StringUtil.trim_number(mana_per_target),
 		StringUtil.trim_number(beast_cells),

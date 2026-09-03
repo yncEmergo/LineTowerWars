@@ -10,6 +10,6 @@ display_name = "Sanctuary"
 targeting = 0
 slot = 6
 icon = ExtResource("2_ultimate_holy_disc")
-radius_cells = 3.91
+radius_cells = 4.0
 armor_bonus = 8
 regen_bonus_share = 2

@@ -46,7 +46,7 @@ func on_tick(creep: Creep, delta: float) -> void:
 
 
 func effect_text() -> String:
-	return "Permanently grants +%s armor to a random creep within %s cells every %s seconds." % [
+	return "Permanently grants +%s armor to a random creep within %s every %s seconds." % [
 		StringUtil.trim_number(armor_bonus),
 		StringUtil.trim_number(CreepPassive.aura_radius()),
 		StringUtil.trim_number(interval_seconds),

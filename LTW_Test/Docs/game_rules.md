@@ -403,6 +403,17 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     - a creature that simply IS a bigger animal than its neighbour may still
       be drawn bigger, inside the band. What is not allowed is bigger because
       it is a later tier
+    - **a BODY PLAN may be corrected as a whole, and that correction is a
+      rule rather than a per-creep nudge.** A plan is authored to look like
+      the creature it is, and some of them then read the wrong SIZE for the
+      field however faithfully they are drawn - a humanoid is tall and narrow
+      and the overhead camera reads narrow as small; a spider counts its legs
+      in its footprint and reads as far heavier than it is. Where that is
+      true it is true of EVERY creep on the plan, so the correction belongs
+      to the plan and moves all of them together. A single creep that is
+      still wrong after both its rung and its plan gets its own multiplier,
+      and a table of those that grows past two or three is the rung ramp or a
+      plan being papered over one creep at a time
     - a BOSS is the one thing allowed a noticeable step, and it is still a
       fraction rather than a multiple - see the Boss rule below
   - **the ladder RUNS OUT if nobody checks it, and it did.** It is measured in
@@ -469,9 +480,8 @@ PANEL shows and what a countdown means are gameplay and are the user's.
 - A multi selection only ever holds one KIND of unit, from one owner
   - Kind is coarser than type: every tower is one kind, so any tower can stand
     in a selection beside any other whatever its element, branch or tier
-  - Towers, mobile units, the send building and the technology discs are all
-    different kinds and are never mixed in one selection. The discs themselves
-    are NOT BUILT; the rule that keeps them out of a tower selection already is
+  - Towers, mobile units, the senders and the technology discs are all
+    different kinds and are never mixed in one selection
   - A selection BOX is narrower still and comes back with one exact TYPE: the
     type it caught most of, so a box over three Archers and two Crushers hands
     back the three Archers. A tie goes to the type the box met first
@@ -596,8 +606,17 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - A task that cannot be carried out when its turn comes is DROPPED and the
     chain carries on. A build spot taken while the builder walked over, and a
     tower there is no longer gold for, are the two that really happen
-  - Shift also keeps the ability ARMED after the click, so a row of towers is
-    one press of the button and one click per tower
+  - A chained click LEAVES the ability armed: the card keeps showing it, the
+    ghost keeps following the cursor and the reach stays drawn. So a row of
+    towers is one press of the button and one click per tower rather than a
+    trip back to the card between each
+  - **The arm lasts exactly as long as SHIFT IS HELD.** Letting go releases it.
+    The chain itself carries on - it was given to the unit and has nothing to
+    do with the card any more - and the player is free to start something else
+    on the same unit, a different building included
+  - Without that lifetime the ability outlives the gesture that meant it: place
+    the last tower of a row, let go of shift, click to pick something up, and
+    you would have placed another tower there instead
   - Shift is still the key that adds to a selection, and the two never
     collide: a click that lands on something the selection can attack is an
     ORDER before it is ever a selection, so the same press was never doing
@@ -608,11 +627,28 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     that unit is selected. There is one builder and a handful of attacker
     creeps, and a lane wearing every dot all of them are walking to would be
     unreadable
-  - a tower ordered and not started leaves a GREY GHOST of itself, drawn
-    whether or not the builder is selected - it is a decision about a piece of
-    ground rather than a note to the unit. It also HOLDS that ground: aiming
-    the next tower over one shows the placement as illegal, so a chain of five
-    cannot be stacked on one spot
+  - an ATTACK-MOVE names a point the same way and means something else there,
+    so its waypoint is RED where a walk's is green. The same red the attack
+    order's ring uses, so "this is an attack" is one colour across the whole
+    interface rather than two that nearly match
+  - a tower ordered and not started leaves a GHOST of itself, drawn whether or
+    not the builder is selected - it is a decision about a piece of ground
+    rather than a note to the unit. It also HOLDS that ground: aiming the next
+    tower over one shows the placement as illegal, so a chain of five cannot be
+    stacked on one spot
+  - a ghost is GREY when there will still be gold for it and RED when there
+    will not, counting everything queued in FRONT of it as already spent.
+    Thirty gold and five ten-gold towers is three grey and two red, and the
+    colours move the moment the gold does - a send, an upgrade, income arriving
+  - the same red an illegal placement uses, deliberately: both say the same
+    thing, that this will not happen, and a second colour for it would be a
+    distinction to learn for no gain
+  - the ghost under the CURSOR says it too, on the same terms and before the
+    click rather than after: it counts every tower already ordered and not yet
+    started as spent, so a chain of five on thirty gold turns red at the
+    fourth, and a single one turns red the moment the gold for it goes
+    elsewhere. It is a warning and not a gate - betting on income arriving
+    during the walk is a legitimate thing to ask for
   - the ghost is not only for chains. A single build order the builder is
     still walking to shows one too, from the click until the tower starts
   - an attack aimed at ONE unit leaves neither mark. What was chosen is the
@@ -800,9 +836,9 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - Placement is blank until that player is out, when it becomes their finish
   - Large numbers are shortened: 999, then 1.2k / 15.6k, then 102k / 903k, then
     1.2M
-  - TBD: the NAME. An anonymous mode showing the player's COLOUR instead belongs
-    to a game mode selection that does not exist yet, and player colours are not
-    built either, so it is the display name for now
+  - What a player is CALLED there is the match's own answer. Ordinarily it is
+    the display name; an ANONYMOUS match names them by their colour instead,
+    which is a match setting the host chooses in the lobby. See Match settings
 - The minimap sits in the bottom left corner, square, and shows the whole map
   - A lane is drawn as its spawn strip and its buildable body. The send strip
     above them is left out: nobody plays on it
@@ -815,10 +851,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     - yours white, everyone else's red. The default
     - yours white, everyone else's in their own player colour
     - everyone in their own player colour, yours included
-  - NOT BUILT: any way to change that setting in game. There is no options
-    menu yet, so it is set in the presentation config
-  - NOT BUILT: player colours are not chosen in the lobby yet, so the two
-    schemes that use them fall back to a fixed list indexed by slot
+  - NOT BUILT: any way to change that scheme in game. The options menu exists
+    but carries no minimap page, so it is set in the presentation config
+  - the COLOURS themselves are chosen in the lobby and travel with the match.
+    See Player colours below
   - A rectangle shows where the camera is looking. The camera's real footprint
     is a trapezoid, since it looks down at an angle, but the box is drawn square
     off the near edge of the view and always stays whole inside the minimap
@@ -955,8 +991,14 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     it. Nothing else is worth stopping for on the way: the player named that
     one
   - aimed at the GROUND, the unit walks there and attacks whatever comes into
-    reach, standing to fight until that is dead and then walking on. It is
-    finished when it reaches the point with nothing left in reach
+    reach. **What it finds it COMMITS to**, exactly as if the player had
+    clicked that creep: it chases it and stays on it until it is dead, or
+    until it is no longer something that can be aimed at - walked off the end
+    of the maze, say. Only then does the walk resume
+  - without that commitment the walk starts again the moment the creep steps
+    out of reach, so the unit lands one hit, watches it leave and carries on.
+    A chain behind it waits the whole time: the next order does not start
+    until the fight is over AND the point has been reached
   - a TOWER cannot walk, so for a tower the movement half simply does not
     happen and what is left is the plain "shoot that one" order it always had.
     Aiming one at the floor does nothing
@@ -983,6 +1025,14 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     is either obeyed or thrown away on the spot
   - Ordering never turns the automatic behaviour off. It only overrides which
     creep is current whenever the ordered one can actually be hit
+- A range circle FOLLOWS the unit it belongs to. Redundant for a tower, which
+  never moves, and the whole point for anything that walks: a creep or the
+  builder leaves a circle nailed to the ground within a second of being given
+  an order
+- A reach that answers nothing is not drawn at all, and the builder's hammer is
+  the case: a melee swing barely wider than the unit itself, on a unit that
+  walks, is a ring on its own feet. Whether a reach is worth showing is
+  authored on that attack, since nothing else can know
 - **Every tower can be asked what it reaches**, on its own square on every
   tower's card
   - It draws the reach and then takes it away again after a few seconds. A
@@ -1016,6 +1066,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The move order marker is deliberately NOT shown for an attack: what was
     chosen is the creep, and a marker on the floor would answer a different
     question
+- Changing the SELECTION ends whatever was being aimed at the old one, along
+  with any circles drawn for it. Both belonged to units the player has stopped
+  looking at, and a card left on its lone Cancel for a unit that armed nothing
+  is a dead square
 - While any ability is waiting for its target, the command card clears down to
   a single CANCEL
   - Nothing else can be pressed or hotkeyed until the order resolves or is
@@ -1033,6 +1087,26 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     option VISIBLE, which a key nobody mentioned is not
   - it backs out of ONE thing per press: the order being aimed first, then the
     menu it was aimed from
+- **CLOSE ONCE, THEN HOLD.** A unit sent at a target walks straight at it, and
+  from the moment it is in reach it stays put - through the windup and the whole
+  cooldown behind it - setting off after the creep again only when the next
+  attack is ready
+  - the approach is never gated on the cooldown. The unit has to be in reach
+    anyway, arriving early costs nothing anybody would want back, and an order
+    that left it standing for a whole attack period would read as an order that
+    never registered
+  - what IS refused is TRAILING: once it has arrived, following a creep through
+    a cooldown it can do nothing with buys nothing and quietly takes the kiting
+    out of the player's hands. Hit and run is the PLAYER's to order, which is
+    what makes it a skill
+  - re-issuing the order on the creep it is ALREADY standing at does not hand
+    the walk back. Otherwise the rule would be undone by clicking twice, and
+    the fastest player would be the one who spams the button
+  - a DIFFERENT creep is a different quarry and gets its own approach, at once,
+    however long the cooldown has left
+  - it changes nothing for a tower, which never moves, or for an attacker creep
+    marching on a tower that cannot run away. The builder is the unit it is
+    actually about
 - An attack has a WINDUP: the gap between it starting and its damage landing
   - it is the window an attack animation plays in - a hammer rising and
     falling, a barrel rocking back - so a tower that swings can land its blow
@@ -1051,6 +1125,27 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     upgrading - drops the swing. The cooldown is not handed back
   - a windup is authored only where there is an animation to fill it. A delay
     with nothing playing in it is one a player cannot see the reason for
+
+**EVERY REACH IN THE GAME IS A MULTIPLE OF A QUARTER CELL**, and every reach
+is SHOWN as a bare number with no unit written after it.
+
+- A reach is any distance a player can measure on the ground: an attack range,
+  a splash, an aura, a blast, how far an ability throws something. Movement
+  speed is the same measure per second and follows the same rule, so the whole
+  creep roster moves between 1.25 and 4.
+- The quarter is what makes those numbers comparable. The source game states
+  its distances in Warcraft III map units and 128 of them make a cell, so a
+  straight conversion gives 2.34, 4.69, 7.03, 9.77 - a wall of figures nobody
+  can hold in their head or tell apart. Rounded, a player learns a handful of
+  values and can compare any two towers at a glance.
+- It costs up to an eighth of a cell against the source figure, which is less
+  than the width of a creep. `unit_data.md` 3 has the conversion and the one
+  place in the code it happens.
+- **The word "cell" is never written next to one.** The number is the reach; a
+  unit repeated on every line of every tooltip is noise. The grid still calls
+  its squares cells in this document and in the source, which is why anything
+  a player reads says SQUARE for those.
+
 - One attack per tower, described by that tower's own attack stats
   - Attack speed in attacks per second, written as APS in the UI, so a bigger
     number is faster
@@ -1230,9 +1325,6 @@ they are written down here rather than being quietly dropped:
   a player set the attuned creep by hand on a shared 30 second cooldown; here
   the tower attunes to whatever it is currently shooting. The automatic half is
   what the source does anyway when nobody sets one
-- **Crystalized Light's mana drain** (Ultimate Crystal). It drains the mana of
-  creeps that use mana for their abilities, and creeps in this project carry
-  none. The number is authored, the tooltip says so, and the effect does nothing
 - **The technology sell refund.** `unit_data.md` 1.8 gives a technology tower a
   50% refund against a Basic tower's 60%. The refund share is one value shared
   by every building, so every tower currently refunds 60%. Splitting it is a
@@ -1246,6 +1338,16 @@ they are written down here rather than being quietly dropped:
   walking INTO the flames afterwards is not caught. Ground effects DO exist now
   - the Moonbeam's own attack leaves one - so this is no longer waiting on
   machinery, only on somebody deciding it is worth the change
+
+Every one of these is a decision to leave something out, and they stand.
+Frenzied Flames is the only one whose blocker has since gone - ground effects
+exist - so it is the one that could be built today if somebody decides it is
+worth the change.
+
+**Crystalized Light's mana drain used to be on this list and no longer is.** It
+was deferred because creeps carried no mana at all; several of them do now, and
+the Ultimate Crystal's lance takes it off every creep it passes that has a pool
+to lose any from. See Status effects.
 
 - The builder places FOUR towers: the three 10g Basic ones, and the **Elemental
   Core** at 200g. Everything else in the game is reached by upgrading one of
@@ -1355,6 +1457,17 @@ never learns what the creep did with it.
     tower of the line, never ten per tower, and a hit landing on a creep that
     is already full adds nothing - which matters because the tower that filled
     it may still be inside its own cooldown before it can set it off
+- **A mana drain** takes points off a creep's own pool per second, for a
+  window. The only thing in the game that reaches a creep's mana, and the only
+  status effect that does nothing at all to most of the roster: a creep whose
+  traits do not run on a pool has none to lose and is refused it outright,
+  rather than carrying a debuff that is doing nothing
+  - the BEST rate wins rather than the sum, the way a heal and a haste do. It
+    is a state the creep is in - its regeneration crystalized - rather than
+    damage arriving, so two towers holding it there hold it once
+  - it NETS against whatever is filling the pool rather than replacing it, so a
+    creep that regenerates faster than it is drained still fills, only slower.
+    See Mana
 - An **armour type** can be altered for a few seconds, once per type per creep
   - WHICH type is a choice the player makes per tower, cycled on the command
     card, and the tower says what it is currently set to. There is a default,
@@ -1458,9 +1571,12 @@ BUILT. A TOWER thing first and mostly, and now a few CREEPS have it too.
   handful of them across the roster and none at all in tier 1
   - the pool is the creep's and the rule is the trait's: what fills it, what
     happens when it is full, and what it costs are the trait's business
-  - it fills from being HIT rather than from attacking or from regeneration,
-    which is the shape every creep trait of this kind takes: a creep banks what
-    is done to it and spends the lot at a threshold
+  - what fills it is the trait's answer and there are three of them. Most bank
+    a point per HIT TAKEN and spend the lot at a threshold, which is the shape
+    the first one set. Some REGENERATE on a clock instead. One starts FULL and
+    drains, so its pool is a timer counting down rather than a cost being saved
+    - no creep fills a pool by attacking, which is the one route open to a tower
+    and closed to a creep
   - it shows on the unit panel exactly as a tower's does, and nowhere else. A
     creep carries no worldspace mana bar - a pack of three walking down a lane
     under a row of blue lines is noise where one tower's bar is information
@@ -1853,7 +1969,8 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
   - Creeps cut corners diagonally but never squeeze between two towers that only
     touch at a corner, matching the rule that they need a whole free internal cell
   - Only ATTACKER creeps push each other apart. A pack of them crowds at a
-    choke point rather than stacking into one body
+    choke point rather than stacking into one body, and no two of them may ever
+    stand inside each other at all - see the attacker rules below
   - Every other creep walks straight through its own kind. They are sent in
     packs and a lane holds a hundred of them, so nobody can read one body from
     two anyway, and shoving them apart pairwise cost more per tick than every
@@ -1886,6 +2003,27 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     a life with one is something its owner has to ORDER
   - a move order means MOVE: it walks and does not stop to fight. An attack
     order cancels the move rather than fighting it
+  - **an attacker keeps a ring of ground to itself and no other attacker may
+    enter it**, which is the one place in the game where two units are held
+    apart rather than merely nudged. The room it claims is a share of its own
+    SELECTION CIRCLE, so what a player is looking at is what the creep takes up
+    and a bigger attacker takes more of it
+    - held every tick and wherever the tick left it, so it holds for one
+      standing still as much as for one walking. A creep walked into is shoved
+      out of the way rather than stood inside, which is what pushing looks like
+      in any other RTS
+    - only against other ATTACKERS, and only on its own layer: a pack walking
+      underneath a flyer is not something either of them can feel
+    - the share is a number rather than a rule in code, and zero switches the
+      whole thing off and leaves the soft push every other creep has
+  - a pack ordered onto ONE POINT piles up around it rather than stacking on
+    it. Whoever gets there first holds the point and the rest stop where they
+    are blocked, so the pack settles outwards a ring at a time instead of
+    circling forever looking for a way in
+    - that giving-up is for a point on the GROUND only. An attack order names a
+      tower, and there is a whole ring of ground within reach of one, so a
+      creep sent onto a tower keeps going and is shoved round the outside until
+      it finds a place to stand
   - an attacker creep can only ever target a TOWER. The builder and technology
     discs cannot be attacked at all - not "are tough", not "are ignored while a
     tower is in range": they are not valid targets, ever. Enforced by their
@@ -2082,6 +2220,73 @@ is another entry in its file rather than a rule anywhere.
   - Each creep type carries its own population value; the exceptions are in the
     roster
 
+# The player's name
+BUILT.
+
+- A player is asked what to call themselves the FIRST time they open
+  multiplayer, and cannot go online until they have chosen. The prompt is
+  modal: everything behind it is dimmed and nothing behind it can be pressed
+  - it is asked BEFORE the connection is opened rather than after, because a
+    client states its name once on arriving and never again
+  - there is no way past it on a first run - no Cancel, and Escape does
+    nothing. A player who is CHANGING a name they already have can back out,
+    because nothing is waiting on them
+  - the box opens with the machine's own login name as a SUGGESTION, and
+    silently offers nothing at all when that would break a rule. It is not an
+    answer: a machine login is not a thing anybody picked to be known by
+- It is CHANGED from a button in the multiplayer panel showing the current
+  name, which opens the same prompt with a way out on it
+- **The name is a thing to display, never a claim to trust.** The server
+  sanitises whatever a client states about itself and the peer id remains the
+  identity, so the rules below are about what makes a legible name rather than
+  about who somebody is
+- What a name may be: LETTERS and DIGITS, plus space, underscore and hyphen
+  inside it, starting with a letter or a digit, between a floor and a ceiling
+  on its length. Deliberately unicode, so a name that needs an umlaut does not
+  have to be spelled wrong
+  - what it refuses is PUNCTUATION and SYMBOLS - what people use to impersonate
+    somebody else, to draw shapes in a lobby list, or to pad a name out with
+    things nobody can say out loud
+  - the prompt says WHY a name is refused rather than only grey out its button,
+    and it is the same call the store gates on, so the two cannot disagree
+- NOT BUILT: a profanity filter. Nothing checks what a name says, only what it
+  is made of
+- It is kept on the machine that typed it, with the video and audio settings
+  rather than in a `.tres` - it is written at runtime by whoever is sitting
+  there. See the note on UserSettings in the README
+
+# Player colours
+BUILT.
+
+- Every player has a COLOUR, and it is per-match identity: it is what anything
+  showing several players at once tells them apart by, and the only thing
+  naming a player at all in an ANONYMOUS match
+- It is CHOSEN IN THE LOBBY, from a dropdown on that player's own row. Only
+  your own row carries one - a colour is yours and nobody else's - and every
+  row shows the colour itself beside the name so the roster reads at a glance
+- **A colour is not a slot, and choosing one moves nothing.** A slot is a LANE,
+  dealt out by the server and re-dealt when somebody leaves or when the lanes
+  are shuffled; a colour is chosen and then kept. So picking one never changes
+  where a player sits in the lobby, and being moved never changes their colour
+- **Unique within a lobby.** The server assigns and validates, so a colour
+  somebody else holds is refused rather than duplicated - two of a colour could
+  not be told apart on a minimap, and in an anonymous match they would be two
+  players with the same name
+  - a colour another player holds is drawn GREYED in the dropdown rather than
+    left out of it, so a player can see what all of them are and which are gone
+  - the request takes the same round trip every other order does, and the row
+    is redrawn from what the server sends back. Two players reaching for the
+    same colour in the same second is exactly what that is for
+- **Nobody sits colourless.** Joining hands out the first free colour in the
+  palette, so the first player in is red, the second blue, and a match can be
+  started without anybody opening the dropdown
+  - somebody leaving frees theirs and leaves a GAP rather than shuffling the
+    colours below them along. The next joiner takes the gap
+- The palette and the names are in the presentation config, in the source
+  game's own order, which is what makes the default deal an RTS palette rather
+  than an arbitrary one. Reordering it re-colours every default
+- NOT BUILT: teams. Free for all only, so a colour says WHO and never WHICH SIDE
+
 # Match settings
 BUILT.
 
@@ -2191,6 +2396,22 @@ BUILT.
     figures are in `unit_data.md` section 1.7. Adopting them is pending a ruleset
     concept, which does not exist yet
 - Bosses steal more than one life. How many is per creep, in the roster
+- **CATCH-UP GOLD.** BUILT. When a player is eliminated, whoever they were
+  attacking is handed a one time lump of gold for the attacker they have just
+  been given instead
+  - losing an attacker is not a reprieve. The ring closes and the next player
+    round it takes over, and that player has been fighting somebody else all
+    match and may be several tiers of income ahead
+  - the lump is a multiple of what the NEW attacker earns per income tick, so
+    it scales with how big a step up they are rather than being a flat number
+    that means nothing by the twentieth minute. The multiple is in
+    `game_config.tres`
+  - paid to the DEFENDER, never to the new attacker, and once per hand-over
+  - it never fires in a 1v1: there is nobody for the ring to hand over to, and
+    a match whose second player is gone is already over
+  - the SOURCE GAME pays this differently - on a new attacker whose income is
+    HIGHER than the last one's, and at 1.5x the difference. `unit_data.md` 1.7
+    records both and says which is which
 
 # Win condition
 BUILT, in the smallest form: the match decides itself and then stops. There is no
@@ -2253,19 +2474,43 @@ that gets edited with it. What is recorded is WHICH decision was never yours.
     the whole game, and the source only names a distance for one tower
   - the six abilities approximated or left out, listed under Towers - which ones
     exist. Each is a judgement about what was worth building now
-- The send building's display name is still a placeholder
+- The DISCS are in the same position as the towers: their structure, prices and
+  effect numbers are the source game's, and two things about them are not
+  - the visual language above - round on square, the circle's colour saying the
+    element and its size saying the tier. Nothing in the source looks like this
+  - the Ultimate tier's own effect numbers, which the 9.4 disc sheet does not
+    record at all - only its base and Advanced tiers. `unit_data.md` 5.2 marks
+    them as supplied for this project rather than copied
+- The senders' display names are still placeholders, all four of them
 - Creep models are primitives varying only by shape, size and colour. Tower
   models are primitives too, but to a deliberate system - see Presentation
 - Creep separation strength is a tuning value you change while testing. Whatever
   it currently reads is a test state, not a decision - and the waypoint bug it was
   once masking is gone, so it is worth a real call at some point
+- So is the share of its selection circle an ATTACKER keeps clear, and how near
+  an ordered point a crowd counts as arriving. Both were set to feel their way
+  to a number rather than decided, and both are one value in the match config
 
 # Open questions
 - Recycling rule generalisation for 3+ players (deferred)
 - Map layout for more than 2 players (deferred)
-- Whether the send tooltip should state pack size
-- Whether to copy the source game's FOUR send buildings, one per creep tier, or
-  reach the tiers from one building some other way. A UI question, not a rules
-  one - nothing about a creep changes either way. See `unit_data.md` 6.1
 - Whether to adopt the source game's per-ruleset starting lives, which needs a
   ruleset concept first. See Life steal
+- Whether Sudden Death should also make creeps progressively tankier. The
+  source game lowers the damage they take by a share every minute for the rest
+  of the match; `unit_data.md` 1.7 has the figure and marks it NOT BUILT. It is
+  the only Sudden Death rule of the source's that was not copied
+- Whether a technology tower should refund less than a Basic one when sold. The
+  source game splits them; here one share is shared by every building. Listed
+  under the elemental abilities above, because that is where it bites
+
+Answered since, and kept here only so the answers are not re-asked:
+
+- CATCH-UP GOLD is built, on a rule of the user's rather than the source
+  game's: it fires when a player is eliminated and pays the defender a
+  multiple of their NEW attacker's income. See Life steal and recycling
+- The send tooltip DOES state what a pack holds, and spells the contents out
+  wherever a pack holds more than one kind
+- The source game's FOUR send buildings were copied, one per creep tier, and
+  the row of squares over the unit panel is how they are reached. See Sending
+  creeps

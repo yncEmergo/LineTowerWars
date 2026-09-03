@@ -9,8 +9,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/StrikeAnimation3D.gd" id="7_StrikeAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.3148
-outer_radius = 0.3698
+inner_radius = 0.3444
+outer_radius = 0.3994
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -19,9 +19,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_corrupted_treant_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.823
-select_radius = 0.315
-select_height = 0.321
+health_bar_height = 0.899
+select_radius = 0.344
+select_height = 0.359
 
 [node name="Visual" parent="." instance=ExtResource("3_corrupted_treant_model")]
 
@@ -42,8 +42,8 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/LegL"), NodePath("../Visual/LegR")]
 _arms = [NodePath("../Visual/Gait/ArmL"), NodePath("../Visual/Gait/ArmR")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.4336
-bob_height = 0.0225
+stride_length = 0.4866
+bob_height = 0.0252
 
 [node name="Strike" type="Node" parent="." node_paths=PackedStringArray("_unit", "_swing")]
 script = ExtResource("7_StrikeAnimation3D")

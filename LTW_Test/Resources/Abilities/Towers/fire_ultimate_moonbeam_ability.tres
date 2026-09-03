@@ -13,4 +13,4 @@ icon = ExtResource("2_ultimate_moonbeam")
 regen_per_second = 10
 max_damage_per_second = 1575
 duration_seconds = 3
-radius_cells = 2.34
+radius_cells = 2.25

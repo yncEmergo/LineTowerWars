@@ -9,6 +9,6 @@ ability_id = 375
 display_name = "Mountain Giant"
 description = "Sends a pack into the enemy maze and raises your income permanently."
 targeting = 1
-slot = 3
+slot = 2
 repeat_on_hold = true
 creep_stats = ExtResource("2_stats")

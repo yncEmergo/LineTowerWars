@@ -85,20 +85,20 @@ func on_tick(tower: Building, delta: float) -> void:
 
 func effect_text() -> String:
 	if aura_cells <= 0.0:
-		return ("Attacks hit %d additional targets. Everything hit takes"
+		return ("Attacks hit %d additional %s. Everything hit takes"
 			+ " +%s%% Spell Damage for %ss and is slowed by %s%%.") % [
-			additional_targets,
+			additional_targets, StringUtil.plural("target", additional_targets),
 			StringUtil.trim_number(spell_amplification * 100.0),
 			StringUtil.trim_number(amplification_seconds),
 			StringUtil.trim_number(slow_amount * 100.0),
 		]
 
-	return ("Attacks hit %d additional targets. Creeps within %s cells have"
+	return ("Attacks hit %d additional %s. Creeps within %s have"
 		+ " their attack damage reduced by %s%%, take %s%% additional Spell"
 		+ " Damage, are slowed by %s%% and have their slow duration increased"
 		+ " by %ss. The aura builds up the longer a creep stays in it and"
 		+ " fades once it leaves.") % [
-		additional_targets,
+		additional_targets, StringUtil.plural("target", additional_targets),
 		StringUtil.trim_number(aura_cells),
 		StringUtil.trim_number(damage_reduction * 100.0),
 		StringUtil.trim_number(spell_amplification * 100.0),

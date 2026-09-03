@@ -134,6 +134,7 @@ func _build_slots() -> void:
 			Log.err("LobbyRoom slot prefab root does not have a LobbySlot script")
 			return
 		_slot_list.add_child(slot)
+		slot.color_chosen.connect(_on_color_chosen)
 		_fill_slot(slot, index)
 
 
@@ -144,10 +145,33 @@ func _fill_slot(slot: LobbySlot, index: int) -> void:
 		return
 
 	# Two client windows on one machine look identical, so say which is which.
+	var is_own: bool = player.network_id == Net.peer_id()
 	var label: String = player.display_name
-	if player.network_id == Net.peer_id():
+	if is_own:
 		label += "  (you)"
 	slot.show_player(index, label, player.network_id == _lobby.host_id)
+	slot.show_color(player.color_index, is_own, _colors_taken_by_others(player))
+
+
+## The colours somebody OTHER than this player holds, which is what their
+## dropdown greys out. Worked out here rather than in the row, because it is a
+## question about the whole roster and a row knows only itself.
+func _colors_taken_by_others(player: MatchPlayer) -> Array:
+	var taken: Array = []
+	for member in _lobby.members:
+		if member == null || member == player:
+			continue
+		if member.color_index != MatchPlayer.NO_COLOR:
+			taken.append(member.color_index)
+	return taken
+
+
+## Asks the server; nothing changes here. The rows are rebuilt when the lobby
+## comes back, so a colour that was refused - somebody took it in the same
+## second - simply redraws as the one this player still has.
+func _on_color_chosen(color_index: int) -> void:
+	if Lobby.is_in_lobby():
+		Lobby.set_color(color_index)
 
 
 func _player_in_slot(index: int) -> MatchPlayer:

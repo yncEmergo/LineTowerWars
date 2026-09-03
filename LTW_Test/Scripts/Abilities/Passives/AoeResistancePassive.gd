@@ -30,4 +30,5 @@ func damage_taken_ratio(_creep: Creep, damage_type: DamageTable.DamageType,
 
 
 func effect_text() -> String:
-	return "Takes %d%% less physical damage from attacks that hit an area." 		% roundi((1.0 - damage_ratio) * 100.0)
+	return "Takes %d%% less physical damage from attacks that hit an area." \
+		% roundi((1.0 - damage_ratio) * 100.0)

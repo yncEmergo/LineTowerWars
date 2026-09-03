@@ -60,7 +60,7 @@ func _roused(creep: Creep) -> bool:
 
 func effect_text() -> String:
 	return ("Below %d%% health it counts as %s armor, gains +%d armor, and"
-		+ " grants every creep within %s cells +%d%% attack damage.") % [
+		+ " grants every creep within %s +%d%% attack damage.") % [
 		roundi(at_health * 100.0), UnitStats.armor_type_name(armor_type),
 		armor_bonus, StringUtil.trim_number(CreepPassive.aura_radius()),
 		roundi(damage_bonus * 100.0),

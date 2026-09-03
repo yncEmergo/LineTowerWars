@@ -61,11 +61,12 @@ func _left(tower: Building) -> float:
 
 
 func effect_text() -> String:
-	return ("Every %s seconds, one tower it can take within %s cells becomes"
-		+ " a %s, for free. Costs no mana and repeats for as long as the tower"
-		+ " stands; a turn that finds nothing simply starts the wait again."
-		+ " The fill over this square is how long is left.") % [
+	var becomes: String = _becomes_name()
+	return ("Every %s seconds, one tower it can take within %s becomes"
+		+ " %s %s, for free. Costs no mana and repeats for as long as the tower"
+		+ " stands; a turn that finds nothing starts the wait again. The fill"
+		+ " over this square is how long is left.") % [
 		StringUtil.trim_number(period_seconds),
 		StringUtil.trim_number(reach_cells),
-		_becomes_name(),
+		StringUtil.article(becomes), becomes,
 	]

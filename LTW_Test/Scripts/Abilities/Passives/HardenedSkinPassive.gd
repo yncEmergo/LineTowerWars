@@ -64,8 +64,7 @@ func heavy_hit_threshold() -> float:
 
 
 func effect_text() -> String:
-	return ("Very high armour. Every single hit that lands for %s or more"
-		+ " strips 1 point of it permanently, down to %d. Smaller hits do"
-		+ " nothing at all, however many of them land.") % [
+	return ("Every single hit that lands for %s or more permanently strips 1"
+		+ " point of armor, down to %d. A hit below that strips nothing.") % [
 		StringUtil.trim_number(damage_per_point), armor_floor,
 	]

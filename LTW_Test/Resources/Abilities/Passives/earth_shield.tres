@@ -8,6 +8,6 @@ ability_id = 332
 display_name = "Earth Shield"
 targeting = 0
 interval_seconds = 14.0
-radius_cells = 3.125
+radius_cells = 3.0
 heal_share = 0.1
 heal_seconds = 12.0

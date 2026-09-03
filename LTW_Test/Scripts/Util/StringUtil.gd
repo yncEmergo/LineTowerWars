@@ -62,3 +62,37 @@ static func ordinal_suffix(value: int) -> String:
 		3:
 			return "rd"
 	return "th"
+
+
+## "a" or "an", whichever fits the word after it. Written out rather than baked
+## into each sentence, because the words these sit in front of are unit NAMES
+## read out of a .tres - "a Voidalisk", "an Ultimate Harbinger" - and nothing
+## authoring one should have to think about the article.
+##
+## The vowel test and nothing cleverer. English has exceptions in both
+## directions ("a unicorn", "an hour") and no name in this game is one; a name
+## that ever is needs its article authored rather than guessed.
+static func article(word: String) -> String:
+	if word.is_empty():
+		return "a"
+	return "an" if "aeiou".contains(word.to_lower()[0]) else "a"
+
+
+## A word made plural when there is not exactly one of the thing, so a
+## generated line reads "3 Ghouls" and "1 Ghoul" off the same call.
+##
+## Regular English only - "s", "es" after a sibilant, "y" to "ies" after a
+## consonant - which is every name in the roster and every noun any generated
+## description uses. A name that does not follow those rules needs its plural
+## authored rather than guessed, and there is none yet.
+static func plural(word: String, count: int) -> String:
+	if absi(count) == 1 || word.is_empty():
+		return word
+
+	var lower: String = word.to_lower()
+	if lower.ends_with("s") || lower.ends_with("x") || lower.ends_with("z") \
+			|| lower.ends_with("ch") || lower.ends_with("sh"):
+		return word + "es"
+	if lower.ends_with("y") && !"aeiou".contains(lower[lower.length() - 2]):
+		return word.left(word.length() - 1) + "ies"
+	return word + "s"

@@ -10,5 +10,5 @@ display_name = "Wellspring"
 targeting = 0
 slot = 6
 icon = ExtResource("2_ultimate_water_disc")
-radius_cells = 2.34
+radius_cells = 2.25
 mana_regen_per_second = 5.4

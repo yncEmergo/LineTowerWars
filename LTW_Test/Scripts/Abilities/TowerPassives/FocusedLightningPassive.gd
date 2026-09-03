@@ -31,7 +31,7 @@ const STACK_KEY: String = "focus_stacks"
 ## do not chain at all.
 @export var chain_targets: int = 0
 ## How far each hop of that chain reaches, in player cells.
-@export var chain_cells: float = 3.9
+@export var chain_cells: float = 4.0
 
 
 ## The ramp is counted when the attack COMMITS rather than when it lands,
@@ -89,6 +89,6 @@ func effect_text() -> String:
 		+ " damage, up to %d attacks. A new target resets it.") % [
 		int(round(bonus_per_attack * 100.0)), max_stacks]
 	if chain_targets > 0:
-		text += " Each attack also chains to %d more creeps within %s cells at full damage." % [
+		text += " Each attack also chains to %d more creeps within %s at full damage." % [
 			chain_targets, StringUtil.trim_number(chain_cells)]
 	return text

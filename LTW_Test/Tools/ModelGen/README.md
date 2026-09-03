@@ -169,6 +169,16 @@ upgrade tree. **Run them** rather than screenshotting the editor viewport — th
 editor's cinematic capture renders them unlit. `Scenes/Dev` is scaffolding and
 should be deleted again once the review is done.
 
-Icons are baked separately, from the finished models: run
-`Scenes/Dev/icon_renderer.tscn` from the editor. It has to run rather than be a
-headless script, because baking an image means rendering one.
+Icons are baked separately, from the finished models, by a KEPT tool that is
+not part of this one:
+
+```
+godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- new
+```
+
+It has to run rather than go headless, because baking an image means rendering
+one. `new` bakes only the units that have no picture yet, which is what to
+reach for after adding a roster. It scans `Resources/UnitStats` rather than
+carrying a list, so a unit added today is baked without editing it.
+`2DArt/Icons/README.md` has the rest, including why it is pointed at the creeps
+and not at the towers.

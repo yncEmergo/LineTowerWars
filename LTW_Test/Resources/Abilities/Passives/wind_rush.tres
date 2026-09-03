@@ -7,6 +7,6 @@ script = ExtResource("1_passive")
 ability_id = 329
 display_name = "Wind Rush"
 targeting = 0
-radius_cells = 3.125
+radius_cells = 3.0
 speed_bonus = 0.4
 duration_seconds = 3.0

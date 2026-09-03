@@ -10,5 +10,5 @@ display_name = "Corrosion"
 targeting = 0
 slot = 6
 icon = ExtResource("2_ultimate_unholy_disc")
-radius_cells = 2.34
+radius_cells = 2.25
 armor_per_hit = 0.1

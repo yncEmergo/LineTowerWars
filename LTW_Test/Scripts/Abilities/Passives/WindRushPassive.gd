@@ -20,9 +20,9 @@ extends CreepPassive
 ## the ceiling it is counting towards, not here.
 
 @export_group("Settings")
-## How far it reaches, in player cells. The source states 400, which is 3.125
-## cells at the divisor every other reach uses - unit_data.md 3.
-@export var radius_cells: float = 3.125
+## How far it reaches, in player cells. The source states 400, which snaps
+## to 3 at the quarter every reach is stated in - unit_data.md 3.
+@export var radius_cells: float = 3.0
 ## Extra share of movement speed granted.
 @export_range(0.0, 2.0, 0.05) var speed_bonus: float = 0.40
 ## Seconds it lasts.
@@ -61,7 +61,7 @@ func _slowest_near(creep: Creep) -> Creep:
 
 
 func effect_text() -> String:
-	return ("At full mana, grants the slowest creep within %s cells +%d%%"
+	return ("At full mana, grants the slowest creep within %s +%d%%"
 		+ " movement speed for %s seconds.") % [
 		StringUtil.trim_number(radius_cells), roundi(speed_bonus * 100.0),
 		StringUtil.trim_number(duration_seconds),

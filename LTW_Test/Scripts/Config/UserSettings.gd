@@ -14,15 +14,22 @@ extends RefCounted
 ## static vars without one. Adding an autoload would also mean editing
 ## [autoload] in project.godot, which breaks a running editor - see CLAUDE.md.
 ##
-## PRESENTATION ONLY, all of it, and that is a hard line rather than a
-## coincidence. A dedicated server never opens this screen and must run the same
-## match whatever is in the file, so nothing here may ever be read by the
-## simulation - see multiplayer.md.
+## PRESENTATION AND IDENTITY, and never the SIMULATION. That is a hard line
+## rather than a coincidence: a dedicated server never opens this screen and
+## must run the same match whatever is in the file, so nothing here may ever
+## decide what happens in one - see multiplayer.md.
+##
+## The player's NAME lives here for the same reason the rest does. It is typed
+## on this machine by whoever is sitting at it, it has to survive being closed,
+## and it is a thing to DISPLAY rather than a claim anybody may trust: the
+## server sanitises whatever a client states about itself and the peer id
+## remains the identity. LobbyIdentity is what reads it.
 
 ## Where the player's choices are kept. user:// rather than res://, because
 ## res:// is read-only in an exported build.
 const FILE_PATH: String = "user://settings.cfg"
 
+const SECTION_PROFILE: String = "profile"
 const SECTION_VIDEO: String = "video"
 const SECTION_AUDIO: String = "audio"
 const SECTION_GAMEPLAY: String = "gameplay"
@@ -113,6 +120,12 @@ const DEFAULT_WINDOW_MODE: WindowMode = WindowMode.WINDOWED
 const DEFAULT_HEALTH_BAR_DISPLAY: HealthBarDisplay = HealthBarDisplay.ALWAYS
 const DEFAULT_KEYBOARD_LAYOUT: KeyboardLayout = KeyboardLayout.EUROPEAN
 
+## What this player calls themselves in multiplayer, or empty when they have
+## never chosen. EMPTY IS MEANINGFUL: it is what makes the lobby browser ask,
+## and it is why this has no factory default the way everything else here does.
+## Written through LobbyIdentity.choose_name, which is where the rules are.
+static var player_name: String = ""
+
 static var window_mode: WindowMode = DEFAULT_WINDOW_MODE
 static var shadows_enabled: bool = DEFAULT_SHADOWS_ENABLED
 static var health_bar_display: HealthBarDisplay = DEFAULT_HEALTH_BAR_DISPLAY
@@ -156,6 +169,7 @@ static func load_from_disk() -> void:
 		})
 		return
 
+	player_name = str(file.get_value(SECTION_PROFILE, "player_name", ""))
 	window_mode = _read_enum(file, SECTION_VIDEO, "window_mode",
 		DEFAULT_WINDOW_MODE, WindowMode.size()) as WindowMode
 	health_bar_display = _read_enum(file, SECTION_GAMEPLAY, "health_bar_display",
@@ -196,6 +210,7 @@ static func _read_hotkeys(file: ConfigFile) -> void:
 ## nothing to confirm.
 static func save_to_disk() -> void:
 	var file: ConfigFile = ConfigFile.new()
+	file.set_value(SECTION_PROFILE, "player_name", player_name)
 	file.set_value(SECTION_VIDEO, "window_mode", int(window_mode))
 	file.set_value(SECTION_VIDEO, "shadows", shadows_enabled)
 	file.set_value(SECTION_GAMEPLAY, "health_bar_display", int(health_bar_display))

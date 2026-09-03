@@ -33,7 +33,7 @@ const POINT_KEY: String = "rift_point"
 @export var regen_per_second: float = 10.0
 ## How far around the CREEP BEING SHOT it looks for something to mark, in
 ## player cells.
-@export var radius_cells: float = 2.34
+@export var radius_cells: float = 2.25
 ## Seconds between marking a creep and dragging it back.
 @export var delay_seconds: float = 3.0
 ## Share of the creep's MAXIMUM health dealt as Spell Damage.
@@ -301,7 +301,7 @@ func _mark_scene() -> PackedScene:
 func effect_text() -> String:
 	var text: String = ("Regenerates %s mana per second. At full mana its next"
 		+ " attack marks the creep it is shooting - or the nearest creep within"
-		+ " %s cells of it, if that one cannot be marked - and %ss later that"
+		+ " %s of it, if that one cannot be marked - and %ss later that"
 		+ " creep is returned to where it came from and takes %s%% of its"
 		+ " maximum health plus %s as Spell Damage. A creep is then safe from"
 		+ " it for %ss from the moment it lands, and %d%% of the mana is"

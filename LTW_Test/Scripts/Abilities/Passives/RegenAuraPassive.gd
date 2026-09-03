@@ -24,6 +24,6 @@ func effect_text() -> String:
 	var config: GameConfig = References.game_config
 	if config != null:
 		radius = config.creep_aura_radius_cells
-	return "Restores %s health per second to every creep within %s cells." % [
+	return "Restores %s health per second to every creep within %s." % [
 		StringUtil.trim_number(health_per_second), StringUtil.trim_number(radius),
 	]

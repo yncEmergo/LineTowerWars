@@ -10,5 +10,5 @@ display_name = "Quickening"
 targeting = 0
 slot = 6
 icon = ExtResource("2_earth_disc")
-radius_cells = 2.34
+radius_cells = 2.25
 attack_speed_bonus = 0.08

@@ -47,7 +47,7 @@ func on_kill(tower: Building, target: Unit) -> void:
 
 func effect_text() -> String:
 	return ("Corrupts creeps hit for %ss. A corrupted creep that dies explodes"
-		+ " for %s Spell Damage within %s cells.") % [
+		+ " for %s Spell Damage within %s.") % [
 		StringUtil.trim_number(duration_seconds),
 		StringUtil.compact_number(explosion_damage),
 		StringUtil.trim_number(explosion_cells),

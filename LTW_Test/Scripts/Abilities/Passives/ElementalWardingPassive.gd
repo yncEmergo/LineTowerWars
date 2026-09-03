@@ -54,8 +54,8 @@ func on_tick(creep: Creep, delta: float) -> void:
 
 
 func effect_text() -> String:
-	return ("Takes %d%% less damage of whichever type has hurt it most, and can"
-		+ " move that resistance once every %s seconds.") % [
+	return ("Takes %d%% less damage of whichever damage type has hurt it"
+		+ " most, and can change which type once every %s seconds.") % [
 		roundi((1.0 - damage_ratio) * 100.0),
 		StringUtil.trim_number(swap_seconds),
 	]

@@ -27,6 +27,6 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return "Friendly towers within %s cells regenerate %s mana per second." % [
+	return "Friendly towers within %s regenerate %s mana per second." % [
 		StringUtil.trim_number(radius_cells),
 		StringUtil.trim_number(mana_regen_per_second)]

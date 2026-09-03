@@ -39,7 +39,7 @@ A_PRIORITIZE = "res://Resources/Abilities/prioritize_ability.tres"
 A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 
 RING_MATERIAL = "res://Resources/Materials/Towers/selection_ring.tres"
-# Placeholder icons, baked from the models by Scenes/Dev/icon_renderer.tscn.
+# Placeholder icons, baked from the models by Scenes/Tools/icon_gen_3d.tscn.
 # Named after the tower's display name, which is the key - see 2DArt/Icons.
 ICONS = "res://2DArt/Icons"
 # Action icons, drawn by Tools/IconGen. An ability that is not ABOUT a unit -

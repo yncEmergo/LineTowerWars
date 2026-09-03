@@ -13,6 +13,12 @@ extends Control
 ## This screen is also where a client meets the network (D20): the connection is
 ## opened when the browser opens and closed on the way out, so a player who only
 ## ever presses Play never opens a socket.
+##
+## **It is also where a player is asked what to call themselves.** A name is
+## needed before the connection is worth opening at all - the server is told it
+## the moment a client arrives - so a machine that has never chosen one gets the
+## prompt FIRST and dials out afterwards. Somebody who already has a name never
+## sees it and can change it from the button in the header.
 
 @export_group("References")
 ## Parent for the rows. Emptied and refilled on every list update.
@@ -25,6 +31,13 @@ extends Control
 @export var _create_button: Button
 @export var _refresh_button: Button
 @export var _back_button: Button
+## Shows the name this machine plays under, and opens the prompt to change it.
+## A button rather than a label with a button beside it: the thing a player
+## wants to click IS their name.
+@export var _name_button: Button
+## Asks for that name. Modal, and inescapable until one is chosen - see
+## NamePrompt.
+@export var _name_prompt: NamePrompt
 
 @export_group("Create Lobby")
 ## Overlay asking for a name and a player count. Hidden until Create is pressed.
@@ -54,8 +67,8 @@ func _ready() -> void:
 		Log.err("LobbyBrowser found no MenuConfig on References")
 	_connect_buttons()
 	_setup_create_panel()
+	_setup_name_prompt()
 	_connect_network()
-	_ensure_connected()
 	refresh()
 
 	# Why we are back, if we were thrown out of a lobby rather than having
@@ -63,6 +76,10 @@ func _ready() -> void:
 	var notice: String = MenuNavigation.take_pending_notice()
 	if !notice.is_empty():
 		_set_status(notice)
+
+	# LAST, and only once there is a name to arrive with - which is
+	# _ensure_connected's own answer, so Reconnect goes through the same gate.
+	_ensure_connected()
 
 
 ## Puts a list of lobbies on screen, replacing whatever was there.
@@ -100,9 +117,21 @@ func _connect_network() -> void:
 	Lobby.request_refused.connect(_on_request_refused)
 
 
+## Opens the connection, or asks for a name first.
+##
+## The NAME GATE lives here rather than in _ready, so every road to a
+## connection goes through it - opening the screen, and the Reconnect button a
+## failed attempt leaves behind. A client states its name once, on arrival, so
+## dialling out without one would register the fallback and then have to
+## correct it.
 func _ensure_connected() -> void:
 	if Net.status() != NetworkService.Status.OFFLINE:
 		return
+	if !LobbyIdentity.has_name():
+		_set_status("Choose a player name to play online.")
+		_open_name_prompt(false)
+		return
+
 	var result: NetworkService.Result = Net.join()
 	if result != NetworkService.Result.OK:
 		_set_status("Cannot connect: %s" % NetworkService.describe(result))
@@ -189,6 +218,8 @@ func _connect_buttons() -> void:
 		_create_confirm_button.pressed.connect(_on_create_confirmed)
 	if _create_cancel_button != null:
 		_create_cancel_button.pressed.connect(_on_create_cancelled)
+	if _name_button != null:
+		_name_button.pressed.connect(_on_name_button_pressed)
 
 
 func _setup_create_panel() -> void:
@@ -203,6 +234,57 @@ func _setup_create_panel() -> void:
 		_player_count_spin.value = _config.default_lobby_size
 	if _lobby_name_input != null:
 		_lobby_name_input.max_length = _config.max_lobby_name_length
+
+
+# --- the player's name -----------------------------------------------------
+
+func _setup_name_prompt() -> void:
+	if _name_prompt != null:
+		_name_prompt.name_chosen.connect(_on_name_chosen)
+		_name_prompt.cancelled.connect(_on_name_cancelled)
+	_update_name_button()
+
+
+## Opens the prompt, or says so loudly if the prefab was never wired - a
+## machine with no name and no way to enter one would otherwise sit on a
+## browser that quietly refuses to connect.
+func _open_name_prompt(may_cancel: bool) -> void:
+	if _name_prompt == null:
+		Log.err("LobbyBrowser has no NamePrompt wired, a name cannot be chosen")
+		return
+	_name_prompt.open(may_cancel)
+
+
+func _on_name_button_pressed() -> void:
+	_open_name_prompt(LobbyIdentity.has_name())
+
+
+## A name arrived. Two different jobs depending on where we were: the FIRST one
+## opens the connection this screen has been holding back, and a later one has
+## to tell a server that already knows us by the old one.
+func _on_name_chosen(_player_name: String) -> void:
+	_update_name_button()
+	if Net.status() == NetworkService.Status.OFFLINE:
+		_set_status("Connecting to %s..." % _server_text())
+		_ensure_connected()
+		return
+	# Already connected, so the server is holding the previous name against our
+	# peer id. Registering again overwrites it, and it pushes the lobby list
+	# back so every row that names us is redrawn.
+	Lobby.rename_player()
+	_update_status()
+
+
+func _on_name_cancelled() -> void:
+	_update_status()
+
+
+func _update_name_button() -> void:
+	if _name_button == null:
+		return
+	var chosen: bool = LobbyIdentity.has_name()
+	_name_button.text = LobbyIdentity.display_name() if chosen else "Set name"
+	_name_button.tooltip_text = "Change the name other players see you as."
 
 
 func _on_join_pressed() -> void:

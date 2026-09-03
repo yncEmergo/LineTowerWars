@@ -20,7 +20,7 @@ const SHIFT_KEY: String = "shifting_parity"
 ## Times the attack bounces onwards from its target.
 @export var bounces: int = 3
 ## How far each bounce reaches, in player cells.
-@export var bounce_cells: float = 1.56
+@export var bounce_cells: float = 1.5
 ## Mana gained per creep struck, bounces included.
 @export var mana_per_target: float = 2.0
 ## Mana lost per second while nothing tops it up.
@@ -91,7 +91,7 @@ func _is_surging(tower: Building) -> bool:
 
 
 func effect_text() -> String:
-	var text: String = ("Attacks bounce up to %d times within %s cells, gaining"
+	var text: String = ("Attacks bounce up to %d times within %s, gaining"
 		+ " %s mana per creep hit. Damage rises by up to +%s%% with the mana"
 		+ " held, and by +%s%% against flyers. Mana drains %s per second.") % [
 		bounces,

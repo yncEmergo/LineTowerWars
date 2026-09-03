@@ -102,9 +102,9 @@ func advance(creep: Creep, delta: float) -> bool:
 ## carry theirs, so a rate that comes to seven and a half points a tick really
 ## deals seven and a half rather than seven.
 ##
-## SPELL damage, which is what the source states, so it goes through whatever
-## the defending tower is and ignores nothing about it - a maze of Fortified
-## towers reads a dive very differently to a maze of Unarmoured ones.
+## SPELL damage, which is what the source states, so it ignores the armour
+## matrix and the tower armour points alike - a dive lands for the same number
+## on a Fortified tower as on an Unarmoured one. See DamageTable.
 func _burn(creep: Creep, delta: float) -> void:
 	if _damage_per_second <= 0.0 || _damage_radius <= 0.0:
 		return

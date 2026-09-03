@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.5476
-outer_radius = 0.6026
+inner_radius = 0.5458
+outer_radius = 0.6008
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -18,8 +18,8 @@ script = ExtResource("1_Creep")
 stats = ExtResource("2_frost_wyrm_stats")
 _selection_ring = NodePath("SelectionRing")
 health_bar_height = 0.453
-select_radius = 0.548
-select_height = 0.137
+select_radius = 0.546
+select_height = 0.136
 
 [node name="Visual" parent="." instance=ExtResource("3_frost_wyrm_model")]
 
@@ -36,9 +36,9 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/WingL"), NodePath("../Visual/WingR")]
 _arms = [NodePath("../Visual/Tail")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.4756
+stride_length = 0.478
 hover_cycles_per_second = 0.7
-bob_height = 0.0246
+bob_height = 0.0245
 swing_degrees = 9
 arm_swing_degrees = 5
 lean_degrees = 0

@@ -8,6 +8,6 @@ script = ExtResource("1_UpgradeTowerAbility")
 ability_id = 76
 tower_stats = ExtResource("2_greater_watch_tower_stats")
 display_name = "Upgrade to Greater Watch Tower"
-description = "Pure single target reach. The longest range in the game and no splash at all, so every shot is spent on one creep."
+description = "Pure single target reach. The longest range in the game, and no splash at all."
 targeting = 1
 slot = 0

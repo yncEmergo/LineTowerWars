@@ -9,6 +9,6 @@ ability_id = 268
 tower_stats = ExtResource("2_earth_ultimate_ancient_warden_stats")
 required_tech_id = 17
 display_name = "Upgrade to Ultimate Ancient Warden"
-description = "Heavy siege splash that permanently eats armor. What you put at the front of a maze."
+description = "Heavy siege splash that permanently eats armor."
 targeting = 1
 slot = 0

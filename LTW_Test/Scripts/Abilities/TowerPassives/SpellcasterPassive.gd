@@ -35,7 +35,7 @@ const ORB_KEY: String = "arcane_orb_armed"
 ## Seconds between casts.
 @export var cast_seconds: float = 3.34
 ## How far it reaches to pick a creep, in player cells.
-@export var cast_cells: float = 4.69
+@export var cast_cells: float = 4.75
 ## Spell Damage a second it deals.
 @export var damage_per_second: float = 90.0
 ## How long it burns for.
@@ -53,7 +53,7 @@ const ORB_KEY: String = "arcane_orb_armed"
 ## Flat bonus damage the orb carries.
 @export var orb_bonus_damage: int = 110
 ## Radius the orb splashes over, in player cells.
-@export var orb_splash_cells: float = 1.41
+@export var orb_splash_cells: float = 1.5
 
 @export_group("Aether Attunement")
 ## Share of the damage dealt that is re-applied to the attuned creep, or 0 on
@@ -153,10 +153,10 @@ func _advance_attunement(tower: Building, delta: float) -> void:
 
 func effect_text() -> String:
 	var text: String = ("Regenerates %s mana per second. Casts Frostfire every"
-		+ " %ss on a creep within %s cells for %s Spell Damage per second over"
+		+ " %ss on a creep within %s for %s Spell Damage per second over"
 		+ " %ss, slowing it up to %s%%; each target hit since the last cast"
 		+ " raises that by %s%%. At full mana an attack is spent as an Arcane"
-		+ " Orb: +%s damage splashing %s cells.") % [
+		+ " Orb: +%s damage splashing %s.") % [
 		StringUtil.trim_number(regen_per_second),
 		StringUtil.trim_number(cast_seconds),
 		StringUtil.trim_number(cast_cells),

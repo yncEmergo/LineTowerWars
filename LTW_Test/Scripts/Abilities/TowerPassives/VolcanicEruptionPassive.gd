@@ -108,10 +108,11 @@ func _missing_armor_damage(target: Unit, dealt: int) -> int:
 ## armour taken is a share of the creep's maximum rather than of what is left.
 func effect_text() -> String:
 	var text: String = ("%d%% chance to deal %d%% bonus damage as Spell Damage"
-		+ " to up to %d targets within its splash and permanently reduce their"
-		+ " armor by %d%% of its maximum.") % [
+		+ " to up to %d %s within its splash, and to permanently reduce the"
+		+ " armor of each by %d%% of that creep's own base armor.") % [
 		int(round(chance * 100.0)), int(round(bonus_share * 100.0)),
-		targets, int(round(armor_share * 100.0)),
+		targets, StringUtil.plural("creep", targets),
+		int(round(armor_share * 100.0)),
 	]
 	if guaranteed_every <= 0:
 		return text
@@ -122,6 +123,6 @@ func effect_text() -> String:
 	]
 	if missing_armor_bonus <= 0.0:
 		return text + "."
-	return text + (", which deals %d%% additional bonus Spell Damage for every"
-		+ " 10%% of base armor missing from targets.") \
+	return text + (", which deals a further %d%% bonus Spell Damage for every"
+		+ " 10%% of its base armor the creep has already lost.") \
 		% int(round(missing_armor_bonus * 100.0))

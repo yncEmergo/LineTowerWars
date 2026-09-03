@@ -24,7 +24,7 @@ impact_scene_path = "res://Scenes/Effects/arcane_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SplashEffect")
-radius = 0.78
+radius = 0.75
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")

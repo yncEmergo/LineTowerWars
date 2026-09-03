@@ -101,6 +101,28 @@ func decay(share_per_second: float, delta: float) -> void:
 	current = clampi(current - whole, 0, maximum)
 
 
+## Drains a FLAT amount per second, which is what a tower crystalizing a
+## creep's mana regeneration does to it. The mirror of decay() above, and the
+## difference is only the unit: that one takes a share of the ceiling, this one
+## takes points.
+##
+## It shares _carry with regenerate() on purpose rather than keeping a second
+## one. A creep that regenerates while it is being drained should net the two,
+## and one carry is what makes that fall out for free - a Shaman filling at a
+## point a second under a drain of a third of one fills at two thirds of a
+## point a second, with no rule anywhere saying so.
+func siphon(per_second: float, delta: float) -> void:
+	if per_second <= 0.0 || current <= 0 || !MatchSession.is_authority():
+		return
+
+	_carry -= per_second * delta
+	var whole: int = int(-_carry)
+	if whole <= 0:
+		return
+	_carry += float(whole)
+	current = clampi(current - whole, 0, maximum)
+
+
 ## Takes mana, refusing to go below zero. Reports whether there was enough,
 ## so a passive can gate on the spend itself rather than checking first.
 func spend(amount: int) -> bool:

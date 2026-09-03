@@ -17,4 +17,4 @@ burst_damage = 2500
 max_mana_cost = 5
 max_mana_floor = 20
 neighbour_penalty = 20
-neighbour_cells = 1.17
+neighbour_cells = 1.25

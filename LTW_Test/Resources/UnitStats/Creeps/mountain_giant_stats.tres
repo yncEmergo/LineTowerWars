@@ -22,7 +22,7 @@ damage_max = 700
 damage_type = 4
 attacks_per_second = 0.67
 target_class = 1
-attack_range = 1.17
+attack_range = 1.25
 delivery = SubResource("Delivery")
 
 [resource]
@@ -37,7 +37,7 @@ attack = SubResource("Attack")
 abilities = Array[ExtResource("2_ability")]([ExtResource("10_card"), ExtResource("11_card"), ExtResource("12_card"), ExtResource("13_card"), ExtResource("14_card"), ExtResource("15_card")])
 default_ability = ExtResource("10_card")
 scene_path = "res://Scenes/Units/Creeps/mountain_giant.tscn"
-move_speed = 2.2656
+move_speed = 2.25
 turn_speed = 8.0
 arrive_threshold = 0.05
 pack_size = 3

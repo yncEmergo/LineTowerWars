@@ -7,8 +7,8 @@
 [ext_resource type="Script" path="res://Scripts/Components/WalkAnimation3D.gd" id="5_WalkAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
-inner_radius = 0.4762
-outer_radius = 0.5312
+inner_radius = 0.4745
+outer_radius = 0.5295
 rings = 20
 ring_segments = 4
 material = ExtResource("4_selection_ring")
@@ -17,9 +17,9 @@ material = ExtResource("4_selection_ring")
 script = ExtResource("1_Creep")
 stats = ExtResource("2_harpy_windwitch_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.433
-select_radius = 0.476
-select_height = 0.127
+health_bar_height = 0.432
+select_radius = 0.475
+select_height = 0.126
 
 [node name="Visual" parent="." instance=ExtResource("3_harpy_windwitch_model")]
 
@@ -36,9 +36,9 @@ _body = NodePath("../Visual/Gait")
 _legs = [NodePath("../Visual/WingL"), NodePath("../Visual/WingR")]
 _arms = [NodePath("../Visual/Tail")]
 leg_phases = PackedFloat32Array(0, 0.5)
-stride_length = 0.4756
+stride_length = 0.478
 hover_cycles_per_second = 1.05
-bob_height = 0.0228
+bob_height = 0.0227
 swing_degrees = 9
 arm_swing_degrees = 5
 lean_degrees = 0

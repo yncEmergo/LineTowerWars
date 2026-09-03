@@ -47,5 +47,5 @@ func on_spawn(creep: Creep) -> void:
 
 func effect_text() -> String:
 	return ("Converts %d%% of its maximum health into a shield that absorbs"
-		+ " damage before any of it reaches the creep.") \
+		+ " damage before any of it reaches its health.") \
 		% roundi((1.0 - health_share) * 100.0)

@@ -26,7 +26,7 @@ const REFUND_KEY: String = "bloom_refund"
 @export var minimum_gold: int = 12
 ## How far it looks for neighbours, in player cells. 0 lifts the rule entirely,
 ## which is what the Ultimate authors.
-@export var crowding_cells: float = 1.95
+@export var crowding_cells: float = 2.0
 
 @export_group("Blast")
 ## Mana regenerated per second.
@@ -36,7 +36,7 @@ const REFUND_KEY: String = "bloom_refund"
 ## else. See unit_data.md 1.1.
 @export var blast_damage: int = 350
 ## Radius it covers, in player cells.
-@export var blast_cells: float = 1.56
+@export var blast_cells: float = 1.5
 ## Armour taken off everything caught, and for how long. Temporary here, unlike
 ## Earth's, because the source states a duration.
 @export var armor_reduction: float = 1.0
@@ -106,18 +106,20 @@ func _payout(tower: Building) -> int:
 func effect_text() -> String:
 	var text: String = "Generates %s gold per attack" % StringUtil.compact_number(gold_per_attack)
 	if crowding_cells > 0.0:
-		text += ", reduced by %s for every other Primalist within %s cells, down to %s" % [
+		text += ", reduced by %s for every other Primalist within %s, down to %s" % [
 			StringUtil.compact_number(gold_per_neighbour),
 			StringUtil.trim_number(crowding_cells),
 			StringUtil.compact_number(minimum_gold)]
-	text += (". Regenerates %s mana per second; at full mana it blasts for %s"
-		+ " Magic damage within %s cells and takes %s armor for %ss. Half the"
-		+ " mana returns if it catches %d creeps or fewer.") % [
+	text += (". Regenerates %s mana per second; at full mana its next attack"
+		+ " blasts every creep within %s for %s Magic damage and takes %s"
+		+ " armor off each of them for %ss. %d%% of the mana is returned if it"
+		+ " catches %d creeps or fewer.") % [
 		StringUtil.trim_number(regen_per_second),
-		StringUtil.compact_number(blast_damage),
 		StringUtil.trim_number(blast_cells),
+		StringUtil.compact_number(blast_damage),
 		StringUtil.trim_number(armor_reduction),
 		StringUtil.trim_number(armor_seconds),
+		roundi(refund_share * 100.0),
 		refund_below,
 	]
 	return text

@@ -61,14 +61,35 @@ extends Resource
 ## of them standing inside each other on one tower is something their owner
 ## would be looking straight at.
 @export var attacker_separation_limit: float = 0.6
+## How much room an ATTACKER creep keeps around itself, as a share of its own
+## selection circle. Two attackers may never stand closer than the sum of the
+## two, and this is the HARD half of crowding: the push above steers a creep
+## that is walking, where this holds wherever the tick left it.
+##
+## A share of the SELECTION CIRCLE rather than a length of its own, so the room
+## a creep claims is the ring the player is looking at - a bigger attacker
+## takes more of it without a second number per creep. At 1.0 two rings would
+## just touch, so anything below overlaps them by design.
+##
+## Zero switches the hard half off entirely and leaves only the soft push,
+## which is what every creep in the game had before.
+@export var attacker_personal_space_ratio: float = 0.5
+## How near its ordered point an ATTACKER has to be before the crowd already
+## standing on it counts as arriving, in player cells.
+##
+## Without it a pack ordered onto one point never settles: the first creep
+## there holds the point and the rest slide round the outside looking for a way
+## in that the rule above will never give them. With it they stop where they
+## are blocked, which is how a pack piles up in any other RTS.
+@export var attacker_crowd_arrive_cells: float = 1.5
 ## Radius of EVERY creep aura, in player cells. One value for the whole game
 ## rather than a per creep one, so an aura is the same size whichever creep
 ## brings it and a player only ever has to learn the shape once. Auras also do
 ## not stack: the best one in range applies. See game_rules.md.
 ##
-## The source game gives every creep aura 700 AoE, which is 5.47 cells at the
-## same divisor every other reach in the game uses (unit_data.md 3).
-@export var creep_aura_radius_cells: float = 5.47
+## The source game gives every creep aura 700 AoE, which snaps to 5.5 at the
+## quarter every reach in the game is stated in (unit_data.md 3).
+@export var creep_aura_radius_cells: float = 5.5
 ## How far a MULTISHOT reaches for its further targets, in player cells.
 ##
 ## One value for the whole game, exactly as the creep aura radius is and for
@@ -254,6 +275,19 @@ extends Resource
 ## raised to it the moment it starts, so a match that is being lost slowly can
 ## still afford what the last tier costs. 0 switches the raise off.
 @export var sudden_death_income_floor: int = 1000000
+## Gold a player is handed when the ring closing gives them a NEW ATTACKER, as
+## a multiple of that attacker's current income. 0 switches the rule off.
+##
+## CATCH-UP GOLD. When a player is eliminated, whoever they were sending into
+## suddenly faces the next player round the ring instead - who has been playing
+## a different match and may be far richer. This is the one payment that
+## acknowledges it: a lump equal to what the new attacker earns per income
+## tick, once, at the moment the hand-over happens.
+##
+## Paid to the DEFENDER, never to the new attacker, and never in a 1v1 - the
+## match is already over there, and a player cannot be handed a share of their
+## own income. See game_rules.md, Life steal and recycling.
+@export var catch_up_gold_share: float = 1.0
 ## Income above which tier 4 creeps stop paying properly. 0 removes the cap.
 @export var income_cap: int = 4000000
 ## Share of a tier 4 creep's income a player over the cap actually receives.
@@ -267,12 +301,44 @@ extends Resource
 @export var min_starting_lives: int = 25
 
 @export_group("Cheats")
-## Whether developer cheats respond at all. Off by default and checked by the
-## AUTHORITY as well as by the machine the key was pressed on, so a server with
-## this off refuses a cheat order however the client asking was built.
+## Whether developer cheats respond at all. Checked by the AUTHORITY as well as
+## by the machine the key was pressed on, so a server with this off refuses a
+## cheat order however the client asking was built.
+##
+## This is the master switch and it is NOT the whole answer - see
+## cheats_allowed(), which is what everything actually asks.
 @export var cheats_enabled: bool = false
+## Whether the master switch above still counts once the match is NETWORKED.
+##
+## OFF, so cheats are a single player testing tool and nothing else. A cheat is
+## an ordinary player order that the server grants, which means one player in a
+## real match could hand themselves the gold to end it - and the flag that
+## would have stopped that is on the SERVER's copy of this file, which is not
+## the machine anybody is looking at while they play.
+##
+## It is a flag rather than a flat refusal because the networked build has to
+## be testable: filling a lane in a headless two client run needs the same
+## shortcuts a single player run does, and CLAUDE.md's scripted loop is exactly
+## where that happens. Turn it on deliberately, on the server, for a test, and
+## turn it off again.
+@export var cheats_in_multiplayer: bool = false
 ## Gold one press of the gold cheat hands the player. See CheatController.
 @export var cheat_gold_amount: int = 9999999
+
+
+## Whether a cheat may fire at all: the master switch, and then the networked
+## question on top of it.
+##
+## `is_networked` is passed in rather than worked out here, for the reason
+## PresentationConfig.minimap_color_for takes is_local rather than asking: a
+## config resource is data about the game and has no business asking the
+## network what it is doing. Every caller hands it `Net.is_online()`.
+##
+## One place rather than the same two-part condition written out in the input
+## handler and again in the server's own check, which are the two machines that
+## have to agree about it.
+func cheats_allowed(is_networked: bool) -> bool:
+	return cheats_enabled && (!is_networked || cheats_in_multiplayer)
 
 
 func internal_cell_size() -> float:

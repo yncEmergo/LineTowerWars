@@ -53,14 +53,25 @@ func chill_taken_ratio() -> float:
 
 
 ## Built from its own three numbers, so the card can never quote a resistance
-## the creep does not have. The chill clause is left off entirely when nothing
-## is resisted rather than reading "0% immune", which is the one part of this a
-## player would misread.
+## the creep does not have. A clause is left off entirely when nothing is
+## resisted rather than reading "0% less", and an OUTRIGHT immunity is written
+## as one rather than as "100% less" - which is the same fact stated in the
+## form a player would have to work out.
 func effect_text() -> String:
-	var parts: PackedStringArray = PackedStringArray([
-		"Takes %d%% less spell damage" % roundi((1.0 - damage_ratio) * 100.0),
-		"harmful effects last %d%% less" % roundi((1.0 - duration_ratio) * 100.0),
-	])
-	if chill_ratio < 1.0:
-		parts.append("%d%% immune to movement chill" % roundi((1.0 - chill_ratio) * 100.0))
-	return "%s." % ", ".join(parts)
+	var parts: PackedStringArray = PackedStringArray()
+	if damage_ratio <= 0.0:
+		parts.append("Takes no spell damage")
+	elif damage_ratio < 1.0:
+		parts.append("Takes %d%% less spell damage"
+			% roundi((1.0 - damage_ratio) * 100.0))
+	if duration_ratio <= 0.0:
+		parts.append("harmful timed effects do not apply to it")
+	elif duration_ratio < 1.0:
+		parts.append("harmful effects last %d%% less"
+			% roundi((1.0 - duration_ratio) * 100.0))
+	if chill_ratio <= 0.0:
+		parts.append("cannot be slowed")
+	elif chill_ratio < 1.0:
+		parts.append("takes %d%% less of every slow"
+			% roundi((1.0 - chill_ratio) * 100.0))
+	return "" if parts.is_empty() else "%s." % ", ".join(parts)

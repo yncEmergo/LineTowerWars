@@ -26,7 +26,7 @@ impact_scene_path = "res://Scenes/Effects/holy_impact.tscn"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("5_SplashEffect")
-radius = 1.95
+radius = 2.0
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -35,7 +35,7 @@ damage_max = 444
 damage_type = 2
 is_aoe_damage = true
 attacks_per_second = 1
-attack_range = 3.52
+attack_range = 3.5
 target_types = 2
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("6_AttackEffect")]([SubResource("Splash")])

@@ -17,4 +17,4 @@ chill_source = "ultimate_divineshroom"
 armor_per_hit = 0.25
 armor_floor = -3
 tower_heal_share = 0.1
-heal_cells = 2.34
+heal_cells = 2.25

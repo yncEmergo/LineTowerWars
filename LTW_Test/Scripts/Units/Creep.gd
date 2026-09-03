@@ -58,6 +58,23 @@ const AURA_REFRESH_SECONDS: float = 0.25
 ## units per second. Purely visual, since nothing is ever measured vertically.
 const CLIMB_SPEED: float = 2.0
 
+## The distance below which two points in a crowding test are the same point:
+## two creeps with no direction between them to be pushed apart along, and two
+## ordered points that are the same order. See _away_from and has_arrived_at.
+const CROWD_MIN_AXIS: float = 0.0001
+
+## How much further apart than their personal space two creeps may stand and
+## still count as touching. Slack rather than an exact test because _hold_apart
+## parks a pair at exactly that distance, and floating point puts them a hair
+## either side of it. See _is_crowd_blocked.
+const CROWD_CONTACT_SLACK: float = 1.1
+
+## Whether this creep stopped short of its ordered point because the crowd was
+## already standing on it, and the point it stopped short of. Cleared by the
+## next walk it is given - see has_arrived_at.
+var _crowd_settled: bool = false
+var _crowd_settled_point: Vector3 = Vector3.ZERO
+
 ## Route the creep committed to, as internal cells in walking order.
 var _path: Array[Vector2i] = []
 ## Which cell of that route the creep is currently walking towards.
@@ -336,6 +353,35 @@ func dive_to(point: Vector3, facing: Vector3) -> void:
 	global_position.y = _ground_height()
 	if facing.length_squared() > 0.0001:
 		face_instantly(global_position + facing)
+
+
+## A fresh walk is a fresh answer, so whatever the creep settled for last time
+## is forgotten here rather than being carried into the new order.
+func move_to(world_target: Vector3) -> void:
+	_crowd_settled = false
+	super(world_target)
+
+
+## A creep that stopped short of an ordered point because the crowd was already
+## standing on it counts as having ARRIVED there. It is as near as the rule
+## will ever let it get, and the point it was aimed at is now under somebody.
+##
+## Without this an attack-move never finishes: it asks this every tick to
+## decide whether to keep walking, so the creep is sent back at a point it
+## cannot reach, gives up again, and the chain behind it never starts.
+func has_arrived_at(world_point: Vector3) -> bool:
+	if super(world_point):
+		return true
+	if !_crowd_settled || area == null:
+		return false
+
+	# The point it settled for and no other: this is asked about whatever a
+	# task happens to be aimed at, and having given up on one spot says nothing
+	# about any other. Clamped on the way in for the reason the base class
+	# clamps - an order past the edge is a point the creep can never stand on.
+	var offset: Vector3 = area.clamp_point(world_point) - _crowd_settled_point
+	offset.y = 0.0
+	return offset.length() <= CROWD_MIN_AXIS
 
 
 ## Halting a creep also calls off a dive, which is what makes Stop the way a
@@ -1059,6 +1105,11 @@ func _physics_process(delta: float) -> void:
 		if !ignores_maze():
 			_record_trail()
 		_march(delta)
+		# AFTER the march and outside it, because an attacker that did not move
+		# this tick is exactly the case that needs it: one standing on a tower
+		# or parked on an ordered point takes no step of its own, and without
+		# this the next creep to walk in would simply stand inside it.
+		_hold_apart()
 		return
 
 	# A flyer and an ethereal creep both read none of the maze and go straight
@@ -1179,6 +1230,17 @@ func _walk_to_order(delta: float) -> void:
 	var distance: float = offset.length()
 	if distance <= _step_reach(delta):
 		_arrive()
+		return
+
+	# Somebody else got there first. Stopping rather than arriving, so the
+	# creep stays where the crowd left it instead of snapping onto a point it
+	# was never able to reach - and stop() ends the task either way, which is
+	# what MoveAbility means by "arrived or was stopped".
+	if _is_crowd_blocked(distance):
+		var point: Vector3 = _target_position
+		stop()
+		_crowd_settled = true
+		_crowd_settled_point = point
 		return
 
 	var direction: Vector3 = offset / distance
@@ -1392,7 +1454,7 @@ func _separation() -> Vector3:
 		return Vector3.ZERO
 
 	var push: Vector3 = Vector3.ZERO
-	var personal_space: float = body_radius() * 2.0
+	var own_space: float = _crowd_radius()
 
 	# The area's own list rather than get_parent().get_children(): it is the
 	# same creeps - this creep is parented under that area's creeps root - and
@@ -1406,6 +1468,7 @@ func _separation() -> Vector3:
 		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
 			continue
 
+		var personal_space: float = own_space + other._crowd_radius()
 		var offset: Vector3 = global_position - other.global_position
 		offset.y = 0.0
 		var distance: float = offset.length()
@@ -1414,6 +1477,136 @@ func _separation() -> Vector3:
 		push += offset / distance * (personal_space - distance) / personal_space
 
 	return push
+
+
+## The room this creep keeps around itself, as a radius. Two creeps may not
+## stand closer than the sum of the two.
+##
+## An ATTACKER measures it off its own SELECTION CIRCLE, so the space it claims
+## is the ring the player is already looking at and a bigger attacker claims
+## more of it without a second stat per creep. Everything else measures it off
+## its body, which is what the soft push has always used.
+##
+## select_radius rather than selection_radius(), which answers 0 for a creep
+## waiting on a revive: that is a rule about what may be CLICKED, and a body
+## that shrank to nothing while it was down would let the rest of the pack
+## close over the spot it is about to stand up in.
+func _crowd_radius() -> float:
+	if !is_attacker():
+		return body_radius()
+	var config: GameConfig = References.game_config
+	if config == null:
+		return 0.0
+	return config.attacker_personal_space_ratio * select_radius
+
+
+## Pushes this creep out of any ATTACKER it is standing inside, and is the hard
+## half of crowding.
+##
+## The soft push in _separation only ever steers a creep that is TAKING A STEP,
+## which is why a commanded pack still ended up as one body: they all walk onto
+## the same point, and the ones that got there stop walking and stop being
+## pushed. This runs whatever the tick did and is what the rule actually rests
+## on - see GameConfig.attacker_personal_space_ratio.
+##
+## Each creep corrects HALF the overlap and only its own position, so a pair
+## separates by the whole of it over the tick they both run, and no creep ever
+## writes another one's position. A neighbour that cannot move itself - one
+## held by a stun, one waiting on a revive - simply contributes nothing back,
+## and the mover walks its own way out over a few more ticks.
+##
+## Goes through _move_by like every other movement, so a creep shoved against a
+## tower slides along it rather than being pushed inside it.
+func _hold_apart() -> void:
+	if area == null || !is_attacker():
+		return
+
+	var own_space: float = _crowd_radius()
+	if own_space <= 0.0:
+		return
+
+	var correction: Vector3 = Vector3.ZERO
+	for other: Creep in area.creeps():
+		if other == self || other.is_down() || !other.is_attacker():
+			continue
+		# The same layer rule the soft push uses: a flyer and the pack walking
+		# underneath it never touch, so neither can be inside the other.
+		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
+			continue
+
+		var space: float = own_space + other._crowd_radius()
+		var offset: Vector3 = global_position - other.global_position
+		offset.y = 0.0
+		var distance: float = offset.length()
+		if distance >= space:
+			continue
+
+		correction += _away_from(other, offset, distance) * (space - distance) * 0.5
+
+	if correction != Vector3.ZERO:
+		_move_by(correction)
+
+
+## Which way out of a neighbour this creep goes.
+##
+## Straight away from it, except when the two are standing on the very same
+## point and there is no direction to be had. That happens - two creeps spawned
+## together and given one order arrive on one spot - and it is settled by
+## UNIT ID rather than by anything about the world, so the two pick opposite
+## sides and stay picked instead of trading places every tick.
+func _away_from(other: Creep, offset: Vector3, distance: float) -> Vector3:
+	if distance > CROWD_MIN_AXIS:
+		return offset / distance
+	var side: float = 1.0 if unit_id > other.unit_id else -1.0
+	return Vector3(side, 0.0, 0.0)
+
+
+## Whether the point this creep was ordered to is already taken by the crowd.
+##
+## True only close to that point, because the rule out here is "somebody is in
+## my way" and further out that is something to walk around rather than a
+## reason to stop. The blocker also has to be standing STILL and standing
+## nearer the point than this creep is, which is what makes a pack settle
+## outwards one ring at a time: the creep on the point stops first, the one
+## touching it stops next, and so on to the edge of the pack.
+func _is_crowd_blocked(distance: float) -> bool:
+	if area == null || !is_attacker():
+		return false
+
+	# A creep sent onto a NAMED target is not after a spot on the ground, it is
+	# after one within reach of that target - and there is a whole ring of
+	# them. Giving up here would leave it standing behind whoever arrived
+	# first, where being shoved round the outside gets it into reach on its own.
+	if attack_component != null && attack_component.ordered_target() != null:
+		return false
+
+	var config: GameConfig = References.game_config
+	if config == null:
+		return false
+	if distance > config.attacker_crowd_arrive_cells * config.cell_size:
+		return false
+
+	var own_space: float = _crowd_radius()
+	for other: Creep in area.creeps():
+		if other == self || other.is_down() || !other.is_attacker() || other.is_moving():
+			continue
+		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
+			continue
+
+		# Touching, with a little slack: _hold_apart parks a pair at exactly
+		# their combined space, and a test for "closer than that" would then
+		# answer false for two creeps pressed right up against each other.
+		var gap: Vector3 = global_position - other.global_position
+		gap.y = 0.0
+		if gap.length() > (own_space + other._crowd_radius()) * CROWD_CONTACT_SLACK:
+			continue
+
+		var theirs: Vector3 = _target_position - other.global_position
+		theirs.y = 0.0
+		if theirs.length() < distance:
+			return true
+
+	return false
 
 
 ## Takes a fresh route from where the creep stands and commits to it.

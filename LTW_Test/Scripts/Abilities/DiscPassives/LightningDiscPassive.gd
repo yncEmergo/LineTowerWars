@@ -43,7 +43,7 @@ func _reach_towers(disc: Building) -> void:
 
 
 func effect_text() -> String:
-	return ("Friendly towers within %s cells become static: they heal for %s%%"
+	return ("Friendly towers within %s become static: they heal for %s%%"
 		+ " of the physical damage they deal, return %s%% of the damage an"
 		+ " attacking creep does to them, and have a %s%% chance to stun it"
 		+ " for %ss.") % [

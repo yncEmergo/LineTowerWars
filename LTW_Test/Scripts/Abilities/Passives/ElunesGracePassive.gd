@@ -55,9 +55,8 @@ func on_damage_taken(creep: Creep, _lost: float,
 
 
 func effect_text() -> String:
-	return ("Takes no damage at all for %s seconds the first time it is hit,"
-		+ " and again for %s seconds the first time it falls below %d%%"
-		+ " health.") % [
+	return ("Takes no damage for %s seconds the first time it is hit, and"
+		+ " again for %s seconds the first time it falls below %d%% health.") % [
 		StringUtil.trim_number(first_seconds),
 		StringUtil.trim_number(second_seconds),
 		roundi(second_at_health * 100.0),

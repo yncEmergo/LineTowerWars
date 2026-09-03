@@ -34,10 +34,18 @@ extends TowerPassive
 ## Extra damage per creep already passed, as a share. 0.05 is the +5% of the
 ## source, applied cumulatively down the line.
 @export var damage_per_target: float = 0.05
-## Mana a creep loses per second when the lance crystalizes it, or 0 for the
-## tiers that do not. NOT BUILT: creeps have no mana in this project yet, so
-## the Ultimate's mana drain is authored, described and inert. See
-## game_rules.md.
+## Mana a creep loses per second when the lance crystalizes it, and for how
+## long. 0 for the two tiers that crystalize nothing.
+##
+## unit_data.md 4.5 words it as the creep's mana REGENERATION being crystalized,
+## and taking points off the pool is how that is served: a Shaman filling at a
+## point a second under this fills at what is left of one, and a creep with no
+## regeneration simply empties. Only the handful of creeps whose traits run on
+## a pool have anything to lose - see CreepMana - and the rest are refused by
+## StatusEffects.drain_mana rather than by anything here.
+##
+## The lance applies it to EVERY creep the spike passes rather than only to the
+## one aimed at, which is PiercingProjectile's job. See mana_drain_rate.
 @export var mana_drain_per_second: float = 0.0
 @export var mana_drain_seconds: float = 0.0
 
@@ -50,6 +58,14 @@ func pierce_ramp() -> float:
 	return damage_per_target
 
 
+func mana_drain_rate() -> float:
+	return mana_drain_per_second
+
+
+func mana_drain_window() -> float:
+	return mana_drain_seconds
+
+
 func effect_text() -> String:
 	var text: String = ("Attacks fire a spike that flies in a straight line"
 		+ " rather than homing, piercing every creep in its path up to %d of"
@@ -57,8 +73,8 @@ func effect_text() -> String:
 		+ " passed.") % [
 		max_targets, StringUtil.trim_number(damage_per_target * 100.0)]
 	if mana_drain_per_second > 0.0:
-		text += (" Creeps that use mana lose %s of it per second for %ss."
-			+ " (Not implemented: creeps carry no mana yet.)") % [
+		text += (" Creeps that use mana for their abilities lose %s of it per"
+			+ " second for %ss.") % [
 			StringUtil.trim_number(mana_drain_per_second),
 			StringUtil.trim_number(mana_drain_seconds)]
 	return text

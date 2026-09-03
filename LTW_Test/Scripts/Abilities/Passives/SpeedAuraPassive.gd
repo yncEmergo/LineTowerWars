@@ -37,10 +37,11 @@ func effect_text() -> String:
 	if config != null:
 		radius = config.creep_aura_radius_cells
 
-	var amount: String = "%d%% movement and attack speed" % roundi(move_speed_bonus * 100.0)
+	var amount: String = "+%d%% movement and attack speed" \
+		% roundi(move_speed_bonus * 100.0)
 	if !is_equal_approx(move_speed_bonus, attack_speed_bonus):
-		amount = "%d%% attack speed and %d%% movement speed" % [
+		amount = "+%d%% attack speed and +%d%% movement speed" % [
 			roundi(attack_speed_bonus * 100.0), roundi(move_speed_bonus * 100.0),
 		]
-	return "Grants +%s to every creep within %s cells." \
+	return "Grants %s to every creep within %s." \
 		% [amount, StringUtil.trim_number(radius)]

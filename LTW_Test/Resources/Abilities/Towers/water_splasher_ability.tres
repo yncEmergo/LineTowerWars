@@ -12,4 +12,4 @@ slot = 6
 icon = ExtResource("2_splasher")
 every = 4
 damage = 12
-radius_cells = 1.17
+radius_cells = 1.25

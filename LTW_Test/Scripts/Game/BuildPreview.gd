@@ -41,6 +41,16 @@ func setup(model_scene: PackedScene) -> void:
 
 func show_at(world_center: Vector3, tint: UnitModel.Tint) -> void:
 	global_position = Vector3(world_center.x, 0.0, world_center.z)
+	set_tint(tint)
+	visible = true
+
+
+## Recolours a ghost that is already standing where it belongs.
+##
+## Split from show_at because a queued tower's colour changes for a reason that
+## has nothing to do with where it is: the player spent gold somewhere else and
+## it can no longer be paid for. Moving it as well would be answering a
+## question nobody asked. See OrderOverlay.
+func set_tint(tint: UnitModel.Tint) -> void:
 	if is_instance_valid(_model):
 		_model.set_preview_tint(tint)
-	visible = true

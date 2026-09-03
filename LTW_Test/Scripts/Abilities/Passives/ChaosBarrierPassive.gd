@@ -50,7 +50,7 @@ func on_tick(creep: Creep, delta: float) -> void:
 
 func effect_text() -> String:
 	return ("Takes up to %d%% less damage, scaled by how full its mana is, and"
-		+ " loses %d%% of that mana every second.") % [
+		+ " loses %d%% of its maximum mana every second.") % [
 		roundi(reduction_at_full * 100.0),
 		roundi(drain_per_second * 100.0),
 	]

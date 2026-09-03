@@ -16,6 +16,19 @@ clients join, build, send creeps at each other, steal lives and finish with a pl
 The server is the only machine that simulates — clients send orders and draw what comes
 back, so two views cannot disagree.
 
+**A player is asked what to call themselves** the first time they open multiplayer, and
+cannot go online until they have chosen — the prompt is modal and, on a first run, has no
+way past it. It suggests the machine's login name without accepting it as the answer, refuses
+punctuation and symbols while taking any language's letters, and is changed later from a
+button in the multiplayer panel showing the current name. It is kept in `user://settings.cfg`
+with the video and audio choices, because it is typed at runtime by whoever is sitting there.
+
+**Everybody picks a colour in the lobby**, from a dropdown of coloured squares on their own
+row, and it travels with them into the match. It is per-match identity rather than a lane number — the server
+keeps it unique, leaving frees one rather than shuffling everybody else's, and a player who
+gets moved when the lanes are dealt keeps the colour they chose. Nobody sits colourless: the
+first player in is red, the second blue, down the source game's own palette.
+
 **The host sets up the match in the lobby**, and everybody in the room watches the rules
 change as they do it. What each player starts with, which creeps are in the game at all,
 whether the lanes are shuffled, and whether players are named or only coloured. A RANKED
@@ -44,31 +57,20 @@ Timber Wolf that only ever arrives inside a Sheep pack and the Ghoul that only e
 of a dead Obsidian Statue. They unlock one at a time on the match clock, cost population that
 is now enforced, and come in three kinds: ordinary creeps that walk the maze, flyers that
 ignore it entirely, and attackers that go after the towers and are the only creeps their owner
-can command. A Boss steals two lives.
+can command. A Boss steals more than one life; how many is per creep, in the roster.
 
-**Tier 2 brought three things the roster had never needed.** A creep with MANA, which banks a
-point per hit taken and spends the lot on a heal — mana had been a tower-only thing until then.
-A creep that SHOOTS, lobbing at a random tower nearby on a clock of its own, which is a second
-attack running alongside its own and the only ranged thing any creep has. And the other two
-halves of a SPELL RESISTANCE — a share off every harmful effect's clock and a share off a
-chill's bite — which had been written down since before anything in the game applied either.
-
-**The Ancient Wendigo was built long before the rest of tier 3**, because a tier 1 creep dies
-to a single shot from anything above the cheapest towers — so there was nothing on the field a
-real tower's damage, rate or on-hit effects could be measured against. It brought the first
-armour that is not a constant: Hardened Skin starts it absurdly high and wears off as the creep
+**Building that roster is where most of the game's machinery came from**, because a creep is
+where the rules get interesting. Creeps carry MANA, banked from being hit or regenerated on a
+clock, and spend it on a trait. One SHOOTS, lobbing at a tower on a clock beside its own. One
+converts nine tenths of itself into a damage-absorbing SHIELD. Some SPAWN other creeps. Some
+reach back the other way and leave effects on a TOWER - a curse on its attack speed, an aura
+weakening its damage, a drain that takes its mana and keeps five times what it took. One walks
+straight THROUGH the maze, one DODGES anything shooting from far enough away, one braces
+against whichever damage type has hurt it most and can move that brace every few seconds. And
+one carries the roster's only ACTIVE ability: the Phoenix is aimed by its owner, dives out
+along that line and back burning what it passes over, and Stop calls the dive off. Armour is
+not always a constant either - Hardened Skin starts absurdly high and wears off as the creep
 is hit, down to a floor it never falls below.
-
-**Tiers 3 and 4 brought most of the machinery a creep roster needs.** Damage absorption
-SHIELDS, for the Boss that converts nine tenths of itself into one and walks a maze showing a
-tenth of its health. Creeps that SPAWN OTHER CREEPS. The first effects that go the other way —
-a dying Harpy curses the towers that killed it, an Obsidian Statue weakens every tower it
-drifts past, and a Chaos Warden drains a tower's mana and keeps five times what it took. A
-creep that walks straight THROUGH the maze, one that DODGES anything shooting from far enough
-away, one that braces against whichever damage type has hurt it most and can move that brace
-every three seconds. And the roster's only ACTIVE ability: the Phoenix is aimed by its owner,
-dives out along that line and back burning what it passes over, and Stop calls the dive off —
-which pays back the armour a maze has eaten off it.
 
 **SUDDEN DEATH is the one place a tier means anything.** At a fixed point on the match clock
 the whole of tier 4 unlocks at once, with no per-creep start delay, and tiers 1 to 3 stop being
@@ -77,13 +79,12 @@ Anybody under an income floor is raised to it, once, so a player who has been lo
 still afford the tier that ends the match; and tier 4 sends stop paying properly above an
 income cap, so Sudden Death does not compound.
 
-**The send buildings no longer exist as buildings.** They used to stand on a strip above the
-creep spawn; that strip and its models are gone. Each tier's sender is reached through a row of
-four squares over the unit panel, which selects it and puts its creeps on the panel. A sender is
-still an ordinary unit underneath — an order names a unit over the wire and the server checks
-its card — it simply has no body, so nothing clicks one, boxes one, draws it on the minimap or
-flies the camera to it. It can still be put in a control group, which is how it is reached by
-keyboard.
+**A creep sender has no body.** It stands nowhere on the map: no model, no footprint, nothing
+to click, nothing on the minimap and nowhere for the camera to fly to. There is one per creep
+tier, and each is reached through a row of squares over the unit panel that selects it and puts
+its creeps on the panel. A sender is still an ordinary unit underneath — an order names a unit
+over the wire and the server checks its card — so it can also be put in a control group, which
+is how it is reached by keyboard.
 
 **The creeps have a visual system of their own**, on the same three axes and answering them
 differently. What a creep does to the maze is its FAMILY and is the firmest of them — a flyer has no
@@ -110,9 +111,9 @@ The builder places a fourth tower, the 200g **Elemental Core**, which morphs fre
 element its owner has researched; each path is then gated on that path's own technology, and the
 gate is the same call the Research Center makes rather than a second copy of the rule. Any
 elemental tower worth 800 gold or more can also go back the way it came, returning to a bare
-Core on the same cell and refunding everything above the Core's own price. Six
-pieces of six abilities are approximated or left out, and [game_rules.md](Docs/game_rules.md) lists
-all six rather than leaving them to be found.
+Core on the same cell and refunding everything above the Core's own price. A handful of pieces
+of those abilities are approximated or left out; [game_rules.md](Docs/game_rules.md) lists each
+one rather than leaving them to be found.
 
 **The technology DISCS are real too, and they are not towers.** All thirty-one of them: a
 2,500g base disc that is unlocked from the first second of a match and does absolutely nothing,
@@ -147,24 +148,25 @@ client is told about them for the unit it is looking at, and about no others —
 [multiplayer.md](Docs/multiplayer.md) §5.4.
 
 **That roster is being reviewed one element at a time**, and the review changes rules all ten
-share — so each change is opted into per element rather than applied to all of them at once, and
-`Tools/ModelGen/style.py` names which elements are in. Fire came first and is where the
-called-down meteor, the burning ground and the worldspace mana bar came from; Ice brought the
-one shot in the game that does not home, a spike that flies in a straight line, pierces
-everything in its path and expires on a distance of its own rather than on arriving; and
-Lightning brought particle impacts and an arc drawn from the tower to every creep a hit reached,
-including the ones an ability chained to; and Void brought towers that convert other towers into
-copies of themselves, and the first tower in the roster to carry two named abilities on two
-squares; and Holy brought tower AURAS that build up on a creep in steps and drain off again
-once it leaves, rather than snapping to full strength the moment it is in range.
+share, so each change is opted into per element rather than applied to all of them at once.
+`Tools/ModelGen/style.py` is the authority on which elements are in. Reviewing an element is
+where most of the combat machinery has come from: called-down meteors and burning ground; the
+one shot in the game that does not home, but flies straight, pierces everything in its path
+and expires on a distance of its own; particle impacts and an arc drawn from the tower to
+every creep a hit reached, including the ones an ability chained to; towers that convert their
+neighbours into copies of themselves; the first tower carrying two named abilities on two
+squares; and auras that build up on a creep in steps and drain off again once it leaves,
+rather than snapping to full strength the moment it is in range.
 
 **Orders CHAIN, the way they do in any RTS.** Holding shift queues an order behind whatever a
 unit is already doing instead of replacing it, and the three that can be chained are the three
 that take time: Move, Attack and Build. Each knows for itself when its task is over — a walk
 arrives, a tower is STARTED, a named creep dies — and the next one begins. Giving one of those
-three without shift wipes the chain; pressing anything else on the card leaves it alone. Shift
-also keeps the ability armed, so a row of towers is one press of the button and one click per
-tower. What is queued is drawn on the ground: a waypoint for every walk still to come, and a
+three without shift wipes the chain; pressing anything else on the card leaves it alone. Shift also
+keeps the ability armed for exactly as long as the key is held, so a row of towers is one press
+of the button and one click per tower; letting go releases the ability while the chain carries
+on, which is what stops the next click placing a tower nobody asked for. What is queued is drawn
+on the ground: a waypoint for every walk still to come, and a
 grey ghost of every tower ordered and not yet started — which also holds that ground, so the
 next placement cannot be aimed on top of it. A tower is paid for when the builder reaches it,
 never when the button was pressed, so a chain may be longer than the gold in hand and one that
@@ -181,11 +183,29 @@ badly and slowly, with a hammer it swings on the attack's own windup.
 **The map is a fixed 6 x 2 grid of twelve lane slots**, whoever turned up. A 1v1 fills two of
 them and the other ten are black ground, which the camera and the minimap both still cover.
 
-What is deliberately not built yet: client-side prediction, bandwidth optimisation, an end
-screen, player colours, technology discs, the rest of creep tiers 3 and 4, and anything past a
-1v1.
-See [multiplayer.md](Docs/multiplayer.md) §13 for what is not built and why, and
-[game_rules.md](Docs/game_rules.md) for the rules that exist but are not implemented.
+**The content is complete.** Every tower, every creep, every disc and every technology of the
+source game is in, at its own numbers. What is left is not roster work.
+
+What is deliberately not built yet, in rough order of size: **bandwidth optimisation** (the
+server sends the whole world every tick, which is fine for a 1v1 on a LAN and nowhere near
+twelve players), **client-side prediction**, **anything past a 1v1**, an **end screen**, and
+**sound** — there is no `Audio/` folder yet and not one audio file in the project.
+
+Two small rules of the source game are also uncopied, and both are written down where they
+belong rather than here: Sudden Death making creeps tankier by the minute
+([unit_data.md](Docs/unit_data.md) §1.7), and a technology tower refunding less than a Basic
+one when sold ([game_rules.md](Docs/game_rules.md)).
+
+There is one piece of tooling worth doing: [unit_data.md](Docs/unit_data.md) §8.2, which
+would generate that file's stat tables out of the resources instead of shadowing them by hand.
+It was deferred for want of content, and there is now no shortage.
+
+Nothing here is blocking. [multiplayer.md](Docs/multiplayer.md) §13 says what is not built on
+the network side and why; [game_rules.md](Docs/game_rules.md) marks the rules that are decided
+but have no code, and lists in one place the choices Claude made that nobody has reviewed.
+
+**Not yet playtested.** Most of the roster has never been played against a person, so the
+towers and creeps that were built last are the ones most likely to be wrong.
 
 ## Documentation
 
@@ -197,8 +217,9 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | --- | --- |
 | [game_rules.md](Docs/game_rules.md) | **The RULES**: how the game works — economy, mazing, sending, damage resolution, lives, win condition. Says which of them are built. Holds no numbers; points at unit_data.md for every one. |
 | [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferenceFilesFromOtherProjects/LineTowerWarsData/`. |
+| [content.md](Docs/content.md) | **The PROCEDURE**: how a tower, creep, disc or ability is added or changed — which files it is made of, which of them ModelGen generates and must not be hand-edited, how an id is picked, and what refuses bad content at boot. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
-| [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D26) behind it. The long one. |
+| [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D27) behind it. The long one. |
 | [server.md](Docs/server.md) | How to start, stop and aim the dedicated server. Controls only. |
 | [Docs/](Docs/) | The index for all of the above — which file answers what, and where a new document goes. |
 | [Docs/Findings/](Docs/Findings/) | Investigations: something measured, chased down or ruled out, written up and dated. |
@@ -217,6 +238,26 @@ stands in a one-player match and needs no server.
 then run two client instances from the editor (Debug → Customize Run Instances…, count 2,
 no feature tags) and press **Multiplayer** in each. Full detail, including what the log
 should say, is in [server.md](Docs/server.md).
+
+**Developer cheats** shortcut the parts of a match you are not testing — gold, every creep
+unlocked at once, every technology granted. They are on the numpad, and
+`Scripts/Input/CheatController.gd` is the list and the authority on which key is which.
+
+Each one is a PLAYER ORDER like any other: it goes through `Commands.submit_player_action`,
+so the authority grants it rather than a client redrawing a number the server never agreed
+to. Which is exactly why they are a **single player tool by default**. Two flags in
+`game_config.tres` decide, and `GameConfig.cheats_allowed()` is the one place they are put
+together:
+
+| Flag | What it does |
+| --- | --- |
+| `cheats_enabled` | The master switch. Off and nothing responds at all. |
+| `cheats_in_multiplayer` | Whether the master switch still counts once the match is networked. **Off**, so a real match refuses every cheat. |
+
+The check that matters is the **server's**, in `CommandService._cheat_target`, so a client
+built with cheats on gets a rejection line rather than gold. Turn the second flag on
+deliberately, on the server, when a headless two-client run needs the same shortcuts a single
+player run gets — and turn it off again. `multiplayer.md` has the reasoning.
 
 **A load test**, for the question of what a full match costs to run:
 
@@ -311,7 +352,10 @@ menu rather than a screen of its own — so Escape peels one layer at a time and
 `Scripts/Config/UserSettings.gd`, the one place in the project where a setting is not a
 `.tres`: these are written at runtime by whoever is at the machine, so they go to
 `user://settings.cfg` instead. Video, Gameplay and Hotkeys do something today; Audio is
-remembered and waits for there to be a sound to apply it to.
+remembered and waits for there to be a sound to apply it to. The player's multiplayer NAME
+lives in that file too, though it is not set from this screen — the lobby browser asks for
+it. It is there for the same reason the rest is: typed at runtime, on this machine, by
+whoever is sitting at it.
 
 Hotkeys is the one page with a second file behind it. The command card is a grid and an
 ability's key is read off the square it sits on, so there is nothing per-ability to

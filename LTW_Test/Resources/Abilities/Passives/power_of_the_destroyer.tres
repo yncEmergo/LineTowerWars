@@ -6,5 +6,5 @@
 script = ExtResource("1_passive")
 ability_id = 340
 display_name = "Power of the Destroyer"
-description = "Sent one at a time, and takes up three of your population instead of one."
+description = "Sent one at a time, and takes up {population} of your population instead of one."
 targeting = 0

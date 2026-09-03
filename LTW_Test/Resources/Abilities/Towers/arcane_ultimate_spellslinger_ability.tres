@@ -20,6 +20,6 @@ slow_cap = 0.5
 growth_per_target = 0.15
 orb_mana_cost = 30
 orb_bonus_damage = 750
-orb_splash_cells = 1.88
+orb_splash_cells = 2.0
 attune_share = 1
 attune_interval = 0.5

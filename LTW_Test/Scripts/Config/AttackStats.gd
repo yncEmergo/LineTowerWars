@@ -97,6 +97,20 @@ const TARGET_AIR: int = 2
 ## Measured in player cells from the tower's centre to the creep's, which is
 ## the same as world units because cell_size is 1.0.
 @export var attack_range: float = 4.0
+## Whether this reach is worth DRAWING on the ground when an attack is aimed
+## or Show Ranges is pressed.
+##
+## True for everything that is placed, which is the whole point of a range
+## circle: where a tower goes is decided by what it can cover, so a player
+## aiming one is asking exactly this question.
+##
+## False for a reach that answers nothing. The builder's hammer is the case it
+## exists for - a melee swing barely wider than the unit itself, on a unit that
+## WALKS, so the circle is a ring drawn on its own feet that tells the player
+## nothing they could act on. Presentation on the stats file rather than a rule
+## in the overlay, because whether a reach is worth showing is a property of
+## that attack and nothing else can know it.
+@export var shows_range: bool = true
 @export_flags("Ground", "Air") var target_types: int = TARGET_GROUND | TARGET_AIR
 ## CLOSEST by default, because it is the only priority whose answer differs
 ## from tower to tower. Every other one ranks the CREEPS - furthest along,

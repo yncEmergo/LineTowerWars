@@ -14,8 +14,21 @@ extends Node3D
 ## server has none of these, and the other player has no business seeing your
 ## plan. See OrderOverlay.
 
+## What the unit is going to that point FOR, which is the whole of what the
+## colour says.
+enum Kind {
+	## Walking there and nothing else.
+	MOVE,
+	## Walking there looking for a fight - an attack-move. Red, so a lane full
+	## of waypoints can be read at a glance for which of them mean trouble.
+	ATTACK,
+}
+
 # Placeholder visual values, so they stay in the script.
-const MARKER_COLOR: Color = Color(0.30, 0.95, 0.35, 0.75)
+const MOVE_COLOR: Color = Color(0.30, 0.95, 0.35, 0.75)
+## The same red the attack order's own ring uses, so "this is an attack" is one
+## colour across the whole interface rather than two that nearly match.
+const ATTACK_COLOR: Color = Color(0.95, 0.22, 0.20, 0.78)
 ## Radius of the flat disc on the floor.
 const RING_RADIUS: float = 0.20
 const RING_THICKNESS: float = 0.045
@@ -36,15 +49,19 @@ func _ready() -> void:
 	_build()
 
 
-## Places the marker on the ground at a world point.
-## Call after the marker is in the tree, since it sets a global position.
-func place_at(world_position: Vector3) -> void:
+## Places the marker on the ground at a world point, in the colour of whatever
+## is going to happen there.
+## Call after the marker is in the tree, since it sets a global position and
+## the material it recolours is built in _ready.
+func place_at(world_position: Vector3, kind: Kind = Kind.MOVE) -> void:
 	global_position = Vector3(world_position.x, GROUND_OFFSET, world_position.z)
+	if _material != null:
+		_material.albedo_color = MOVE_COLOR if kind == Kind.MOVE else ATTACK_COLOR
 
 
 func _build() -> void:
 	_material = StandardMaterial3D.new()
-	_material.albedo_color = MARKER_COLOR
+	_material.albedo_color = MOVE_COLOR
 	_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	# Both this and the build grid are transparent and nearly coplanar, so

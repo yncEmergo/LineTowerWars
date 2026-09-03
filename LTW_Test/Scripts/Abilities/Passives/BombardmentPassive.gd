@@ -26,9 +26,9 @@ extends CreepPassive
 ## Seconds between rockets.
 @export var interval_seconds: float = 4.0
 ## How far a rocket reaches, in player cells. The source states it as a 400
-## radius, which is 3.125 cells at the divisor every other reach in the game
-## uses - see unit_data.md 3.
-@export var radius_cells: float = 3.125
+## radius, which snaps to 3 at the quarter every reach in the game is stated
+## in - see unit_data.md 3.
+@export var radius_cells: float = 3.0
 
 @export_group("Rocket")
 ## What one rocket is: its damage, its type, and how it gets there. An
@@ -108,5 +108,8 @@ func validate(seen: Dictionary) -> bool:
 
 
 func effect_text() -> String:
-	return "Fires a rocket at a random tower within %.1f cells every %s seconds." \
-		% [radius_cells, StringUtil.trim_number(interval_seconds)]
+	return ("Fires a rocket at a random tower within %s every %s"
+		+ " seconds.") % [
+		StringUtil.trim_number(radius_cells),
+		StringUtil.trim_number(interval_seconds),
+	]

@@ -12,6 +12,6 @@ slot = 6
 icon = ExtResource("2_voidling")
 regen_per_second = 1
 mana_per_attack = 1
-reach_cells = 3.12
+reach_cells = 3.0
 becomes_type_id = 97
 converts_type_ids = PackedInt32Array(26, 36, 46, 27, 37, 47)

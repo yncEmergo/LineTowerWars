@@ -7,7 +7,7 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="10_cancel"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/stat_bar.tscn" id="11_stat_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/status_icon.tscn" id="12_status_icon"]
-[ext_resource type="Script" path="res://Scripts/UI/StatusBar.gd" id="13_status_bar"]
+[ext_resource type="Script" uid="uid://behyfqjbojywe" path="res://Scripts/UI/StatusBar.gd" id="13_status_bar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
 content_margin_left = 16.0
@@ -42,7 +42,7 @@ border_color = Color(0.29, 0.31, 0.38, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 
-[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_resource_label", "_health_bar", "_resource_bar", "_damage_label", "_armor_label", "_attack_label", "_splash_label", "_job_row", "_job_icon", "_job_label", "_job_bar", "_command_grid", "_selection_grid", "_portrait", "_status_bar")]
+[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_resource_label", "_health_bar", "_resource_bar", "_damage_label", "_armor_label", "_attack_label", "_splash_label", "_job_row", "_job_icon", "_job_label", "_job_bar", "_status_bar", "_command_grid", "_selection_grid", "_portrait")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -64,12 +64,12 @@ _job_row = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow")
 _job_icon = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobIcon")
 _job_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn/JobLabel")
 _job_bar = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobColumn/JobBar")
+_status_bar = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/StatusBar")
 _command_grid = NodePath("Layout/CommandPanel/CommandGrid")
 _selection_grid = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/SelectionGrid")
 _command_slot_scene = ExtResource("2_command_slot")
 _unit_tile_scene = ExtResource("3_unit_tile")
 _portrait = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/Portrait")
-_status_bar = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/StatusBar")
 _cancel_ability = ExtResource("10_cancel")
 
 [node name="Layout" type="HBoxContainer" parent="." unique_id=582896892]
@@ -101,7 +101,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="Portrait" type="SubViewportContainer" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=2116016378 node_paths=PackedStringArray("_stage", "_camera")]
-custom_minimum_size = Vector2(104, 104)
+custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
 stretch = true
 script = ExtResource("9_portrait")
@@ -112,7 +112,7 @@ _camera = NodePath("View/Camera3D")
 own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(104, 104)
+size = Vector2i(90, 90)
 render_target_update_mode = 4
 
 [node name="Camera3D" type="Camera3D" parent="Layout/InfoPanel/InfoRow/PortraitColumn/Portrait/View" unique_id=1942535625]
@@ -137,20 +137,18 @@ custom_minimum_size = Vector2(0, 9)
 [node name="HealthLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=1730412266]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.44, 0.89, 0.46, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 10
 text = "100 / 100"
 horizontal_alignment = 1
 
 [node name="ResourceBar" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=1614361122 instance=ExtResource("11_stat_bar")]
-visible = false
 custom_minimum_size = Vector2(0, 9)
 fill_color = Color(0.35, 0.58, 0.98, 1)
 
 [node name="ResourceLabel" type="Label" parent="Layout/InfoPanel/InfoRow/PortraitColumn" unique_id=896593021]
-visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.42, 0.68, 1, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 10
 text = "0 / 0"
 horizontal_alignment = 1
 
@@ -224,12 +222,12 @@ theme_override_constants/h_separation = 3
 theme_override_constants/v_separation = 3
 columns = 6
 
-[node name="Spacer" type="Control" parent="Layout/InfoPanel/InfoRow/InfoColumn"]
+[node name="Spacer" type="Control" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=545524055]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="StatusBar" type="GridContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn"]
+[node name="StatusBar" type="GridContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=288346338]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 theme_override_constants/h_separation = 2

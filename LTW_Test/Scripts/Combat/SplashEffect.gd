@@ -46,5 +46,5 @@ func effect_name() -> String:
 ## Phrased as "a 1 cell radius" rather than "within 1 cells", so a whole number
 ## radius does not read as broken English.
 func description_text() -> String:
-	return "Deals full damage to everything in a %s cell radius around the impact." \
+	return "Deals full damage to everything within %s of the impact." \
 		% StringUtil.trim_number(radius)

@@ -468,12 +468,18 @@ func _apply_cheat_unlock_techs(command: Command) -> void:
 ## Who a cheat applies to, or null once it has already been refused.
 ##
 ## Both cheats ask the same two questions and neither trusts the sender's
-## answer to either: are cheats on HERE - so a server built with them off
+## answer to either: are cheats allowed HERE - so a server built with them off
 ## refuses one however the client asking was built - and is there a player in
 ## that slot to apply it to.
+##
+## "Allowed here" is two things rather than one, and the second is what makes
+## a cheat a single player tool: a NETWORKED match refuses them unless the
+## server's own config deliberately says otherwise. See
+## GameConfig.cheats_allowed. This is the check that counts - the one in
+## CheatController only saves a packet.
 func _cheat_target(command: Command) -> PlayerState:
 	var config: GameConfig = References.game_config
-	if config == null || !config.cheats_enabled:
+	if config == null || !config.cheats_allowed(Net.is_online()):
 		_reject(command, "cheats are off")
 		return null
 
