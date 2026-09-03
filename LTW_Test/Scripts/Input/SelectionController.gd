@@ -14,9 +14,10 @@ extends Node
 ##
 ## What may be selected TOGETHER is asked of the unit rather than decided here,
 ## and the two gestures ask two different questions. A BOX takes one exact
-## type, the one it caught most of. SHIFT takes anything of the same
-## selection_class(), so a mixture of tower types is assembled by hand while a
-## tower and the builder are never both in one selection either way.
+## type, the type of the unit nearest where the drag began. SHIFT takes
+## anything of the same selection_class(), so a mixture of tower types is
+## assembled by hand while a tower and the builder are never both in one
+## selection either way.
 ##
 ## Everything it needs is shared, so it all comes through References.
 
@@ -284,7 +285,9 @@ func _select_in_rect(rect: Rect2, additive: bool) -> void:
 		_set_selection(extended)
 		return
 
-	_set_selection(_dominant_type(_prefer_mobile_units(caught)))
+	# _drag_start rather than the rect, which has been normalised and no longer
+	# remembers which of its corners the player aimed at.
+	_set_selection(_type_nearest(_prefer_mobile_units(caught), _drag_start))
 
 
 ## The single unit a box comes back with when it caught nothing the player can
@@ -307,18 +310,7 @@ func _lone_unit_in_rect(rect: Rect2) -> Node:
 	if touched.is_empty():
 		return null
 
-	var center: Vector2 = rect.get_center()
-	var best: Node = null
-	var best_distance: float = INF
-
-	for unit in _prefer_mobile_units(touched):
-		var screen_center: Vector2 = _camera.unproject_position(unit.selection_anchor())
-		var distance: float = screen_center.distance_squared_to(center)
-		if distance < best_distance:
-			best = unit
-			best_distance = distance
-
-	return best
+	return _nearest_to(_prefer_mobile_units(touched), rect.get_center())
 
 
 ## Whether a unit's projected circle touches the box at all. Shared by the
@@ -370,44 +362,56 @@ func _can_join_selection(unit: Node) -> bool:
 	return unit.selection_class() == _selected[0].selection_class()
 
 
-## Keeps the most numerous unit type in a box and drops the rest, so a box
-## drawn across a mixture comes back as one type rather than as a crowd sharing
-## an almost empty command card.
+## Narrows a box to ONE unit type: the type of the unit nearest where the drag
+## STARTED, that unit first in the result.
 ##
-## The MAJORITY rather than the first one found, because a box is a rough
-## gesture: dragging over three Archers and two Crushers means the Archers,
-## whichever of them the sweep happened to reach first. A tie goes to the type
-## the box met first, which is the old behaviour and is as good an answer as
-## any when the player was equally ambiguous about both.
+## The start of the gesture rather than the middle of the box or the type it
+## caught most of, because the start is the one point the player actually
+## aimed at - the box then grows to wherever they happened to let go, so both
+## its centre and how many of each type fell inside it are accidents of how
+## far they dragged. Putting the pointer on the Archer you want and sweeping
+## across a mixture gives you the Archers.
+##
+## First in the result because _selected[0] is the unit the rest of the
+## selection answers to: it is what a later shift click compares its class
+## against, and it leads the panel.
 ##
 ## Only the box narrows like this. Assembling a mixture of types is what shift
 ## is for, and that goes through _can_join_selection instead.
-func _dominant_type(units: Array) -> Array:
+func _type_nearest(units: Array, anchor: Vector2) -> Array:
 	if units.size() <= 1:
 		return units
 
-	# Counted by the stats resource, which IS the unit type - see
-	# Unit.is_same_type_as. Ownership needs no test here, because a box only
-	# ever sweeps up the local player's own units in the first place.
-	var counts: Dictionary = {}
-	for unit in units:
-		counts[unit.stats] = int(counts.get(unit.stats, 0)) + 1
+	var lead: Node = _nearest_to(units, anchor)
+	if lead == null:
+		return units
 
-	var wanted: UnitStats = null
-	var best: int = 0
-	# Dictionary iteration is insertion ordered, so a tie is settled by which
-	# type the box met first rather than arbitrarily.
-	for key: UnitStats in counts:
-		var count: int = counts[key]
-		if count > best:
-			wanted = key
-			best = count
-
-	var result: Array = []
+	var result: Array = [lead]
 	for unit in units:
-		if unit.stats == wanted:
+		# Compared by the stats resource, which IS the unit type - see
+		# Unit.is_same_type_as. Ownership needs no test here, because a box only
+		# ever sweeps up the local player's own units in the first place.
+		if unit != lead && unit.stats == lead.stats:
 			result.append(unit)
 	return result
+
+
+## The unit whose projected centre sits nearest a point on screen. Shared by
+## the box's type anchor and the lone creep fallback, which differ only in
+## which point they measure from - where the drag began, and the middle of the
+## box it ended up as.
+func _nearest_to(units: Array, point: Vector2) -> Node:
+	var best: Node = null
+	var best_distance: float = INF
+
+	for unit in units:
+		var screen_pos: Vector2 = _camera.unproject_position(unit.selection_anchor())
+		var distance: float = screen_pos.distance_squared_to(point)
+		if distance < best_distance:
+			best = unit
+			best_distance = distance
+
+	return best
 
 
 ## Every unit of exactly this one's type. Ownership is already covered, both

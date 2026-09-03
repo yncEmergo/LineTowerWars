@@ -32,6 +32,15 @@ const GOLD_KEY: Key = KEY_KP_1
 const UNLOCK_CREEPS_KEY: Key = KEY_KP_2
 ## Numpad 3: grants every technology in the build, free of charge.
 const UNLOCK_TECHS_KEY: Key = KEY_KP_3
+## Numpad 4: builds the saved layout into the player's area, free and
+## finished. See TowerLayout.
+const LOAD_LAYOUT_KEY: Key = KEY_KP_4
+## Numpad 5: saves the player's current maze to that same file.
+##
+## Next to the key that loads it rather than somewhere out of the way, because
+## the two are one tool used in one order - and the destructive-looking one of
+## the pair is the SAVE, which overwrites the file the last maze went into.
+const SAVE_LAYOUT_KEY: Key = KEY_KP_5
 
 var _config: GameConfig:
 	get:
@@ -73,4 +82,8 @@ func _action_for(key: InputEventKey) -> Command.PlayerAction:
 			return Command.PlayerAction.CHEAT_UNLOCK_CREEPS
 		UNLOCK_TECHS_KEY:
 			return Command.PlayerAction.CHEAT_UNLOCK_TECHS
+		LOAD_LAYOUT_KEY:
+			return Command.PlayerAction.CHEAT_LOAD_LAYOUT
+		SAVE_LAYOUT_KEY:
+			return Command.PlayerAction.CHEAT_SAVE_LAYOUT
 	return Command.PlayerAction.NONE

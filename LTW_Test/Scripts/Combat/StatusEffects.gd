@@ -219,6 +219,13 @@ var _cold_ratio: float = 1.0
 ## or 0 for no ceiling. Read off the passives with the two ratios above and for
 ## the same reason - it cannot change while the creep walks.
 var _duration_cap: float = 0.0
+## What a SLOW's own window is shortened to, and the longest one may run. Kept
+## apart from the two above because the source hands the two clocks to
+## different creeps: a spell resistance shortens spell durations and leaves a
+## slow's alone, and Regenerative Flesh is the one trait that shortens a
+## slow's. See CreepPassive.slow_duration_ratio.
+var _slow_duration_ratio: float = 1.0
+var _slow_duration_cap: float = 0.0
 ## The most this creep may ever be slowed, whatever has piled up on it. 1.0 is
 ## no ceiling. Goblin Engineering is the only thing that lowers it.
 var _max_slow: float = 1.0
@@ -276,9 +283,13 @@ func _init(creep: Creep) -> void:
 		_chill_ratio *= passive.chill_taken_ratio()
 		_cold_ratio *= passive.cold_taken_ratio()
 		_max_slow = minf(_max_slow, passive.max_slow_share())
+		_slow_duration_ratio *= passive.slow_duration_ratio()
 		var cap: float = passive.harmful_duration_cap()
 		if cap > 0.0:
 			_duration_cap = cap if _duration_cap <= 0.0 else minf(_duration_cap, cap)
+		var slow_cap: float = passive.slow_duration_cap()
+		if slow_cap > 0.0 && (_slow_duration_cap <= 0.0 || slow_cap < _slow_duration_cap):
+			_slow_duration_cap = slow_cap
 
 
 # --- questions ------------------------------------------------------------
@@ -475,13 +486,17 @@ func chill(source: UnitAbility, key: String, per_hit: float, cap: float,
 	# An ACCUMULATING chill only ever climbs, so it holds its own claim on the
 	# key for as long as it is being fed - see Chill.stated.
 	entry.stated = 0.0
-	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds))
+	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds, false))
 
 
 ## Applies a flat slow that does not accumulate: the magnitude is the whole of
 ## it and re-applying only refreshes the window. Holy 2's Luminous Grasp.
+##
+## `sustained` says the window is a HOLD an aura re-states on its own beat
+## rather than a duration the creep serves, which is what exempts it from a
+## creep's slow-duration resistance - see _slow_seconds.
 func slow(source: UnitAbility, key: String, amount: float, seconds: float,
-		cold: bool) -> void:
+		cold: bool, sustained: bool) -> void:
 	if !_may_write() || amount <= 0.0:
 		return
 
@@ -494,7 +509,7 @@ func slow(source: UnitAbility, key: String, amount: float, seconds: float,
 	if blunted >= entry.amount || entry.stated >= RESTATE_SECONDS:
 		entry.amount = blunted
 		entry.stated = 0.0
-	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds))
+	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds, sustained))
 
 
 ## Share of a slow that lands on this creep: what it resists of every slow, and
@@ -1219,27 +1234,38 @@ func _harmful_seconds(seconds: float) -> float:
 	return served if _duration_cap <= 0.0 else minf(served, _duration_cap)
 
 
-## How long a SLOW runs on this creep, which is the one harmful window the
-## creep's duration resistance never touches.
+## How long a SLOW runs on this creep.
 ##
-## A creep resists a slow with chill_taken_ratio(), cold_taken_ratio() and
-## max_slow_share(), and with nothing else. Shortening the window as well would be charging it
-## twice for one trait: the Dragonspawn already takes half of every chill, and
-## a quarter-length window on top of that left it untouched by the two aura
-## slows in the game - a Sludge Monstrosity steps its chill every 1.5s and a
-## Titan Vault re-applies its own every beat, so a window cut to a fraction of
-## a second expired before the next step could build on it. What "resists
-## magic" means for a slow is that it lands smaller, not that it falls off
-## early. See unit_data.md 6.6 and game_rules.md.
+## A slow has its OWN duration resistance, kept apart from the one every other
+## harmful window serves. A creep resists an ordinary slow with
+## chill_taken_ratio(), cold_taken_ratio(), max_slow_share() and this, and a
+## spell resistance answers none of the four: what "resists magic" means for a
+## slow is that it lands smaller, not that it falls off early. Charging the
+## Dragonspawn for both left it walking through a maze of chill towers
+## untouched. Regenerative Flesh is the one trait that shortens a slow's clock,
+## and states it as its own rule. See unit_data.md 6.6 and game_rules.md.
 ##
-## What it IS folded in with is whatever is currently lengthening slows on this
+## A SUSTAINED slow is exempt from all of it. An aura re-states its slow on its
+## own beat, so its window is a HOLD rather than a clock: shortening it does not
+## end the slow sooner, it drops the slow between beats and leaves a creep that
+## resists slow durations immune to every aura in the game. What a Sludge
+## Monstrosity or a Titan Vault does to a creep ends when the creep walks out of
+## it and by nothing else.
+##
+## What BOTH paths fold in is whatever is currently lengthening slows on this
 ## creep, which acts on slows alone and so has nowhere else to live. Applied at
 ## the moment a slow lands and never afterwards - see lengthen_slows.
-func _slow_seconds(seconds: float) -> float:
+func _slow_seconds(seconds: float, sustained: bool) -> float:
 	var base: float = maxf(seconds, 0.0)
-	if base <= 0.0 || _slow_bonus_left <= EPSILON:
+	if base <= 0.0:
 		return base
-	return base + _slow_bonus
+	if _slow_bonus_left > EPSILON:
+		base += _slow_bonus
+	if sustained:
+		return base
+	# Ceiling after the share, the order Regenerative Flesh states it in.
+	var served: float = base * _slow_duration_ratio
+	return served if _slow_duration_cap <= 0.0 else minf(served, _slow_duration_cap)
 
 
 ## How many stacks an aura may hold on one creep, from the game's own rules.

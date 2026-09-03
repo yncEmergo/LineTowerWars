@@ -240,8 +240,24 @@ no feature tags) and press **Multiplayer** in each. Full detail, including what 
 should say, is in [server.md](Docs/server.md).
 
 **Developer cheats** shortcut the parts of a match you are not testing — gold, every creep
-unlocked at once, every technology granted. They are on the numpad, and
-`Scripts/Input/CheatController.gd` is the list and the authority on which key is which.
+unlocked at once, every technology granted, and a whole maze saved and rebuilt. They are on
+the numpad, and `Scripts/Input/CheatController.gd` is the list and the authority on which
+key is which.
+
+The **layout pair** is the one worth explaining. One key writes the maze standing in your
+area out to a file as building types and grid cells; the other builds that file back, free
+and finished, so a maze worth testing against is one press away instead of five minutes of
+clicking. `TowerLayout` is the file format and `GameConfig.cheat_layout_path` is where it
+goes — `user://` by default, and every save logs the folder. Loading is non-destructive and
+per entry: anything already standing keeps its cell, so a second press adds nothing and a
+press over a half-built maze fills in the rest. Nothing about placement is waived — the area
+refuses a taken cell or one under rubble exactly as it refuses a build order — only the
+price, the build timer and the walk.
+
+The file is ordinary hand-editable Godot, and the format is deliberately the smallest honest
+one: a type id and a cell per entry, area-local, so a layout saved in one player's area
+loads into anybody's. That is also the shape a player-facing maze template would want, if
+saved layouts ever stop being a testing tool.
 
 Each one is a PLAYER ORDER like any other: it goes through `Commands.submit_player_action`,
 so the authority grants it rather than a client redrawing a number the server never agreed

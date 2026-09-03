@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://di4ewf47v362s"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/arcane_greater_spellslinger_ability.tres" id="5_arcane_greater_spellslinger_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_arcane_greater_spellslinger_to_arcane_ultimate_spellslinger_ability.tres" id="6_upgrade_arcane_greater_spellslinger_to_arcane_ultimate_spellslinger_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="7_return_to_elemental_core_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="10_u1wbx"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="11_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/greater_spellslinger.png" id="15_greater_spellslinger"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://bdjwfwe7kr3ja" path="res://2DArt/Icons/greater_spellslinger.png" id="15_greater_spellslinger"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -27,13 +28,18 @@ script = ExtResource("3_AttackStats")
 damage_min = 225
 damage_max = 228
 damage_type = 0
-attacks_per_second = 1
 attack_range = 6.25
-target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/arcane_greater_spellslinger_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
+gold_cost = 10000
+max_mana = 50
+total_gold_cost = 15000
 unit_type_id = 132
 display_name = "Greater Spellslinger"
 icon = ExtResource("15_greater_spellslinger")
@@ -43,10 +49,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_arcane_greater_spellslinger_ability"), ExtResource("6_upgrade_arcane_greater_spellslinger_to_arcane_ultimate_spellslinger_ability"), ExtResource("7_return_to_elemental_core_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability"), ExtResource("11_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/arcane_greater_spellslinger.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/arcane_greater_spellslinger_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
-max_mana = 50
-gold_cost = 10000
-total_gold_cost = 15000

@@ -422,6 +422,11 @@ permissive server could hand themselves the gold to end a match. Turning it on i
 made on the SERVER, deliberately, for a headless test. What the cheats DO is in the root
 README under Running it.
 
+One of them changes nothing and still takes this road: the cheat that SAVES a maze to a file
+only reads the world, but the world worth reading is the authority's - a client's towers are a
+drawing of it. So in a deliberately cheat-enabled networked test the file lands on the
+SERVER, next to its own logs, and not on the machine the key was pressed on.
+
 Signals: `command_applied(Command)`, `command_rejected(Command, String)` - both server side.
 Wire: `submit_command` is `@rpc("any_peer", "reliable")`. `Command`
 (`Scripts/Multiplayer/Command.gd`) is a RefCounted, not a Resource: it is created, sent and
@@ -458,6 +463,13 @@ for a whole match. The choice is a setting the player themselves changed on thei
 like the Prioritize flag beside it, and a card that went on drawing the old answer would read
 as a button that does nothing. One field each, for the tower rather than per ability: no tower
 carries two passives that bank or two abilities that cycle.
+
+One spare BIT of that flags field says whether a player has this unit in a fight, and it is
+there for the builder alone - the one unit that never picks its own targets, so the one unit
+whose swing a client cannot work out for itself. It has to be sent because an attack ordered
+onto a UNIT draws no marker, and the order chain a client is given is only the drawing half of
+the real one: without the bit, a builder hammering a creep on the server stands with its arm
+down on both clients. Nothing on the wire grew for it, since the flags int was already there.
 
 What a morph is turning INTO is still not sent, so a client draws no upgrade preview and its
 panel pictures the tower rather than what it is becoming. That is a whole unit type per record
@@ -559,6 +571,7 @@ PlayerState.set_replicated(gold, income, lives)    # no spend/gain rules re-run
 SendBuilding.set_replicated_stock(stats, count)
 Building.set_replicated_phase(building, selling, upgrading)
 AttackComponent.set_prioritize_air(value)          # which creep a tower picks IS simulation
+AttackComponent.set_fighting_on_command(value)     # the builder's swing, which it cannot infer
 ```
 Each exists because the ordinary method ENFORCES something - you cannot spend what you do not
 have, a life must come from somebody, zero health means death - and a value that already went

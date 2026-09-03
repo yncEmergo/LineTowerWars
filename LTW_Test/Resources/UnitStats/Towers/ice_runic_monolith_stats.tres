@@ -1,23 +1,23 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://bfefp8p5cvkgi"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
-[ext_resource type="Script" path="res://Scripts/Combat/SplashEffect.gd" id="5_SplashEffect"]
-[ext_resource type="Script" path="res://Scripts/Combat/AttackEffect.gd" id="6_AttackEffect"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="5_SplashEffect"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="6_AttackEffect"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/ice_runic_monolith_ability.tres" id="7_ice_runic_monolith_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_ice_runic_monolith_to_ice_lesser_lich_ability.tres" id="8_upgrade_ice_runic_monolith_to_ice_lesser_lich_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_ice_runic_monolith_to_ice_lesser_crystal_ability.tres" id="9_upgrade_ice_runic_monolith_to_ice_lesser_crystal_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="10_return_to_elemental_core_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="11_attack_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="11_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="12_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="13_sell_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="13_sell_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="14_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="15_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="16_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="17_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/runic_monolith.png" id="18_runic_monolith"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="15_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="16_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="17_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://c8f8b8vt7ehfk" path="res://2DArt/Icons/runic_monolith.png" id="18_runic_monolith"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -37,12 +37,17 @@ damage_type = 0
 is_aoe_damage = true
 attacks_per_second = 0.667
 attack_range = 4.75
-target_types = 3
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("6_AttackEffect")]([SubResource("Splash")])
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/ice_runic_monolith_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("17_cancel_upgrade_ability")])
+gold_cost = 800
+total_gold_cost = 1000
 unit_type_id = 74
 display_name = "Runic Monolith"
 icon = ExtResource("18_runic_monolith")
@@ -52,9 +57,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_ice_runic_monolith_ability"), ExtResource("8_upgrade_ice_runic_monolith_to_ice_lesser_lich_ability"), ExtResource("9_upgrade_ice_runic_monolith_to_ice_lesser_crystal_ability"), ExtResource("10_return_to_elemental_core_ability"), ExtResource("11_attack_ability"), ExtResource("12_prioritize_ability"), ExtResource("13_sell_ability"), ExtResource("14_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/ice_runic_monolith.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/ice_runic_monolith_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("15_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("17_cancel_upgrade_ability")])
-gold_cost = 800
-total_gold_cost = 1000

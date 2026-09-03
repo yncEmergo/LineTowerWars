@@ -163,6 +163,12 @@ const FLAG_PRIORITIZE_AIR: int = 8
 ## calls them different things, so without it a client says a tower being
 ## reverted is being upgraded.
 const FLAG_RETURNING: int = 16
+## Whether a player has this unit in a FIGHT - whether an attack order is the
+## task it is working on. Only the builder acts on it, and it has to be sent:
+## an attack ordered onto a unit draws no marker, so it is not in the order
+## chain a client is given and the client cannot work this out for itself. See
+## AttackComponent.is_fighting_on_command.
+const FLAG_FIGHTING_ON_COMMAND: int = 32
 
 ## Newest snapshot received and not yet applied, or empty.
 ##
@@ -388,8 +394,11 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 			flags |= FLAG_UPGRADING
 		if building.is_returning():
 			flags |= FLAG_RETURNING
-	if unit.attack_component != null && unit.attack_component.prioritizes_air():
-		flags |= FLAG_PRIORITIZE_AIR
+	if unit.attack_component != null:
+		if unit.attack_component.prioritizes_air():
+			flags |= FLAG_PRIORITIZE_AIR
+		if unit.attack_component.is_fighting_on_command():
+			flags |= FLAG_FIGHTING_ON_COMMAND
 
 	# The two mana fields carry a CREEP's pool as well as a tower's now. Same
 	# two floats either way, so nothing on the wire grew when the creeps that
@@ -712,6 +721,8 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 
 	if unit.attack_component != null:
 		unit.attack_component.set_prioritize_air((flags & FLAG_PRIORITIZE_AIR) != 0)
+		unit.attack_component.set_fighting_on_command(
+			(flags & FLAG_FIGHTING_ON_COMMAND) != 0)
 
 
 ## A unit the server no longer has. Unregistered immediately rather than left

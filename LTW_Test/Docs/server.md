@@ -154,8 +154,9 @@ Arguments** in the run instances dialog.
 Two machines in different buildings, no rented server and no router configuration:
 **Tailscale**, a free VPN mesh that gives each PC a permanent address and connects them
 directly. This is the DEV LOOP only — testers on a public download cannot be asked to
-install it, and that is the point at which a publicly reachable server starts being worth
-paying for. Nothing set up here is wasted when that happens: it is the same address list.
+install it, which is why the rented server below exists. Nothing set up here was wasted when
+that arrived: it is the same address list, and the tailnet is now also how the rented machine
+is administered without exposing its admin access to the internet.
 
 **Why not a port forward.** A PC behind a router has no address the other one can dial, so
 the router has to be told to send UDP 7777 inwards. That is a router login, an address that
@@ -249,6 +250,55 @@ missing, nearly every time.
 
 ---
 
+## The public server
+
+A rented Linux machine runs the server around the clock, so somebody who is not on the tailnet
+can play. **This is what a handed-out build reaches**, and nothing has to be running on your PC
+for it to work. It exists because a dormitory or building connection cannot be dialled into at
+all — no port forward, no router login, no public address of its own.
+
+| What you want | Command, from the project root |
+| --- | --- |
+| Ship the pushed HEAD and restart | `.\Tools\deploy_server.ps1` |
+| Ask what it is running | `.\Tools\deploy_server.ps1 -Check` |
+| Watch its log | `.\Tools\deploy_server.ps1 -Log` |
+| Restart without pulling | `.\Tools\deploy_server.ps1 -Restart` |
+
+Its address is in `network_config.tres` with every other candidate, and is the deploy script's
+own default — this document does not repeat it, for the same reason it does not repeat the
+tailnet ones.
+
+**It deploys from GIT, not from your working tree.** This is the one thing about it worth
+internalising. The checkout on the server is reset to `origin/main`, so an uncommitted change
+cannot reach it however many times you deploy. A client carrying local changes the server does
+not have is exactly how you get `Initial world DIFFERS from the server` — and that line is
+then telling the truth about a version mismatch rather than reporting a determinism bug. Push
+first; `-Check` warns when you have not.
+
+### How it is put together
+
+No export and no build. A `systemd` unit named `ltw-server` runs the same
+`--headless -- --server` command you run locally, against a git checkout, under an
+unprivileged `ltw` user. It restarts on crash and starts at boot, so the normal state of the
+world is that it is up.
+
+Its log is the same stdout you read in a local terminal, kept by the journal instead of
+scrolling past — so every line in *What you should see* and *Matches* applies to it verbatim.
+`-Log` is a wrapper over `journalctl -u ltw-server -f`.
+
+Its firewall admits two things: SSH, and UDP on the game's port. Note UDP — the same trap as
+on Windows, where a TCP rule allows nothing while looking correct in every listing.
+
+A fresh checkout has no imported-asset cache, so the deploy re-runs `--import` before
+restarting. Skipping that is the `Identifier ... not declared` failure `CLAUDE.md` warns about,
+which on a server reads as the service crash-looping.
+
+### What it does not do
+
+There is no account system and no password. Anybody holding the address can connect, which is
+fine for a closed test among people you know and is a real question the day a build is public.
+It also still runs one match at a time, exactly as a local server does.
+
 ## Settings
 
 Defaults live in `Resources/Config/network_config.tres` — port, addresses, max peers, connect
@@ -285,8 +335,9 @@ script waits briefly before returning.
 Allow it for **private** networks. Without that, nothing off this machine can reach it.
 
 **A client says the server did not answer**
-It waited the configured timeout (5 s) and gave up. Either the server is not running, is on
-another port, or a firewall is in the way. Check the server terminal for `Listening on port`.
+It waited out `connect_timeout_seconds` on each address in turn and gave up. Either the
+server is not running, is on another port, or a firewall is in the way. Check the server
+terminal for `Listening on port`.
 
 **The Boot line says `"role": client`**
 The `--server` argument did not arrive — nearly always a missing `--` separator.

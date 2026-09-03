@@ -32,6 +32,41 @@ var _distance: PackedInt32Array = PackedInt32Array()
 ## Sweeps the field. exit_first_row and everything below it is the goal, which
 ## is the end zone strip at the bottom of the area.
 func build(occupied: PackedByteArray, width: int, depth: int, exit_first_row: int) -> void:
+	var goals: Array[Vector2i] = []
+	for iz in range(maxi(0, exit_first_row), depth):
+		for ix in range(width):
+			if occupied[iz * width + ix] == 0:
+				goals.append(Vector2i(ix, iz))
+	_sweep(occupied, width, depth, goals)
+
+
+## Sweeps the field towards ONE cell rather than towards the end zone, which is
+## what a COMMANDED walk reads: the goal is wherever a player pointed instead of
+## the strip at the bottom, and every other thing about following the field -
+## the diagonal smoothing, the corner test, committing to a route - is
+## identical, which is why it is this class rather than an A* of its own.
+##
+## Affordable per order because the grid is small - an area is a thousand-odd
+## internal cells - and because a creep COMMITS to what comes out of it. A
+## chase re-aims itself every tick and re-plans only when its quarry crosses
+## into another cell. See Creep._plan_order_route.
+##
+## A goal that is off the grid or inside a wall leaves the field unreachable
+## everywhere, so path_from hands back nothing and the caller is free to fall
+## back on walking straight at the point. PlayerArea.route_between resolves a
+## blocked one before it ever gets here.
+func build_to(occupied: PackedByteArray, width: int, depth: int, goal: Vector2i) -> void:
+	var goals: Array[Vector2i] = []
+	if _in_bounds_of(goal, width, depth) && occupied[goal.y * width + goal.x] == 0:
+		goals.append(goal)
+	_sweep(occupied, width, depth, goals)
+
+
+## The breadth-first sweep itself, outwards from every goal cell at once. Both
+## builds above are the same walk over the grid and differ only in what they
+## call the goal.
+func _sweep(occupied: PackedByteArray, width: int, depth: int,
+		goals: Array[Vector2i]) -> void:
 	_width = width
 	_depth = depth
 	_distance = PackedInt32Array()
@@ -44,12 +79,9 @@ func build(occupied: PackedByteArray, width: int, depth: int, exit_first_row: in
 	# Cells rather than flat indices, so the sweep never has to divide an index
 	# back into coordinates.
 	var queue: Array[Vector2i] = []
-	for iz in range(maxi(0, exit_first_row), depth):
-		for ix in range(width):
-			var index: int = iz * width + ix
-			if occupied[index] == 0:
-				_distance[index] = 0
-				queue.append(Vector2i(ix, iz))
+	for cell: Vector2i in goals:
+		_distance[cell.y * width + cell.x] = 0
+		queue.append(cell)
 
 	var head: int = 0
 	while head < queue.size():
@@ -166,7 +198,13 @@ func _cell_free(cell: Vector2i, occupied: PackedByteArray) -> bool:
 
 
 func _in_bounds(cell: Vector2i) -> bool:
-	return cell.x >= 0 && cell.y >= 0 && cell.x < _width && cell.y < _depth
+	return _in_bounds_of(cell, _width, _depth)
+
+
+## Bounds test against dimensions handed in rather than against the field's
+## own, so a build may ask it before the field has any.
+func _in_bounds_of(cell: Vector2i, width: int, depth: int) -> bool:
+	return cell.x >= 0 && cell.y >= 0 && cell.x < width && cell.y < depth
 
 
 func _steps() -> Array:

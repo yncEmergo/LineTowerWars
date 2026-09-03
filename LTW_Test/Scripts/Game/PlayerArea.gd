@@ -70,6 +70,11 @@ var _blocking: PackedByteArray = PackedByteArray()
 var _creeps: Array[Creep] = []
 ## Route to the end zone, rebuilt whenever the occupancy grid changes.
 var _flow: FlowField = FlowField.new()
+## Scratch field for the point-to-point routes ordered units ask for, kept
+## rather than allocated per call. One field is enough because every answer is
+## read straight back out in route_between before anything else can ask: the
+## sweep is not a state this area carries, only the buffer it runs in.
+var _order_flow: FlowField = FlowField.new()
 ## Internal cells a destroyed tower left rubble on, as cell index -> seconds
 ## left. Sparse rather than one entry per cell, because rubble is rare and a
 ## dictionary of three entries costs nothing to tick where a full grid would be
@@ -486,6 +491,30 @@ func route_to_exit(world_pos: Vector3) -> Array[Vector2i]:
 		var empty: Array[Vector2i] = []
 		return empty
 	return _flow.path_from(world_to_internal_cell(world_pos), _blocking)
+
+
+## The whole route from one world point to another, as internal cells in
+## walking order. Empty when the two share a cell, and empty when no route
+## joins them at all - which leaves the caller free to walk straight at the
+## point instead.
+##
+## The same shape as route_to_exit above and read exactly the same way, and it
+## exists for the same reason one cell further along: a COMMANDED walk has to
+## go round the maze rather than press into it, and where it is going is a spot
+## the player pointed at rather than the end zone. See Creep._walk_to_order.
+##
+## A destination inside a wall resolves to the nearest cell that is not, so an
+## order aimed at a tower routes to its face rather than to nowhere. It is the
+## same rule CommandController._reachable_point_in applies to a ground click,
+## asked here as well because an attack order never passes through that.
+func route_between(from: Vector3, to: Vector3) -> Array[Vector2i]:
+	var goal: Vector3 = clamp_point(to)
+	if !is_point_free(goal):
+		goal = nearest_free_point(goal)
+
+	_order_flow.build_to(_blocking, internal_width(), internal_depth(),
+		world_to_internal_cell(goal))
+	return _order_flow.path_from(world_to_internal_cell(from), _blocking)
 
 
 ## Whether something standing here has reached the end zone.

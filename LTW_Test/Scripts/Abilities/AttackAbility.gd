@@ -52,8 +52,12 @@ func execute(unit: Unit, target: AbilityTarget) -> void:
 		unit.move_to(target.position)
 
 
+## The ORDER question rather than can_attack, and the difference is the whole
+## of what lets an attacker be re-aimed. A creep that is walking may not FIRE,
+## but it may certainly be TOLD to fight - the order is what stops the walk.
+## See Unit.can_take_attack_order.
 func can_execute(unit: Unit) -> bool:
-	return unit != null && unit.attack_component != null && unit.can_attack()
+	return unit != null && unit.attack_component != null && unit.can_take_attack_order()
 
 
 func is_queueable() -> bool:

@@ -324,6 +324,18 @@ extends Resource
 @export var cheats_in_multiplayer: bool = false
 ## Gold one press of the gold cheat hands the player. See CheatController.
 @export var cheat_gold_amount: int = 9999999
+## Where the layout cheat saves a maze to, and reads one back from. See
+## TowerLayout and CheatController.
+##
+## user:// rather than res:// because it is WRITTEN at runtime, which an
+## exported build cannot do to its own data. Point it at a res:// path to load
+## a layout shipped with the game instead - the save half will then refuse,
+## which is the honest answer.
+##
+## One file rather than a slot per number, because this is a testing shortcut:
+## keeping several means copying the file, and the folder is named in the log
+## line every save prints.
+@export var cheat_layout_path: String = "user://Layouts/tower_layout.tres"
 
 
 ## Whether a cheat may fire at all: the master switch, and then the networked

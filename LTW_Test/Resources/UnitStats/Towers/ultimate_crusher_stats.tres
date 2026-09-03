@@ -1,19 +1,19 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://bcebkysla4nn4"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
-[ext_resource type="Script" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
-[ext_resource type="Script" path="res://Scripts/Combat/SelfSplashEffect.gd" id="6_SelfSplashEffect"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="5_AttackEffect"]
+[ext_resource type="Script" uid="uid://bjy36qnkh5xni" path="res://Scripts/Combat/SelfSplashEffect.gd" id="6_SelfSplashEffect"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="7_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="8_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="9_sell_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="10_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_crusher.png" id="14_ultimate_crusher"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="11_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="12_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="13_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://dj0x4u4twvuiy" path="res://2DArt/Icons/ultimate_crusher.png" id="14_ultimate_crusher"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
@@ -26,17 +26,21 @@ radius = 3.0
 script = ExtResource("3_AttackStats")
 damage_min = 2395
 damage_max = 2403
-damage_type = 2
 is_aoe_damage = true
 attacks_per_second = 0.2
 windup_seconds = 0.55
 attack_range = 1.25
-target_types = 3
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/ultimate_crusher_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
+gold_cost = 25000
+total_gold_cost = 31190
 unit_type_id = 45
 display_name = "Ultimate Crusher"
 icon = ExtResource("14_ultimate_crusher")
@@ -46,9 +50,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("7_attack_ability"), ExtResource("8_prioritize_ability"), ExtResource("9_sell_ability"), ExtResource("10_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/ultimate_crusher.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/ultimate_crusher_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_upgrade_ability")])
-gold_cost = 25000
-total_gold_cost = 31190

@@ -1,17 +1,18 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://bm1wi6jfauy40"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="5_attack_ability"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="5_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="6_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="7_sell_ability"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="7_sell_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="7_yu3g4"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="8_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="11_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/ultimate_watch_tower.png" id="12_ultimate_watch_tower"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="9_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="10_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="11_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://vi22b6hrvyav" path="res://2DArt/Icons/ultimate_watch_tower.png" id="12_ultimate_watch_tower"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
@@ -25,11 +26,16 @@ damage_max = 610
 damage_type = 3
 attacks_per_second = 2
 attack_range = 6.25
-target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/ultimate_watch_tower_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_upgrade_ability")])
+gold_cost = 25000
+total_gold_cost = 31190
 unit_type_id = 31
 display_name = "Ultimate Watch Tower"
 icon = ExtResource("12_ultimate_watch_tower")
@@ -39,9 +45,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_attack_ability"), ExtResource("6_prioritize_ability"), ExtResource("7_sell_ability"), ExtResource("8_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/ultimate_watch_tower.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/ultimate_watch_tower_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("9_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("10_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("11_cancel_upgrade_ability")])
-gold_cost = 25000
-total_gold_cost = 31190

@@ -19,11 +19,18 @@ extends CreepPassive
 ## them shortens the clock as a slow lands, and the other reaches in ONCE, at
 ## half health, and cuts whatever has piled up in half.
 ##
-## The duration rules are answered through the generic harmful-effect hooks
-## rather than through a slow-only one, so they shorten a stun and a burn as
-## well as a chill. That is broader than the source states and is deliberate:
-## the roster has one duration knob, one place it is applied, and a second one
-## that only slows would be a rule nobody could see from a stats file.
+## ONE duration knob answering BOTH hooks: the generic harmful one, so the
+## Abomination shortens a stun and a burn as well as a slow, and the slow-only
+## one, which is what the source actually states. Broader than the source and
+## deliberate - a second number that only slows would be a rule nobody could
+## see from a stats file. It is the only creep in the roster answering the
+## slow hook, which is why that hook exists at all.
+##
+## What it does NOT shorten is a SUSTAINED slow - an aura re-stating itself on
+## its own beat, which is every Sludge Monstrosity and every Titan Vault. Its
+## window is a hold rather than a clock, so cutting it to a fraction of a
+## second would not end the slow sooner, it would leave the Abomination
+## walking through both of those untouched. See StatusEffects._slow_seconds.
 
 @export_group("Slow")
 ## Share of a harmful clock this creep serves.
@@ -46,6 +53,15 @@ func harmful_duration_ratio() -> float:
 
 
 func harmful_duration_cap() -> float:
+	return duration_cap
+
+
+## The same two numbers again, on the hook a slow reads. See the class note.
+func slow_duration_ratio() -> float:
+	return duration_ratio
+
+
+func slow_duration_cap() -> float:
 	return duration_cap
 
 
@@ -82,7 +98,8 @@ func on_damage_taken(creep: Creep, _lost: float,
 
 
 func effect_text() -> String:
-	return ("Harmful spell effects last %d%% less and never more than %s seconds."
+	return ("Harmful effects and slows last %d%% less and never more than %s"
+		+ " seconds, though a slow from an aura is untouched."
 		+ " Regenerates %s health per second for every percent of health it is"
 		+ " missing, up to %s per second. The first time it falls below %d%%"
 		+ " health, the slow on it is halved.") % [

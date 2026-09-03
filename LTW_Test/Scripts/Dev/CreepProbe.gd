@@ -324,7 +324,7 @@ func _check_lesser_spell_resistance() -> void:
 		"%d vs %d" % [resisted, normal])
 
 	creep.status().chill(_ability("Passives/lesser_spell_resistance"),
-		"probe", 0.4, 0.4, 4.0)
+		"probe", 0.4, 0.4, 4.0, true)
 	await _ticks(2)
 	var slow: float = 1.0 - creep.status().move_ratio()
 	_check("takes half of a movement chill", absf(slow - 0.2) < 0.01,
@@ -470,7 +470,7 @@ func _check_bone_shield() -> void:
 	_check("and buys 4% health a point", absi(creep.max_health() - expected) <= 1,
 		"%d vs %d" % [creep.max_health(), expected])
 
-	creep.status().chill(_ability("Passives/bone_shield"), "probe", 0.5, 0.5, 4.0)
+	creep.status().chill(_ability("Passives/bone_shield"), "probe", 0.5, 0.5, 4.0, false)
 	await _ticks(2)
 	_check("and cannot be slowed", is_equal_approx(creep.status().move_ratio(), 1.0),
 		"%.2f" % creep.status().move_ratio())
@@ -560,7 +560,7 @@ func _check_wind_rush() -> void:
 	_check("the shaman starts part full", pool != null && pool.current == 10
 		&& pool.maximum == 14, "" if pool == null else "%d/%d" % [pool.current, pool.maximum])
 
-	friend.status().chill(_ability("Passives/wind_rush"), "probe", 0.5, 0.5, 20.0)
+	friend.status().chill(_ability("Passives/wind_rush"), "probe", 0.5, 0.5, 20.0, false)
 	var slowed: float = friend.current_move_speed()
 	await _seconds(5.0)
 	_check("and hurries the slowest creep near it",
@@ -571,7 +571,7 @@ func _check_wind_rush() -> void:
 func _check_regenerative_flesh() -> void:
 	var creep: Creep = await _spawn("abomination")
 	creep.status().chill(_ability("Passives/regenerative_flesh"),
-		"probe", 0.4, 0.4, 10.0)
+		"probe", 0.4, 0.4, 10.0, false)
 	await _ticks(1)
 	_check("a ten second slow is capped to 1.4",
 		creep.status().move_ratio() < 1.0, "%.2f" % creep.status().move_ratio())
@@ -581,6 +581,15 @@ func _check_regenerative_flesh() -> void:
 		|| is_equal_approx(creep.status().move_ratio(), 1.0),
 		"still %.2f" % (1.0 if creep.status_or_null() == null
 			else creep.status().move_ratio()))
+
+	# An aura's slow is a HOLD it re-states, so the 1.4 second ceiling has no
+	# claim on it - a Sludge Monstrosity and a Titan Vault grind an Abomination
+	# down exactly as they do anything else. See StatusEffects._slow_seconds.
+	creep.status().slow(_ability("Passives/regenerative_flesh"),
+		"probe_aura", 0.4, 10.0, false, true)
+	await _seconds(2.0)
+	_check("but an aura's slow it serves in full",
+		creep.status().move_ratio() < 1.0, "%.2f" % creep.status().move_ratio())
 
 	creep.take_damage(int(float(creep.max_health()) * 0.9),
 		DamageTable.DamageType.SPELL)
@@ -594,7 +603,7 @@ func _check_regenerative_flesh() -> void:
 func _check_earth_shield() -> void:
 	var magi: Creep = await _spawn("ogre_magi")
 	var friend: Creep = await _spawn("knight", Vector3(0.6, 0.0, 0.0))
-	friend.status().chill(_ability("Passives/earth_shield"), "probe", 0.5, 0.5, 60.0)
+	friend.status().chill(_ability("Passives/earth_shield"), "probe", 0.5, 0.5, 60.0, false)
 	await _ticks(2)
 	_check("the packmate starts slowed", friend.status().move_ratio() < 1.0,
 		"%.2f" % friend.status().move_ratio())
@@ -732,7 +741,7 @@ func _check_blocked() -> void:
 func _check_stoneskin() -> void:
 	var creep: Creep = await _spawn("mountain_giant")
 	creep.status().chill(_ability("Passives/stoneskin_fortitude"),
-		"probe", 0.5, 0.5, 10.0)
+		"probe", 0.5, 0.5, 10.0, false)
 	await _ticks(2)
 	_check("stoneskin refuses a chill outright",
 		is_equal_approx(creep.status().move_ratio(), 1.0),
@@ -793,8 +802,8 @@ func _check_war_stance() -> void:
 func _check_goblin_engineering() -> void:
 	var creep: Creep = await _spawn("goblin_shredder")
 	var source: UnitAbility = _ability("Passives/goblin_engineering")
-	creep.status().chill(source, "one", 0.6, 0.6, 20.0)
-	creep.status().chill(source, "two", 0.6, 0.6, 20.0)
+	creep.status().chill(source, "one", 0.6, 0.6, 20.0, false)
+	creep.status().chill(source, "two", 0.6, 0.6, 20.0, false)
 	await _ticks(2)
 	var slow: float = 1.0 - creep.status().move_ratio()
 	_check("however many chill it, it is never past a quarter",
@@ -835,7 +844,7 @@ func _check_legendary_resistance() -> void:
 
 	creep.status().stun(_ability("Passives/legendary_spell_resistance"), 10.0)
 	creep.status().chill(_ability("Passives/legendary_spell_resistance"),
-		"probe", 0.5, 0.5, 10.0)
+		"probe", 0.5, 0.5, 10.0, true)
 	await _ticks(2)
 	_check("and no timed harmful effect applies at all",
 		!creep.status().is_stunned()

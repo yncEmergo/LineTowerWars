@@ -98,6 +98,8 @@ func _connect_to_attack() -> void:
 		attack.attack_started.connect(_on_attack_started)
 	if !attack.attacked.is_connected(_on_attacked):
 		attack.attacked.connect(_on_attacked)
+	if !attack.attack_cancelled.is_connected(_on_attack_cancelled):
+		attack.attack_cancelled.connect(_on_attack_cancelled)
 
 
 func _on_attack_started(_target: Unit, windup: float) -> void:
@@ -106,6 +108,21 @@ func _on_attack_started(_target: Unit, windup: float) -> void:
 	_windup = windup
 	_elapsed = 0.0
 	_recover_left = 0.0
+
+
+## Puts the swing straight back to rest, with no follow-through and no
+## shockwave: the blow never landed, so there is nothing for either to be the
+## consequence of.
+##
+## SNAPPED rather than eased, and that is the whole point of it - the thing
+## that cancelled the swing is the player's next order, and an arm still coming
+## down afterwards is exactly what they asked to stop.
+func _on_attack_cancelled() -> void:
+	_windup = 0.0
+	_elapsed = 0.0
+	_recover_left = 0.0
+	if _swing != null:
+		_apply(0.0)
 
 
 func _on_attacked(_target: Unit) -> void:

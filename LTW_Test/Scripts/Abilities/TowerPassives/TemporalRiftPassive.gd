@@ -216,7 +216,7 @@ func _collect(creep: Creep, point: Vector3) -> void:
 	creep.take_damage(damage, DamageTable.DamageType.SPELL)
 	if slow_amount > 0.0 && creep.is_alive():
 		creep.status().slow(self, slow_source, slow_amount,
-			StatusEffects.DEFAULT_SLOW_SECONDS, false)
+			StatusEffects.DEFAULT_SLOW_SECONDS, false, false)
 
 
 # --- visuals ----------------------------------------------------------------

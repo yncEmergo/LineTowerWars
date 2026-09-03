@@ -30,6 +30,13 @@ signal attack_started(target: Unit, windup: float)
 ## Raised the moment the damage is released - the hammer lands, the shot
 ## leaves. With no windup it follows attack_started in the same frame.
 signal attacked(target: Unit)
+## Raised when a committed attack is DROPPED before its damage landed: a new
+## order arrived, or the unit stopped being able to attack mid-swing.
+##
+## The counterpart to `attacked` above, and exactly one of the two follows
+## every `attack_started` - so an animation that listens to both is never left
+## holding a swing in the air.
+signal attack_cancelled()
 
 ## Height above the unit's origin that shots leave from when no muzzle node was
 ## wired. A placeholder visual value, like the rest of the primitive art.
@@ -112,6 +119,9 @@ var _ordered_target: Unit = null
 ## survives that: what is asked is "is this the one I am already standing at",
 ## and a different quarry answers no on its own with nothing to reset.
 var _reached_target: Unit = null
+## Whether the SERVER says a player has this unit in a fight, and meaningful on
+## a CLIENT only. See is_fighting_on_command.
+var _commanded: bool = false
 ## Ticks left before this unit may search for a target again.
 ##
 ## Only ever set by a search that came back EMPTY, so a unit that is fighting
@@ -201,6 +211,42 @@ func set_prioritize_air(value: bool) -> void:
 	_scan_wait = 0
 
 
+## Whether a player has this unit in a fight right now - whether an attack
+## order is the task it is working on.
+##
+## Only ever asked of a unit that does NOT pick its own targets, which is the
+## builder: for everything else the answer is irrelevant, since a tower fights
+## whether anybody told it to or not. See AttackStats.auto_acquire.
+##
+## On the AUTHORITY it is read off the ORDER CHAIN rather than remembered,
+## because the chain already IS that answer and already ends on its own. Both
+## halves of an attack order - onto a creep, or onto a patch of ground - are an
+## AttackAbility at the head of it, so an attack-move still hunts for its own
+## targets exactly as it should, and the hunting stops on the tick that task
+## finishes or is replaced. A flag would have to be cleared by hand in every
+## place the chain already handles, and the one place that got missed would
+## leave the builder auto-attacking for the rest of the match.
+##
+## A CLIENT is TOLD, and has to be. The chain it holds is the drawing half of
+## the real one, and an attack ordered onto a unit draws nothing at all
+## (QueuedOrder.draws_marker) - so the client's own copy cannot see the very
+## order this is about, and a builder fighting on the server would stand there
+## with its hammer down. It rides a spare bit of the flags the snapshot already
+## carries, so nothing on the wire grew for it - see ReplicationService.
+func is_fighting_on_command() -> bool:
+	if !MatchSession.is_authority():
+		return _commanded
+	if _unit == null || _unit.order_queue == null || _unit.order_queue.is_empty():
+		return false
+	return _unit.order_queue.orders()[0].ability is AttackAbility
+
+
+## Handed down by the server, and meaningful on a CLIENT only. The write half
+## of the reading above, exactly as set_prioritize_air is.
+func set_fighting_on_command(value: bool) -> void:
+	_commanded = value
+
+
 ## Orders this unit onto one specific target, the way an attack order works in
 ## any RTS. Answers whether the order was taken.
 ##
@@ -218,7 +264,7 @@ func set_prioritize_air(value: bool) -> void:
 ## priority inside the automatic search, and this never goes through it.
 func order_attack(target: Unit) -> bool:
 	var attack: AttackStats = _attack
-	if attack == null || _unit == null || !_unit.can_attack():
+	if attack == null || _unit == null || !_unit.can_take_attack_order():
 		return false
 	if !_is_valid_target(target, attack):
 		return false
@@ -228,6 +274,27 @@ func order_attack(target: Unit) -> bool:
 	# standing in reach is shot on the tick the order arrived.
 	_scan_wait = 0
 	return true
+
+
+## Drops a swing that has already COMMITTED, because the player has told this
+## unit to do something else, and forgets what it was pointed at.
+##
+## What the order chain calls when a new command replaces the current one, for
+## a unit that can WALK - see OrderQueue._cancel_current. A player who sends
+## the builder off to build has said what it is doing now, and a hammer that
+## finished its arc into a creep a moment later would read as an order that
+## was only half heard.
+##
+## Nothing is refunded: the cooldown was spent the moment the attack committed,
+## exactly as it would have been had the blow landed. So spamming orders at a
+## unit is not a way to make it attack faster.
+##
+## A TOWER is deliberately left out of this. It has the opposite rule - it
+## commits when the windup starts and may not be retargeted mid-swing - and
+## nothing a player can order a tower to do is a reason to take the swing back.
+func cancel_attack() -> void:
+	_cancel_windup()
+	_target = null
 
 
 ## Forgets the standing order, leaving the unit to pick its own targets again.
@@ -311,6 +378,18 @@ func _physics_process(delta: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_scan_wait = maxi(0, _scan_wait - 1)
 
+	# A unit that only fights ON COMMAND stops the instant the command ends,
+	# the swing already in the air included, and forgets what it was pointed
+	# at - or whatever the last order handed it would keep it hammering for the
+	# rest of the match. Every tower falls straight through.
+	#
+	# On the AUTHORITY the order chain has already done this and the call is a
+	# no-op, since a new order cancels the swing as it arrives. On a CLIENT it
+	# is the whole of it: the client has no chain to cancel from and is simply
+	# TOLD the fight is over, so this is where its hammer comes down.
+	if !_may_acquire(attack):
+		cancel_attack()
+
 	# A committed attack owns the tower until it lands. It still aims, so the
 	# swing tracks, but nothing may retarget it and nothing may start a second.
 	if _windup_left > 0.0:
@@ -333,7 +412,7 @@ func _physics_process(delta: float) -> void:
 	# the whole match, and most of a full maze is in exactly that state. The
 	# wait is the other half: after a search comes back empty, it does not
 	# search again for a few ticks. See GameConfig.idle_target_scan_ticks.
-	if _target == null && _cooldown <= 0.0 && _scan_wait <= 0:
+	if _target == null && _cooldown <= 0.0 && _scan_wait <= 0 && _may_acquire(attack):
 		_target = _acquire(attack)
 		if _target == null:
 			_scan_wait = _next_scan_wait()
@@ -368,6 +447,16 @@ func _next_scan_wait() -> int:
 		var id: int = 0 if _unit == null else _unit.unit_id
 		return 1 + (id % ticks)
 	return ticks
+
+
+## Whether this unit may pick a target for ITSELF right now, as opposed to
+## shooting one it was handed.
+##
+## True for everything that fights unasked - every tower, every attacker creep
+## - and that is what AttackStats.auto_acquire says. The builder is the one
+## unit that answers no: it fights when it is told to and not otherwise.
+func _may_acquire(attack: AttackStats) -> bool:
+	return attack.auto_acquire || is_fighting_on_command()
 
 
 ## The target this unit picks for itself, which is a different search per
@@ -469,9 +558,17 @@ func _advance_windup(delta: float, attack: AttackStats) -> void:
 
 ## Drops a swing that can no longer land. Nothing is refunded: the cooldown was
 ## already spent, exactly as it would have been if the attack had landed.
+##
+## GUARDED rather than unconditional, because the can-attack test at the top of
+## the tick calls this every tick for a tower that is upgrading - so an
+## unguarded emit would be twenty attack_cancelled a second for the whole
+## build, at whatever animation is listening for one.
 func _cancel_windup() -> void:
+	if _windup_left <= 0.0 && _windup_target == null:
+		return
 	_windup_left = 0.0
 	_windup_target = null
+	attack_cancelled.emit()
 
 
 ## Releases the damage of a committed attack.

@@ -547,6 +547,24 @@ func secondary_resource() -> TowerResource:
 
 ## Whether this unit is in a state where its attack may fire, if it has one.
 func can_attack() -> bool:
+	return can_take_attack_order()
+
+
+## Whether this unit may be GIVEN an attack order right now, which is a WEAKER
+## question than can_attack above and has to be asked separately from it.
+##
+## The two came apart over the attacker creeps. A creep walking somewhere does
+## not stop to fight - move means move - so it may not FIRE while it walks, and
+## that same answer was quietly refusing the player's next click: an order is
+## checked before it is applied, so an attacker already on its way could not be
+## aimed at anything, and neither could one chasing the tower it had just been
+## sent after. Ordering it is exactly what ENDS the walk, so the walk cannot be
+## what forbids the order.
+##
+## What does still refuse one is being unable to attack AT ALL: a tower going
+## up, or one being rebuilt into its next tier, has nothing to shoot with. So
+## Building overrides THIS half and Creep overrides can_attack.
+func can_take_attack_order() -> bool:
 	return is_alive()
 
 

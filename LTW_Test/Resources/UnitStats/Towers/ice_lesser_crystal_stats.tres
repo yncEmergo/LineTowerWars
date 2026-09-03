@@ -1,26 +1,26 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://ccla7ed0pee7j"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/PierceDelivery.gd" id="4_PierceDelivery"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://32p6ge1ysf6j" path="res://Scripts/Combat/PierceDelivery.gd" id="4_PierceDelivery"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/ice_lesser_crystal_ability.tres" id="5_ice_lesser_crystal_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_ice_lesser_crystal_to_ice_greater_crystal_ability.tres" id="6_upgrade_ice_lesser_crystal_to_ice_greater_crystal_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="7_return_to_elemental_core_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="10_fhmfj"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="11_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_crystal.png" id="15_lesser_crystal"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://dc6cf7i4vamrs" path="res://2DArt/Icons/lesser_crystal.png" id="15_lesser_crystal"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_PierceDelivery")
 projectile_scene_path = "res://Scenes/Effects/ice_spike.tscn"
 speed = 26
-travel_cells = 8
 trailing_damage_type = 5
 impact_scene_path = "res://Scenes/Effects/frost_impact.tscn"
 
@@ -31,11 +31,16 @@ damage_max = 207
 damage_type = 3
 attacks_per_second = 0.714
 attack_range = 5.5
-target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/ice_lesser_crystal_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
+gold_cost = 4000
+total_gold_cost = 5000
 unit_type_id = 78
 display_name = "Lesser Crystal"
 icon = ExtResource("15_lesser_crystal")
@@ -45,9 +50,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_ice_lesser_crystal_ability"), ExtResource("6_upgrade_ice_lesser_crystal_to_ice_greater_crystal_ability"), ExtResource("7_return_to_elemental_core_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability"), ExtResource("11_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/ice_lesser_crystal.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/ice_lesser_crystal_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
-gold_cost = 4000
-total_gold_cost = 5000

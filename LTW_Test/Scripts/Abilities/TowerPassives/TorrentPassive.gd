@@ -84,7 +84,7 @@ func on_tick(tower: Building, delta: float) -> void:
 		# wins the number, which is what slow() already does with its key.
 		var held: int = aura_stacks_on(creep, slow_source)
 		status.slow(self, slow_source, minf(slow_per_stack * float(held), slow_cap),
-			AURA_HOLD_SECONDS, false)
+			AURA_HOLD_SECONDS, false, true)
 		if physical_amplification > 0.0:
 			status.amplify_physical(self, physical_amplification * share, AURA_HOLD_SECONDS)
 

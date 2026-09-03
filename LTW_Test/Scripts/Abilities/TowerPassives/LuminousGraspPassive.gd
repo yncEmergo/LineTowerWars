@@ -62,7 +62,7 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 	if status == null:
 		return
 	status.amplify_spell(self, spell_amplification, amplification_seconds)
-	status.slow(self, slow_source, slow_amount, amplification_seconds, false)
+	status.slow(self, slow_source, slow_amount, amplification_seconds, false, false)
 
 
 ## The aura, on the tier that has one. Beats on the stacking interval rather
@@ -80,7 +80,8 @@ func on_tick(tower: Building, delta: float) -> void:
 			continue
 		var status: StatusEffects = creep.status()
 		status.amplify_spell(self, spell_amplification * share, AURA_HOLD_SECONDS)
-		status.slow(self, slow_source, slow_amount * share, AURA_HOLD_SECONDS, false)
+		status.slow(self, slow_source, slow_amount * share, AURA_HOLD_SECONDS,
+			false, true)
 		status.weaken_attack(self, 0.0, damage_reduction * share, AURA_HOLD_SECONDS)
 		# Lengthens slows as they LAND rather than topping up the ones already
 		# running, which is what stops an aura from making every chill on

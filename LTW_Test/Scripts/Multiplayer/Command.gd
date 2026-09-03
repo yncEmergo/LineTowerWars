@@ -62,6 +62,15 @@ enum PlayerAction {
 	## charge. Same terms again, and the sender's alone - the other player's
 	## Research Center is untouched.
 	CHEAT_UNLOCK_TECHS,
+	## Developer cheat: write the sender's maze out to the layout file, as
+	## building types and grid cells. The one cheat that changes nothing about
+	## the world - it only reads it - and it still takes this road because the
+	## world it has to read is the AUTHORITY's. See TowerLayout.
+	CHEAT_SAVE_LAYOUT,
+	## Developer cheat: build the layout file into the sender's area, free and
+	## finished. Same terms as the rest; what it places is refused cell by cell
+	## by the area itself, so it can no more seal a maze than a build order can.
+	CHEAT_LOAD_LAYOUT,
 }
 
 ## Which simulation tick the client issued this on. Not trusted for anything

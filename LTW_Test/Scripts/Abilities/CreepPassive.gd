@@ -136,6 +136,28 @@ func max_slow_share() -> float:
 	return 1.0
 
 
+## Share of a SLOW's WINDOW this creep serves, and the mirror of the three
+## hooks above: they blunt how far a slow goes, this one shortens how long it
+## lasts. 1.0 is the full window. Multiplied across passives.
+##
+## Kept apart from harmful_duration_ratio() because the source states the two
+## separately and hands them to different creeps: a spell resistance shortens
+## harmful SPELL durations and does nothing at all to a slow, while
+## Regenerative Flesh shortens harmful SLOW durations and is the only trait in
+## the roster that does. One hook for both let a Dragonspawn resist a chill
+## twice over - once in magnitude and once in the clock - which is the double
+## dip the split exists to stop. See unit_data.md 6.6.
+func slow_duration_ratio() -> float:
+	return 1.0
+
+
+## The longest a slow may run on this creep whatever it asked for, in seconds,
+## or 0 for no ceiling at all. The smallest across every passive wins, applied
+## after the ratio above. Regenerative Flesh's "max 1.4 sec".
+func slow_duration_cap() -> float:
+	return 0.0
+
+
 ## Armour points granted to every creep inside the shared creep aura radius,
 ## this one included. The best aura in range wins; they do not add up.
 ##

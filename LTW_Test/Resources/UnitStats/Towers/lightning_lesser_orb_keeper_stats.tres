@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="BuildingStats" format=3]
+[gd_resource type="Resource" script_class="BuildingStats" format=3 uid="uid://dtni7pkbnbpf1"]
 
-[ext_resource type="Script" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
-[ext_resource type="Script" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
+[ext_resource type="Script" uid="uid://dxg416djnfdme" path="res://Scripts/Config/BuildingStats.gd" id="1_BuildingStats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
+[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="4_InstantDelivery"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/lightning_lesser_orb_keeper_ability.tres" id="5_lightning_lesser_orb_keeper_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_lightning_lesser_orb_keeper_to_lightning_greater_orb_keeper_ability.tres" id="6_upgrade_lightning_lesser_orb_keeper_to_lightning_greater_orb_keeper_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="7_return_to_elemental_core_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="8_attack_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="9_prioritize_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="10_hnohc"]
+[ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="10_sell_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="11_show_ranges_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/lesser_orb_keeper.png" id="15_lesser_orb_keeper"]
+[ext_resource type="Resource" uid="uid://b6fcgbq4oy2qe" path="res://Resources/Abilities/cancel_build_ability.tres" id="12_cancel_build_ability"]
+[ext_resource type="Resource" uid="uid://cuh8pqg4v4y4k" path="res://Resources/Abilities/cancel_sell_ability.tres" id="13_cancel_sell_ability"]
+[ext_resource type="Resource" uid="uid://uj1p53850vvy" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="14_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" uid="uid://kl4ogmi72khi" path="res://2DArt/Icons/lesser_orb_keeper.png" id="15_lesser_orb_keeper"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
@@ -27,11 +28,17 @@ damage_max = 240
 damage_type = 1
 attacks_per_second = 2
 attack_range = 1.5
-target_types = 3
 delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_BuildingStats")
+model_scene_path = "res://Scenes/Units/Models/Towers/lightning_lesser_orb_keeper_model.tscn"
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
+gold_cost = 4000
+max_mana = 100
+total_gold_cost = 5000
 unit_type_id = 86
 display_name = "Lesser Orb Keeper"
 icon = ExtResource("15_lesser_orb_keeper")
@@ -41,10 +48,3 @@ armor = 5
 attack = SubResource("Attack")
 abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_lightning_lesser_orb_keeper_ability"), ExtResource("6_upgrade_lightning_lesser_orb_keeper_to_lightning_greater_orb_keeper_ability"), ExtResource("7_return_to_elemental_core_ability"), ExtResource("8_attack_ability"), ExtResource("9_prioritize_ability"), ExtResource("10_sell_ability"), ExtResource("11_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/lightning_lesser_orb_keeper.tscn"
-model_scene_path = "res://Scenes/Units/Models/Towers/lightning_lesser_orb_keeper_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("12_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("13_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("14_cancel_upgrade_ability")])
-max_mana = 100
-gold_cost = 4000
-total_gold_cost = 5000

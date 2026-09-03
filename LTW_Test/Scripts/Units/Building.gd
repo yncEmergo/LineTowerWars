@@ -592,7 +592,11 @@ func is_under_construction() -> bool:
 ## being SOLD still shoots: it is standing, it still blocks the maze, and the
 ## sale can still be called off, so it goes on defending until it is actually
 ## gone.
-func can_attack() -> bool:
+##
+## The ORDER half rather than can_attack, so both answers follow from it: a
+## tower with nothing to shoot with cannot be aimed at anything either. See
+## Unit.can_take_attack_order for why the two are separate questions.
+func can_take_attack_order() -> bool:
 	return super() && !_under_construction && !_upgrading
 
 

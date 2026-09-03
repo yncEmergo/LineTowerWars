@@ -230,6 +230,14 @@ func _is_complete(order: QueuedOrder) -> bool:
 ## Undoes whatever the head had the unit doing. Both of these are duck typed
 ## and both are no-ops on a unit that has neither: a tower cannot walk, and
 ## nothing without an attack has an order to forget.
+##
+## A unit that WALKS also drops a swing it has already committed to, which the
+## standing order above outlives. The two are different lifetimes and the
+## player sees both: forgetting the order stops it fighting that creep AGAIN,
+## and cancelling the swing stops the blow already on its way - so a builder
+## sent off to build sets off at once rather than finishing an arc nobody
+## asked for. A TOWER keeps its swing on purpose, see
+## AttackComponent.cancel_attack.
 func _cancel_current() -> void:
 	if _unit == null || !is_instance_valid(_unit):
 		return
@@ -237,6 +245,8 @@ func _cancel_current() -> void:
 		_unit.stop()
 	if _unit.attack_component != null:
 		_unit.attack_component.clear_order()
+		if _unit is MobileUnit:
+			_unit.attack_component.cancel_attack()
 
 
 ## Tells the overlay to redraw this unit's markers. Null everywhere the

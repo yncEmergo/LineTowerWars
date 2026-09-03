@@ -58,6 +58,10 @@ const AURA_REFRESH_SECONDS: float = 0.25
 ## units per second. Purely visual, since nothing is ever measured vertically.
 const CLIMB_SPEED: float = 2.0
 
+## Stands for "no cell", for the goal of a route that does not exist. Negative
+## on both axes, so it can never be a cell the grid really holds.
+const OFF_GRID: Vector2i = Vector2i(-1, -1)
+
 ## The distance below which two points in a crowding test are the same point:
 ## two creeps with no direction between them to be pushed apart along, and two
 ## ordered points that are the same order. See _away_from and has_arrived_at.
@@ -79,6 +83,19 @@ var _crowd_settled_point: Vector3 = Vector3.ZERO
 var _path: Array[Vector2i] = []
 ## Which cell of that route the creep is currently walking towards.
 var _path_index: int = 0
+## Route to a COMMANDED point, and which cell of it the creep is walking
+## towards. Kept apart from _path above rather than sharing it, because the two
+## answer different questions and would overwrite each other: _path is the way
+## to the exit and is what steps_to_exit reports to every tower's target
+## ranking, and this is the way to wherever somebody sent the creep.
+var _order_path: Array[Vector2i] = []
+var _order_index: int = 0
+## Internal cell _order_path was planned to, or OFF_GRID when there is no route
+## in hand. What keeps a CHASE affordable: an attack order re-aims its walk at
+## its quarry every single tick, and every one of those that lands in the cell
+## already routed to reads the route in hand instead of sweeping the grid
+## again. See _plan_order_route.
+var _order_goal: Vector2i = OFF_GRID
 ## Route already covered, newest last, for being set back along it.
 var _trail: Array[Vector3] = []
 
@@ -357,9 +374,28 @@ func dive_to(point: Vector3, facing: Vector3) -> void:
 
 ## A fresh walk is a fresh answer, so whatever the creep settled for last time
 ## is forgotten here rather than being carried into the new order.
+##
+## It also takes a ROUTE, so a commanded creep goes round the maze instead of
+## pressing into it - the same pathfinding one walking to the exit reads, asked
+## for a point somebody picked instead of for the end zone.
+##
+## Planned only when the destination lands in a DIFFERENT CELL from the one
+## already routed to. An attack order re-aims its walk at its quarry on every
+## tick, and sweeping the grid twenty times a second for a tower that has not
+## moved would be work for nothing.
 func move_to(world_target: Vector3) -> void:
 	_crowd_settled = false
 	super(world_target)
+
+	# Nothing that ignores the maze reads the occupancy grid at all, so there
+	# is nothing for it to route around and the straight line IS the route.
+	if area == null || ignores_maze():
+		_clear_order_route()
+		return
+
+	var goal: Vector2i = area.world_to_internal_cell(_target_position)
+	if goal != _order_goal:
+		_plan_order_route(goal)
 
 
 ## A creep that stopped short of an ordered point because the crowd was already
@@ -386,8 +422,13 @@ func has_arrived_at(world_point: Vector3) -> bool:
 
 ## Halting a creep also calls off a dive, which is what makes Stop the way a
 ## player ends one - and what pays the armour back for doing so.
+##
+## The route goes with the walk. A creep told to go somewhere it has already
+## been sent must plan again from where it now stands, and holding a spent
+## route would answer that question with the old one.
 func stop() -> void:
 	super()
+	_clear_order_route()
 	cancel_dive()
 
 
@@ -1255,19 +1296,28 @@ func _march(delta: float) -> void:
 	_face_direction(direction, delta)
 
 
-## Walks towards a commanded position, arriving when it gets there.
+## Walks towards a commanded position along the route it was handed, arriving
+## when it gets there.
 ##
 ## Deliberately not MobileUnit's own loop: that writes the position directly
-## and would walk straight through a maze, where this goes through _move_by and
-## slides along the towers like every other ground creep.
+## and would walk straight through a maze, where this follows a route ROUND it
+## and takes every step through _move_by like every other ground creep.
+##
+## The route is followed a cell at a time exactly as the walk to the exit is,
+## and the LAST leg is the ordered point itself rather than a cell centre, so a
+## creep lands where the player clicked instead of on the nearest half-cell.
+## Arriving and giving up to the crowd are both measured against that point
+## too: a creep three cells out has not arrived however near its next waypoint.
 func _walk_to_order(delta: float) -> void:
-	var offset: Vector3 = _target_position - global_position
-	offset.y = 0.0
+	# Only the cell being walked INTO is re-tested, which is what committing to
+	# a route means - a tower dropped further along changes nothing until the
+	# creep gets to it. Same rule _has_step applies to the walk to the exit.
+	if _order_step_blocked():
+		_replan_order()
 
-	var distance: float = offset.length()
-	if distance <= _step_reach(delta):
-		_arrive()
-		return
+	var remaining: Vector3 = _target_position - global_position
+	remaining.y = 0.0
+	var distance: float = remaining.length()
 
 	# Somebody else got there first. Stopping rather than arriving, so the
 	# creep stays where the crowd left it instead of snapping onto a point it
@@ -1280,9 +1330,71 @@ func _walk_to_order(delta: float) -> void:
 		_crowd_settled_point = point
 		return
 
-	var direction: Vector3 = offset / distance
+	if _has_order_step() && _order_step_offset().length() <= _step_reach(delta):
+		_advance_order_step()
+
+	var to_step: Vector3 = _order_step_offset() if _has_order_step() else remaining
+	var length: float = to_step.length()
+	if !_has_order_step() && length <= _step_reach(delta):
+		_arrive()
+		return
+	if length <= CROWD_MIN_AXIS:
+		return
+
+	var direction: Vector3 = to_step / length
 	_step(direction, delta)
 	_face_direction(direction, delta)
+	_watch_for_stall(length, delta)
+
+
+## Whether the ordered route still has a cell left to walk to.
+func _has_order_step() -> bool:
+	return _order_index >= 0 && _order_index < _order_path.size()
+
+
+## Whether the cell the creep is walking INTO has had a tower put in it since
+## the route was planned, which is the one thing that makes it re-plan.
+func _order_step_blocked() -> bool:
+	if area == null || !_has_order_step():
+		return false
+	return !area.is_point_free(area.internal_cell_center(_order_path[_order_index]))
+
+
+func _order_step_offset() -> Vector3:
+	var cell: Vector3 = area.internal_cell_center(_order_path[_order_index])
+	var offset: Vector3 = cell - global_position
+	offset.y = 0.0
+	return offset
+
+
+func _advance_order_step() -> void:
+	_order_index += 1
+	_reset_stall()
+
+
+## Takes a fresh route to the ordered point and commits to it, the way _replan
+## does for the walk to the exit. An empty one - no route, or already in the
+## goal cell - leaves the creep walking straight at the point, which is what it
+## did before there was any pathfinding here at all.
+func _plan_order_route(goal: Vector2i) -> void:
+	_order_goal = goal
+	_order_path = area.route_between(global_position, _target_position)
+	_order_index = 0
+	_reset_stall()
+
+
+## Re-takes that route from where the creep now stands, for a tower dropped
+## into it or a corner it has been pressed into.
+func _replan_order() -> void:
+	if area == null || ignores_maze():
+		return
+	_plan_order_route(area.world_to_internal_cell(_target_position))
+
+
+func _clear_order_route() -> void:
+	_order_path = []
+	_order_index = 0
+	_order_goal = OFF_GRID
 
 
 ## Turns a creep that is standing and fighting to face what it is hitting.
@@ -1335,6 +1447,7 @@ func _attack_reach() -> float:
 ## dropping it to the floor the way MobileUnit would.
 func _arrive() -> void:
 	super()
+	_clear_order_route()
 	global_position.y = _ground_height()
 
 
@@ -1393,6 +1506,12 @@ func _advance_step() -> void:
 ## the creep out of its cell, so this is the one remaining way out of a corner
 ## it has been pressed into. It plans from where the creep actually stands,
 ## which usually hands back the same route, simply re-aimed.
+##
+## WHICH route is decided by whether the creep is walking on an order, and the
+## two can never both be true: a commanded walk is the only thing that reaches
+## _walk_to_order, and only a creep with no order left reaches _walk_route.
+## Re-planning the wrong one of the two would send a commanded attacker off
+## towards the exit.
 func _watch_for_stall(distance: float, delta: float) -> void:
 	if distance < _stall_distance - _creep_stats.arrive_threshold:
 		_stall_distance = distance
@@ -1404,7 +1523,10 @@ func _watch_for_stall(distance: float, delta: float) -> void:
 		return
 
 	Log.info("Creep re-routing after making no progress", {"creep": name})
-	_replan()
+	if is_moving():
+		_replan_order()
+	else:
+		_replan()
 
 
 func _reset_stall() -> void:

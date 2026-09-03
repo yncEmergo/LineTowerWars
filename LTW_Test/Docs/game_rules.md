@@ -66,6 +66,15 @@ described here is implemented and working. Values marked TBD are not decided yet
     substitute for a tower
   - It takes an attack order like anything else that can attack, which for a
     unit that walks means an attack-MOVE - see Towers and attacking
+  - **It only ever fights when it is TOLD to.** Unlike everything else that
+    attacks, the builder never picks a fight of its own: a creep walking past
+    its nose is ignored until the player orders otherwise
+    - the builder's time is the PLAYER's rather than the simulation's. It is
+      the one unit being steered by hand, usually in the middle of laying out
+      a maze, and a hammer that swung at whatever wandered by would stop it
+      dead over a few points of damage nobody asked for
+    - an attack-move still hunts. That IS an order, and the whole of what it
+      says is "go there and fight what you meet"
 - Stats live in a per-unit resource: health, damage range, armour type, movement speed
   - Current builder values are placeholders and not balanced
 - TBD (much later): full control scheme
@@ -483,8 +492,12 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - Towers, mobile units, the senders and the technology discs are all
     different kinds and are never mixed in one selection
   - A selection BOX is narrower still and comes back with one exact TYPE: the
-    type it caught most of, so a box over three Archers and two Crushers hands
-    back the three Archers. A tie goes to the type the box met first
+    type of the unit nearest where the drag STARTED, and that unit leads the
+    selection. So putting the pointer on the Archer you want and sweeping
+    across a mixture hands back the Archers
+  - The START of the gesture rather than the middle of the box or the type it
+    caught most of, because the start is the one point the player actually
+    aimed at: the box then grows to wherever they happened to let go
   - Assembling a selection of several types is what shift is for, below
   - A box that catches both units and buildings keeps the units
 - Anything can be clicked to inspect it, including creeps and enemy units
@@ -1157,6 +1170,20 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     same rule a projectile already follows when its target dies mid flight
   - a tower that stops being able to attack mid-swing - one that starts
     upgrading - drops the swing. The cooldown is not handed back
+  - **a unit that WALKS drops its swing the moment a new order arrives**, and
+    that is the one place the commitment above gives way. Told to move, to
+    build or to fight something else mid-windup, it abandons the blow at once
+    and the animation goes back to rest rather than finishing its arc
+    - the two rules answer different questions. A tower may not be RETARGETED
+      mid-swing because the animation would land somewhere it never played;
+      being ordered elsewhere entirely is not a retarget, it is the player
+      saying the fight is over
+    - it is only for what walks. Nothing a player can order a tower to do is a
+      reason to take a swing back, and a tower is never in the player's way
+    - the cooldown is not handed back here either, so spamming orders at a
+      unit is not a way to make it attack faster
+    - SHIFT-queueing does not cancel anything: a queued order is what to do
+      NEXT, and the swing in the air is still what is happening now
   - a windup is authored only where there is an animation to fill it. A delay
     with nothing playing in it is one a player cannot see the reason for
 
@@ -1548,13 +1575,19 @@ never learns what the creep did with it.
   - a share of every harmful effect's DURATION, which is one number applied to
     all of them - a stun, a burn, an amplification, eaten armour - rather than
     to whichever ones somebody remembered
-    - **a SLOW is the one exception, and deliberately.** A creep resists a slow
-      by taking less of it and by refusing to be slowed past a line, and by
-      nothing else - shortening the window as well would charge it twice for
-      one trait. It also broke the two auras that slow: both re-apply a small
-      chill on a beat and build it up, so a window cut to a fraction of a
-      second expired before the next step could add to it and a resistant
-      creep walked through them untouched
+    - **a SLOW's clock is a SEPARATE number, and deliberately.** The source
+      states the two apart and hands them to different creeps: what resists
+      spells shortens spell windows and does nothing at all to a slow, and one
+      trait alone shortens a slow's. One number for both charged a
+      spell-resistant creep twice for a single trait - once in how far a slow
+      went and once in how long it lasted - and left it walking through a maze
+      of chill towers untouched
+    - and a slow an AURA SUSTAINS is exempt from even that. An aura re-states
+      its slow on its own beat, so its window is a hold rather than a clock:
+      cutting it short does not end the slow sooner, it drops the slow between
+      beats and leaves the one creep that shortens slows immune to every aura
+      in the game. What an aura holds on a creep ends when the creep walks out
+      of it and by nothing else
   - a share of a slow's MAGNITUDE, which blunts the slow and its own cap
     together. Blunting only what lands would leave the cap where it was and a
     resistant creep would still reach the full slow, just later, which is the
@@ -2074,6 +2107,21 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     a life with one is something its owner has to ORDER
   - a move order means MOVE: it walks and does not stop to fight. An attack
     order cancels the move rather than fighting it
+    - which is about FIRING and not about being ORDERED. A walking attacker
+      may be aimed at anything at any moment - giving it the order is exactly
+      what ends the walk, so the walk can never be the reason the order is
+      refused. What still refuses one is having no working weapon at all
+  - a COMMANDED walk reads the maze, the same way a creep walking to the end
+    zone does: it takes a route round the towers rather than pressing into
+    them, and it commits to that route until the cell it is walking into is
+    the one that has been built in
+    - so an attacker sent to a spot behind a wall goes round, and one sent
+      into a pocket walks out of it. Without this it would lean on the nearest
+      wall until it happened to knock a hole in it
+    - it is the SAME pathfinding, asked for a spot the player pointed at
+      instead of for the exit, and it is only planned again when that spot
+      moves to another cell. An attack order re-aims its walk every tick and
+      must not cost a search every tick
   - **an attacker keeps a ring of ground to itself and no other attacker may
     enter it**, which is the one place in the game where two units are held
     apart rather than merely nudged. The room it claims is a share of its own

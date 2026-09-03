@@ -94,6 +94,21 @@ const TARGET_AIR: int = 2
 
 @export_group("Targeting")
 @export var target_class: TargetClass = TargetClass.CREEPS
+## Whether this unit looks for something to shoot with NO order at all.
+##
+## True for everything that defends by standing there - every tower - and for
+## an attacker creep, which was sent to chew on a maze and needs no further
+## instruction once it arrives. It is the whole of what a tower does.
+##
+## False for a unit that only ever fights when it is TOLD to, which is the
+## builder. A hammer that swung at whatever wandered past would stop the
+## builder dead in the middle of a maze the player was laying out, over four
+## damage nobody asked for - and the builder is the one unit whose time is the
+## player's rather than the simulation's.
+##
+## It never refuses an ORDER, and an attack-move still hunts: what it turns off
+## is picking a fight unasked. See AttackComponent._may_acquire.
+@export var auto_acquire: bool = true
 ## Measured in player cells from the tower's centre to the creep's, which is
 ## the same as world units because cell_size is 1.0.
 @export var attack_range: float = 4.0

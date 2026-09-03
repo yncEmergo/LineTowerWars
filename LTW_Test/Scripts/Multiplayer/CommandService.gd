@@ -354,6 +354,12 @@ func _apply_player_order(command: Command) -> void:
 		Command.PlayerAction.CHEAT_UNLOCK_TECHS:
 			_apply_cheat_unlock_techs(command)
 			return
+		Command.PlayerAction.CHEAT_SAVE_LAYOUT:
+			_apply_cheat_save_layout(command)
+			return
+		Command.PlayerAction.CHEAT_LOAD_LAYOUT:
+			_apply_cheat_load_layout(command)
+			return
 
 	var tech: TechManager = References.tech_manager
 	if tech == null:
@@ -463,6 +469,93 @@ func _apply_cheat_unlock_techs(command: Command) -> void:
 		command_applied.emit(command)
 	else:
 		_reject(command, reason)
+
+
+## The fourth developer cheat: the sender's maze written out to a file, as
+## building types and grid cells (TowerLayout).
+##
+## The one cheat that changes nothing at all, and it still comes down this road
+## rather than reading the world where the key was pressed - because the world
+## worth saving is the AUTHORITY's. On a client the towers on screen are a
+## drawing of it, and in single player, which is the only place cheats normally
+## answer, the two are the same machine anyway.
+##
+## Which means that in a deliberately cheat-enabled networked test the file
+## lands on the SERVER, next to its own logs. That is where the world is; it is
+## worth knowing before hunting for it in the wrong user:// folder.
+func _apply_cheat_save_layout(command: Command) -> void:
+	var area: PlayerArea = _cheat_area(command)
+	if area == null:
+		return
+
+	# Read straight through: _cheat_area has already refused a machine with no
+	# GameConfig, by way of _cheat_target.
+	var path: String = References.game_config.cheat_layout_path
+	var layout: TowerLayout = TowerLayout.capture(area)
+	if !layout.save_file(path):
+		_reject(command, "the layout file could not be written")
+		return
+
+	# Globalized as well as raw, because the raw one is the path the config
+	# carries and the other is the folder somebody has to open.
+	Log.info("Cheat: layout saved", {
+		"slot": command.player_slot,
+		"buildings": layout.entry_count(),
+		"path": path,
+		"folder": ProjectSettings.globalize_path(path).get_base_dir(),
+	})
+	command_applied.emit(command)
+
+
+## The fifth: that file built back into the sender's area, free and finished.
+##
+## Nothing here decides what may be placed. Every entry is offered to the area
+## and refused by the same can_place a build order goes through, so a cell that
+## is taken, under rubble or outside the buildable zone is skipped - and a
+## layout cannot seal an area any more than building it by hand could. What the
+## cheat waives is the price, the build timer and the walk, which is the whole
+## of what makes it a cheat.
+##
+## It does NOT close the technology undo window the way a real construction
+## does (TechManager.notify_construction_started). No gold went onto the field,
+## so nothing was committed.
+func _apply_cheat_load_layout(command: Command) -> void:
+	var area: PlayerArea = _cheat_area(command)
+	if area == null:
+		return
+
+	var path: String = References.game_config.cheat_layout_path
+	var layout: TowerLayout = TowerLayout.load_file(path)
+	if layout == null:
+		_reject(command, "there is no readable layout at %s" % path)
+		return
+
+	var placed: int = layout.restore(area)
+	Log.info("Cheat: layout built", {
+		"slot": command.player_slot,
+		"placed": placed,
+		"of": layout.entry_count(),
+	})
+	command_applied.emit(command)
+
+
+## The area a layout cheat reads or writes, or null once it has been refused.
+##
+## Asks _cheat_target first and throws its answer away: what that call is for
+## here is the two questions every cheat has to pass - whether cheats are
+## allowed on THIS machine, and whether anybody is playing that slot - and a
+## layout happens to want the area rather than the purse.
+func _cheat_area(command: Command) -> PlayerArea:
+	if _cheat_target(command) == null:
+		return null
+
+	var manager: PlayerManager = References.player_manager
+	var area: PlayerArea = null
+	if manager != null:
+		area = manager.area_for(command.player_slot)
+	if area == null:
+		_reject(command, "slot %d has no area" % command.player_slot)
+	return area
 
 
 ## Who a cheat applies to, or null once it has already been refused.

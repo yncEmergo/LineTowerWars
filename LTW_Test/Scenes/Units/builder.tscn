@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bk5plku5t5tev" path="res://Scripts/Units/Builder.gd" id="1_builder"]
 [ext_resource type="Resource" uid="uid://bi645f4vtxego" path="res://Resources/UnitStats/builder_stats.tres" id="2_builder_stats"]
-[ext_resource type="Script" path="res://Scripts/Combat/AttackComponent.gd" id="3_attack"]
-[ext_resource type="Script" path="res://Scripts/Components/SlamAnimation3D.gd" id="4_slam"]
+[ext_resource type="Script" uid="uid://b1s7ewmnvmg34" path="res://Scripts/Combat/AttackComponent.gd" id="3_attack"]
+[ext_resource type="Script" uid="uid://ce8fvvkwruwqu" path="res://Scripts/Components/SlamAnimation3D.gd" id="4_slam"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
 albedo_color = Color(0.3, 0.55, 0.85, 1)
@@ -44,6 +44,8 @@ outer_radius = 0.55
 script = ExtResource("1_builder")
 stats = ExtResource("2_builder_stats")
 _selection_ring = NodePath("Visuals/SelectionRing")
+select_radius = 0.3
+select_height = 1.0
 
 [node name="Visuals" type="Node3D" parent="." unique_id=664626015]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 1, 0)
@@ -56,14 +58,14 @@ mesh = SubResource("CapsuleMesh_body")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.715, -0.4)
 mesh = SubResource("BoxMesh_nose")
 
-[node name="ArmPivot" type="Node3D" parent="Visuals"]
+[node name="ArmPivot" type="Node3D" parent="Visuals" unique_id=2047428268]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.8, 0)
 
-[node name="Arm" type="MeshInstance3D" parent="Visuals/ArmPivot"]
+[node name="Arm" type="MeshInstance3D" parent="Visuals/ArmPivot" unique_id=870741885]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
 mesh = SubResource("BoxMesh_arm")
 
-[node name="Hammer" type="MeshInstance3D" parent="Visuals/ArmPivot"]
+[node name="Hammer" type="MeshInstance3D" parent="Visuals/ArmPivot" unique_id=1025726016]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.48, -0.04)
 mesh = SubResource("BoxMesh_hammer")
 
@@ -73,13 +75,13 @@ visible = false
 cast_shadow = 0
 mesh = SubResource("TorusMesh_ring")
 
-[node name="AttackComponent" type="Node" parent="." node_paths=PackedStringArray("_unit", "_muzzle")]
+[node name="AttackComponent" type="Node" parent="." unique_id=1494336297 node_paths=PackedStringArray("_unit", "_muzzle")]
 script = ExtResource("3_attack")
 _unit = NodePath("..")
 _muzzle = NodePath("../Visuals/ArmPivot/Hammer")
 turn_towards_target = false
 
-[node name="SlamAnimation" type="Node" parent="." node_paths=PackedStringArray("_unit", "_swing")]
+[node name="SlamAnimation" type="Node" parent="." unique_id=1497277948 node_paths=PackedStringArray("_unit", "_swing")]
 script = ExtResource("4_slam")
 _unit = NodePath("..")
 _swing = NodePath("../Visuals/ArmPivot")
