@@ -8,3 +8,8 @@ __pycache__/
 # Benchmark reports written by run_bench.ps1. Generated output, not content:
 # a run is only ever compared with another run on the same machine.
 Reports/
+
+# Windows shadow copies of a file being overwritten while something held it
+# open - "~name~RF<hex>.TMP" next to the original. Antivirus and the GodotSteam
+# DLLs produced a dozen of them, all committed by accident.
+~*.TMP

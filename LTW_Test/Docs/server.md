@@ -149,14 +149,121 @@ Arguments** in the run instances dialog.
 
 ---
 
+## Testing across two PCs
+
+Two machines in different buildings, no rented server and no router configuration:
+**Tailscale**, a free VPN mesh that gives each PC a permanent address and connects them
+directly. This is the DEV LOOP only — testers on a public download cannot be asked to
+install it, and that is the point at which a publicly reachable server starts being worth
+paying for. Nothing set up here is wasted when that happens: it is the same address list.
+
+**Why not a port forward.** A PC behind a router has no address the other one can dial, so
+the router has to be told to send UDP 7777 inwards. That is a router login, an address that
+changes every time the ISP reconnects, and — on DS-Lite or cable, which is most German
+connections — a carrier-grade NAT that makes it impossible outright rather than merely
+tedious. Tailscale has none of those three failure modes.
+
+### Setting a machine up
+
+Once per PC and never again. Both lines are PowerShell.
+
+```powershell
+winget install --id tailscale.tailscale --accept-source-agreements --accept-package-agreements --silent
+& "C:\Program Files\Tailscale\tailscale.exe" up --hostname=ltw-home
+```
+
+`up` prints a login URL and waits. Open it, sign in with **the same account on both
+machines** — the account is what puts them on one network — and the command returns by
+itself. An agent cannot do this step: it is a browser sign-in and needs a human.
+
+**The hostname is a convention worth keeping**: `ltw-office`, `ltw-home`, and `ltw-<place>`
+for a third, so `tailscale status` reads as a sentence instead of as two Windows machine
+names nobody chose.
+
+Read the machine's own address back with:
+
+```powershell
+& "C:\Program Files\Tailscale\tailscale.exe" ip -4
+```
+
+It is a `100.x.y.z` address and it is permanent for as long as that machine stays on the
+tailnet. `tailscale status` lists every machine and whether it is currently reachable.
+
+### What the project needs to know
+
+The addresses a client dials live in `Resources/Config/network_config.tres`, and **that file
+is the authority** — this document deliberately does not repeat them, because a copy here is
+the one that would go stale. Add the new machine's `100.x` address to the list there. The
+client tries each candidate in turn and takes the first that answers, so either PC can be the
+server on any given day and neither needs a rebuild to swap roles.
+
+### The firewall, on whichever PC is running the server
+
+Windows blocks unsolicited incoming traffic. Tailscale adds rules for its own traffic on
+install, but the game's port is the game's problem. In PowerShell **as Administrator**, on
+the server machine only:
+
+```powershell
+New-NetFirewallRule -DisplayName "LTW dedicated server" -Direction Inbound `
+  -Protocol UDP -LocalPort 7777 -Action Allow -Profile Private,Public
+```
+
+**UDP, not TCP** — ENet is UDP (`multiplayer.md` D5), so a TCP rule allows nothing and a TCP
+reachability test proves nothing. The client machine needs no rule: it makes an outbound
+connection, which Windows permits by default.
+
+**Do not assume Godot's own rule covers it, and this is the trap worth reading twice.**
+Windows offers to create a rule the first time Godot opens a socket, and the rule it makes is
+for THAT EXECUTABLE on whichever profile the machine was on at the time — in practice the
+Wi-Fi network, which is *Public*. Tailscale's adapter is classified **Private**. So the
+existing "Godot Engine" rule can be enabled, inbound, allow, UDP, and still not apply to a
+single packet arriving over Tailscale, because it is scoped to the wrong profile. Nothing
+reports this: the server logs `Listening on port 7777` exactly as it always does and the
+other machine simply never gets an answer.
+
+Check both halves before believing a rule exists:
+
+```powershell
+Get-NetConnectionProfile | Select-Object Name,InterfaceAlias,NetworkCategory
+Get-NetFirewallRule -DisplayName "LTW dedicated server" | Select-Object Enabled,Direction,Action,Profile
+```
+
+The first says which profile Tailscale is on, the second says which profiles the rule covers.
+They have to overlap. The rule above names `Private,Public` so that they always do.
+
+A rule on the PORT rather than on the executable is also what survives the move to an
+exported build, which is a different `.exe` that Godot's own rule knows nothing about.
+
+### Checking it works, before blaming the game
+
+In this order, stopping at the first that fails:
+
+| Check | How | Passing means |
+| --- | --- | --- |
+| Both on the tailnet | `tailscale status` | the other machine is listed and not `offline` |
+| The network reaches it | `tailscale ping ltw-home` | packets arrive. It also says `direct` or `via DERP` — relayed still works, it just adds latency |
+| The server is accepting | the `Listening on port` line in the server terminal | the game is up, not just the machine |
+
+A `tailscale ping` that answers while the game still cannot connect is the firewall rule
+missing, nearly every time.
+
+---
+
 ## Settings
 
-Defaults live in `Resources/Config/network_config.tres` — port, address, max peers, connect
-timeout. The command line overrides them per run; edit the resource to change what "normal"
-means.
+Defaults live in `Resources/Config/network_config.tres` — port, addresses, max peers, connect
+timeout, and the protocol version. The command line overrides the first two per run; edit the
+resource to change what "normal" means.
 
-The one that matters when the server moves off this machine is `server_address`, which is
-what clients dial. The server itself does not use it.
+The one that matters when the server moves off this machine is `server_addresses`, the LIST a
+client dials through in order, taking the first that answers. The server itself does not use
+it. `--address` collapses that list to the one address named, which is what a deliberate
+one-off test wants.
+
+`protocol_version` is the other one worth knowing about: a client stating a different number
+is refused by the server with a message naming both builds, rather than being let in to
+desync. Bump it whenever two builds stop being able to play together — the property's own
+comment says what counts.
 
 ---
 

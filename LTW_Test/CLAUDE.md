@@ -207,6 +207,20 @@
     building its snapshot from the previous tick
   - set BOTH when a node has to be last, and remember that a node whose parent
     is the thing it is timing runs before it by default
+- AN @RPC IS NOT SENT WHEN IT IS CALLED. Godot queues it and flushes at the END
+  OF THE FRAME, so anything that destroys the channel in that same frame throws
+  the packet away. The case that bites is `disconnect_peer(id)` immediately after
+  an `rpc_id` to that peer: it fails on the SENDER with "Unable to send packet on
+  channel 0, max channels: 0", in a server log nobody is watching, while the
+  receiver merely sees the socket close with no reason given
+  - which is the exact silent failure the message was being sent to replace, so
+    it is worth knowing before writing the next one
+  - give the peer a beat before hanging up on it. `NetworkService`'s
+    `REFUSAL_FLUSH_SECONDS` and its `_closing` list are the worked example
+  - `disconnect_peer(id, false)` does NOT save you. The `now = false` flag defers
+    ENet's own disconnect until ITS queue drains, and Godot's rpc has not reached
+    that queue yet
+
 - A NEW SCRIPT IN AN EXISTING FOLDER is not imported by a `godot --path` run. A
   new FOLDER is scanned; a new file dropped into a folder Godot already knows is
   not. Its class_name never reaches the global class cache, so every script

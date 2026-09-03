@@ -317,14 +317,14 @@ ABILITIES = {
         mana_per_target=3.0, fork_damage=2000, mana_per_fork=10,
         fork_cells=cells(400)),
     "water_lesser_sludge_monstrosity": _p(
-        TORRENT, "Torrent", aura_cells=cells(400), step_seconds=1.5,
-        slow_per_step=0.048, slow_cap=0.24, stun_every=3, stun_seconds=1.0),
+        TORRENT, "Torrent", aura_cells=cells(400),
+        slow_per_stack=0.048, slow_cap=0.24, stun_every=3, stun_seconds=1.0),
     "water_greater_sludge_monstrosity": _p(
-        TORRENT, "Torrent", aura_cells=cells(400), step_seconds=1.5,
-        slow_per_step=0.07, slow_cap=0.28, stun_every=3, stun_seconds=1.2),
+        TORRENT, "Torrent", aura_cells=cells(400),
+        slow_per_stack=0.07, slow_cap=0.28, stun_every=3, stun_seconds=1.2),
     "water_ultimate_sludge_monstrosity": _p(
-        TORRENT, "Crippling Decay", aura_cells=cells(400), step_seconds=1.5,
-        slow_per_step=0.09, slow_cap=0.36, stun_every=3, stun_seconds=1.8,
+        TORRENT, "Crippling Decay", aura_cells=cells(400),
+        slow_per_stack=0.09, slow_cap=0.36, stun_every=3, stun_seconds=1.8,
         stun_needs_same_target=True, physical_amplification=0.10),
 
     # --- 4.2 Earth --------------------------------------------------------

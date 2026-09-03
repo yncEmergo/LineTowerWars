@@ -91,7 +91,11 @@ DELIVERY = {
     "divineshroom": ("projectile", "res://Scenes/Effects/spore_burst.tscn", 9.0, 0.8),
     "titan_vault": ("projectile", "res://Scenes/Effects/holy_bolt.tscn", 16.0, 0.0),
     "spellslinger": ("projectile", "res://Scenes/Effects/arcane_shard.tscn", 13.0, 0.0),
-    "arcane_orb": ("projectile", "res://Scenes/Effects/arcane_orb.tscn", 9.0, 0.0),
+    # Three times what the rest of the element flies at, and deliberately: an
+    # Arcane Orb is a slow single shot carrying most of the tower's damage, and
+    # at an ordinary speed a creep it was aimed at had usually walked out of the
+    # blast before it landed.
+    "arcane_orb": ("projectile", "res://Scenes/Effects/arcane_orb.tscn", 27.0, 0.0),
     "ancient_warden": ("projectile", "res://Scenes/Effects/boulder.tscn", 6.0, 2.4),
     "scorpion": ("projectile", "res://Scenes/Effects/thorn.tscn", 20.0, 0.0),
     "gravedigger": ("projectile", "res://Scenes/Effects/poison_glob.tscn", 9.0, 0.5),

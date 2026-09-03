@@ -167,8 +167,8 @@ func can_hit_air() -> bool:
 ## which is the same rule the armour line follows. 0 for everything that has
 ## grown into nothing, which is nearly every unit in the game.
 func damage_text(bonus: int = 0, ratio: float = 1.0) -> String:
-	return "%d - %d" % [_scaled(damage_min, bonus, ratio),
-		_scaled(damage_max, bonus, ratio)]
+	return "%d - %d" % [scaled_damage(damage_min, bonus, ratio),
+		scaled_damage(damage_max, bonus, ratio)]
 
 
 ## One end of the damage range as the tower actually deals it.
@@ -178,7 +178,11 @@ func damage_text(bonus: int = 0, ratio: float = 1.0) -> String:
 ## a tower standing in a Void disc with an Alchemist's banked damage hits for
 ## (roll x 1.24) + 300 rather than for (roll + 300) x 1.24. Written the other
 ## way round the panel would quote a number the tower never deals.
-func _scaled(damage: int, bonus: int, ratio: float) -> int:
+##
+## Public so the panel can work out what a temporary ratio is WORTH - the
+## difference between this answer with the disc and without it - without
+## rebuilding that order for itself.
+func scaled_damage(damage: int, bonus: int, ratio: float) -> int:
 	return int(round(float(damage) * maxf(0.0, ratio))) + bonus
 
 

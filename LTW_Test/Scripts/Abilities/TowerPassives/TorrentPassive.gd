@@ -4,30 +4,42 @@ extends TowerPassive
 ## Water 2, the whole Sludge Monstrosity line: an aura that grinds every creep
 ## near it slower whether or not the tower is shooting them.
 ##
-## unit_data.md 4.10: creeps in a radius are slowed a step every second and a
-## half, up to a cap, and every third attack stuns the primary target. The
-## Ultimate adds an amplification to every PHYSICAL attack that lands on a
-## creep in its radius, which makes it the mirror of the Titan Vault - one
-## helps spells, the other helps everything else.
+## unit_data.md 4.10 states this as "slowed by X% every 1.5 sec, up to Y%", and
+## the game it is copied from does NOT work that way - which is a correction to
+## that document rather than to this file. There is ONE stack, it lands every
+## half second, and everything the aura does is read off it: the slow and, on
+## the Ultimate, the physical amplification. There is no second clock.
 ##
-## The slow ACCUMULATES on the same clock for every creep in range, so a creep
-## walking through the aura is slower the longer it takes - which is the one
-## slow in the game that punishes a long maze rather than a short one.
+## Every third attack also stuns the primary target, which is on the attack and
+## not on the aura. The Ultimate's amplification makes it the mirror of the
+## Titan Vault - one helps spells, the other helps everything else.
+##
+## So a creep walking through is slower the longer it takes, and slower again
+## for every Sludge Monstrosity reaching it: each tower lands its own stack on
+## its own half-second beat, so standing in two of them fills the pile twice as
+## fast. It is the one slow in the game that punishes a long maze rather than a
+## short one.
 
 const AURA_KEY: String = "torrent_aura"
-const STEP_KEY: String = "torrent_step"
 const COUNT_KEY: String = "torrent_count"
 const TARGET_KEY: String = "torrent_target"
 
 @export_group("Torrent")
 ## Radius of the aura, in player cells.
 @export var aura_cells: float = 3.12
-## Seconds between one step of the slow and the next.
-@export var step_seconds: float = 1.5
-## Movement taken per step, as a share.
-@export var slow_per_step: float = 0.048
-## The most it may reach.
+## Movement taken PER STACK, as a share. The stack is the aura's only clock, so
+## this is what one half-second in the radius is worth.
+@export var slow_per_stack: float = 0.048
+## The most it may reach however many stacks are held. Reached at 5 stacks on
+## the Lesser and at 4 on the two above it, which is what the source's two
+## numbers come to - see the class note.
 @export var slow_cap: float = 0.24
+## The key this line's STACK PILE and its slow both live under. Every tier
+## shares it, so a Lesser and an Ultimate over one creep feed one pile - which
+## fills twice as fast for the two of them - and state one slow, the stronger
+## of the two winning. Authored rather than taken off the .tres for that
+## reason; see StatusEffects.touch_aura.
+@export var slow_source: String = "sludge_monstrosity"
 
 @export_group("Stun")
 ## Attacks between one stun and the next, or 0 for none.
@@ -44,37 +56,35 @@ const TARGET_KEY: String = "torrent_target"
 @export var physical_amplification: float = 0.0
 
 
-## The aura's own clock is the tower's, not each creep's: one step every
-## step_seconds, applied to everything standing in range at that moment. A
-## creep that walks in halfway through a step simply catches the next one.
 ## The aura, beating on the stacking interval because one beat is one stack.
 ##
-## It BUILDS on a creep rather than landing whole - see GameConfig's aura
-## section - so everything it applies is scaled by how tight its grip on that
-## creep currently is. The chill keeps its own separate `step_seconds` clock on
-## top of that: the grip decides how HARD each step lands, the step clock
-## decides how OFTEN one is taken.
+## ONE stack drives everything, and it is read rather than accumulated: the
+## slow is what the pile is worth RIGHT NOW, re-stated on every beat, so it
+## moves the instant a stack lands or drains. That is the whole reason this no
+## longer has a clock of its own - a second ramp on top of the stack ramp left
+## the debuff row reading full grip while the creep was barely slowed.
+##
+## The clock is the TOWER's, not each creep's, so a creep that walks in halfway
+## through a beat simply catches the next one - and two towers on their own
+## beats land two stacks in the time one lands one.
 func on_tick(tower: Building, delta: float) -> void:
 	if tower.area == null || !tower.can_attack():
 		return
 	if !aura_due(tower, AURA_KEY, delta, aura_stack_interval()):
 		return
 
-	var step: float = float(tower.ability_state.get(STEP_KEY, 0.0)) + aura_stack_interval()
-	var stepping: bool = step >= step_seconds
-	tower.ability_state[STEP_KEY] = 0.0 if stepping else step
-
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
-		var share: float = grip_aura(self, creep)
+		var share: float = grip_aura(self, creep, slow_source)
 		if share <= 0.0:
 			continue
 		var status: StatusEffects = creep.status()
-		if stepping:
-			# The chill's own window is longer than the step, so a creep in the
-			# aura keeps climbing rather than losing ground between steps.
-			status.chill(self, resource_path, slow_per_step * share, slow_cap,
-				step_seconds * 3.0)
+		# STATED rather than added to, because the pile is the whole answer.
+		# Two tiers over one creep feed one pile and the stronger of the two
+		# wins the number, which is what slow() already does with its key.
+		var held: int = aura_stacks_on(creep, slow_source)
+		status.slow(self, slow_source, minf(slow_per_stack * float(held), slow_cap),
+			AURA_HOLD_SECONDS, false)
 		if physical_amplification > 0.0:
 			status.amplify_physical(self, physical_amplification * share, AURA_HOLD_SECONDS)
 
@@ -105,12 +115,13 @@ func on_hit(tower: Building, target: Unit, _dealt: int, is_primary: bool) -> voi
 
 
 func effect_text() -> String:
-	var text: String = ("Creeps within %s cells are slowed up to %s%% every %ss,"
-		+ " to a maximum of %s%%. The aura builds up the longer a creep stays"
-		+ " in it and fades once it leaves.") % [
+	var text: String = ("Creeps within %s cells are slowed a further %s%% every"
+		+ " %ss they stand there, to a maximum of %s%%. Every Sludge"
+		+ " Monstrosity reaching a creep adds its own, so the slow builds"
+		+ " faster the more of them there are, and fades once it leaves.") % [
 		StringUtil.trim_number(aura_cells),
-		StringUtil.trim_number(slow_per_step * 100.0),
-		StringUtil.trim_number(step_seconds),
+		StringUtil.trim_number(slow_per_stack * 100.0),
+		StringUtil.trim_number(aura_stack_interval()),
 		StringUtil.trim_number(slow_cap * 100.0),
 	]
 	if stun_every > 0:

@@ -42,6 +42,11 @@ const AURA_KEY: String = "luminous_aura"
 @export var slow_extension: float = 0.0
 ## Share taken off the attack damage of the creeps in it.
 @export var damage_reduction: float = 0.0
+## The key this tower's slow accumulates under. Every tier of this line shares
+## it, so a Lesser and an Ultimate do not stack - the higher cap simply wins.
+## Authored rather than taken off the .tres for that reason; see
+## StatusEffects.chill.
+@export var slow_source: String = "titan_vault"
 
 
 func extra_targets(_tower: Building) -> int:
@@ -57,7 +62,7 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 	if status == null:
 		return
 	status.amplify_spell(self, spell_amplification, amplification_seconds)
-	status.slow(self, resource_path, slow_amount, amplification_seconds)
+	status.slow(self, slow_source, slow_amount, amplification_seconds, false)
 
 
 ## The aura, on the tier that has one. Beats on the stacking interval rather
@@ -70,12 +75,12 @@ func on_tick(tower: Building, delta: float) -> void:
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
-		var share: float = grip_aura(self, creep)
+		var share: float = grip_aura(self, creep, slow_source)
 		if share <= 0.0:
 			continue
 		var status: StatusEffects = creep.status()
 		status.amplify_spell(self, spell_amplification * share, AURA_HOLD_SECONDS)
-		status.slow(self, resource_path, slow_amount * share, AURA_HOLD_SECONDS)
+		status.slow(self, slow_source, slow_amount * share, AURA_HOLD_SECONDS, false)
 		status.weaken_attack(self, 0.0, damage_reduction * share, AURA_HOLD_SECONDS)
 		# Lengthens slows as they LAND rather than topping up the ones already
 		# running, which is what stops an aura from making every chill on

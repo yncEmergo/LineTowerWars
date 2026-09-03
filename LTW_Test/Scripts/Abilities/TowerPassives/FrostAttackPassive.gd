@@ -11,8 +11,10 @@ extends TowerPassive
 ##
 ## Every chill in the game ACCUMULATES towards its own cap and each source
 ## keeps its own, which is what "up to 25%" means at all. The source key below
-## is what gives a tier its own: two Runic Monoliths share a cap, and a Runic
-## Monolith and a Lesser Lich do not.
+## is what decides who shares one, and the whole Ice line shares a single key:
+## an Obelisk, a Runic Monolith and every Lich above them feed ONE chill that
+## climbs to whichever of their caps is highest, so upgrading a line replaces
+## its slow rather than stacking a second copy of it. See StatusEffects.chill.
 
 @export_group("Frost Attack")
 ## Movement taken per hit, as a share. 0.0375 is the -3.75% of the source.
@@ -23,14 +25,14 @@ extends TowerPassive
 ## the base is 4 seconds; the Lich line authors more.
 @export var slow_seconds: float = 4.0
 ## The key this tower's chill accumulates under. Every tower sharing it shares
-## one cap, which is why a tier authors its own.
+## one cap, which is why every tier of the line authors the same one.
 @export var chill_source: String = "ice"
 
 
 func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
+		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, true)
 
 
 func effect_text() -> String:

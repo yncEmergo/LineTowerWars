@@ -13,6 +13,6 @@ icon = ExtResource("2_greater_divineshroom")
 slow_per_hit = 0.0416
 slow_cap = 0.5
 slow_seconds = 4
-chill_source = "greater_divineshroom"
+chill_source = "divineshroom"
 armor_per_hit = 0.15
 armor_floor = -3

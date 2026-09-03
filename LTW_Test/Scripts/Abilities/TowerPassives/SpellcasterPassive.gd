@@ -43,6 +43,11 @@ const ORB_KEY: String = "arcane_orb_armed"
 ## Movement taken per tick of it, and the most that may reach.
 @export var slow_per_tick: float = 0.08
 @export var slow_cap: float = 0.40
+## The key this tower's slow accumulates under. Every tier of this line shares
+## it, so a Lesser and an Ultimate do not stack - the higher cap simply wins.
+## Authored rather than taken off the .tres for that reason; see
+## StatusEffects.chill.
+@export var slow_source: String = "spellslinger"
 ## Extra damage per creep the tower has hit since the last cast, as a share.
 @export var growth_per_target: float = 0.10
 
@@ -122,7 +127,7 @@ func _advance_frostfire(tower: Building, delta: float) -> void:
 	creep.status().burn(self, scaled, duration_seconds)
 	# Deeper with every tick it burns, which is why the chill is applied at its
 	# full cap in one go rather than per tick: nothing here runs per tick.
-	creep.status().chill(self, resource_path, slow_cap, slow_cap, duration_seconds)
+	creep.status().chill(self, slow_source, slow_cap, slow_cap, duration_seconds, false)
 
 
 ## Re-applies the tower's own output to the creep it is attuned to.

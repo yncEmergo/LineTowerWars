@@ -90,14 +90,37 @@ func harmful_duration_cap() -> float:
 	return 0.0
 
 
-## Share of a movement chill's MAGNITUDE that lands on this creep. 1.0 takes
-## the full slow, 0.5 is the "50% immune to movement chill" the spell
-## resistances carry, 0.0 is outright immunity. Multiplied across passives.
+## Share of ANY slow's MAGNITUDE that lands on this creep. 1.0 takes the full
+## slow, 0.0 is outright immunity. Multiplied across passives.
 ##
-## The MAGNITUDE rather than the duration, which is the question above: the
-## source game blunts how far a slow goes and shortens how long it lasts as two
-## separate numbers, and a creep can carry one without the other.
+## The MAGNITUDE rather than the duration: the source game blunts how far a
+## slow goes and shortens how long it lasts as two separate numbers, and a
+## creep can carry one without the other. A slow's duration is not shortened by
+## anything at all - see StatusEffects._slow_seconds.
+##
+## EVERY slow, whatever put it there: a Sludge Monstrosity's aura, a Titan
+## Vault's grasp, a Lich's frost. This is what "cannot be slowed" means, and
+## only a trait that really means all of them answers it.
 func chill_taken_ratio() -> float:
+	return 1.0
+
+
+## A FURTHER share of a COLD slow's magnitude that lands, on top of the ratio
+## above. Multiplied across passives.
+##
+## Cold alone, because that is what the spell resistances in the roster
+## actually resist. "50% immune to movement chill" is a resistance to FROST -
+## an Ice tower's chill and an Ice disc's - and not to a Sludge Monstrosity
+## grinding a creep down or a Titan Vault holding it: a Dragonspawn walking
+## through either of those is slowed exactly as anything else is, and it is the
+## Ice line alone that it shrugs off.
+##
+## Separate from chill_taken_ratio() rather than replacing it, because the two
+## are different claims: one trait says "nothing may slow me" and another says
+## "frost does half". Folding them together would have made a Bone Shield
+## skeleton, which cannot be slowed at all, walk normally into the one thing
+## that is not frost.
+func cold_taken_ratio() -> float:
 	return 1.0
 
 

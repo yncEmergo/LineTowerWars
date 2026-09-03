@@ -21,7 +21,7 @@ at the end, and both now have something real to be measured against rather than 
 
 | Looking for | Go to |
 | --- | --- |
-| What is decided and must not be re-opened | §1, D1-D26 |
+| What is decided and must not be re-opened | §1, D1-D28 |
 | The API surface, with real checked signatures | §2 |
 | How the whole thing is meant to work | §5 |
 | What is genuinely still open | §1 → *Still open* |
@@ -50,6 +50,8 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D9 | **PickleGD: keep the link, do not install yet.** | 2026-08-21 | Not a transport. Likely useful for cold-path payloads, wrong for the hot path. See §7. |
 | D10 | **The network session may be a plain autoload**, standing on its own rather than going through `References`. | 2026-08-21 | User's call: `References` is a convenience, not a hard rule, and a global-like entity is exactly what a session that outlives scene changes needs. Unblocks 0.1. |
 | D11 | **Simulation tick is 20 Hz**, in a config `.tres`. | 2026-08-21 | Squarely in the RTS band. 50 ms, and an exact 3:1 divisor of a 60 Hz render frame. See §5.5. |
+| D28 | **A build states its `protocol_version` on connecting, and the server refuses one that disagrees.** | 2026-09-03 | Bumped by hand, in `NetworkConfig`. Needed the moment a build exists that somebody else has a copy of: two versions of this project cannot otherwise be told apart until they have already gone wrong together, because the server simulates and the clients draw, so a disagreement surfaces as refused orders or a world that quietly differs - never as "you need to update". Lives on `Net` rather than `Lobby`, though `Lobby.register_player` is also a first message, because it gates the CONNECTION: a peer refused there never reaches `Lobby`, and anything added later that talks earlier is covered without being changed. `WorldChecksum` stays underneath it - a version catches two builds that were never meant to meet, the checksum catches two that agree on their version and still built different worlds. |
+| D27 | **A client dials a LIST of addresses, taking the first that answers**, rather than one authored address. | 2026-09-03 | User's requirement, from the shape of the dev loop: two PCs in different buildings take the server in turns, and whichever is not hosting has to find the one that is without being rebuilt or told which. Sequential, cheapest-first - 127.0.0.1 leads, so a player on the same machine as the server connects instantly. The cost is that each dead candidate is paid in full at `connect_timeout_seconds`, which is why that number came down: a dead candidate is now the common case rather than the failure case. Parallel probing would cost one round trip instead of N timeouts and is the upgrade if the list ever grows past a handful. `--address` still collapses the list to one, so the headless probes and `run_server.ps1` are untouched. |
 | D26 | **A dropped player gets a 10 second hold** before being declared gone, and a DELIBERATE leave skips it entirely. | 2026-08-23 | User's call, from the three sketched in §11.1. Sits on top of the ~5.6 s ENet already takes to notice a hard-killed client, so a crash resolves in about fifteen seconds and a brief hiccup costs nothing. Implementable only because a goodbye and a silence are different messages, not merely different speeds - `MatchStart.leave_match()` in §2 is what makes the goodbye actually arrive. |
 | D25 | **The send ring, lives and life steal are part of the networked build**, not a separate gameplay task. | 2026-08-23 | User's call. All three were already specified in `game_rules.md` and none is networking, but "see each other's lives drop" is untestable without them, and D14's disconnect rule needs lives that can drain. Built and verified before any command went over a wire. |
 | D24 | **Start runs a 5 second countdown**, shown to everyone in the lobby. Nobody may join during it; any player leaving cancels it; the host may cancel it at any point. The browser lists such a lobby as **"Starting..."** and unjoinable. | 2026-08-23 | User's rule. Gives everyone a moment to see the match is about to begin, and makes "who is in this match" final before the handshake rather than during it. Fully specified; §8.1. |
@@ -115,8 +117,8 @@ it leaves.
 | `Scripts/UI/Menus/LobbyListEntry.gd` / `LobbySlot.gd` | Row and slot prefabs. |
 | `Scripts/UI/Menus/MenuNavigation.gd` | Every scene change, in one place. |
 | `Scripts/UI/Menus/GameMenu.gd` | In-match menu: resume, options, leave, quit. Esc / F10. |
-| `Scripts/Multiplayer/NetworkService.gd` | The autoload **`Net`**: owns the one ENet peer, reports through signals and a `Result` enum. |
-| `Scripts/Config/NetworkConfig.gd` + `Resources/Config/network_config.tres` | Address, port, max peers, connect timeout, command-line overrides. |
+| `Scripts/Multiplayer/NetworkService.gd` | The autoload **`Net`**: owns the one ENet peer, reports through signals and a `Result` enum. Walks the address list until something answers (D27), and is where a build states its version and a wrong one is refused (D28). |
+| `Scripts/Config/NetworkConfig.gd` + `Resources/Config/network_config.tres` | The address LIST, port, max peers, per-address connect timeout, the protocol version, command-line overrides. |
 | `Scripts/Util/CommandLineUtil.gd` | Reading launch arguments — both spellings, both arg lists, one place. |
 | `Scripts/Multiplayer/LobbyService.gd` | The autoload **`Lobby`**: the registry on the server, the mirror of it on a client, and the start countdown (D24). |
 | `Scripts/Multiplayer/MatchStartService.gd` | The autoload **`MatchStart`**: the handshake from "countdown ran out" to "the match exists on every machine". Nothing beyond that. |

@@ -31,7 +31,11 @@ const AURA_KEY: String = "chilling_death_aura"
 ## How long a chill lasts.
 @export var slow_seconds: float = 7.0
 ## The key this chill accumulates under, shared by every Ultimate Lich.
-@export var chill_source: String = "ultimate_lich"
+@export var chill_source: String = "ice"
+## The key this tower's aura stacks under. Every tier of this line shares it,
+## so two towers of the line feed ONE pile on a creep and fill it twice as
+## fast. Authored for the reason a slow key is; see StatusEffects.touch_aura.
+@export var aura_source: String = "ultimate_lich_aura"
 
 @export_group("Frostbitten")
 ## Share of the creep's MAXIMUM health dealt as Spell Damage when it reaches
@@ -65,7 +69,7 @@ func on_tick(tower: Building, delta: float) -> void:
 
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			tower.area, tower.global_position, aura_cells):
-		var share: float = grip_aura(self, creep)
+		var share: float = grip_aura(self, creep, aura_source)
 		if share > 0.0:
 			creep.status().weaken_attack(self, attack_slow * share, 0.0, AURA_HOLD_SECONDS)
 
@@ -75,7 +79,7 @@ func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> v
 	if status == null:
 		return
 
-	status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
+	status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, true)
 	if status.chill_amount(chill_source) < slow_cap || status.is_immune(FROSTBITE_KEY):
 		return
 

@@ -11,8 +11,8 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | --- | --- |
 | [game_rules.md](game_rules.md) | **The RULES.** How the game works — economy, mazing, sending, damage resolution, lives, win condition, and the visual language the rosters are built to. Says which rules are BUILT and which are only written down. Carries no numbers; points at `unit_data.md` instead. |
 | [unit_data.md](unit_data.md) | **The NUMBERS.** Every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements. |
-| [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it (D1–D26), and the costs deliberately not paid yet. |
-| [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server. Controls only, never architecture — that is `multiplayer.md`. |
+| [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it (D1–D28), and the costs deliberately not paid yet. |
+| [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server, and how two PCs in different places reach each other to test. Controls only, never architecture — that is `multiplayer.md`. |
 | [Findings/](Findings/) | **Investigations.** Something that was measured, dug into or ruled out, written up and dated. |
 | `../CLAUDE.md` | Conventions, engine traps, hard rules. In the root because Claude Code loads it from there. |
 | `../README.md` | The way in: what the project is, what works today. In the root because that is where a git host looks. |

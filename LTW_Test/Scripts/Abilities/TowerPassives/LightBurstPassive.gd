@@ -39,7 +39,7 @@ extends TowerPassive
 func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
-		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds)
+		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, false)
 		status.erode_armor(self, armor_per_hit, armor_floor)
 	_heal_towers(tower, dealt)
 

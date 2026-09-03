@@ -24,6 +24,10 @@ extends CreepPassive
 ## Share of a harmful effect's clock it serves.
 @export_range(0.0, 1.0, 0.05) var duration_ratio: float = 0.5
 ## Share of a chill's magnitude that lands. 0 is outright slow immunity.
+##
+## EVERY slow, unlike the frost clause the other spell resistances carry: this
+## one really does say "cannot be slowed", so it answers the general hook and
+## not the cold one. See CreepPassive.chill_taken_ratio.
 @export_range(0.0, 1.0, 0.05) var chill_ratio: float = 0.0
 
 @export_group("Conversion")
@@ -61,8 +65,8 @@ func max_health_ratio(creep: Creep) -> float:
 
 
 func effect_text() -> String:
-	return ("Takes %d%% less spell damage, cannot be slowed, and harmful effects"
-		+ " last %d%% less. Converts all of its armor into health, %s%% of its"
+	return ("Takes %d%% less spell damage, cannot be slowed, and harmful spell"
+		+ " effects last %d%% less. Converts all of its armor into health, %s%% of its"
 		+ " maximum per point.") % [
 		roundi((1.0 - spell_damage_ratio) * 100.0),
 		roundi((1.0 - duration_ratio) * 100.0),

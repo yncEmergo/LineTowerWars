@@ -13,4 +13,4 @@ icon = ExtResource("2_obelisk")
 slow_per_hit = 0.0375
 slow_cap = 0.2
 slow_seconds = 4
-chill_source = "obelisk"
+chill_source = "ice"

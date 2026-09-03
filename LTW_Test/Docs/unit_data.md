@@ -1131,6 +1131,14 @@ target per 10 mana used.**
 **Torrent (1)** *(Lesser Sludge Monstrosity)* - creeps within a 400 radius are **slowed by 4.8%
 every 1.5 sec, up to 24%**. Every 3rd attack **stuns the primary target for 1 sec**.
 
+> **The 1.5 sec in the three Torrent entries is wrong and the prototype deliberately
+> departs from it.** The source game runs this off ONE aura stack, applied every 0.5 sec by
+> every Sludge Monstrosity in range, and everything the aura does - the slow and the
+> Ultimate's damage amplification - is read off that one stack count. So a creep standing in
+> two of them fills the pile twice as fast, and the per-step figures below are per STACK.
+> The caps are unchanged and are still the numbers that matter. Overridden on the project
+> owner's instruction; see `TorrentPassive`, which is the authority.
+
 **Torrent (2)** *(Greater Sludge Monstrosity)* - slow **7% every 1.5 sec up to 28%**; stun
 **1.2 sec** every 3rd attack.
 

@@ -30,6 +30,18 @@ const COUNT_FILL: Color = Color(0.72, 0.38, 0.90, 1.0)
 const COUNT_TEXT: Color = Color(0.82, 0.58, 0.98, 1.0)
 const COUNT_EMPTY: Color = Color(0.16, 0.07, 0.20, 1.0)
 
+## A SHIELD standing in front of the health. Teal, which is what an RTS or an
+## RPG has drawn a shield in for thirty years - a player reads it as "damage
+## that has to come off before the green does" with nothing having to say so.
+##
+## Close to the mana blue and deliberately so: both are "the other bar", and
+## nothing in the game carries a shield and mana at once. What keeps them apart
+## at a glance is where they are drawn - a shield sits ABOVE the health bar
+## because it is spent first, and mana below it.
+const SHIELD_FILL: Color = Color(0.30, 0.82, 0.82, 1.0)
+const SHIELD_TEXT: Color = Color(0.48, 0.90, 0.90, 1.0)
+const SHIELD_EMPTY: Color = Color(0.06, 0.20, 0.21, 1.0)
+
 ## What the tower holds and the most it can hold. Whole numbers, because every
 ## second resource in the game is counted rather than measured.
 var current: int = 0
@@ -47,6 +59,13 @@ static func mana(held: int, ceiling: int) -> TowerResource:
 ## A count a passive has banked, e.g. the kills an Alchemist has devoured.
 static func counted(held: int, ceiling: int) -> TowerResource:
 	return _make(held, ceiling, COUNT_FILL, COUNT_TEXT, COUNT_EMPTY)
+
+
+## Damage standing in front of a unit's health, and the most it ever held.
+## Behemoth's Abyssal Carapace is the only thing that grants one so far, and
+## the shape is general because it is not likely to stay that way.
+static func shield(held: int, ceiling: int) -> TowerResource:
+	return _make(held, ceiling, SHIELD_FILL, SHIELD_TEXT, SHIELD_EMPTY)
 
 
 static func _make(held: int, ceiling: int, fill: Color, text: Color,

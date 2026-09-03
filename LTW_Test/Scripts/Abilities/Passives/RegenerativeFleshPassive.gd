@@ -82,7 +82,7 @@ func on_damage_taken(creep: Creep, _lost: float,
 
 
 func effect_text() -> String:
-	return ("Harmful effects last %d%% less and never more than %s seconds."
+	return ("Harmful spell effects last %d%% less and never more than %s seconds."
 		+ " Regenerates %s health per second for every percent of health it is"
 		+ " missing, up to %s. The first time it falls below %d%% health, the"
 		+ " slow on it is halved.") % [

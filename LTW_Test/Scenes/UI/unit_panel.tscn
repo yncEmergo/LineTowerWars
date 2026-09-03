@@ -42,7 +42,7 @@ border_color = Color(0.29, 0.31, 0.38, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 
-[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_resource_label", "_health_bar", "_resource_bar", "_damage_label", "_armor_label", "_attack_label", "_splash_label", "_job_row", "_job_icon", "_job_label", "_job_bar", "_command_grid", "_selection_grid", "_portrait", "_status_bar")]
+[node name="UnitPanel" type="Control" unique_id=1649097562 node_paths=PackedStringArray("_name_label", "_health_label", "_resource_label", "_health_bar", "_resource_bar", "_damage_label", "_armor_label", "_attack_label", "_speed_label", "_splash_label", "_job_row", "_job_icon", "_job_label", "_job_bar", "_command_grid", "_selection_grid", "_portrait", "_status_bar")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,6 +59,7 @@ _resource_bar = NodePath("Layout/InfoPanel/InfoRow/PortraitColumn/ResourceBar")
 _damage_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/DamageLabel")
 _armor_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/ArmorLabel")
 _attack_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/AttackLabel")
+_speed_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/SpeedLabel")
 _splash_label = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/SplashLabel")
 _job_row = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow")
 _job_icon = NodePath("Layout/InfoPanel/InfoRow/InfoColumn/JobRow/JobIcon")
@@ -155,7 +156,7 @@ text = "0 / 0"
 horizontal_alignment = 1
 
 [node name="InfoColumn" type="VBoxContainer" parent="Layout/InfoPanel/InfoRow" unique_id=1093665997]
-custom_minimum_size = Vector2(260, 0)
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
@@ -167,21 +168,45 @@ theme_override_font_sizes/font_size = 15
 text = "Builder"
 horizontal_alignment = 1
 
-[node name="DamageLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1804016724]
+[node name="DamageLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1804016724]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
 text = "Damage:   0 - 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
-[node name="ArmorLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1558229312]
+[node name="ArmorLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1558229312]
 layout_mode = 2
 mouse_filter = 1
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
 text = "Armor:   Invulnerable"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
-[node name="AttackLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1671254138]
+[node name="SpeedLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1558229313]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "Speed:   6"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="AttackLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1671254138]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
 text = "Attack:   1 APS,  4 range"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
 
 [node name="SplashLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=540095211]
 layout_mode = 2
