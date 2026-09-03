@@ -194,9 +194,14 @@ tailnet. `tailscale status` lists every machine and whether it is currently reac
 
 The addresses a client dials live in `Resources/Config/network_config.tres`, and **that file
 is the authority** — this document deliberately does not repeat them, because a copy here is
-the one that would go stale. Add the new machine's `100.x` address to the list there. The
-client tries each candidate in turn and takes the first that answers, so either PC can be the
-server on any given day and neither needs a rebuild to swap roles.
+the one that would go stale.
+
+The client tries each candidate in turn and takes the first that answers — and every one that
+does NOT answer costs a full `connect_timeout_seconds` before the next is tried. So the list is
+kept SHORT, and **the tailnet addresses are deliberately not in it**: with the public server
+always up, three dead candidates ahead of it turned every connect into a wait that looked like
+a hang. Dial a specific machine with `--address` instead, which is exactly what that argument
+is for. Localhost stays first so a local `run_server.ps1` still wins instantly.
 
 ### The firewall, on whichever PC is running the server
 

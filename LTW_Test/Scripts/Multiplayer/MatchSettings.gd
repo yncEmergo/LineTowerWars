@@ -114,6 +114,20 @@ const DRAFT_OPTIONS: int = 3
 @export var random_lanes: bool = true
 @export var tech_mode: TechMode = TechMode.PICK
 @export var modifier: Modifier = Modifier.NONE
+## Whether the developer cheats answer in this match.
+##
+## OFF by default and MUTUALLY EXCLUSIVE WITH RANKED, which is the whole of the
+## rule: a cheat is a real player order the server grants (D27), so a match
+## where one player can hand themselves gold is not a match worth comparing
+## with any other. The lock in sanitise() enforces that on the server rather
+## than trusting the host's screen, and reset_to_defaults() is what puts it
+## back - so a ranked match cannot carry this however it was sent.
+##
+## This is the way in that does NOT need the server's own config edited, which
+## GameConfig.cheats_in_multiplayer still is. The difference that matters is
+## visibility: this one is a row in the lobby everybody can see before they
+## agree to play, where the config flag is invisible to every player.
+@export var cheats_enabled: bool = false
 
 
 ## What a brand new lobby offers: every number as GameConfig has it, and the
@@ -140,6 +154,7 @@ static func from_dict(data: Dictionary) -> MatchSettings:
 	settings.random_lanes = bool(data.get("lanes", true))
 	settings.tech_mode = int(data.get("tech", TechMode.PICK)) as TechMode
 	settings.modifier = int(data.get("mod", Modifier.NONE)) as Modifier
+	settings.cheats_enabled = bool(data.get("cheats", false))
 	return settings
 
 
@@ -155,6 +170,7 @@ func to_dict() -> Dictionary:
 		"lanes": random_lanes,
 		"tech": tech_mode,
 		"mod": modifier,
+		"cheats": cheats_enabled,
 	}
 
 
@@ -179,6 +195,7 @@ func reset_to_defaults(config: GameConfig) -> void:
 	creep_set = CreepSet.ALL
 	random_lanes = true
 	modifier = Modifier.NONE
+	cheats_enabled = false
 	if config == null:
 		Log.err("MatchSettings has no GameConfig to take its defaults from")
 		return
@@ -272,7 +289,10 @@ func describe() -> String:
 		creep_set_name(),
 		tech_mode_name(),
 		modifier_name(),
-		", random lanes" if random_lanes else "",
+		"%s%s" % [
+			", random lanes" if random_lanes else "",
+			", CHEATS ON" if cheats_enabled else "",
+		],
 	]
 
 

@@ -33,6 +33,10 @@ func on_death(creep: Creep) -> bool:
 	return true
 
 
+func down_seconds() -> float:
+	return revive_delay
+
+
 func effect_text() -> String:
 	return "The first time it dies it gets back up %s seconds later, with %d%% of its health." \
 		% [StringUtil.trim_number(revive_delay), roundi(health_ratio * 100.0)]

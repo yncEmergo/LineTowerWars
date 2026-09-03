@@ -50,6 +50,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D9 | **PickleGD: keep the link, do not install yet.** | 2026-08-21 | Not a transport. Likely useful for cold-path payloads, wrong for the hot path. See §7. |
 | D10 | **The network session may be a plain autoload**, standing on its own rather than going through `References`. | 2026-08-21 | User's call: `References` is a convenience, not a hard rule, and a global-like entity is exactly what a session that outlives scene changes needs. Unblocks 0.1. |
 | D11 | **Simulation tick is 20 Hz**, in a config `.tres`. | 2026-08-21 | Squarely in the RTS band. 50 ms, and an exact 3:1 divisor of a 60 Hz render frame. See §5.5. |
+| D30 | **The public server runs on a RENTED machine, and a deploy is MANUAL.** Pushing changes nothing; the server keeps running the commit it has until it is told otherwise. | 2026-09-03 | User's call, forced by circumstance: the developer's building has a managed connection with no address that can be dialled from outside, so hosting at home cannot reach a tester at all - see `server.md`. Manual rather than automatic on purpose. A restart ends any match in progress (D19), and a `protocol_version` bump (D29) locks out every tester who has not taken the new build, so WHEN that happens has to be a decision rather than a side effect of pushing. Supersedes D18. |
 | D29 | **A build states its `protocol_version` on connecting, and the server refuses one that disagrees.** | 2026-09-03 | Bumped by hand, in `NetworkConfig`. Needed the moment a build exists that somebody else has a copy of: two versions of this project cannot otherwise be told apart until they have already gone wrong together, because the server simulates and the clients draw, so a disagreement surfaces as refused orders or a world that quietly differs - never as "you need to update". Lives on `Net` rather than `Lobby`, though `Lobby.register_player` is also a first message, because it gates the CONNECTION: a peer refused there never reaches `Lobby`, and anything added later that talks earlier is covered without being changed. `WorldChecksum` stays underneath it - a version catches two builds that were never meant to meet, the checksum catches two that agree on their version and still built different worlds. |
 | D28 | **A client dials a LIST of addresses, taking the first that answers**, rather than one authored address. | 2026-09-03 | User's requirement, from the shape of the dev loop: two PCs in different buildings take the server in turns, and whichever is not hosting has to find the one that is without being rebuilt or told which. Sequential, cheapest-first - 127.0.0.1 leads, so a player on the same machine as the server connects instantly. The cost is that each dead candidate is paid in full at `connect_timeout_seconds`, which is why that number came down: a dead candidate is now the common case rather than the failure case. Parallel probing would cost one round trip instead of N timeouts and is the upgrade if the list ever grows past a handful. `--address` still collapses the list to one, so the headless probes and `run_server.ps1` are untouched. |
 | D27 | **Developer cheats are refused in a NETWORKED match** unless the server's own config deliberately allows them. | 2026-09-02 | User's call. A cheat is a real player order the authority grants (§2), so the master switch alone would let one player in a real match hand themselves the gold to end it - and the file that refuses it is the SERVER's, not the one they are looking at. A second flag rather than a flat refusal, because the networked build has to be testable: a headless two client run needs the same shortcuts a single player run gets. `GameConfig.cheats_allowed(Net.is_online())` is the one place the two are put together. |
@@ -831,6 +832,62 @@ the distance one tick covers.** Arrival thresholds, separation limits, aura radi
 ranges were all tuned when a tick was 1/60 s. `MobileUnit` was already safe because it
 clamps its step to the remaining distance; `Creep` was not.
 
+### 5.7 Where the server runs, and how code reaches it (D30)
+
+The dedicated server runs on a rented Linux machine. D4 said that "runs on your machine" and
+"runs in a datacenter" differ only by an address, and that turned out to be exactly true:
+nothing in the code changed when it moved, and the one edit was a line in `NetworkConfig`.
+
+**What is on that machine.** Three things, and deliberately no more:
+
+- a git **clone** of this repository - complete and independent, not a link to anything
+- a Linux build of Godot, pinned to the same version the editor runs
+- a `systemd` unit running the same `--headless -- --server` command `run_server.ps1` runs
+
+There is no separate server codebase, no database and no persistent state. That is D3 seen from
+the other end: the server IS this project, booted through `server_main` instead of the menu. A
+match lives in memory and is gone when it ends, which is also why there is nothing to back up.
+
+**A push does not deploy.** This is the part that surprises anyone expecting a web backend.
+Committing and pushing changes nothing about what the server is running; it keeps serving the
+commit it already has until somebody runs the deploy. The chain is:
+
+```
+editor ──commit──▶ local ──push──▶ origin ──deploy pulls──▶ server clone ──restart──▶ running
+```
+
+Two consequences worth holding on to:
+
+- **An uncommitted change cannot reach the server**, however many times it is deployed, because
+  the path runs through a commit. A client running local edits against a server without them is
+  the ordinary cause of `Initial world DIFFERS from the server` - a version gap, not a
+  determinism bug.
+- **Git is a middleman used once per deploy, not a live dependency.** The clone is complete, so
+  matches keep running whether or not the host is reachable.
+
+**What a deploy does**, in order: fetch, hard reset to the remote branch, re-import, restart.
+The reset is deliberate rather than a pull - the checkout is a deploy target that nobody edits
+by hand, so the remote always wins and no conflict can ever stop a deploy half way. The
+re-import is not optional: a clean checkout has no imported-asset cache and no script class
+table, which on a server shows up as the service crash-looping rather than as an error anyone
+reads.
+
+**Restarting ends any match in progress.** One process holds the lobby and the match (D19) and
+every bit of match state is in memory, so deploying during a playtest disconnects everybody at
+once. There is no drain-and-swap and no reconnect (D13) to soften it. Deploy between sessions.
+
+**The developer no longer plays at zero latency**, which D18 named as the one thing a local
+server hides. Everyone including the developer now reaches the simulation over a real network,
+so an ordering or timing bug that only appears under latency appears for the person who can fix
+it rather than only for testers.
+
+**Not built, and the honest gap**: no accounts, no authentication and no persistence, so anyone
+holding the address can connect and nothing survives a match. That is D7 deferred, and it
+becomes a real question the day a build is public rather than handed to people by name.
+
+**How it is driven** - deploy, read the log, restart - is `server.md`. This section is what it
+is; that file is which commands to type.
+
 ---
 
 ## 6. Transport — ENet (D5)
@@ -1171,11 +1228,15 @@ movement is the likeliest candidate, being the one continuous action a player pe
 Not to be confused with the creep extrapolation in §5.4, which is the client running the
 *simulation* ahead of the server for bandwidth reasons. That is needed regardless.
 
-### 11.5 Where the dev server runs (D18)
+### 11.5 Where the dev server runs (D18, superseded by D30)
 
-Locally in the office, on the user's own machine for the first tests, moving later if
-needed. The address is one line in `NetworkConfig`, so nothing about the code changes when
-it moves.
+Originally: locally in the office, on the user's own machine for the first tests, moving later
+if needed. **It has since moved** - the public server runs on a rented machine, see §5.7. The
+prediction held exactly: the address is one line in `NetworkConfig` and nothing about the code
+changed when it moved.
+
+A local server is still the right thing for developing against, and `run_server.ps1` still
+starts one. What changed is which server a handed-out build reaches.
 
 The one thing a local server hides is **latency**: at 0 ms, every ordering and timing bug
 stays invisible and then appears for real players at 80 ms. Worth injecting artificial delay

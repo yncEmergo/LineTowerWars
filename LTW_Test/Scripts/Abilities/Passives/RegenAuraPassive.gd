@@ -15,6 +15,10 @@ extends CreepPassive
 @export var health_per_second: float = 2.0
 
 
+func grants_aura() -> bool:
+	return true
+
+
 func aura_health_regen(_creep: Creep) -> float:
 	return maxf(0.0, health_per_second)
 

@@ -21,8 +21,8 @@ damage_min = 4
 damage_max = 5
 attacks_per_second = 0.3333333
 windup_seconds = 0.75
-attack_range = 1.25
 auto_acquire = false
+attack_range = 1.25
 shows_range = false
 delivery = SubResource("Delivery")
 

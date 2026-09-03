@@ -14,6 +14,7 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | [content.md](content.md) | **The PROCEDURE.** How a tower, creep, disc or ability is actually added or changed: which files it is made of, which of them are generated, how an id is picked, and what refuses bad content at boot. Carries no rules and no numbers. |
 | [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it (D1–D29), and the costs deliberately not paid yet. |
 | [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server, and how two PCs in different places reach each other to test. Controls only, never architecture — that is `multiplayer.md`. |
+| [performance-handover.md](performance-handover.md) | **TEMPORARY.** State of play and the plan for the server performance work, written across a machine change. The only living document here; every other file is either a reference or a dated finding. Delete it or fold it into `multiplayer.md` once the work lands. |
 | [Findings/](Findings/) | **Investigations.** Something that was measured, dug into or ruled out, written up and dated. |
 | `../CLAUDE.md` | Conventions, engine traps, hard rules. In the root because Claude Code loads it from there. |
 | `../README.md` | The way in: what the project is, what works today. In the root because that is where a git host looks. |

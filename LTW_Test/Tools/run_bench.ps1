@@ -62,6 +62,14 @@ $scenarios = @(
     @{ name = "ten-plain";       scene = "server"; players = $Players; creeps = 100; tower = "archer_stats" }
     @{ name = "client-1v1";      scene = "client"; players = 2;        creeps = 100 }
     @{ name = "client-ten";      scene = "client"; players = $Players; creeps = 100 }
+    # FEW TOWERS, MANY CREEPS - the early game, and the shape a stutter was
+    # actually reported in. Every scenario above fills the maze, so the whole
+    # matrix asked "what does a LOT of towers cost" and none of it asked what a
+    # lane full of creeps costs on its own. Creeps were already the dominant
+    # cost with a full maze; this is the same question with the towers taken
+    # away, which is what separates a per-creep cost from a per-tower one.
+    @{ name = "1v1-fewtowers";    scene = "server"; players = 2; creeps = 150; towers = 8 }
+    @{ name = "client-fewtowers"; scene = "client"; players = 2; creeps = 150; towers = 8 }
 )
 
 if (-not [string]::IsNullOrWhiteSpace($Only)) {

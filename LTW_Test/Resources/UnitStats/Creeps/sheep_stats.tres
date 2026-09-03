@@ -1,37 +1,28 @@
-[gd_resource type="Resource" script_class="CreepStats" format=3]
+[gd_resource type="Resource" script_class="CreepStats" format=3 uid="uid://mx4t47d4bi6u"]
 
-[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://4w1bsw7kant1" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Passives/fast_producing.tres" id="3_fast_producing"]
-[ext_resource type="Script" path="res://Scripts/Config/CreepPackEntry.gd" id="4_pack_entry"]
+[ext_resource type="Script" uid="uid://4cmcuainrkwb" path="res://Scripts/Config/CreepPackEntry.gd" id="4_pack_entry"]
 [ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/timber_wolf_stats.tres" id="5_timber_wolf"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/sheep.png" id="98_icon"]
+[ext_resource type="Texture2D" uid="uid://dy0vm81am24lt" path="res://2DArt/Icons/sheep.png" id="98_icon"]
 
 [sub_resource type="Resource" id="Companion_timber_wolf"]
 script = ExtResource("4_pack_entry")
-icon = ExtResource("98_icon")
 creep_stats = ExtResource("5_timber_wolf")
-count = 1
 
 [resource]
 script = ExtResource("1_creep_stats")
-icon = ExtResource("98_icon")
-unit_type_id = 20
-display_name = "Sheep"
-max_health = 2
-armor_type = 1
-armor = 0
-abilities = Array[ExtResource("2_ability")]([ExtResource("3_fast_producing")])
-scene_path = "res://Scenes/Units/Creeps/sheep.tscn"
+pack_size = 2
+pack_companions = Array[ExtResource("4_pack_entry")]([SubResource("Companion_timber_wolf")])
+body_radius = 0.16
 move_speed = 1.75
 turn_speed = 8.0
 arrive_threshold = 0.05
-pack_size = 2
-pack_companions = Array[ExtResource("4_pack_entry")]([SubResource("Companion_timber_wolf")])
-gold_cost = 10
-income_gain = 2
-unlock_seconds = 0.0
-max_stock = 32
-stock_regen_seconds = 8.0
-body_radius = 0.16
-bounty = 0
+unit_type_id = 20
+display_name = "Sheep"
+icon = ExtResource("98_icon")
+max_health = 2
+armor_type = 1
+abilities = Array[ExtResource("2_ability")]([ExtResource("3_fast_producing")])
+scene_path = "res://Scenes/Units/Creeps/sheep.tscn"

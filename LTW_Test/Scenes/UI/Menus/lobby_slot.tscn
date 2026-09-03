@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/Menus/LobbySlot.gd" id="1_slot"]
+[ext_resource type="Theme" path="res://Resources/UI/lobby_compact_theme.tres" id="2_compact"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_swatch"]
 content_margin_left = 2.0
@@ -20,9 +21,9 @@ corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
 content_margin_left = 16.0
-content_margin_top = 10.0
+content_margin_top = 6.0
 content_margin_right = 16.0
-content_margin_bottom = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.105, 0.115, 0.15, 1)
 border_width_left = 1
 border_width_top = 1
@@ -37,6 +38,8 @@ corner_radius_bottom_left = 3
 [node name="LobbySlot" type="PanelContainer" node_paths=PackedStringArray("_index_label", "_name_label", "_state_label", "_color_option", "_color_swatch")]
 offset_right = 560.0
 offset_bottom = 44.0
+size_flags_horizontal = 3
+theme = ExtResource("2_compact")
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 script = ExtResource("1_slot")
 _index_label = NodePath("Row/IndexLabel")

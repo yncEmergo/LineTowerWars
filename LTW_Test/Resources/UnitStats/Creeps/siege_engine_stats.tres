@@ -1,15 +1,17 @@
-[gd_resource type="Resource" script_class="CreepStats" format=3]
+[gd_resource type="Resource" script_class="CreepStats" format=3 uid="uid://6jovmmd458b1"]
 
-[ext_resource type="Script" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://4w1bsw7kant1" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" uid="uid://s0vmh3n3pptf" path="res://Resources/Abilities/move_ability.tres" id="4_move"]
+[ext_resource type="Resource" uid="uid://bo2r4bfsi2pd0" path="res://Resources/Abilities/stop_ability.tres" id="5_stop"]
+[ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="6_attack"]
+[ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="8_niut8"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="8_projectile"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Passives/attacker.tres" id="10_attacker"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Passives/bombardment.tres" id="11_bombardment"]
-[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="4_move"]
-[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="5_stop"]
-[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="6_attack"]
-[ext_resource type="Script" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
-[ext_resource type="Script" path="res://Scripts/Combat/ProjectileDelivery.gd" id="8_projectile"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/siege_engine.png" id="98_icon"]
+[ext_resource type="Resource" uid="uid://dpyrwb7fnk5m8" path="res://Resources/Abilities/Passives/bombardment.tres" id="11_bombardment"]
+[ext_resource type="Script" uid="uid://4cmcuainrkwb" path="res://Scripts/Config/CreepPackEntry.gd" id="11_xpa2a"]
+[ext_resource type="Texture2D" uid="uid://dsfcovxchm71h" path="res://2DArt/Icons/siege_engine.png" id="98_icon"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("8_projectile")
@@ -30,20 +32,6 @@ delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_creep_stats")
-icon = ExtResource("98_icon")
-unit_type_id = 157
-display_name = "Siege Engine"
-max_health = 28800
-armor_type = 5
-armor = 4
-attack = SubResource("Attack")
-abilities = Array[ExtResource("2_ability")]([ExtResource("4_move"), ExtResource("5_stop"), ExtResource("6_attack"), ExtResource("10_attacker"), ExtResource("11_bombardment")])
-default_ability = ExtResource("4_move")
-scene_path = "res://Scenes/Units/Creeps/siege_engine.tscn"
-move_speed = 1.5
-turn_speed = 8.0
-arrive_threshold = 0.05
-pack_size = 3
 gold_cost = 75000
 income_gain = 3750
 unlock_seconds = 720.0
@@ -53,3 +41,16 @@ initial_stock = 1
 body_radius = 0.24
 bounty = 7312
 is_attacker = true
+move_speed = 1.5
+turn_speed = 8.0
+arrive_threshold = 0.05
+unit_type_id = 157
+display_name = "Siege Engine"
+icon = ExtResource("98_icon")
+max_health = 28800
+armor_type = 5
+armor = 4
+attack = SubResource("Attack")
+abilities = Array[ExtResource("2_ability")]([ExtResource("4_move"), ExtResource("5_stop"), ExtResource("6_attack"), ExtResource("10_attacker"), ExtResource("11_bombardment")])
+default_ability = ExtResource("4_move")
+scene_path = "res://Scenes/Units/Creeps/siege_engine.tscn"

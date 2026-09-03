@@ -567,12 +567,11 @@ func _cheat_area(command: Command) -> PlayerArea:
 ##
 ## "Allowed here" is two things rather than one, and the second is what makes
 ## a cheat a single player tool: a NETWORKED match refuses them unless the
-## server's own config deliberately says otherwise. See
-## GameConfig.cheats_allowed. This is the check that counts - the one in
-## CheatController only saves a packet.
+## server's own config says otherwise, or the LOBBY turned them on for this
+## match. See MatchSession.cheats_permitted. This is the check that counts -
+## the one in CheatController only saves a packet.
 func _cheat_target(command: Command) -> PlayerState:
-	var config: GameConfig = References.game_config
-	if config == null || !config.cheats_allowed(Net.is_online()):
+	if !MatchSession.cheats_permitted():
 		_reject(command, "cheats are off")
 		return null
 

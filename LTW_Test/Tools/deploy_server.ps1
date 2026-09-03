@@ -82,12 +82,21 @@ if (-not $originHead) { $originHead = (& git rev-parse origin/main) }
 $originHead = $originHead.Trim()
 
 $localHead = (& git rev-parse HEAD).Trim()
-$dirty     = (& git status --porcelain)
+
+# Tracked modifications are the ones that matter: they are code the client runs and the
+# server cannot have. Untracked files are almost always build junk - a warning that fires
+# on those is a warning nobody reads by the third time.
+$modified  = @(& git status --porcelain --untracked-files=no)
+$untracked = @(& git status --porcelain | Where-Object { $_ -match '^\?\?' })
+
+$localNote = if ($modified.Count)  { "+ $($modified.Count) modified" }
+             elseif ($untracked.Count) { "clean ($($untracked.Count) untracked)" }
+             else { "clean" }
 
 Write-Host ""
 Write-Host "server  $($remoteHead.Substring(0,8))  $(if ($remoteHead -eq $originHead) { '(current)' } else { '(behind)' })"
 Write-Host "origin  $($originHead.Substring(0,8))"
-Write-Host "local   $($localHead.Substring(0,8))  $(if ($dirty) { '+ uncommitted changes' } else { 'clean' })"
+Write-Host "local   $($localHead.Substring(0,8))  $localNote"
 Write-Host ""
 
 if ($localHead -ne $originHead) {
@@ -95,13 +104,18 @@ if ($localHead -ne $originHead) {
         -ForegroundColor Yellow
     Write-Host "server will run something other than what you are testing." -ForegroundColor Yellow
 }
-if ($dirty) {
-    Write-Host "You have uncommitted changes. They CANNOT reach the server, which deploys from" `
+if ($modified.Count) {
+    Write-Host "You have tracked changes that are not committed. They CANNOT reach the server," `
         -ForegroundColor Yellow
-    Write-Host "git. A client running them against a server without them may well report" `
+    Write-Host "which deploys from git. A client running them against a server without them may" `
         -ForegroundColor Yellow
-    Write-Host "'Initial world DIFFERS from the server' - that is the mismatch, not a bug." `
+    Write-Host "well report 'Initial world DIFFERS from the server' - that is the mismatch," `
         -ForegroundColor Yellow
+    Write-Host "not a bug. The files:" -ForegroundColor Yellow
+    $modified | Select-Object -First 8 | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+    if ($modified.Count -gt 8) {
+        Write-Host "  ... and $($modified.Count - 8) more" -ForegroundColor Yellow
+    }
 }
 
 if ($Check) { exit 0 }

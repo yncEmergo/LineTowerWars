@@ -309,7 +309,7 @@ func show_unit(unit: Variant) -> void:
 	if _status_bar != null:
 		_status_bar.show_unit(_unit)
 
-	_card_stack = [_unit.current_abilities()]
+	_card_stack = [_commandable_abilities(_unit)]
 	_refresh_slots()
 	_show_portrait(_unit)
 	visible = true
@@ -627,20 +627,32 @@ func _fill_selection_grid(units: Array) -> void:
 ##
 ## Abilities are shared resources, so identical units reference the very same
 ## .tres and compare equal without needing an id.
+## The card for one unit, which is EMPTY for anything the local player does not
+## own. An opponent's unit can still be clicked and inspected - reading their
+## build is part of the game and the rest of the panel still fills in - but a
+## square offering an order the server is bound to refuse is a button that
+## cannot work. CommandController refuses the order too; this is what stops it
+## being offered.
+func _commandable_abilities(unit: Unit) -> Array:
+	if unit == null || !is_instance_valid(unit) || !unit.is_owned_by_local_player():
+		return []
+	return unit.current_abilities()
+
+
 func _shared_abilities(units: Array) -> Array:
 	var first: Unit = units[0] as Unit
 	if first == null || !is_instance_valid(first):
 		return []
 
 	var shared: Array = []
-	for ability in first.current_abilities():
+	for ability in _commandable_abilities(first):
 		var in_every: bool = true
 		for other in units:
 			var typed: Unit = other as Unit
 			# A unit part-way through being freed is not part of the answer.
 			if typed == null || !is_instance_valid(typed) || typed == first:
 				continue
-			if !typed.current_abilities().has(ability):
+			if !_commandable_abilities(typed).has(ability):
 				in_every = false
 				break
 		if in_every:
@@ -714,7 +726,7 @@ func _on_unit_abilities_changed() -> void:
 	# recomputes what everyone still shares, because one unit changing state
 	# can remove an ability from the whole card.
 	if _group.is_empty():
-		_card_stack = [_unit.current_abilities()]
+		_card_stack = [_commandable_abilities(_unit)]
 	else:
 		_card_stack = [_shared_abilities(_group)]
 	_refresh_slots()

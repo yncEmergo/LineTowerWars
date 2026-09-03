@@ -313,6 +313,38 @@ func techs() -> TechRegistry:
 ## Reads the peer rather than the setup, because it is a fact about this
 ## PROCESS rather than about the match: a match run from the editor with no
 ## network is its own authority.
+## Whether a developer cheat may fire right now.
+##
+## ONE definition, asked by the machine the key was pressed on and by the
+## server that grants the order, so the two cannot disagree about it. Two ways
+## in, and they answer different needs:
+##
+##   GameConfig.cheats_allowed - the master switch, plus the separate flag that
+##   lets a NETWORKED match have them at all. Invisible to players and edited on
+##   the server, which is what makes it right for a scripted headless run and
+##   wrong for anything anybody is playing.
+##
+##   MatchSettings.cheats_enabled - a row in the lobby, off by default, and
+##   incompatible with ranked. Visible to everybody before they agree to play,
+##   which is the property the config flag has not got.
+##
+## A single player run never reaches the second: there is no lobby, so the
+## master switch is the whole answer.
+static func cheats_permitted() -> bool:
+	var config: GameConfig = References.game_config
+	if config == null:
+		return false
+
+	var networked: bool = Net.is_online()
+	if config.cheats_allowed(networked):
+		return true
+	if !networked:
+		return false
+
+	var settings: MatchSettings = match_settings()
+	return settings != null && settings.cheats_enabled
+
+
 static func is_authority() -> bool:
 	return !Net.is_online() || Net.is_server()
 

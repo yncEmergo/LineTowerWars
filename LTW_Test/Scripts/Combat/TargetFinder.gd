@@ -44,10 +44,13 @@ static func creeps_in_radius(area: PlayerArea, center: Vector3, radius: float) -
 		return found
 
 	var limit: float = radius * radius
-	for creep: Creep in area.creeps():
-		if !_is_attackable(creep):
+	# DISTANCE FIRST, then the predicate. Three float operations reject most
+	# candidates; _is_attackable is five calls, and paying those for a creep
+	# standing at the other end of the lane was most of what this cost.
+	for creep: Creep in area.creeps_near(center, radius):
+		if _flat_distance_squared(center, creep.global_position) > limit:
 			continue
-		if _flat_distance_squared(center, creep.global_position) <= limit:
+		if _is_attackable(creep):
 			found.append(creep)
 
 	return found
@@ -179,12 +182,16 @@ static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats,
 	# something its own attack would happily reach. See Unit.attack_range_bonus.
 	var reach: float = stats.attack_range + range_bonus
 	var limit: float = reach * reach
-	for creep: Creep in area.creeps():
-		if !_is_attackable(creep) || !can_be_hit_by(creep, stats):
-			continue
-
+	# Only the creeps near enough to be worth asking about, and the DISTANCE
+	# asked before anything else: it is three float operations and it rejects
+	# most of what arrives, where _is_attackable and can_be_hit_by are six
+	# calls between them. The old order paid those for every creep in the lane.
+	for creep: Creep in area.creeps_near(center, reach):
 		var distance: float = _flat_distance_squared(center, creep.global_position)
 		if distance > limit:
+			continue
+
+		if !_is_attackable(creep) || !can_be_hit_by(creep, stats):
 			continue
 
 		var score: float = _score(creep, distance, stats.target_priority)
@@ -280,6 +287,13 @@ static func _score(creep: Creep, distance_squared: float, priority: int) -> floa
 ## it has health left and it is not invulnerable. Invulnerability is the whole
 ## of the builder-and-disc rule in unit_data.md 1.5, so nothing has to be named
 ## by type here.
+## The public form of the test below, for callers that select creeps by
+## something other than a radius and must not quietly disagree about which of
+## them count. PlayerArea.aura_sources is the one that does.
+static func is_attackable(unit: Unit) -> bool:
+	return _is_attackable(unit)
+
+
 static func _is_attackable(unit: Unit) -> bool:
 	if unit == null || !is_instance_valid(unit) || unit.is_queued_for_deletion():
 		return false

@@ -90,6 +90,33 @@ extends Resource
 ## The source game gives every creep aura 700 AoE, which snaps to 5.5 at the
 ## quarter every reach in the game is stated in (unit_data.md 3).
 @export var creep_aura_radius_cells: float = 5.5
+## Side of one cell in the grid an area keeps its creeps in, so a search reads
+## the ones NEAR a point instead of all of them. See CreepIndex.
+##
+## PURE PERFORMANCE - no answer changes with it, only how long it takes to
+## arrive, because every caller still tests the exact distance. It sits here
+## with idle_target_scan_ticks rather than in the script for the same reason
+## that one does: it is a number worth turning while measuring.
+##
+## Smaller cells return fewer creeps that were never in reach, and cost more
+## dictionary lookups per query. Around half the commonest reach is the sensible
+## band; the lane is only a few cells wide, so the depth axis is where this
+## actually buys anything.
+@export var creep_index_cell_size: float = 2.0
+## How often a creep re-reads the auras standing around it, in seconds.
+##
+## A GAMEPLAY value as well as a pacing one: it is how long a creep keeps a
+## buff it has walked out of, and how long it waits for one it has walked into.
+## Neither answer can change fast enough for a fraction of a second to show,
+## which is what makes it safe to lengthen - but it is not free, so it is a
+## number to choose rather than to maximise.
+##
+## The sweep is spread across the interval by unit id (see Creep._aura_phase),
+## so lengthening it lowers the total work AND widens the spread. Both matter:
+## the spread is what stops a wave that spawned together from sweeping together
+## and turning a flat cost into a spike, which is the mistake
+## AttackComponent._next_scan_wait already documents for tower targeting.
+@export var creep_aura_refresh_seconds: float = 0.5
 ## How far a MULTISHOT reaches for its further targets, in player cells.
 ##
 ## One value for the whole game, exactly as the creep aura radius is and for

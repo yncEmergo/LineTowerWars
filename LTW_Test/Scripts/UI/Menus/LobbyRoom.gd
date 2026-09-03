@@ -19,8 +19,12 @@ extends Control
 @export_group("References")
 @export var _title_label: Label
 @export var _subtitle_label: Label
-## Parent for the slot rows, refilled whenever the lobby changes.
-@export var _slot_list: VBoxContainer
+## Parent for the slot rows, refilled whenever the lobby changes. A GRID of
+## two columns, so a full twelve-player lobby is six rows and the box fits the
+## whole roster without scrolling - which is why its ScrollContainer has
+## scrolling switched off and the box is sized by its contents. A bigger
+## roster than the grid can fit turns that back on.
+@export var _slot_list: GridContainer
 ## The match rules. Shown to everybody and editable by the host alone
 ## (multiplayer.md 8.2); it looks after that itself.
 @export var _settings_panel: LobbySettingsPanel

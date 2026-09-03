@@ -163,6 +163,12 @@ const FLAG_PRIORITIZE_AIR: int = 8
 ## calls them different things, so without it a client says a tower being
 ## reverted is being upgraded.
 const FLAG_RETURNING: int = 16
+## Whether a creep is DOWN waiting on a revive. Presentation on the server -
+## hidden, with a shaft of light over the spot - and so invisible to a client
+## until it was told, which is exactly what it looked like: a creep standing
+## still on an empty health bar and then walking off again. A bit rather than a
+## field, on a number the record already carried. See Creep.set_replicated_down.
+const FLAG_DOWN: int = 64
 ## Whether a player has this unit in a FIGHT - whether an attack order is the
 ## task it is working on. Only the builder acts on it, and it has to be sent:
 ## an attack ordered onto a unit draws no marker, so it is not in the order
@@ -394,6 +400,9 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 			flags |= FLAG_UPGRADING
 		if building.is_returning():
 			flags |= FLAG_RETURNING
+	var down_creep: Creep = unit as Creep
+	if down_creep != null && down_creep.is_down():
+		flags |= FLAG_DOWN
 	if unit.attack_component != null:
 		if unit.attack_component.prioritizes_air():
 			flags |= FLAG_PRIORITIZE_AIR
@@ -713,9 +722,11 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 	# The ceiling comes down the wire as well as the count, because one tier 4
 	# trait raises its own - see CreepMana.raise_ceiling().
 	var creep: Creep = unit as Creep
-	if creep != null && creep.mana() != null:
-		creep.mana().maximum = maxi(0, int(records[at + 11]))
-		creep.mana().set_replicated(int(records[at + 10]))
+	if creep != null:
+		creep.set_replicated_down((flags & FLAG_DOWN) != 0)
+		if creep.mana() != null:
+			creep.mana().maximum = maxi(0, int(records[at + 11]))
+			creep.mana().set_replicated(int(records[at + 10]))
 
 	unit.set_replicated_shield(records[at + 17], records[at + 18])
 

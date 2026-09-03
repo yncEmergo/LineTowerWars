@@ -164,6 +164,22 @@ func slow_duration_cap() -> float:
 ## Every aura hook takes the creep CARRYING the aura, never the one receiving
 ## it: one of them is switched on by its own creep's health, and the answer is
 ## then the same for everything standing in range.
+## Whether this passive gives out an aura AT ALL - whether any of the five
+## questions below can ever answer with something other than its neutral
+## default.
+##
+## Asked so a creep looking for auras can skip a neighbour that emits none
+## without asking it five questions to find that out. Almost every creep in the
+## roster emits none, and the five calls per passive per neighbour per sweep
+## were the largest part of what standing in a crowd cost.
+##
+## Overridden to true by the handful that DO emit one. A passive that grows an
+## aura later must override this too, or its aura silently stops being heard -
+## which is the cost of the shortcut and the reason it is stated here.
+func grants_aura() -> bool:
+	return false
+
+
 func aura_armor_bonus(_creep: Creep) -> int:
 	return 0
 
@@ -293,6 +309,20 @@ func health_regen(_creep: Creep) -> float:
 ## remember whether it had already run.
 func on_spawn(_creep: Creep) -> void:
 	pass
+
+
+## How long this passive puts a creep DOWN for when it fires, or 0 for one that
+## never does.
+##
+## Asked by a CLIENT, which runs no simulation and so never sees on_death fire.
+## It is told THAT a creep is down by the snapshot but not for how long, and
+## the light standing over the spot needs the number to brighten on time.
+##
+## Read here rather than sent, because it is AUTHORED data both machines
+## already hold - the same reason a unit's stats are not on the wire. See
+## Creep.set_replicated_down().
+func down_seconds() -> float:
+	return 0.0
 
 
 ## Runs the moment the creep's health reaches zero, before it is removed and

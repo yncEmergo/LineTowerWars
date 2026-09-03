@@ -53,7 +53,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 
 	var config: GameConfig = _config
-	if config == null || !config.cheats_allowed(Net.is_online()):
+	if config == null || !MatchSession.cheats_permitted():
 		return
 
 	var action: Command.PlayerAction = _action_for(key)

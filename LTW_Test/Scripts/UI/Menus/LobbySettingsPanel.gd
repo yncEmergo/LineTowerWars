@@ -20,6 +20,19 @@ extends PanelContainer
 ## player count (game_rules.md - a fixed pool split between everybody), so it
 ## redraws whenever somebody joins or leaves. The moment the host types a
 ## number over it, it stays put. `Defaults` puts it back.
+##
+## It wears lobby_compact_theme.tres, which is nothing but the compact scale: a
+## smaller font and thinner padding on the buttons and the text fields. It is a
+## dozen controls in a strip under the player list, and at menu_theme's
+## full-size button it was taller than the list itself. The player rows above
+## wear the same theme, for the same reason and to the same scale.
+##
+## That has to be a theme rather than per-node overrides, because a SpinBox
+## draws its text with an internal LineEdit CHILD - and a theme override on the
+## SpinBox does not reach a child, only a theme in the tree does. The same goes
+## for the OptionButton dropdowns. It also has to define EVERY button state:
+## a state it leaves out falls through to menu_theme's roomy one, so a
+## half-defined set makes a button change height when the mouse touches it.
 
 @export_group("References")
 @export var _lives_spin: SpinBox
@@ -29,6 +42,11 @@ extends PanelContainer
 @export var _income_spin: SpinBox
 @export var _interval_spin: SpinBox
 @export var _ranked_check: CheckButton
+## Turns the developer cheats on for everybody in the match. Mutually exclusive
+## with Ranked - see MatchSettings.cheats_enabled - and the two clear each other
+## here as well as being enforced on the server, so the host never sees a pair
+## of ticks the match cannot actually honour.
+@export var _cheats_check: CheckButton
 @export var _creeps_option: OptionButton
 @export var _lanes_check: CheckButton
 @export var _tech_option: OptionButton
@@ -113,6 +131,8 @@ func _draw_gameplay() -> void:
 		_ranked_check.button_pressed = _settings.is_ranked
 	if _lanes_check != null:
 		_lanes_check.button_pressed = _settings.random_lanes
+	if _cheats_check != null:
+		_cheats_check.button_pressed = _settings.cheats_enabled
 	if _creeps_option != null:
 		_creeps_option.selected = int(_settings.creep_set)
 	if _tech_option != null:
@@ -138,6 +158,7 @@ func _draw_editability() -> void:
 	# The two the host always keeps: whether it is ranked at all, and how the
 	# opening technology is dealt.
 	_set_enabled(_ranked_check, _editable)
+	_set_enabled(_cheats_check, _editable)
 	_set_enabled(_tech_option, _editable)
 
 	if _hint_label == null:
@@ -167,6 +188,12 @@ func _gather() -> MatchSettings:
 	var settings: MatchSettings = _settings.duplicate_settings()
 	if _ranked_check != null:
 		settings.is_ranked = _ranked_check.button_pressed
+	if _cheats_check != null:
+		settings.cheats_enabled = _cheats_check.button_pressed
+		# Cheats win over the ranked tick rather than being quietly dropped by
+		# the server's lock, so what the host sees is what the match will be.
+		if settings.cheats_enabled:
+			settings.is_ranked = false
 	if _lanes_check != null:
 		settings.random_lanes = _lanes_check.button_pressed
 	if _creeps_option != null:
@@ -206,6 +233,7 @@ func _on_defaults_pressed() -> void:
 	# lobby and wrong for a host who has deliberately left it: they asked for
 	# the numbers back, not for the mode to change under them.
 	settings.is_ranked = _settings.is_ranked
+	settings.cheats_enabled = _settings.cheats_enabled
 	settings.tech_mode = _settings.tech_mode
 	Lobby.set_settings(settings)
 
@@ -259,7 +287,9 @@ func _connect_controls() -> void:
 	for spin: SpinBox in [_gold_spin, _research_spin, _income_spin, _interval_spin]:
 		if spin != null:
 			spin.value_changed.connect(_on_value_changed)
-	for check: CheckButton in [_ranked_check, _lanes_check]:
+	if _ranked_check != null && !_ranked_check.toggled.is_connected(_on_ranked_toggled):
+		_ranked_check.toggled.connect(_on_ranked_toggled)
+	for check: CheckButton in [_cheats_check, _lanes_check]:
 		if check != null:
 			check.toggled.connect(_on_toggled)
 	for option: OptionButton in [_creeps_option, _tech_option, _modifier_option]:
@@ -273,6 +303,15 @@ func _connect_controls() -> void:
 ## kind of control and none of them is read: the whole block is gathered off
 ## the controls either way.
 func _on_value_changed(_value: float) -> void:
+	_send()
+
+
+## Ranked and Cheats cannot both stand. Ticking Ranked clears Cheats here, the
+## way ticking Cheats clears Ranked in _gather - so whichever the host touched
+## last is the one that wins, which is what a pair of exclusive ticks should do.
+func _on_ranked_toggled(pressed: bool) -> void:
+	if pressed && _cheats_check != null:
+		_cheats_check.set_pressed_no_signal(false)
 	_send()
 
 

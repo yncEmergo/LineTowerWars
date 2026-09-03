@@ -45,6 +45,10 @@ func armor_type_override(creep: Creep) -> int:
 	return int(armor_type) if _roused(creep) else -1
 
 
+func grants_aura() -> bool:
+	return true
+
+
 func aura_attack_damage_ratio(creep: Creep) -> float:
 	return 1.0 + damage_bonus if _roused(creep) else 1.0
 

@@ -23,6 +23,10 @@ extends CreepPassive
 @export var attack_speed_bonus: float = 0.1
 
 
+func grants_aura() -> bool:
+	return true
+
+
 func aura_move_speed_ratio(_creep: Creep) -> float:
 	return 1.0 + maxf(0.0, move_speed_bonus)
 

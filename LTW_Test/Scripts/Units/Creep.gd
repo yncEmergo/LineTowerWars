@@ -106,6 +106,10 @@ var _stall_elapsed: float = 0.0
 
 ## Passives read off this creep's stats once, since they are asked on every hit.
 var _passives: Array[CreepPassive] = []
+## Whether any of this creep's passives gives out an aura, read off them once.
+## Almost never true, which is the whole value of asking: an area's aura sweep
+## visits the creeps that emit one instead of every creep standing nearby.
+var _emits_aura: bool = false
 ## Once-only passives that have already fired, e.g. a revive that was used up.
 ## Per creep, because the passive resource is shared by every creep of the type
 ## and so may hold no state of its own.
@@ -138,7 +142,13 @@ var _march_target: Building = null
 var _march_elapsed: float = 0.0
 ## Starts at the interval so the very first physics frame reads the auras
 ## rather than leaving a freshly spawned creep unbuffed for a quarter second.
+##
+## That head start is also why the sweep has to be PHASED afterwards: every
+## creep begins its clock full, so a wave that spawned on one tick came due on
+## one tick forever after. See _aura_phase.
 var _aura_elapsed: float = AURA_REFRESH_SECONDS
+## Whether this creep's sweep has been spread off the tick it spawned on yet.
+var _aura_phased: bool = false
 ## How many HEAVY physical hits have landed on this creep over its whole life -
 ## it only ever grows, and nothing resets it: not a heal, not a revive, and not
 ## being recycled into the next player's maze, which deliberately keeps the
@@ -582,6 +592,7 @@ func _collect_passives() -> void:
 	_skittering = false
 	_ethereal = false
 	_aura_deaf = false
+	_emits_aura = false
 	_dodge_chance = 0.0
 	_heavy_hit_threshold = 0.0
 	for entry in _creep_stats.abilities:
@@ -591,6 +602,7 @@ func _collect_passives() -> void:
 			_skittering = _skittering || passive.is_skittering()
 			_ethereal = _ethereal || passive.is_ethereal()
 			_aura_deaf = _aura_deaf || passive.ignores_auras()
+			_emits_aura = _emits_aura || passive.grants_aura()
 			# Asked with an unreachable range, so what comes back is the BEST
 			# this creep could ever dodge - a gate rather than an answer. The
 			# real question is asked with the attacker's own reach, and only
@@ -658,6 +670,49 @@ func begin_revive(delay: float, health_ratio: float) -> void:
 	# keeps it visible while the creep is not.
 	visible = false
 	_show_revive_light(delay)
+
+
+## Puts a CLIENT's copy of this creep down, or stands it back up.
+##
+## begin_revive() and _finish_revive() are SIMULATION and run on the authority
+## alone, so without this a client was never told any of it happened: the creep
+## stayed on screen, stood still with an empty health bar for the whole wait and
+## then walked off again, with no light over the spot. Everything the server
+## knew was right; none of it was drawn.
+##
+## Costs one BIT on the wire, not a field - see ReplicationService.FLAG_DOWN.
+## How long the wait lasts is not sent at all, because the creep's own passive
+## is authored data this machine already has.
+##
+## Idempotent: the snapshot repeats the flag twenty times a second and only the
+## EDGES do anything.
+func set_replicated_down(down: bool) -> void:
+	if down == is_down():
+		return
+
+	if down:
+		# Held at the authored length rather than counted down, since
+		# _advance_revive is behind the authority gate and never runs here. It
+		# is what makes is_down() true, which the click test below reads too.
+		_revive_countdown = _down_seconds()
+		visible = false
+		_show_revive_light(_revive_countdown)
+		return
+
+	_revive_countdown = -1.0
+	visible = true
+	if is_instance_valid(_revive_light):
+		_revive_light.finish()
+	_revive_light = null
+
+
+## The longest any of this creep's passives puts it down for. 0 for every creep
+## that cannot be revived, which is all but one of them.
+func _down_seconds() -> float:
+	var longest: float = 0.0
+	for passive in _passives:
+		longest = maxf(longest, passive.down_seconds())
+	return longest
 
 
 ## A creep waiting on a revive cannot be clicked: it is not on screen, and a
@@ -984,13 +1039,30 @@ func is_pinned() -> bool:
 ## Naive and linear like TargetFinder, and much cheaper, since it runs four
 ## times a second rather than every tick. Both want the same spatial hash
 ## before the population cap of 100 is real.
-func _refresh_aura(delta: float) -> void:
-	_aura_elapsed += delta
-	if _aura_elapsed < AURA_REFRESH_SECONDS:
-		return
-	_aura_elapsed = 0.0
+## Whether this creep gives out an aura at all. Cached off its passives at
+## spawn - see _collect_passives.
+func emits_aura() -> bool:
+	return _emits_aura
 
+
+func _refresh_aura(delta: float) -> void:
 	var config: GameConfig = References.game_config
+	var interval: float = AURA_REFRESH_SECONDS if config == null 		else config.creep_aura_refresh_seconds
+
+	_aura_elapsed += delta
+	if _aura_elapsed < interval:
+		return
+
+	# Zero, and then a slice of the interval that depends on this creep's id -
+	# so the FIRST sweep still happens the tick it spawns and every one after
+	# it is spread. Without this a wave of ninety six sweeps on one tick, five
+	# ticks apart, which is a spike rather than a cost. Measured on a Wendigo
+	# wave, where every creep carries an aura and so every creep sweeps.
+	_aura_elapsed = 0.0
+	if !_aura_phased:
+		_aura_phased = true
+		_aura_elapsed = _aura_phase(interval)
+
 	if config == null:
 		return
 
@@ -1012,8 +1084,22 @@ func _refresh_aura(delta: float) -> void:
 	if _aura_deaf || (_status != null && _status.is_aura_denied()):
 		return
 
+	# NEARBY first, through the spatial index, and only THEN whether it emits
+	# anything. Both halves are needed and each is useless without the other:
+	#
+	#   the index is what stops a lane of two hundred being walked, and
+	#   emits_aura is what stops five virtual calls per passive being spent on
+	#   a neighbour that was never going to answer with anything.
+	#
+	# An earlier version of this asked the area for its emitters and skipped
+	# the index entirely. That is faster only while emitters are RARE, and the
+	# roster has creeps - the Ancient Wendigo among them - that all carry one,
+	# where it degenerates to walking the whole lane again. Measured: it cost
+	# about 30 ms on the worst ticks of a Wendigo wave. Nearby first.
 	for creep: Creep in TargetFinder.creeps_in_radius(
 			area, global_position, config.creep_aura_radius_cells):
+		if !creep.emits_aura():
+			continue
 		for passive in creep.passives():
 			_aura_armor = maxi(_aura_armor, passive.aura_armor_bonus(creep))
 			_aura_move_ratio = maxf(_aura_move_ratio,
@@ -1023,6 +1109,18 @@ func _refresh_aura(delta: float) -> void:
 			_aura_damage_ratio = maxf(_aura_damage_ratio,
 				passive.aura_attack_damage_ratio(creep))
 			_aura_regen = maxf(_aura_regen, passive.aura_health_regen(creep))
+
+
+## Where in the interval this creep's sweep sits, so two creeps that spawned
+## together do not come due together.
+##
+## The unit id rather than a roll, for the reason AttackComponent gives for the
+## same trick: it is a number the server and every client already agree on, so
+## nothing here can make two machines sweep on different ticks. One phase per
+## TICK of the interval, which is as fine a spread as a fixed tick can carry.
+func _aura_phase(interval: float) -> float:
+	var phases: int = maxi(1, int(round(interval * float(Engine.physics_ticks_per_second))))
+	return interval * float(unit_id % phases) / float(phases)
 
 
 ## Heals the creep from its own regeneration passives.

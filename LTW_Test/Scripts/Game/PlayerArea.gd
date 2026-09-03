@@ -68,6 +68,30 @@ var _blocking: PackedByteArray = PackedByteArray()
 ## Every creep walking this area, kept in step with the creeps root rather than
 ## asked for it. See creeps().
 var _creeps: Array[Creep] = []
+## The grid that answers "which creeps are near here" over that list. Built on
+## first use rather than in _ready, because the config it takes its cell size
+## from is reached through References and an area is built before that is
+## guaranteed to be wired.
+var _creep_index: CreepIndex = null
+## The grid's own shape and where it sits, held rather than recomputed.
+##
+## is_point_free() is the single hottest call in the simulation - a walking
+## creep asks it about four times a tick, once for its next waypoint and twice
+## more to slide along whatever is in the way. It used to answer by calling
+## to_local(), which builds an INVERSE MATRIX, and by reaching References three
+## more times for the grid's width, depth and cell size. None of those four
+## answers can change while a match is running, and together they were most of
+## what moving a creep cost. See Docs/Findings/2026-09-03-server-tick-overrun.md.
+##
+## Kept in step by _refresh_grid_cache: setup() calls it, and the transform
+## notification below catches an area that is moved afterwards, so this cannot
+## go stale silently.
+var _grid_from_world: Transform3D = Transform3D.IDENTITY
+var _grid_to_world: Transform3D = Transform3D.IDENTITY
+var _internal_width: int = 0
+var _internal_depth: int = 0
+var _internal_cell: float = 0.5
+var _grid_cache_ready: bool = false
 ## Route to the end zone, rebuilt whenever the occupancy grid changes.
 var _flow: FlowField = FlowField.new()
 ## Scratch field for the point-to-point routes ordered units ask for, kept
@@ -97,6 +121,10 @@ func setup(id: int) -> void:
 	player_id = id
 	name = "PlayerArea%d" % id
 	position = _config.area_origin(id)
+	# After the position is set, since the cache holds the area's transform, and
+	# before anything below sizes itself off internal_width/internal_depth.
+	set_notify_transform(true)
+	_refresh_grid_cache()
 	_occupied = PackedByteArray()
 	_occupied.resize(internal_width() * internal_depth())
 	_blocking = PackedByteArray()
@@ -213,21 +241,44 @@ func clamp_point(world_pos: Vector3) -> Vector3:
 # converts back to world space.
 
 func internal_width() -> int:
-	if _config == null:
-		return 0
-	return _config.area_width_cells * _config.internal_cells_per_cell
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	return _internal_width
 
 
 func internal_depth() -> int:
-	if _config == null:
-		return 0
-	return _config.area_depth_cells() * _config.internal_cells_per_cell
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	return _internal_depth
 
 
 func internal_cell_size() -> float:
-	if _config == null:
-		return 0.5
-	return _config.internal_cell_size()
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	return _internal_cell
+
+
+## Reads the grid's shape and the area's placement off the config and the node,
+## once, so the hot paths above are three field reads instead of a matrix
+## inverse and three trips through References.
+func _refresh_grid_cache() -> void:
+	var config: GameConfig = _config
+	if config == null:
+		return
+	_internal_width = config.area_width_cells * config.internal_cells_per_cell
+	_internal_depth = config.area_depth_cells() * config.internal_cells_per_cell
+	_internal_cell = config.internal_cell_size()
+	_grid_to_world = global_transform
+	_grid_from_world = _grid_to_world.affine_inverse()
+	_grid_cache_ready = true
+
+
+## An area is placed once and never moves, but "never" is a claim about today's
+## Main rather than a property of this class - so the cache is invalidated if it
+## ever does, instead of quietly reporting cells from where the area used to be.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSFORM_CHANGED:
+		_grid_cache_ready = false
 
 
 ## First internal row of the buildable zone. Everything above is spawn.
@@ -467,18 +518,22 @@ func _rebuild_flow_field() -> void:
 ## Internal cell containing a world point, unclamped, so a caller can tell an
 ## off-grid point from an edge one.
 func world_to_internal_cell(world_pos: Vector3) -> Vector2i:
-	var local: Vector3 = to_local(world_pos)
-	var size: float = internal_cell_size()
-	return Vector2i(int(floor(local.x / size)), int(floor(local.z / size)))
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	var local: Vector3 = _grid_from_world * world_pos
+	return Vector2i(
+		int(floor(local.x / _internal_cell)), int(floor(local.z / _internal_cell))
+	)
 
 
 func internal_cell_center(cell: Vector2i) -> Vector3:
-	var size: float = internal_cell_size()
-	return to_global(Vector3(
-		(float(cell.x) + 0.5) * size,
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	return _grid_to_world * Vector3(
+		(float(cell.x) + 0.5) * _internal_cell,
 		0.0,
-		(float(cell.y) + 0.5) * size
-	))
+		(float(cell.y) + 0.5) * _internal_cell
+	)
 
 
 ## The whole route from a world point to the end zone, as internal cells in
@@ -562,6 +617,21 @@ func creeps_root() -> Node3D:
 ## filters those out, and that has not moved.
 func creeps() -> Array[Creep]:
 	return _creeps
+
+
+## The creeps that MIGHT be within radius of a world point - a superset, which
+## the caller narrows by testing the exact distance itself.
+##
+## The accelerated form of creeps() above, and the one every range question
+## should ask: a tower's target search and a creep's aura sweep both used to
+## read the whole lane and discard most of it. See CreepIndex, which is where
+## the reasoning lives.
+func creeps_near(center: Vector3, radius: float) -> Array[Creep]:
+	if _creep_index == null:
+		var config: GameConfig = References.game_config
+		var size: float = 2.0 if config == null else config.creep_index_cell_size
+		_creep_index = CreepIndex.new(size)
+	return _creep_index.near(_creeps, center, radius)
 
 
 ## Starts keeping that list in step with the creeps root.

@@ -720,6 +720,17 @@ func _orderable(ability: UnitAbility, units: Array, queued: bool) -> Array:
 ## when the builder reaches it - so this is the one place that knows which of
 ## the two questions applies, rather than every call site guessing.
 func _can_order(ability: UnitAbility, unit: Unit, queued: bool) -> bool:
+	# OWNERSHIP FIRST, because that is the order the server asks in: it refuses
+	# a unit belonging to somebody else before it looks at the ability at all.
+	# Leaving it out here did not let anything through - the server refused
+	# every one - but a right click with an opponent's builder selected sent a
+	# Move order per tick that could only ever come back rejected.
+	#
+	# It belongs here rather than in the selection, because selecting an
+	# opponent's unit to read their build is legal and wanted. What is not
+	# wanted is offering an ORDER for it.
+	if unit == null || !unit.is_owned_by_local_player():
+		return false
 	if queued && ability.is_queueable():
 		return ability.can_queue(unit)
 	return ability.can_execute(unit)

@@ -1,12 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bl5vjeuaxaso3"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Menus/LobbySettingsPanel.gd" id="1_settings"]
+[ext_resource type="Script" uid="uid://dg6g4qp3hfevb" path="res://Scripts/UI/Menus/LobbySettingsPanel.gd" id="1_settings"]
+[ext_resource type="Theme" path="res://Resources/UI/lobby_compact_theme.tres" id="2_compact"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-content_margin_left = 14.0
-content_margin_top = 10.0
-content_margin_right = 14.0
-content_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
 bg_color = Color(0.086, 0.094, 0.118, 1)
 border_width_left = 1
 border_width_top = 1
@@ -18,7 +19,8 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[node name="LobbySettingsPanel" type="PanelContainer" node_paths=PackedStringArray("_lives_spin", "_lives_label", "_gold_spin", "_research_spin", "_income_spin", "_interval_spin", "_ranked_check", "_creeps_option", "_lanes_check", "_tech_option", "_modifier_option", "_defaults_button", "_hint_label")]
+[node name="LobbySettingsPanel" type="PanelContainer" unique_id=2040763823 node_paths=PackedStringArray("_lives_spin", "_lives_label", "_gold_spin", "_research_spin", "_income_spin", "_interval_spin", "_ranked_check", "_creeps_option", "_lanes_check", "_cheats_check", "_tech_option", "_modifier_option", "_defaults_button", "_hint_label")]
+theme = ExtResource("2_compact")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_settings")
 _lives_spin = NodePath("Column/Columns/Resources/Grid/LivesSpin")
@@ -27,192 +29,202 @@ _gold_spin = NodePath("Column/Columns/Resources/Grid/GoldSpin")
 _research_spin = NodePath("Column/Columns/Resources/Grid/ResearchSpin")
 _income_spin = NodePath("Column/Columns/Resources/Grid/IncomeSpin")
 _interval_spin = NodePath("Column/Columns/Resources/Grid/IntervalSpin")
-_ranked_check = NodePath("Column/Columns/Gameplay/RankedCheck")
+_ranked_check = NodePath("Column/Columns/Gameplay/ChecksRow/RankedCheck")
 _creeps_option = NodePath("Column/Columns/Gameplay/CreepsRow/CreepsOption")
-_lanes_check = NodePath("Column/Columns/Gameplay/LanesCheck")
+_lanes_check = NodePath("Column/Columns/Gameplay/ChecksRow/LanesCheck")
+_cheats_check = NodePath("Column/Columns/Gameplay/ChecksRow/CheatsCheck")
 _tech_option = NodePath("Column/Columns/Gameplay/TechRow/TechOption")
 _modifier_option = NodePath("Column/Columns/Modifier/ModifierOption")
 _defaults_button = NodePath("Column/Footer/DefaultsButton")
 _hint_label = NodePath("Column/Footer/HintLabel")
 
-[node name="Column" type="VBoxContainer" parent="."]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Columns" type="HBoxContainer" parent="Column"]
-layout_mode = 2
-theme_override_constants/separation = 28
-
-[node name="Resources" type="VBoxContainer" parent="Column/Columns"]
+[node name="Column" type="VBoxContainer" parent="." unique_id=1348648220]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Header" type="Label" parent="Column/Columns/Resources"]
+[node name="Columns" type="HBoxContainer" parent="Column" unique_id=909126042]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Resources" type="VBoxContainer" parent="Column/Columns" unique_id=970832718]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Header" type="Label" parent="Column/Columns/Resources" unique_id=660315577]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 8
 text = "RESOURCES"
 
-[node name="Grid" type="GridContainer" parent="Column/Columns/Resources"]
+[node name="Grid" type="GridContainer" parent="Column/Columns/Resources" unique_id=375164990]
 layout_mode = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 2
-columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
+columns = 6
 
-[node name="LivesLabel" type="Label" parent="Column/Columns/Resources/Grid"]
+[node name="LivesLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=1149644432]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Lives (auto)"
+horizontal_alignment = 2
 
-[node name="LivesSpin" type="SpinBox" parent="Column/Columns/Resources/Grid"]
-custom_minimum_size = Vector2(130, 0)
+[node name="LivesSpin" type="SpinBox" parent="Column/Columns/Resources/Grid" unique_id=1644993630]
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 500.0
 value = 100.0
 
-[node name="GoldLabel" type="Label" parent="Column/Columns/Resources/Grid"]
+[node name="GoldLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=1580943061]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Starting gold"
+horizontal_alignment = 2
 
-[node name="GoldSpin" type="SpinBox" parent="Column/Columns/Resources/Grid"]
-custom_minimum_size = Vector2(130, 0)
+[node name="GoldSpin" type="SpinBox" parent="Column/Columns/Resources/Grid" unique_id=1853644020]
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 10000000.0
 step = 10.0
 
-[node name="ResearchLabel" type="Label" parent="Column/Columns/Resources/Grid"]
+[node name="ResearchLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=848343925]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Research points"
+horizontal_alignment = 2
 
-[node name="ResearchSpin" type="SpinBox" parent="Column/Columns/Resources/Grid"]
-custom_minimum_size = Vector2(130, 0)
+[node name="ResearchSpin" type="SpinBox" parent="Column/Columns/Resources/Grid" unique_id=2139923236]
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 30.0
 
-[node name="IncomeLabel" type="Label" parent="Column/Columns/Resources/Grid"]
+[node name="IncomeLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=86911462]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Starting income"
+horizontal_alignment = 2
 
-[node name="IncomeSpin" type="SpinBox" parent="Column/Columns/Resources/Grid"]
-custom_minimum_size = Vector2(130, 0)
+[node name="IncomeSpin" type="SpinBox" parent="Column/Columns/Resources/Grid" unique_id=1434742046]
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 1000000.0
 step = 5.0
 
-[node name="IntervalLabel" type="Label" parent="Column/Columns/Resources/Grid"]
+[node name="IntervalLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=1270581647]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 6
 text = "Income timer"
+horizontal_alignment = 2
 
-[node name="IntervalSpin" type="SpinBox" parent="Column/Columns/Resources/Grid"]
-custom_minimum_size = Vector2(130, 0)
+[node name="IntervalSpin" type="SpinBox" parent="Column/Columns/Resources/Grid" unique_id=1979355268]
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 300.0
 value = 10.0
 suffix = "s"
 
-[node name="Gameplay" type="VBoxContainer" parent="Column/Columns"]
+[node name="Gameplay" type="VBoxContainer" parent="Column/Columns" unique_id=1712910494]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 3
 
-[node name="Header" type="Label" parent="Column/Columns/Gameplay"]
+[node name="Header" type="Label" parent="Column/Columns/Gameplay" unique_id=1968199722]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 8
 text = "GAMEPLAY"
 
-[node name="RankedCheck" type="CheckButton" parent="Column/Columns/Gameplay"]
+[node name="ChecksRow" type="HBoxContainer" parent="Column/Columns/Gameplay"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RankedCheck" type="CheckButton" parent="Column/Columns/Gameplay/ChecksRow" unique_id=1657578926]
 layout_mode = 2
 tooltip_text = "A ranked match is played on the standard rules. Everything but the technology mode is locked."
 text = "Ranked"
 
-[node name="CreepsRow" type="HBoxContainer" parent="Column/Columns/Gameplay"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="CreepsLabel" type="Label" parent="Column/Columns/Gameplay/CreepsRow"]
-custom_minimum_size = Vector2(86, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
-text = "Creeps"
-
-[node name="CreepsOption" type="OptionButton" parent="Column/Columns/Gameplay/CreepsRow"]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-
-[node name="LanesCheck" type="CheckButton" parent="Column/Columns/Gameplay"]
+[node name="LanesCheck" type="CheckButton" parent="Column/Columns/Gameplay/ChecksRow" unique_id=1455447005]
 layout_mode = 2
 tooltip_text = "Shuffles who plays which lane, so the send order is not the join order."
 text = "Random lanes"
 
-[node name="TechRow" type="HBoxContainer" parent="Column/Columns/Gameplay"]
+[node name="CheatsCheck" type="CheckButton" parent="Column/Columns/Gameplay/ChecksRow"]
+layout_mode = 2
+tooltip_text = "Developer cheats answer in this match, for everybody in it. Cannot be combined with Ranked."
+text = "Cheats"
+
+[node name="CreepsRow" type="HBoxContainer" parent="Column/Columns/Gameplay" unique_id=630893368]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TechLabel" type="Label" parent="Column/Columns/Gameplay/TechRow"]
-custom_minimum_size = Vector2(86, 0)
+[node name="CreepsLabel" type="Label" parent="Column/Columns/Gameplay/CreepsRow" unique_id=1329062242]
+custom_minimum_size = Vector2(56, 0)
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
-theme_override_font_sizes/font_size = 14
-text = "Tech mode"
+theme_override_font_sizes/font_size = 6
+text = "Creeps"
+horizontal_alignment = 2
 
-[node name="TechOption" type="OptionButton" parent="Column/Columns/Gameplay/TechRow"]
-custom_minimum_size = Vector2(200, 0)
+[node name="CreepsOption" type="OptionButton" parent="Column/Columns/Gameplay/CreepsRow" unique_id=111648225]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+
+[node name="TechRow" type="HBoxContainer" parent="Column/Columns/Gameplay" unique_id=709628305]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TechLabel" type="Label" parent="Column/Columns/Gameplay/TechRow" unique_id=1372617685]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
+theme_override_font_sizes/font_size = 6
+text = "Tech mode"
+horizontal_alignment = 2
+
+[node name="TechOption" type="OptionButton" parent="Column/Columns/Gameplay/TechRow" unique_id=1949340802]
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 tooltip_text = "Pick Tech: spend your free research yourself.
 Random: one Ultimate is rolled for everybody.
 Draft: everybody picks one of the same three Ultimates before the match starts."
 
-[node name="Modifier" type="VBoxContainer" parent="Column/Columns"]
+[node name="Modifier" type="VBoxContainer" parent="Column/Columns" unique_id=1738799104]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 3
 
-[node name="Header" type="Label" parent="Column/Columns/Modifier"]
+[node name="Header" type="Label" parent="Column/Columns/Modifier" unique_id=1258153622]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 8
 text = "MODIFIER"
 
-[node name="ModifierOption" type="OptionButton" parent="Column/Columns/Modifier"]
-custom_minimum_size = Vector2(170, 0)
+[node name="ModifierOption" type="OptionButton" parent="Column/Columns/Modifier" unique_id=695053115]
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 tooltip_text = "Anonymous: players are shown by their colour instead of their name, in the match only."
 
-[node name="Footer" type="HBoxContainer" parent="Column"]
+[node name="Footer" type="HBoxContainer" parent="Column" unique_id=308837208]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HintLabel" type="Label" parent="Column/Footer"]
+[node name="HintLabel" type="Label" parent="Column/Footer" unique_id=8974839]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.5, 0.53, 0.61, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 8
 text = "Only the host can change these."
 
-[node name="FooterSpacer" type="Control" parent="Column/Footer"]
+[node name="FooterSpacer" type="Control" parent="Column/Footer" unique_id=301498893]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="DefaultsButton" type="Button" parent="Column/Footer"]
-custom_minimum_size = Vector2(130, 0)
+[node name="DefaultsButton" type="Button" parent="Column/Footer" unique_id=377880167]
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Defaults"

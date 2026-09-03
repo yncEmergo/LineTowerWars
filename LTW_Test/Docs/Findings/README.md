@@ -13,6 +13,7 @@ in `Docs/` may.
 | File | What it covers |
 | --- | --- |
 | [2026-08-29-performance.md](2026-08-29-performance.md) | First load test of the simulation and the renderer. Where a tick goes, what drawing costs, what was fixed and what is still open. |
+| [2026-09-03-server-tick-overrun.md](2026-09-03-server-tick-overrun.md) | Stutter on mass creep spawns in the first remote match: the server misses its tick. Where a creep tick actually goes, what was wrong about the first three guesses, and the three fixes that came out of it. |
 
 ## Writing one
 

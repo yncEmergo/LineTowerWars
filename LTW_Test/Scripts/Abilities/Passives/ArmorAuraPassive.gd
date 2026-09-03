@@ -18,6 +18,10 @@ extends CreepPassive
 @export var armor_bonus: int = 3
 
 
+func grants_aura() -> bool:
+	return true
+
+
 func aura_armor_bonus(_creep: Creep) -> int:
 	return armor_bonus
 
