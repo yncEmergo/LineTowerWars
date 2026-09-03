@@ -18,7 +18,7 @@
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_ProjectileDelivery")
 projectile_scene_path = "res://Scenes/Effects/arcane_orb.tscn"
-speed = 9
+speed = 27
 impact_scene_path = "res://Scenes/Effects/arcane_impact.tscn"
 
 [sub_resource type="Resource" id="Attack"]

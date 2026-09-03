@@ -247,14 +247,22 @@ static func aura_stack_interval() -> float:
 ##
 ## Every stacking aura in the roster goes through here, which is what makes
 ## them one mechanic rather than three that happen to look alike. The KEY is
-## the ability's own resource path, so two towers running the same aura feed
-## one grip on the creep and two different auras never interfere.
+## AUTHORED and names the LINE, so every tower of that line feeds one grip on
+## the creep - two Sludge Monstrosities stack it twice as fast, and a Lesser
+## and an Ultimate are still one aura - while two different lines never
+## interfere.
 ##
 ## The window every effect is applied for is AURA_HOLD_SECONDS, comfortably
 ## longer than the beat, so a creep standing still never flickers between
 ## beats - see the note on that constant.
-static func grip_aura(passive: TowerPassive, creep: Creep) -> float:
-	return creep.status().touch_aura(passive)
+static func grip_aura(passive: TowerPassive, creep: Creep, key: String) -> float:
+	return creep.status().touch_aura(passive, key)
+
+
+## How many stacks of one aura a creep is holding, for an effect stated per
+## stack rather than as a share of a full grip.
+static func aura_stacks_on(creep: Creep, key: String) -> int:
+	return creep.status().aura_stacks(key)
 
 
 ## The status effects on a struck unit, or null when it is not a creep at all.

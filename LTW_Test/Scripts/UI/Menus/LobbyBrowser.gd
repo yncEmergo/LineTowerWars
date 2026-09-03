@@ -111,6 +111,7 @@ func _connect_network() -> void:
 	Net.status_changed.connect(_on_network_status_changed)
 	Net.connection_failed.connect(_on_connection_failed)
 	Net.disconnected_from_server.connect(_on_server_disconnected)
+	Net.attempting_address.connect(_on_attempting_address)
 
 	Lobby.lobby_list_changed.connect(_on_lobby_list_changed)
 	Lobby.current_lobby_changed.connect(_on_current_lobby_changed)
@@ -164,9 +165,32 @@ func _on_network_status_changed(_new_status: NetworkService.Status) -> void:
 	_update_status()
 
 
+## Says what was actually TRIED, not where we would have started. With more than
+## one address in the list, "is the server running at 127.0.0.1?" would be true
+## of one attempt out of several and misleading about the rest.
 func _on_connection_failed(result: NetworkService.Result) -> void:
+	var detail: String = Net.refusal_detail()
+	if !detail.is_empty():
+		_set_status(detail)
+		return
+
+	var tried: PackedStringArray = Net.attempted_addresses()
+	if tried.size() > 1:
+		_set_status("%s - tried %s on port %d." % [
+			NetworkService.describe(result), ", ".join(tried), _server_port(),
+		])
+		return
 	_set_status("%s - is the server running at %s?" % [
 		NetworkService.describe(result), _server_text(),
+	])
+
+
+func _on_attempting_address(address: String, index: int, of: int) -> void:
+	if of <= 1:
+		_set_status("Connecting to %s:%d..." % [address, _server_port()])
+		return
+	_set_status("Looking for a server: %s (%d of %d)..." % [
+		address, index, of,
 	])
 
 
@@ -196,11 +220,24 @@ func _connected_text() -> String:
 	]
 
 
+## The address this screen should NAME right now: the one being dialled while a
+## walk is in progress, and the one that would be dialled first before any has
+## been. Net is asked first because only it knows how far along the list we are.
 func _server_text() -> String:
 	var config: NetworkConfig = References.network_config
 	if config == null:
 		return "the server"
-	return "%s:%d" % [config.resolved_address(), config.resolved_port()]
+	var address: String = Net.current_address()
+	if address.is_empty():
+		address = config.resolved_address()
+	return "%s:%d" % [address, config.resolved_port()]
+
+
+func _server_port() -> int:
+	var config: NetworkConfig = References.network_config
+	if config == null:
+		return 0
+	return config.resolved_port()
 
 
 # --- buttons --------------------------------------------------------------

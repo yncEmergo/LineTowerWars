@@ -51,6 +51,12 @@ const DEFAULT_SLOW_SECONDS: float = 4.0
 ## expiring on this very tick and a creep should be walking again.
 const EPSILON: float = 0.0001
 
+## How long a STATED slow holds its value before a weaker statement may replace
+## it. Longer than an aura's beat so a tower restating the same number never
+## fights itself, short enough that losing the strongest tower in a line shows
+## up immediately. See Chill.stated.
+const RESTATE_SECONDS: float = 0.75
+
 ## One accumulating chill, keyed by whoever is applying it.
 ##
 ## A CLASS rather than three parallel dictionaries because the three numbers
@@ -64,8 +70,19 @@ class Chill extends RefCounted:
 	## Seconds left before it wears off entirely.
 	var seconds_left: float = 0.0
 	## ability_id of whatever last added to it, so the HUD can picture it. Not
-	## the cap key, which is authored per TIER and is a rule rather than a name.
+	## the cap key, which is authored per LINE and is a rule rather than a name.
 	var source_id: int = StatusEntry.NO_SOURCE
+	## Seconds since `amount` was last raised, for a slow that is STATED on a
+	## beat rather than accumulated - an aura restates what its stack pile is
+	## worth several times a second.
+	##
+	## What it buys is that a LOWER statement can take over once whatever set
+	## the higher one has stopped saying it: sell the Ultimate Sludge and the
+	## Lesser standing beside it takes the slow down to its own within a beat,
+	## rather than the creep keeping the dead tower's number for as long as it
+	## stays in range. "The highest in that line AT THE TIME" is the rule; this
+	## is the "at the time" half of it.
+	var stated: float = 0.0
 
 
 ## One aura's hold on this creep, keyed by whichever ability is applying it.
@@ -191,6 +208,13 @@ var _owners: Dictionary = {}
 ## creep nothing has ever touched never even asks. See CreepPassive.
 var _duration_ratio: float = 1.0
 var _chill_ratio: float = 1.0
+## A FURTHER share of a COLD slow that lands, on top of the one above. Read the
+## same way and for the same reason.
+##
+## Frost is the only kind of slow anything in the roster resists SPECIFICALLY,
+## which is what this is: the spell resistances shrug off an Ice tower and an
+## Ice disc and nothing else. See CreepPassive.cold_taken_ratio.
+var _cold_ratio: float = 1.0
 ## The longest any harmful effect may run on this creep whatever it asked for,
 ## or 0 for no ceiling. Read off the passives with the two ratios above and for
 ## the same reason - it cannot change while the creep walks.
@@ -206,6 +230,15 @@ var _max_slow: float = 1.0
 ## is the one thing here with no clock at all. Sources ADD, because two shields
 ## on one creep are two shields.
 var _shield: float = 0.0
+## The most it has ever held, which is what a shield BAR is drawn against - the
+## background behind the fill is how much of it has already been spent.
+##
+## Kept rather than derived, because nothing else remembers it: a shield is a
+## pool with no clock, and once a hit has eaten half of one there is no other
+## record of how big it was. Reset to zero the moment the pool empties, so a
+## creep that is shielded again starts a fresh bar rather than one that looks
+## nine tenths gone.
+var _shield_max: float = 0.0
 ## Seconds left of taking no damage whatever. Elune's Grace is the only thing
 ## that grants one, and it is a window rather than a pool.
 var _ward_left: float = 0.0
@@ -241,6 +274,7 @@ func _init(creep: Creep) -> void:
 	for passive in creep.passives():
 		_duration_ratio *= passive.harmful_duration_ratio()
 		_chill_ratio *= passive.chill_taken_ratio()
+		_cold_ratio *= passive.cold_taken_ratio()
 		_max_slow = minf(_max_slow, passive.max_slow_share())
 		var cap: float = passive.harmful_duration_cap()
 		if cap > 0.0:
@@ -251,21 +285,30 @@ func _init(creep: Creep) -> void:
 
 ## Share of its normal speed this creep moves at right now, 0 to 1.
 ##
-## The WORST chill on it wins rather than the sum: two towers each slowing 40%
-## leave a creep at 60% speed, not at 20%. That is the WC3 convention and it is
-## what stops a lane of one tower type stopping a pack dead.
+## Slows from DIFFERENT sources MULTIPLY, and slows from the same one do not.
+## Two towers of different lines each taking 40% leave a creep at 36% speed
+## rather than at 60% or at 20%: each one takes its share of what is left, so
+## piling more on always helps and never stops the creep dead.
+##
+## Within one source key there is a single accumulating chill, so a whole line
+## of Sludge Monstrosities is ONE slow however many of them are grinding - the
+## strongest cap in that line is what it climbs to. That is what a "path" means
+## here, and it is why the key is AUTHORED per line rather than taken off the
+## .tres: which towers share a slow is a balance decision, and reading it off
+## the resource would give every tier its own and let a line stack with itself.
+## See the chill() note below.
 func move_ratio() -> float:
 	if _stun_left > EPSILON || _paralyze_left > EPSILON:
 		return 0.0
 
-	var worst: float = 0.0
+	var moving: float = 1.0
 	for key in _chills:
-		worst = maxf(worst, (_chills[key] as Chill).amount)
+		moving *= 1.0 - (_chills[key] as Chill).amount
 	# The creep's own ceiling on being slowed, applied to the PILE rather than
 	# to each chill as it lands: "cannot be slowed by more than 25%" is a
 	# statement about the total, and clamping each application instead would
 	# let four towers reach 100% a quarter at a time.
-	return clampf(1.0 - minf(worst, _max_slow), 0.0, 1.0)
+	return clampf(1.0 - minf(1.0 - moving, _max_slow), 0.0, 1.0)
 
 
 ## Whether the creep is held still and cannot act. Stun and paralyze both, from
@@ -364,6 +407,12 @@ func shield_points() -> float:
 	return _shield
 
 
+## The most that shield has ever held, or 0 when there is none. What the bar is
+## drawn against.
+func shield_max() -> float:
+	return _shield_max
+
+
 ## Multiplier on this creep's movement speed from anything HASTENING it, which
 ## is one packmate's trait and nothing a tower ever does. Never below 1.
 func haste_ratio() -> float:
@@ -395,40 +444,66 @@ func poison_damage() -> int:
 ## Adds one hit of an accumulating chill and refreshes its window.
 ##
 ## `per_hit` and `cap` are shares, so unit_data.md's "-5.5% per hit up to -30%"
-## is chill(ability, key, 0.055, 0.30, seconds). The KEY is what gives each
-## tower type its own cap; two Lesser Liches share one, which is deliberate and
-## matches the source game treating a slow as a property of the ability.
+## is chill(ability, key, 0.055, 0.30, seconds, cold).
+##
+## THE KEY IS THE PATH. Every tier of one upgrade line authors the same one, so
+## a Lesser and an Ultimate Sludge Monstrosity feed ONE accumulating chill that
+## climbs to whichever of them has the higher cap - they do not stack, and the
+## stronger simply wins. Different lines are different keys and multiply
+## against each other; see move_ratio.
 ##
 ## The key stays separate from the ability rather than being derived from it,
-## because it is AUTHORED: which towers share a cap is a balance decision a
-## .tres makes, and reading it off the resource instead would quietly take that
-## knob away.
+## because it is AUTHORED: which towers share a slow is a balance decision a
+## .tres makes, and reading it off the resource would give every TIER its own
+## and let a line stack with itself.
+##
+## `cold` says this is FROST - an Ice tower or an Ice disc - which is the only
+## kind of slow anything in the roster resists specifically.
 func chill(source: UnitAbility, key: String, per_hit: float, cap: float,
-		seconds: float) -> void:
+		seconds: float, cold: bool) -> void:
 	if !_may_write() || per_hit <= 0.0 || cap <= 0.0:
 		return
 
 	# The creep's own resistance blunts the chill and its cap together. Blunting
 	# only what lands would leave the cap where it was, and a resistant creep
 	# would still reach the full slow eventually - just later, which is the
-	# opposite of what "50% immune to movement chill" means.
+	# opposite of what resisting a slow means.
+	var blunt: float = _slow_ratio(cold)
 	var entry: Chill = _chill_for(source, key)
-	entry.cap = maxf(entry.cap, cap * _chill_ratio)
-	entry.amount = minf(entry.amount + per_hit * _chill_ratio, entry.cap)
-	entry.seconds_left = maxf(entry.seconds_left, _harmful_seconds(_lengthened(seconds)))
+	entry.cap = maxf(entry.cap, cap * blunt)
+	entry.amount = minf(entry.amount + per_hit * blunt, entry.cap)
+	# An ACCUMULATING chill only ever climbs, so it holds its own claim on the
+	# key for as long as it is being fed - see Chill.stated.
+	entry.stated = 0.0
+	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds))
 
 
 ## Applies a flat slow that does not accumulate: the magnitude is the whole of
 ## it and re-applying only refreshes the window. Holy 2's Luminous Grasp.
-func slow(source: UnitAbility, key: String, amount: float, seconds: float) -> void:
+func slow(source: UnitAbility, key: String, amount: float, seconds: float,
+		cold: bool) -> void:
 	if !_may_write() || amount <= 0.0:
 		return
 
-	var blunted: float = amount * _chill_ratio
+	var blunted: float = amount * _slow_ratio(cold)
 	var entry: Chill = _chill_for(source, key)
 	entry.cap = maxf(entry.cap, blunted)
-	entry.amount = maxf(entry.amount, blunted)
-	entry.seconds_left = maxf(entry.seconds_left, _harmful_seconds(_lengthened(seconds)))
+	# The strongest statement wins while it is still being made, and a weaker
+	# one takes over once the stronger has gone quiet for a beat. See
+	# Chill.stated.
+	if blunted >= entry.amount || entry.stated >= RESTATE_SECONDS:
+		entry.amount = blunted
+		entry.stated = 0.0
+	entry.seconds_left = maxf(entry.seconds_left, _slow_seconds(seconds))
+
+
+## Share of a slow that lands on this creep: what it resists of every slow, and
+## what it resists of frost on top when the slow is one.
+##
+## Both ways of applying a slow go through it, so a trait that says "cannot be
+## slowed" cannot be walked around by an effect that took the other route.
+func _slow_ratio(cold: bool) -> float:
+	return _chill_ratio * _cold_ratio if cold else _chill_ratio
 
 
 ## The chill accumulating under one cap key, created on the spot the first time
@@ -450,19 +525,22 @@ func _chill_for(source: UnitAbility, key: String) -> Chill:
 ## split every other effect here follows - a tower states what it does and the
 ## creep works out what that came to.
 ##
-## Keyed by the ABILITY rather than by the tower, so two towers running the same
-## aura feed one grip and a creep standing in both climbs to full twice as fast.
-## Two different auras are two grips and never interfere.
-func touch_aura(source: UnitAbility) -> float:
-	if !_may_write() || source == null:
+## Keyed by the PATH rather than by the tower or by one .tres, so every tower
+## feeding it feeds ONE pile: two Sludge Monstrosities standing over a creep
+## stack it twice as fast, and a Lesser and an Ultimate of the same line are
+## still the one aura rather than two. Two different lines are two grips and
+## never interfere. The key is authored, exactly as the chill key is - see
+## chill() for why.
+func touch_aura(source: UnitAbility, key: String) -> float:
+	if !_may_write() || source == null || key.is_empty():
 		return 0.0
 
-	var key: String = source.resource_path
 	var grip: Grip = _grips.get(key) as Grip
 	if grip == null:
 		grip = Grip.new()
-		grip.source_id = _id_of(source)
 		_grips[key] = grip
+	# Whoever last fed it owns the icon, the way a merged chill does.
+	grip.source_id = _id_of(source)
 
 	# The touch resets the drain whether or not it could add anything, so a
 	# creep sitting at full stacks never starts losing them while it stands
@@ -472,18 +550,23 @@ func touch_aura(source: UnitAbility) -> float:
 	# One stack per touch, and the tower's own beat is what makes that one per
 	# `aura_stack_seconds`. Two towers touching means two stacks in that time.
 	grip.stacks = mini(_stack_ceiling(), grip.stacks + 1)
-	return aura_share(source)
+	return aura_share(key)
 
 
 ## The share of an aura's strength currently held, without touching it. For
 ## anything that has to read a grip it is not the one feeding.
-func aura_share(source: UnitAbility) -> float:
-	if source == null:
-		return 0.0
-	var grip: Grip = _grips.get(source.resource_path) as Grip
-	if grip == null:
-		return 0.0
-	return clampf(float(grip.stacks) / float(_stack_ceiling()), 0.0, 1.0)
+func aura_share(key: String) -> float:
+	var ceiling: int = _stack_ceiling()
+	return 0.0 if ceiling <= 0 else clampf(
+		float(aura_stacks(key)) / float(ceiling), 0.0, 1.0)
+
+
+## How many stacks of one aura are held, for an effect stated PER STACK rather
+## than as a share of a full grip - a Sludge Monstrosity's slow is "this much
+## per stack, up to that much", so it wants the count and not the fraction.
+func aura_stacks(key: String) -> int:
+	var grip: Grip = _grips.get(key) as Grip
+	return 0 if grip == null else grip.stacks
 
 
 ## Makes every slow APPLIED FROM NOW ON last longer, for a window. What "slow
@@ -678,7 +761,15 @@ func absorb(source: UnitAbility, amount: float) -> void:
 	if amount <= 0.0 || !_may_write():
 		return
 	_shield += amount
+	# Sources ADD here too, so two shields on one creep make one bar twice as
+	# long rather than a second one starting part-spent.
+	_shield_max += amount
 	_own(StatusEntry.Kind.SHIELDED, source)
+	# The bar is built the first time there is one to draw rather than with the
+	# health bar, so this is where the authority learns it has one. A client is
+	# told the same thing by the snapshot; see Unit.refresh_shield_bar.
+	if _creep != null && is_instance_valid(_creep):
+		_creep.refresh_shield_bar()
 
 
 ## Takes what it can out of the shield and answers what is LEFT to reach the
@@ -696,6 +787,7 @@ func spend_shield(landed: float) -> float:
 	_shield -= eaten
 	if _shield < 0.001:
 		_shield = 0.0
+		_shield_max = 0.0
 	return landed - eaten
 
 
@@ -1002,6 +1094,7 @@ func _advance_chills(delta: float) -> void:
 	var expired: Array = []
 	for key in _chills:
 		var entry: Chill = _chills[key] as Chill
+		entry.stated += delta
 		entry.seconds_left -= delta
 		if entry.seconds_left <= 0.0:
 			expired.append(key)
@@ -1110,16 +1203,14 @@ func _advance_mana_drain(delta: float) -> void:
 		_mana_drain_per_second = 0.0
 
 
-## A slow's duration with whatever is currently lengthening slows on this creep
-## folded in. Applied at the moment a slow lands and never afterwards.
 ## How long a harmful timed effect really runs on this creep, once its own
 ## resistance has been applied.
 ##
-## Every timed mutator above goes through it, so a creep that shortens harmful
-## durations shortens ALL of them - stun, burn, amplification, eaten armour -
-## rather than only the ones somebody remembered to route through here. The
-## slow lengthening is deliberately NOT folded in: that acts on slows alone and
-## has its own funnel below.
+## Every timed mutator above goes through it EXCEPT the two that apply a slow,
+## so a creep that shortens harmful durations shortens all the rest of them -
+## stun, burn, amplification, eaten armour - rather than only the ones somebody
+## remembered to route through here. The slow lengthening is deliberately NOT
+## folded in: that acts on slows alone and rides the funnel below.
 func _harmful_seconds(seconds: float) -> float:
 	var served: float = maxf(seconds, 0.0) * _duration_ratio
 	# The ceiling comes after the share, which is the order Regenerative Flesh
@@ -1128,7 +1219,23 @@ func _harmful_seconds(seconds: float) -> float:
 	return served if _duration_cap <= 0.0 else minf(served, _duration_cap)
 
 
-func _lengthened(seconds: float) -> float:
+## How long a SLOW runs on this creep, which is the one harmful window the
+## creep's duration resistance never touches.
+##
+## A creep resists a slow with chill_taken_ratio(), cold_taken_ratio() and
+## max_slow_share(), and with nothing else. Shortening the window as well would be charging it
+## twice for one trait: the Dragonspawn already takes half of every chill, and
+## a quarter-length window on top of that left it untouched by the two aura
+## slows in the game - a Sludge Monstrosity steps its chill every 1.5s and a
+## Titan Vault re-applies its own every beat, so a window cut to a fraction of
+## a second expired before the next step could build on it. What "resists
+## magic" means for a slow is that it lands smaller, not that it falls off
+## early. See unit_data.md 6.6 and game_rules.md.
+##
+## What it IS folded in with is whatever is currently lengthening slows on this
+## creep, which acts on slows alone and so has nowhere else to live. Applied at
+## the moment a slow lands and never afterwards - see lengthen_slows.
+func _slow_seconds(seconds: float) -> float:
 	var base: float = maxf(seconds, 0.0)
 	if base <= 0.0 || _slow_bonus_left <= EPSILON:
 		return base

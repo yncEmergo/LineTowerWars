@@ -219,7 +219,7 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferenceFilesFromOtherProjects/LineTowerWarsData/`. |
 | [content.md](Docs/content.md) | **The PROCEDURE**: how a tower, creep, disc or ability is added or changed — which files it is made of, which of them ModelGen generates and must not be hand-edited, how an id is picked, and what refuses bad content at boot. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
-| [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D27) behind it. The long one. |
+| [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D29) behind it. The long one. |
 | [server.md](Docs/server.md) | How to start, stop and aim the dedicated server. Controls only. |
 | [Docs/](Docs/) | The index for all of the above — which file answers what, and where a new document goes. |
 | [Docs/Findings/](Docs/Findings/) | Investigations: something measured, chased down or ruled out, written up and dated. |

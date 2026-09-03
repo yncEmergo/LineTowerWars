@@ -705,7 +705,8 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     - The damage line is left out entirely for anything that cannot attack, so a
       creep's panel carries no line that only ever says "not this one"
     - **it is the damage the thing standing there actually rolls**, not the
-      number on its stats. A tower that has permanently grown has the growth
+      number on its stats - read as the plain figure and whatever is tinted
+      beside it together. A tower that has permanently grown has the growth
       folded into the range and repeated on the end, so the line answers both
       "what does this hit for" and "how much of that did it earn". Same rule
       the armour line already follows, which shows the points a creep has left
@@ -718,10 +719,31 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       at right now and the distance it is reaching right now, not the two
       figures on its stats file. A technology disc lends a tower speed, reach
       or damage, and a creep aura takes speed and damage away - all of it lands
-      on these lines
+      on these lines, and nothing in the game changes either of those two
+      permanently, so on that line every point of difference is tinted
       - what is EARNED is repeated on the end and what is REACHING the tower is
         not, which is the whole difference between them: growth belongs to the
         tower and follows it, and an aura is a fact about where it is standing
+    - **a PERMANENT change is folded into the plain number and a TEMPORARY one
+      is written beside it, tinted.** Green for something helping the unit, red
+      for something hurting it, on every stat line the panel draws - armour,
+      damage, attack speed, reach
+      - the split is what the player is actually asking. What is permanent IS
+        the unit's number now, and belongs in the figure they read as the
+        unit: damage an Alchemist has devoured, armour a Divineshroom has eaten
+        for good, armour a packmate has handed over for the rest of a creep's
+        life, a creep's own trait. Drawing one of those as a change would say
+        something is about to wear off that never will
+      - what is temporary is a fact about where the unit is STANDING or about
+        what somebody has just done to it, and a player deciding whether to
+        step out of it, sell the thing granting it or wait for it to pass needs
+        to see exactly how much of the number goes with it
+      - **a technology disc counts as temporary** even though nothing ever
+        expires it, on that same reading: it stands beside the tower rather
+        than being part of it, and selling one takes its points away
+      - the base and the change always add back up to what the unit really is,
+        because the base is worked out by taking the change OFF the whole
+        answer rather than by rebuilding it from the permanent half
       - all four lines are re-read while the panel is open rather than written
         once, because a disc going up beside a tower moves them while the
         player is looking straight at the number
@@ -732,6 +754,18 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       running through zero rather than two rules meeting at it
   - Below those, attack speed and range, on a line that is left out entirely
     for anything that cannot attack
+  - **and MOVEMENT SPEED, for the things that move** - the creeps and the
+    builder - left out for every tower on the same grounds the damage line is
+    left out for a creep
+    - nothing in the game changes a creep's speed for good, so the plain figure
+      is always its authored one and every point of difference is tinted. A
+      creep crawling under four towers' worth of chill is the loudest case of a
+      temporary change in the game, and the line is where a player reads how
+      much of it is theirs
+  - **A SHIELD is drawn as the second resource**, in the bar and the line under
+    the portrait, in the teal an RTS has drawn a shield in for thirty years. It
+    wins over a pool where a unit has both, because a unit behind a shield is
+    not dying and that is the more important thing about it
   - **While the tower is on a clock, those stat lines give way to the
     countdown**: the picture of what the job is about, what it is called, the
     seconds left, and a bar
@@ -1401,9 +1435,19 @@ they shoot.
   - a creep gains one step per tower per interval while it is inside the radius,
     and every effect that aura applies is scaled by how many steps it holds. At
     the top of the ladder the aura is doing exactly what it says it does
+  - **THE STEP COUNT IS THE WHOLE MECHANIC.** An aura has one ladder and no
+    clock of its own beside it: what it is doing to a creep is read off that
+    count and restated on every beat, so it moves the instant a step lands or
+    drains. An aura that ran a second ramp on top would leave the debuff row
+    showing a full grip while the creep was barely touched, which is exactly
+    what the Sludge Monstrosity used to do
   - **standing in two of the same aura fills it twice as fast.** Each tower
-    grips separately, so massing a support tower buys something real rather than
-    being wasted on an effect that does not stack
+    lands its own step on its own beat, so massing a support tower buys
+    something real rather than being wasted on an effect that does not stack
+    - and every TIER of one line counts as the same aura: a Lesser and an
+      Ultimate over one creep fill one ladder between them, and what they do
+      with it is the stronger of the two rather than both. Same rule the slows
+      follow, and the same authored key
   - two DIFFERENT auras never interfere. Each is its own grip on the creep
   - once nothing has reached a creep for a short window, it starts losing steps
     on a clock. The grip LINGERS: crossing a gap between two towers, or briefly
@@ -1433,10 +1477,13 @@ never learns what the creep did with it.
 - **Chill** is a slow that ACCUMULATES towards its own cap. Every slow in
   `unit_data.md` is written "X% per hit, up to Y%", so being hit again by the
   same tower goes deeper until that tower's cap is reached
-  - each SOURCE keeps its own cap, which is what "up to 40%" means at all. Two
-    tiers of one line do not share one
-  - the WORST chill on a creep wins rather than the sum, so two towers each
-    slowing 40% leave it at 60% speed rather than at 20%
+  - each PATH keeps its own cap, which is what "up to 40%" means at all. Every
+    tier of one upgrade line shares it, so a Lesser and an Ultimate of the same
+    line are ONE slow climbing to whichever of their caps is higher - upgrading
+    a line replaces its slow rather than stacking a second copy of it
+  - slows from DIFFERENT paths MULTIPLY. Two lines each taking 40% leave a
+    creep at 36% speed, not 60% and not 20%: each takes its share of what is
+    left, so piling more on always helps and never stops the creep dead
   - a chill that runs out is forgotten rather than left at zero, so a creep that
     walked out of range and back in starts accumulating again
 - **Stun** holds a creep still and stops it acting. **Paralyze** does the same
@@ -1501,10 +1548,23 @@ never learns what the creep did with it.
   - a share of every harmful effect's DURATION, which is one number applied to
     all of them - a stun, a burn, an amplification, eaten armour - rather than
     to whichever ones somebody remembered
-  - a share of a movement chill's MAGNITUDE, which blunts the chill and its own
-    cap together. Blunting only what lands would leave the cap where it was and
-    a resistant creep would still reach the full slow, just later, which is the
-    opposite of what resisting a chill means
+    - **a SLOW is the one exception, and deliberately.** A creep resists a slow
+      by taking less of it and by refusing to be slowed past a line, and by
+      nothing else - shortening the window as well would charge it twice for
+      one trait. It also broke the two auras that slow: both re-apply a small
+      chill on a beat and build it up, so a window cut to a fraction of a
+      second expired before the next step could add to it and a resistant
+      creep walked through them untouched
+  - a share of a slow's MAGNITUDE, which blunts the slow and its own cap
+    together. Blunting only what lands would leave the cap where it was and a
+    resistant creep would still reach the full slow, just later, which is the
+    opposite of what resisting a slow means
+    - and a FURTHER share for a COLD slow on top of it, which is a separate
+      claim and a separate number. "Cannot be slowed" is about every slow in
+      the game; "50% immune to movement chill" is about FROST, and a creep
+      carrying only the second is ground down by a Sludge Monstrosity's aura
+      and held by a Titan Vault exactly as anything else is. Frost is an Ice
+      tower and an Ice disc, and nothing else
   - a CEILING on how far a slow may ever go, whatever has piled up. That is a
     different thing to blunting each chill: a resistance still lets four towers
     add up to something large, and a ceiling refuses the total past a line
@@ -1950,6 +2010,17 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
 - Spawn position is randomised: random x across the width, random y within a margin at the very top
   - Every creep of a pack rolls its own position, so a pack arrives spread out
 - Creeps carry a worldspace health bar like any damageable unit
+- **Anything carrying a SHIELD carries a second bar just above that one**, teal
+  and with a background behind it: the fill is what the shield still holds and
+  the empty part is how much of it has already been spent
+  - ABOVE the health bar rather than below, because a shield is what is spent
+    first. A tower's second resource sits below its health bar for the mirror
+    reason, and the two are then never confused at a glance
+  - it is NOT the player's to switch off, unlike the health bar. A shield is the
+    reason a unit is not dying, so one drawn with the health bar hidden would
+    look like a creep nothing was hurting
+  - it appears the moment a unit is shielded and disappears when the shield is
+    gone, so nothing is drawn for the great majority that never carry one
 - Creeps take no orders from anyone
   - They can be clicked to inspect, showing the normal unit panel with an empty
     command card, but never selected by a selection box and never commanded

@@ -13,4 +13,4 @@ icon = ExtResource("2_runic_monolith")
 slow_per_hit = 0.045
 slow_cap = 0.25
 slow_seconds = 4
-chill_source = "runic_monolith"
+chill_source = "ice"

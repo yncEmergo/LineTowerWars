@@ -169,15 +169,21 @@ static func armor_type_name(kind: ArmorType) -> String:
 ## alters for a few seconds at a time - see ArmorTypeChoiceAbility. -1 leaves it
 ## as this resource's own, which is what every caller but the panel wants.
 ##
+## `note` is whatever is temporarily changing those points, already written and
+## already tinted. It goes between the number and the TYPE rather than after
+## the bracket, because the two of them are one figure - "3 +2 (Heavy)" reads
+## as armour, and "3 (Heavy) +2" reads as though something were being added to
+## the word.
+##
 ## Anything invulnerable shows only the word: a point value next to the absence
 ## of damage would read as though the two were on the same scale.
-func armor_text(points: int, shown_type: int = -1) -> String:
+func armor_text(points: int, shown_type: int = -1, note: String = "") -> String:
 	var kind: ArmorType = armor_type
 	if shown_type >= 0:
 		kind = shown_type as ArmorType
 	if kind == ArmorType.INVULNERABLE:
 		return armor_type_name(kind)
-	return "%d  (%s)" % [points, armor_type_name(kind)]
+	return "%d%s  (%s)" % [points, note, armor_type_name(kind)]
 
 
 ## The prefab this describes, loaded the first time something spawns one.

@@ -6,7 +6,9 @@
 script = ExtResource("1_network_config")
 port = 7777
 max_peers = 32
-server_address = "127.0.0.1"
-connect_timeout_seconds = 5.0
+server_addresses = PackedStringArray("127.0.0.1", "100.106.22.50")
+connect_timeout_seconds = 3.0
+protocol_version = 1
+handshake_timeout_seconds = 5.0
 address_argument = "--address"
 port_argument = "--port"

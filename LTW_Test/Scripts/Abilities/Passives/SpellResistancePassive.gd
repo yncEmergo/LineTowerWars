@@ -34,8 +34,13 @@ extends CreepPassive
 ## Share of a harmful timed effect's window the creep serves. 0.25 is "harmful
 ## spell durations -75%", which is the Lesser resistance's figure.
 @export_range(0.0, 1.0, 0.01) var duration_ratio: float = 1.0
-## Share of a movement chill's magnitude that lands. 0.5 is the "50% immune to
+## Share of a COLD slow's magnitude that lands. 0.5 is the "50% immune to
 ## movement chill" every one of the resistances but the Major one carries.
+##
+## Frost alone. What these creeps resist is an Ice tower and an Ice disc, not
+## every slow in the game - a Dragonspawn is ground down by a Sludge
+## Monstrosity and held by a Titan Vault exactly as anything else is. See
+## CreepPassive.cold_taken_ratio.
 @export_range(0.0, 1.0, 0.05) var chill_ratio: float = 1.0
 
 
@@ -48,7 +53,7 @@ func harmful_duration_ratio() -> float:
 	return duration_ratio
 
 
-func chill_taken_ratio() -> float:
+func cold_taken_ratio() -> float:
 	return chill_ratio
 
 
@@ -65,13 +70,13 @@ func effect_text() -> String:
 		parts.append("Takes %d%% less spell damage"
 			% roundi((1.0 - damage_ratio) * 100.0))
 	if duration_ratio <= 0.0:
-		parts.append("harmful timed effects do not apply to it")
+		parts.append("harmful spell effects do not apply to it")
 	elif duration_ratio < 1.0:
-		parts.append("harmful effects last %d%% less"
+		parts.append("harmful spell effects last %d%% less"
 			% roundi((1.0 - duration_ratio) * 100.0))
 	if chill_ratio <= 0.0:
-		parts.append("cannot be slowed")
+		parts.append("immune to frost")
 	elif chill_ratio < 1.0:
-		parts.append("takes %d%% less of every slow"
+		parts.append("%d%% immune to frost"
 			% roundi((1.0 - chill_ratio) * 100.0))
 	return "" if parts.is_empty() else "%s." % ", ".join(parts)

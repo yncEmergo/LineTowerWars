@@ -394,7 +394,23 @@ func stop() -> void:
 func current_move_speed() -> float:
 	if _creep_stats == null:
 		return 0.0
+	if !MatchSession.is_authority():
+		# A client has neither the StatusEffects nor the aura scan, and both are
+		# in the records the server sent for this creep. Its own ceiling on
+		# being slowed is not, and need not be: that follows from its passives,
+		# which every machine has. Same split armor_value() makes.
+		return _creep_stats.move_speed * StatusEntry.move_speed_ratio_in(
+			StatusEntry.for_unit(self), _slow_ceiling())
 	return _move_speed()
+
+
+## The most this creep may ever be slowed, whatever has piled up on it, from
+## its own passives. 1.0 is no ceiling, which is every creep but one.
+func _slow_ceiling() -> float:
+	var ceiling: float = 1.0
+	for passive in _passives:
+		ceiling = minf(ceiling, passive.max_slow_share())
+	return ceiling
 
 
 func _move_speed() -> float:
@@ -846,9 +862,30 @@ func mana() -> CreepMana:
 ## every creep in a pack of three would be a row of blue lines walking down the
 ## lane.
 func secondary_resource() -> TowerResource:
+	# A SHIELD wins over a pool, because a creep behind one is not dying and
+	# that is by far the more important thing about it. Nothing in the roster
+	# carries both, so the order is a rule rather than a choice being made.
+	var ceiling: float = shield_maximum()
+	if ceiling > 0.0:
+		return TowerResource.shield(
+			int(round(shield_points())), int(round(ceiling)))
 	if _mana == null:
 		return null
 	return _mana.as_resource()
+
+
+## Damage standing in front of this creep's health. Its own pool on the
+## authority, and whatever the server last sent on a client - see Unit.
+func shield_points() -> float:
+	if !MatchSession.is_authority():
+		return super()
+	return 0.0 if _status == null else _status.shield_points()
+
+
+func shield_maximum() -> float:
+	if !MatchSession.is_authority():
+		return super()
+	return 0.0 if _status == null else _status.shield_max()
 
 
 ## Advances a clock one of this creep's passives owns and reports whether it

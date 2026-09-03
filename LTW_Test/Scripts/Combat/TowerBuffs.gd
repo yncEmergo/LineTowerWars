@@ -312,7 +312,7 @@ func _apply_chill(creep: Creep) -> void:
 	if source == null:
 		return
 	creep.status().chill(source, source.resource_path, per_hit,
-		value_of(Kind.CHILL_CAP), StatusEffects.DEFAULT_SLOW_SECONDS)
+		value_of(Kind.CHILL_CAP), StatusEffects.DEFAULT_SLOW_SECONDS, true)
 
 
 ## The armour an Unholy disc's attacks eat, permanently, down to zero.

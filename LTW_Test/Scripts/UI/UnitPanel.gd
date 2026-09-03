@@ -28,6 +28,12 @@ const FALLBACK_COMMAND_ROWS: int = 3
 const SELECTION_COLUMNS: int = 6
 const SELECTION_ROWS: int = 3
 
+## Colours a TEMPORARY change to a stat is written in beside the base number:
+## green for something helping the unit, red for something hurting it. The same
+## two the rest of the HUD already reads as health gained and health lost.
+const BUFF_COLOR: Color = Color(0.44, 0.89, 0.46)
+const DEBUFF_COLOR: Color = Color(0.90, 0.36, 0.34)
+
 @export_group("References")
 @export var _name_label: Label
 @export var _health_label: Label
@@ -44,17 +50,30 @@ const SELECTION_ROWS: int = 3
 ## builder and every Basic tower. Its colour is not a property of the prefab:
 ## the tower answers with it, so mana stays blue and a banked count is violet.
 @export var _resource_bar: StatBar
-@export var _damage_label: Label
-@export var _armor_label: Label
+## The three stat lines, and RICH text rather than plain because each of them
+## draws two things at once: what the unit is, and what is currently being done
+## to it. A disc's +2 armour is green and a curse's -30% attack speed is red,
+## both beside a base number that stays the ordinary colour - see _delta_text.
+## A Label can only ever be one colour, so the choice was this or a second
+## label per row.
+@export var _damage_label: RichTextLabel
+@export var _armor_label: RichTextLabel
 ## Attack speed and range. Hidden for anything that cannot attack, so a creep's
 ## panel does not carry an empty line.
-@export var _attack_label: Label
+@export var _attack_label: RichTextLabel
 ## How much ground one attack covers and how many creeps it strikes. Shown for
 ## anything that attacks, INCLUDING when the answer to both is nothing: "no
 ## splash" is a real and important property of a tower, and a line that only
 ## appeared on the towers that had some would make the ones that do not read as
 ## if the panel had forgotten to say.
 @export var _splash_label: Label
+## How fast the unit travels, for the units that travel at all - the creeps and
+## the builder. Hidden for every tower, so a tower's panel carries no line that
+## only ever says "not this one", the same rule the damage line follows.
+##
+## Rich text for the reason the three above it are: a creep under a chill is
+## the loudest case of a stat being temporarily changed in the whole game.
+@export var _speed_label: RichTextLabel
 ## Shown INSTEAD of the stat lines while the selected tower is busy with
 ## something on a clock - selling, upgrading, reverting to a Core. The panel
 ## says one thing at a time, and while a countdown is running that is the one
@@ -283,6 +302,7 @@ func show_unit(unit: Variant) -> void:
 	_set_resource_text(unit)
 	_set_damage_text(_unit)
 	_apply_armor_label()
+	_set_speed_text(_unit)
 	_set_attack_text(_unit)
 	_refresh_bars()
 	_refresh_job()
@@ -367,13 +387,14 @@ func _set_damage_text(unit: Unit) -> void:
 
 
 ## The damage line for one unit, with everything currently changing it folded
-## in. Two different things, and both belong here:
+## in. Two different things, and they are drawn DIFFERENTLY:
 ##
 ##   what the unit has EARNED and keeps - an Alchemist that has devoured a
-##   hundred points of damage hits for a hundred more than its stats say, and
-##   the panel is where a player finds that out
+##   hundred points of damage hits for a hundred more than its stats say - is
+##   the unit's damage now and goes into the plain base figure
 ##   what is REACHING it right now - a Void disc lending it damage, an
-##   Obsidian Statue drifting past taking some away
+##   Obsidian Statue drifting past taking some away - is drawn beside that as a
+##   tinted change, because it stops the moment the thing applying it does
 ##
 ## Asked of the UNIT rather than read off its stats, for the same reason the
 ## armour line is: the number on the resource is the base, and what is standing
@@ -381,8 +402,41 @@ func _set_damage_text(unit: Unit) -> void:
 func _damage_line(unit: Unit) -> String:
 	var tower: Building = unit as Building
 	var bonus: int = 0 if tower == null else tower.permanent_damage_bonus()
-	return "Damage:   %s" % unit.stats.damage_text(
-		bonus, unit.attack_damage_ratio())
+	var lent: float = StatusEntry.attack_damage_ratio_in(StatusEntry.for_unit(unit))
+	# The base is what the unit would hit for with nothing on it, which is its
+	# whole answer divided by the part that is temporary. Read that way round
+	# rather than rebuilt from the permanent half, so the base and the change
+	# always add back up to the number the unit really deals.
+	var whole: float = unit.attack_damage_ratio()
+	var base: float = whole if is_zero_approx(lent) else whole / lent
+	var attack: AttackStats = unit.stats.attack
+	return "Damage:   %s%s" % [
+		unit.stats.damage_text(bonus, base),
+		_damage_delta_text(attack, bonus, base, whole),
+	]
+
+
+## What a temporary ratio is worth to the damage RANGE, as the tinted change
+## the base number carries beside it - "+5 - +6", or one number when both ends
+## move by the same amount.
+##
+## Both ends are worked out through AttackStats.scaled_damage rather than by
+## multiplying here, because the order the bonus and the ratio are applied in is
+## the damage pipeline's and is stated in exactly one place.
+func _damage_delta_text(attack: AttackStats, bonus: int, base: float,
+		whole: float) -> String:
+	if attack == null || is_equal_approx(base, whole):
+		return ""
+	var low: int = attack.scaled_damage(attack.damage_min, bonus, whole)
+	var high: int = attack.scaled_damage(attack.damage_max, bonus, whole)
+	low -= attack.scaled_damage(attack.damage_min, bonus, base)
+	high -= attack.scaled_damage(attack.damage_max, bonus, base)
+	if low == 0 && high == 0:
+		return ""
+	if low == high:
+		return _delta_text(float(low), 0)
+	return _tinted("%s - %s" % [_signed_number(float(low), 0),
+		_signed_number(float(high), 0)], whole > base)
 
 
 ## Keeps it up to date. Polled for the same reason the armour line is: a tower
@@ -420,16 +474,66 @@ func _set_attack_text(unit: Unit) -> void:
 	# an Earth disc makes a tower swing faster and a Primal disc makes it reach
 	# further, and neither is anything its stats file can know about.
 	#
+	# Both halves are also entirely TEMPORARY, unlike the other two lines:
+	# nothing in the game permanently changes how fast a unit swings or how far
+	# it reaches, so the base is simply what the attack says and every point of
+	# difference is drawn as a tinted change beside it.
+	#
 	# Written only when it has actually moved, the way the damage line is: this
-	# runs every frame now that it is polled, and assigning a Label its own text
+	# runs every frame now that it is polled, and assigning a label its own text
 	# back re-lays the panel out for nothing.
-	var text: String = "Attack:   %s,  %s range" % [
-		attack.attack_speed_text(unit.attack_speed_ratio()),
-		attack.range_text(unit.attack_range_bonus())
+	var entries: Array[StatusEntry] = StatusEntry.for_unit(unit)
+	var speed: float = StatusEntry.attack_speed_ratio_in(entries)
+	var text: String = "Attack:   %s%s,  %s range%s" % [
+		attack.attack_speed_text(),
+		_delta_text(attack.attacks_per_second * (speed - 1.0), 2),
+		attack.range_text(),
+		_delta_text(unit.attack_range_bonus(), 1),
 	]
 	if _attack_label.text != text:
 		_attack_label.text = text
 	_set_splash_text(attack)
+
+
+## How fast the unit travels, and nothing at all for one that cannot. Must run
+## after _set_group_mode, which reveals every single-unit label.
+##
+## The base is the unit's AUTHORED speed and every point of difference is
+## tinted, because nothing in the game changes a creep's speed for good: a
+## chill, a packmate's aura and a haste all wear off, and what the player wants
+## to know is how much of what they are watching is one of those.
+func _set_speed_text(unit: Unit) -> void:
+	if _speed_label == null || unit == null:
+		return
+
+	var mobile: MobileUnitStats = unit.stats as MobileUnitStats
+	var showing: bool = mobile != null && !_busy
+	_speed_label.visible = showing
+	if !showing:
+		return
+
+	# Asked of the UNIT on the same terms every other line is, and the unit
+	# answers from the simulation on the server and from the replicated effects
+	# on a client - so the number here and the creep the player is watching
+	# crawl across the lane cannot disagree.
+	var whole: float = unit.current_move_speed()
+	var text: String = "Speed:   %s%s" % [
+		StringUtil.trim_number(mobile.move_speed, 2),
+		_delta_text(whole - mobile.move_speed, 2),
+	]
+	if _speed_label.text != text:
+		_speed_label.text = text
+
+
+## Keeps it up to date. Polled for the reason the rest are, and more sharply
+## than any of them: a creep walking past one Ice tower has this line moving
+## every single hit.
+func _refresh_speed_label() -> void:
+	if _speed_label == null || !_speed_label.visible:
+		return
+	if _unit == null || !is_instance_valid(_unit):
+		return
+	_set_speed_text(_unit)
 
 
 ## Keeps it up to date, polled for the reason the damage and armour lines are:
@@ -490,6 +594,8 @@ func _set_group_mode(group: bool) -> void:
 		_damage_label.visible = !group
 	if _armor_label != null:
 		_armor_label.visible = !group
+	if _speed_label != null:
+		_speed_label.visible = !group
 	if _attack_label != null:
 		_attack_label.visible = !group
 	if _splash_label != null:
@@ -1001,6 +1107,7 @@ func _release_hold() -> void:
 func _process(delta: float) -> void:
 	_refresh_armor_label()
 	_refresh_damage_label()
+	_refresh_speed_label()
 	_refresh_attack_label()
 	_refresh_resource_label()
 	_refresh_bars()
@@ -1099,7 +1206,12 @@ func _apply_armor_label() -> void:
 
 	var points: int = _armor_points()
 	var kind: UnitStats.ArmorType = _armor_type()
-	var text: String = "Armor:   %s" % stats.armor_text(points, kind)
+	# What an aura or a disc is LENDING comes off the base and is drawn beside
+	# it instead. What has been eaten or given for good stays in the base, since
+	# that is the creep's armour now - see _delta_text.
+	var lent: int = StatusEntry.temporary_armor_delta_in(StatusEntry.for_unit(_unit))
+	var text: String = "Armor:   %s" % stats.armor_text(
+		points - lent, kind, _delta_text(float(lent), 0))
 	if _armor_label.text != text:
 		_armor_label.text = text
 
@@ -1128,6 +1240,39 @@ func _armor_points() -> int:
 
 func _armor_type() -> UnitStats.ArmorType:
 	return _unit.armor_type_value()
+
+
+## A TEMPORARY change to a stat, written as the tinted "+2" that hangs off the
+## base number, or nothing at all when nothing is changing it.
+##
+## Only a temporary change gets one. A PERMANENT change is the unit's number
+## now and belongs in the plain base figure: an Alchemist's banked damage,
+## armour a Divineshroom has eaten for good, armour a Crypt Fiend has handed
+## over, a creep's own trait. Drawing those as a change would tell a player
+## something is about to wear off that never will.
+##
+## A technology disc counts as TEMPORARY even though nothing ever expires it,
+## because it stands beside the tower rather than being part of it - a player
+## deciding whether to sell one wants to see exactly which points go with it.
+static func _delta_text(amount: float, digits: int = 1) -> String:
+	if is_zero_approx(amount):
+		return ""
+	return _tinted(_signed_number(amount, digits), amount > 0.0)
+
+
+## One already-written change in the colour its direction calls for. Separate
+## from the above because the damage line writes a RANGE rather than a number
+## and cannot go through it.
+static func _tinted(body: String, positive: bool) -> String:
+	var color: Color = BUFF_COLOR if positive else DEBUFF_COLOR
+	return "   [color=#%s]%s[/color]" % [color.to_html(false), body]
+
+
+## A number with its sign always written out, so a change reads as one whether
+## it helps or hurts.
+static func _signed_number(amount: float, digits: int) -> String:
+	return "%s%s" % ["+" if amount > 0.0 else "-",
+		StringUtil.trim_number(absf(amount), digits)]
 
 
 ## What hovering the armour line says: how much of a hit those points actually
@@ -1216,9 +1361,10 @@ func _current_job() -> BuildingJob:
 	return tower.current_job()
 
 
-## Puts the three stat lines back under their own rules once _busy has changed.
-## Damage and attack decide for themselves whether they apply at all - a creep
-## has no attack line either way - so both go back through their own setters.
+## Puts the stat lines back under their own rules once _busy has changed.
+## Damage, speed and attack decide for themselves whether they apply at all - a
+## creep has no attack line either way - so all three go back through their own
+## setters.
 func _apply_stat_lines() -> void:
 	if _unit == null || !is_instance_valid(_unit) || _unit.stats == null:
 		return
@@ -1226,11 +1372,13 @@ func _apply_stat_lines() -> void:
 		return
 
 	_set_damage_text(_unit)
+	_set_speed_text(_unit)
 	_set_attack_text(_unit)
 	if _armor_label != null:
 		_armor_label.visible = !_busy
 	if _status_bar != null:
 		_status_bar.visible = !_busy
+
 
 func _repeat_interval(config: ControlsConfig) -> float:
 	var ramp: float = config.hold_repeat_ramp_seconds

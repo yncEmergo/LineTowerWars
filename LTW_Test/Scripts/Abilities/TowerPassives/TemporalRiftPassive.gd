@@ -54,6 +54,11 @@ const POINT_KEY: String = "rift_point"
 ## Movement taken when it lands, ignoring every slow resistance, or 0 on the
 ## tiers that only damage.
 @export var slow_amount: float = 0.0
+## The key this tower's slow accumulates under. Every tier of this line shares
+## it, so a Lesser and an Ultimate do not stack - the higher cap simply wins.
+## Authored rather than taken off the .tres for that reason; see
+## StatusEffects.chill.
+@export var slow_source: String = "harbinger"
 
 @export_group("Visuals")
 ## Dropped where the creep will be sent back to, for as long as the delay
@@ -210,8 +215,8 @@ func _collect(creep: Creep, point: Vector3) -> void:
 	var damage: int = flat_damage + int(round(float(creep.max_health()) * health_share))
 	creep.take_damage(damage, DamageTable.DamageType.SPELL)
 	if slow_amount > 0.0 && creep.is_alive():
-		creep.status().slow(self, resource_path, slow_amount,
-			StatusEffects.DEFAULT_SLOW_SECONDS)
+		creep.status().slow(self, slow_source, slow_amount,
+			StatusEffects.DEFAULT_SLOW_SECONDS, false)
 
 
 # --- visuals ----------------------------------------------------------------

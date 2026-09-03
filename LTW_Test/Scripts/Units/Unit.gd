@@ -99,6 +99,15 @@ var order_queue: OrderQueue = null
 
 var _selected: bool = false
 var _health_bar: HealthBar3D
+## The teal bar over the health bar, built the first time this unit is actually
+## shielded rather than with the health bar - most units never are, and a node
+## per unit for a bar that would never be drawn is a node per unit for nothing.
+var _shield_bar: ShieldBar3D = null
+## Damage standing in front of this unit's health on a CLIENT, and the most that
+## ever stood there. Handed down by the server, the way health is: a client runs
+## no simulation and so has no StatusEffects to read one out of (3.4).
+var _replicated_shield: float = 0.0
+var _replicated_shield_max: float = 0.0
 
 
 ## What this unit's ACTIVE ability - the one a player presses - is waiting on
@@ -414,6 +423,48 @@ func status_entries() -> Array[StatusEntry]:
 	return empty
 
 
+## Damage standing in front of this unit's health right now, or 0 for anything
+## unshielded - which is every tower and nearly every creep.
+##
+## 0 here rather than on Creep, because "is this unit shielded" is a question
+## anything drawing a bar asks of any unit, and the one kind that can answer
+## overrides it. Answers on either machine for the reason armor_value() does:
+## the authority reads its own pool, a client reads what the server sent.
+func shield_points() -> float:
+	return _replicated_shield if !MatchSession.is_authority() else 0.0
+
+
+## The most that shield has ever held, which is what its bar is drawn against.
+## 0 for anything unshielded, and that is also the test for whether a bar is
+## drawn at all.
+func shield_maximum() -> float:
+	return _replicated_shield_max if !MatchSession.is_authority() else 0.0
+
+
+## The shield handed down by the server, which is the ONLY way it changes on a
+## client. Builds the bar the first time there is one to draw.
+func set_replicated_shield(held: float, ceiling: float) -> void:
+	_replicated_shield = maxf(0.0, held)
+	_replicated_shield_max = maxf(0.0, ceiling)
+	refresh_shield_bar()
+
+
+## Builds the worldspace shield bar the first time this unit has a shield, and
+## does nothing on every call after that.
+##
+## Lazy rather than built with the health bar, and called from wherever a shield
+## can first appear: a unit is shielded by something happening to it rather than
+## by what it is, so there is no moment at spawn that would know.
+func refresh_shield_bar() -> void:
+	if _shield_bar != null || shield_maximum() <= 0.0 || !is_in_world():
+		return
+	_shield_bar = ShieldBar3D.new()
+	_shield_bar.name = "ShieldBar"
+	_shield_bar.watch(self)
+	add_child(_shield_bar)
+	_shield_bar.position = Vector3(0.0, health_bar_height + ShieldBar3D.GAP, 0.0)
+
+
 ## Armour points this unit has RIGHT NOW: its own, plus anything granted to it
 ## while it stands where it stands. Overridden by anything an aura can reach,
 ## which is why the panel asks the unit rather than reading its stats file.
@@ -508,6 +559,17 @@ func can_attack() -> bool:
 ## extending, which is every unit outside a Primal disc's radius.
 func attack_range_bonus() -> float:
 	return 0.0
+
+
+## How fast this unit is travelling RIGHT NOW, in cells per second, or 0 for
+## anything that does not move at all - which is every tower.
+##
+## Its authored speed here, since nothing changes a builder's. Creeps override
+## it to fold in the auras over them and whatever a tower has chilled them
+## with, on either machine, for the reason armor_value() does.
+func current_move_speed() -> float:
+	var mobile: MobileUnitStats = stats as MobileUnitStats
+	return 0.0 if mobile == null else mobile.move_speed
 
 
 ## Multiplier on how fast this unit attacks RIGHT NOW, above 1 being faster.

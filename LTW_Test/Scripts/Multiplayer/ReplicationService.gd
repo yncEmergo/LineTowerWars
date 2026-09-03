@@ -25,7 +25,7 @@ extends Node
 
 ## Fields per unit in the snapshot: id, type, owner, area, x, y, z, yaw,
 ## health, flags, mana, maximum mana, job progress, banked damage, ability
-## choice, ability cooldown, ability link.
+## choice, ability cooldown, ability link, shield, maximum shield.
 ##
 ## Mana is in there because an elemental tower's whole ability is usually "fill
 ## up, then spend it", and a client that could not see the bar would be
@@ -80,9 +80,22 @@ extends Node
 ## rather than one per ability, on the same grounds the ability choice is one
 ## number; see ActiveAbilityState.
 ##
+## The SHIELD is damage standing in front of a unit's health, and the most that
+## shield ever held. It gets a pair of its own rather than riding the mana
+## fields, even though nothing today carries both: a shield is a second bar
+## drawn in a different place for a different reason, and the day something does
+## carry both, an alias would have silently drawn one of them as the other.
+##
+## The maximum is sent because nothing else remembers it. A shield is a pool
+## with no clock, so once a hit has eaten into one there is no other record of
+## how big it started - and that is exactly what the background behind the bar
+## is showing.
+##
 ## Floats hold every one of these exactly: a float32 is exact on integers up to
-## 16.7 million, which is far past any id this game will hand out.
-const UNIT_STRIDE: int = 17
+## 16.7 million, which is far past any id this game will hand out. The shield is
+## the first field that is not a whole number and does not need to be - it is
+## drawn as a bar and rounded for the line under it.
+const UNIT_STRIDE: int = 19
 ## Fields per player: slot, gold, income, lives, value, placement, and whether
 ## the creep-unlock cheat has been granted to them.
 ##
@@ -382,6 +395,7 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 	# two floats either way, so nothing on the wire grew when the creeps that
 	# run a trait on mana arrived - see CreepMana.
 	var mana: Vector2i = _mana_of(unit, building)
+	var shield: Vector2 = _shield_of(unit)
 
 	var position: Vector3 = unit.global_position
 	return PackedFloat32Array([
@@ -400,6 +414,8 @@ func _unit_record(unit: Unit) -> PackedFloat32Array:
 		0 if building == null else building.ability_choice(),
 		unit.active_ability.cooldown_left,
 		unit.active_ability.link_id,
+		shield.x,
+		shield.y,
 	])
 
 
@@ -416,6 +432,16 @@ func _mana_of(unit: Unit, building: Building) -> Vector2i:
 	if creep == null || creep.mana() == null:
 		return Vector2i.ZERO
 	return Vector2i(creep.mana().current, creep.mana().maximum)
+
+
+## The damage standing in front of this unit's health and the most that ever
+## stood there, as (current, maximum). (0, 0) for anything unshielded, which a
+## client reads back as "no bar".
+##
+## Asked of the unit rather than of its StatusEffects, so a shield granted some
+## other way later is on the wire the moment the unit answers with it.
+func _shield_of(unit: Unit) -> Vector2:
+	return Vector2(unit.shield_points(), unit.shield_maximum())
 
 
 ## One player's whole technology state. Sent every tick like everything else in
@@ -681,6 +707,8 @@ func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
 	if creep != null && creep.mana() != null:
 		creep.mana().maximum = maxi(0, int(records[at + 11]))
 		creep.mana().set_replicated(int(records[at + 10]))
+
+	unit.set_replicated_shield(records[at + 17], records[at + 18])
 
 	if unit.attack_component != null:
 		unit.attack_component.set_prioritize_air((flags & FLAG_PRIORITIZE_AIR) != 0)

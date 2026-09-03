@@ -13,4 +13,4 @@ icon = ExtResource("2_greater_lich")
 slow_per_hit = 0.0635
 slow_cap = 0.36
 slow_seconds = 5.5
-chill_source = "greater_lich"
+chill_source = "ice"

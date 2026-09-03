@@ -292,6 +292,27 @@ static func armor_delta_in(entries: Array[StatusEntry]) -> int:
 	return int(round(delta))
 
 
+## Armour points these effects are LENDING the unit for as long as whatever is
+## applying them keeps applying it - the half of armor_delta_in() the panel
+## draws as a tinted change beside the base number rather than folding into it.
+##
+## The split is by KIND and needs no new field, because the two permanent shapes
+## already have kinds of their own: armour a Divineshroom has eaten and armour a
+## Crypt Fiend has handed over are gone or kept for the rest of the unit's life,
+## so they ARE its armour now. What is left is a temporary change and what a
+## disc or a packmate aura lends.
+##
+## A technology disc counts as temporary even though nothing ever expires it: it
+## stands beside the tower rather than being part of it, and a player deciding
+## whether to sell one wants to see which points go with it.
+static func temporary_armor_delta_in(entries: Array[StatusEntry]) -> int:
+	var delta: float = 0.0
+	for entry in entries:
+		if entry.kind == Kind.ARMOR_CHANGED || entry.kind == Kind.ARMOR_LENT:
+			delta += entry.magnitude
+	return int(round(delta))
+
+
 ## Multiplier on how fast the unit these are on attacks, all of them folded
 ## together. The client's half of Building.attack_speed_ratio and
 ## Creep.attack_speed_ratio, and it reconstructs the authority's answer exactly
@@ -320,6 +341,28 @@ static func attack_damage_ratio_in(entries: Array[StatusEntry]) -> float:
 		elif entry.kind == Kind.ATTACK_EMPOWERED:
 			ratio *= 1.0 + entry.magnitude
 	return ratio
+
+
+## Multiplier on how fast the unit these are on MOVES, all of them folded
+## together. The client's half of Creep.current_move_speed.
+##
+## Slows MULTIPLY against each other rather than the worst of them winning, and
+## each entry here is one source's whole accumulated chill - so this
+## reconstructs the authority's answer exactly. See StatusEffects.move_ratio.
+##
+## `max_slow` is the creep's own ceiling on being slowed, applied to the PILE
+## once at the end rather than to each entry, which is the order the authority
+## applies it in. 1.0 is no ceiling, which is every creep but one.
+static func move_speed_ratio_in(entries: Array[StatusEntry],
+		max_slow: float = 1.0) -> float:
+	var moving: float = 1.0
+	var hasted: float = 1.0
+	for entry in entries:
+		if entry.kind == Kind.SLOWED:
+			moving *= 1.0 - entry.magnitude
+		elif entry.kind == Kind.HASTED:
+			hasted *= 1.0 + entry.magnitude
+	return clampf(1.0 - minf(1.0 - moving, max_slow), 0.0, 1.0) * hasted
 
 
 ## Cells of reach these effects add, which only a Primal disc ever does. Summed
