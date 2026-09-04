@@ -112,6 +112,9 @@ var _turn_checksums: Dictionary = {}
 ## Peers already told their world diverged, so each is told once per match.
 var _told: Dictionary = {}
 
+## The match all of the state above belongs to. See _reset_if_new_match.
+var _match_id: String = ""
+
 
 func _ready() -> void:
 	# **Immune to the pause it causes itself**, and this is not optional: a stall
@@ -134,6 +137,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if !_is_live():
 		return
+
+	_reset_if_new_match()
 
 	# Held only by a stall. Everything else the world stops for - the draft
 	# above all - must NOT stop the turns, or the very orders that would end it
@@ -244,6 +249,52 @@ func _set_held(held: bool) -> void:
 	var session: MatchSession = References.match_session
 	if session != null:
 		session.set_paused(held)
+
+
+## Throws away everything belonging to the PREVIOUS match.
+##
+## **This is an autoload, so it outlives the match it was built for**, and a
+## dedicated server hosts one match after another in the same process (D19).
+## Without this, the second match on a given server inherits the first one's
+## turn clock: `_primed` is already true so it never primes, `_frames` is
+## thousands of ticks ahead so it emits turns from the middle of a match nobody
+## is playing, and every client sits on turn 0 waiting for orders from a peer
+## that has mentally moved on.
+##
+## The symptom is a permanent stall with `missing: [1]` and the world paused,
+## which reads as "the game froze on start" and says nothing about why. It only
+## ever bites the SECOND match on a server, which is why a fresh process always
+## looked fine and testing never caught it.
+##
+## Keyed on the match id rather than on a signal, because every peer already
+## holds it and it changes exactly when this needs to fire - no wiring to
+## forget, and correct on the server and on a client alike.
+func _reset_if_new_match() -> void:
+	var session: MatchSession = References.match_session
+	var id: String = "" if session == null || session.setup() == null \
+		else session.setup().match_id
+	if id == _match_id:
+		return
+
+	_match_id = id
+	_outgoing.clear()
+	_incoming.clear()
+	_turn_checksums.clear()
+	_told.clear()
+	_last_sent_turn = NO_TURN
+	_last_checksum_turn = NO_TURN
+	_last_run_turn = NO_TURN
+	_stalled_on = NO_TURN
+	_stall_frames = 0
+	_primed = false
+	_frames = 0
+
+	# Never left holding the tree for a match that no longer exists.
+	if _stalling:
+		_stalling = false
+		_set_held(false)
+
+	Log.info("Lockstep reset for a new match", {"match": id})
 
 
 # --- the turn clock -------------------------------------------------------

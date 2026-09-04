@@ -423,9 +423,18 @@ art at all so far - so this is the placement rule, not a description of the tree
     measured, dug into or ruled out, rather than a rule or a number. It is the
     one place a dated snapshot of live values is allowed, because the date is
     what makes it honest. See its README for the shape
-- GIT IS THE USER'S. Never commit, never push, never branch, never revert. Leave
-  the work in the working tree and say what changed; the user reads it before it
-  lands. Reading git - log, diff, blame, status - is fine and often useful
+- GIT: COMMIT, PUSH AND DEPLOY ARE ALLOWED. Granted 2026-09-04, to close the
+  loop on the lockstep work - the deploy script ships `origin/main`, so
+  deploying without pushing is impossible and the two permissions are one
+  permission
+  - **SAY SO BEFORE PUSHING, never silently.** The point of the grant is speed,
+    not autonomy: name what is about to land and why, in the same reply
+  - **NEVER branch and NEVER revert.** History is still the user's. A mistake is
+    fixed with a new commit forward, not by rewriting what is behind
+  - a deploy is `.\Tools\deploy_server.ps1`, and it hard-resets the server to
+    `origin/main`. Check for connected players first - stopping the service
+    under a live match makes every client its own authority (`server.md`)
+  - reading git - log, diff, blame, status - was always fine and still is
 - README.md is the way in: what the project is, what works, and which file answers
   what. Keep its Status section honest - it is the first thing a new reader trusts.
 - Refer to game_rules.md for the RULES - how the game works, not what anything
