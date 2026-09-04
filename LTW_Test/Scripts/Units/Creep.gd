@@ -149,6 +149,13 @@ var _march_elapsed: float = 0.0
 var _aura_elapsed: float = AURA_REFRESH_SECONDS
 ## Whether this creep's sweep has been spread off the tick it spawned on yet.
 var _aura_phased: bool = false
+## Time banked since this creep last took a step, and how many ticks are left
+## before it takes the next one. -1 is "never moved", which is what makes the
+## phase below happen once, on the first tick this creep is asked to walk.
+##
+## See _due_to_move. Both are meaningless when the interval is 1.
+var _move_elapsed: float = 0.0
+var _move_countdown: int = -1
 ## How many HEAVY physical hits have landed on this creep over its whole life -
 ## it only ever grows, and nothing resets it: not a heal, not a revive, and not
 ## being recycled into the next player's maze, which deliberately keeps the
@@ -1271,6 +1278,29 @@ func _physics_process(delta: float) -> void:
 		_reach_end()
 		return
 
+	# EVERYTHING BELOW THIS LINE IS THE STEP, and it is the most expensive
+	# thing a creep does by a wide margin. It is taken every Nth tick with the
+	# time banked since the last one, so a creep covers the same ground in
+	# fewer, longer steps - and the phase is per creep, so the lane is spread
+	# across the N ticks instead of stepping in unison. See
+	# GameConfig.creep_move_interval_ticks.
+	#
+	# The banked delta goes to every branch below, because all three scale
+	# with it: how far a step reaches, how far the facing turns and how long
+	# the stall clock has been running. Handing any of them the raw tick delta
+	# would quietly change how fast creeps walk, which is a balance change
+	# wearing a performance change's clothes.
+	var move_delta: float = _due_to_move(delta)
+	if move_delta <= 0.0:
+		return
+
+	_advance_movement(move_delta)
+
+
+## The step itself, once _due_to_move has said this is the tick to take one and
+## handed over the time it covers. Three kinds of creep travel three different
+## ways and none of them is the other's special case.
+func _advance_movement(move_delta: float) -> void:
 	# AN ATTACKER IS ASKED FIRST, before anything about how it travels. What
 	# an attacker does is go after towers and never advance on its own
 	# (game_rules.md), and that is true of one that flies as much as of one
@@ -1280,7 +1310,7 @@ func _physics_process(delta: float) -> void:
 	if is_attacker():
 		if !ignores_maze():
 			_record_trail()
-		_march(delta)
+		_march(move_delta)
 		# AFTER the march and outside it, because an attacker that did not move
 		# this tick is exactly the case that needs it: one standing on a tower
 		# or parked on an ordered point takes no step of its own, and without
@@ -1292,11 +1322,56 @@ func _physics_process(delta: float) -> void:
 	# down the lane. What separates them is only how high they are drawn and
 	# what may shoot them, neither of which is a movement question.
 	if ignores_maze():
-		_glide(delta)
+		_glide(move_delta)
 		return
 
 	_record_trail()
-	_walk_route(delta)
+	_walk_route(move_delta)
+
+
+## The time this creep should walk for on this tick, or 0 when it is not this
+## creep's turn to walk at all.
+##
+## The tick's delta is BANKED either way, so the step taken on a creep's own
+## tick covers exactly the time that has passed since its last one and its
+## speed is untouched. Nothing banks while a creep is stunned or diving,
+## because neither of those reaches this - which is what stops a creep held for
+## a second from teleporting a second's walk the moment it is let go.
+##
+## The phase comes off the unit id rather than a roll, for the reason
+## _aura_phase gives for the same trick: it is a number every machine already
+## agrees on, and it spreads a wave that spawned on one tick evenly across all
+## N of them instead of merely moving the spike somewhere else.
+func _due_to_move(delta: float) -> float:
+	_move_elapsed += delta
+
+	var every: int = _move_interval_ticks()
+	if every <= 1:
+		var whole: float = _move_elapsed
+		_move_elapsed = 0.0
+		return whole
+
+	# Once, on the first tick this creep is asked to walk. Doing it at spawn
+	# instead would be the same answer, but this way a creep that spends its
+	# first ticks stunned or in the air still enters the rotation cleanly.
+	if _move_countdown < 0:
+		_move_countdown = unit_id % every
+
+	if _move_countdown > 0:
+		_move_countdown -= 1
+		return 0.0
+
+	_move_countdown = every - 1
+	var banked: float = _move_elapsed
+	_move_elapsed = 0.0
+	return banked
+
+
+func _move_interval_ticks() -> int:
+	var config: GameConfig = References.game_config
+	if config == null:
+		return 1
+	return maxi(1, config.creep_move_interval_ticks)
 
 
 ## An ordinary creep: follow the route it committed to, one waypoint at a time.

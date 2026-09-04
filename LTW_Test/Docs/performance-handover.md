@@ -15,6 +15,11 @@ Read that finding first. This one assumes it.
 
 ### 1.1 The working tree is uncommitted and the server runs code that is not in git
 
+> **DONE on the git side, NOT on the server side.** `origin/main` now carries 2026-09-03's
+> work, and the working tree was clean when 2026-09-04 started. The server has still not been
+> deployed to it, so everything below stands as written - run the deploy before testing
+> anything, and note that the working tree is dirty again with 2026-09-04's change (§2a).
+
 The public server's checkout is at `db86a4f` — the same commit as `origin/main` — but the files
 on it were **copied in by hand** (`scp`), not deployed. So `git -C /srv/ltw status` on the server
 is dirty and its HEAD tells you nothing about what it is running.
@@ -74,6 +79,74 @@ The 4-player row above has the median on the budget line and p95 well over it.
 
 ---
 
+## 2a. What was done on 2026-09-04
+
+**§4.1 landed: staggered creep movement.** One fix, pure GDScript, no rule and no balance
+number touched.
+
+| Where | What |
+| --- | --- |
+| `GameConfig.creep_move_interval_ticks` | How many ticks apart a creep takes its step. 1 is the old behaviour. |
+| `Creep._due_to_move` | Banks the tick's delta and answers whether this is the creep's tick to walk. Phase from `unit_id`, exactly as `_aura_phase` does. |
+| `Creep._advance_movement` | The three travel branches, extracted out of `_physics_process` so the gate has something to gate. |
+
+Everything a step scales by - `_step_reach`, `_face_direction`, `_watch_for_stall`,
+`_glide`'s climb, the crowding push - is handed the BANKED delta, so a creep covers the same
+ground in fewer, longer steps and no speed changes. Nothing banks while a creep is stunned or
+mid-dive, because neither reaches the gate: a creep held for a second does not teleport a
+second's walk when it is let go.
+
+### Verified
+
+- **The phase is flat.** A temporary per-tick probe over ~310 creeps counted 148-163 moving on
+  every single tick at an interval of 2 - dead even, tick after tick, with no clumping. This is
+  the thing §4.1 warned about and it is not happening.
+- **The work really is halved.** Timing the extracted block: **7.7 ms → 4.2 ms per tick** at
+  ~307 creeps. Per moving creep the cost is unchanged (25 µs → 27 µs), so the saving is the
+  halved population and nothing else.
+- **A full maze still routes.** 390 towers per area, densest legal layout, 25 s: creeps
+  reaching the exit went 1607 → 1626, a 1.2% difference. No tunnelling, no sticking, no
+  re-route storm. This was the risk the step-length table in §4.1 was about.
+
+### Measured, on the DEV PC - see the caveat below
+
+| Scenario | avg before | avg after | p95 before | p95 after | max before | max after |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 16 towers, 308 creeps (`1v1-fewtowers`) | 35.5 | **32.2** | 93.6 | **77.7** | 165 | **119** |
+| 780 towers, 240 creeps (full maze) | 25.2 | **23.0** | 33.8 | **31.3** | 44.1 | **38.8** |
+
+**These numbers are NOT comparable to anything in §2, and must not be quoted as if they were.**
+They were taken on the developer PC because the SSH path to the server is not available from
+the session that did this work. That machine is both much faster than the rented box and much
+noisier: its p95/p50 on the few-towers shape is ~3.6×, where the server's is ~1.6×, so most of
+its tail is OS scheduling rather than the game. Its medians swing ±4 ms between identical runs,
+which is larger than the effect being measured - which is exactly why the in-tick probe above
+is the number to trust and the table is only corroboration.
+
+**The step-length limit in §4.1 was computed from the wrong creep and is more forgiving than it
+said.** It used a creep at 2.25/s; the roster's fastest walk at 4.0, and a speed aura over one
+of those makes 5.0. But the obstacle is a TOWER, which is a whole grid cell rather than the
+half-cell internal grid the table assumed, so a step has to exceed a full cell to cross one
+without ever sampling it. That is four times the interval, not two. 2 is comfortable, 4 is at
+the edge, and the swept-test warning still applies beyond it.
+
+### Still to do for this fix
+
+1. **RUN THE BENCH ON THE SERVER.** §6's command, the reported Firelord/Wendigo scenario,
+   against the §2 baseline. That is the only measurement that answers whether this closes the
+   4-player gap, and it is the one measurement that could not be taken.
+2. **Look at it.** A creep's position now only changes on its own tick, so at an interval of 2
+   each creep is drawn at half the tick rate. The phase means the CROWD never pulses together,
+   but an individual creep does, and no amount of profiling answers whether that reads as
+   stutter. If it does, the knob goes back to 1 and the fix waits behind §4.3, which is what
+   makes it visually free.
+3. If it does read badly and §4.3 is far off, the fallback is to split the step rather than
+   skip it: advance the position every tick along the committed direction, and do the route
+   questions - the waypoint test, the two slide tests, the stall watch, the facing - every Nth.
+   That keeps 20 Hz visuals for roughly three quarters of the saving, at the cost of more code
+   and a cached direction that can go stale.
+
+
 ## 3. Where a creep tick goes now
 
 Measured by timing segments **inside** `Creep._physics_process` (scaffolding since deleted — see
@@ -97,6 +170,10 @@ trust `est_targeting_ms_per_tick` from the bench — see §5.2.
 ## 4. What to do next, in priority order
 
 ### 4.1 Staggered movement at half rate — the biggest remaining item
+
+> **LANDED 2026-09-04, unmeasured on the server. See §2a.** The rest of this section is kept
+> as written because it is the reasoning the fix was built to, and because its step-length
+> table is WRONG in a way worth seeing next to the correction in §2a.
 
 `move` is ~77 µs of ~100 µs per creep. The user's idea, and it is a good one.
 
@@ -123,6 +200,14 @@ this class of bug.
 balance change wearing a performance change's clothes.
 
 ### 4.2 The unexplained outlier
+
+> **A lead, from 2026-09-04's runs, not chased.** On the dev PC two scenarios with nearly the
+> same MEDIAN have wildly different tails: a full maze of 780 towers and 240 creeps runs
+> p50 24.5 / max 44, while 16 towers and 308 creeps runs p50 26 / max 165. Same median, four
+> times the tail. Whatever spikes is therefore about creep DENSITY in an open lane rather
+> than about towers, spawning (only a handful of creeps spawned in that window) or the flow
+> field (nothing was built or sold). The aura sweep is the one part the finding already calls
+> genuinely superlinear, and an open lane is where it is densest. Worth testing first.
 
 Even after every fix, **max is ~93 ms** on the Wendigo scenario while p95 is 48. Something
 spikes rarely and hard, and it was never chased. Candidates never ruled out: a wave arriving

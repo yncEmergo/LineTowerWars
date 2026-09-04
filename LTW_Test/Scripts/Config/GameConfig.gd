@@ -117,6 +117,35 @@ extends Resource
 ## and turning a flat cost into a spike, which is the mistake
 ## AttackComponent._next_scan_wait already documents for tower targeting.
 @export var creep_aura_refresh_seconds: float = 0.5
+## How many ticks apart a creep takes its movement step. 1 moves every tick.
+##
+## Moving is by far the most expensive thing a creep does - roughly three
+## quarters of its whole tick - and almost none of that cost is the position
+## write. It is the route questions around it: whether the next waypoint is
+## still free, the two slide tests that let a creep travel along a wall, the
+## stall watch and the facing. None of those answers changes meaningfully
+## between one twentieth of a second and the next.
+##
+## STAGGERED, never merely slowed. Each creep is given a phase off its unit id
+## (see Creep._due_to_move), so the population is spread evenly across the N
+## ticks rather than all moving on the same one - which would halve the work
+## and put every bit of it on alternate ticks, the exact spike
+## creep_aura_refresh_seconds above was phased to remove.
+##
+## The accumulated time is passed through, so speed, rotation and the stall
+## clock are unchanged: a creep covers the same ground, in fewer, longer steps.
+##
+## THE STEP LENGTH IS THE LIMIT. _move_by tests only where a step LANDS, not
+## the ground it crosses, so a step longer than a tower is wide could cross one
+## without ever sampling a blocked point. A tower is one grid cell, and the
+## fastest creep in the roster with the best speed aura over it travels a
+## quarter of that per tick - so 2 is comfortable, 4 is at the edge and
+## anything beyond it needs a swept test rather than a bigger number here.
+##
+## The cost is VISUAL: a creep's position only changes on its own ticks, so at
+## 2 each creep is drawn at 10 Hz. The phase means the crowd never pulses
+## together, but an individual creep does. Set to 1 to turn it off.
+@export var creep_move_interval_ticks: int = 2
 ## How far a MULTISHOT reaches for its further targets, in player cells.
 ##
 ## One value for the whole game, exactly as the creep aura radius is and for
