@@ -69,6 +69,13 @@ enum Result {
 ## number stops being a magic 1 scattered through rpc_id calls.
 const SERVER_PEER_ID: int = 1
 
+## What round_trip_ms answers when there is no link to read: offline, no such
+## peer, or a peer this machine has no direct connection to. **Negative on
+## purpose** - a zero would read as a perfect connection and would quietly set
+## an input delay of nothing, so every caller has to notice it. Same sentinel
+## reasoning as LobbyInfo.ping_ms.
+const UNKNOWN_RTT: int = -1
+
 ## How long the server waits after refusing a build before hanging up on it.
 ##
 ## It exists because **an rpc is not sent when it is called.** Godot queues it
@@ -212,6 +219,37 @@ func peer_id() -> int:
 	if !is_online():
 		return 0
 	return multiplayer.get_unique_id()
+
+
+## The measured round trip to a peer in milliseconds, or UNKNOWN_RTT.
+##
+## **ENet already knows this and no extra packet is sent to ask.** Every
+## reliable packet is acknowledged, and ENet keeps a smoothed round trip from
+## those acknowledgements - so this reads traffic the match generates anyway.
+## Under lockstep that traffic is a packet per peer per turn, which samples the
+## link far more often than any heartbeat would be worth writing.
+##
+## On a CLIENT the only peer reachable this way is the server: a client's ENet
+## host holds exactly one connection. What a client needs to know about the
+## OTHER players has to be told to it by the server, which can see them all.
+func round_trip_ms(of_peer: int) -> int:
+	var link: ENetPacketPeer = _link_to(of_peer)
+	if link == null:
+		return UNKNOWN_RTT
+	return int(link.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME))
+
+
+## How much that round trip has been VARYING, in milliseconds, or UNKNOWN_RTT.
+##
+## The jitter margin, and the reason a delay set from the mean alone stutters:
+## a link averaging 30 ms that regularly spikes to 90 needs the 90, and the
+## mean cannot see it. ENet keeps this alongside the mean for its own retransmit
+## timers, so it costs nothing to read either.
+func round_trip_variance_ms(of_peer: int) -> int:
+	var link: ENetPacketPeer = _link_to(of_peer)
+	if link == null:
+		return UNKNOWN_RTT
+	return int(link.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME_VARIANCE))
 
 
 ## Everyone connected to us, server side. Empty on a client.
@@ -421,6 +459,29 @@ func _teardown() -> void:
 ## addresses needs: closing one attempt must not announce that we are offline,
 ## because a moment later we are dialling the next one and every listener would
 ## have redrawn twice for nothing.
+## The ENet connection to one peer, or null when there is not one to read.
+##
+## The id is checked HERE rather than caught below, because `get_peer()` reports
+## an id it does not hold as an engine error rather than as a null - and this is
+## read every turn, so one wrong id would be a console flood.
+func _link_to(of_peer: int) -> ENetPacketPeer:
+	if _peer == null || !is_online():
+		return null
+
+	# A client holds exactly ONE ENet connection, to the server, however many
+	# other players Godot has told it about. Asking it about another client is
+	# a legitimate question with no local answer.
+	var reachable: bool = false
+	if is_server():
+		reachable = of_peer in multiplayer.get_peers()
+	else:
+		reachable = of_peer == SERVER_PEER_ID
+	if !reachable:
+		return null
+
+	return _peer.get_peer(of_peer)
+
+
 func _close_peer() -> void:
 	if _peer != null:
 		_peer.close()

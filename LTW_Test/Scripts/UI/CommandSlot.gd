@@ -78,6 +78,17 @@ var _tooltip: AbilityTooltip = null
 
 
 func _ready() -> void:
+	# **On PRESS, not on release, and that is an input-latency fix rather than a
+	# preference.** Godot's default is ACTION_MODE_BUTTON_RELEASE, so a card
+	# square sat on the order for as long as the player held the mouse down -
+	# 60-120 ms of pure delay added to every build and every send, and paid
+	# before the order even reached the turn scheduler. Hotkeys never had it,
+	# which is why the two felt different for no visible reason.
+	#
+	# Nothing is lost by pressing early: an order is refused by the simulation
+	# rather than by this button, so there is no half-committed state to back
+	# out of if the player was wrong.
+	action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	pressed.connect(_on_pressed)
 	clear()
 

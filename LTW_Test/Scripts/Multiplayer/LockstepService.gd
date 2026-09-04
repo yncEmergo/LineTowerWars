@@ -35,17 +35,32 @@ extends Node
 ## agree" has no answer while only one of them is computing** - and it is exactly
 ## what changes on the day this flag goes on.
 ##
-## ## What a TURN is
+## ## What a TURN is, and where the input delay really comes from
 ##
-## Lockstep cannot simulate a tick until every peer's orders for it have
-## arrived, and waiting on the network every 50 ms would be absurd. So orders
-## are batched into TURNS of `ticks_per_turn` ticks, and an order given during
-## turn T is scheduled to run on turn T + `input_delay_turns`. That delay is
-## what buys the packets time to land, and it is the one number a player feels.
+## A TURN is a group of `ticks_per_turn` simulation ticks - one tick, in
+## practice - and it is the unit orders are scheduled in. Every peer says its
+## final word on every turn, even when that word is "nothing", because silence
+## cannot be told apart from a lost packet.
 ##
-## Every peer sends its orders for a turn even when it has none, because
-## "nothing" is the message that lets the turn close. Silence is
-## indistinguishable from a lost packet.
+## An order is booked for the first turn this machine has NOT yet closed, and it
+## runs when that turn comes up. So what a player waits is:
+##
+##     however long until that turn runs  =  the delay, plus up to one turn
+##
+## and the delay is simply how far ahead of itself this machine chooses to
+## close turns. **That is the whole of it.** There is no other term. A delay of
+## four turns at 100 ms a turn is 400 ms of input lag and buys 400 ms of wire
+## time that a 20 ms link does not want.
+##
+## **The delay is a LIVENESS parameter, never a CORRECTNESS one**, and getting
+## that backwards is what made this expensive. It decides which turn an order is
+## booked for; it has no say in what that turn then does. Every peer applies
+## turn N's orders on tick N regardless of how far ahead anybody chose to close
+## it. So the delay may be changed mid-match, and two peers may hold different
+## values, without any risk of divergence whatsoever - the worst a wrong value
+## can do is stall (too low) or feel heavy (too high).
+##
+## That is what lets it be MEASURED rather than guessed. See `delay_turns()`.
 ##
 ## ## Why this is an autoload
 ##
@@ -68,14 +83,21 @@ const NO_TURN: int = -1
 ## How often a stall repeats itself, in physics frames. Two seconds at 20 Hz.
 const STALL_REPORT_FRAMES: int = 40
 
+## How often the server re-measures the connections, in physics frames. One
+## second at 20 Hz, and it only says anything when the answer has moved - a
+## link that is behaving costs one comparison a second and no traffic at all.
+const MEASURE_EVERY_FRAMES: int = 20
+
+
 # --- local state, on every machine ----------------------------------------
 ## Orders this machine has issued that have not been sent yet, keyed by the
 ## turn they are scheduled to run on.
 var _outgoing: Dictionary = {}
 ## Orders received per turn, keyed by turn then by peer id.
 var _incoming: Dictionary = {}
-## The last turn this machine sent for, so it sends exactly once per turn.
-var _last_sent_turn: int = NO_TURN
+## The highest turn this machine has said its final word on. Everything above
+## it is still open to an order. See _close_through.
+var _closed_through: int = NO_TURN
 ## The last turn this machine checksummed, on the same reasoning.
 var _last_checksum_turn: int = NO_TURN
 ## The last turn whose orders were actually run, so a turn runs exactly once.
@@ -85,9 +107,6 @@ var _stalling: bool = false
 var _stalled_on: int = NO_TURN
 ## Physics frames spent in the current stall, for the repeating report.
 var _stall_frames: int = 0
-## Whether the first turns have been primed. See _send_turn.
-var _primed: bool = false
-
 ## Physics frames this machine has spent in the match, and the turn clock built
 ## on it.
 ##
@@ -115,6 +134,18 @@ var _told: Dictionary = {}
 ## The match all of the state above belongs to. See _reset_if_new_match.
 var _match_id: String = ""
 
+## The furthest any player is from the server, one way, in milliseconds.
+##
+## Measured by the SERVER, which is the only machine with a connection to every
+## peer, and announced to the rest. A client cannot work this out: its ENet host
+## holds one link, to the server, so the other player's distance is a fact only
+## the middle of the star can see. UNKNOWN_RTT until the first announcement.
+var _worst_one_way: int = NetworkService.UNKNOWN_RTT
+
+## When THIS machine's player gave the first order riding a turn, in wall-clock
+## milliseconds, keyed by that turn. Diagnostic only - see _report_latency.
+var _ordered_at: Dictionary = {}
+
 
 func _ready() -> void:
 	# **Immune to the pause it causes itself**, and this is not optional: a stall
@@ -140,18 +171,28 @@ func _physics_process(_delta: float) -> void:
 
 	_reset_if_new_match()
 
+	# **`_frames` counts ticks that have FINISHED, so the tick now beginning is
+	# `_frames` itself and the turn it belongs to is `current_turn()`.**
+	#
+	# Counting it up first instead cost a whole tick of input lag for nothing:
+	# turn X would only pass the `turn > clock_turn` gate on the tick AFTER the
+	# one it belongs to, so every order in the game ran 50 ms later than the
+	# schedule said it should. Measured at 126-134 ms on loopback where the
+	# arithmetic says 50-100.
+	var turn: int = current_turn()
+
+	# Closed FIRST, so this machine's word is on the wire before anything else
+	# in the tick can hold it up. Nothing in the simulation depends on the order
+	# of these three.
+	_close_through(turn + delay_turns())
+	_advance_turn(turn)
+	_measure_and_announce()
+
 	# Held only by a stall. Everything else the world stops for - the draft
 	# above all - must NOT stop the turns, or the very orders that would end it
-	# can never arrive.
+	# can never arrive. A tick that stalled did not happen, so it is not counted.
 	if !_stalling:
 		_frames += 1
-
-	var turn: int = current_turn()
-	_advance_turn(turn)
-
-	if turn != _last_sent_turn:
-		_send_turn(turn)
-		_last_sent_turn = turn
 
 
 ## The heart of lockstep: a turn may only be SIMULATED once every peer's orders
@@ -200,7 +241,7 @@ func _advance_turn(clock_turn: int) -> void:
 				"missing": _missing_for(turn),
 				"have": (_incoming.get(turn, {}) as Dictionary).keys(),
 				"expected": _expected_peers(),
-				"sent_up_to": _last_sent_turn,
+				"closed_through": _closed_through,
 				"seconds": snappedf(float(_stall_frames) * MatchSession.tick_seconds(), 0.1),
 			})
 		return
@@ -227,6 +268,101 @@ func _advance_turn(clock_turn: int) -> void:
 	turn_ready.emit(turn, orders)
 	if !orders.is_empty():
 		Commands.apply_turn(orders)
+	_report_latency(turn)
+
+
+## How long the player waited between giving an order and the world acting on
+## it - the ONE number that says whether this game feels responsive.
+##
+## **Wall clock, and read by nothing but this line.** The simulation may never
+## touch it: two machines do not share a clock, so a value derived from it would
+## differ per peer and desync them. What a player feels is a wall-clock number
+## though, and no count of ticks can stand in for it - the whole point is to
+## catch the case where the tick arithmetic looks right and the game still feels
+## slow.
+##
+## Fires once per turn that carried an order from this machine, which is once
+## per player action, so `Log.info` is affordable here by the rule in
+## `CLAUDE.md`. A turn nobody ordered on costs one Dictionary lookup.
+func _report_latency(turn: int) -> void:
+	if !_ordered_at.has(turn):
+		return
+	var waited: int = Time.get_ticks_msec() - (_ordered_at[turn] as int)
+	_ordered_at.erase(turn)
+	Log.info("Order ran", {
+		"turn": turn,
+		"waited_ms": waited,
+		"ticks_per_turn": _ticks_per_turn(),
+		"delay_turns": delay_turns(),
+	})
+
+
+## The milliseconds this machine's word needs to reach the peer furthest from
+## it, or -1 while there is nothing measurable yet.
+##
+## The two cases differ because the star has a middle. The server IS the middle,
+## so its word travels one leg. A client's word climbs to the middle and comes
+## back down the far side, so it pays both.
+func _wire_budget_ms() -> int:
+	var margin: int = _jitter_margin_ms()
+	if Net.is_server():
+		if _worst_one_way == NetworkService.UNKNOWN_RTT:
+			return -1
+		return _worst_one_way + margin
+
+	var mine: int = _one_way_to(NetworkService.SERVER_PEER_ID)
+	if mine == NetworkService.UNKNOWN_RTT:
+		return -1
+
+	# Until the server has said how far the furthest OTHER player is, assume
+	# they are as far off as this machine. Wrong only when the two pings differ
+	# a lot, and wrong in the safe direction exactly when this machine is the
+	# slower of the two - which is the case that would otherwise stall.
+	var theirs: int = mine if _worst_one_way == NetworkService.UNKNOWN_RTT else _worst_one_way
+	return mine + theirs + margin
+
+
+## Half a measured round trip, plus how much that round trip has been varying.
+func _one_way_to(peer: int) -> int:
+	var rtt: int = Net.round_trip_ms(peer)
+	if rtt == NetworkService.UNKNOWN_RTT:
+		return NetworkService.UNKNOWN_RTT
+	return rtt / 2 + maxi(0, Net.round_trip_variance_ms(peer))
+
+
+## The server re-reads its connections and tells everyone when the answer moves.
+##
+## Only the server can do this: it is the one machine with a link to every peer.
+## It says nothing while the number is unchanged, so a well behaved match sends
+## this once and then never again.
+func _measure_and_announce() -> void:
+	if !Net.is_server() || _frames % MEASURE_EVERY_FRAMES != 0:
+		return
+
+	var worst: int = 0
+	for peer: int in multiplayer.get_peers():
+		if peer == NetworkService.SERVER_PEER_ID:
+			continue
+		var one_way: int = _one_way_to(peer)
+		if one_way != NetworkService.UNKNOWN_RTT:
+			worst = maxi(worst, one_way)
+
+	if worst == _worst_one_way:
+		return
+	_worst_one_way = worst
+	announce_one_way.rpc(worst)
+
+
+## How far the furthest player is, from the only machine that can see them all.
+##
+## Advisory: a client that never hears this still plays, on its own ping doubled
+## (see _wire_budget_ms). Losing it costs accuracy, never correctness - the
+## delay cannot desync anybody, whatever value it takes.
+@rpc("authority", "call_remote", "reliable")
+func announce_one_way(ms: int) -> void:
+	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	_worst_one_way = maxi(0, ms)
 
 
 ## Whether every peer has said what it is doing on this turn.
@@ -256,10 +392,9 @@ func _set_held(held: bool) -> void:
 ## **This is an autoload, so it outlives the match it was built for**, and a
 ## dedicated server hosts one match after another in the same process (D19).
 ## Without this, the second match on a given server inherits the first one's
-## turn clock: `_primed` is already true so it never primes, `_frames` is
-## thousands of ticks ahead so it emits turns from the middle of a match nobody
-## is playing, and every client sits on turn 0 waiting for orders from a peer
-## that has mentally moved on.
+## turn clock: `_frames` is thousands of ticks ahead, so it closes turns from
+## the middle of a match nobody is playing, and every client sits on turn 0
+## waiting for orders from a peer that has mentally moved on.
 ##
 ## The symptom is a permanent stall with `missing: [1]` and the world paused,
 ## which reads as "the game froze on start" and says nothing about why. It only
@@ -279,15 +414,16 @@ func _reset_if_new_match() -> void:
 	_match_id = id
 	_outgoing.clear()
 	_incoming.clear()
+	_ordered_at.clear()
 	_turn_checksums.clear()
 	_told.clear()
-	_last_sent_turn = NO_TURN
+	_closed_through = NO_TURN
 	_last_checksum_turn = NO_TURN
 	_last_run_turn = NO_TURN
 	_stalled_on = NO_TURN
 	_stall_frames = 0
-	_primed = false
 	_frames = 0
+	_worst_one_way = NetworkService.UNKNOWN_RTT
 
 	# Never left holding the tree for a match that no longer exists.
 	if _stalling:
@@ -313,23 +449,76 @@ func first_tick_of(turn: int) -> int:
 	return turn * _ticks_per_turn()
 
 
-## The turn an order given RIGHT NOW should run on.
+## The turn an order given RIGHT NOW will run on: the first one this machine has
+## not already spoken for.
 ##
-## Never the current turn: its inputs are already being exchanged, and an order
-## added to it now would reach some peers after they had simulated it. That is
-## the desync lockstep exists to make impossible, so the delay is not tunable
-## down to zero - see NetworkConfig.input_delay_turns.
-##
-## **Counted from the next turn this machine will SEND for, not from the turn it
-## is in**, and the difference is not academic. Orders arrive on render frames;
-## sending happens on the physics tick that opens a turn. An order given after
-## that tick but still inside the same turn would be booked for a turn whose
-## packet had already gone out empty - so it sat in the outgoing pile forever
-## and simply never happened. It cost a full two-peer run to see, because
-## nothing errors: the turns all run, the checksums all agree, and the orders
-## are quietly dropped.
+## **Counted from what has been CLOSED, not from the turn the clock is in**, and
+## the difference is not academic. Orders arrive on render frames; closing
+## happens on the physics tick. An order booked for a turn whose packet had
+## already gone out sat in the outgoing pile for ever and simply never happened
+## - it cost a full two-peer run to see, because nothing errors: the turns all
+## run, the checksums all agree, and the orders are quietly dropped.
 func scheduled_turn() -> int:
-	return maxi(current_turn(), _last_sent_turn + 1) + _input_delay()
+	return _closed_through + 1
+
+
+## How far ahead of itself this machine closes turns - THE INPUT DELAY.
+##
+## Measured, not guessed. What it has to cover is the trip from this machine to
+## the peer that is furthest away, because that peer may not simulate the turn
+## until this machine's word about it has arrived:
+##
+##     a client:  my one way up  +  the furthest player's one way down
+##     the server: the furthest player's one way down
+##
+## ENet supplies both halves - it acknowledges every reliable packet and keeps a
+## smoothed round trip and a variance from those acknowledgements, so the match's
+## own traffic is the measurement and nothing is sent to obtain it. The variance
+## goes in because a mean cannot see a spike, and `jitter_margin_ms` sits on top
+## of both for what neither measures.
+##
+## Rounded UP to a whole turn, because a turn is the only granularity a schedule
+## has, and clamped so that neither a garbage reading nor a genuinely terrible
+## connection can push it somewhere useless.
+##
+## **Changing it is free and cannot desync anybody** - see the note at the top of
+## this file. That is the whole reason it is allowed to move at all.
+## **NOT SMOOTHED, and that is a measured decision rather than an oversight.**
+##
+## The Age of Empires post-mortem is emphatic that a consistent slower response
+## beat one that varied, so damping this looks obviously right, and Warzone 2100
+## really does slew its own latency asymmetrically - down 5 ms at a time, up 60.
+## An asymmetric slew was built here and MEASURED FOUR TIMES WORSE: 370 ms mean
+## against 79, with the delay ratcheting to the ceiling and staying there,
+## because a rise taken at once plus a fall that has to be earned turns one
+## spike into a permanent tax.
+##
+## The spikes it was reacting to are an artefact of the only test available -
+## three headless Godot processes contending for one desktop's cores, which is
+## not a network. Damping the wrong signal made the wrong signal permanent.
+##
+## So this stays raw until it can be judged against a REAL connection, where the
+## question is whether the reading is spiky at all. If it is, the fix belongs in
+## the measurement below - a decaying peak, or dropping the variance term - and
+## not in a ratchet on the answer. See `Docs/Findings`.
+func delay_turns() -> int:
+	var config: NetworkConfig = _config()
+	if config == null:
+		return 2
+	var floor_turns: int = maxi(1, config.min_delay_turns)
+	var ceiling_turns: int = maxi(floor_turns, config.max_delay_turns)
+	if !config.adaptive_delay:
+		return clampi(config.fixed_delay_turns, 1, ceiling_turns)
+
+	var budget: int = _wire_budget_ms()
+	if budget < 0:
+		# Nothing measurable yet, which on a live connection lasts about a
+		# frame. The CEILING rather than the floor: guessing high costs feel
+		# for an instant, guessing low stalls the opening of the match.
+		return ceiling_turns
+
+	var turn_ms: float = maxf(1.0, MatchSession.tick_seconds() * float(_ticks_per_turn()) * 1000.0)
+	return clampi(ceili(float(budget) / turn_ms), floor_turns, ceiling_turns)
 
 
 # --- collecting orders ----------------------------------------------------
@@ -347,6 +536,10 @@ func schedule(command: Command) -> int:
 	if !_outgoing.has(turn):
 		_outgoing[turn] = []
 	(_outgoing[turn] as Array).append(command.to_dict())
+
+	# The stopwatch starts where the player pressed, not where the tick opened.
+	if !_ordered_at.has(turn):
+		_ordered_at[turn] = Time.get_ticks_msec()
 	return turn
 
 
@@ -369,48 +562,61 @@ func commands_for(turn: int) -> Array:
 
 # --- exchanging them ------------------------------------------------------
 
-func _send_turn(turn: int) -> void:
-	# **The pipeline has to be primed or nothing ever starts.** An order given
-	# now is booked `input_delay` turns ahead, so the first `input_delay` turns
-	# can never carry one - and nobody would ever send for them. Every peer then
-	# reaches turn 0, waits for orders that by definition do not exist, and the
-	# match holds forever on its first tick. Cost a full two-peer run to find,
-	# and it looked exactly like a networking failure.
-	if !_primed:
-		_primed = true
-		# **From turn ZERO, not from the turn this peer happens to be on.**
-		#
-		# Two peers do not start their match at the same instant - the server
-		# builds its world after the clients have built theirs, and two clients
-		# load at whatever speed their machines manage. Each one's clock starts
-		# at 0 when ITS match begins, so by the time a late peer goes live the
-		# others are already several turns in and waiting on turns it has not
-		# heard of.
-		#
-		# Priming from the current turn made that peer's first message be about
-		# turn 2 or 3, while everybody else sat blocked on turn 1 that nobody
-		# would ever send - a permanent stall, with the tree paused, which
-		# reads as "the game started and no input does anything".
-		#
-		# Emitting from 0 says the honest thing: this peer had no orders for any
-		# turn before it existed. Bounded by the current turn, and a peer cannot
-		# join mid-match (D13), so the loop is short.
-		for early: int in range(0, turn + _input_delay()):
-			_emit(early, [])
-
-	var scheduled: int = turn + _input_delay()
-	var payload: Array = _outgoing.get(scheduled, [])
-	_outgoing.erase(scheduled)
-	_emit(scheduled, payload)
+## Says this machine's final word on every turn up to and including `target`.
+##
+## **A RANGE rather than one turn per tick, and that is what makes the delay
+## changeable at all.** Closing exactly one turn per tick is correct only while
+## the delay never moves: raise it and the turn skipped over is never closed, so
+## every peer waits on it for ever; lower it and the same turn is closed twice.
+## Asking instead "which turns have I not closed yet" is right under both, and
+## under a delay that moves every second.
+##
+## It also subsumes the PRIMING that used to be a special case with a flag. On
+## the first tick nothing has been closed and `_closed_through` is -1, so this
+## closes turn 0 through 0 + delay in one go - which is exactly what priming
+## was, and from turn zero rather than from wherever this peer's clock happened
+## to start, which is what made a late-loading peer stall the whole match.
+##
+## Every turn goes out even when empty: "I have nothing for this one" is the
+## message that lets a turn close, and silence is indistinguishable from a lost
+## packet.
+func _close_through(target: int) -> void:
+	while _closed_through < target:
+		_closed_through += 1
+		var payload: Array = _outgoing.get(_closed_through, [])
+		_outgoing.erase(_closed_through)
+		_emit(_closed_through, payload)
 
 
-## Sent even when EMPTY. "I have nothing for this turn" is the message that lets
-## the turn close; silence cannot be told apart from a dropped packet.
+## One turn's word, onto the wire - and into this machine's own record of the
+## turn at the same moment.
+##
+## **A peer records its OWN word locally rather than waiting to hear it back**,
+## and that is a correctness fix, not an optimisation. A client used to learn its
+## own orders only from the server's relay of them, so its own word took a full
+## round trip to reach it. If that echo ever arrived after the turn had run,
+## `_is_complete` passed without it, `commands_for` returned the turn short of
+## this peer's own orders, and `_incoming.erase` threw the echo away - so this
+## machine alone applied a different turn from everybody else, with NO stall and
+## NO error, discoverable only at the next checksum.
+##
+## It was covered before only by accident: the announced worst one-way is taken
+## across every peer INCLUDING the receiving one, so the budget happened to
+## always exceed a peer's own round trip. Anyone tightening that loop would have
+## broken it silently. Recording locally removes the dependency instead of
+## resting on it, and costs a client half its own latency into the bargain.
+##
+## What the server stamps is the SLOT, and an honest client writes the same
+## value into `to_dict()` that the server writes over it - so the local record
+## and the relayed one are identical. A client that lies about its slot now
+## disagrees with everybody instead of being quietly corrected, which the
+## checksum catches; the relay is still the only thing other peers believe.
 func _emit(turn: int, payload: Array) -> void:
 	if Net.is_server():
 		_record(turn, NetworkService.SERVER_PEER_ID, payload)
 		receive_turn.rpc(turn, NetworkService.SERVER_PEER_ID, payload)
 		return
+	_record(turn, multiplayer.get_unique_id(), payload)
 	submit_turn.rpc_id(NetworkService.SERVER_PEER_ID, turn, payload)
 
 
@@ -477,6 +683,14 @@ func receive_turn(turn: int, from_peer: int, payload: Array) -> void:
 
 
 func _record(turn: int, peer: int, payload: Array) -> void:
+	# A turn that has already run is finished with, and `_advance_turn` has
+	# erased it. Without this, the server's echo of a peer's own word - which
+	# now arrives AFTER that peer has run the turn, because it no longer waits
+	# for it - would re-create the entry and leave it there for the rest of the
+	# match. Harmless to the simulation, unbounded in memory.
+	if turn <= _last_run_turn:
+		return
+
 	if !_incoming.has(turn):
 		_incoming[turn] = {}
 	(_incoming[turn] as Dictionary)[peer] = payload
@@ -490,13 +704,22 @@ func _missing_peers(by_peer: Dictionary) -> PackedInt32Array:
 	return missing
 
 
-## Everyone whose orders a turn is waiting on: every connected peer, plus the
-## server itself, which plays no slot but still relays.
+## Everyone whose orders a turn is waiting on: every connected peer, the server
+## itself - which plays no slot but still relays - and THIS MACHINE.
+##
+## Including itself looks redundant and is not. `multiplayer.get_peers()` never
+## names the local peer, so without this line a client's completeness test never
+## mentioned the client's own orders, and a turn could run without them. It costs
+## nothing now that `_emit` records locally: the entry is already there before
+## the question is asked. What it buys is that the day something stops recording
+## locally, the match STALLS and says so, instead of diverging in silence.
 func _expected_peers() -> PackedInt32Array:
 	var peers: PackedInt32Array = PackedInt32Array([NetworkService.SERVER_PEER_ID])
 	for id: int in multiplayer.get_peers():
 		if id != NetworkService.SERVER_PEER_ID:
 			peers.append(id)
+	if !Net.is_server():
+		peers.append(multiplayer.get_unique_id())
 	return peers
 
 
@@ -591,12 +814,12 @@ func _forget_old_turns(now: int) -> void:
 ## Off the network there are no turns to agree on, and a single player run must
 ## pay nothing at all for any of this.
 ##
-## **Also gated on `lockstep_enabled`, which is OFF, and that gate is not
-## caution - it is a correctness fix.** Comparing world checksums between
-## machines is meaningless while only one of them simulates, which is exactly
-## what D2 means: a client draws replicated snapshots and runs no gameplay loop
-## of its own. Left ungated, this reported a desync as soon as a tower was built
-## and ended a live match on 2026-09-04. See NetworkConfig.lockstep_enabled.
+## **Also gated on `lockstep_enabled`**, and that gate is not caution - it is a
+## correctness fix. With the flag off the match is server-authoritative, so a
+## client draws replicated snapshots and runs no gameplay loop of its own;
+## comparing world checksums between machines is then meaningless, and left
+## ungated it reported a desync as soon as a tower was built and ended a live
+## match on 2026-09-04. See NetworkConfig.lockstep_enabled.
 func _is_live() -> bool:
 	if !Net.is_online() || References.match_session == null:
 		return false
@@ -623,12 +846,12 @@ func _config() -> NetworkConfig:
 
 func _ticks_per_turn() -> int:
 	var config: NetworkConfig = _config()
-	return 4 if config == null else maxi(1, config.ticks_per_turn)
+	return 1 if config == null else maxi(1, config.ticks_per_turn)
 
 
-func _input_delay() -> int:
+func _jitter_margin_ms() -> int:
 	var config: NetworkConfig = _config()
-	return 2 if config == null else maxi(1, config.input_delay_turns)
+	return 20 if config == null else maxi(0, config.jitter_margin_ms)
 
 
 func _checksum_every() -> int:

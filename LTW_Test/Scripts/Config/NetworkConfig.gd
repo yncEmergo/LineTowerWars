@@ -84,60 +84,86 @@ extends Resource
 
 @export_group("Lockstep")
 
-## Whether the lockstep layer does anything at all. **OFF, and it must stay off
-## until the cutover.**
+## Whether the game plays by lockstep or by state replication.
 ##
-## `LockstepService` counts turns, exchanges commands and compares world
-## checksums between machines. The last of those is ACTIVELY WRONG under the
-## model that is actually built (D2, server-authoritative): a client does not
-## simulate - `MatchSession.is_authority()` stops every gameplay loop on it -
-## so its world is a REPLICA drawn from snapshots, not an independently
-## computed one. Comparing the two therefore reports a desync the moment
-## anything happens, and the first tower somebody builds ends their match.
+## ON in the shipped `.tres`. Off, the match is server-authoritative exactly as
+## it was before the cutover: the server simulates, clients draw snapshots, and
+## none of `LockstepService` runs. The old model is kept switchable rather than
+## deleted because it is the only way to compare the two under load.
 ##
-## That is not a bug in the comparison. It is that the question "do these two
-## machines agree" has no meaning while only one of them is computing. It
-## starts having meaning on the day every peer simulates, and this flag is what
-## turns it on then.
-##
-## Cost a real test on 2026-09-04, in a live match, after towers were built.
-@export var lockstep_enabled: bool = false
+## **Off is not merely a different model, it also silences the checksums**, and
+## that is a correctness matter rather than a preference. Comparing world
+## checksums between machines is meaningless while only one of them simulates:
+## a client under replication holds a REPLICA, not an independently computed
+## world, so the comparison disagrees as soon as a tower is built. Left ungated
+## it ended a live match on 2026-09-04. "Do these two machines agree" only has
+## an answer while both are computing.
+@export var lockstep_enabled: bool = true
 
 ## How many simulation ticks make one lockstep TURN.
 ##
-## A turn is the unit commands are scheduled in and checksums are compared on,
-## and it exists because doing either every tick would mean a network round
-## trip every 50 ms. Four ticks is 200 ms at 20 Hz.
+## A turn is the unit commands are scheduled in and checksums are compared on.
 ##
-## The trade is latency against traffic: fewer ticks per turn means orders take
-## effect sooner and more packets are sent. It does NOT change the simulation
-## rate - every tick still runs.
+## **ONE, and there is no good reason for it to be anything else.** A turn
+## longer than a tick quantises every order to its length twice over - once
+## waiting for the turn to close, once again because the delay is counted in
+## turns - so two ticks per turn cost 100 ms of latency to save ten packets a
+## second. The packets are a few dozen bytes and usually empty. That trade was
+## backwards, and it was most of why an order took 200-300 ms on a LAN.
 ##
-## **This is the DOMINANT term in how sluggish the game feels**, because the
-## delay below is counted in turns. Two ticks is 100 ms at 20 Hz, and the
-## packets are tiny - usually empty - so halving it costs almost nothing on the
-## wire and takes 200 ms off every order.
-@export var ticks_per_turn: int = 2
+## What it does NOT change is the simulation rate: every tick still runs
+## whatever this says. The floor underneath it is the tick itself - an order can
+## only take effect on a tick boundary, so 20 Hz costs up to 50 ms on its own
+## (D11, and see `multiplayer.md` 11.4).
+@export var ticks_per_turn: int = 1
 
-## How many turns ahead a command is scheduled for.
+## Whether the input delay is MEASURED from the live connection or fixed.
 ##
-## **This is the input delay, and with `ticks_per_turn` it is what a player
-## feels.** It buys every peer time to receive an order before the turn it
-## belongs to has to be simulated.
+## **On, and the fixed number below exists only so the two can be compared.**
+## A fixed delay has to be set for the worst connection anybody might have, so
+## everybody pays for it - which is how a LAN game ended up feeling like a 300
+## ms one. Measured, it is whatever the wire actually needs and no more, so a
+## player on a good connection gets a responsive game and a player on a bad one
+## gets a playable one.
 ##
-## **The real latency is (this + 1) to (this + 2) turn periods, not this many.**
-## An order given during a turn cannot ride that turn's packet - it has already
-## gone out - so it is booked one turn further on, and it then runs at the START
-## of that turn. At 2 ticks per turn and a delay of 2 that is 200-300 ms.
+## Safe to change at any moment and safe to differ between peers, because the
+## delay decides only WHICH turn an order is booked for, never what that turn
+## does. See `LockstepService.delay_turns()`.
+@export var adaptive_delay: bool = true
+
+## The delay used when `adaptive_delay` is off, in TURNS.
 ##
-## It cannot be zero: a turn nobody has received yet cannot be simulated, and a
-## peer that has to wait for it stutters instead. What it must exceed is the
-## ROUND TRIP to the slowest peer - below that, turns arrive late and the match
-## stalls instead of merely feeling heavy. `this * ticks_per_turn * 50 ms` is
-## the budget; at 2 and 2 that is 200 ms, comfortable within a country and thin
-## across an ocean. Raising it hides worse connections at the cost of feel, and
-## the proper answer is to measure the round trip and set it from that.
-@export var input_delay_turns: int = 2
+## Only for deliberate comparison: set it, turn adaptation off, and the game
+## behaves like a build with no measurement in it. Paired runs against the same
+## server are the only honest way to show the adaptive path is actually winning
+## (`CLAUDE.md`).
+@export var fixed_delay_turns: int = 2
+
+## The smallest delay adaptation may choose, in TURNS.
+##
+## **One, and it cannot be zero.** A turn whose orders have not arrived cannot
+## be simulated, and zero would book an order for a turn already being run - so
+## every peer would stall on every order instead of merely feeling heavy.
+@export var min_delay_turns: int = 1
+
+## The largest delay adaptation may choose, in TURNS.
+##
+## A ceiling rather than a target: past this the connection is bad enough that
+## stalling is the honest outcome, and stretching the delay further only trades
+## a visible stutter for an invisible sluggishness nobody asked for.
+@export var max_delay_turns: int = 12
+
+## Head room added on top of the measured round trip, in MILLISECONDS.
+##
+## A link averaging 30 ms that spikes to 70 needs the 70, and a mean cannot see
+## a spike. ENet's own round-trip VARIANCE is added first and this sits on top
+## of it, covering what neither measures: the frame a packet waits before Godot
+## flushes it, and the scheduling jitter of two machines nobody is tuning.
+##
+## The trade is exact and worth stating: every millisecond here is a millisecond
+## of input delay for everybody, and every millisecond missing is a risk of a
+## stall. A stall is worse than sluggishness, so this is deliberately generous.
+@export var jitter_margin_ms: int = 20
 
 ## How often the world is checksummed and compared between machines, in TURNS.
 ##
@@ -223,8 +249,22 @@ func validate() -> bool:
 		complete = false
 
 	# Zero would mean simulating a turn whose commands cannot have arrived yet.
-	if input_delay_turns < 1:
-		Log.err("NetworkConfig input_delay_turns must be at least one", input_delay_turns)
+	if min_delay_turns < 1:
+		Log.err("NetworkConfig min_delay_turns must be at least one", min_delay_turns)
+		complete = false
+
+	if max_delay_turns < min_delay_turns:
+		Log.err("NetworkConfig max_delay_turns is below min_delay_turns", {
+			"min": min_delay_turns, "max": max_delay_turns,
+		})
+		complete = false
+
+	if fixed_delay_turns < 1:
+		Log.err("NetworkConfig fixed_delay_turns must be at least one", fixed_delay_turns)
+		complete = false
+
+	if jitter_margin_ms < 0:
+		Log.err("NetworkConfig jitter_margin_ms cannot be negative", jitter_margin_ms)
 		complete = false
 
 	if checksum_every_turns < 1:
