@@ -434,6 +434,19 @@ art at all so far - so this is the placement rule, not a description of the tree
   - a deploy is `.\Tools\deploy_server.ps1`, and it hard-resets the server to
     `origin/main`. Check for connected players first - stopping the service
     under a live match makes every client its own authority (`server.md`)
+  - **A DEPLOY THAT CHECKED THE FILES IS NOT CHECKING THE PROCESS.** The script
+    reported the server on the new commit while the OLD BUILD WENT ON SERVING,
+    because `git reset` had run and `systemctl restart` had not. Nothing said
+    so; the next client was simply refused for being on "different code",
+    against a server that had by every printed message just been updated
+    - the cause is a Windows PowerShell 5.1 trap worth knowing on its own:
+      **stderr from a native executable becomes a terminating error** when
+      `$ErrorActionPreference = "Stop"`. One ordinary line of git progress
+      aborts the script wherever it happens to be. Every `.ps1` in `Tools/`
+      sets that preference
+    - so a remote action is not done because a script said it was. The script
+      now proves the restart by comparing the service pid before and after,
+      and that is the shape to copy: assert the EFFECT, not the command
   - reading git - log, diff, blame, status - was always fine and still is
 - README.md is the way in: what the project is, what works, and which file answers
   what. Keep its Status section honest - it is the first thing a new reader trusts.
@@ -550,9 +563,15 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   - creep separation was the third, and is no longer paid: it now runs for
     ATTACKER creeps only and is skipped without a call for everything else.
     Switching it back on for the whole roster puts it straight back
-- Replication sends the whole world every tick, every unit in it. Fine for a
-  1v1 on a LAN, nowhere near 12 players. That is multiplayer.md
-  3.3, deliberately deferred until there was something to measure
+- **The lockstep client's tick budget is UNMEASURED.** Every client now
+  simulates every lane, so the per-creep cost that was a server problem is a
+  client problem too, and a match runs at the speed of its slowest peer.
+  Nobody has watched a client's frame time in a loaded match. This is the
+  largest open risk in the model - see multiplayer.md 4.1
+  - the replication path still exists behind `NetworkConfig.lockstep_enabled`
+    and still sends the whole world every tick. It is kept switchable because
+    it is the only honest way to compare the two under load, not because it is
+    expected back
   - a unit record grew by two floats when towers gained mana, and two more
     when the Beastmaster gained an ability a player AIMS - its cooldown and
     what it is linked to, which every unit in the world now carries a slot for.

@@ -7,21 +7,33 @@ numbers are `unit_data.md`, conventions are `CLAUDE.md`, and starting the server
 **Two players can play each other, start to finish.** A dedicated server hosts the lobby
 list; the host presses Start and everyone watches the same countdown; all three machines -
 both clients and the headless server - build the same match from the same seed, proven by
-checksum rather than by inspection. From there orders travel to the server as INTENT, the
-server is the only machine that simulates, and both clients draw what it sends. Towers,
-creeps, gold, income, stock, lives, value and placement all replicate. A leak steals a life,
-a disconnect erases the leaver's maze, and the last player standing ends the match.
+checksum rather than by inspection. A leak steals a life, a disconnect erases the leaver's
+maze, and the last player standing ends the match.
 
-**What that costs, and it is deliberate:** the client predicts nothing (D17), so an order
-takes a round trip before anything moves, and the server sends the WHOLE world twenty times
-a second. Both are phase A choices, both are listed under *What is deliberately not built*
-at the end, and both now have something real to be measured against rather than guessed at.
+**The model is DETERMINISTIC LOCKSTEP (D2, cut over 2026-09-04).** Every machine simulates
+the whole world. An order is not applied where it is given: it is booked for a TURN a little
+ahead, exchanged with every peer, and run by all of them on that turn. A turn may only be
+simulated once every peer's word on it has arrived, and until it has, the world is held
+still - that hold IS lockstep. There is no state stream at all; the server relays orders,
+stamps who sent them, and compares per-turn world checksums so a divergence is caught rather
+than corrected.
+
+**What that costs, and it is deliberate:** a desync ends the match rather than healing, and
+every client pays the CPU to simulate every lane. What it buys is the bandwidth of a few
+dozen bytes per peer per tick instead of a whole world twenty times a second, and an input
+delay that tracks the connection instead of a constant.
+
+**Before the cutover this file described server-authoritative replication in the present
+tense, and that outlived the code by a day.** It is worth knowing why, because it cost real
+work: every false latency claim in here read as consistent with the paragraphs around it, so
+nobody checked any of them. If you are changing the model again, change this section first.
 
 **Where to start reading**, whichever of these you need:
 
 | Looking for | Go to |
 | --- | --- |
-| What is decided and must not be re-opened | §1, D1-D29 |
+| What is decided and must not be re-opened | §1 |
+| Why an order feels as fast or as slow as it does | §11.4 |
 | The API surface, with real checked signatures | §2 |
 | How the whole thing is meant to work | §5 |
 | What is genuinely still open | §1 → *Still open* |
@@ -40,7 +52,8 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | # | Decision | Date | Notes |
 | --- | --- | --- | --- |
 | D1 | **No physics engine, anywhere.** All gameplay is plain maths. | 2026-08-21 | Now a hard rule in `CLAUDE.md`, and already true of the code before it was written down. |
-| D2 | **Server-authoritative replication.** The server decides what happened. | 2026-08-21 | Chosen over lockstep and host-authority deliberately, accepting it is heavier for a 1v1 prototype, because ranked play needs it and retrofitting it later would be a rewrite. **UNDER REVIEW since 2026-09-04 - see §4.1. Still the built model; do not build new work on the replication layer until this is settled.** |
+| D2 | **Deterministic lockstep.** Every peer simulates; the server relays orders and compares checksums. | 2026-09-04 | Replaced server-authoritative replication, which held from 2026-08-21 and is the reasoning still recorded in §4. Reopened on two facts neither of which was known when it was taken: central simulation of twelve lanes did not fit the tick budget, and this codebase was already deterministic by construction - the NO PHYSICS ENGINE rule in `CLAUDE.md` had made it so for unrelated reasons. See §4.1. |
+| ~~D2 (old)~~ | ~~**Server-authoritative replication.** The server decides what happened.~~ | 2026-08-21 | Chosen over lockstep and host-authority deliberately, accepting it is heavier for a 1v1 prototype, because ranked play needs it and retrofitting it later would be a rewrite. **UNDER REVIEW since 2026-09-04 - see §4.1. Still the built model; do not build new work on the replication layer until this is settled.** |
 | D3 | **The game server is a headless Godot export of this same project**, in GDScript. | 2026-08-21 | One copy of the simulation, shared by client and server. See §5.2. |
 | D4 | **Dedicated server process from day one**, run on localhost during development. | 2026-08-21 | Not a listen server. "Runs on your machine" and "runs in a datacenter" then differ only by an address. |
 | D5 | **ENet (`ENetMultiplayerPeer`) is the transport.** | 2026-08-21 | UDP with reliable *and* unreliable channels. Built in. See §6 for why not WebSockets. |
@@ -64,7 +77,8 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D20 | **A client connects when Multiplayer is pressed**, not at boot. | 2026-08-21 | The lobby browser needs a live list, so the connection's lifetime is the browser's. Single player never opens a socket, and the browser is where every failure state in 1.8 already belongs. |
 | D19 | **One process runs the lobby and the match** for now. | 2026-08-21 | Splitting them later is an address change, so it is safe to defer. Does not conflict with D16: still one process per match once matches are spawned separately. |
 | D18 | **Dev server runs locally in the office**, on the user's own PC for the first tests. | 2026-08-21 | Same code path as anywhere else; the address is one line in `NetworkConfig`. |
-| D17 | **Feedback now, prediction later.** No client-side prediction in the first version. | 2026-08-21 | Immediate local feedback only. Prediction revisited much later, as an experiment. |
+| D17 | **Feedback, never prediction.** Presentation may answer the INTENT at once; nothing may guess the RESULT. | 2026-08-21, restated 2026-09-04 | Was "prediction later, as an experiment". Under lockstep it is not an experiment that is waiting, it is a contradiction: prediction means simulating ahead of the turn, which is the one thing the model exists to forbid. The line is unchanged and now permanent - a marker, a ghost, a ring, a highlight and a sound are true the moment the player asks; spending gold, occupying a cell and starting a build are not. See §11.4. |
+| D32 | **The input delay is MEASURED from the live connection**, never authored. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Also the only way to use more than one CPU core — see §11.3. |
 | D15 | **Load timeout 60 s**, then start without whoever is missing, provided `min_players` are ready. No area spawns for them. | 2026-08-21 | See §11.2. |
 | D14 | **A disconnect erases that player's maze.** The match continues; their lives drain away through normal life steal until they are eliminated normally. | 2026-08-21 | Reuses life steal, elimination and ring-closing exactly as `game_rules.md` already defines them — see §11.1. |
@@ -390,12 +404,20 @@ one bug the first end-to-end run found.
 
 ---
 
-### Playing a match: `Commands`, `Replication`, authority
+### Playing a match: `Commands`, `Lockstep`, authority
 
-**The autoloads, in this order** - `Net`, `MatchStart`, `Lobby`, `Commands`,
-`Replication`. Every one of them is an autoload for the same forced reason: an `@rpc` routes
-by NODE PATH, and the two match scenes have different roots (`/root/Main/...` against
+**The autoloads, in this order** - `Net`, `MatchStart`, `Lobby`, `Commands`, `Replication`,
+`Lockstep`. Every one of them is an autoload for the same forced reason: an `@rpc` routes by
+NODE PATH, and the two match scenes have different roots (`/root/Main/...` against
 `/root/ServerMatch/...`), so nothing inside a match scene can be an rpc endpoint.
+
+> **Which of the last two is doing the work depends on `NetworkConfig.lockstep_enabled`,
+> and it ships ON.** With it on, `Lockstep` owns the match: every peer simulates,
+> `MatchSession.is_authority()` answers true everywhere, orders are booked into turns, and
+> `Replication` goes silent - there is no state stream at all. With it off the game is
+> server-authoritative exactly as it was before 2026-09-04, which is what the rest of this
+> subsection and §5.3-5.4 describe. Both paths are live; the flag is the switch, and it is
+> the only honest way to compare them under load.
 
 **`Commands`** (`Scripts/Multiplayer/CommandService.gd`) - the one road a player order takes:
 
@@ -687,27 +709,30 @@ project with only that variable set and no arguments at all: it booted as the se
 
 ---
 
-## 4. Why server-authoritative, and what it costs
+## 4. Why lockstep, and what it costs
 
-Rejected alternatives, recorded so the reasoning is not relitigated:
+**This section is HISTORY as much as reasoning.** Server-authoritative replication was D2
+from 2026-08-21 to 2026-09-04, and the argument for it is kept because it is still the right
+argument for a game with hidden information - it just is not the right one for this game.
+Read §4.1 for what changed.
 
-| Rejected | Why not |
+Alternatives, and where they stand now:
+
+| | Standing |
 | --- | --- |
-| **Deterministic lockstep** | Genre-correct, and this codebase suits it unusually well. But no client can be trusted to report a result, and a desync is unrecoverable. Its bandwidth advantage is largely recovered anyway by §5.4. |
-| **Host-authoritative** | Fastest to a playable 1v1, but the host has zero latency, can edit the simulation, and their leaving ends the match. Unusable for ranked. |
-| **Per-lane authority** | Cheapest by far, and the lanes really are independent, but it trusts the client completely. |
+| **Deterministic lockstep** | **This is what is built.** Was rejected on "no client can be trusted to report a result, and a desync is unrecoverable". The first half was simply wrong and is corrected in §4.1: under lockstep no client reports anything. The second half is true and is accepted. |
+| **Server-authoritative replication** | Held for two weeks and worked. Retired because a central simulation of twelve lanes does not fit a 50 ms tick, and because the security it buys is worth close to nothing in a game with no hidden information. Still switchable through `NetworkConfig.lockstep_enabled`, which is the only honest way to compare the two under load. |
+| **Host-authoritative** | Rejected. The host has zero latency, can edit the simulation, and their leaving ends the match. Unusable for ranked. |
+| **Per-lane authority** | Rejected. Cheapest by far, and the lanes really are independent, but it trusts the client completely. |
 
-**The cost being accepted:** more work before the first networked match, a server to run and
-pay for, and input latency that prediction has to hide. That is the trade for a result the
-player cannot forge.
+**The cost being accepted:** a desync ends a match rather than healing, every client pays to
+simulate every lane, and every feature written from now on must be deterministic forever.
+That last one is the real price, not the migration.
 
-### 4.1 D2 under review - deterministic lockstep, reopened 2026-09-04
+### 4.1 Why D2 changed, 2026-09-04
 
-**Nothing has changed in the code.** D2 is still what is built and still what new work must
-target. This section exists so the argument is not re-derived from scratch, and so that the
-two facts that reopened it are not lost.
-
-**A decision is only worth reopening on new information.** Two pieces arrived:
+**A decision is only worth reopening on new information.** Two pieces arrived, and neither
+was known when D2 was taken:
 
 **1. The CPU cost of central simulation was never priced in.** The rejection table above
 weighs lockstep's BANDWIDTH advantage and dismisses it as "largely recovered anyway by
@@ -724,18 +749,22 @@ IS. The cheat lockstep enables is the MAPHACK, and a maphack against a board tha
 public buys nothing. So the security premium D2 is paying is, for this game specifically,
 close to zero.
 
-Worth correcting one line above while it is being read: *"no client can be trusted to report
-a result"* overstates it. Under lockstep no client REPORTS anything - every peer runs the same
-rules over the same inputs, and a client that fabricates gold or moves a creep it should not
-does not get away with it, it DESYNCS, which is detectable by comparing state checksums per
-turn. What lockstep gives up is information hiding, not result integrity.
+**3. The reason lockstep had been rejected was not true.** *"No client can be trusted to
+report a result"* was the line, and under lockstep no client REPORTS anything: every peer runs
+the same rules over the same inputs, and a client that fabricates gold or moves a creep it
+should not does not get away with it, it DESYNCS - detectable by comparing world checksums per
+turn. What lockstep gives up is information HIDING, not result integrity, and per point 2
+there is nothing here to hide. The one thing a checksum cannot catch is a peer LYING ABOUT WHO
+IT IS, which is why the relay still stamps the sender's slot onto every order it forwards.
 
-**What lockstep would NOT fix, and this is why it is not being done yet.** It relocates the
-cost rather than removing it: under lockstep EVERY client simulates EVERY lane, so the work
-is duplicated to every machine rather than reduced. Twelve lanes at today's per-creep cost is
-heavier than one machine can carry, and a lockstep match runs at the speed of its SLOWEST
-peer - so minimum spec becomes the binding constraint instead of the server. **The per-unit
-cost has to come down under either model**, which is why that is the work being done first.
+**What lockstep does NOT fix, and this is the open risk rather than a reason not to have
+done it.** It relocates the CPU cost rather than removing it: every client now simulates
+every lane, so the work is duplicated to every machine rather than reduced, and a lockstep
+match runs at the speed of its SLOWEST peer - minimum spec is the binding constraint instead
+of the server. Twelve lanes at today's per-creep cost is heavier than one machine can carry.
+**The per-unit cost still has to come down**, and it is now a client problem as well as a
+server one. UNMEASURED so far: nobody has run a loaded match under lockstep and watched a
+client's tick budget.
 
 **What it would buy, beyond CPU**: `ReplicationService` and all of §3.3 / phase B deleted,
 along with the whole family of bugs that exists only because there is a replication boundary
@@ -767,11 +796,10 @@ bandwidth AND decouples the visual rate from the simulation rate - which is what
 the interpolation seam that killed staggered movement
 (`Findings/2026-09-04-staggered-creep-movement.md`).
 
-### 4.2 What a cutover would do to the DECISION LOG
+### 4.2 What the cutover DID to the decision log
 
-Written 2026-09-04, before any cutover, so the blast radius is known rather than discovered.
-**Nothing here is decided** - this is what would have to be rewritten if D2 changes, and it is
-listed because a decision log that silently goes stale is worse than none.
+Written 2026-09-04 before the cutover, so the blast radius was known rather than discovered,
+and kept afterwards because it turned out to be accurate. Everything below has now happened.
 
 **Replaced or retired:**
 
@@ -891,6 +919,13 @@ the HUD.
 
 ### 5.3 The command / state loop
 
+> **This diagram is the REPLICATION path (`lockstep_enabled = false`).** Under lockstep the
+> right-hand column is not an authority, it is a relay: it stamps who sent an order and
+> forwards it, every peer validates and applies the same orders on the same turn, and
+> nothing is broadcast back as state. What survives unchanged is the first half - **the
+> client sends INTENT, never state** - and every rule named at the bottom of this section,
+> which is now enforced identically on every machine rather than centrally.
+
 ```
 CLIENT                                  SERVER
 ──────                                  ──────
@@ -917,6 +952,12 @@ legality, and the maze-blocking rule from `game_rules.md` — a player must not 
 their lane. That one in particular must never be client-side.
 
 ### 5.4 Bandwidth: how thousands of creeps stay affordable
+
+> **Largely moot under lockstep, and kept because the flag can go back.** Lockstep sends
+> orders, not units: a few dozen bytes per peer per tick whatever is happening in the world,
+> so none of the schemes below are needed to make a 1v1 or a 12-player match affordable on
+> the wire. What lockstep does NOT solve is the CPU that section §4.1 is about. Everything
+> here still applies to the replication path.
 
 This was the one real objection to replication, so the plan is written down rather than
 discovered later. Four mechanisms, in order of importance:
@@ -972,10 +1013,10 @@ Rendering uses Godot's own physics interpolation, and it is **not optional at th
 the builder covers 0.30 world units per tick, which is visibly stepped raw and smooth
 interpolated. Confirmed in play.
 
-How far prediction goes is open. The cheap first version predicts nothing and shows a build
-a few tens of milliseconds late, which for a tower defence — where the player places
-buildings rather than aiming a rifle — is far more tolerable than in a shooter. Add
-prediction where the delay turns out to be felt.
+**Prediction is not on the table** - see §11.4 and D17. Under lockstep it would mean
+simulating ahead of the turn, which is what the model exists to forbid. The tick rate is
+instead a hard floor under input latency: an order can only take effect on a boundary, so
+20 Hz costs up to 50 ms whatever the network does. Raising it is §5.6, and is not free.
 
 ### 5.6 Changing the tick rate is not a free knob
 
@@ -1398,22 +1439,91 @@ export reduces by stripping visual resources.
 Still open: whether the lobby lives in its own process or shares one with a match. For the
 prototype, one process doing both is simplest, and splitting later is an address change.
 
-### 11.4 Feedback now, prediction later (D17)
+### 11.4 Input delay, feedback, and prediction (D17, D32)
 
-**Prediction** is the client guessing the server's answer before it arrives — showing the
-tower the instant you click, assuming the server will agree. When it disagrees, the client
-has to take it back, and that undo is what looks glitchy.
+#### Where the delay comes from
 
-**Feedback** is confirming the input landed without claiming the outcome: the click, a ghost
-where the tower will go, the gold greying out. It cannot ever be wrong.
+Under lockstep an order is booked for the first TURN this machine has not already closed,
+and it runs when that turn comes up. So the wait is:
 
-For a tower defence, 60–100 ms on placing a building is close to imperceptible — a shooter
-could not tolerate that on aim, but nothing here is aimed. So the first version ships
-feedback only, and prediction is revisited if the delay turns out to be felt. The builder's
-movement is the likeliest candidate, being the one continuous action a player performs.
+    the delay this machine closes turns ahead by,  plus up to one turn
 
-Not to be confused with the creep extrapolation in §5.4, which is the client running the
-*simulation* ahead of the server for bandwidth reasons. That is needed regardless.
+and nothing else. There is no second term. The delay is how far ahead of itself a peer
+chooses to speak, and it has to cover the trip to the peer furthest away - a client's word
+climbs to the relay and comes back down the far side, so it pays both legs; the server pays
+one.
+
+**The delay is a LIVENESS parameter, not a CORRECTNESS one.** It decides which turn an order
+is booked into and has no say in what that turn does - every peer applies turn N's orders on
+tick N regardless of how far ahead anybody closed it. So it may differ between peers and
+change mid-match with no risk of divergence at all. The worst a wrong value can do is stall
+(too low) or feel heavy (too high). That is exactly why it is measured rather than authored,
+and why measuring it needed no agreement protocol.
+
+#### The floor
+
+Two things are irreducible. An order can only take effect on a tick boundary, so the 20 Hz
+tick (D11) costs up to one tick on its own. And the word has to arrive, which costs the wire.
+Forrest Smith, who worked on the Supreme Commander engine, states the first half plainly for
+a 10 Hz sim: *"The latency from player click to unit response is always going to be at least
+0-100ms (the next SimTick)."* One tick, not a fixed budget.
+
+#### What was wrong here before, and why it survived
+
+This section used to say 60-100 ms was the target and that prediction would be revisited if
+the delay were felt. It was felt, at 300-400 ms, and the reasoning offered for that number
+was that it is inherent to lockstep and that RTS games mask it with acknowledgement sounds.
+**Both claims were false**, the second was invented outright, and it took the user's own
+insistence to get them checked.
+
+What the primary sources actually say:
+
+- **Age of Empires** (Bettner and Terrano's post-mortem, the canonical lockstep paper): the
+  communications turn *"was roughly the round-trip ping time for a message"* and was adapted
+  continuously by their Speed Control system. Turn length tracks the network; the frames
+  inside a turn track the slowest CPU. Two independent knobs, neither of them fixed.
+- **Warcraft III**, patch 1.28.4: *"The artificial latency on all Battle.net realms has been
+  reduced from 250ms to 100ms."* LAN was 100 ms throughout. WC3 does not schedule turns
+  ahead at all - it flushes whatever orders arrived on a timer, so its command latency is
+  `RTT + uniform(0, 100 ms)`. At 30 ms ping that is ~80 ms.
+- **StarCraft** ran the same engine at a 125 ms budget on LAN and 500 ms on Battle.net purely
+  by configuration, and Remastered shipped Dynamic Turn Rate to choose between them.
+- **Spring/Recoil** has no command-delay constant anywhere in the engine. **Warzone 2100**
+  negotiates down to a 100 ms floor. **OpenRA** was measured by one of its own contributors
+  at 72 ms click-to-response after changing a single constant.
+- **The acknowledgement-sound claim has no primary source.** The AoE paper was searched for
+  it directly; the only mention of sound in it is a determinism warning about random terrain
+  sounds. Unit barks are real and predate networked RTS entirely (Dune II, 1992). Nothing
+  attributes lockstep's playability to them.
+
+The decisive check is local and takes no research: set the ping to zero and re-run the old
+arithmetic. It gives the same number. **A delay that does not move when the network is
+removed was never a network delay** - it was `input_delay_turns x ticks_per_turn` plus turn
+quantisation plus an off-by-one in the tick counter.
+
+One honest counterweight, recorded rather than buried: AoE's own 1997 playtesting found
+*"250 milliseconds of command latency was not even noticed"*, and Sheldon et al. (NetGames
+2003) found no significant effect on WC3 outcomes up to 500 ms. Both measure OUTCOMES and
+tolerance, not perceived responsiveness, and neither argues the delay is unavoidable. The
+same AoE paper is far more useful on what actually hurts: *"a consistent 500 msec command
+latency was playable, but one that varied was considered jerky and hard to use."*
+
+#### Feedback and prediction (D17)
+
+**Prediction** is guessing the outcome before the turn runs - showing the tower as built,
+spending the gold, starting the walk. Under lockstep that means simulating ahead of the
+turn, which is the one thing the model exists to forbid, so it is not deferred, it is
+excluded.
+
+**Feedback** is answering the INTENT without claiming the RESULT, and it may be instant
+because it is presentation and cannot be wrong. Already local: selection, the build ghost,
+the move marker, the attack ring, the range overlay, and the abilities that declare
+`is_local_only()`. The line is exactly there - a marker, a ghost, a ring, a highlight and a
+sound are true the moment the player asks; occupying the cell is not.
+
+Still available within that line, and not built: a grey footprint dropped at the clicked cell
+the instant a build order is submitted and removed when the real building arrives, greying a
+tower on sell, and pre-decrementing the DISPLAYED send stock.
 
 ### 11.5 Where the dev server runs (D18, superseded by D30)
 
@@ -1476,8 +1586,10 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 
 | | What | Why not yet |
 | --- | --- | --- |
-| **Replication phase B** | Spawn-and-extrapolate, interest management, quantisation - all of §5.4. The server currently sends the whole world, every unit, twenty times a second. | Phase A shipped first on purpose so this is measured rather than guessed at. Fine for a 1v1 on a LAN, nowhere near 12 players. This is the next thing to do when it is wanted. |
-| **Client-side prediction** | An order takes a full round trip before anything moves (D17). | Nothing to do until somebody plays over a real connection: measure before optimising. §11.4 covers why a tower defence tolerates this and a shooter would not. |
+| **Replication phase B** | Spawn-and-extrapolate, interest management, quantisation - all of §5.4. | **Deleted by the cutover rather than deferred.** Lockstep sends orders, not units, so there is no world stream to optimise. It comes back only if `lockstep_enabled` ever goes back to false for good. |
+| **Client-side prediction** | Guessing the outcome before the turn runs. | **Excluded, not deferred** (D17, §11.4). Under lockstep prediction means simulating ahead of the turn, which is the one thing the model forbids. Instant local FEEDBACK is a different thing, is allowed, and has more room in it - see the last paragraph of §11.4. |
+| **A lockstep client's tick budget under load** | Every client now simulates every lane. Nobody has run a loaded match under lockstep and watched a client's frame time. | The single biggest open risk in the model (§4.1). It wants the same paired-measurement treatment the server got, on the weakest machine available rather than a dev PC. |
+| **Delay smoothing** | The input delay is recomputed from live round-trip figures with no damping, so it can move between turns. | Tried and REVERTED on 2026-09-04: an asymmetric slew measured four times worse than none, because the only test available is three Godot processes sharing one desktop's cores and damping an artefact makes the artefact permanent. Wants a real connection to judge it against. `Findings/2026-09-04-input-delay.md`. |
 | **Projectile replication** | Projectiles are re-simulated locally as presentation; only the server applies their damage. | Cheap and correct as it stands. |
 | **Target acquisition on the client** | `AttackComponent` asks `is_authority()` nowhere, so every client runs the full target search for every tower in every lane, exactly as the server does. Only the damage is gated, in `Unit.take_damage` - a client's answer decides where its barrels point and where it spawns a shot, and nothing else. | It falls inside the presentation exception the row above uses, and for the same reason: a client has to know what a tower is shooting to draw it shooting. What is DIFFERENT is the price. Flying a projectile is a few vectors; acquiring a target is a scan of the whole lane, per tower, and it is the largest cost in a loaded tick on either machine. So the client pays a server's simulation bill to draw barrels, most of them in lanes nobody is looking at. The fix is not a gate on its own - a gated client would draw nothing - but the server naming what each tower fired at, which is the same spawn-event shape phase B wants and should land with it. |
 | **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |

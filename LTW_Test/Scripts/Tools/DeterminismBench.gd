@@ -12,8 +12,8 @@ extends Node
 ##
 ## **What it actually tests, stated plainly.** Two runs of the SAME BINARY on
 ## the SAME MACHINE from the same seed. That catches the whole family of
-## iteration-order and unseeded-randomness bugs, which is what
-## `lockstep-migration.md` section 6 inventoried. It does NOT catch
+## iteration-order and unseeded-randomness bugs, which is what the determinism
+## inventory taken before the cutover went looking for. It does NOT catch
 ## cross-machine float divergence, because there is only one machine here - that
 ## needs two boxes running `replay=` against the same trace, which this supports
 ## and which is the next step up.

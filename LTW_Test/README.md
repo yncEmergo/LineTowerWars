@@ -11,10 +11,18 @@ Built with **Godot 4.7**, targeting PC (keyboard & mouse).
 Pre-alpha. The current and only milestone is a **1v1 prototype**. Free-for-all with 3+
 players is out of scope until that works.
 
-**It is networked and playable.** A dedicated server hosts lobbies and runs the match; two
+**It is networked and playable.** A dedicated server hosts lobbies and relays the match; two
 clients join, build, send creeps at each other, steal lives and finish with a placement.
-The server is the only machine that simulates — clients send orders and draw what comes
-back, so two views cannot disagree.
+
+**It plays by deterministic lockstep.** Every machine simulates the whole world from the same
+seed and the same orders, so there is no state stream at all — the server forwards orders,
+stamps who sent them, and compares world checksums so a disagreement is caught rather than
+papered over. An order is booked a turn or two ahead and run by every peer on that turn, and
+how far ahead is MEASURED from the live connection rather than authored, so the input delay
+tracks the ping instead of being a constant everybody pays. See
+[multiplayer.md](Docs/multiplayer.md) §11.4 for how that works, and
+[Findings/2026-09-04-input-delay.md](Docs/Findings/2026-09-04-input-delay.md) for what it
+measured on the day.
 
 **A player is asked what to call themselves** the first time they open multiplayer, and
 cannot go online until they have chosen — the prompt is modal and, on a first run, has no

@@ -51,8 +51,28 @@ if (-not (Test-Path $Key)) {
     exit 1
 }
 
+# **`$ErrorActionPreference` is dropped to Continue around ssh ON PURPOSE, and it
+# is a bug fix rather than sloppiness.** Windows PowerShell 5.1 wraps every line a
+# native executable writes to stderr in an ErrorRecord, and with the preference
+# set to Stop that record is TERMINATING - so one perfectly ordinary line of git
+# progress ("From https://github.com/...") aborts the script mid-deploy.
+#
+# It cost a real deploy on 2026-09-04. `git fetch` and `git reset` had already run
+# on the server, so the tree was on the new commit and this script cheerfully
+# reported it, while `systemctl restart` never executed and the server went on
+# running an hour-old build. The next client to connect was refused for being on
+# "different code" - against a server that had, by every message this script
+# printed, just been updated.
+#
+# The exit code is the honest signal and is still checked. stderr is not.
 function Invoke-Server([string] $Command) {
-    & ssh -i $Key -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "root@$Server" $Command
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & ssh -i $Key -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "root@$Server" $Command
+    } finally {
+        $ErrorActionPreference = $previous
+    }
     if ($LASTEXITCODE -ne 0) { throw "ssh returned $LASTEXITCODE" }
 }
 
@@ -67,8 +87,14 @@ if ($Log) {
 
 # ---- restart only --------------------------------------------------------------------
 if ($Restart) {
+    $before = (Invoke-Server "systemctl show -p MainPID --value ltw-server").Trim()
     Invoke-Server "systemctl restart ltw-server"
-    Write-Host "Restarted." -ForegroundColor Green
+    $after = (Invoke-Server "systemctl show -p MainPID --value ltw-server").Trim()
+    if ($after -eq $before -or $after -eq "0") {
+        Write-Host "THE SERVICE DID NOT RESTART - still pid $before." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Restarted: pid $before -> $after." -ForegroundColor Green
     Invoke-Server "systemctl is-active ltw-server"
     exit 0
 }
@@ -128,12 +154,16 @@ if ($remoteHead -eq $originHead) {
 # ---- deploy --------------------------------------------------------------------------
 Write-Host "Deploying..." -ForegroundColor Cyan
 
+# Which process is serving right now, so the restart below can be PROVEN rather
+# than assumed. See the check after it.
+$oldPid = (Invoke-Server "systemctl show -p MainPID --value ltw-server").Trim()
+
 # Reset rather than pull: the checkout is a deploy target, never edited by hand, so the
 # remote branch always wins. A pull would stop on a conflict nobody is there to resolve.
 Invoke-Server @"
 set -e
-git -C $Path fetch --depth 1 origin main
-git -C $Path reset --hard origin/main
+git -C $Path fetch --depth 1 origin main --quiet
+git -C $Path reset --hard origin/main --quiet
 chown -R ltw:ltw $Path
 /opt/godot/godot --headless --path $Path/LTW_Test --import >/dev/null 2>&1 || true
 systemctl restart ltw-server
@@ -141,6 +171,24 @@ systemctl restart ltw-server
 
 $newHead = (Invoke-Server "git -C $Path rev-parse HEAD").Trim()
 Write-Host "Server now on $($newHead.Substring(0,8))." -ForegroundColor Green
+
+# **The tree being on the new commit does NOT mean the new commit is RUNNING**, and
+# conflating the two is exactly how an hour-old build kept serving while this
+# script said everything was fine. A restart gives the service a new pid; if the
+# pid has not moved, the restart did not happen, whatever else succeeded.
+$newPid = (Invoke-Server "systemctl show -p MainPID --value ltw-server").Trim()
+if ($newPid -eq $oldPid -or $newPid -eq "0") {
+    Write-Host ""
+    Write-Host "THE SERVICE DID NOT RESTART. It is still pid $oldPid, running the OLD build." `
+        -ForegroundColor Red
+    Write-Host "The files on the server are updated; the process serving them is not." `
+        -ForegroundColor Red
+    Write-Host "Clients will be refused for being on 'different code'. Retry with:" `
+        -ForegroundColor Red
+    Write-Host "  .\Tools\deploy_server.ps1 -Restart" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "Restarted: pid $oldPid -> $newPid." -ForegroundColor Green
 
 Invoke-Server "systemctl is-active ltw-server"
 Write-Host ""

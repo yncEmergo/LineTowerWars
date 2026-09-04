@@ -16,6 +16,7 @@ in `Docs/` may.
 | [2026-09-03-server-tick-overrun.md](2026-09-03-server-tick-overrun.md) | Stutter on mass creep spawns in the first remote match: the server misses its tick. Where a creep tick actually goes, what was wrong about the first three guesses, and the three fixes that came out of it. |
 | [2026-09-04-log-info-in-the-creep-tick.md](2026-09-04-log-info-in-the-creep-tick.md) | Where the unattributed half of a creep's tick went: one `Log.info` on the leak path — and why that dev-PC number does not transfer to the server. Also profiles the tower tick (clean) and the spawn path (pathfinding, not instantiation). |
 | [2026-09-04-staggered-creep-movement.md](2026-09-04-staggered-creep-movement.md) | Moving each creep every Nth tick: built, measured at ~16% off the worst tick, and reverted because it looked terrible — and why that was the replication seam rather than the rate. Also the run-to-run variance of the rented box, and two hypotheses ruled out. |
+| [2026-09-04-input-delay.md](2026-09-04-input-delay.md) | Why an order took 300-400 ms after the lockstep cutover, and why almost none of it was the network. What the primary sources actually say about lockstep latency, the off-by-one worth a whole tick, and a damping scheme that measured four times worse and was reverted. |
 
 ## Writing one
 
