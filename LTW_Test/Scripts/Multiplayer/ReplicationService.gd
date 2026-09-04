@@ -284,6 +284,13 @@ func _on_network_status_changed(_status: NetworkService.Status) -> void:
 func _physics_process(_delta: float) -> void:
 	if _session == null:
 		return
+	# Asked BEFORE multiplayer.is_server(), which reaches get_unique_id() and
+	# pushes "No multiplayer peer is assigned" once the peer is gone. That is
+	# the window between leaving a match and the match scene being torn down,
+	# and it errors every tick inside it. There is nothing to replicate off the
+	# network in any case.
+	if !Net.is_online():
+		return
 	if multiplayer.is_server():
 		_broadcast()
 		return

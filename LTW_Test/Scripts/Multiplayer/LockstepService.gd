@@ -4,18 +4,26 @@ extends Node
 ## Turn scheduling and per-turn agreement, for the lockstep model (D2 under
 ## review, `multiplayer.md` 4.1).
 ##
-## **This is ADDITIVE and nothing depends on it yet.** It counts turns, collects
-## the commands belonging to each one, exchanges them between peers and compares
-## world checksums per turn. It does NOT execute anything: `CommandService`
-## still applies orders exactly as it did, and `ReplicationService` still sends
-## the world. That flip is the cutover, it is not reversible cheaply, and it is
-## deliberately not here.
+## **ASLEEP until `NetworkConfig.lockstep_enabled` is turned on, and that is not
+## caution.** It counts turns, collects the commands belonging to each one,
+## exchanges them between peers and compares world checksums per turn. It
+## executes nothing: `CommandService` still applies orders exactly as it did and
+## `ReplicationService` still sends the world.
 ##
-## So today this runs beside the real system and answers one question honestly:
-## **would lockstep have worked on this turn?** `turn_ready` tells you every peer
-## agreed on the inputs; the checksum comparison tells you they agreed on the
-## result. Both can be watched for a whole match before anything is staked on
-## them.
+## **The checksum half CANNOT run under D2, and finding that out cost a live
+## match.** This file was first written believing it could sit beside the real
+## system and answer "would lockstep have worked on this turn?". Half of that
+## was wrong. A client under D2 does not simulate - `MatchSession.is_authority()`
+## stops every gameplay loop on it - so its world is a REPLICA assembled from
+## snapshots, and it holds none of the state `Unit.checksum_state()` reports:
+## no path index, no aura values, no banked ability state. Comparing it against
+## the server's therefore disagrees the moment anything happens, and on
+## 2026-09-04 the first tower built ended the match with a desync popup.
+##
+## The lesson is worth more than the bug: **"do two machines agree" is not a
+## question that has an answer while only one of them is computing.** It starts
+## having one on the day every peer simulates, which is the same day the flag
+## goes on.
 ##
 ## ## What a TURN is
 ##
@@ -61,6 +69,8 @@ var _last_checksum_turn: int = NO_TURN
 # --- server state ---------------------------------------------------------
 ## Checksums reported per turn, keyed by turn then by peer id.
 var _turn_checksums: Dictionary = {}
+## Peers already told their world diverged, so each is told once per match.
+var _told: Dictionary = {}
 
 
 func _ready() -> void:
@@ -275,6 +285,14 @@ func _compare_turn(turn: int, peer: int, checksum: int) -> void:
 		if int(by_peer[id]) == reference:
 			continue
 
+		# Once per peer per match, not once per checksum turn. A world that has
+		# diverged stays diverged, so every later turn disagrees too - and
+		# reporting each one buries the FIRST one, which is the only tick with
+		# any diagnostic value. It also spammed a live log on 2026-09-04.
+		if _told.has(int(id)):
+			continue
+		_told[int(id)] = true
+
 		Log.err("Peers disagree about the world", {
 			"turn": turn,
 			"tick": first_tick_of(turn),
@@ -302,8 +320,18 @@ func _forget_old_turns(now: int) -> void:
 
 ## Off the network there are no turns to agree on, and a single player run must
 ## pay nothing at all for any of this.
+##
+## **Also gated on `lockstep_enabled`, which is OFF, and that gate is not
+## caution - it is a correctness fix.** Comparing world checksums between
+## machines is meaningless while only one of them simulates, which is exactly
+## what D2 means: a client draws replicated snapshots and runs no gameplay loop
+## of its own. Left ungated, this reported a desync as soon as a tower was built
+## and ended a live match on 2026-09-04. See NetworkConfig.lockstep_enabled.
 func _is_live() -> bool:
-	return Net.is_online() && References.match_session != null
+	if !Net.is_online() || References.match_session == null:
+		return false
+	var config: NetworkConfig = _config()
+	return config != null && config.lockstep_enabled
 
 
 func _session_tick() -> int:

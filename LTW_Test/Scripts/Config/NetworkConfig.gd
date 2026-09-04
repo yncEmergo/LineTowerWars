@@ -84,6 +84,25 @@ extends Resource
 
 @export_group("Lockstep")
 
+## Whether the lockstep layer does anything at all. **OFF, and it must stay off
+## until the cutover.**
+##
+## `LockstepService` counts turns, exchanges commands and compares world
+## checksums between machines. The last of those is ACTIVELY WRONG under the
+## model that is actually built (D2, server-authoritative): a client does not
+## simulate - `MatchSession.is_authority()` stops every gameplay loop on it -
+## so its world is a REPLICA drawn from snapshots, not an independently
+## computed one. Comparing the two therefore reports a desync the moment
+## anything happens, and the first tower somebody builds ends their match.
+##
+## That is not a bug in the comparison. It is that the question "do these two
+## machines agree" has no meaning while only one of them is computing. It
+## starts having meaning on the day every peer simulates, and this flag is what
+## turns it on then.
+##
+## Cost a real test on 2026-09-04, in a live match, after towers were built.
+@export var lockstep_enabled: bool = false
+
 ## How many simulation ticks make one lockstep TURN.
 ##
 ## A turn is the unit commands are scheduled in and checksums are compared on,
