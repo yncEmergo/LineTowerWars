@@ -65,6 +65,9 @@ signal turn_stalled(turn: int, missing: PackedInt32Array)
 ## run. Mirrors MatchStartService.DESYNC_START_TICK.
 const NO_TURN: int = -1
 
+## How often a stall repeats itself, in physics frames. Two seconds at 20 Hz.
+const STALL_REPORT_FRAMES: int = 40
+
 # --- local state, on every machine ----------------------------------------
 ## Orders this machine has issued that have not been sent yet, keyed by the
 ## turn they are scheduled to run on.
@@ -80,8 +83,28 @@ var _last_run_turn: int = NO_TURN
 ## Whether the world is being held still waiting for a turn, and which one.
 var _stalling: bool = false
 var _stalled_on: int = NO_TURN
+## Physics frames spent in the current stall, for the repeating report.
+var _stall_frames: int = 0
 ## Whether the first turns have been primed. See _send_turn.
 var _primed: bool = false
+
+## Physics frames this machine has spent in the match, and the turn clock built
+## on it.
+##
+## **Counted here rather than read from `MatchSession.tick()`, and that is not a
+## duplication - it is the fix for a deadlock.** The match clock FREEZES
+## whenever the world is held still, and the world is held still for things that
+## are part of the game: the technology draft holds it at match start.
+##
+## Under lockstep a draft pick is a COMMAND, and a command needs a turn to
+## travel on. Deriving the turn clock from the match clock means the draft
+## freezes the turns, the turns cannot deliver the pick, and the pick is what
+## would end the draft. Nothing errors; the match simply stops with the tree
+## paused, which reads as "the game started and no input does anything".
+##
+## So the network clock keeps its own time. It stops for exactly one thing - a
+## STALL, where by definition no peer may move - and for nothing else.
+var _frames: int = 0
 
 # --- server state ---------------------------------------------------------
 ## Checksums reported per turn, keyed by turn then by peer id.
@@ -112,12 +135,15 @@ func _physics_process(_delta: float) -> void:
 	if !_is_live():
 		return
 
+	# Held only by a stall. Everything else the world stops for - the draft
+	# above all - must NOT stop the turns, or the very orders that would end it
+	# can never arrive.
+	if !_stalling:
+		_frames += 1
+
 	var turn: int = current_turn()
 	_advance_turn(turn)
 
-	# After the turn, so a machine held on a stall does not go on announcing
-	# turns it has not reached. Its own clock is frozen while held, so the turn
-	# number here does not move either.
 	if turn != _last_sent_turn:
 		_send_turn(turn)
 		_last_sent_turn = turn
@@ -137,20 +163,41 @@ func _physics_process(_delta: float) -> void:
 ## right tool: it pauses the TREE, so every gameplay loop stops at once without
 ## any of them being asked, and it gives the match clock back what the hold took
 ## so no creep unlock silently serves its time during a stall.
-func _advance_turn(turn: int) -> void:
-	if turn == _last_run_turn:
-		return
-	if _session_tick() != first_tick_of(turn):
+## Turns are run IN ORDER and one at a time - the next one due, never the one
+## the clock happens to be pointing at.
+##
+## The first version tested `_session_tick() == first_tick_of(turn)`, an exact
+## match on a boundary. Anything that moved the clock off that boundary - a
+## pause correcting it, a frame where more than one turn elapsed - meant the
+## test was never true again and the match hung with no error. Asking "which
+## turn have I not run yet" cannot miss.
+func _advance_turn(clock_turn: int) -> void:
+	var turn: int = _last_run_turn + 1
+	if turn > clock_turn:
 		return
 
 	if !_is_complete(turn):
 		if !_stalling:
 			_stalling = true
 			_stalled_on = turn
-			var missing: PackedInt32Array = _missing_for(turn)
-			Log.warn("Waiting on a turn", {"turn": turn, "missing": missing})
-			turn_stalled.emit(turn, missing)
+			_stall_frames = 0
+			turn_stalled.emit(turn, _missing_for(turn))
 			_set_held(true)
+
+		# Repeated, with what IS present as well as what is missing. A stall
+		# that never clears is the worst failure this system has - the world
+		# stops and nothing says why - so it has to keep saying what it wants
+		# rather than reporting once and going quiet.
+		_stall_frames += 1
+		if _stall_frames % STALL_REPORT_FRAMES == 1:
+			Log.warn("Waiting on a turn", {
+				"turn": turn,
+				"missing": _missing_for(turn),
+				"have": (_incoming.get(turn, {}) as Dictionary).keys(),
+				"expected": _expected_peers(),
+				"sent_up_to": _last_sent_turn,
+				"seconds": snappedf(float(_stall_frames) * MatchSession.tick_seconds(), 0.1),
+			})
 		return
 
 	if _stalling:
@@ -201,9 +248,9 @@ func _set_held(held: bool) -> void:
 
 # --- the turn clock -------------------------------------------------------
 
-## The turn the match is in right now, counting from 0 alongside the tick.
+## The turn the match is in right now, on the network's own clock.
 func current_turn() -> int:
-	return turn_for_tick(_session_tick())
+	return turn_for_tick(_frames)
 
 
 func turn_for_tick(tick: int) -> int:
@@ -505,10 +552,6 @@ func _is_live() -> bool:
 	var config: NetworkConfig = _config()
 	return config != null && config.lockstep_enabled
 
-
-func _session_tick() -> int:
-	var session: MatchSession = References.match_session
-	return 0 if session == null else session.tick()
 
 
 func _areas() -> Array[PlayerArea]:
