@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://b76phvckprwr1" path="res://Scripts/UI/PlayerStatsPanel.gd" id="4_player_stats"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/research_center.tscn" id="15_research"]
@@ -222,4 +223,7 @@ theme_override_constants/separation = 2
 process_mode = 3
 
 [node name="DraftPanel" parent="." instance=ExtResource("17_draft")]
+process_mode = 3
+
+[node name="DesyncNotice" parent="." instance=ExtResource("90_desync")]
 process_mode = 3

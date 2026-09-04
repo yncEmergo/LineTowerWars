@@ -442,6 +442,33 @@ func status_entries() -> Array[StatusEntry]:
 	return empty
 
 
+## Everything about THIS unit that the simulation will read to compute the next
+## tick, as one short string for `WorldChecksum`.
+##
+## **The rule for what belongs here, and it is mechanical rather than a
+## judgement call: would two machines differing ONLY in this value eventually
+## produce different worlds?** If yes it goes in. Mana does - abilities fire off
+## it. A cooldown does. A stack count does. An animation, a particle, a bar's
+## fill and anything a camera knows do not, and must never be added: they differ
+## between machines legitimately and would report a desync that is not one.
+##
+## **Virtual for the same reason `status_entries()` had to become one.** That
+## one used to be a cast to `Creep` in the two places that asked, and the cast
+## silently kept three whole systems off the wire. A checksum built by reaching
+## into units from outside has exactly that failure mode and a worse
+## consequence: the state somebody forgot to add is not merely undrawn, it is a
+## blind spot where a desync goes undetected. Overriding this is how a new unit
+## type, or the next secondary resource, is covered BY CONSTRUCTION rather than
+## by somebody remembering.
+##
+## The base answer is health, because every unit has it. Position, id and owner
+## are added by `WorldChecksum` itself and are deliberately not repeated here.
+func checksum_state() -> String:
+	# Quantised on the same grounds as a position: two machines agreeing to a
+	# thousandth agree, and hashing raw float bits would call that a mismatch.
+	return "h%d" % roundi(current_health * WorldChecksum.SCALE)
+
+
 ## Damage standing in front of this unit's health right now, or 0 for anything
 ## unshielded - which is every tower and nearly every creep.
 ##

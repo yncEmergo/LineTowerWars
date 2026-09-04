@@ -95,16 +95,16 @@ static func _add_units(parts: PackedStringArray, session: MatchSession) -> void:
 			parts.append("u%d:missing" % id)
 			continue
 		var stats_name: String = "-" if unit.stats == null else unit.stats.resource_path
-		parts.append("u%d:%d:%s:%s:%d/%d" % [
+		# Identity, place, and then whatever the UNIT says about itself. That
+		# last part is virtual on purpose: a checksum that reached in here for
+		# each field would go blind the day somebody adds a resource and does
+		# not think of this file. See Unit.checksum_state.
+		parts.append("u%d:%d:%s:%s:%s" % [
 			id,
 			unit.owner_player_id,
 			stats_name,
 			_point(unit.global_position),
-			# Health quantised on the same grounds as a position: two machines
-			# agreeing to a thousandth agree, and hashing raw float bits would
-			# call that a mismatch.
-			roundi(unit.current_health * SCALE),
-			unit.max_health(),
+			unit.checksum_state(),
 		])
 
 

@@ -767,6 +767,69 @@ bandwidth AND decouples the visual rate from the simulation rate - which is what
 the interpolation seam that killed staggered movement
 (`Findings/2026-09-04-staggered-creep-movement.md`).
 
+### 4.2 What a cutover would do to the DECISION LOG
+
+Written 2026-09-04, before any cutover, so the blast radius is known rather than discovered.
+**Nothing here is decided** - this is what would have to be rewritten if D2 changes, and it is
+listed because a decision log that silently goes stale is worse than none.
+
+**Replaced or retired:**
+
+| # | What happens to it |
+| --- | --- |
+| **D2** | Replaced outright. Server-authoritative becomes peer-deterministic |
+| **D17** | **Retired, not adjusted.** "No client-side prediction" answers a question that stops existing - under lockstep every client simulates the real thing, so there is nothing to predict and nothing to correct |
+| **D16** | Its stated reason dies. "One process per match is also the only way to use more than one core" is a claim about a server that SIMULATES; a relay does not. Process-per-match may still be wanted for isolation, but not for that |
+
+**Survive, with different reasoning underneath - and that is the dangerous kind, because the
+line still reads true while the argument behind it has moved:**
+
+| # | What changes |
+| --- | --- |
+| **D3** | "One copy of the simulation, shared by client and server" becomes "one copy shared by every CLIENT". The server stops needing the simulation at all - but the requirement gets STRICTER, not looser, because now every player's machine must agree bit-for-bit with every other |
+| **D9** | The PickleGD assessment splits on hot path versus cold path. Lockstep DELETES the hot path - there is no per-tick state stream - so only the cold path argument survives |
+| **D27** | Cheats are refused by the SERVER checking a command. With no authoritative server, the check has to happen on every peer, or a cheat becomes a desync instead of a refusal |
+| **D4, D19, D30** | All the hosting decisions. A relay is a fraction of the cost, which is the entire point of the change; the decisions stand, the economics under them do not |
+
+**Unaffected, but promoted from "sensible" to "load-bearing" - worth knowing, because these
+become the things a mistake is unrecoverable in:**
+
+- **D1** (no physics engine) is what makes determinism achievable at all.
+- **D12** (authored ability ids) - commands become the ONLY thing on the wire.
+- **D29 / D31** (protocol version, rpc surface hash). Today a build mismatch is refused at the
+  door. Under lockstep an unrefused mismatch is a desync a few turns in, which is far harder to
+  read. These stop being hygiene and become the thing standing between a player and an
+  unexplainable match.
+- **D13** (no reconnect) already absorbs lockstep's worst drawback, and by luck rather than by
+  design: rejoining a lockstep match means replaying the entire input log or shipping a full
+  state snapshot, and D13 means neither is ever needed.
+
+### 4.3 Ranked play under lockstep - the concern D2 was paying for
+
+D2's original justification was that ranked play needs a result no player can forge. Worth
+recording why that is not the objection it looks like, since it is the one thing that would
+send this decision back the other way.
+
+**1. A cheating client DESYNCS rather than winning.** Every peer runs the same rules over the
+same inputs, so a client that hands itself gold does not get away with it - it computes a world
+nobody else computes, and the per-turn checksum says so. That is a stronger property than it
+sounds: it is not detection after the fact, it is that the cheat cannot take effect anywhere but
+on the cheater's own screen.
+
+**2. The input log IS the match, and it can be re-simulated.** A ranked result can be verified
+offline by replaying the recorded commands and confirming the outcome - cheap, because it does
+not have to run in real time, and it is what competitive lockstep RTS games have always done.
+**The machinery for this already exists**: `Scripts/Tools/DeterminismBench.gd` records a
+command log and replays it into a fresh match. A ranked validator is that, pointed at a real
+match instead of a generated one.
+
+**3. What lockstep really gives up is information, not integrity** - the maphack. And
+§4.1 already records that this game HAS no hidden information: no fog of war, no vision
+system, every player watches every lane. So the hole is worth nothing here.
+
+None of that is built, and none of it needs to be for a prototype. It is recorded so the D2
+argument is not re-run from scratch the day rating is added.
+
 ---
 
 ## 5. Architecture

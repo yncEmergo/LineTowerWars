@@ -82,6 +82,38 @@ extends Resource
 ## merely slow has nothing to send but one integer, so this can be short.
 @export var handshake_timeout_seconds: float = 5.0
 
+@export_group("Lockstep")
+
+## How many simulation ticks make one lockstep TURN.
+##
+## A turn is the unit commands are scheduled in and checksums are compared on,
+## and it exists because doing either every tick would mean a network round
+## trip every 50 ms. Four ticks is 200 ms at 20 Hz.
+##
+## The trade is latency against traffic: fewer ticks per turn means orders take
+## effect sooner and more packets are sent. It does NOT change the simulation
+## rate - every tick still runs.
+@export var ticks_per_turn: int = 4
+
+## How many turns ahead a command is scheduled for.
+##
+## **This is the input delay, and it is the one number a player can feel.** An
+## order given now runs this many turns from now, which is what buys every peer
+## time to receive it before the turn it belongs to has to be simulated. Two
+## turns at four ticks is 400 ms.
+##
+## It cannot be zero: a turn nobody has received yet cannot be simulated, and a
+## peer that has to wait for it stutters instead. Raising it hides worse
+## connections and makes the game feel heavier.
+@export var input_delay_turns: int = 2
+
+## How often the world is checksummed and compared between machines, in TURNS.
+##
+## Every turn is the strictest and the most expensive; comparing rarely means a
+## desync is found later and is harder to trace back. Detection only - there is
+## no correction to send. See MatchStartService.receive_desync.
+@export var checksum_every_turns: int = 5
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20
@@ -152,6 +184,20 @@ func validate() -> bool:
 
 	if max_peers < 1:
 		Log.err("NetworkConfig max_peers is below one, nobody could connect", max_peers)
+		complete = false
+
+	if ticks_per_turn < 1:
+		Log.err("NetworkConfig ticks_per_turn must be at least one", ticks_per_turn)
+		complete = false
+
+	# Zero would mean simulating a turn whose commands cannot have arrived yet.
+	if input_delay_turns < 1:
+		Log.err("NetworkConfig input_delay_turns must be at least one", input_delay_turns)
+		complete = false
+
+	if checksum_every_turns < 1:
+		Log.err("NetworkConfig checksum_every_turns must be at least one",
+			checksum_every_turns)
 		complete = false
 
 	if connect_timeout_seconds <= 0.0:

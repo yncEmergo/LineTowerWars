@@ -885,6 +885,33 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 ## them won is not kept - so a row draws its title's first letter rather than an
 ## icon. Worth a per-aura source field on this class the day that reads badly;
 ## it is not worth five today.
+## A creep's own inputs to the next tick, on top of the health `Unit` gives.
+##
+## How far along its route it is, because that decides where it goes next and a
+## position alone cannot say it - two creeps standing on the same cell heading
+## opposite ways are not the same creep. Its mana pool, for the traits that run
+## on one. And the aura values it is currently carrying, because those are read
+## every tick to work out how fast it moves and how hard it is to kill.
+##
+## `_aura_elapsed` is deliberately IN here: it decides which tick the next aura
+## sweep lands on, and two machines sweeping on different ticks would diverge
+## for a while and then agree again, which is the hardest kind of desync to
+## find. Better it is caught the moment the clocks part.
+func checksum_state() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append(super())
+	parts.append("p%d" % _path_index)
+	parts.append("ae%d" % roundi(_aura_elapsed * WorldChecksum.SCALE))
+	parts.append("aa%d" % _aura_armor)
+	parts.append("am%d" % roundi(_aura_move_ratio * WorldChecksum.SCALE))
+	parts.append("at%d" % roundi(_aura_attack_ratio * WorldChecksum.SCALE))
+	parts.append("ad%d" % roundi(_aura_damage_ratio * WorldChecksum.SCALE))
+	parts.append("ar%d" % roundi(_aura_regen * WorldChecksum.SCALE))
+	if _mana != null:
+		parts.append("m%d/%d" % [_mana.current, _mana.maximum])
+	return ",".join(parts)
+
+
 func status_entries() -> Array[StatusEntry]:
 	var list: Array[StatusEntry] = []
 	if _status != null:

@@ -368,6 +368,14 @@ art at all so far - so this is the placement rule, not a description of the tree
     picture yet
   - KEPT, not scaffolding. Scripts/Dev is the folder that gets deleted; this is
     run again every time a roster gains a unit
+- /Archive/ is WORKING CODE THAT WAS REPLACED, kept because it worked. A
+  `.gdignore` keeps Godot out of it entirely, so nothing in it is imported and
+  no class_name in it reaches the global class cache
+  - only for something CORRECT that lost to an architectural change - not a bug
+    fix, not a failed experiment, both of which git already holds
+  - every entry answers four questions in its own README, and the fourth is the
+    one that earns the folder: what would have to be true to want it back
+  - Archive/README.md is the policy. Read it before putting anything there
 - /Tools/ is BUILD TIME TOOLING that never runs inside the engine, and is not
   part of the game. Nothing at runtime may reach into it, and a `.gdignore`
   keeps Godot's filesystem out

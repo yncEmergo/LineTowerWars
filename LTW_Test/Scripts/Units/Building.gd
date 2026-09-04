@@ -243,6 +243,30 @@ func status_entries() -> Array[StatusEntry]:
 	return list
 
 
+## A tower's own inputs to the next tick, on top of the health `Unit` gives.
+##
+## Mana and the ability clock because they decide WHEN the tower next acts; the
+## construction clock because it decides when it starts acting at all; and
+## `ability_state` because that is where a passive banks the damage it has
+## earned for good, which changes what the next shot does.
+##
+## `ability_state`'s keys are walked SORTED: it is a Dictionary, and two
+## machines are not entitled to agree on its iteration order.
+func checksum_state() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append(super())
+	parts.append("m%d/%d" % [current_mana, max_mana])
+	parts.append("cd%d" % roundi(active_ability.cooldown() * WorldChecksum.SCALE))
+	parts.append("bc%d" % roundi(_construction_elapsed * WorldChecksum.SCALE))
+
+	var keys: Array = ability_state.keys()
+	keys.sort()
+	for key: Variant in keys:
+		parts.append("a%s=%s" % [key, ability_state[key]])
+
+	return ",".join(parts)
+
+
 ## Everything reaching this tower right now, as the ONE list both machines can
 ## answer from.
 ##
