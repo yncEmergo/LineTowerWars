@@ -48,12 +48,33 @@ var _techs: TechRegistry = TechRegistry.new()
 var _units: Dictionary = {}
 var _next_unit_id: int = 1
 
+## Whether THIS match is running deterministic lockstep, cached at `begin` and
+## read by `is_authority` on every gameplay loop of every tick.
+##
+## STATIC because `is_authority` is, and it is static because a loop deep inside
+## a passive has no session to hand it. Cached rather than read from the config
+## each time for the same reason: 72 call sites ask this question, many of them
+## per unit per tick, and a config lookup on that path is not free.
+##
+## Set at the START of a match and never mid-match: two peers that disagreed
+## about which model they were running would not merely desync, they would
+## disagree about what a desync IS.
+static var _lockstep: bool = false
+
 
 ## Starts a match. Called by Main before anything is created, since areas,
 ## builders and player states all read from here.
 func begin(match_setup: MatchSetup) -> void:
 	_setup = match_setup
 	_paused = false
+	# Read once, here, so it cannot change under a running match. A single
+	# player run is its own authority either way, so the flag only means
+	# anything when there is a network.
+	var network: NetworkConfig = References.network_config
+	# AND online: a single player run has no peers to agree with, and a turn
+	# waiting on orders that will never arrive would hang the match on tick one.
+	# One player is its own authority under either model.
+	_lockstep = network != null && network.lockstep_enabled && Net.is_online()
 	_units.clear()
 	_next_unit_id = 1
 	_start_frame = Engine.get_physics_frames()
@@ -345,8 +366,34 @@ static func cheats_permitted() -> bool:
 	return settings != null && settings.cheats_enabled
 
 
+## Whether THIS machine may advance the world.
+##
+## **Under lockstep the answer is always yes, and that is the whole cutover.**
+## Every peer runs the same simulation over the same inputs, so every peer is an
+## authority and none of them is THE authority. That one word changes what all
+## 72 call sites mean without any of them being touched - which is what the
+## discipline of routing every gameplay loop through this function bought.
+##
+## What replaces the server's veto is not a check here but the TURN: a peer may
+## only simulate a turn once every peer's orders for it have arrived, so the
+## inputs are identical before the simulation is allowed to run at all. See
+## `LockstepService`.
+##
+## Under D2 (replication) it means what it always did: the server decides, a
+## client draws what it is told, and a single player run is its own authority
+## because there is nobody to ask.
 static func is_authority() -> bool:
+	if _lockstep:
+		return true
 	return !Net.is_online() || Net.is_server()
+
+
+## Whether this match is running lockstep rather than replication. For the few
+## places that genuinely have to know WHICH model is underneath - the
+## replication layer switching itself off, and the command road choosing which
+## way to send an order. Gameplay code must never ask: it asks `is_authority`.
+static func is_lockstep() -> bool:
+	return _lockstep
 
 
 # --- Unit registry ------------------------------------------------------
@@ -434,11 +481,29 @@ func live_units() -> Array:
 	return units
 
 
-## Every live unit id, ascending. Ascending because the one caller compares the
-## result between two machines (WorldChecksum), and a dictionary's own order is
-## an implementation detail that has no business deciding whether two worlds
-## match.
+## Every live unit id, ascending. Ascending because the caller that wants THIS
+## one compares the result between two machines (WorldChecksum), and a
+## dictionary's own order is an implementation detail that has no business
+## deciding whether two worlds match.
+##
+## **If order does not matter to you, call `unit_ids_unsorted()` instead.** The
+## sort here is over every unit in the world, and a caller on a per-frame path
+## pays it for nothing - which `ReplicationService._apply_units` did, on every
+## client, twenty times a second, for a sweep that only asks which ids are
+## absent.
 func unit_ids() -> Array:
 	var ids: Array = _units.keys()
 	ids.sort()
 	return ids
+
+
+## Every live unit id, in whatever order the dictionary holds them.
+##
+## A COPY, like `keys()` itself, so erasing a unit while walking the result is
+## safe - which the removal sweep in `ReplicationService` relies on.
+##
+## Never use this where two machines compare the answer. That is what
+## `unit_ids()` is for, and the difference between them is the difference
+## between a checksum that means something and one that does not.
+func unit_ids_unsorted() -> Array:
+	return _units.keys()

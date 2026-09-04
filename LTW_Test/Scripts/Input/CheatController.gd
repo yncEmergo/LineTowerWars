@@ -33,7 +33,8 @@ const UNLOCK_CREEPS_KEY: Key = KEY_KP_2
 ## Numpad 3: grants every technology in the build, free of charge.
 const UNLOCK_TECHS_KEY: Key = KEY_KP_3
 ## Numpad 4: builds the saved layout into the player's area, free and
-## finished. See TowerLayout.
+## finished. The file is read HERE and sent with the order, so a networked
+## match builds one maze rather than one per machine. See TowerLayout.
 const LOAD_LAYOUT_KEY: Key = KEY_KP_4
 ## Numpad 5: saves the player's current maze to that same file.
 ##
@@ -60,7 +61,21 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if action == Command.PlayerAction.NONE:
 		return
 
-	Commands.submit_player_action(action)
+	# The layout cheat is the one press that carries a payload, and the file it
+	# comes from is on THIS machine - so it is read here and travels with the
+	# order. Every peer then builds the same maze rather than opening its own
+	# user:// folder and finding a different one, or nothing. See Command.layout.
+	var maze: TowerLayout = null
+	if action == Command.PlayerAction.CHEAT_LOAD_LAYOUT:
+		maze = TowerLayout.load_file(config.cheat_layout_path)
+		if maze == null:
+			# load_file has already said where it looked. Same job as the
+			# cheats-off check above: it saves a packet that would only come
+			# back as a rejection line.
+			get_viewport().set_input_as_handled()
+			return
+
+	Commands.submit_player_action(action, 0, maze)
 	get_viewport().set_input_as_handled()
 
 

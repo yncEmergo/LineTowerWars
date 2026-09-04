@@ -109,6 +109,18 @@ var player_action: PlayerAction = PlayerAction.NONE
 ## Resolves to null on a machine whose content does not contain it, which is a
 ## mismatched build and gets rejected.
 var tech_id: int = 0
+## The maze a CHEAT_LOAD_LAYOUT is asking for, or null on every other order.
+##
+## The one thing a command carries that is not a bare id or number, and it is
+## still intent rather than state: it says WHICH MAZE was asked for, exactly as
+## target_position says which spot was clicked. The world it lands in refuses
+## it cell by cell, so it can claim nothing.
+##
+## It has to travel because the layout FILE lives on the machine that pressed
+## the key, and under lockstep every peer runs every order. A peer reading the
+## path out of its own config would read a different maze or no maze at all -
+## which is a desync on the turn the key was pressed. See TowerLayout.to_dict.
+var layout: TowerLayout = null
 
 
 ## The order a player just gave, before it has a slot. The server overwrites
@@ -135,10 +147,12 @@ static func create(id: int, units: Array, target: AbilityTarget,
 ## A press in the Research Center, which is given to nobody. The slot is filled
 ## in the same way it is for a unit order, and overwritten by the server on
 ## arrival for the same reason.
-static func create_player_action(action: PlayerAction, tech: int = 0) -> Command:
+static func create_player_action(action: PlayerAction, tech: int = 0,
+		maze: TowerLayout = null) -> Command:
 	var command: Command = Command.new()
 	command.player_action = action
 	command.tech_id = tech
+	command.layout = maze
 	return command
 
 
@@ -160,6 +174,8 @@ static func from_dict(data: Dictionary) -> Command:
 	command.queued = bool(data.get("q", false))
 	command.player_action = int(data.get("act", PlayerAction.NONE)) as PlayerAction
 	command.tech_id = int(data.get("tech", 0))
+	if data.has("lay"):
+		command.layout = TowerLayout.from_dict(data["lay"])
 	return command
 
 
@@ -188,6 +204,11 @@ func to_dict() -> Dictionary:
 	if is_player_order():
 		data["act"] = player_action
 		data["tech"] = tech_id
+	# Only the layout cheat ever carries one, and it is by far the largest
+	# thing a command can hold - so it is written only when it is really there
+	# rather than as an empty block on every order in the match.
+	if layout != null:
+		data["lay"] = layout.to_dict()
 	return data
 
 

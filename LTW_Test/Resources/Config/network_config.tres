@@ -9,6 +9,7 @@ max_peers = 32
 server_addresses = PackedStringArray("127.0.0.1", "167.233.153.19")
 connect_timeout_seconds = 3.0
 protocol_version = 1
+lockstep_enabled = true
 handshake_timeout_seconds = 5.0
 address_argument = "--address"
 port_argument = "--port"

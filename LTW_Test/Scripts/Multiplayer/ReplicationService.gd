@@ -291,6 +291,18 @@ func _physics_process(_delta: float) -> void:
 	# network in any case.
 	if !Net.is_online():
 		return
+	# **Silent under lockstep, which is the whole point of lockstep.** Every peer
+	# simulates the same world from the same orders, so there is nothing to send
+	# and nobody who would be entitled to send it. This early return is what
+	# deletes the entire per-tick state stream - the largest cost on the wire and
+	# the largest cost on the server.
+	#
+	# The layer is kept rather than removed while the model is still being
+	# proven. When it is retired for good it goes to Archive/ with the four
+	# questions that folder asks, NOT to the bin: it worked, and what it lost to
+	# was the CPU cost of simulating centrally, not a fault in it.
+	if MatchSession.is_lockstep():
+		return
 	if multiplayer.is_server():
 		_broadcast()
 		return
@@ -637,7 +649,11 @@ func _apply_units(records: PackedFloat32Array) -> void:
 			_update(unit, records, index)
 		index += UNIT_STRIDE
 
-	for id in session.unit_ids():
+	# Unsorted: this asks which ids are ABSENT from the snapshot, and the answer
+	# does not depend on the order they are visited in. unit_ids() sorts every
+	# unit in the world, and paying that here cost a client one sort of several
+	# hundred ids twenty times a second.
+	for id in session.unit_ids_unsorted():
 		if !seen.has(int(id)):
 			_remove(int(id))
 

@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
+[ext_resource type="Script" path="res://Scripts/Dev/ClientLagProbe.gd" id="91_lagprobe"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/research_center.tscn" id="15_research"]
@@ -227,3 +228,6 @@ process_mode = 3
 
 [node name="DesyncNotice" parent="." instance=ExtResource("90_desync")]
 process_mode = 3
+
+[node name="ClientLagProbe" type="Node" parent="."]
+script = ExtResource("91_lagprobe")

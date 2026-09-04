@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cl0ixr275nfnu"]
 
 [ext_resource type="Script" uid="uid://b7p3v34mtt2qh" path="res://Scripts/Game/Main.gd" id="1_rgh2o"]
+[ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="90_netcfg"]
 [ext_resource type="Script" uid="uid://dj7fxuuds1a5o" path="res://Scripts/Camera/RTSCamera.gd" id="2_pbw6q"]
 [ext_resource type="Script" path="res://Scripts/Effects/SunLight.gd" id="2_sun"]
 [ext_resource type="Script" uid="uid://vqbtyt4ly280" path="res://Scripts/Input/SelectionController.gd" id="4_jw32o"]
@@ -103,4 +104,5 @@ _controls_config = ExtResource("16_ctrl")
 _damage_table = ExtResource("17_dmgt")
 _menu_config = ExtResource("20_menucfg")
 _content_config = ExtResource("22_content")
+_network_config = ExtResource("90_netcfg")
 _presentation_config = ExtResource("23_present")

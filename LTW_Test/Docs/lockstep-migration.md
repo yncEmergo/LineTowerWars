@@ -475,6 +475,28 @@ Recorded here so the constraint is not discovered after the rework instead of be
 (`CLAUDE.md`) and never ships, so it is out of scope — but it is worth knowing it is not
 empty right now.
 
+### 6.7 Per-machine INPUT — found in play 2026-09-04, one item
+
+The axis section 6 did not have: not "do two machines compute the same answer", but **"do two
+machines start from the same numbers"**. An order that reads anything belonging to the machine
+it runs on — a file, a user:// path, an environment variable, a clock — feeds a different
+input into an identical simulation, and lockstep has no way to notice until the checksum
+turn.
+
+| Site | What | Verdict |
+| --- | --- | --- |
+| **`CommandService._apply_cheat_load_layout`** | opened `GameConfig.cheat_layout_path` on every peer | **WAS BROKEN — fixed.** Only the presser has that file, so the other peer built nothing and the worlds parted on the turn the key was pressed. This is what "the layout cheat does nothing in multiplayer" was |
+| `CommandService._apply_cheat_save_layout` | WROTE that path on every peer | **WAS WRONG — fixed.** Harmless to the simulation, since it changes nothing, but one player pressing save silently overwrote everybody else's saved maze |
+
+The fix is the general one for this class and is worth copying rather than re-inventing: the
+per-machine thing is read **where the key was pressed**, and travels inside the `Command`
+(`Command.layout`, `TowerLayout.to_dict`). Every peer then runs the order over the same
+numbers, which is what lockstep already assumes about every other order.
+
+**Nothing else in the simulation reads a per-machine input**, which is why this axis has two
+rows and both are the same cheat. It is listed anyway because the NEXT thing that wants to
+read a file or a config on an order will look exactly as reasonable as this one did.
+
 ## 7. Out of scope — do not do these
 
 Recorded so a session with time left does not helpfully wander into them.

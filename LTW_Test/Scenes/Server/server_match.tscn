@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/Game/Main.gd" id="1_main"]
+[ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="90_netcfg"]
 [ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
 [ext_resource type="Script" path="res://Scripts/Game/PlayerManager.gd" id="3_players"]
 [ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="4_session"]
@@ -48,3 +49,4 @@ _projectiles_root = NodePath("../Projectiles")
 _game_config = ExtResource("7_gcfg")
 _damage_table = ExtResource("8_dmgt")
 _content_config = ExtResource("9_content")
+_network_config = ExtResource("90_netcfg")

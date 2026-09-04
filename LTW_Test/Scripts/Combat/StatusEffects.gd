@@ -110,6 +110,10 @@ var _creep: Creep
 ## source key -> Chill. Per SOURCE so two towers do not share one cap, which is
 ## what makes "up to 40%" mean anything at all.
 var _chills: Dictionary = {}
+## _chills' keys in a fixed order, and whether that order needs rebuilding.
+## See _sorted_chill_keys.
+var _chill_keys: Array = []
+var _chill_keys_dirty: bool = true
 ## Seconds left of being unable to move or act at all.
 var _stun_left: float = 0.0
 ## Seconds left of being held in place while still able to be shot as though on
@@ -308,6 +312,25 @@ func _init(creep: Creep) -> void:
 ## .tres: which towers share a slow is a balance decision, and reading it off
 ## the resource would give every tier its own and let a line stack with itself.
 ## See the chill() note below.
+## The chill keys in a fixed order, rebuilt only when the set of chills changes.
+##
+## **Why an order is needed at all:** move_ratio multiplies the chills together,
+## float multiplication is not associative, and two machines are not entitled to
+## agree on a Dictionary's iteration order. Sorting makes the answer the same
+## everywhere.
+##
+## **Why it is cached:** the reader runs per creep per tick and the writer fires
+## when a tower lands a new chill or one expires, which is orders of magnitude
+## rarer. Sorting on every read allocated an array per creep per tick to
+## recompute an answer that had not changed.
+func _sorted_chill_keys() -> Array:
+	if _chill_keys_dirty:
+		_chill_keys = _chills.keys()
+		_chill_keys.sort()
+		_chill_keys_dirty = false
+	return _chill_keys
+
+
 func move_ratio() -> float:
 	if _stun_left > EPSILON || _paralyze_left > EPSILON:
 		return 0.0
@@ -319,19 +342,15 @@ func move_ratio() -> float:
 	# order is made explicit here rather than inherited. _append_chills does the
 	# same thing for the same reason, one step further along the same path.
 	#
-	# Guarded on size, and that guard is not a micro-optimisation: this runs for
-	# every creep on every tick, and MOST creeps carry no chill at all. Nothing
-	# can be reordered below two entries, so the sort - and the array keys()
-	# allocates to be sorted - is skipped for the case that dominates.
+	# The order comes from a CACHE, not from sorting here. This runs for every
+	# creep on every tick, and against a maze of chilling towers most creeps
+	# carry two or more - so sorting per call allocated an array per creep per
+	# tick for an answer that only changes when a chill is added or expires.
+	# Rebuilt in _sorted_chill_keys, invalidated at the three places _chills is
+	# written and nowhere else.
 	var moving: float = 1.0
-	if _chills.size() < 2:
-		for key in _chills:
-			moving *= 1.0 - (_chills[key] as Chill).amount
-	else:
-		var keys: Array = _chills.keys()
-		keys.sort()
-		for key in keys:
-			moving *= 1.0 - (_chills[key] as Chill).amount
+	for key: Variant in _sorted_chill_keys():
+		moving *= 1.0 - (_chills[key] as Chill).amount
 	# The creep's own ceiling on being slowed, applied to the PILE rather than
 	# to each chill as it lands: "cannot be slowed by more than 25%" is a
 	# statement about the total, and clamping each application instead would
@@ -545,6 +564,7 @@ func _chill_for(source: UnitAbility, key: String) -> Chill:
 	if entry == null:
 		entry = Chill.new()
 		_chills[key] = entry
+		_chill_keys_dirty = true
 	entry.source_id = _id_of(source)
 	return entry
 
@@ -897,6 +917,7 @@ func clear_slows() -> void:
 	if !_may_write():
 		return
 	_chills.clear()
+	_chill_keys_dirty = true
 
 
 ## Halves every chill currently on the creep, cap and all, so a tower that had
@@ -963,9 +984,7 @@ func entries() -> Array[StatusEntry]:
 
 
 func _append_chills(list: Array[StatusEntry]) -> void:
-	var keys: Array = _chills.keys()
-	keys.sort()
-	for key in keys:
+	for key: Variant in _sorted_chill_keys():
 		var entry: Chill = _chills[key] as Chill
 		list.append(StatusEntry.make(StatusEntry.Kind.SLOWED, entry.source_id,
 			entry.amount, entry.seconds_left))
@@ -1132,6 +1151,8 @@ func _advance_chills(delta: float) -> void:
 			expired.append(key)
 	for key in expired:
 		_chills.erase(key)
+	if !expired.is_empty():
+		_chill_keys_dirty = true
 
 
 ## Drains every aura grip nothing has renewed lately.

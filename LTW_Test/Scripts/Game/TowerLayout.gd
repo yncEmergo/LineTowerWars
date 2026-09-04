@@ -211,3 +211,39 @@ func _place_one(area: PlayerArea, session: MatchSession, type_id: int,
 	# it, which keeps the sell refund honest on a tower nobody paid for.
 	building.place(area.player_id, area, cell, stats.total_gold_cost, true)
 	return true
+
+
+## This layout as plain ids and numbers, small enough to ride inside a Command.
+##
+## **This is what makes the layout cheat work over a network.** The file it was
+## read from lives on ONE machine, and under lockstep every peer runs every
+## order - so a peer reading "the layout file" would read its own, or none at
+## all, and the two worlds would part on the spot. Sending the maze itself
+## means every peer builds the same one from the same numbers.
+##
+## Cells travel FLATTENED, x then y, rather than as an Array[Vector2i]: a
+## PackedInt32Array is one length-prefixed block of ints where a typed array of
+## Vector2i encodes a variant header per entry.
+func to_dict() -> Dictionary:
+	var flat: PackedInt32Array = PackedInt32Array()
+	flat.resize(cells.size() * 2)
+	for index in range(cells.size()):
+		flat[index * 2] = cells[index].x
+		flat[index * 2 + 1] = cells[index].y
+	return {"t": unit_type_ids, "c": flat, "g": grid_size}
+
+
+## The other half of to_dict, over whatever actually arrived.
+##
+## Nothing here trusts the sender's arithmetic: an odd number of cell ints or a
+## count that does not match the types is read as far as it is whole, which is
+## the same rule entry_count() already applies to a hand-edited file.
+static func from_dict(data: Dictionary) -> TowerLayout:
+	var layout: TowerLayout = TowerLayout.new()
+	layout.unit_type_ids = PackedInt32Array(data.get("t", PackedInt32Array()))
+	layout.grid_size = data.get("g", Vector2i.ZERO)
+
+	var flat: PackedInt32Array = PackedInt32Array(data.get("c", PackedInt32Array()))
+	for index in range(flat.size() / 2):
+		layout.cells.append(Vector2i(flat[index * 2], flat[index * 2 + 1]))
+	return layout

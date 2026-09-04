@@ -95,13 +95,22 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
 		_apply(command, ability, units)
 		return
 
-	if multiplayer.is_server():
-		_queue(command)
-		return
-
 	if ability.ability_id == AbilityRegistry.NO_ABILITY:
 		Log.err("Ability has no id and cannot be ordered over a network",
 			ability.display_name)
+		return
+
+	# **Under lockstep NOBODY applies an order when it is given**, including the
+	# machine that gave it. It is booked for a turn a little ahead, exchanged,
+	# and run by every peer on that turn - which is the whole mechanism, and why
+	# an order has a delay a player can feel. Applying it here as well would
+	# apply it twice locally and once everywhere else.
+	if MatchSession.is_lockstep():
+		Lockstep.schedule(command)
+		return
+
+	if multiplayer.is_server():
+		_queue(command)
 		return
 	submit_command.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict())
 
@@ -113,7 +122,13 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
 ## on, the other names an action and a technology - and a submit() that started
 ## accepting an empty selection would stop refusing the mistake it is there to
 ## refuse.
-func submit_player_action(action: Command.PlayerAction, tech_id: int = 0) -> void:
+##
+## `maze` is the layout cheat's payload and is null for everything else. It is
+## read where the key was PRESSED rather than where the order lands, because
+## the file it comes from is on that machine and nowhere else - see
+## Command.layout.
+func submit_player_action(action: Command.PlayerAction, tech_id: int = 0,
+		maze: TowerLayout = null) -> void:
 	if action == Command.PlayerAction.NONE:
 		return
 
@@ -122,7 +137,7 @@ func submit_player_action(action: Command.PlayerAction, tech_id: int = 0) -> voi
 		Log.err("Commands.submit_player_action with no MatchSession, the order goes nowhere")
 		return
 
-	var command: Command = Command.create_player_action(action, tech_id)
+	var command: Command = Command.create_player_action(action, tech_id, maze)
 	command.tick = session.tick()
 	command.player_slot = session.local_slot()
 
@@ -131,6 +146,13 @@ func submit_player_action(action: Command.PlayerAction, tech_id: int = 0) -> voi
 	if !Net.is_online():
 		_apply_player_order(command)
 		return
+
+	# Same reasoning as submit(): under lockstep this waits for its turn like
+	# every other order, on every machine including this one.
+	if MatchSession.is_lockstep():
+		Lockstep.schedule(command)
+		return
+
 	if multiplayer.is_server():
 		_queue(command)
 		return
@@ -163,6 +185,24 @@ func submit_command(payload: Dictionary) -> void:
 func _queue(command: Command) -> void:
 	_pending.append(command)
 	set_physics_process(true)
+
+
+## Every order belonging to one lockstep turn, run in the order given.
+##
+## **The order of this array is load-bearing.** `LockstepService` sorts it by
+## the peer that sent it, so every machine applies the same orders in the same
+## sequence - two peers building on the same cell in the other order would give
+## it to different players and diverge from there. Nothing here may re-sort it.
+##
+## Validation is unchanged and is the point: every peer runs the SAME
+## `_validate_and_apply` over the SAME orders, so every peer refuses the same
+## ones. A rule enforced identically everywhere needs no authority to enforce
+## it.
+func apply_turn(payloads: Array) -> void:
+	for entry: Variant in payloads:
+		var command: Command = Command.from_dict(entry as Dictionary)
+		if command != null:
+			_validate_and_apply(command)
 
 
 ## The top of a simulation tick, before anything in the match scene moves.
@@ -480,12 +520,24 @@ func _apply_cheat_unlock_techs(command: Command) -> void:
 ## drawing of it, and in single player, which is the only place cheats normally
 ## answer, the two are the same machine anyway.
 ##
-## Which means that in a deliberately cheat-enabled networked test the file
+## Which means that in a deliberately cheat-enabled REPLICATED test the file
 ## lands on the SERVER, next to its own logs. That is where the world is; it is
 ## worth knowing before hunting for it in the wrong user:// folder.
+##
+## Under LOCKSTEP there is no such single world - every peer runs every order
+## over its own identical copy - so every peer would write the same maze, each
+## into its own user:// folder, and one player pressing the key would silently
+## overwrite the saved layout of everybody else in the match. Only the machine
+## that pressed it writes.
 func _apply_cheat_save_layout(command: Command) -> void:
 	var area: PlayerArea = _cheat_area(command)
 	if area == null:
+		return
+
+	var session: MatchSession = _session
+	if MatchSession.is_lockstep() && (
+		session == null || !session.is_local_player(command.player_slot)
+	):
 		return
 
 	# Read straight through: _cheat_area has already refused a machine with no
@@ -519,15 +571,22 @@ func _apply_cheat_save_layout(command: Command) -> void:
 ## It does NOT close the technology undo window the way a real construction
 ## does (TechManager.notify_construction_started). No gold went onto the field,
 ## so nothing was committed.
+##
+## **The maze comes off the COMMAND, never off this machine's own file.** The
+## file was read where the key was pressed (CheatController), and that is what
+## makes the cheat work in a networked match: under lockstep every peer runs
+## this, and a peer opening its own user://Layouts would build a different maze
+## or - far more usually - none at all, which parts the two worlds on the turn
+## the key was pressed. That was the bug; the file read moving one step up the
+## road is the fix.
 func _apply_cheat_load_layout(command: Command) -> void:
 	var area: PlayerArea = _cheat_area(command)
 	if area == null:
 		return
 
-	var path: String = References.game_config.cheat_layout_path
-	var layout: TowerLayout = TowerLayout.load_file(path)
+	var layout: TowerLayout = command.layout
 	if layout == null:
-		_reject(command, "there is no readable layout at %s" % path)
+		_reject(command, "the layout order carried no layout")
 		return
 
 	var placed: int = layout.restore(area)
