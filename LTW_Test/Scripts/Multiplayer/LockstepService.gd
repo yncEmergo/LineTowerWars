@@ -280,7 +280,24 @@ func _send_turn(turn: int) -> void:
 	# and it looked exactly like a networking failure.
 	if !_primed:
 		_primed = true
-		for early: int in range(turn, turn + _input_delay()):
+		# **From turn ZERO, not from the turn this peer happens to be on.**
+		#
+		# Two peers do not start their match at the same instant - the server
+		# builds its world after the clients have built theirs, and two clients
+		# load at whatever speed their machines manage. Each one's clock starts
+		# at 0 when ITS match begins, so by the time a late peer goes live the
+		# others are already several turns in and waiting on turns it has not
+		# heard of.
+		#
+		# Priming from the current turn made that peer's first message be about
+		# turn 2 or 3, while everybody else sat blocked on turn 1 that nobody
+		# would ever send - a permanent stall, with the tree paused, which
+		# reads as "the game started and no input does anything".
+		#
+		# Emitting from 0 says the honest thing: this peer had no orders for any
+		# turn before it existed. Bounded by the current turn, and a peer cannot
+		# join mid-match (D13), so the loop is short.
+		for early: int in range(0, turn + _input_delay()):
 			_emit(early, [])
 
 	var scheduled: int = turn + _input_delay()

@@ -165,7 +165,11 @@ func _process(delta: float) -> void:
 	# right, since D20 says a client connects when Multiplayer is pressed rather
 	# than at boot.
 	if !_browsing:
-		if _elapsed < SETTLE_SECONDS:
+		# The JOIN probe deliberately dawdles, so the two peers do NOT start
+		# their matches at the same instant. That stagger is what exposed the
+		# priming bug and nothing else reproduces it.
+		var wait: float = SETTLE_SECONDS * (3.0 if _role == "join" else 1.0)
+		if _elapsed < wait:
 			return
 		_browsing = true
 		Log.warn("PROBE opening the lobby browser")
@@ -185,7 +189,7 @@ func _process(delta: float) -> void:
 
 	# Nothing to drive until the match is up.
 	if !_in_match:
-		if _elapsed > SETTLE_SECONDS * 6.0:
+		if _elapsed > SETTLE_SECONDS * 20.0:
 			Log.err("PROBE never got into a match")
 			_finish()
 		return
