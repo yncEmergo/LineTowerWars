@@ -268,7 +268,10 @@ func send_creeps(creep_stats: CreepStats) -> void:
 	# Checked here as well as on the button, because the last opponent can run
 	# out of lives between pressing it and the order arriving on the server.
 	if !can_send(creep_stats):
-		Log.info("Send refused", {"type": creep_stats.display_name})
+		# DEBUG: a send ability is repeat_on_hold, so a player leaning on the key
+		# with nothing to send reaches this EVERY TICK. Log.info costs a
+		# get_stack() - see CLAUDE.md and the 2026-09-04 finding.
+		Log.debug("Send refused", {"type": creep_stats.display_name})
 		return
 
 	var creep_scene: PackedScene = creep_stats.scene()
@@ -279,7 +282,8 @@ func send_creeps(creep_stats: CreepStats) -> void:
 
 	var stock: CreepStock = stock_for(creep_stats)
 	if stock != null && !stock.has_stock():
-		Log.info("Out of stock", {"type": creep_stats.display_name})
+		# Same repeat_on_hold path as "Send refused" above.
+		Log.debug("Out of stock", {"type": creep_stats.display_name})
 		return
 
 	var state: PlayerState = _owner_state()

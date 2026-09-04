@@ -62,6 +62,21 @@ extends Resource
 @export var min_income_interval: float = 1.0
 @export var max_income_interval: float = 300.0
 
+## How long the lobby browser waits for the server to answer a create or join
+## before telling the player it heard nothing.
+##
+## A refusal already comes back as a message, so this is only for the case
+## where NOTHING comes back - the request left and no answer, refusal included,
+## ever arrived. That is what a client and server running different code looks
+## like: Godot routes an rpc by its INDEX in the method list, so two builds
+## whose @rpc sets differ silently deliver a call to the wrong function and
+## nobody replies. Without this the browser sits on "Creating lobby..." for
+## ever with the real error only in the log. Cost an hour on 2026-09-04.
+##
+## Generous on purpose. It is not a latency budget, it is the point at which
+## silence stops being worth waiting through.
+@export var lobby_request_timeout_seconds: float = 8.0
+
 @export_group("Starting a match")
 ## Seconds between the host pressing Start and the match handshake beginning
 ## (D24). Everyone in the lobby watches the same number, because the countdown

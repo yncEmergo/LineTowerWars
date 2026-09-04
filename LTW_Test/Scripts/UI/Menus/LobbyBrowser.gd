@@ -20,6 +20,10 @@ extends Control
 ## prompt FIRST and dials out afterwards. Somebody who already has a name never
 ## sees it and can change it from the button in the header.
 
+## Only reached when the browser has no MenuConfig at all, which is already
+## an error - see _ready. A placeholder rather than a setting.
+const DEFAULT_REQUEST_TIMEOUT: float = 8.0
+
 @export_group("References")
 ## Parent for the rows. Emptied and refilled on every list update.
 @export var _lobby_list: VBoxContainer
@@ -56,6 +60,12 @@ var _entry_group: ButtonGroup = ButtonGroup.new()
 ## Set while a request is outstanding, so a refused create can put the dialog
 ## back rather than leaving the player looking at a browser that ignored them.
 var _pending_action: String = ""
+## How long that request has been outstanding, or -1 while there is none.
+##
+## A refusal arrives as a message and clears the wait on its own. This is for
+## the case where NOTHING arrives - see MenuConfig.lobby_request_timeout_seconds
+## for what causes that and why silence is the failure worth naming.
+var _pending_elapsed: float = -1.0
 
 var _config: MenuConfig:
 	get:
@@ -63,6 +73,9 @@ var _config: MenuConfig:
 
 
 func _ready() -> void:
+	# Nothing is outstanding yet, and _process only earns its keep while
+	# something is. See _begin_pending.
+	set_process(false)
 	if _config == null:
 		Log.err("LobbyBrowser found no MenuConfig on References")
 	_connect_buttons()
@@ -143,12 +156,56 @@ func _on_lobby_list_changed(lobbies: Array[LobbyInfo]) -> void:
 	_update_status()
 
 
+## Only while a request is outstanding, so an idle browser ticks nothing.
+func _process(delta: float) -> void:
+	if _pending_elapsed < 0.0:
+		return
+
+	_pending_elapsed += delta
+	if _pending_elapsed < _request_timeout():
+		return
+
+	var action: String = _pending_action
+	_clear_pending()
+
+	# LOUDLY, because this is the shape of a client and server on different
+	# code and the player cannot see the log. Saying only "no answer" would
+	# leave them retrying a thing that will never work.
+	Log.err("The server never answered a lobby request", {"action": action})
+	_set_status(
+		"The server did not answer. It may be running different code - "
+		+ "restart it and check its log."
+	)
+
+	# Same courtesy a refusal gets: give back the dialog they filled in.
+	if action == "create" && _create_panel != null:
+		_create_panel.show()
+
+
+func _begin_pending(action: String) -> void:
+	_pending_action = action
+	_pending_elapsed = 0.0
+	set_process(true)
+
+
+func _clear_pending() -> void:
+	_pending_action = ""
+	_pending_elapsed = -1.0
+	set_process(false)
+
+
+func _request_timeout() -> float:
+	if _config == null:
+		return DEFAULT_REQUEST_TIMEOUT
+	return _config.lobby_request_timeout_seconds
+
+
 ## Landing in a lobby is what a successful create or join looks like: the server
 ## does not answer "yes", it simply tells us which lobby we are in.
 func _on_current_lobby_changed(lobby: LobbyInfo) -> void:
 	if lobby == null:
 		return
-	_pending_action = ""
+	_clear_pending()
 	MenuNavigation.to_lobby_room(self, lobby)
 
 
@@ -158,7 +215,7 @@ func _on_request_refused(reason: String) -> void:
 	# with what they typed still in it.
 	if _pending_action == "create" && _create_panel != null:
 		_create_panel.show()
-	_pending_action = ""
+	_clear_pending()
 
 
 func _on_network_status_changed(_new_status: NetworkService.Status) -> void:
@@ -327,7 +384,7 @@ func _update_name_button() -> void:
 func _on_join_pressed() -> void:
 	if _selected == null:
 		return
-	_pending_action = "join"
+	_begin_pending("join")
 	_set_status("Joining %s..." % _selected.lobby_name)
 	Lobby.join(_selected.lobby_id)
 
@@ -371,7 +428,7 @@ func _on_create_confirmed() -> void:
 	if _create_panel != null:
 		_create_panel.hide()
 
-	_pending_action = "create"
+	_begin_pending("create")
 	_set_status("Creating lobby...")
 	Lobby.create(_entered_lobby_name(LobbyIdentity.display_name()), _entered_player_count())
 

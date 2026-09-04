@@ -688,7 +688,7 @@ func _displace_creeps_in(cell: Vector2i, footprint: Vector2i) -> void:
 		if at.y < cell.y || at.y >= cell.y + footprint.y:
 			continue
 
-		Log.info("Creep displaced by a building", {"creep": creep.name})
+		Log.debug("Creep displaced by a building", {"creep": creep.name})
 		creep.set_back_along_path()
 
 

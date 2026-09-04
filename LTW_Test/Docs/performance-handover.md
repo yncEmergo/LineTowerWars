@@ -15,6 +15,12 @@ Read that finding first. This one assumes it.
 
 ### 1.1 The working tree is uncommitted and the server runs code that is not in git
 
+> **DONE, 2026-09-04. This whole section is history.** The server was rebuilt, deployed from
+> git, and `deploy_server.ps1 -Check` now reports server, origin and local on the same commit
+> with a clean tree. Nothing below needs doing; it is kept because §5.4's lesson survives it.
+>
+> The state it described, kept for the record:
+>
 > **DONE on the git side, NOT on the server side.** `origin/main` now carries 2026-09-03's
 > work, and the working tree was clean when 2026-09-04 started. The server has still not been
 > deployed to it, so everything below stands as written - run the deploy before testing
@@ -79,75 +85,74 @@ The 4-player row above has the median on the budget line and p95 well over it.
 
 ---
 
-## 2a. What was done on 2026-09-04
+## 2a. 2026-09-04: §4.1 was built, measured, and REVERTED
 
-**§4.1 landed: staggered creep movement.** One fix, pure GDScript, no rule and no balance
-number touched.
+**Staggered creep movement is dead. Do not rebuild it.** It worked exactly as designed, bought
+about 16% off the worst tick, and looked so bad that the user called it unplayable. The code
+is gone; what follows is why, because the reason is more useful than the fix was.
 
-| Where | What |
-| --- | --- |
-| `GameConfig.creep_move_interval_ticks` | How many ticks apart a creep takes its step. 1 is the old behaviour. |
-| `Creep._due_to_move` | Banks the tick's delta and answers whether this is the creep's tick to walk. Phase from `unit_id`, exactly as `_aura_phase` does. |
-| `Creep._advance_movement` | The three travel branches, extracted out of `_physics_process` so the gate has something to gate. |
+### What it did
 
-Everything a step scales by - `_step_reach`, `_face_direction`, `_watch_for_stall`,
-`_glide`'s climb, the crowding push - is handed the BANKED delta, so a creep covers the same
-ground in fewer, longer steps and no speed changes. Nothing banks while a creep is stunned or
-mid-dive, because neither reaches the gate: a creep held for a second does not teleport a
-second's walk when it is let go.
+Each creep took its step every Nth tick with the time banked since its last one, phased off
+`unit_id` so the population spread evenly across the N ticks. Verified: a per-tick probe over
+~310 creeps counted 148-163 moving on every tick, dead even, no clumping. The move block
+halved, 7.7 ms → 4.2 ms. A full maze still routed - creeps reaching the exit went 1607 → 1626
+over 25 s, so no tunnelling and no sticking.
 
-### Verified
+### What it bought, measured ON THE SERVER, paired
 
-- **The phase is flat.** A temporary per-tick probe over ~310 creeps counted 148-163 moving on
-  every single tick at an interval of 2 - dead even, tick after tick, with no clumping. This is
-  the thing §4.1 warned about and it is not happening.
-- **The work really is halved.** Timing the extracted block: **7.7 ms → 4.2 ms per tick** at
-  ~307 creeps. Per moving creep the cost is unchanged (25 µs → 27 µs), so the saving is the
-  halved population and nothing else.
-- **A full maze still routes.** 390 towers per area, densest legal layout, 25 s: creeps
-  reaching the exit went 1607 → 1626, a 1.2% difference. No tunnelling, no sticking, no
-  re-route storm. This was the risk the step-length table in §4.1 was about.
+Same deployed commit, interval flipped in place between runs. Creep-heavy shape (16 towers,
+308 creeps):
 
-### Measured, on the DEV PC - see the caveat below
+| interval | avg | p50 | p95 | max |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 36.63 | 35.08 | 55.46 | 74.73 |
+| 1 | 42.26 | 42.34 | 62.81 | 73.10 |
+| 1 | 38.25 | 36.53 | 56.29 | 77.52 |
+| 2 | 35.20 | 34.38 | 50.76 | 62.12 |
+| 2 | 33.87 | 32.36 | 51.20 | 62.47 |
 
-| Scenario | avg before | avg after | p95 before | p95 after | max before | max after |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 16 towers, 308 creeps (`1v1-fewtowers`) | 35.5 | **32.2** | 93.6 | **77.7** | 165 | **119** |
-| 780 towers, 240 creeps (full maze) | 25.2 | **23.0** | 33.8 | **31.3** | 44.1 | **38.8** |
+Every interval-1 run maxed at 73-78 ms and both interval-2 runs at 62 - about 16% off the
+worst tick, with no overlap. On the tower-heavy Firelord/Wendigo scenario: p50 32.83 → 32.80,
+**no change at all**, which is expected - 90 towers against 219 creeps is a tick dominated by
+targeting, and this touched none of it.
 
-**These numbers are NOT comparable to anything in §2, and must not be quoted as if they were.**
-They were taken on the developer PC because the SSH path to the server is not available from
-the session that did this work. That machine is both much faster than the rented box and much
-noisier: its p95/p50 on the few-towers shape is ~3.6×, where the server's is ~1.6×, so most of
-its tail is OS scheduling rather than the game. Its medians swing ±4 ms between identical runs,
-which is larger than the effect being measured - which is exactly why the in-tick probe above
-is the number to trust and the table is only corroboration.
+### Why it looked terrible, and what that actually proves
 
-**The step-length limit in §4.1 was computed from the wrong creep and is more forgiving than it
-said.** It used a creep at 2.25/s; the roster's fastest walk at 4.0, and a speed aura over one
-of those makes 5.0. But the obstacle is a TOWER, which is a whole grid cell rather than the
-half-cell internal grid the table assumed, so a step has to exceed a full cell to cross one
-without ever sampling it. That is four times the interval, not two. 2 is comfortable, 4 is at
-the edge, and the swept-test warning still applies beyond it.
+**It is not that 10 Hz is too slow to look smooth. It is that the client was interpolating
+across the wrong interval.**
 
-### Still to do for this fix
+`ReplicationService` applies a snapshot on the client's own physics tick, and Godot's physics
+interpolation smooths between the last two tick transforms. When the server does not move a
+creep on a tick, the two transforms are IDENTICAL - so the creep renders frozen for a whole
+tick period, then covers a double step in the next one. A sawtooth in velocity, per creep,
+at 10 Hz. That is the "laggy as fuck", and it is an artefact of the mismatch, not of the rate.
 
-1. **RUN THE BENCH ON THE SERVER.** §6's command, the reported Firelord/Wendigo scenario,
-   against the §2 baseline. That is the only measurement that answers whether this closes the
-   4-player gap, and it is the one measurement that could not be taken.
-2. **Look at it.** A creep's position now only changes on its own tick, so at an interval of 2
-   each creep is drawn at half the tick rate. The phase means the CROWD never pulses together,
-   but an individual creep does, and no amount of profiling answers whether that reads as
-   stutter. If it does, the knob goes back to 1 and the fix waits behind §4.3, which is what
-   makes it visually free.
-3. If it does read badly and §4.3 is far off, the fallback is to split the step rather than
-   skip it: advance the position every tick along the committed direction, and do the route
-   questions - the waypoint test, the two slide tests, the stall watch, the facing - every Nth.
-   That keeps 20 Hz visuals for roughly three quarters of the saving, at the cost of more code
-   and a cached direction that can go stale.
+**This matters for what comes next.** A UNIFORM lower simulation rate does not have this
+problem: every creep moves every tick, and the interpolator lerps across the whole tick
+period, which is what makes 24 fps film look like motion. Halving the tick rate globally is a
+different proposition from staggering within it, and the failure of this experiment is not
+evidence against it.
 
+### The variance is bigger than anything written here previously admits
+
+Identical code, same box, minutes apart, gave p50 of **35.08, 42.34 and 36.53** - a 21%
+spread. Section 2's table and the finding's tables are single runs compared across hours,
+which is inside that noise band. Nothing there is wrong, but no single-run difference under
+about 20% on this machine means anything on its own.
+
+**Measure paired from now on**: same commit, flip the one variable in place, alternate runs.
+That is what made the result above legible when a cross-deploy comparison showed nearly
+nothing. This is the most durable thing the day produced.
 
 ## 3. Where a creep tick goes now
+
+> **SUPERSEDED 2026-09-04.** This table measures PARTS and the parts never added up to the
+> whole - which is exactly what hid the real answer. A creep tick was ~98 µs, of which ~50 µs
+> was a single `Log.info` on the leak path. After moving the per-creep log events to
+> `Log.debug` a creep tick is ~49 µs, `move` is the top cost again at ~21 µs and `aura` second
+> at ~10 µs. See `Findings/2026-09-04-log-info-in-the-creep-tick.md`. The numbers below are
+> kept because the move breakdown inside them is still the best one taken.
 
 Measured by timing segments **inside** `Creep._physics_process` (scaffolding since deleted — see
 §6 if you need it again). Per creep, ~214 creeps, after fixes 1–2:
@@ -169,37 +174,23 @@ trust `est_targeting_ms_per_tick` from the bench — see §5.2.
 
 ## 4. What to do next, in priority order
 
-### 4.1 Staggered movement at half rate — the biggest remaining item
+### 4.1 Staggered movement — TRIED, REVERTED, DO NOT REBUILD
 
-> **LANDED 2026-09-04, unmeasured on the server. See §2a.** The rest of this section is kept
-> as written because it is the reasoning the fix was built to, and because its step-length
-> table is WRONG in a way worth seeing next to the correction in §2a.
+See §2a. It works, it is worth ~16% of the worst tick, and it is unplayable to look at. The
+step-length table this section used to carry was also computed from the wrong creep: it
+assumed 2.25/s, the roster's fastest walk at 4.0, and a speed aura over one of those makes
+5.0. But the obstacle is a TOWER, a whole grid cell rather than the half-cell internal grid,
+so a step has to exceed a full cell to cross one unsampled - four times the interval, not two.
+Recorded in case a swept test is ever needed for another reason.
 
-`move` is ~77 µs of ~100 µs per creep. The user's idea, and it is a good one.
+### 4.2 The unexplained outlier - SOLVED 2026-09-04
 
-**Stagger it; do not simply lower the global rate.** Moving everything every 2nd tick halves the
-cost but puts all of it on alternate ticks — a spike every other tick, which is precisely the
-mistake fix 4 just corrected. Instead give each creep a phase by `unit_id`, so each moves every
-Nth tick and the population is spread across the N phases. Same saving, perfectly flat.
-
-**The step length is the hard limit.** Internal cell size is `cell_size / internal_cells_per_cell`
-= 0.5. A fast creep (Wendigo, 2.25/s) covers 0.1125 per tick at 20 Hz:
-
-| Rate | Step | Fraction of an internal cell |
-| --- | ---: | ---: |
-| every tick | 0.1125 | 22% |
-| **every 2nd** | 0.225 | **45% — safe** |
-| every 4th | 0.45 | **90% — at the edge of tunnelling a one-cell wall** |
-
-`_move_by` tests only the DESTINATION, not the path, so at 4× a creep can cross a wall cell in
-one step. **Do 2× first. 4× needs a swept test.** `CLAUDE.md` §5.6 already warns about exactly
-this class of bug.
-
-**Whatever N is, pass the accumulated delta through.** `_step_reach`, `_face_direction` and
-`_watch_for_stall` all scale with it; getting it wrong silently changes creep speed, which is a
-balance change wearing a performance change's clothes.
-
-### 4.2 The unexplained outlier
+> **It was `Log.info("Creep leaked", ...)`, at roughly 10 ms a call.** Rare, enormous, and
+> exactly the shape the spikes had: a wave arriving at the exit together logs several leaks in
+> one tick. `Log.info` calls `get_stack()` on every invocation. Fixed by moving the per-creep
+> events to `Log.debug`; the creep tick halved and max fell 6.8x on the dev PC. Full write-up
+> in `Findings/2026-09-04-log-info-in-the-creep-tick.md`. The section below is kept for the
+> candidates it ruled in and out.
 
 > **A lead, from 2026-09-04's runs, not chased.** On the dev PC two scenarios with nearly the
 > same MEDIAN have wildly different tails: a full maze of 780 towers and 240 creeps runs
@@ -215,6 +206,11 @@ spikes rarely and hard, and it was never chased. Candidates never ruled out: a w
 every placement and sale). Find it before assuming the distribution is clean.
 
 ### 4.3 Replication phase B / client extrapolation
+
+> **DEFERRED 2026-09-04, on architecture grounds rather than on its merits.** D2
+> (server-authoritative replication) is under review against deterministic lockstep - see
+> `multiplayer.md` §4.1 - and lockstep DELETES this entire layer. Do not build it until that
+> is settled. The rest of this section stands and is the right design if D2 is kept.
 
 The user's own framing is the best argument for it: *"90% of what moves or shoots is very
 predictable. Player commands are rare and creeps are not commandable anyway."*

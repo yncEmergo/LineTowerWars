@@ -9,6 +9,15 @@
 - you're here to implement the game not design it
 - do NOT alter the rules unless on your own without asking
 - use Log.gd addon for debugging
+  - **a log call on a PER-UNIT or PER-TICK path must be Log.debug, never Log.info.**
+    Log.info runs get_stack() on every invocation - a full GDScript stack capture, which
+    is what draws the [Creep:2041] prefix - and then print_rich(). Measured at ~10 ms per
+    call, and ONE of them ("Creep leaked", once per creep per lane) was half of all creep
+    simulation time. The level is checked first, so a debug call at the default level costs
+    nothing and the line stays available by flipping the level
+  - Log.info is for a PER-PLAYER-ACTION event: a tower sold, an upgrade started, a lobby
+    created. Those fire when somebody clicks, and the stack capture is affordable
+  - see Docs/Findings/2026-09-04-log-info-in-the-creep-tick.md
 - NO PHYSICS ENGINE. Every gameplay result is computed in plain maths, never by
   a physics body, a collision shape or a space query
   - no CharacterBody3D / RigidBody3D / Area3D for gameplay, no move_and_slide,

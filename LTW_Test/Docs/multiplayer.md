@@ -40,7 +40,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | # | Decision | Date | Notes |
 | --- | --- | --- | --- |
 | D1 | **No physics engine, anywhere.** All gameplay is plain maths. | 2026-08-21 | Now a hard rule in `CLAUDE.md`, and already true of the code before it was written down. |
-| D2 | **Server-authoritative replication.** The server decides what happened. | 2026-08-21 | Chosen over lockstep and host-authority deliberately, accepting it is heavier for a 1v1 prototype, because ranked play needs it and retrofitting it later would be a rewrite. |
+| D2 | **Server-authoritative replication.** The server decides what happened. | 2026-08-21 | Chosen over lockstep and host-authority deliberately, accepting it is heavier for a 1v1 prototype, because ranked play needs it and retrofitting it later would be a rewrite. **UNDER REVIEW since 2026-09-04 - see §4.1. Still the built model; do not build new work on the replication layer until this is settled.** |
 | D3 | **The game server is a headless Godot export of this same project**, in GDScript. | 2026-08-21 | One copy of the simulation, shared by client and server. See §5.2. |
 | D4 | **Dedicated server process from day one**, run on localhost during development. | 2026-08-21 | Not a listen server. "Runs on your machine" and "runs in a datacenter" then differ only by an address. |
 | D5 | **ENet (`ENetMultiplayerPeer`) is the transport.** | 2026-08-21 | UDP with reliable *and* unreliable channels. Built in. See §6 for why not WebSockets. |
@@ -679,6 +679,65 @@ Rejected alternatives, recorded so the reasoning is not relitigated:
 **The cost being accepted:** more work before the first networked match, a server to run and
 pay for, and input latency that prediction has to hide. That is the trade for a result the
 player cannot forge.
+
+### 4.1 D2 under review - deterministic lockstep, reopened 2026-09-04
+
+**Nothing has changed in the code.** D2 is still what is built and still what new work must
+target. This section exists so the argument is not re-derived from scratch, and so that the
+two facts that reopened it are not lost.
+
+**A decision is only worth reopening on new information.** Two pieces arrived:
+
+**1. The CPU cost of central simulation was never priced in.** The rejection table above
+weighs lockstep's BANDWIDTH advantage and dismisses it as "largely recovered anyway by
+§5.4". That is true and it is beside the point. What lockstep really saves is the SERVER
+SIMULATING AT ALL - a lockstep server is a relay that runs no game loop. Measured on the
+rented box: a creep costs roughly 100 µs of tick per tick, so a two-lane match with a few
+hundred creeps already sits on the 50 ms budget with one core saturated. Twelve lanes is not
+close. See `Findings/2026-09-03-server-tick-overrun.md` and `performance-handover.md`.
+
+**2. This game has NO HIDDEN INFORMATION.** There is no fog of war and no vision system
+anywhere in `game_rules.md` - every player watches every lane, which is what Line Tower Wars
+IS. The cheat lockstep enables is the MAPHACK, and a maphack against a board that is already
+public buys nothing. So the security premium D2 is paying is, for this game specifically,
+close to zero.
+
+Worth correcting one line above while it is being read: *"no client can be trusted to report
+a result"* overstates it. Under lockstep no client REPORTS anything - every peer runs the same
+rules over the same inputs, and a client that fabricates gold or moves a creep it should not
+does not get away with it, it DESYNCS, which is detectable by comparing state checksums per
+turn. What lockstep gives up is information hiding, not result integrity.
+
+**What lockstep would NOT fix, and this is why it is not being done yet.** It relocates the
+cost rather than removing it: under lockstep EVERY client simulates EVERY lane, so the work
+is duplicated to every machine rather than reduced. Twelve lanes at today's per-creep cost is
+heavier than one machine can carry, and a lockstep match runs at the speed of its SLOWEST
+peer - so minimum spec becomes the binding constraint instead of the server. **The per-unit
+cost has to come down under either model**, which is why that is the work being done first.
+
+**What it would buy, beyond CPU**: `ReplicationService` and all of §3.3 / phase B deleted,
+along with the whole family of bugs that exists only because there is a replication boundary
+(the frozen income clock, the skeleton revive, anything authority-only that presentation
+reads). And no interpolation seam - the reason staggered creep movement was unplayable on
+2026-09-04 was a replication artefact that a client rendering its own simulation cannot have.
+
+**What would have to be true to switch:**
+
+- the per-creep cost is down far enough that twelve lanes fit on a mid-range client, not just
+  a good one;
+- iteration order is deterministic everywhere - GDScript `Dictionary` order, `get_children()`,
+  spawn order. Float maths is the EASY half here: same engine build, same architecture,
+  PC-only, no physics;
+- nothing time-based survives in the simulation, only tick-based;
+- desync detection exists (per-turn state checksums) before the first ranked match, because a
+  desync is unrecoverable and close to undebuggable from a bug report;
+- the ongoing tax is accepted: every feature written from then on must be deterministic,
+  forever. That is the real cost, not the migration.
+
+**Consequences for work done in the meantime:** D13 (no reconnect) already absorbs lockstep's
+main drawback, so nothing there needs revisiting. The thing to avoid is DEEPENING the
+replication layer - §4.3's client extrapolation in `performance-handover.md` is exactly the
+work lockstep would delete, and is deferred on those grounds rather than on its merits.
 
 ---
 

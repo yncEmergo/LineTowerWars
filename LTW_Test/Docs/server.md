@@ -17,7 +17,9 @@ In the VS Code terminal (it is PowerShell), from the project folder:
 ```
 
 **Ctrl+C** also stops it, if you started it in the terminal you are looking at.
-`.\Tools\stop_server.ps1 -List` shows what is running without touching it.
+`.\Tools\stop_server.ps1 -List` shows what is running, and how long it has been up,
+without touching it. Uptime is there because a long-lived server silently runs older code
+than your checkout - see **When it does not work**.
 
 Starting a second server on the same port is refused with a message rather than
 allowed to fail deep inside ENet. Two servers on DIFFERENT ports is fine, so
@@ -71,7 +73,7 @@ player slot.
 | Two servers at once | run the second with `-Port 7778` |
 | Godot lives somewhere else | `.\Tools\run_server.ps1 -Godot "C:\path\to\Godot.exe"` |
 | Stop it | `.\Tools\stop_server.ps1` |
-| See what is running | `.\Tools\stop_server.ps1 -List` |
+| See what is running, and for how long | `.\Tools\stop_server.ps1 -List` |
 
 `-Windowed` gives you the same log in a window instead of the terminal — occasionally handy,
 but the terminal is the better place for it.
@@ -352,6 +354,29 @@ That is the editor's own embedded Game panel, not your game and not the server -
 appears nowhere in this project. It is Editor Settings -> Run -> Window Placement -> **Game
 Embed Mode**; set it to *Disabled* so every instance opens as its own window. Running the
 server from a terminal sidesteps it either way.
+
+**A LOBBY NEVER GETS CREATED, or a request just hangs with no error**
+The most likely cause is a server that has been running longer than your working tree has
+been still. **A running server holds the scripts it PARSED AT BOOT.** Every pull, checkout,
+deploy or revert you make afterwards moves the files out from under it, and nothing tells you:
+
+- the build handshake still passes, because `protocol_version` did not change;
+- Godot routes an rpc by its **index in the method list**, not by its name, so two builds
+  whose `@rpc` sets differ deliver a call to the *wrong function*;
+- the symptom is whatever that wrong function does - usually nothing, so the client waits for
+  an answer that is never coming.
+
+The tell in the log is `rpc node checksum failed ... Node path: /root/Lobby`, sometimes with
+`Method expected N argument(s), but called with M` beside it. That pair means *the two ends
+are not running the same code*, whatever the version handshake said.
+
+**The fix is to restart the server.** `.\Tools\stop_server.ps1 -List` prints each server's
+uptime and warns when one has been up over an hour, which is the reading that catches this:
+a server up since yesterday, next to a checkout from this morning.
+
+The same trap in its file-copying form is `performance-handover.md` §5.4 - hand-staged files
+diverge silently for exactly the same reason. Deploy from git, and restart the server after
+you do.
 
 **A client vanishes but the server does not notice for ~5 seconds**
 Expected. A client that closes properly is reported instantly; one that was killed, crashed

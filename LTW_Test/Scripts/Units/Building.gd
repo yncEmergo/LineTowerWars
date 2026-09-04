@@ -1406,6 +1406,13 @@ func _health_regen_per_second() -> float:
 ## already down needs no guard here: heal() turns the first into a clamp that
 ## changes nothing and refuses the second outright.
 func _regenerate(delta: float) -> void:
+	# Nothing to do at full health, which is nearly every tower nearly all of
+	# the time. Without this the rate is computed and thrown away by heal()'s
+	# own clamp - a max_health() call, a config read and whatever a Holy disc
+	# is lending, per tower per tick. The same early-out Creep._regenerate has
+	# always had; measured at about a third of a standing tower's own tick.
+	if current_health >= float(max_health()):
+		return
 	heal(_health_regen_per_second() * delta)
 
 
@@ -1419,6 +1426,12 @@ func _regenerate(delta: float) -> void:
 func _advance_passives(delta: float) -> void:
 	# The Water disc regenerates the mana of towers that have no passive of
 	# their own at all, so the sum starts outside the early return below.
+	# A tower with no passives and no disc over it has nothing for either loop
+	# below to find, and that is most of a basic maze. Asked once rather than
+	# paid for twice per tower per tick.
+	if _buffs == null && _tower_passives.is_empty():
+		return
+
 	var per_second: float = 0.0 if _buffs == null else _buffs.mana_per_second()
 	for passive in _tower_passives:
 		per_second += passive.mana_per_second(self)
