@@ -112,18 +112,31 @@ extends Resource
 ## The trade is latency against traffic: fewer ticks per turn means orders take
 ## effect sooner and more packets are sent. It does NOT change the simulation
 ## rate - every tick still runs.
-@export var ticks_per_turn: int = 4
+##
+## **This is the DOMINANT term in how sluggish the game feels**, because the
+## delay below is counted in turns. Two ticks is 100 ms at 20 Hz, and the
+## packets are tiny - usually empty - so halving it costs almost nothing on the
+## wire and takes 200 ms off every order.
+@export var ticks_per_turn: int = 2
 
 ## How many turns ahead a command is scheduled for.
 ##
-## **This is the input delay, and it is the one number a player can feel.** An
-## order given now runs this many turns from now, which is what buys every peer
-## time to receive it before the turn it belongs to has to be simulated. Two
-## turns at four ticks is 400 ms.
+## **This is the input delay, and with `ticks_per_turn` it is what a player
+## feels.** It buys every peer time to receive an order before the turn it
+## belongs to has to be simulated.
+##
+## **The real latency is (this + 1) to (this + 2) turn periods, not this many.**
+## An order given during a turn cannot ride that turn's packet - it has already
+## gone out - so it is booked one turn further on, and it then runs at the START
+## of that turn. At 2 ticks per turn and a delay of 2 that is 200-300 ms.
 ##
 ## It cannot be zero: a turn nobody has received yet cannot be simulated, and a
-## peer that has to wait for it stutters instead. Raising it hides worse
-## connections and makes the game feel heavier.
+## peer that has to wait for it stutters instead. What it must exceed is the
+## ROUND TRIP to the slowest peer - below that, turns arrive late and the match
+## stalls instead of merely feeling heavy. `this * ticks_per_turn * 50 ms` is
+## the budget; at 2 and 2 that is 200 ms, comfortable within a country and thin
+## across an ocean. Raising it hides worse connections at the cost of feel, and
+## the proper answer is to measure the round trip and set it from that.
 @export var input_delay_turns: int = 2
 
 ## How often the world is checksummed and compared between machines, in TURNS.
