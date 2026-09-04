@@ -149,20 +149,22 @@ func set_standing(new_value: int, new_placement: int) -> void:
 ##
 ## One method rather than a lose() and a gain() at two call sites, because the
 ## two halves must never happen separately - half a steal would quietly destroy
-## or invent a life. Reports whether it went through, so a leak into a player
-## who is already out cannot pay out twice.
+## or invent a life. Answers HOW MANY actually moved, and 0 for a steal that
+## did not go through - so a leak into a player who is already out cannot pay
+## out twice, and the message on screen quotes the number that really changed
+## hands rather than the number that was asked for.
 ##
 ## A Boss takes two rather than one, and the count is CAPPED at what the victim
 ## actually has: a player on their last life loses that one and no more, so a
 ## Boss can never invent a life by taking more than was there. Which creep
 ## takes how many is CreepStats.lives_stolen.
-func steal_life_from(victim: PlayerState, count: int = 1) -> bool:
+func steal_life_from(victim: PlayerState, count: int = 1) -> int:
 	if victim == null || victim == self || victim.is_eliminated():
-		return false
+		return 0
 
 	var stolen: int = clampi(count, 1, victim.lives)
 	victim.lives -= stolen
 	lives += stolen
 	victim.lives_changed.emit(victim.lives)
 	lives_changed.emit(lives)
-	return true
+	return stolen

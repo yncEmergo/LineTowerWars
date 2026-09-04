@@ -58,11 +58,16 @@ func on_attack(tower: Building, _target: Unit) -> void:
 	tower.ability_state[IDLE_KEY] = 0.0
 
 
-func on_hit(tower: Building, target: Unit, dealt: int, is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
 		status.erode_armor(self, armor_per_hit, 0.0)
 
+
+## What the tower EATS, which is stated per hit rather than per creep - so a
+## splash that brushed six creeps feeds it once, exactly as it did before the
+## armour half moved above.
+func on_hit(tower: Building, _target: Unit, dealt: int, is_primary: bool) -> void:
 	var held: float = float(tower.ability_state.get(BONUS_KEY, 0.0))
 	tower.ability_state[BONUS_KEY] = minf(damage_cap, held + damage_per_hit)
 

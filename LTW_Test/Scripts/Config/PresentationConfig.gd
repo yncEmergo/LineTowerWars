@@ -65,6 +65,28 @@ enum OwnerColors {
 ## off, and anything with longer left than this simply draws clear.
 @export var status_expiry_sweep_seconds: float = 5.0
 
+@export_group("Leak Log", "leak_")
+## Seconds a leak message stays at full strength before it starts to go.
+##
+## Long enough to read a line that arrived while you were looking somewhere
+## else, short enough that a bad thirty seconds does not bury the command card
+## under a wall of text.
+@export var leak_hold_seconds: float = 5.0
+## Seconds it then takes to fade out entirely.
+@export var leak_fade_seconds: float = 0.75
+## The tallest the whole stack may ever be, in pixels. A message pushed past
+## this by a newer one is gone at once rather than fading - the newest lines
+## are the ones worth the room, and a stack that grew with the leaks would
+## reach the top of the screen in a bad wave.
+@export var leak_max_height: float = 190.0
+## Lives you TOOK, and lives you LOST. Only the number is drawn in these; the
+## player who took or lost them is drawn in their own colour, which is what
+## makes a line readable at a glance without reading it.
+@export var leak_gain_color: Color = Color(0.36, 0.85, 0.42, 1.0)
+@export var leak_loss_color: Color = Color(0.93, 0.27, 0.27, 1.0)
+## Everything else on the line.
+@export var leak_text_color: Color = Color(0.9, 0.92, 0.95, 1.0)
+
 @export_group("Minimap", "minimap_")
 ## Ground under everything, and what an empty map slot looks like. Black,
 ## because the world itself is black outside the player areas.

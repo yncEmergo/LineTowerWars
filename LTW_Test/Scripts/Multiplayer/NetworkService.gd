@@ -360,7 +360,7 @@ func _on_connected_to_server() -> void:
 	# ours first is what puts the build number ahead of everything else this
 	# client will ever say. A server that refuses us then does so before it has
 	# been asked for anything.
-	state_protocol_version.rpc_id(SERVER_PEER_ID, _protocol_version())
+	state_protocol_version.rpc_id(SERVER_PEER_ID, _protocol_version(), rpc_signature())
 	connected_to_server.emit()
 
 
@@ -462,7 +462,7 @@ func _refuse(result: Result, action: String) -> Result:
 
 ## Stated by a client the moment it connects. Server side.
 @rpc("any_peer", "reliable")
-func state_protocol_version(version: int) -> void:
+func state_protocol_version(version: int, signature: String) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
@@ -471,16 +471,34 @@ func state_protocol_version(version: int) -> void:
 	_awaiting_version.erase(sender)
 
 	var expected: int = _protocol_version()
-	if version == expected:
-		Log.info("Peer is on our build", {"peer": sender, "build": version})
+	var ours: String = rpc_signature()
+
+	if version != expected:
+		_refuse_build(sender, expected, ours, "This game is build %d and the server is build %d." % [
+			version, expected,
+		])
 		return
 
+	# The version above is a number somebody remembers to raise. This is not:
+	# it is computed from the code, so it catches the case that number cannot -
+	# a build that was edited and not deployed. See rpc_signature().
+	if signature != ours:
+		_refuse_build(sender, expected, ours,
+			"The server is running different code. Deploy your changes, or update the game.")
+		return
+
+	Log.info("Peer is on our build", {"peer": sender, "build": version, "rpc": ours})
+
+
+## Says no, and says which of the two checks said it.
+func _refuse_build(sender: int, expected: int, signature: String, reason: String) -> void:
 	Log.warn("Refusing a peer on another build", {
 		"peer": sender,
-		"theirs": version,
 		"ours": expected,
+		"rpc": signature,
+		"reason": reason,
 	})
-	refuse_protocol_version.rpc_id(sender, expected)
+	refuse_protocol_version.rpc_id(sender, expected, reason)
 	# NOT disconnected here - see _closing and REFUSAL_FLUSH_SECONDS.
 	_closing[sender] = REFUSAL_FLUSH_SECONDS
 
@@ -488,14 +506,20 @@ func state_protocol_version(version: int) -> void:
 ## The server saying no, with its own number so the client can say which way
 ## round the mismatch is. Client side.
 @rpc("authority", "reliable")
-func refuse_protocol_version(server_version: int) -> void:
+func refuse_protocol_version(server_version: int, reason: String) -> void:
 	if multiplayer.is_server():
 		return
 	var ours: int = _protocol_version()
-	_refusal_detail = "The server is on build %d and this game is build %d." % [
-		server_version, ours,
-	]
-	Log.warn("The server refused this build", {"theirs": server_version, "ours": ours})
+	# The server's own words, because it is the side that knows WHICH check
+	# failed - the version number or the rpc surface behind it.
+	_refusal_detail = reason
+	if _refusal_detail.is_empty():
+		_refusal_detail = "The server is on build %d and this game is build %d." % [
+			server_version, ours,
+		]
+	Log.warn("The server refused this build", {
+		"theirs": server_version, "ours": ours, "reason": _refusal_detail,
+	})
 	# A wrong build is wrong at every address, so the walk stops here rather than
 	# carrying the same refusal to the next machine on the list.
 	_candidates = PackedStringArray([current_address()])
@@ -571,6 +595,66 @@ func _disconnect_peer(id: int) -> void:
 
 
 # --- config, with a usable answer when there is none ----------------------
+
+## A fingerprint of every @rpc method this build can send or receive.
+##
+## **This exists because the protocol version cannot do this job.** That number
+## is written by hand in network_config.tres, so it does not change when
+## somebody edits code - which means the check it powers passes exactly when it
+## is needed least. Every silent RPC misroute this project has had came through
+## that gap: a client with a method the server lacks, or the reverse.
+##
+## Godot addresses an rpc by its INDEX in the method list, not by its name, so
+## one method added anywhere shifts every method after it and calls land on the
+## wrong function. What comes out is an error naming a method nobody called -
+## "receive_leak: expected 3 arguments, but called with 1" - which reads like a
+## bug in that method rather than like "your build differs". Cost most of a day
+## on 2026-09-04, twice, from two different causes.
+##
+## Computed rather than declared, so nothing has to be remembered. It walks the
+## AUTOLOADS, which is where every rpc endpoint must live anyway (see
+## CLAUDE.md), and takes any whose script declares one. A new rpc autoload is
+## covered without touching this.
+##
+## What it deliberately does NOT include: private helpers, ordinary methods, or
+## anything outside those scripts. A client-only UI change must not refuse a
+## connection - only a change to what crosses the wire may.
+func rpc_signature() -> String:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return ""
+
+	var entries: Array[String] = []
+	for node: Node in tree.root.get_children():
+		var script: Script = node.get_script() as Script
+		if script == null:
+			continue
+		var config: Dictionary = script.get_rpc_config()
+		if config.is_empty():
+			continue
+
+		# Arity as well as name: a signature change misroutes nothing, but it
+		# fails on arrival in exactly the same confusing way.
+		var arity: Dictionary = {}
+		for method: Dictionary in script.get_script_method_list():
+			arity[method.get("name", "")] = (method.get("args", []) as Array).size()
+
+		for method_name: StringName in config:
+			var mode: Dictionary = config[method_name]
+			entries.append("%s.%s/%d/%d/%d" % [
+				node.name,
+				method_name,
+				int(arity.get(method_name, -1)),
+				int(mode.get("rpc_mode", -1)),
+				int(mode.get("transfer_mode", -1)),
+			])
+
+	# Sorted, because neither the autoload order nor a Dictionary's own order is
+	# something to trust two machines to agree on.
+	entries.sort()
+	return "
+".join(entries).md5_text().substr(0, 12)
+
 
 func _protocol_version() -> int:
 	var config: NetworkConfig = _config()

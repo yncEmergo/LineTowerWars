@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/LeakLog.gd" id="1_leak_log"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/leak_message.tscn" id="2_leak_message"]
+
+[node name="LeakLog" type="VBoxContainer"]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -350.0
+offset_top = -404.0
+offset_right = 350.0
+offset_bottom = -204.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 2
+script = ExtResource("1_leak_log")
+_message_scene = ExtResource("2_leak_message")

@@ -49,6 +49,10 @@ const CELL_FREE: int = 0
 const CELL_BLOCKED: int = 1
 const CELL_WALKABLE: int = 2
 
+## Ceiling on the route cache before it is emptied whole. Only reached if
+## creeps start re-planning away from the spawn strip; see route_to_exit.
+const ROUTE_CACHE_LIMIT: int = 512
+
 var player_id: int = 1
 
 ## One byte per internal cell, one of the CELL_ values above. Indexed
@@ -65,6 +69,14 @@ var _occupied: PackedByteArray = PackedByteArray()
 ## would otherwise each have to build one. Written only by _set_footprint, so
 ## the two can never drift.
 var _blocking: PackedByteArray = PackedByteArray()
+## Routes to the exit already worked out, keyed by the internal cell they start
+## from. Emptied by _set_footprint, which is the only thing that writes
+## _blocking - see route_to_exit.
+##
+## The arrays are SHARED with every creep holding one. Safe because a creep
+## only ever reads its route and advances an index into it; nothing mutates
+## _path. Anything that changes that has to duplicate here instead.
+var _route_cache: Dictionary = {}
 ## Every creep walking this area, kept in step with the creeps root rather than
 ## asked for it. See creeps().
 var _creeps: Array[Creep] = []
@@ -432,6 +444,11 @@ func _set_footprint(cell: Vector2i, footprint: Vector2i, value: int) -> void:
 				_occupied[index] = value
 				_blocking[index] = walled
 
+	# Every cached route was worked out against the grid this just changed.
+	# Done HERE rather than in occupy/release because this is the one place
+	# _blocking is written, so no caller can forget.
+	_route_cache.clear()
+
 
 func _fits_build_zone(cell: Vector2i, footprint: Vector2i) -> bool:
 	if cell.x < 0 || cell.y < 0:
@@ -545,7 +562,29 @@ func route_to_exit(world_pos: Vector3) -> Array[Vector2i]:
 	if !_flow.is_built():
 		var empty: Array[Vector2i] = []
 		return empty
-	return _flow.path_from(world_to_internal_cell(world_pos), _blocking)
+
+	# CACHED, because the answer depends only on the starting cell and the
+	# blocking grid, and the grid changes only when a building goes up or comes
+	# down. Walking the field to the exit measured at ~550 us per creep on
+	# 2026-09-04 - the single largest cost of putting one creep in the world,
+	# larger than instantiating its whole node tree.
+	#
+	# Bounded in practice because a creep only re-plans where it SPAWNS: the
+	# 2026-09-03 finding counted zero replans in a loaded lane, so the keys are
+	# the spawn strip rather than the whole grid. ROUTE_CACHE_LIMIT is the guard
+	# for the case that stops being true.
+	var cell: Vector2i = world_to_internal_cell(world_pos)
+	if _route_cache.has(cell):
+		var hit: Array[Vector2i] = _route_cache[cell]
+		return hit
+
+	var route: Array[Vector2i] = _flow.path_from(cell, _blocking)
+	# Cleared rather than evicted one at a time: the next few creeps pay full
+	# price and it refills, which is cheaper than keeping an order on it.
+	if _route_cache.size() >= ROUTE_CACHE_LIMIT:
+		_route_cache.clear()
+	_route_cache[cell] = route
+	return route
 
 
 ## The whole route from one world point to another, as internal cells in

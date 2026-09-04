@@ -55,7 +55,7 @@ func extra_targets(_tower: Building) -> int:
 
 ## The attack's debuff, on the tiers whose attack carries one. A tower with an
 ## aura does its work through that instead and its attack stays plain.
-func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	if aura_cells > 0.0:
 		return
 	var status: StatusEffects = status_of(target)

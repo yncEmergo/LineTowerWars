@@ -1903,8 +1903,15 @@ func _record_trail() -> void:
 		_trail.remove_at(0)
 
 
+## Every jump a creep makes, wherever it came from: a tower built on top of it,
+## a Harbinger taking its progress, a leak into the next maze.
+##
+## Through Unit.teleport_to rather than by assigning global_position, so the
+## interpolator PLACES the creep rather than sliding it there - see that
+## method. The height is worked out here because only a creep knows whether it
+## flies.
 func _teleport_to(world_pos: Vector3) -> void:
-	global_position = Vector3(world_pos.x, _ground_height(), world_pos.z)
+	teleport_to(Vector3(world_pos.x, _ground_height(), world_pos.z))
 	_replan()
 
 
@@ -1961,7 +1968,7 @@ func _pay_bounty() -> void:
 func _reach_end() -> void:
 	reached_end.emit()
 
-	var stolen: bool = _steal_life()
+	var stolen: int = _steal_life()
 	# A creep that steals NOTHING is not recycled either: it has reached the
 	# end of the only maze it was ever going to matter in, and walking it into
 	# the next player's lane would be a free bounty nobody paid for. The
@@ -1983,24 +1990,31 @@ func _reach_end() -> void:
 		"into": -1 if destination == null else destination.player_id,
 	})
 
+	# The one thing a player has to be TOLD about a leak. Both ends of it are
+	# already true on the authority by now, and the lives on the wire say the
+	# numbers moved without saying who moved them - see
+	# ReplicationService.leak_reported.
+	if stolen > 0:
+		Replication.report_leak(owner_player_id, area.player_id, stolen)
+
 	if destination == null:
 		queue_free()
 		return
 	_recycle_into(destination)
 
 
-## One life from the defender to the sender. Reports whether it happened, which
-## it does not when the creep is walking its own owner's maze - a single area
-## run - or when the defender is already out.
-func _steal_life() -> bool:
+## One life from the defender to the sender. Answers HOW MANY moved, which is
+## none when the creep is walking its own owner's maze - a single area run - or
+## when the defender is already out.
+func _steal_life() -> int:
 	var manager: PlayerManager = References.player_manager
 	if manager == null || area == null:
-		return false
+		return 0
 
 	var thief: PlayerState = manager.state_for(owner_player_id)
 	var victim: PlayerState = manager.state_for(area.player_id)
 	if thief == null:
-		return false
+		return 0
 
 	var count: int = 1 if _creep_stats == null else _creep_stats.lives_stolen
 	return thief.steal_life_from(victim, count)
@@ -2040,9 +2054,9 @@ func _recycle_into(destination: PlayerArea) -> void:
 		0.0 if _creep_stats == null else _creep_stats.body_radius,
 		MatchSession.match_rng()
 	)
-	global_position = Vector3(point.x, _ground_height(), point.z)
-	# Placed, not moved: without this the interpolator streaks it across the
-	# whole map from the end zone it just left.
-	reset_physics_interpolation()
+	# A real teleport, not a very fast walk: the whole length of the map lies
+	# between the end zone it just left and the spawn strip it arrives on, and
+	# an interpolated move over that costs one tick, which is what made a leak
+	# look broken. _teleport_to places it and replans from there.
+	_teleport_to(point)
 	_trail = [global_position]
-	_replan()

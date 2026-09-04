@@ -25,7 +25,7 @@ extends TowerPassive
 @export var explosion_cells: float = 1.25
 
 
-func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
 		# Written as an immunity because that is exactly the shape: a key with

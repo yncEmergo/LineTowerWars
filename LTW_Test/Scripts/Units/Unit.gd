@@ -180,6 +180,25 @@ func adopt(id: int, player_id: int, home_area: PlayerArea, world_pos: Vector3) -
 	reset_physics_interpolation()
 
 
+## Puts this unit somewhere else WITHOUT any of the journey being drawn.
+##
+## The engine interpolates a unit between where it was on the last tick and
+## where it is on this one, which is right for everything that walks and wrong
+## for everything that jumps: a creep recycled into the next maze would streak
+## the length of the map inside one tick, which reads as a bug rather than as a
+## teleport. Resetting the interpolation places the unit instead.
+##
+## So anything that MOVES a unit by writing its position - a leak into the next
+## maze, a Harbinger taking a creep's progress, a tower going up underneath one
+## - goes through here rather than assigning global_position itself.
+##
+## The height is the caller's: this knows nothing about the ground, and a flyer
+## and a walker want different answers. See Creep._teleport_to.
+func teleport_to(world_pos: Vector3) -> void:
+	global_position = world_pos
+	reset_physics_interpolation()
+
+
 ## Takes an id from the match, once. Silent when there is no session, so a bare
 ## test scene still runs - the unit simply stays unaddressable, which is only a
 ## problem the moment something tries to send it over a wire.

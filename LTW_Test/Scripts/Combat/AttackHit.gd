@@ -140,11 +140,12 @@ func _strike(target: Unit) -> void:
 	var tower: Building = _live_source()
 	if tower == null:
 		return
+	# BEFORE on_hit, which is the contract on the two hooks: a passive that
+	# reads its own debuff back - Frostbitten asks how deep the chill now is -
+	# has to be looking at this hit's contribution rather than the last one's.
+	debuff(target)
 	for passive in passives:
 		passive.on_hit(tower, target, dealt, is_primary)
-	# What a disc is lending the tower lands AFTER its own passives, so a tower
-	# that already chills applies its own chill and the disc's under two
-	# separate caps rather than one merged into the other. See TowerBuffs.
 	var boons: TowerBuffs = tower.buffs_or_null()
 	if boons != null:
 		boons.on_tower_hit(tower, target, damage_type, dealt)
@@ -172,14 +173,22 @@ func _return_fire(target: Unit, dealt: int) -> void:
 ## Damage from one of this attack's EFFECTS rather than from the attack itself,
 ## and the kill credit that comes with it. Every splash goes through here.
 ##
-## The two halves of a hit are deliberately split. A passive's on_hit is stated
-## per creep the tower STRUCK - a poison stack, a share of armour eaten - and
-## running it over a splash would hand a whole crowd what was meant for one
-## creep, which is why a splash has never run one. A KILL is the other way
-## round: unit_data.md says "per creep killed" and means whoever finished it,
-## and a splash tower that finished a creep with its splash finished it. An
-## Alchemist that only counted what its own shell landed on would grow at a
-## fraction of the rate the source describes, because splash is how it kills.
+## The three halves of a hit are deliberately split, and a splash gets two of
+## them. A passive's on_hit is stated per SHOT - a poison stack worth a share
+## of the damage, a tower healing itself, a bonus banked per swing - and
+## running it over a splash would pay a tower once per creep standing about,
+## which is why a splash has never run one.
+##
+## The DEBUFF is the other way round and is why apply_debuffs exists: a chill
+## or an eaten armour point is stated per creep, so everything the blast
+## covered gets it. A Warden that ate the armour of only the creep it aimed at
+## would be describing an attack nobody watching it could recognise.
+##
+## A KILL is the other way round again: unit_data.md says "per creep killed"
+## and means whoever finished it, and a splash tower that finished a creep with
+## its splash finished it. An Alchemist that only counted what its own shell
+## landed on would grow at a fraction of the rate the source describes, because
+## splash is how it kills.
 ##
 ## Already-dead creeps are skipped rather than damaged, so an effect walking a
 ## list cannot pay a tower twice for the same body.
@@ -189,6 +198,7 @@ func splash_onto(creep: Creep, amount: int, damage_type: DamageTable.DamageType,
 		return
 
 	creep.take_damage(amount, damage_type, is_area)
+	debuff(creep)
 	if creep.is_alive():
 		return
 
@@ -197,6 +207,31 @@ func splash_onto(creep: Creep, amount: int, damage_type: DamageTable.DamageType,
 		return
 	for passive in passives:
 		passive.on_kill(tower, creep)
+
+
+## Puts this attack's debuffs on one creep: what the tower's own passives
+## chill, erode or amplify, and then what a technology disc is lending it.
+##
+## Called for every creep the attack touched at all - the one it aimed at, the
+## ones a multishot picked up, and everything the splash covered - so it is the
+## one place in the pipeline that does not care how a creep was caught.
+##
+## The disc goes last, after the tower's own, so a tower that already chills
+## applies its own chill and the disc's under two separate caps rather than one
+## merged into the other. See TowerBuffs.
+##
+## Silent when the tower has been sold mid-flight: a shot still lands and still
+## splashes, but there is nothing left to attribute a debuff to.
+func debuff(target: Unit) -> void:
+	var tower: Building = _live_source()
+	if tower == null:
+		return
+
+	for passive in passives:
+		passive.apply_debuffs(tower, target)
+	var boons: TowerBuffs = tower.buffs_or_null()
+	if boons != null:
+		boons.apply_debuffs(target)
 
 
 ## The tower that fired, or null if it has been sold, destroyed or upgraded

@@ -169,6 +169,10 @@ func _strike(creep: Creep, at: Vector3) -> void:
 	var scaled: float = float(_hit.damage) * (1.0 + _ramp * float(_passed))
 	creep.take_damage(int(round(scaled)),
 		_delivery.trailing_type(_hit.damage_type), false)
+	# The same rule a splash follows: a debuff is stated per creep, so
+	# everything the spike went through is chilled or eroded by it. What stays
+	# with the first body is the per-SHOT half - see AttackHit.splash_onto.
+	_hit.debuff(creep)
 	_passed += 1
 
 

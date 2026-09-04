@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ControlsConfig" format=3 uid="uid://dntbwmi5dakuc"]
 
 [ext_resource type="Script" uid="uid://bnwriq031fxgx" path="res://Scripts/Config/ControlsConfig.gd" id="1_controls"]
-[ext_resource type="Script" path="res://Scripts/Config/HotkeyAction.gd" id="2_HotkeyAction"]
+[ext_resource type="Script" uid="uid://6nqbhhrsiikk" path="res://Scripts/Config/HotkeyAction.gd" id="2_HotkeyAction"]
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/sell_hotkey.tres" id="3_sell"]
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/build_hotkey.tres" id="4_build"]
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/cancel_hotkey.tres" id="5_cancel"]
@@ -9,9 +9,11 @@
 
 [resource]
 script = ExtResource("1_controls")
+command_hotkey_rows = null
 hotkey_actions = Array[ExtResource("2_HotkeyAction")]([ExtResource("3_sell"), ExtResource("4_build"), ExtResource("5_cancel"), ExtResource("6_research")])
 research_toggle_action = ExtResource("6_research")
+research_hotkey_rows = null
 hold_repeat_delay = 0.1
-hold_repeat_start_interval = 0.25
-hold_repeat_min_interval = 0.025
-hold_repeat_ramp_seconds = 0.5
+hold_repeat_start_interval = 0.2
+hold_repeat_min_interval = 0.05
+hold_repeat_ramp_seconds = 0.75

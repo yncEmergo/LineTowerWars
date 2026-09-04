@@ -4,8 +4,6 @@
 [ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
 [ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="3_AttackStats"]
 [ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="4_ProjectileDelivery"]
-[ext_resource type="Script" uid="uid://d4l2a6wd2k2fh" path="res://Scripts/Combat/SplashEffect.gd" id="5_SplashEffect"]
-[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="6_AttackEffect"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/water_ultimate_sludge_monstrosity_ability.tres" id="7_water_ultimate_sludge_monstrosity_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="8_return_to_elemental_core_ability"]
 [ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
@@ -24,19 +22,13 @@ speed = 8
 arc_height = 0.9
 impact_scene_path = "res://Scenes/Effects/toxic_impact.tscn"
 
-[sub_resource type="Resource" id="Splash"]
-script = ExtResource("5_SplashEffect")
-radius = 0.75
-
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
 damage_min = 1622
 damage_max = 1625
-is_aoe_damage = true
 attacks_per_second = 0.667
 attack_range = 4.75
 delivery = SubResource("Delivery")
-effects = Array[ExtResource("6_AttackEffect")]([SubResource("Splash")])
 
 [resource]
 script = ExtResource("1_BuildingStats")

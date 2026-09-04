@@ -11,10 +11,14 @@
 - use Log.gd addon for debugging
   - **a log call on a PER-UNIT or PER-TICK path must be Log.debug, never Log.info.**
     Log.info runs get_stack() on every invocation - a full GDScript stack capture, which
-    is what draws the [Creep:2041] prefix - and then print_rich(). Measured at ~10 ms per
-    call, and ONE of them ("Creep leaked", once per creep per lane) was half of all creep
-    simulation time. The level is checked first, so a debug call at the default level costs
-    nothing and the line stays available by flipping the level
+    is what draws the [Creep:2041] prefix - and then print_rich(). ONE of them ("Creep
+    leaked", once per creep per lane) was half of all creep simulation time. The level is
+    checked first, so a debug call at the default level costs nothing and the line stays
+    available by flipping the level
+  - **the COST of it is platform-specific and a Windows profile of it lies.** Measured at
+    ~10 ms per call on the Windows dev PC and ~2 ms on the Linux server, because most of it
+    is output rather than the stack capture. Anything measured about a call that WRITES has
+    to be measured on the target platform or not claimed
   - Log.info is for a PER-PLAYER-ACTION event: a tower sold, an upgrade started, a lobby
     created. Those fire when somebody clicks, and the stack capture is affordable
   - see Docs/Findings/2026-09-04-log-info-in-the-creep-tick.md
@@ -167,6 +171,12 @@
 # Writing scenes and resources by hand
 - A node with node-typed @exports needs node_paths=PackedStringArray("_field", ...)
   on its [node] line, or those references silently stay null at runtime
+- A hand-written [node] needs its own `script = ExtResource("...")` line. Declaring
+  the script as an ext_resource at the top of the file attaches it to NOTHING on
+  its own, and the scene loads perfectly happily without it - the node is just the
+  bare engine type, so every method on it is missing and `as MyClass` comes back
+  null. Cost a debugging cycle on leak_message.tscn, where it read as the class
+  not being registered
 - Never invent a uid. Omit it, or reference by path only, and let Godot assign one
 - A PanelContainer's padding lives in its StyleBox content margins, never in a
   MarginContainer inside it. Both do the same job, so a panel carrying both double

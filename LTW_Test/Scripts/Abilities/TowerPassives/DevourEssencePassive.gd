@@ -76,7 +76,7 @@ func on_kill(tower: Building, _target: Unit) -> void:
 	_feed(tower, damage_per_kill)
 
 
-func on_hit(tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(tower: Building, target: Unit) -> void:
 	if armor_type_seconds <= 0.0 || target == null:
 		return
 	var status: StatusEffects = status_of(target)

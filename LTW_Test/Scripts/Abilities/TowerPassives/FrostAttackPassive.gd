@@ -29,7 +29,7 @@ extends TowerPassive
 @export var chill_source: String = "ice"
 
 
-func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
 		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, true)

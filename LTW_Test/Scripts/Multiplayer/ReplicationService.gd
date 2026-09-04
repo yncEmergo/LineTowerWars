@@ -23,6 +23,19 @@ extends Node
 ## no prediction in the first version), so there is nothing to reconcile and
 ## nothing that can drift. What it draws is what arrived.
 
+## A life changed hands: `thief` took `lives` off `victim`. Raised on whichever
+## machine is drawing the world - the authority raises it as it happens and
+## every client is told - so the HUD listens here and nowhere else.
+##
+## The only EVENT on this service, which is otherwise nothing but state. It is
+## here because it has the same two ends as everything else does and needs no
+## second channel of its own: an @rpc has to live on an autoload (CLAUDE.md),
+## and this is the autoload that already carries the server's word about the
+## world. What makes it an event rather than a field is that a leak is a THING
+## THAT HAPPENED - two snapshots of the lives either side of one say a number
+## changed and cannot say who took it.
+signal leak_reported(thief: int, victim: int, lives: int)
+
 ## Fields per unit in the snapshot: id, type, owner, area, x, y, z, yaw,
 ## health, flags, mana, maximum mana, job progress, banked damage, ability
 ## choice, ability cooldown, ability link, shield, maximum shield.
@@ -176,6 +189,23 @@ const FLAG_DOWN: int = 64
 ## AttackComponent.is_fighting_on_command.
 const FLAG_FIGHTING_ON_COMMAND: int = 32
 
+## How far a unit may move between two snapshots and still be DRAWN as having
+## walked there, in player cells.
+##
+## A client runs no movement of its own: it writes whatever position the
+## snapshot carries and lets the physics interpolator draw the gap. That is
+## right for a creep walking a lane and wrong for one that JUMPED - a leak into
+## the next maze, a tower built on top of a creep, a Harbinger taking its
+## progress - where the same interpolation streaks it across the whole map in
+## one tick.
+##
+## Worked out from the distance rather than sent as a flag, deliberately. The
+## snapshot is UNRELIABLE, so a flag set for one tick is lost with the packet
+## carrying it and the streak comes back - while a jump is still a jump in the
+## next packet that does arrive. Nothing in the game covers this much ground in
+## a tick under its own power, so anything that has must have been placed.
+const TELEPORT_CELLS: float = 2.0
+
 ## Newest snapshot received and not yet applied, or empty.
 ##
 ## Buffered rather than applied on arrival, for the same reason commands are
@@ -258,6 +288,39 @@ func _physics_process(_delta: float) -> void:
 		_broadcast()
 		return
 	_apply_incoming()
+
+
+# --- leaks ----------------------------------------------------------------
+
+## Says that a creep just took `lives` off `victim` and gave them to `thief`.
+##
+## Called by the AUTHORITY, once per leak, from where the leak actually happens
+## - see Creep._reach_end. Raised locally whatever kind of run this is, so a
+## single player game needs no network at all, and forwarded to every client
+## when there is one.
+##
+## Sent to EVERYBODY rather than to the two players involved. Who is allowed to
+## read a leak is a question about the HUD - a spectator watching the whole
+## match sees every line of it, a player sees the ones they are in - and
+## deciding it here would settle it for both.
+##
+## RELIABLE, unlike the snapshot beside it. A snapshot that goes missing is
+## replaced 50 ms later by a complete one; a message that goes missing is
+## simply never shown, and a player who was not told a life was taken has no
+## other way to find out which of two things happened.
+func report_leak(thief: int, victim: int, lives: int) -> void:
+	if lives <= 0:
+		return
+	leak_reported.emit(thief, victim, lives)
+	if Net.is_online() && multiplayer.is_server():
+		receive_leak.rpc(thief, victim, lives)
+
+
+@rpc("authority", "reliable")
+func receive_leak(thief: int, victim: int, lives: int) -> void:
+	if multiplayer.is_server():
+		return
+	leak_reported.emit(thief, victim, lives)
 
 
 # --- server ---------------------------------------------------------------
@@ -697,7 +760,13 @@ func _parent_for(unit: Unit, area: PlayerArea) -> Node:
 
 
 func _update(unit: Unit, records: PackedFloat32Array, at: int) -> void:
-	unit.global_position = Vector3(records[at + 4], records[at + 5], records[at + 6])
+	var to: Vector3 = Vector3(records[at + 4], records[at + 5], records[at + 6])
+	# Placed rather than moved when the server put it somewhere it could not
+	# have walked to. See TELEPORT_CELLS.
+	if unit.global_position.distance_squared_to(to) > TELEPORT_CELLS * TELEPORT_CELLS:
+		unit.teleport_to(to)
+	else:
+		unit.global_position = to
 	unit.rotation.y = records[at + 7]
 	unit.set_replicated_health(records[at + 8])
 

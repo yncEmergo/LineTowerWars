@@ -8,6 +8,11 @@ before optimising anything else". This is that measurement. The answer is that *
 of all creep simulation time was a single `Log.info` call**, and it is also the explanation for
 the unexplained max spikes that finding left open.
 
+> **READ THE SERVER SECTION BEFORE QUOTING THE HEADLINE.** "Half the creep tick" is a WINDOWS
+> number. On the Linux server the same fix is worth about 7%, because most of the cost is
+> output and Windows output is roughly five times more expensive. The fix is right either way;
+> the size of it is not what the dev-PC profile said.
+
 **These numbers are a snapshot.** See [README.md](README.md).
 
 ## The question
@@ -107,7 +112,8 @@ a tower sold, an upgrade started, a lobby created. The `Building` call sites are
 second kind and were correctly left alone. The cost is not the writing, it is the
 `get_stack()`, and it is paid whether or not anybody ever reads the line.
 
-**Measured, dev PC, same scenario, probe removed:**
+**Measured, DEV PC (Windows), same scenario, probe removed — read the server section below
+before quoting any of this:**
 
 | | avg | p50 | p95 | max |
 | --- | ---: | ---: | ---: | ---: |
@@ -119,11 +125,34 @@ Per creep, `TOTAL` went **98.5 µs → 49.2 µs**: the creep tick halved.
 **p95 improved 4.5× and max 6.8×.** The variance collapsed with it — p95/p50 was 3.7 and is
 now 1.26, which is the stutter mechanism going away rather than shrinking.
 
-**Measured on the SERVER, before only.** Hetzner CX23, same scenario:
-avg 32.83, p50 30.89, p95 49.70, max 75.34. **The after was not measured there** — writing to
-the server was refused by tooling permissions in this session, so the change could not be
-staged. That measurement is the first thing to take, and until it exists the server numbers
-above are a baseline with no partner.
+### Measured on the SERVER afterwards — and the dev-PC number DOES NOT TRANSFER
+
+Taken once the fix was deployed. Hetzner CX23, same creep-heavy scenario, three runs each,
+both sides with the movement stagger OFF so the only difference is the log call:
+
+| | p50 runs | median |
+| --- | --- | ---: |
+| `Log.info` | 35.08, 42.34, 36.53 | 36.5 |
+| **`Log.debug`** | 35.05, 34.09, 34.07 | **34.1** |
+
+**About 7% on the server, against 2.1× on the dev PC.** Which works out at roughly 2 ms per
+call on Linux against the ~10 ms measured on Windows.
+
+**So the claim earlier in this finding that "the SHARES are what matter and they transfer" is
+WRONG**, and is left standing above only so this correction has something to point at. They did
+not transfer. `Log.info` costs `get_stack()` plus `print_rich()`, and the OUTPUT half of that is
+far more expensive on a Windows console than on a Linux one — roughly five times so. A profile
+of an I/O-bound call is a profile of the PLATFORM, not of the code.
+
+**The fix is still right** — it is free, it removes a real ~2 ms spike source, and the log
+volume was already a problem in its own right — but it is a 7% fix on the machine that matters,
+not a halving. **Any future claim about a call that writes output has to be measured on the
+target platform or not made.**
+
+The paired test could not be run in place — writing to the server was refused by tooling
+permissions all session — so the two rows above come from separate deploys rather than an
+in-place toggle. Three runs each and the medians do not overlap, but that is weaker evidence
+than the dev-PC pairing, which is why the figure is given as "about 7%".
 
 ## The tower tick, profiled the same way — and it is clean
 
@@ -168,6 +197,49 @@ towers, many creeps) and **nothing on a full maze**, because there creeps die to
 than reaching the exit and the leak path barely runs. That is the shape the stutter was
 reported in, so it is the right one to have fixed — but it is not a universal 2×.
 
+## The spawn path, measured the same day — and it is the PATHFINDING
+
+Nothing had ever timed putting one creep into the world, and it is the load a player feels
+when they hold the send key. Measured with a temporary `SpawnProbe`, full maze, ~1550 spawns.
+
+**Measured, per spawn, dev PC:**
+
+| | before | after | |
+| --- | ---: | ---: | --- |
+| **`_replan()`** | **547** | **67** | the route to the exit |
+| `add_child` | 178 | 188 | |
+| `instantiate` | 167 | 175 | the prefab, model and all |
+| placement / setup / passives | ~15 | ~15 | |
+| **total** | **~904 µs** | **~448 µs** | |
+
+**Pathfinding was 61% of it — instantiating the whole node tree was under a fifth.** The
+prediction going in was the opposite: that building a ~45-node prefab on a server that never
+draws it would dominate. It does not.
+
+**What was changed.** `PlayerArea.route_to_exit` now caches the route by its starting cell.
+The answer depends only on that cell and the blocking grid, and the grid is written in exactly
+one place - `_set_footprint` - so the cache is emptied there and no caller can forget. The
+arrays are SHARED with every creep holding one, which is safe only because a creep reads its
+route and advances an index into it and nothing mutates `_path`; that is stated in the comment
+so the next person to change it knows what they would be breaking.
+
+Bounded because a creep only re-plans where it SPAWNS - the 2026-09-03 finding counted zero
+replans in a loaded lane - so the keys are the spawn strip, not the grid. `ROUTE_CACHE_LIMIT`
+guards the case where that stops being true, by emptying rather than evicting.
+
+**Correctness: `creeps_spawned` was 1549 before and 1549 after**, on the same seed and
+scenario - the same number of creeps got through the same maze - with no "no route" warnings.
+
+**Honest about the whole-tick effect: none that this benchmark can see.** ~450 µs saved on a
+spawn, at ~3 spawns a tick, is ~1.4 ms against a ~22 ms tick, which is inside the noise here.
+**Its value is in BURSTS**: a wave of twenty creeps arriving on one tick cost ~18 ms and now
+costs ~9 ms. That is a p95/max fix, not a median one, and it should be judged on the tail.
+
+**And it inverts the next step.** Instantiation plus `add_child` is now **81%** of what remains
+of a spawn, where it was 38%. Stripping the `Visual` child on a headless server - already
+flagged in `performance-handover.md` §5.6 as "worth doing for memory and spawn cost, but it
+will not help the tick" - is now the largest remaining item on this path.
+
 ## What is still open
 
 1. **Re-measure on the server**, paired, once this is deployed. Everything above about the
@@ -178,10 +250,20 @@ reported in, so it is the right one to have fixed — but it is not a universal 
    200 ms of server time per second, from one held button. Both moved to `Log.debug`. Nothing
    else in `Scripts/` is on a per-unit path: the `Building` calls are per-click, and
    `VoidSpreadPassive` logs per conversion rather than per attempt.
-3. **The spatial hash is now the clear number one.** `move` is the top creep cost again at
-   ~21 µs of a ~49 µs creep tick, `aura` second at ~10 µs, and the tower target search is
-   ~5 µs of a ~22 µs tower tick. All three are the scans that item addresses, and it is still
-   unbuilt - now against a tick with no cheap wins left in it.
+3. **What remains is NOT scan-bound, and the spatial hash is already built.** An earlier draft
+   of this line called the spatial hash "the clear number one" and that was wrong twice over:
+   - `CreepIndex` has existed since 2026-09-03 and `PlayerArea.creeps_near()` goes through it.
+     `TargetFinder.creeps_in_radius` and `TargetFinder.best_target` both call `creeps_near`, so
+     **tower targeting and every radius query in the game are already indexed.** The only
+     remaining linear walks over `area.creeps()` are creep separation and `_hold_apart`, both
+     ATTACKER-ONLY, and separation is off for the ordinary roster.
+   - `move`, at ~21 µs the top remaining creep cost, **is not a scan at all**. It is
+     `is_point_free` grid reads, the two slide tests and the transform write. No spatial
+     structure touches it.
+
+   So the honest position is that there is no large unbuilt indexing win left. What remains is
+   distributed per-unit work, and the next real number to get is the SPAWN path, which nothing
+   has ever measured: node instantiation plus the one `_replan()` each new creep does.
 4. **A release export may be cheaper still.** `get_stack()` returns an empty array in release
    builds; the server runs the editor binary, which is a debug build. Untested, and not a
    reason to leave `Log.info` on a hot path either way.

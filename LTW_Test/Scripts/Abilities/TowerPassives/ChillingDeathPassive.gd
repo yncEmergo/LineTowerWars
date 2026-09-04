@@ -74,12 +74,21 @@ func on_tick(tower: Building, delta: float) -> void:
 			creep.status().weaken_attack(self, attack_slow * share, 0.0, AURA_HOLD_SECONDS)
 
 
+func apply_debuffs(_tower: Building, target: Unit) -> void:
+	var status: StatusEffects = status_of(target)
+	if status != null:
+		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, true)
+
+
+## Frostbitten, which is DAMAGE rather than a debuff and so stays on the shot:
+## a creep the splash merely brushed is chilled by it but not burst by it.
+##
+## Reads the chill back off the creep, which apply_debuffs has already deepened
+## for this hit - that ordering is the contract on those two hooks.
 func on_hit(_tower: Building, target: Unit, _dealt: int, _is_primary: bool) -> void:
 	var status: StatusEffects = status_of(target)
 	if status == null:
 		return
-
-	status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, true)
 	if status.chill_amount(chill_source) < slow_cap || status.is_immune(FROSTBITE_KEY):
 		return
 

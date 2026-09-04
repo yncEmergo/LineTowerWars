@@ -30,10 +30,16 @@ extends TowerPassive
 @export var self_heal_share: float = 0.0
 
 
-func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
 		status.erode_armor(self, armor_per_hit, armor_floor)
+
+
+## Nature's Guidance, which is a share of what the SHOT cost and so is not part
+## of the debuff: a Warden eats the armour of everything its blast covers and
+## heals off the creep it actually hit.
+func on_hit(tower: Building, _target: Unit, dealt: int, _is_primary: bool) -> void:
 	if self_heal_share > 0.0:
 		tower.heal(int(round(float(dealt) * self_heal_share)))
 

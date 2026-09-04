@@ -36,11 +36,16 @@ extends TowerPassive
 @export var heal_cells: float = 2.25
 
 
-func on_hit(tower: Building, target: Unit, dealt: int, _is_primary: bool) -> void:
+func apply_debuffs(_tower: Building, target: Unit) -> void:
 	var status: StatusEffects = status_of(target)
 	if status != null:
 		status.chill(self, chill_source, slow_per_hit, slow_cap, slow_seconds, false)
 		status.erode_armor(self, armor_per_hit, armor_floor)
+
+
+## Divine Spores, a share of what the SHOT cost, so it is paid once per creep
+## struck rather than once per creep the blast reached.
+func on_hit(tower: Building, _target: Unit, dealt: int, _is_primary: bool) -> void:
 	_heal_towers(tower, dealt)
 
 

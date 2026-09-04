@@ -355,7 +355,27 @@ appears nowhere in this project. It is Editor Settings -> Run -> Window Placemen
 Embed Mode**; set it to *Disabled* so every instance opens as its own window. Running the
 server from a terminal sidesteps it either way.
 
+**"The server is running different code. Deploy your changes, or update the game."**
+Exactly what it says, and it is the handshake catching a mismatch rather than letting it become
+the confusing failure below. The two builds have different `@rpc` methods, so the server refused
+the connection instead of misrouting calls.
+
+Almost always: **you edited code and did not deploy it.** `.\Tools\deploy_server.ps1 -Check`
+tells you, and the fix is commit, push, deploy. For local testing you do not need to deploy at
+all — `.\Tools\run_server.ps1` runs a server from your working tree, so both sides match.
+
+The check is a hash of every `@rpc` method's name, argument count and mode, taken across the
+autoloads (see `NetworkService.rpc_signature`). It exists because `protocol_version` cannot do
+this job: that number is written by hand, so it does not change when somebody edits code, which
+is precisely when the check is needed. A client-only UI change does **not** trip this — only a
+change to what crosses the wire.
+
 **A LOBBY NEVER GETS CREATED, or a request just hangs with no error**
+
+> **Mostly historical since the rpc-signature check above landed.** That check now refuses a
+> mismatched build at connect time with a plain message. What follows is the shape of the
+> failure when it slips through anyway — a stale *process* on a build that still matches, for
+> instance — and is worth recognising.
 The most likely cause is a server that has been running longer than your working tree has
 been still. **A running server holds the scripts it PARSED AT BOOT.** Every pull, checkout,
 deploy or revert you make afterwards moves the files out from under it, and nothing tells you:

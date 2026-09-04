@@ -434,10 +434,14 @@ ELEMENTS = {
             },
             {
                 "key": "sludge_monstrosity", "tech": 12, "name": "Sludge Monstrosity",
+                # NO SPLASH on any tier, which is the source game's own answer
+                # (LTW 9.4 tower data lists the Ultimate at 0) and is what
+                # makes this the single-target half of Water: the Hurricane
+                # line splashes, this one grinds one creep down with an aura.
                 "tiers": [
-                    (4000, NORMAL, 209, 212, 1.5, 600, 75, BOTH, 0, 0.0),
-                    (10000, NORMAL, 561, 564, 1.5, 600, 75, BOTH, 0, 0.0),
-                    (30000, NORMAL, 1622, 1625, 1.5, 600, 100, BOTH, 0, 0.0),
+                    (4000, NORMAL, 209, 212, 1.5, 600, 0, BOTH, 0, 0.0),
+                    (10000, NORMAL, 561, 564, 1.5, 600, 0, BOTH, 0, 0.0),
+                    (30000, NORMAL, 1622, 1625, 1.5, 600, 0, BOTH, 0, 0.0),
                 ],
             },
         ],

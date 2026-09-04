@@ -1121,6 +1121,10 @@ cap **+200**, same 3 sec idle reset.
 Water 1 is the anti-air paralysis line with a Chaos-damage attack modifier; Water 2 is the
 aura-slow line with a periodic stun.
 
+The Sludge Monstrosity line has NO SPLASH on any tier, which is the source game's own
+answer and is the whole shape of the path: everything it does to a crowd it does through
+its aura, and its attack is a single heavy hit on one creep.
+
 | Tower | Gold | Type | Damage | Speed | Range | Splash | Targets | Mana |
 | ----- | ---- | ---- | ------ | ----- | ----- | ------ | ------- | ---- |
 | Splasher | 200 | Piercing | 12-13 | 1.0 | ~500 | ~75 | Ground, Air | - |
@@ -1128,9 +1132,9 @@ aura-slow line with a periodic stun.
 | Lesser Hurricane Elemental | 4,000 | Piercing | 286-288 | 1.2 | ~500 | ~100 | Ground, Air | - |
 | Greater Hurricane Elemental | 10,000 | Piercing | 753-755 | 1.2 | ~500 | 100 | Ground, Air | - |
 | Ultimate Hurricane Elemental | 30,000 | Piercing | 2,322-2,324 | 1.2 | ~500 | 125 | Ground, Air | 100 |
-| Lesser Sludge Monstrosity | 4,000 | Normal | 209-212 | ~1.5 | ~600 | 75 | Ground, Air | - |
-| Greater Sludge Monstrosity | 10,000 | Normal | 561-564 | ~1.5 | ~600 | 75 | Ground, Air | - |
-| Ultimate Sludge Monstrosity | 30,000 | Normal | 1,622-1,625 | ~1.5 | ~600 | 100 | Ground, Air | - |
+| Lesser Sludge Monstrosity | 4,000 | Normal | 209-212 | ~1.5 | ~600 | - | Ground, Air | - |
+| Greater Sludge Monstrosity | 10,000 | Normal | 561-564 | ~1.5 | ~600 | - | Ground, Air | - |
+| Ultimate Sludge Monstrosity | 30,000 | Normal | 1,622-1,625 | ~1.5 | ~600 | - | Ground, Air | - |
 
 **Crushing Wave (1)** *(Splasher)* - every 4th attack unleashes a Crushing Wave dealing **12
 Spell Damage** to creeps hit.

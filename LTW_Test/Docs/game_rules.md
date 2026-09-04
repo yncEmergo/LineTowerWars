@@ -1338,6 +1338,23 @@ is SHOWN as a bare number with no unit written after it.
       impact did, the patch is what the ground does afterwards
   - STATUS EFFECTS are what an attack leaves BEHIND on a creep, and they are
     the creep's rather than the attack's. See Status effects below
+- A DEBUFF LANDS ON EVERY CREEP THE ATTACK TOUCHED, and that is the one thing on
+  this page that does not care how a creep was caught
+  - the creep aimed at, every creep a multishot picked up alongside it, every
+    creep the splash covered, and every creep a piercing shot went through: a
+    tower that chills chills all of them, and one that eats armour eats all of
+    theirs
+  - because a debuff is stated PER CREEP. A tower whose blast covered six creeps
+    and chilled one would be describing an attack nobody watching it could
+    recognise, and it is why an armour-eating tower is worth putting in front of
+    everything else at all
+  - the DEBUFF is the whole of what spreads. Everything a tower's ability does
+    that is measured per SHOT stays with the creep that was struck - damage the
+    tower banks, health it steals back, a burst it sets off, a stun on the
+    target it was aiming at - because paying those once per creep standing about
+    would multiply a splash tower's ability by the size of the crowd
+  - a technology disc lending a tower a chill or an armour bite follows the same
+    rule, under its own separate cap. See Technology discs
 - MULTISHOT picks one primary target and then that many further creeps standing
   near it, so multishot 2 attacks 3 creeps in total
   - "Near" is one distance shared by the whole game, not a per tower value. An
@@ -2515,6 +2532,24 @@ BUILT.
     figures are in `unit_data.md` section 1.7. Adopting them is pending a ruleset
     concept, which does not exist yet
 - Bosses steal more than one life. How many is per creep, in the roster
+- **THE LEAK LOG.** BUILT. Every life that changes hands is announced on screen,
+  above the command card: newest at the bottom, older ones pushed up, gone after
+  a few seconds
+  - a player is only ever shown the leaks they are AT ONE END OF. A life is
+    stolen rather than lost, so a leak has two ends and only those two are worth
+    telling either player about; a twelve player match generates one somewhere
+    almost every second. The server announces all of them and the HUD filters,
+    so a spectator - when there is one - can be shown the whole ledger without
+    the server learning about it
+  - the other player is named in THEIR OWN COLOUR, by whatever the match calls
+    them, so an anonymous match names them by colour without the log knowing the
+    rule. See The player's name
+  - two leaks the same way round in a row are ONE line with a bigger number
+    rather than the same sentence twice, and the second one restarts its clock
+  - the stack has a CEILING. A line pushed past it by newer ones is gone at once
+    rather than fading, so a bad wave cannot walk the log up the screen
+  - what is deliberately NOT in it, unlike the source game, is which creep leaked
+    and at what health
 - **CATCH-UP GOLD.** BUILT. When a player is eliminated, whoever they were
   attacking is handed a one time lump of gold for the attacker they have just
   been given instead

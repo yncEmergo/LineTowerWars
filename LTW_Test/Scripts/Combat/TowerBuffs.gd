@@ -216,25 +216,33 @@ func mana_per_second() -> float:
 	return value_of(Kind.MANA)
 
 
-## Everything a disc adds to a hit the tower has just landed: the chill, the
-## armour it eats, and the share of it the tower heals for.
+## The DEBUFF a disc lends the tower's attacks: the chill, and the armour it
+## eats. Applied to every creep the attack touched, splash included, which is
+## the same rule TowerPassive.apply_debuffs states and for the same reason.
 ##
 ## Runs after the tower's own passives, so a tower that both chills on its own
 ## and stands in an Ice disc applies two chills under two caps - which is what
 ## unit_data.md means by two sources having their own, see StatusEffects.
+func apply_debuffs(target: Unit) -> void:
+	if !_may_write():
+		return
+	var creep: Creep = target as Creep
+	if creep == null:
+		return
+	_apply_chill(creep)
+	_apply_erosion(creep)
+
+
+## What a disc gives the TOWER out of a hit it has just landed, which today is
+## the share of it the tower heals for. The debuff half is apply_debuffs above.
 ##
 ## `dealt` is what the hit actually cost the creep once the whole pipeline had
 ## run, the same figure TowerPassive.on_hit is handed, because every share in
 ## 5.2 is stated against the damage dealt.
-func on_tower_hit(tower: Building, target: Unit,
+func on_tower_hit(tower: Building, _target: Unit,
 		damage_type: DamageTable.DamageType, dealt: int) -> void:
 	if tower == null || !_may_write():
 		return
-
-	var creep: Creep = target as Creep
-	if creep != null:
-		_apply_chill(creep)
-		_apply_erosion(creep)
 	_apply_lifesteal(tower, damage_type, dealt)
 
 

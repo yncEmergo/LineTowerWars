@@ -83,11 +83,13 @@ static func article(word: String) -> String:
 ##
 ## Regular English only - "s", "es" after a sibilant, "y" to "ies" after a
 ## consonant - which is every name in the roster and every noun any generated
-## description uses. A name that does not follow those rules needs its plural
-## authored rather than guessed, and there is none yet.
-static func plural(word: String, count: int) -> String:
+## description uses. A word that does not follow those rules hands its plural
+## in as `irregular`, which is what "life" and "lives" needs.
+static func plural(word: String, count: int, irregular: String = "") -> String:
 	if absi(count) == 1 || word.is_empty():
 		return word
+	if !irregular.is_empty():
+		return irregular
 
 	var lower: String = word.to_lower()
 	if lower.ends_with("s") || lower.ends_with("x") || lower.ends_with("z") \

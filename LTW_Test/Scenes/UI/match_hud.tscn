@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cjvgxgqp2yvm" path="res://Scripts/UI/SelectionBoxOverlay.gd" id="1_selection_box"]
 [ext_resource type="PackedScene" uid="uid://blfftwryikbwo" path="res://Scenes/UI/unit_panel.tscn" id="2_unit_panel"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="Script" uid="uid://cqjqej3lral7e" path="res://Scripts/UI/MatchStatusBar.gd" id="3_status_bar"]
 [ext_resource type="Texture2D" uid="uid://cht2c4h7xacq" path="res://2DArt/UI/Icons/stat_gold.png" id="4_c6esv"]
 [ext_resource type="Script" uid="uid://b76phvckprwr1" path="res://Scripts/UI/PlayerStatsPanel.gd" id="4_player_stats"]
@@ -51,6 +52,8 @@ anchors_preset = 0
 script = ExtResource("1_selection_box")
 
 [node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
+
+[node name="LeakLog" parent="." instance=ExtResource("18_leak_log")]
 
 [node name="SendBar" parent="." instance=ExtResource("16_send_bar")]
 anchors_preset = -1

@@ -1,6 +1,7 @@
 # Handover: server performance, 2026-09-03 → 04
 
-**This is a LIVING document and the only one in `Docs/` that is.** It exists because the work
+**This is a LIVING document.** (`lockstep-migration.md`, added 2026-09-04, is the other one.)
+It exists because the work
 below spans a machine change and a fresh session. **Delete it, or fold it into
 `multiplayer.md`, once the work it describes has landed.** It is not a finding — the dated
 measurements live in

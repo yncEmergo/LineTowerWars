@@ -26,8 +26,10 @@ extends UnitAbility
 ##   damage_type_for  lets an attack be dealt as something other than its own
 ##                  type this once - "every other attack is Spell Damage"
 ##   extra_targets  further creeps this attack strikes alongside its primary
+##   apply_debuffs  for every creep the attack TOUCHED, splash included. Where
+##                  slows, armour erosion and the other debuffs go
 ##   on_hit         once per creep actually struck, after it has taken the
-##                  damage. Where slows, poison, armour erosion and the rest go
+##                  damage. Where everything measured per SHOT goes
 ##
 ## AUTHORITY. Every hook runs on both machines, exactly as the attack that
 ## calls them does - a client fires, flies and lands its own shots as
@@ -160,7 +162,31 @@ func mana_drain_window() -> float:
 	return 0.0
 
 
-## Runs once per creep actually struck, after that creep has taken the damage.
+## The DEBUFF this tower's attacks put on a creep: a chill, armour eroded,
+## spell damage amplified, an armour type altered.
+##
+## Runs for EVERY creep the attack touched, which is wider than on_hit below:
+## the creep aimed at, everything a multishot picked up alongside it, and
+## everything caught by the splash. A tower that chills chills the whole blast,
+## which is what a player watching one land expects and what the source game
+## does.
+##
+## It is handed no damage figure and no `is_primary` ON PURPOSE - both are
+## questions about the SHOT, and anything that needs either is not a debuff and
+## belongs in on_hit. So a passive that also banks damage, heals its tower or
+## detonates something splits itself across the two: the debuff here, the rest
+## there.
+##
+## Runs BEFORE on_hit for a creep that was struck directly, so a passive
+## reading its own debuff back - Frostbitten asks how deep the chill now is -
+## sees this hit's contribution.
+func apply_debuffs(_tower: Building, _target: Unit) -> void:
+	pass
+
+
+## Runs once per creep actually STRUCK - the primary target and whatever a
+## multishot picked up alongside it - after that creep has taken the damage.
+## A creep caught only by the splash never reaches here; see apply_debuffs.
 ##
 ## `dealt` is what the hit cost the creep AFTER the whole pipeline, which is
 ## what every "20% of the damage dealt" in unit_data.md means. `is_primary`

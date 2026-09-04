@@ -14,7 +14,7 @@ in `Docs/` may.
 | --- | --- |
 | [2026-08-29-performance.md](2026-08-29-performance.md) | First load test of the simulation and the renderer. Where a tick goes, what drawing costs, what was fixed and what is still open. |
 | [2026-09-03-server-tick-overrun.md](2026-09-03-server-tick-overrun.md) | Stutter on mass creep spawns in the first remote match: the server misses its tick. Where a creep tick actually goes, what was wrong about the first three guesses, and the three fixes that came out of it. |
-| [2026-09-04-log-info-in-the-creep-tick.md](2026-09-04-log-info-in-the-creep-tick.md) | Where the unattributed half of a creep's tick went: one `Log.info` on the leak path, at ~10 ms a call. The rule that came out of it, and why every earlier profile missed it. |
+| [2026-09-04-log-info-in-the-creep-tick.md](2026-09-04-log-info-in-the-creep-tick.md) | Where the unattributed half of a creep's tick went: one `Log.info` on the leak path — and why that dev-PC number does not transfer to the server. Also profiles the tower tick (clean) and the spawn path (pathfinding, not instantiation). |
 
 ## Writing one
 
