@@ -254,6 +254,10 @@ press over a half-built maze fills in the rest. Nothing about placement is waive
 refuses a taken cell or one under rubble exactly as it refuses a build order — only the
 price, the build timer and the walk.
 
+**The LOAD half was reported not working on 2026-09-03 and has not been investigated.** Saving
+is believed fine. Treat this paragraph as what it is meant to do rather than as a report that
+it does.
+
 The file is ordinary hand-editable Godot, and the format is deliberately the smallest honest
 one: a type id and a cell per entry, area-local, so a layout saved in one player's area
 loads into anybody's. That is also the shape a player-facing maze template would want, if

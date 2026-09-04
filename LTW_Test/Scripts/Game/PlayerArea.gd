@@ -698,16 +698,37 @@ func _watch_creeps() -> void:
 		_on_creep_entered(child)
 
 
+## Both halves drop the creep grid, and that is not an optimisation detail -
+## it is what keeps a FREED creep out of a search.
+##
+## The grid rebuilds itself once per PHYSICS frame, but the render frames that
+## follow a tick share its frame number, and a creep queue_freed during that
+## tick is actually deleted between the two. So a reader running on a render
+## frame - UnitPanel polls a Mountain Giant's damage line from _process, which
+## asks BlockedPassive, which searches the lane - would read a bucket still
+## holding the deleted creep and crash on its position.
+##
+## Hanging it off the same signals that keep _creeps itself correct means the
+## two can never disagree about who is in the lane. Cheap, too: a death does
+## not reach here until the frame ends, so a tick full of kills invalidates
+## once rather than per creep.
 func _on_creep_entered(child: Node) -> void:
 	var creep: Creep = child as Creep
 	if creep != null && !_creeps.has(creep):
 		_creeps.append(creep)
+		_invalidate_creep_index()
 
 
 func _on_creep_exiting(child: Node) -> void:
 	var creep: Creep = child as Creep
 	if creep != null:
 		_creeps.erase(creep)
+		_invalidate_creep_index()
+
+
+func _invalidate_creep_index() -> void:
+	if _creep_index != null:
+		_creep_index.invalidate()
 
 
 ## Pushes any creep standing inside a footprint out to the nearest free spot.

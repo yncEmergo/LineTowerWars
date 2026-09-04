@@ -46,6 +46,22 @@ signal match_abandoned(match_id: String)
 ## they said they were leaving.
 signal player_dropped(slot: int)
 
+## Client side: this machine's world no longer matches the server's, and the
+## match cannot be trusted from here. Carries the tick it was noticed on and a
+## sentence fit to show a player.
+##
+## Nothing listens yet, and that is deliberate rather than an oversight: WHAT a
+## desync should do to a running match - end it, keep playing and say so, offer
+## to quit - is a design decision nobody has made. The signal exists so that
+## decision has somewhere to land, and so the detection is not silent in the
+## meantime.
+signal desync_detected(tick: int, detail: String)
+
+## The tick a match-start comparison reports, which happens before tick zero.
+## Negative so it cannot collide with a real tick once the per-turn comparison
+## lockstep needs starts using the same path.
+const DESYNC_START_TICK: int = -1
+
 ## The match being started, then the match being played. Null when this process
 ## is in no match at all, which is what makes every entry point below safe to
 ## call from a single player run.
@@ -581,10 +597,50 @@ func _compare_checksums() -> void:
 		var reported: int = int(_reported_checksums[peer_id])
 		if reported == _reference_checksum:
 			Log.info("Initial world agrees", {"peer": peer_id, "sum": reported})
-		else:
-			Log.err("Initial world DIFFERS from the server", {
-				"peer": peer_id,
-				"client": reported,
-				"server": _reference_checksum,
-			})
+			continue
+
+		Log.err("Initial world DIFFERS from the server", {
+			"peer": peer_id,
+			"slot": _slot_of(peer_id),
+			"client": reported,
+			"server": _reference_checksum,
+		})
+		# The player is TOLD. Before this, a desync was one line in a server log
+		# nobody was watching while the client played on in a world nobody
+		# shared - the same silent-failure shape as a client that loses the
+		# server (multiplayer.md 11.1), and the most confusing possible bug to
+		# be handed as a report.
+		receive_desync.rpc_id(peer_id, DESYNC_START_TICK, reported, _reference_checksum)
+
 	_reported_checksums.clear()
+
+
+## Says a machine's world stopped matching the server's, and says it to the
+## machine it happened on.
+##
+## **A desync is UNRECOVERABLE and that is why this is loud.** Nothing here
+## repairs anything - there is no correction to send, because under
+## replication the client is already being told the answer and under lockstep
+## there is nobody to ask. All this can do is make the failure legible: which
+## tick, both numbers, and one sentence a person can put in a bug report.
+##
+## `tick` is DESYNC_START_TICK for the match-start comparison, which is the
+## only caller today. It takes a real tick so the per-turn comparison lockstep
+## needs can use exactly this path rather than inventing a second one.
+@rpc("authority", "reliable")
+func receive_desync(tick: int, ours: int, theirs: int) -> void:
+	if multiplayer.is_server():
+		return
+
+	var when: String = "while building the world" if tick == DESYNC_START_TICK \
+		else "on tick %d" % tick
+	var detail: String = ("This game and the server disagree about the world %s."
+		+ " The match cannot be trusted from here.") % when
+
+	Log.err("DESYNC - this machine's world differs from the server's", {
+		"tick": tick,
+		"ours": ours,
+		"server": theirs,
+		"detail": detail,
+	})
+	desync_detected.emit(tick, detail)

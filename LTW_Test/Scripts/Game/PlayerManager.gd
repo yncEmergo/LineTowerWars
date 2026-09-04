@@ -222,6 +222,26 @@ func state_for(player_id: int) -> PlayerState:
 	return _states[player_id]
 
 
+## Every player's state, ascending by slot.
+##
+## Ascending because the one caller compares the result BETWEEN TWO MACHINES
+## (`WorldChecksum`), and a Dictionary's own order is an implementation detail
+## with no business deciding whether two worlds are called identical. Exactly
+## the shape and exactly the reasoning of `MatchSession.unit_ids()`.
+##
+## Anything that merely draws a player's gold should keep using `state_for` and
+## not pay for this.
+func states_in_slot_order() -> Array[PlayerState]:
+	var slots: Array = _states.keys()
+	slots.sort()
+	var ordered: Array[PlayerState] = []
+	for slot: Variant in slots:
+		var state: PlayerState = _states[slot] as PlayerState
+		if state != null:
+			ordered.append(state)
+	return ordered
+
+
 ## Which player this client controls. The single place that answers "is this
 ## mine".
 ##

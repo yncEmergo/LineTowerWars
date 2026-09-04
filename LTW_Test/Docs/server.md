@@ -300,6 +300,14 @@ A fresh checkout has no imported-asset cache, so the deploy re-runs `--import` b
 restarting. Skipping that is the `Identifier ... not declared` failure `CLAUDE.md` warns about,
 which on a server reads as the service crash-looping.
 
+**Never stop it while somebody is playing.** Benchmarking wants the box to itself and so
+stops the service, and doing that mid-match does NOT end the match: `Net.is_online()` goes
+false on every client, `MatchSession.is_authority()` is `!Net.is_online() || Net.is_server()`,
+and so **each client silently becomes its own authority and carries on playing a private
+game**. It looks exactly like a replication bug. `-Check` and `-Log` are safe; check for
+connected peers, or ask, before stopping anything. The underlying design gap is recorded in
+`multiplayer.md` §11.1.
+
 ### What it does not do
 
 There is no account system and no password. Anybody holding the address can connect, which is
@@ -394,9 +402,9 @@ are not running the same code*, whatever the version handshake said.
 uptime and warns when one has been up over an hour, which is the reading that catches this:
 a server up since yesterday, next to a checkout from this morning.
 
-The same trap in its file-copying form is `performance-handover.md` §5.4 - hand-staged files
-diverge silently for exactly the same reason. Deploy from git, and restart the server after
-you do.
+The same trap in its file-copying form: files staged onto the server by hand diverge silently
+for exactly the same reason, and `from_dict`'s forgiving defaults hide it — `multiplayer.md`
+§7. Deploy from git, and restart the server after you do.
 
 **A client vanishes but the server does not notice for ~5 seconds**
 Expected. A client that closes properly is reported instantly; one that was killed, crashed

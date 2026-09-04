@@ -74,6 +74,10 @@ func _pick(tower: Building) -> Building:
 	var best_price: int = 0
 	var best_distance: float = 0.0
 
+	# Cheapest first, then nearest - and a tower tying on BOTH falls to whichever
+	# the walk reached first, which is child order under the area. That is the
+	# order the build commands arrived in, so every machine reaches the same one.
+	# The narrowest case of the dependency TargetFinder._scan describes at length.
 	for child: Node in tower.area.get_children():
 		var other: Building = child as Building
 		if other == null || other == tower || !_may_convert(other):

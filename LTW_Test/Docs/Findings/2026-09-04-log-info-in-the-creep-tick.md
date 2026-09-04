@@ -81,8 +81,8 @@ invocation — a full GDScript call-stack capture, which is what produces the `[
 prefix — and then `print_rich()`, which parses BBCode and writes out. The level check runs
 FIRST, so `Log.debug` at the default `INFO` level returns immediately and costs nothing.
 
-**Inferred, and it fits exactly.** This is also the "unexplained outlier" of
-`performance-handover.md` §4.2 — max ~93 ms while p95 was 48. A wave arriving at the exit
+**Inferred, and it fits exactly.** This is also the "unexplained outlier" left open by
+[2026-09-03-server-tick-overrun.md](2026-09-03-server-tick-overrun.md) — max ~93 ms while p95 was 48. A wave arriving at the exit
 together logs several leaks in one tick, at ~10 ms each. Nothing else in the tick has that
 shape: rare, and enormous when it fires.
 
@@ -237,7 +237,7 @@ costs ~9 ms. That is a p95/max fix, not a median one, and it should be judged on
 
 **And it inverts the next step.** Instantiation plus `add_child` is now **81%** of what remains
 of a spawn, where it was 38%. Stripping the `Visual` child on a headless server - already
-flagged in `performance-handover.md` §5.6 as "worth doing for memory and spawn cost, but it
+measured (see [2026-09-04-staggered-creep-movement.md](2026-09-04-staggered-creep-movement.md)) as "worth doing for memory and spawn cost, but it
 will not help the tick" - is now the largest remaining item on this path.
 
 ## What is still open

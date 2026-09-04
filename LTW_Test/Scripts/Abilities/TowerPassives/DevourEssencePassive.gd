@@ -117,6 +117,11 @@ func _nearest_sibling(tower: Building) -> Building:
 
 	var best: Building = null
 	var best_distance: float = overflow_cells
+	# `distance <= best_distance` keeps the LAST of two equally close towers,
+	# so which one it is depends on child order under the area. That order is
+	# the order the build commands arrived in and is the same on every machine,
+	# which is the only reason this is safe to leave alone. See TargetFinder's
+	# _scan note - the same dependency, on a far hotter path.
 	for child: Node in tower.area.get_children():
 		var other: Building = child as Building
 		if other == null || other == tower || !(self in other.tower_passives()):

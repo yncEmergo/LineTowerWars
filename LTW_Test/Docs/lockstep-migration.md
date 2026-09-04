@@ -167,6 +167,24 @@ probably presentation. Each one that turns out to be gameplay is a real desync i
 
 ### 3.2 Alone — determinism hardening
 
+> **DONE 2026-09-04.** There was one EASY row and no HARD ones, so this was small. What was
+> changed:
+>
+> - **`StatusEffects.move_ratio`** now sorts the chill keys before multiplying them together.
+>   Float multiplication is not associative, so how slowed a creep is depended on a
+>   Dictionary's iteration order. Guarded on `size() < 2`, because this runs for every creep
+>   on every tick and most creeps carry no chill at all — without the guard it allocates an
+>   array per creep per tick to sort nothing.
+> - **Four tie-break sites given the comment they were missing**: `TargetFinder._scan` and
+>   `_nearest_building`, `DevourEssencePassive` and `VoidSpreadPassive`. None is a bug — each
+>   is correct because the collection feeding it is ordered by construction — but none said
+>   so, and all four break silently if anything ever reorders creeps or an area's children.
+>   `_scan` now names the whole chain it depends on.
+>
+> **Acceptance met**: `creeps_spawned` was 1324 before and 1324 after, on the same seed and
+> scenario. Tick timings moved around inside the ±20% noise band and no perf claim is made
+> either way.
+
 **Fix only the EASY rows. Leave every HARD row alone** and report it.
 
 Every one of these is correct under the CURRENT architecture too, so none is a bet on lockstep
@@ -182,8 +200,10 @@ and none needs the model to change first:
 **Verify after each group of changes, not at the end:**
 
 ```powershell
-& "$env:USERPROFILE\Desktop\Godot 4.7.1.exe" --path . --headless --import   # must parse clean
-& "$env:USERPROFILE\Desktop\Godot 4.7.1.exe" --path . --headless res://Scenes/Tools/perf_bench.tscn -- scene=server players=2 creeps=120 towers=0 seconds=20
+# $GODOT is YOUR Godot 4.7 binary - the two dev machines keep it in different
+# places and under different names, so do not paste a path from this file.
+& $GODOT --path . --headless --import   # must parse clean
+& $GODOT --path . --headless res://Scenes/Tools/perf_bench.tscn -- scene=server players=2 creeps=120 towers=0 seconds=20
 ```
 
 **Acceptance: `creeps_spawned` unchanged from the run before your change.** Same seed, same
@@ -192,6 +212,74 @@ did not move. It is what proved the route cache safe on 2026-09-04. A changed co
 altered behaviour; find out why before continuing.
 
 ### 3.3 Alone — the proof harness
+
+> **DONE 2026-09-04.** `Scripts/Tools/DeterminismBench.gd` +
+> `Scenes/Tools/determinism_bench.tscn` — in `Tools`, beside `PerfBench`, because the user
+> chose to KEEP it. `Scripts/Dev` is the folder that gets deleted; this is not in it.
+>
+> ```powershell
+> # record a run, then record it again from the same seed
+> & $GODOT --path . --headless res://Scenes/Tools/determinism_bench.tscn -- seed=7 players=2 ticks=300 every=10 out=user://det_a.json
+> & $GODOT --path . --headless res://Scenes/Tools/determinism_bench.tscn -- seed=7 players=2 ticks=300 every=10 out=user://det_b.json
+> # replay A's RECORDED COMMANDS into a fresh match
+> & $GODOT --path . --headless res://Scenes/Tools/determinism_bench.tscn -- replay=user://det_a.json ticks=300 every=10 out=user://det_r.json
+> # and ask where, if anywhere, two runs first differ
+> & $GODOT --path . --headless res://Scenes/Tools/determinism_bench.tscn -- compare=user://det_a.json,user://det_b.json
+> ```
+>
+> **Demonstrated, all three ways round:**
+>
+> | Test | Result |
+> | --- | --- |
+> | record twice, same seed, 300 ticks | `IDENTICAL across 31 samples` |
+> | replay A's 102 recorded commands into a fresh match | `IDENTICAL across 31 samples` |
+> | same seed, 800 ticks | `IDENTICAL across 81 samples` |
+> | **one creep moved 1mm at tick 170** | **`DIVERGED first at tick 170`** |
+>
+> The last row is the one that matters: a checker that has only ever been seen to pass is not
+> evidence. `perturb=<tick>` exists to make it fail on demand.
+>
+> **`WorldChecksum` WAS then widened, on the user's call (2026-09-04).** It covered identity
+> and position but not health or gold, so a desync that moved only a creep's health was
+> invisible to it — which was right for the job it had (one comparison at match start, where
+> nothing has happened yet and health and gold are implied by the config it already hashes)
+> and wrong for the job lockstep gives it. It now also carries each unit's current and maximum
+> health, and each player's gold, income and lives in slot order via the new
+> `PlayerManager.states_in_slot_order()`.
+>
+> Free today, because it still runs exactly once per match and only when networked. The cost
+> to watch is under lockstep, where it would run every N turns: the expensive part is building
+> a string per unit and hashing the join, NOT the two extra numbers per entry. If it ever
+> needs to be cheap, replace the string join with a rolling integer hash rather than trimming
+> what it covers.
+>
+> **MANA is still deliberately absent**, and that one is not laziness: it lives on `Building`
+> and `Creep` rather than on `Unit`, so reaching it needs a cast — and a cast on exactly this
+> kind of walk is what silently kept three whole systems off the wire once already
+> (`CLAUDE.md`, known weaknesses). It wants a virtual on `Unit` first, the way
+> `status_entries()` had to become one.
+>
+> The harness still takes a second `deep` sample of its own, which now overlaps the widened
+> `WorldChecksum` almost entirely. Kept as a cross-check: two independently written hashes
+> disagreeing about whether two worlds match would itself be worth knowing.
+>
+> **What it does NOT prove.** Two runs of the same binary on one machine. That covers the
+> whole iteration-order and unseeded-randomness family — which is what §6 inventoried — and
+> covers nothing about cross-machine float divergence. The next step up is two different
+> machines running `replay=` against the same trace and comparing; the harness already
+> supports it, and it has not been done.
+>
+> **Two traps it paid for, both worth knowing before extending it:**
+>
+> - **The driver must not draw from `MatchSession.match_rng()`.** It did at first. Record
+>   generates its command stream and replay does not, so the two consumed a different number
+>   of rolls and every gameplay roll afterwards got a different number — the replay diverged
+>   from its own recording, entirely because of the test.
+> - **`Command.to_dict()` is the WIRE format and does not survive JSON.** Godot sends a
+>   `Vector3` as twelve bytes; `JSON.stringify` turns it into the string `"(0, 0, 0)"`, and
+>   `from_dict` then hands back something unusable. The replay ran, raised nothing, injected
+>   nothing, and read exactly like a determinism failure at the first sampled tick. The trace
+>   is a file format and carries its own encoding.
 
 **Without this there is no way to know determinism holds**, and a desync in a real match is
 unreproducible from a bug report. Build it before the cutover, not after.
@@ -251,8 +339,10 @@ no hidden information in `game_rules.md`, so the maphack lockstep enables buys n
 
 ## 5. Where performance stands, so it is not re-derived
 
-Full detail in `performance-handover.md` and
-`Findings/2026-09-04-log-info-in-the-creep-tick.md`. The short version:
+Full detail in `Findings/2026-09-03-server-tick-overrun.md`,
+`Findings/2026-09-04-log-info-in-the-creep-tick.md` and
+`Findings/2026-09-04-staggered-creep-movement.md` — which between them absorbed
+`performance-handover.md`, deleted 2026-09-04. The short version:
 
 - Server, creep-heavy 1v1 shape: **p50 ~34 ms, p95 ~53 ms** against a 50 ms budget. Median
   inside, tail still just over.
@@ -272,22 +362,118 @@ profile of the PLATFORM: the log fix measured 2.1× on Windows and 7% on Linux.
 
 ## 6. The determinism inventory
 
-**EMPTY — this is §3.1's output. Fill it in.**
+**Filled in 2026-09-04 by §3.1.** A read-only pass over `Scripts/{Game,Units,Combat,
+Abilities,Tech,Multiplayer}`. Kept in full, SAFE rows included, so the next reader does not
+re-triage what has already been checked.
 
-One row per hazard. Keep SAFE and PRESENTATION rows: their value is that the next reader does
-not re-triage them, and "we checked, it is fine" is a result.
+**Headline: the simulation is in far better determinism shape than §2 assumed.** One EASY
+fix, no HARD ones. The hazard §3.1 expected to dominate — loose `rand*` calls — does not
+exist.
+
+### 6.1 RNG — clean
+
+Every gameplay roll already goes through `MatchSession.match_rng()`. Each call site was read,
+not merely counted.
+
+| File:line | What | Verdict | Note |
+| --- | --- | --- | --- |
+| `BombardmentPassive:72`, `EtherealAuraPassive:44`, `SpawnOnDeathPassive:66`, `GerminatePassive:115`, `PressuringWaterPassive:102`, `VolcanicEruptionPassive:77`, `AttackHit:258`, `HitPattern:125`, `TowerBuffs:277`, `TechManager:278` | gameplay rolls | SAFE | all `MatchSession.match_rng()` |
+| `AttackStats.roll_damage`, `PlayerArea.random_spawn_point`, `RNGUtil.*`, `StartingTech._rng` | take an `rng` PARAMETER | SAFE | every gameplay caller passes `match_rng()` — checked `AttackComponent:597`, `BombardmentPassive:85`, `Creep:2054`, `SendBuilding:512`. Only `PerfBench` passes anything else |
+| `LobbyService:475`, `MatchSetup:50` | bare `randi()` | SAFE | this IS the match seed. It must be unpredictable, and it is then shared with every peer |
+| `LobbyInfo._shuffle_lanes:120` | its own `RandomNumberGenerator` | SAFE | seeded FROM the match seed, server-only, and the RESULT is broadcast rather than re-rolled anywhere |
+| `BountyPopup:81-83`, `LightningBolt3D:101-102` | bare `randf_range` | PRESENTATION | a floating gold number and a lightning squiggle. `LightningBolt3D` already documents itself as such |
+
+### 6.2 Time — clean
+
+| File:line | What | Verdict | Note |
+| --- | --- | --- | --- |
+| — | `Time.get_*` / `OS.get_ticks` / `Engine.get_frames` in simulation | SAFE | **zero.** The only hits are `SelectionController:434` (the double-click window, presentation), `ServerMain:63` (a log timestamp) and `Scripts/Dev/*` (probes) |
+
+### 6.3 Dictionary iteration
 
 | File:line | What | Verdict | Note / action |
 | --- | --- | --- | --- |
-| | | | |
+| **`StatusEffects:316`** | `moving *= 1.0 - amount` over `_chills` | **EASY** | **The one real find.** Float multiplication is not associative, so the slow a creep carries depends on the order its chills are walked. Sort the keys — `_append_chills:951` in the same file already does exactly that, so the fix matches the file's own style |
+| `StatusEffects:951,964` | `_append_chills` / `_append_grips` | SAFE | already `keys.sort()`, and this is the path that crosses the wire |
+| `StatusEffects:891,1110,1135,1153` | halve / advance / expire | SAFE | each entry advanced independently; erase order cannot matter |
+| `TowerBuffs:289`, `TowerStatus:143` | timer decrement + expire | SAFE | same shape |
+| `PlayerArea:353` | `_rubble` countdown | SAFE | same shape |
+| `PlayerManager:444,452` | `_states` — income floor, pay income | SAFE | independent per player |
+| `PlayerManager:298` | `value_for` sums `invested_gold` | SAFE | INTEGER addition, which commutes exactly |
+| `Building:438` | `inherit_ability_state` copies a dict | SAFE | key-for-key copy |
+| `CreepWarding:95` | `_worst_type` picks a maximum | SAFE | **already carries an explicit tie-break** (`key < best`). Somebody thought about this one |
+| `SendBuilding:169,193,231` | `_stocks` | SAFE | `stock_entries` is self-describing by `unit_type_id`, so the reader keys by id rather than by position |
+| `MatchSession:429` | `live_units()`, unordered | SAFE | only `Minimap` and `PerfProbes` call it, and its docstring already says why it does not sort |
+| `WorldChecksum:66,91` | the checksum itself | SAFE | sorts slots AND unit ids. **§3.3 rests on this and it is sound** |
+| `UnitTypeRegistry:55`, `AbilityRegistry:87`, `TechRegistry:196` | boot validation | SAFE | log-only, and runs before a match exists |
+| `UnitAbility:340` | placeholder substitution | PRESENTATION | builds a description string |
 
-**Summary, once filled:**
+### 6.4 `get_children()` and collection order
 
-- SAFE: _n_ · PRESENTATION: _n_ · EASY: _n_ · **HARD: _n_**
-- **The HARD count is the answer to "how big is the lockstep rework".** State it plainly in the
-  report, with one line per hard item saying what makes it hard.
+| File:line | What | Verdict | Note / action |
+| --- | --- | --- | --- |
+| `PlayerManager:298`, `AncientBloomPassive:95` | sum / count | SAFE | integer accumulation |
+| `LightBurstPassive:65` | heals everything in radius | SAFE | applied to all, and `heal()` clamps |
+| `DiscUpgradeAbility:92` | returns true on the first match | SAFE | an existence test — a boolean cannot depend on order |
+| `TowerLayout:64` | writes the layout file | SAFE | a developer cheat, and order affects only line order in the file |
+| `CrashLightningPassive:93`, `TargetFinder:81` | append every match | SAFE | the SET is order-independent, and both feed callers that apply to all of it |
+| **`TargetFinder._offer`** | targeting; ties go to the creep found FIRST | SAFE, **fragile** | fed by `creeps_near` → `CreepIndex.near`, which walks buckets over `range(min_x, max_x + 1)` and fills them from `PlayerArea._creeps`, an **Array**. So the order is deterministic by construction. It is also the hottest path in the game, and nothing states that dependency at the site |
+| **`TargetFinder._nearest_building:228`** | first wins ties | SAFE, **fragile** | same class — depends on child order under the area, which follows the build commands |
+| **`DevourEssencePassive:120`** | `distance <= best_distance`, so LAST wins ties | SAFE, **fragile** | same class |
+| **`VoidSpreadPassive:77`** | ties on price AND distance fall to the first found | SAFE, **fragile** | same class, and the narrowest of the four |
+| `PlayerArea:697` | seeds `_creeps` from the existing children | SAFE | feeds the order the four rows above depend on |
+| `_rebuild_flow_field` | `_flow.build(...)` | SAFE | walks the blocking grid by index; no dictionary |
 
----
+### 6.5 Summary
+
+- **SAFE: the overwhelming majority · PRESENTATION: 3 · EASY: 1 · HARD: 0**
+- **The HARD count is ZERO.** Nothing found needs a design decision to fix, and nothing found
+  is other than obviously behaviour-preserving. On this axis, the lockstep rework is small.
+- **The one EASY fix is `StatusEffects:316`**, and it is correct under the CURRENT
+  architecture too: the server's own answer for how slowed a creep is should not depend on
+  dictionary order either.
+
+**The thing worth carrying forward is not a row, it is a CLASS.** Four sites resolve an exact
+tie by taking whichever candidate was reached first, and all four are correct today only
+because the collection feeding them happens to be ordered — an `Array` in spawn order, or
+scene children in build order. Under lockstep every peer replays the same commands, so those
+orders agree and so do the answers. **Nothing at any of those four sites says so.** A later
+change that reorders creeps or buildings for an unrelated reason — a pooling scheme, a sort
+for rendering, a spatial rebuild that walks a Dictionary — breaks all four silently and
+produces a desync with no visible cause.
+
+That is a comment-and-tie-break job rather than a bug, it is cheap, and it is the thing most
+likely to be regretted if it is skipped. Recommended for §3.2 alongside the one EASY fix, and
+it is what should be done FIRST if the budget is small.
+
+### 6.6 Cross-machine maths — checked 2026-09-04, one item
+
+Separate from everything above, because it is the axis a single machine cannot test.
+
+**IEEE 754 exactly specifies `+`, `-`, `*`, `/` and `sqrt`**, so those are bit-identical on
+every conforming machine and are not a risk. `length()`, `distance_to()` and `normalized()`
+ride on `sqrt` and are safe with them - and most hot paths here use `length_squared()` anyway.
+
+What the standard does NOT specify is the transcendentals - `sin`, `cos`, `atan2`, `pow`,
+`exp`, `log` - which are library code and differ between platforms and CPU vendors. The whole
+simulation contains seven such calls:
+
+| Site | Verdict |
+| --- | --- |
+| `Projectile:129` arc, `GroundHazard:146` flicker, `AttackComponent:745` barrel, `AttackDelivery:76` effect facing | PRESENTATION - the arc is declared visual by `CLAUDE.md` |
+| `MobileUnit:111,116` | writes only `rotation.y`. Presentation unless something gates an action on having finished turning - worth one check |
+| **`CreepDive:92`** — `sin(PI * progress()) * _reach` | **the only one reaching a gameplay position.** The Phoenix dive arc |
+
+**The Phoenix dive is being REWORKED anyway** (its current behaviour is not what LTW 12.4a
+does), so this is not a fix to make now - it is a constraint on the rework: **whatever
+replaces it should reach its position with multiplication rather than with `sin`.** A parabola,
+`4x(1-x)`, has nearly the same shape and is IEEE-exact everywhere. A lookup table also works.
+Recorded here so the constraint is not discovered after the rework instead of before it.
+
+**Not triaged, deliberately:** `Scripts/Dev/` currently holds `CreepProbe.gd` and
+`AttackerProbe.gd`, which use `Time.get_ticks_msec()`. That folder is scaffolding
+(`CLAUDE.md`) and never ships, so it is out of scope — but it is worth knowing it is not
+empty right now.
 
 ## 7. Out of scope — do not do these
 
@@ -296,7 +482,9 @@ Recorded so a session with time left does not helpfully wander into them.
 - **The cutover (§3.4).** Needs the user present. This is the whole reason the plan is split.
 - **Stripping the `Visual` child on a headless server.** Real and worth doing — it is the
   largest remaining item on the spawn path (§5) — but it is a PERFORMANCE change and would
-  confound the determinism work. Separate session.
+  confound the determinism work. Separate session. Note it will not move the TICK, only
+  memory and the spawn path: `Findings/2026-09-04-staggered-creep-movement.md` measured
+  that.
 - **Lowering the tick rate to 10 Hz.** Touches every timer and cooldown in the game, and its
   client-interpolation half is replication work lockstep would delete. Parked deliberately.
 - **Bumping `protocol_version`, committing, pushing, or deploying.** Git is the user's

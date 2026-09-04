@@ -312,9 +312,26 @@ func move_ratio() -> float:
 	if _stun_left > EPSILON || _paralyze_left > EPSILON:
 		return 0.0
 
+	# Sorted, because this is a PRODUCT of floats and float multiplication is
+	# not associative: the same three chills walked in two orders give answers
+	# that differ in the last bits, and a creep's speed feeds its position. Two
+	# machines are not entitled to agree on a Dictionary's own order, so the
+	# order is made explicit here rather than inherited. _append_chills does the
+	# same thing for the same reason, one step further along the same path.
+	#
+	# Guarded on size, and that guard is not a micro-optimisation: this runs for
+	# every creep on every tick, and MOST creeps carry no chill at all. Nothing
+	# can be reordered below two entries, so the sort - and the array keys()
+	# allocates to be sorted - is skipped for the case that dominates.
 	var moving: float = 1.0
-	for key in _chills:
-		moving *= 1.0 - (_chills[key] as Chill).amount
+	if _chills.size() < 2:
+		for key in _chills:
+			moving *= 1.0 - (_chills[key] as Chill).amount
+	else:
+		var keys: Array = _chills.keys()
+		keys.sort()
+		for key in keys:
+			moving *= 1.0 - (_chills[key] as Chill).amount
 	# The creep's own ceiling on being slowed, applied to the PILE rather than
 	# to each chill as it lands: "cannot be slowed by more than 25%" is a
 	# statement about the total, and clamping each application instead would

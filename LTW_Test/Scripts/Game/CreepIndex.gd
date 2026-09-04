@@ -16,6 +16,10 @@ extends RefCounted
 ## over a list that is already in memory, against the many searches that pass
 ## then serves. Cheap to build once, read many times.
 ##
+## Rebuilt lazily, and also whenever the area says its creep list changed -
+## see invalidate(), which is not optional. The frame check alone would hand a
+## render-frame reader a bucket holding a creep freed at the end of the tick.
+##
 ## Rebuilt LAZILY, on the first query of a tick, deliberately: it must not
 ## depend on this node running before the towers that ask it, and Godot's tick
 ## order is plain tree order unless every node in the chain sets
@@ -84,9 +88,16 @@ func near(creeps: Array[Creep], center: Vector3, radius: float) -> Array[Creep]:
 	return found
 
 
-## Throws the grid away, so the next query builds it again. Called when the
-## area's creep list changes shape in a way a position sweep would not catch -
-## a creep recycled into another lane, an area torn down.
+## Throws the grid away, so the next query builds it again.
+##
+## MUST be called whenever the area's creep list changes membership, and
+## PlayerArea does it off the same two signals that maintain the list. The
+## frame number below is not enough on its own: it counts PHYSICS frames, so
+## every render frame after a tick reads the grid that tick built, and a creep
+## queue_freed during that tick is deleted in between. A reader on a render
+## frame would then find a deleted creep in a bucket and crash reading its
+## position - which is precisely what UnitPanel's damage line did to a Mountain
+## Giant's crowding scan.
 func invalidate() -> void:
 	_frame_built = -1
 

@@ -1981,7 +1981,8 @@ func _reach_end() -> void:
 	# every creep that walks a lane ends here - and Log.info costs a get_stack()
 	# plus a print_rich() whether or not anybody reads the result. Measured at
 	# ~10 ms per call on 2026-09-04, which was HALF of all creep simulation time.
-	# See performance-handover.md. The line is still there at DEBUG.
+	# See Findings/2026-09-04-log-info-in-the-creep-tick.md, which also says why that
+	# Windows number is ~7% on the Linux server. The line is still there at DEBUG.
 	Log.debug("Creep leaked", {
 		"creep": name,
 		"owner": owner_player_id,

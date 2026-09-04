@@ -526,6 +526,17 @@ True for a solo run and for the server, false on a client. **Anything new that a
 world must ask it**, or a client will simulate something the server also simulates and the
 two will disagree.
 
+**Its shadow side is a whole CLASS of bug, and there are known instances of it.** State that
+only advances on the authority, that presentation reads directly, and that nobody replicates,
+is simply frozen on a client - and it is invisible in a single-player run, because there the
+client IS the authority. Three have been found one at a time: the skeleton revive, the
+frozen income countdown (`PlayerManager._income_elapsed` never advances on a client, so
+`seconds_until_income()` returns the full interval forever - the gold itself arrives normally,
+so it is cosmetic, and the fix is ONE float in the snapshot because it is ONE shared clock,
+not one per player), and whatever the next one turns out to be. **It is worth a sweep rather
+than three more one-off fixes**: the question to ask of any field a HUD reads is whether a
+client ever writes it.
+
 **`UnitStats.unit_type_id` + `MatchSession.unit_types()`** - the same shape as `ability_id`
 and the ability registry (D12), for the same reasons. `UnitTypeRegistry.stats_for(id)` returns
 null for a type this build does not contain, which is a mismatched build and must be refused.
@@ -704,7 +715,8 @@ weighs lockstep's BANDWIDTH advantage and dismisses it as "largely recovered any
 SIMULATING AT ALL - a lockstep server is a relay that runs no game loop. Measured on the
 rented box: a creep costs roughly 100 µs of tick per tick, so a two-lane match with a few
 hundred creeps already sits on the 50 ms budget with one core saturated. Twelve lanes is not
-close. See `Findings/2026-09-03-server-tick-overrun.md` and `performance-handover.md`.
+close. See `Findings/2026-09-03-server-tick-overrun.md` and
+`Findings/2026-09-04-log-info-in-the-creep-tick.md`.
 
 **2. This game has NO HIDDEN INFORMATION.** There is no fog of war and no vision system
 anywhere in `game_rules.md` - every player watches every lane, which is what Line Tower Wars
@@ -746,8 +758,14 @@ reads). And no interpolation seam - the reason staggered creep movement was unpl
 
 **Consequences for work done in the meantime:** D13 (no reconnect) already absorbs lockstep's
 main drawback, so nothing there needs revisiting. The thing to avoid is DEEPENING the
-replication layer - §4.3's client extrapolation in `performance-handover.md` is exactly the
-work lockstep would delete, and is deferred on those grounds rather than on its merits.
+replication layer — CLIENT EXTRAPOLATION (§3.3 phase B, D17) is exactly the work lockstep
+would delete, and is deferred on those grounds rather than on its merits. It remains the right
+design if D2 is kept, and the user's own framing is its best argument: *"90% of what moves or
+shoots is very predictable. Player commands are rare and creeps are not commandable anyway."*
+Sending spawn events plus velocity instead of every unit's position 20x/second collapses
+bandwidth AND decouples the visual rate from the simulation rate - which is what would remove
+the interpolation seam that killed staggered movement
+(`Findings/2026-09-04-staggered-creep-movement.md`).
 
 ---
 
@@ -782,6 +800,27 @@ contains no simulation.
 
 C# is available in Godot, but the simulation is already GDScript and there is no reason to
 split languages. Keep GDScript.
+
+**And if GDScript turns out to be too slow?** The question was asked directly on 2026-09-03,
+and the answer so far is NOT YET, on evidence rather than on taste. Roughly 3x came out of
+four mechanical GDScript changes with no cost to readability - the tick was doing avoidable
+work, not sitting on a language floor. See `Findings/2026-09-03-server-tick-overrun.md` and
+`Findings/2026-09-04-log-info-in-the-creep-tick.md`.
+
+What remains after those is many small operations each costing microseconds - a
+`global_position` write, step maths, slide tests. *That* is the GDScript per-operation tax and
+it is real. So if another large multiple is ever needed, the shape of the answer is fixed by
+D3 rather than open:
+
+- **A GDExtension used by BOTH client and server** is the shape. One implementation, so "one
+  copy of the simulation, shared by both sides" survives.
+- **A separate C++ server is NOT.** It would mean two implementations of the same simulation
+  that must agree bit-for-bit forever - a desync factory, in a language the user does not
+  read. Under lockstep (§4.1) it would be worse still, since every client would then be the
+  second implementation.
+- **C# is the middle rung**: faster than GDScript, far more learnable, the same "shared by
+  both sides" requirement, and it complicates the Linux deployment because it needs the .NET
+  runtime.
 
 **Practical shape:** a second entry scene, e.g. `Scenes/Server/server_main.tscn`, selected
 at boot by `OS.has_feature("dedicated_server")`. It never loads the menus, the camera or
@@ -1003,6 +1042,15 @@ Assessment, split by path:
   untrusted direction, and they are tiny and fixed-shape, so a hand-written parser that
   reflects on nothing is both safer and smaller. PickleGD's class registry is the right
   property to have, but it is not a substitute for the server range-checking every value.
+
+**A trap that costs a debugging session, whatever serialiser is used.** `from_dict` defaults
+are deliberately FORGIVING - a key the reader has never heard of is dropped and the field
+keeps its default, which is what lets a lobby payload gain a field without breaking every
+older peer. The cost is that **version skew is then silent**: a server running older code than
+the client dropped a `MatchSettings` key and the symptom was "the cheats checkbox unticks
+itself", which reads as a UI fault and is not one. `protocol_version` (§6) catches a
+DECLARED break; it cannot catch two builds that both claim the same number because one of
+them was staged by hand. Deploy from git - `server.md` says why.
 
 **Verdict:** the link is enough — no need to install it. It is a good tool aimed at a problem
 we do not have yet, and it costs nothing to adopt later once there is a real wire format to
@@ -1244,6 +1292,13 @@ Details still open, none of them blocking:
   merely desirable: the two cases are already distinguishable by how fast they arrive.
 - **Whether the towers are refunded, recycled or simply deleted** when the maze is erased.
   Deletion is simplest and nobody is left to receive gold.
+- **A client that loses the SERVER does not stop.** `MatchSession.is_authority()` is
+  `!Net.is_online() || Net.is_server()`, so the moment the connection drops, `Net.is_online()`
+  goes false and every client **silently becomes its own authority and carries on playing a
+  private game**. It looks exactly like a replication bug, and it was found by stopping the
+  service under a live match while benchmarking. Given D13 - out is out - a client that loses
+  the server should stop and say so. This is the most confusing possible failure mode and it
+  is not fixed.
 
 ### 11.2 The loading screen timeout (D15)
 

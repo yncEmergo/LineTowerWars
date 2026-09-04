@@ -28,6 +28,7 @@ static func of(setup: MatchSetup, areas: Array[PlayerArea], session: MatchSessio
 	_add_setup(parts, setup)
 	_add_areas(parts, areas)
 	_add_units(parts, session)
+	_add_players(parts)
 	return "|".join(parts).hash()
 
 
@@ -94,8 +95,40 @@ static func _add_units(parts: PackedStringArray, session: MatchSession) -> void:
 			parts.append("u%d:missing" % id)
 			continue
 		var stats_name: String = "-" if unit.stats == null else unit.stats.resource_path
-		parts.append("u%d:%d:%s:%s" % [
-			id, unit.owner_player_id, stats_name, _point(unit.global_position),
+		parts.append("u%d:%d:%s:%s:%d/%d" % [
+			id,
+			unit.owner_player_id,
+			stats_name,
+			_point(unit.global_position),
+			# Health quantised on the same grounds as a position: two machines
+			# agreeing to a thousandth agree, and hashing raw float bits would
+			# call that a mismatch.
+			roundi(unit.current_health * SCALE),
+			unit.max_health(),
+		])
+
+
+## What each player OWNS, which is half of what a match is and none of which is
+## visible in the units above.
+##
+## In slot order, for the same reason the setup is: a slot is the lane, every
+## machine numbers them identically, and a Dictionary's own order is not
+## something two machines are entitled to agree on.
+##
+## MANA is deliberately absent. It lives on `Building` and `Creep` rather than
+## on `Unit`, so reaching it needs a cast - and a cast on exactly this kind of
+## walk is what silently kept three whole systems off the wire once already
+## (`CLAUDE.md`, known weaknesses). If mana is wanted here, it wants a virtual
+## on `Unit` first, the way `status_entries()` had to become one.
+static func _add_players(parts: PackedStringArray) -> void:
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		parts.append("players:none")
+		return
+
+	for state: PlayerState in manager.states_in_slot_order():
+		parts.append("s%d:%d:%d:%d" % [
+			state.player_id, state.gold, state.income, state.lives,
 		])
 
 

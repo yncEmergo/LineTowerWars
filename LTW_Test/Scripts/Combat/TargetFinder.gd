@@ -168,6 +168,15 @@ static func nearest_building(area: PlayerArea, center: Vector3) -> Building:
 ##
 ## Ties still go to the creep found first, because the offer is a strict
 ## improvement and the lane is walked in the one order both machines agree on.
+##
+## **That order is LOAD-BEARING and nothing enforces it.** It comes from
+## `PlayerArea._creeps`, an Array in spawn-and-reparent order, read through
+## `CreepIndex.near`, which walks its buckets over an ascending integer range.
+## Both machines replay the same spawns, so both build the same Array and reach
+## the same creep first. Sort that Array, pool it, or fill the index from a
+## Dictionary, and two machines pick different targets on an exact score tie -
+## which is a desync with no visible cause. Add a tie-break on `unit_id` before
+## making any of those changes, not after.
 static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats,
 		range_bonus: float = 0.0) -> Array[Creep]:
 	var best: Array[Creep] = []
@@ -225,6 +234,11 @@ static func _nearest_building(area: PlayerArea, center: Vector3,
 	var best_distance: float = NO_SCORE
 	var limit: float = INF if is_inf(reach) else reach * reach
 
+	# `distance >= best_distance` keeps the FIRST of two equally close towers,
+	# and what decides which that is, is child order under the area - which is
+	# the order the build commands arrived in, identical on every machine that
+	# replayed them. Deterministic by construction rather than by a tie-break;
+	# anything that reorders an area's children breaks it silently.
 	for child: Node in area.get_children():
 		var building: Building = child as Building
 		if !_is_attackable(building):

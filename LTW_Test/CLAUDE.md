@@ -300,6 +300,23 @@
   - a negative result only counts if the test exercised the right case. A probe
     that never fires because the wrong unit was spawned looks identical to a
     probe that disproves the theory
+- **A performance measurement is PAIRED or it is nothing.** The rented server varies about
+  20% run to run - identical code, minutes apart, gave p50 of 35.1, 42.3 and 36.5 - so a
+  single before/after across two deploys proves nothing. Same commit, flip the one variable
+  in place, alternate runs
+  - and MEASURE ON THE TARGET. The bench is `Scenes/Tools/perf_bench.tscn` driven by
+    `Tools/run_bench.ps1`, and it runs on the server unchanged. A dev PC is materially
+    faster and its answer for anything that WRITES is a profile of the platform, not of the
+    code - the Log.gd rule above is the worked example
+  - `towers=0` in the bench is the sentinel for FILL THE MAZE, not for zero towers. There is
+    no way to ask for a creeps-only world
+  - `est_targeting_ms_per_tick` from the bench is an ASSUMPTION, not a measurement:
+    `one_search x towers x lanes`, which is false wherever a tower already holds a target. It
+    over-reported targeting by 6x once. Measure by varying tower count instead
+  - to profile INSIDE a tick, the approach that works is a temporary static accumulator under
+    `Scripts/Dev`, called from a copy of the hot function so the shipping path pays only a
+    bool check, gated on an environment variable and printing every N ticks. Never measure by
+    re-calling functions from a probe and multiplying
 - Never inflate a gameplay value to fit a test, and never leave one inflated
 - The multiplayer test loop that actually works is HEADLESS AND SCRIPTED, not the
   editor. Godot instances driven by hand cannot be made to do the same thing
