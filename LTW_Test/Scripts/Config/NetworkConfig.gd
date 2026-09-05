@@ -195,16 +195,29 @@ extends Resource
 ## stopped.
 @export var silent_timeout_seconds: float = 8.0
 
-## Head room added on top of the measured round trip, in MILLISECONDS.
+## Head room added on top of the measured round trip AND its variance, in
+## milliseconds.
 ##
-## A link averaging 30 ms that spikes to 70 needs the 70, and a mean cannot see
-## a spike. ENet's own round-trip VARIANCE is added first and this sits on top
-## of it, covering what neither measures: the frame a packet waits before Godot
-## flushes it, and the scheduling jitter of two machines nobody is tuning.
+## **Zero, and that is measured rather than assumed.** The budget already counts
+## the round trip and ENet's own variance, each exactly once; this is a flat
+## constant on top of both, and a constant is the one term that cannot adapt to
+## anything.
 ##
-## The trade is exact and worth stating: every millisecond here is a millisecond
-## of input delay for everybody, and every millisecond missing is a risk of a
-## stall. A stall is worse than sluggishness, so this is deliberately generous.
+## Paired alternating runs against the rented server at 26 ms ping, with the time
+## every peer spent HELD measured alongside the latency - because a stall COUNT
+## cannot tell six invisible hitches from six visible freezes, and every earlier
+## attempt to tune this traded against a count without knowing what it cost:
+##
+##     margin  0   median  85 ms   2.10 s held across both peers, per ~50 s played
+##     margin 20   median 131 ms   1.25 s held
+##
+## So twenty bought 0.85 s less holding per match - half a dozen stalls of one or
+## two ticks each, well under the 0.6 s the stall panel waits before it even
+## appears - and charged 46 ms on every single order to do it. Invisible benefit,
+## felt cost.
+##
+## It stays as a knob because a genuinely bad link may want one, and because the
+## next person should be able to measure it rather than trust this.
 @export var jitter_margin_ms: int = 0
 
 ## How often the world is checksummed and compared between machines, in TURNS.
