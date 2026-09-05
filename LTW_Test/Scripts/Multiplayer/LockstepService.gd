@@ -365,6 +365,24 @@ func announce_one_way(ms: int) -> void:
 	_worst_one_way = maxi(0, ms)
 
 
+## Whether the world is being held right now waiting for somebody's turn.
+##
+## Public because a STALL IS THE ONLY THING IN THIS GAME THAT STOPS THE WORLD
+## WITHOUT TELLING THE PLAYER, and the panel that fixes that has to be able to
+## ask. `turn_stalled` fires once at the start and nothing marks the end, so a
+## screen driven by the signal alone could never work out when to hide itself.
+func is_stalled() -> bool:
+	return _stalling
+
+
+## Whose word the match is waiting for, by peer id, or empty when it is not
+## waiting. For the panel to turn into names.
+func waiting_on() -> PackedInt32Array:
+	if !_stalling || _stalled_on == NO_TURN:
+		return PackedInt32Array()
+	return _missing_for(_stalled_on)
+
+
 ## Whether every peer has said what it is doing on this turn.
 func _is_complete(turn: int) -> bool:
 	var by_peer: Dictionary = _incoming.get(turn, {})

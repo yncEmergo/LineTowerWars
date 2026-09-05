@@ -1,0 +1,104 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/StallPanel.gd" id="1_stall"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 34.0
+content_margin_top = 26.0
+content_margin_right = 34.0
+content_margin_bottom = 26.0
+bg_color = Color(0.06, 0.07, 0.1, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.62, 0.25, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="StallPanel" type="Control" node_paths=PackedStringArray("_panel", "_status_label", "_elapsed_label", "_leave_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_stall")
+_panel = NodePath("Panel")
+_status_label = NodePath("Panel/Box/Column/StatusLabel")
+_elapsed_label = NodePath("Panel/Box/Column/ElapsedLabel")
+_leave_button = NodePath("Panel/Box/Column/LeaveButton")
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.024, 0.035, 0.72)
+
+[node name="Box" type="PanelContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Column" type="VBoxContainer" parent="Panel/Box"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Panel/Box/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 26
+text = "WAITING FOR PLAYERS"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="Panel/Box/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.86, 0.88, 0.93, 1)
+theme_override_font_sizes/font_size = 17
+text = "Waiting for the match"
+horizontal_alignment = 1
+
+[node name="ElapsedLabel" type="Label" parent="Panel/Box/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.6, 0.63, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "0 seconds"
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Panel/Box/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.5, 0.53, 0.6, 1)
+theme_override_font_sizes/font_size = 13
+text = "The match continues on its own if they come back."
+horizontal_alignment = 1
+
+[node name="LeaveButton" type="Button" parent="Panel/Box/Column"]
+custom_minimum_size = Vector2(180, 34)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Leave the match"
