@@ -977,10 +977,13 @@ func _compare_turn(turn: int, peer: int, checksum: int) -> void:
 			"theirs": int(by_peer[id]),
 			"reference": reference,
 		})
-		if int(id) != NetworkService.SERVER_PEER_ID:
-			MatchStart.receive_desync.rpc_id(
-				int(id), first_tick_of(turn), int(by_peer[id]), reference
-			)
+		# Everybody, not just the peer that disagreed - see
+		# MatchStartService.announce_desync. Which peer is the "reference" here
+		# is whichever one reported first, so singling out the other would end
+		# an arbitrary player's match and award their opponent the win.
+		MatchStart.announce_desync(
+			first_tick_of(turn), int(by_peer[id]), reference
+		)
 
 	_forget_old_turns(turn)
 

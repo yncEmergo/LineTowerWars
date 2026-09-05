@@ -99,6 +99,8 @@ var _grace_seconds: float = 10.0
 var _reported_checksums: Dictionary = {}
 var _reference_checksum: int = 0
 var _has_reference: bool = false
+## Whether this match has already been declared diverged. See announce_desync.
+var _desync_announced: bool = false
 
 # --- both sides -----------------------------------------------------------
 var _ready_ids: PackedInt32Array = PackedInt32Array()
@@ -145,6 +147,7 @@ func begin(match_setup: MatchSetup) -> void:
 	_ready_ids = PackedInt32Array()
 	_reported_checksums.clear()
 	_has_reference = false
+	_desync_announced = false
 	_read_server_settings()
 
 	_expected = PackedInt32Array()
@@ -571,6 +574,7 @@ func _finish_match() -> void:
 	_grace.clear()
 	_deliberate.clear()
 	_has_reference = false
+	_desync_announced = false
 	set_process(false)
 	match_abandoned.emit(finished_id)
 
@@ -662,18 +666,45 @@ func _compare_checksums() -> void:
 			"client": reported,
 			"reference": _reference_checksum,
 		})
-		# The player is TOLD. Before this, a desync was one line in a server log
-		# nobody was watching while the client played on in a world nobody
-		# shared - the same silent-failure shape as a client that loses the
-		# server (multiplayer.md 11.1), and the most confusing possible bug to
-		# be handed as a report.
-		receive_desync.rpc_id(peer_id, DESYNC_START_TICK, reported, _reference_checksum)
+		# **EVERY player is told, not just the odd one out.** Before this, a
+		# desync was one line in a server log nobody was watching while the
+		# client played on in a world nobody shared - the same silent-failure
+		# shape as a client that loses the server (multiplayer.md 11.1).
+		#
+		# Telling only the mismatching peer was right while the SERVER held the
+		# reference world, because then the odd one out really was the wrong one.
+		# Under lockstep the reference is whichever peer spoke first, so
+		# notifying only the other one ejects an arbitrarily chosen player and
+		# hands their opponent the match. A divergence is a fact about the MATCH,
+		# so the match is what ends: everyone is told, and a ranked game is
+		# cancelled rather than awarded (decided 2026-09-05).
+		announce_desync(DESYNC_START_TICK, reported, _reference_checksum)
 
 	_reported_checksums.clear()
 
 
-## Says a machine's world stopped matching the server's, and says it to the
-## machine it happened on.
+## Tells EVERY peer in the match that it has diverged, once.
+##
+## Once, because a world that has diverged stays diverged: every later comparison
+## disagrees too, and repeating it would bury the first report, which is the only
+## one with any diagnostic value.
+##
+## The two numbers are deliberately not labelled "yours" and "theirs" here - each
+## receiver reads them from its own side. What matters is the TICK, which is the
+## same on every machine and is the only thing that makes the divergence
+## traceable afterwards.
+func announce_desync(tick: int, reported: int, reference: int) -> void:
+	if _desync_announced:
+		return
+	_desync_announced = true
+	Log.err("Match diverged, telling every player", {
+		"tick": tick, "reported": reported, "reference": reference,
+	})
+	receive_desync.rpc(tick, reported, reference)
+
+
+## Says a machine's world stopped matching the rest of the match, and says it to
+## every machine in it.
 ##
 ## **A desync is UNRECOVERABLE and that is why this is loud.** Nothing here
 ## repairs anything - there is no correction to send, because under
@@ -691,13 +722,18 @@ func receive_desync(tick: int, ours: int, theirs: int) -> void:
 
 	var when: String = "while building the world" if tick == DESYNC_START_TICK \
 		else "on tick %d" % tick
-	var detail: String = ("This game and the server disagree about the world %s."
+	# **"The players" rather than "you and the server", because under lockstep
+	# there is no server world to be right.** The relay compares peers against
+	# each other and the reference is whichever of them reported first, which is
+	# an accident of timing and not an authority. Telling one player their world
+	# is the wrong one would be a claim nothing here can support.
+	var detail: String = ("The players' games no longer agree about the world %s."
 		+ " The match cannot be trusted from here.") % when
 
-	Log.err("DESYNC - this machine's world differs from the server's", {
+	Log.err("DESYNC - the match has diverged", {
 		"tick": tick,
 		"ours": ours,
-		"server": theirs,
+		"other": theirs,
 		"detail": detail,
 	})
 	desync_detected.emit(tick, detail)

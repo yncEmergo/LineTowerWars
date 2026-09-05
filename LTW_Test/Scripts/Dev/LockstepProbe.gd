@@ -47,6 +47,7 @@ var _sent: int = 0
 var _dialled: bool = false
 var _browsing: bool = false
 var _joining: bool = false
+var _corrupted: bool = false
 
 
 func _ready() -> void:
@@ -210,9 +211,33 @@ func _process(delta: float) -> void:
 		return
 
 	_drive()
+	_maybe_corrupt()
 
 	if _elapsed >= _play_seconds():
 		_finish()
+
+
+## DELIBERATELY breaks this machine's world, on --desync, so the desync PATH can
+## be tested rather than hoped for.
+##
+## There is no other way to test it. A desync is by definition the thing that is
+## not supposed to happen, so the only way to see what happens when it does is to
+## cause one - and it has to be caused OUTSIDE the command road, or every peer
+## would apply it identically and agree perfectly. One gold, on one machine, is
+## enough: gold is in the world checksum.
+func _maybe_corrupt() -> void:
+	if _corrupted || !("--desync" in OS.get_cmdline_user_args()) || _elapsed < 12.0:
+		return
+	var manager: PlayerManager = References.player_manager
+	var session: MatchSession = References.match_session
+	if manager == null || session == null:
+		return
+	var state: PlayerState = manager.state_for(session.local_slot())
+	if state == null:
+		return
+	_corrupted = true
+	state.gold += 1
+	Log.warn("PROBE deliberately corrupted this world", {"gold": state.gold})
 
 
 ## Orders, so the turns being exchanged carry something and the world diverges
