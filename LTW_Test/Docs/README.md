@@ -14,6 +14,7 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | [content.md](content.md) | **The PROCEDURE.** How a tower, creep, disc or ability is actually added or changed: which files it is made of, which of them are generated, how an id is picked, and what refuses bad content at boot. Carries no rules and no numbers. |
 | [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it, and the costs deliberately not paid yet. |
 | [multiplayer-todo.md](multiplayer-todo.md) | **What the networked build still needs**, in the order it is worth doing - and the long view on getting input latency below the raw ping between players on different continents. A plan, not a record. |
+| [building.md](building.md) | **Making a build.** How a playable client is exported and handed to a tester: the export templates a machine needs first, the one command, what the preset leaves out and why, and the rule that the server is deployed from the same commit. Procedure only. |
 | [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server, and how two PCs in different places reach each other to test. Controls only, never architecture — that is `multiplayer.md`. |
 | [Findings/](Findings/) | **Investigations.** Something that was measured, dug into or ruled out, written up and dated. |
 | `../CLAUDE.md` | Conventions, engine traps, hard rules. In the root because Claude Code loads it from there. |
@@ -28,6 +29,7 @@ Ask what kind of thing it is, in this order:
 3. **Something about the networked build** → into `multiplayer.md` if it is BUILT, into
    `multiplayer-todo.md` if it is not.
 4. **A control the server gained or lost** → into `server.md`, and keep it current.
+   **A step in exporting or handing out a build** → into `building.md`, on the same terms.
 5. **A convention, or a trap the engine set that cost a debugging session** → into `../CLAUDE.md`.
 6. **A step in authoring or changing content** — which file to edit, what is generated,
    what checks it → into `content.md`. Not a new file, and not a rule: anything about what
@@ -64,4 +66,5 @@ pressing. The READING does not.
 
 Not here. The control scripts live in [`../Tools/`](../Tools/) and are typed from the project
 root: `.\Tools\run_server.ps1`, `.\Tools\stop_server.ps1`, `.\Tools\run_bench.ps1`.
-`server.md` documents the first two, and `Findings/` the third.
+`server.md` documents the first two, and `Findings/` the third. Exporting the game is not a script
+in there at all — it is one `godot --export-release` line, written out in `building.md`.

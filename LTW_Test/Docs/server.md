@@ -205,6 +205,15 @@ always up, three dead candidates ahead of it turned every connect into a wait th
 a hang. Dial a specific machine with `--address` instead, which is exactly what that argument
 is for. Localhost stays first so a local `run_server.ps1` still wins instantly.
 
+**An EXPORTED build drops the loopback entries before it dials.** A player who downloaded the
+game is not running a server on their own PC, so localhost is a guaranteed dead candidate
+there — it costs the full timeout and puts "Connecting to 127.0.0.1" on screen before the real
+server is ever tried. The entry earns its place at the top of the list for the dev loop and
+costs a handed-out build nothing, which is why it is dropped at read time rather than reordered
+in the resource. `--address` still overrides everything, in an export as in the editor. The
+branch turns on `OS.has_feature("template")`, so it is unreachable from the editor and from the
+headless probes — see `NetworkConfig._without_loopback`, and `building.md` for how to prove it.
+
 ### The firewall, on whichever PC is running the server
 
 Windows blocks unsolicited incoming traffic. Tailscale adds rules for its own traffic on

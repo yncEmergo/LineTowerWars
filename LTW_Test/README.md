@@ -33,6 +33,12 @@ input delay as it adapts, and the turn stream itself — which is the replay for
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 
+**It exports to a Windows build**, which is how a tester who is not on the dev machines plays
+it: one release preset, and a handed-out build reaches the rented server without being told
+where it is. Nothing about a build is committed - an export is reproducible from the commit it
+was made at, and the server is deployed from that same commit so the two cannot disagree.
+[Docs/building.md](Docs/building.md) is the procedure.
+
 **A player is asked what to call themselves** the first time they open multiplayer, and
 cannot go online until they have chosen — the prompt is modal and, on a first run, has no
 way past it. It suggests the machine's login name without accepting it as the answer, refuses

@@ -1,0 +1,10 @@
+# Export output. The Godot project is LTW_Test/, and its export preset writes
+# here - a sibling of the project rather than a folder inside it, so build
+# artefacts can never land in the Godot filesystem and be imported back as
+# content. The path is relative in export_presets.cfg, so it resolves the same
+# on every checkout without naming one machine's disk.
+#
+# Builds are uploaded to itch, not committed: an export is mostly the engine
+# template, and it is reproducible from the commit it was built at. Docs/building.md
+# is the procedure.
+Builds/

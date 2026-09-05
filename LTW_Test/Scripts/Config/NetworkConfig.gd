@@ -72,6 +72,11 @@ extends Resource
 ##
 ## Setting these up across two PCs - and why the addresses here are the ones
 ## Tailscale hands out rather than public ones - is server.md.
+##
+## AN EXPORTED BUILD DROPS THE LOOPBACK ENTRIES from this list before dialling,
+## because a player who downloaded the game is not running a server on their own
+## PC and would only wait out a dead one. So 127.0.0.1 belongs first here for the
+## dev loop's sake, and costs a handed-out build nothing. See _without_loopback.
 @export var server_addresses: PackedStringArray = PackedStringArray(["127.0.0.1"])
 ## How long a client waits on ONE address before trying the next.
 ##
@@ -253,7 +258,47 @@ func resolved_addresses() -> PackedStringArray:
 		var trimmed: String = candidate.strip_edges()
 		if !trimmed.is_empty() && !(trimmed in addresses):
 			addresses.append(trimmed)
-	return addresses
+	return _without_loopback(addresses)
+
+
+## The authored list with the loopback entries removed, in an EXPORTED build
+## only - and only while something else is left to dial.
+##
+## Nobody who downloaded the game is running a server on their own PC, so
+## 127.0.0.1 is a guaranteed dead candidate there: it costs a full
+## connect_timeout_seconds and puts "Connecting to 127.0.0.1" on screen before
+## the real server is ever tried. In the EDITOR it is the opposite - the local
+## server is the common case - which is why the entry stays first in the
+## authored list and is dropped here rather than reordered there.
+##
+## OS.has_feature("template") is the build-config question, so it is false for
+## every way this project is run during development, the headless server and the
+## headless probes included. Only a handed-out build takes this branch.
+##
+## The emptiness guard is the half that matters. A build exported from a checkout
+## whose list holds nothing BUT loopback would otherwise have nowhere at all to
+## dial, which is a worse and far more confusing failure than the wait this
+## removes. Dropping nothing leaves the old behaviour, which at least ends by
+## reporting honestly that the server did not answer.
+static func _without_loopback(addresses: PackedStringArray) -> PackedStringArray:
+	if !OS.has_feature("template"):
+		return addresses
+
+	var remote: PackedStringArray = PackedStringArray()
+	for address in addresses:
+		if !_is_loopback(address):
+			remote.append(address)
+	if remote.is_empty():
+		return addresses
+	return remote
+
+
+## Whether an address names the machine it is read on. Spelled out rather than
+## resolved: these are the ways the authored list can say "here", and the 127.
+## prefix covers the rest of that range for anyone who writes one.
+static func _is_loopback(address: String) -> bool:
+	var lowered: String = address.strip_edges().to_lower()
+	return lowered == "localhost" || lowered == "::1" || lowered.begins_with("127.")
 
 
 ## The first address that would be tried, for a message written before any
