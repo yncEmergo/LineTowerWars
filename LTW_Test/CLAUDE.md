@@ -300,6 +300,26 @@
   - a negative result only counts if the test exercised the right case. A probe
     that never fires because the wrong unit was spawned looks identical to a
     probe that disproves the theory
+- **A TRANSPORT'S PEER LIST IS NOT A MATCH ROSTER.** `multiplayer.get_peers()`
+  answers "who is connected to this process"; nearly every call site wants "who
+  is in this match". They are the same number in every test that runs one server
+  and exactly the players, which is every test anybody writes by default - so the
+  assumption cannot be falsified by the suite that is meant to check it. It froze
+  every running match the moment a third person opened the multiplayer menu
+  - the general form is worth more than the instance: **a test topology that
+    never differs from the assumption cannot falsify it.** If a number is only
+    ever checked in the case where two meanings coincide, choose the meaning
+    deliberately rather than by whichever call was shorter
+- **THE THING THAT UNBLOCKS A QUEUE CANNOT TRAVEL THROUGH IT.** A peer stalled
+  waiting for a departed player has a frozen clock, so an order in the turn
+  stream saying "stop waiting for them from turn T" can never be reached. Any
+  release mechanism carried by the channel it releases will deadlock; the answer
+  is to satisfy the channel from outside it, which here is the relay speaking for
+  the departed
+- **A STALL COUNT IS NOT A STALL COST.** Two configurations with the same number
+  of stalls can differ by an order of magnitude in time actually held, and every
+  tuning decision made against the count alone is made blind. Measure the
+  DURATION - `Lockstep.stalled_seconds()` - before trading latency against it
 - **A performance measurement is PAIRED or it is nothing.** The rented server varies about
   20% run to run - identical code, minutes apart, gave p50 of 35.1, 42.3 and 36.5 - so a
   single before/after across two deploys proves nothing. Same commit, flip the one variable
