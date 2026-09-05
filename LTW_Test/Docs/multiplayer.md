@@ -757,14 +757,25 @@ turn. What lockstep gives up is information HIDING, not result integrity, and pe
 there is nothing here to hide. The one thing a checksum cannot catch is a peer LYING ABOUT WHO
 IT IS, which is why the relay still stamps the sender's slot onto every order it forwards.
 
-**What lockstep does NOT fix, and this is the open risk rather than a reason not to have
-done it.** It relocates the CPU cost rather than removing it: every client now simulates
-every lane, so the work is duplicated to every machine rather than reduced, and a lockstep
-match runs at the speed of its SLOWEST peer - minimum spec is the binding constraint instead
-of the server. Twelve lanes at today's per-creep cost is heavier than one machine can carry.
-**The per-unit cost still has to come down**, and it is now a client problem as well as a
-server one. UNMEASURED so far: nobody has run a loaded match under lockstep and watched a
-client's tick budget.
+**What lockstep does NOT fix.** It relocates the CPU cost rather than removing it: every
+client now simulates every lane, so the work is duplicated to every machine rather than
+reduced, and a lockstep match runs at the speed of its SLOWEST peer - minimum spec is the
+binding constraint instead of the server.
+
+**This was the largest open risk in the model and it has now been MEASURED** rather than
+extrapolated, on client-class hardware, in `Findings/2026-09-05-lockstep-hardening.md`. The
+answer splits cleanly:
+
+- **A 1v1 - the actual milestone - has better than 2x headroom** against the tick budget. It
+  is not at risk and nothing here blocks it.
+- **Twelve players is about 2x OVER** budget on a gaming PC. That is the per-unit simulation
+  cost, it is not lockstep's fault and lockstep does not undo it, and it has to come down
+  before twelve players is a real target.
+
+The order to do that in, cheapest payoff last: stop dispatching `_physics_process` per node -
+thousands of GDScript virtual calls plus `Node3D` transform propagation, before any game logic
+runs - then the spatial hash the known weaknesses in `CLAUDE.md` already name. The first is the
+order-of-magnitude change; the second buys percentages.
 
 **What it would buy, beyond CPU**: `ReplicationService` and all of §3.3 / phase B deleted,
 along with the whole family of bugs that exists only because there is a replication boundary
@@ -1588,8 +1599,10 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 | --- | --- | --- |
 | **Replication phase B** | Spawn-and-extrapolate, interest management, quantisation - all of §5.4. | **Deleted by the cutover rather than deferred.** Lockstep sends orders, not units, so there is no world stream to optimise. It comes back only if `lockstep_enabled` ever goes back to false for good. |
 | **Client-side prediction** | Guessing the outcome before the turn runs. | **Excluded, not deferred** (D17, §11.4). Under lockstep prediction means simulating ahead of the turn, which is the one thing the model forbids. Instant local FEEDBACK is a different thing, is allowed, and has more room in it - see the last paragraph of §11.4. |
-| **A lockstep client's tick budget under load** | Every client now simulates every lane. Nobody has run a loaded match under lockstep and watched a client's frame time. | The single biggest open risk in the model (§4.1). It wants the same paired-measurement treatment the server got, on the weakest machine available rather than a dev PC. |
+| **The per-unit simulation cost** | A loaded twelve-lane world costs about twice the tick budget on a gaming PC. A 1v1 costs less than half of it. | MEASURED 2026-09-05, so this is now a sizing problem rather than an unknown - see §4.1. Blocks twelve players; blocks nothing about the 1v1 milestone. |
 | **Delay smoothing** | The input delay is recomputed from live round-trip figures with no damping, so it can move between turns. | Tried and REVERTED on 2026-09-04: an asymmetric slew measured four times worse than none, because the only test available is three Godot processes sharing one desktop's cores and damping an artefact makes the artefact permanent. Wants a real connection to judge it against. `Findings/2026-09-04-input-delay.md`. |
+| **Redundancy under real packet loss** | Every turn word is echoed unreliably alongside the reliable one, so a single loss costs nothing instead of a freeze. Proven to CARRY the data by running a match with the reliable path disabled; never tested against actual loss, because loopback drops nothing. | Wants a link conditioner. The benefit is by construction rather than measured. |
+| **Desync attribution** | With the server a relay there is no third world, so a mismatch says two peers disagree and never which is right. | Decided 2026-09-05: a ranked match is CANCELLED on a desync rather than resolved. Working out who was right means replaying the turn log offline - the log already flows through the relay and nothing keeps it yet. |
 | **Projectile replication** | Projectiles are re-simulated locally as presentation; only the server applies their damage. | Cheap and correct as it stands. |
 | **Target acquisition on the client** | `AttackComponent` asks `is_authority()` nowhere, so every client runs the full target search for every tower in every lane, exactly as the server does. Only the damage is gated, in `Unit.take_damage` - a client's answer decides where its barrels point and where it spawns a shot, and nothing else. | It falls inside the presentation exception the row above uses, and for the same reason: a client has to know what a tower is shooting to draw it shooting. What is DIFFERENT is the price. Flying a projectile is a few vectors; acquiring a target is a scan of the whole lane, per tower, and it is the largest cost in a loaded tick on either machine. So the client pays a server's simulation bill to draw barrels, most of them in lanes nobody is looking at. The fix is not a gate on its own - a gated client would draw nothing - but the server naming what each tower fired at, which is the same spawn-event shape phase B wants and should land with it. |
 | **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |

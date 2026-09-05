@@ -572,11 +572,13 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   - creep separation was the third, and is no longer paid: it now runs for
     ATTACKER creeps only and is skipped without a call for everything else.
     Switching it back on for the whole roster puts it straight back
-- **The lockstep client's tick budget is UNMEASURED.** Every client now
-  simulates every lane, so the per-creep cost that was a server problem is a
-  client problem too, and a match runs at the speed of its slowest peer.
-  Nobody has watched a client's frame time in a loaded match. This is the
-  largest open risk in the model - see multiplayer.md 4.1
+- **The per-unit simulation cost is what limits player count.** Every client
+  simulates every lane under lockstep, so it is a client problem as well as a
+  server one. MEASURED 2026-09-05 on client hardware: a 1v1 has better than 2x
+  headroom against the tick budget, twelve lanes is about 2x OVER it. So the
+  1v1 milestone is not at risk and twelve players needs the per-unit work -
+  the per-node _physics_process dispatch first, the spatial hash second.
+  See multiplayer.md 4.1 and Findings/2026-09-05-lockstep-hardening.md
   - the replication path still exists behind `NetworkConfig.lockstep_enabled`
     and still sends the whole world every tick. It is kept switchable because
     it is the only honest way to compare the two under load, not because it is
