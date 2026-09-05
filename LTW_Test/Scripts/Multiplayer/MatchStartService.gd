@@ -475,6 +475,37 @@ func _advance_grace(delta: float) -> void:
 		_drop_peer(peer_id, "timed out")
 
 
+## Tells every machine that a player is gone, in a way that reaches all of them
+## at the SAME MOMENT in the simulation.
+##
+## **Under lockstep a drop cannot be a local signal, and it used to be one.**
+## `_on_peer_left` returns early on anything but the server, so `player_dropped`
+## only ever fired there - and under replication that was right, because the
+## server was the only machine simulating and clients saw the maze vanish in the
+## next snapshot. The cutover deleted that mechanism and nothing replaced it: the
+## server erased the leaver's maze, both clients kept theirs, and the match ran
+## on with two different worlds and nobody told. D14 says the match CONTINUES,
+## so the survivor played out the rest of it against a world the server no longer
+## shared.
+##
+## It reaches the draft the same way. `StartingTech` also waits on this signal to
+## stop expecting a pick from somebody who crashed; on a client it never came, so
+## one peer dying during a draft held the survivors in a paused world for the
+## rest of the match - the exact failure that connection exists to prevent.
+##
+## So the drop is issued as an ORDER and rides a turn like everything else. Every
+## peer applies it on the same turn, emits this signal locally, and the existing
+## wiring underneath - `PlayerManager.erase_player`, `StartingTech` - is untouched
+## and now actually runs everywhere.
+func _announce_drop(slot: int) -> void:
+	if !MatchSession.is_lockstep():
+		# Replication: the server is the only machine that simulates, so a local
+		# emit is the whole of it and always was.
+		player_dropped.emit(slot)
+		return
+	Commands.submit_server_action(Command.PlayerAction.PLAYER_LEFT, slot)
+
+
 ## Declares a player gone for good. **No reconnect, out is out** (D13), so
 ## there is nothing to keep for them.
 ##
@@ -508,7 +539,7 @@ func _drop_peer(peer_id: int, reason: String) -> void:
 		"left_in_match": _expected.size(),
 	})
 	if slot != 0:
-		player_dropped.emit(slot)
+		_announce_drop(slot)
 
 	if !_expected.is_empty():
 		return

@@ -108,6 +108,13 @@ func face_instantly(world_point: Vector3) -> void:
 	to_point.y = 0.0
 	if to_point.length_squared() <= 0.0001:
 		return
+	# **Facing is PRESENTATION and must stay that way.** `atan2` is not
+	# specified by IEEE-754, so two machines may disagree in the last bits -
+	# harmless only for as long as nothing gameplay-relevant reads a rotation
+	# and nothing checksums one. Both are true today (WorldChecksum takes
+	# position and health). A rule that says "must be facing the target to
+	# fire" would silently make this a desync source, so it wants a different
+	# answer than a rotation if it is ever wanted.
 	rotation.y = atan2(-to_point.x, -to_point.z)
 
 

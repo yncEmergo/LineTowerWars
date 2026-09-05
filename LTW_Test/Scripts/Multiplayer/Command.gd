@@ -71,7 +71,25 @@ enum PlayerAction {
 	## finished. Same terms as the rest; what it places is refused cell by cell
 	## by the area itself, so it can no more seal a maze than a build order can.
 	CHEAT_LOAD_LAYOUT,
+	## A player has left for good, and every peer must erase their maze ON THE
+	## SAME TURN (D14).
+	##
+	## **The only order the SERVER issues.** It is a world event, not a player's
+	## intent - but a world event that has to happen at one agreed moment, and a
+	## turn is the only thing this system has that means "one agreed moment". A
+	## plain broadcast rpc would land on a different tick on each peer, which is
+	## the same divergence arriving more slowly.
+	##
+	## `player_slot` carries WHO left rather than who is asking. A modified
+	## client can forge this, and gains nothing by it: the relay stamps the
+	## sender's own slot over the field, so the worst it can do is erase its own
+	## maze - which is a slow way of doing what leaving already does.
+	PLAYER_LEFT,
 }
+
+## Which values of PlayerAction the SERVER may issue and a player may not.
+## Read by CommandService, which is where the distinction has to be enforced.
+const SERVER_ACTIONS: Array[PlayerAction] = [PlayerAction.PLAYER_LEFT]
 
 ## Which simulation tick the client issued this on. Not trusted for anything
 ## yet: the server applies commands on the tick it receives them. It is here

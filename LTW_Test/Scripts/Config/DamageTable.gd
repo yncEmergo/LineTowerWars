@@ -45,6 +45,9 @@ enum DamageType {
 
 ## Used when a row has not been filled in, so a half configured table deals
 ## plain damage rather than none. validate() is what reports the gap.
+## How many times the negative-armour curve is multiplied out at most.
+## See armor_multiplier - past this the curve is flat.
+const MAX_ARMOR_STEPS: int = 64
 const DEFAULT_MULTIPLIER: float = 1.0
 
 ## How many damage types go through the armour matrix, which is every one of
@@ -98,6 +101,18 @@ func multiplier(damage_type: DamageType, armor_type: UnitStats.ArmorType) -> flo
 ## immunity however much of it is stacked. The negative half is the mirror: it
 ## amplifies without ever quite doubling. Both read exactly 1.0 at zero, which
 ## is where the two halves meet.
+##
+## **The negative half multiplies in a LOOP rather than calling `pow`, and that
+## is a determinism fix.** `pow` is not specified by IEEE-754: glibc and the
+## Windows UCRT are each entitled to be a ulp out, and under lockstep the peer
+## group is Windows clients against a Linux server. This sits in the live damage
+## pipeline, so a single ulp there is a creep that dies on one machine and lives
+## on another. Repeated multiplication is plain IEEE arithmetic and is exact
+## everywhere. Armour is an int over a small range, so the loop is the cheap
+## answer as well as the correct one.
+##
+## The value moves by a few ulp against what `pow` returned. That is far below
+## anything a player could see and far above nothing, which is the trade.
 func armor_multiplier(armor: int) -> float:
 	if armor == 0:
 		return 1.0
@@ -106,7 +121,14 @@ func armor_multiplier(armor: int) -> float:
 		var points: float = float(armor) * armor_reduction_per_point
 		return 1.0 - points / (1.0 + armor_reduction_per_point * float(armor))
 
-	return 2.0 - pow(negative_armor_base, float(-armor))
+	# Bounded because the exponent comes from gameplay and a debuff stack has no
+	# hard ceiling of its own. By 64 the curve has long since flattened onto its
+	# asymptote, so anything past it is the same answer more slowly.
+	var steps: int = mini(-armor, MAX_ARMOR_STEPS)
+	var factor: float = 1.0
+	for _i: int in range(steps):
+		factor *= negative_armor_base
+	return 2.0 - factor
 
 
 ## Share of the damage this many armour points takes OFF, as a percentage.

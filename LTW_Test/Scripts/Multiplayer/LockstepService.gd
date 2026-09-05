@@ -205,7 +205,7 @@ func _physics_process(_delta: float) -> void:
 ## hiccups, and is strictly better than the alternative of simulating ahead and
 ## discovering later that everyone computed a different world.
 ##
-## `MatchSession.set_paused` is what does the holding, and it is exactly the
+## `MatchSession.hold` is what does the holding, and it is exactly the
 ## right tool: it pauses the TREE, so every gameplay loop stops at once without
 ## any of them being asked, and it gives the match clock back what the hold took
 ## so no creep unlock silently serves its time during a stall.
@@ -379,12 +379,16 @@ func _missing_for(turn: int) -> PackedInt32Array:
 
 
 ## Holds or releases the world. Routed through the session so the match clock is
-## corrected, and so a stall and the technology draft cannot fight over the
-## tree - whoever wants it held has it held.
+## corrected, and so a stall and the technology draft cannot fight over the tree
+## - whoever wants it held has it held.
+##
+## That last claim was a LIE until 2026-09-05: `set_paused` was a plain boolean,
+## so a stall clearing released a draft's hold along with its own. It is true now
+## because holds are named and counted. See MatchSession.hold.
 func _set_held(held: bool) -> void:
 	var session: MatchSession = References.match_session
 	if session != null:
-		session.set_paused(held)
+		session.hold(&"lockstep", held)
 
 
 ## Throws away everything belonging to the PREVIOUS match.

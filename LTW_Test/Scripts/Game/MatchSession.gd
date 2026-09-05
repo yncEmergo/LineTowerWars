@@ -35,9 +35,13 @@ static var _fallback_rng: RandomNumberGenerator = null
 var _setup: MatchSetup = null
 var _rng: RandomNumberGenerator = null
 var _start_frame: int = 0
-## Set while the whole scene tree is held still - the technology DRAFT is the
-## only thing that does it so far. Kept here rather than only on the tree
-## because the match clock has to be corrected for it; see set_paused.
+## Every reason the world is currently being held still, by name. More than one
+## thing is entitled to stop it and they overlap, so this is a SET of claims
+## rather than a flag - see hold().
+var _holds: Array[StringName] = []
+## Whether the tree is actually paused, which is "are there any holds". Kept
+## here rather than only on the tree because the match clock has to be corrected
+## for it; see hold().
 var _paused: bool = false
 ## The frame the hold began on, so resuming can give the clock back what the
 ## hold took.
@@ -218,7 +222,7 @@ func tick() -> int:
 	# Frozen while the world is held still. The engine goes on counting physics
 	# frames whether or not anything is processing them, so without this the
 	# clock would run through a pause and every creep unlock would come out of
-	# it having silently served time. See set_paused.
+	# it having silently served time. See hold().
 	if _paused:
 		return _pause_frame - _start_frame
 	return Engine.get_physics_frames() - _start_frame
@@ -236,40 +240,78 @@ func elapsed_seconds() -> float:
 	return float(tick()) * tick_seconds()
 
 
-## Whether the world is being held still. See set_paused.
+## Whether the world is being held still, by anybody. See hold().
 func is_paused() -> bool:
 	return _paused
 
 
-## Holds the whole match still, or lets it go again.
+## Who is currently holding the world still, for a message or a log line.
+func holders() -> Array:
+	var names: Array = _holds.duplicate()
+	names.sort()
+	return names
+
+
+## Holds the whole match still, or releases ONE holder's claim on it.
+##
+## **Named holders rather than a boolean, because there is more than one thing
+## entitled to stop the world and they overlap.** The technology draft holds it
+## at match start; a lockstep stall holds it whenever a peer's turn has not
+## arrived. As a plain bool the second one released the first:
+##
+##   1. the draft opens, and pauses
+##   2. a stall arrives, asks for a pause, and finds one already set
+##   3. the stall clears, clears the pause - and the match is now RUNNING
+##      while it is still drafting
+##
+## That peer then advances ticks nobody else runs: income accrues, the clock
+## moves, creep unlocks serve their time. Gold is in the checksum, so it is a
+## desync as well as a visibly wrong screen. **And a stall at match start is
+## close to guaranteed**, because peers finish loading at different moments and
+## whichever is ready first waits for the last. It is latent today only because
+## the shipped `tech_mode` is PICK; the day a lobby turns DRAFT on, it fires.
+##
+## The world moves again when the LAST holder lets go, which is what
+## `LockstepService._set_held` already claimed in a comment: whoever wants it
+## held has it held.
 ##
 ## **The tree is what is paused**, not a flag every loop has to check: every
 ## gameplay loop in the project lives in `_physics_process`, so Godot's own
 ## pause switches all of them off at once and nothing new has to remember to
 ## ask. What must keep running says so for itself - the network autoloads, and
-## whatever screen the player is being held FOR.
+## whatever screen the player is being held FOR. Measured 2026-09-05: a pause
+## set from an earlier node's `_physics_process` takes effect within that SAME
+## physics frame, in both directions, so a held peer advances exactly zero
+## world ticks and resumes on the tick the hold clears.
 ##
 ## The match CLOCK is given back what the hold took, because the tick counter
 ## is the physics frame and the engine goes on counting those while nothing is
 ## processing them. Without this, a ten second draft would be ten seconds every
 ## creep unlock in the match had silently already served.
-##
-## Called on both machines - the authority from the draft it is running, a
-## client from what the snapshot says is still outstanding - so a client is
-## held for as long as the server is, give or take the snapshot that says so.
-func set_paused(paused: bool) -> void:
-	if _paused == paused:
+func hold(reason: StringName, held: bool) -> void:
+	var had: bool = reason in _holds
+	if held == had:
 		return
-	_paused = paused
+	if held:
+		_holds.append(reason)
+	else:
+		_holds.erase(reason)
+
+	var wanted: bool = !_holds.is_empty()
+	if wanted == _paused:
+		return
+	_paused = wanted
 
 	var tree: SceneTree = get_tree()
 	if tree != null:
-		tree.paused = paused
-	if paused:
+		tree.paused = wanted
+	if wanted:
 		_pause_frame = Engine.get_physics_frames()
 	else:
 		_start_frame += Engine.get_physics_frames() - _pause_frame
-	Log.info("Match " + ("paused" if paused else "resumed"), {"tick": tick()})
+	Log.info("Match " + ("paused" if wanted else "resumed"), {
+		"tick": tick(), "by": reason, "holders": holders(),
+	})
 
 
 ## Whether the match has reached Sudden Death.

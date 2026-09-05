@@ -73,7 +73,7 @@ extends Resource
 ## WorldChecksum stays the backstop underneath this. A version number catches
 ## two builds that were never meant to meet; the checksum catches two builds
 ## that agree on their version and still built different worlds.
-@export var protocol_version: int = 1
+@export var protocol_version: int = 2
 ## How long the server waits for a freshly connected peer to state its version
 ## before dropping it.
 ##

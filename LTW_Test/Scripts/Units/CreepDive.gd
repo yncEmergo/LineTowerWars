@@ -15,7 +15,7 @@ extends RefCounted
 ## creep in a maze should allocate nothing for it and ask nothing about it.
 ##
 ## THE ARC IS ONE SINE. Distance along the aimed direction is
-## sin(pi * progress) times the reach, so the Phoenix leaves at speed, turns at
+## 4p(1-p) times the reach, so the Phoenix leaves at speed, turns at
 ## the far end without stopping, and arrives back where it started exactly as
 ## the clock runs out. Out and back is the whole of what the source describes,
 ## and a curve that has to be authored as a keyframed path would be three
@@ -89,7 +89,18 @@ func advance(creep: Creep, delta: float) -> bool:
 		return false
 
 	_elapsed += delta
-	var along: float = sin(PI * progress()) * _reach
+	# **A parabola rather than a sine, and that is a determinism fix.** This
+	# WRITES a creep's real position and position is checksummed, so the `sin`
+	# that used to be here put an unspecified libm call directly into the
+	# simulation - and the peer group is Windows clients against a Linux server.
+	#
+	# 4p(1-p) is the same curve to the eye: out fast, still at the far end, back
+	# fast, and it reaches exactly the same peak of 1.0 at the halfway point, so
+	# the REACH the ability is authored around is untouched. It leaves about a
+	# quarter faster than the sine did and returns as much faster, which is not
+	# a difference anybody can see on a Phoenix.
+	var p: float = progress()
+	var along: float = 4.0 * p * (1.0 - p) * _reach
 	var to: Vector3 = _origin + _direction * along
 	creep.dive_to(Vector3(to.x, creep.global_position.y, to.z), _direction)
 	_burn(creep, delta)

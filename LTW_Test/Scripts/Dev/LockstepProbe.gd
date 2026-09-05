@@ -29,7 +29,8 @@ const ROLE_ARGUMENT: String = "--probe"
 
 ## Long enough for a lobby to exist and the server to notice it.
 const SETTLE_SECONDS: float = 2.0
-## How long to play before reporting.
+## How long to play before reporting, overridable with --play <seconds> so a
+## test that has to outlast the disconnect grace can say so.
 const PLAY_SECONDS: float = 25.0
 
 var _role: String = ""
@@ -70,6 +71,14 @@ func _ready() -> void:
 	# all while an autoload's _ready runs - Net.join() this early is refused
 	# with "No network configuration" and the probe never leaves the ground.
 	# Waited for in _process instead.
+
+
+func _play_seconds() -> float:
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	for index: int in range(args.size()):
+		if args[index] == "--play" && index + 1 < args.size():
+			return maxf(1.0, float(args[index + 1]))
+	return PLAY_SECONDS
 
 
 func _read_role() -> String:
@@ -202,7 +211,7 @@ func _process(delta: float) -> void:
 
 	_drive()
 
-	if _elapsed >= PLAY_SECONDS:
+	if _elapsed >= _play_seconds():
 		_finish()
 
 

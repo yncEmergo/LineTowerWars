@@ -12,11 +12,27 @@ class_name WorldChecksum
 ## is SUPPOSED to differ per machine, and a server plays no slot at all. What is
 ## checksummed is only what every machine must agree on.
 ##
-## Floats are quantised to a thousandth of a unit before hashing, because a
-## checksum over raw floats compares bit patterns rather than positions - and
-## two machines that agree to within a millionth of a unit agree.
+## **Positions are compared EXACTLY, bit for bit.** They used to be rounded to
+## the nearest millimetre, on the reasoning that two machines agreeing to within
+## a millionth of a unit agree. That reasoning belongs to a replicated world,
+## where a client's copy is an approximation of the server's and a tolerance is
+## the only sane way to compare them.
+##
+## Under lockstep it is exactly backwards. Two peers run the same arithmetic on
+## the same inputs, so they agree to the last bit or they have ALREADY diverged
+## and are going to keep diverging. A millimetre of slack does not absorb that,
+## it only delays the report until the drift is big enough to cross the rounding
+## - by which time the tick that caused it is thousands of ticks back and the
+## trail is cold. The tolerance was buying nothing and costing the early warning.
+##
+## `SCALE` survives for the values that are still quantised: health, cooldowns,
+## construction progress and the aura fields, all of them reached through the
+## `checksum_state()` virtual on the units themselves. Those want the same
+## treatment and it is a wider change - three classes override that method - so
+## it is deliberately left for the checksum rewrite rather than done halfway
+## here.
 
-## The quantisation step: positions are compared to the nearest millimetre.
+## The quantisation step for the values that are still rounded. See above.
 const SCALE: float = 1000.0
 
 
@@ -26,10 +42,33 @@ const SCALE: float = 1000.0
 static func of(setup: MatchSetup, areas: Array[PlayerArea], session: MatchSession) -> int:
 	var parts: PackedStringArray = PackedStringArray()
 	_add_setup(parts, setup)
+	_add_rng(parts, session)
 	_add_areas(parts, areas)
 	_add_units(parts, session)
 	_add_players(parts)
 	return "|".join(parts).hash()
+
+
+## The match generator's own position in its stream.
+##
+## **The single most valuable thing in this file, and it was missing.** Every
+## other entry here is an EFFECT - a position, a health, a gold total - so a
+## divergence only shows up once it has moved something a player could see, and
+## by then the tick it started on is long gone. The generator's state is the
+## CAUSE: two peers that have drawn a different NUMBER of times disagree here on
+## the very turn it happened, whether or not the draw has changed anything yet.
+##
+## It is also the check that finds the likeliest desync there is. Every roll in
+## the simulation goes through `MatchSession.match_rng()` and every presentation
+## path is supposed to use the global `randf()` instead; the instant one of them
+## gets that backwards, one machine draws and the others do not, and this says so
+## immediately instead of surfacing as half a millimetre of position a minute
+## later.
+static func _add_rng(parts: PackedStringArray, session: MatchSession) -> void:
+	if session == null:
+		parts.append("rng:none")
+		return
+	parts.append("rng:%d" % session.rng().state)
 
 
 static func _add_setup(parts: PackedStringArray, setup: MatchSetup) -> void:
@@ -132,7 +171,16 @@ static func _add_players(parts: PackedStringArray) -> void:
 		])
 
 
+## One position, as the exact bits of its three components.
+##
+## `PackedFloat64Array` rather than 32 so this is right under a double-precision
+## build as well: a component that is really a float32 widens to a double without
+## losing anything, and one that is really a double keeps every bit. Either way
+## both peers run the same build, so both take the same branch.
 static func _point(position: Vector3) -> String:
+	var bytes: PackedByteArray = PackedFloat64Array([
+		position.x, position.y, position.z,
+	]).to_byte_array()
 	return "%d,%d,%d" % [
-		roundi(position.x * SCALE), roundi(position.y * SCALE), roundi(position.z * SCALE),
+		bytes.decode_u64(0), bytes.decode_u64(8), bytes.decode_u64(16),
 	]

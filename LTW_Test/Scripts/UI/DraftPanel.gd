@@ -38,7 +38,7 @@ var _tech: TechManager:
 
 func _ready() -> void:
 	# The one screen that must answer while the world is held still, along with
-	# the menu that lets a player leave. See MatchSession.set_paused.
+	# the menu that lets a player leave. See MatchSession.hold.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if _panel != null:
 		_panel.hide()

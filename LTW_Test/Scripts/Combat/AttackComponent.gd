@@ -742,6 +742,8 @@ func _aim(delta: float) -> void:
 	if absf(offset.x) < 0.0001 && absf(offset.z) < 0.0001:
 		return
 
+	# Presentation only - a barrel pointing. See the note in MobileUnit on why
+	# atan2 is allowed here and would not be in a rule.
 	var wanted: float = atan2(-offset.x, -offset.z)
 	_turret_head.global_rotation.y = rotate_toward(
 		_turret_head.global_rotation.y, wanted, turret_turn_speed * delta

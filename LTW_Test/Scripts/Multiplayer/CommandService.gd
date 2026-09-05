@@ -159,6 +159,40 @@ func submit_player_action(action: Command.PlayerAction, tech_id: int = 0,
 	submit_command.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict())
 
 
+## An order the SERVER issues about the world rather than a player about their
+## own units - today only a drop (D14).
+##
+## **Named for its issuer on purpose.** It skips `local_slot()`, because the slot
+## it carries is the slot it is ABOUT, and the server plays none. Everything
+## after it is the ordinary road: it is booked into a turn, exchanged, and run by
+## every peer on the same turn.
+##
+## Offline it applies at once, which is the same shape `submit_player_action`
+## already uses: with no peers there is nobody to agree with.
+func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
+	if !(action in Command.SERVER_ACTIONS):
+		Log.err("submit_server_action refused an action a player owns", action)
+		return
+
+	var session: MatchSession = _session
+	if session == null:
+		Log.err("Commands.submit_server_action with no MatchSession, the order goes nowhere")
+		return
+
+	var command: Command = Command.create_player_action(action)
+	command.tick = session.tick()
+	command.player_slot = slot
+
+	if !Net.is_online():
+		_apply_player_order(command)
+		return
+
+	if MatchSession.is_lockstep():
+		Lockstep.schedule(command)
+		return
+	_queue(command)
+
+
 # --- server ---------------------------------------------------------------
 
 ## An order arriving from a client.
@@ -180,6 +214,22 @@ func submit_command(payload: Dictionary) -> void:
 		})
 		return
 	_queue(command)
+
+
+## A drop, arriving on the turn every peer agreed to run it on.
+##
+## All this does is emit the signal locally. Everything that has to HAPPEN is
+## already connected to it on every machine - `PlayerManager.erase_player` frees
+## the leaver's units, `StartingTech` stops waiting on their pick - and the whole
+## bug was that the signal only ever fired on one machine.
+func _apply_player_left(command: Command) -> void:
+	if command.player_slot == 0:
+		return
+	Log.info("Player left, erasing their world", {
+		"slot": command.player_slot, "tick": _session.tick() if _session != null else -1,
+	})
+	MatchStart.player_dropped.emit(command.player_slot)
+	command_applied.emit(command)
 
 
 func _queue(command: Command) -> void:
@@ -374,6 +424,14 @@ func _run_on(unit: Unit, ability: UnitAbility, command: Command) -> bool:
 ## the prerequisite here, for the same reason there is no copy of the gold
 ## check for a tower.
 func _apply_player_order(command: Command) -> void:
+	# **A drop is exempt from every gate below, including the draft's.** It is
+	# not a request, it is a fact that has already happened, and the case it
+	# exists for is precisely a peer dying DURING a draft - refusing it there
+	# would leave the survivors waiting for a pick that can never come.
+	if command.player_action == Command.PlayerAction.PLAYER_LEFT:
+		_apply_player_left(command)
+		return
+
 	# A match held still for the DRAFT accepts exactly one order: the choice it
 	# is being held for. Every other screen is frozen on a legitimate client,
 	# so this is what a modified one is refused with.

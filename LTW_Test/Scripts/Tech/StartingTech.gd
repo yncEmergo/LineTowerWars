@@ -263,7 +263,7 @@ func _roll_options() -> Array[TechDefinition]:
 func _settle() -> void:
 	var session: MatchSession = _session
 	if session != null:
-		session.set_paused(is_drafting())
+		session.hold(&"draft", is_drafting())
 	draft_changed.emit()
 
 
