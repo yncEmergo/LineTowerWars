@@ -83,9 +83,6 @@ const NO_TURN: int = -1
 ## How often a stall repeats itself, in physics frames. Two seconds at 20 Hz.
 const STALL_REPORT_FRAMES: int = 40
 
-## How many turns of world comparisons the relay keeps before forgetting them.
-## See _forget_old_checksums.
-const CHECKSUM_MEMORY_TURNS: int = 200
 
 ## How far ahead of what it has SEEN a relay books a system order. One second at
 ## 20 Hz. See inject().
@@ -912,26 +909,6 @@ func _expected_peers() -> PackedInt32Array:
 
 # --- agreeing on the result ----------------------------------------------
 
-## Throws away comparisons too old to still be waiting for anybody.
-##
-## Without this the table grows for the whole match: an entry per peer per
-## checksum turn, kept for ever because nothing ever erased one. Slow, but
-## unbounded is unbounded, and it is the relay - the one process that hosts match
-## after match without restarting - that pays it.
-##
-## A generous window rather than "erase once everybody has answered", because
-## peers report a turn at slightly different moments and erasing on the first
-## complete set would throw away the entry a straggler is about to be compared
-## against.
-func _forget_old_checksums(newest: int) -> void:
-	var cutoff: int = newest - CHECKSUM_MEMORY_TURNS
-	if cutoff < 0:
-		return
-	for key: Variant in _turn_checksums.keys():
-		if int(key) < cutoff:
-			_turn_checksums.erase(key)
-
-
 ## The world at the end of a turn, hashed and sent to the server to compare.
 ##
 ## This is the ONLY thing that detects a desync once the server stops holding an
@@ -974,7 +951,6 @@ func _compare_turn(turn: int, peer: int, checksum: int) -> void:
 		_turn_checksums[turn] = {}
 	var by_peer: Dictionary = _turn_checksums[turn]
 	by_peer[peer] = checksum
-	_forget_old_checksums(turn)
 
 	var reference: int = 0
 	var has_reference: bool = false
