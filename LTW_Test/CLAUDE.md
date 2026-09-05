@@ -351,6 +351,13 @@
     after parking a MatchSetup in MenuNavigation.pending_match
   - DELETE Scripts/Dev and Scenes/Dev when the work is done, and remove the
     autoload line. They are scaffolding, not tests
+  - **the lockstep probe that proved the cutover is GONE, deliberately, and what
+    it did is written down instead.** Every scenario worth re-testing is in
+    Docs/Findings/2026-09-05-lockstep-review-2-response.md with the numbers it
+    produced: a plain 1v1, a peer hard-killed mid-match, a THIRD peer connecting
+    mid-match, and a deliberately planted desync. Rebuild it from that list
+    rather than from scratch, and note that the third-peer case is the one no
+    obvious test topology contains
   - stop and restart the server between runs. A lobby left over from the last one
     looks exactly like a bug in the next
 

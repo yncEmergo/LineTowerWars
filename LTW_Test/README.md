@@ -12,7 +12,10 @@ Pre-alpha. The current and only milestone is a **1v1 prototype**. Free-for-all w
 players is out of scope until that works.
 
 **It is networked and playable.** A dedicated server hosts lobbies and relays the match; two
-clients join, build, send creeps at each other, steal lives and finish with a placement.
+clients join, build, send creeps at each other, steal lives and finish with a placement. A
+player who disconnects has their maze erased on the same turn on every machine, and the match
+carries on without them; a divergence between two games is detected and ends the match for
+both rather than for whichever one noticed.
 
 **It plays by deterministic lockstep.** Every machine simulates the whole world from the same
 seed and the same orders, so there is no state stream at all — the server forwards orders,
@@ -23,6 +26,12 @@ tracks the ping instead of being a constant everybody pays. See
 [multiplayer.md](Docs/multiplayer.md) §11.4 for how that works, and
 [Findings/2026-09-04-input-delay.md](Docs/Findings/2026-09-04-input-delay.md) for what it
 measured on the day.
+
+**A session can be logged to a file**, from a tick box in the lobby, off unless somebody asks
+for it. It records the connection, the match, every stall and who it was waiting for, the
+input delay as it adapts, and the turn stream itself — which is the replay format, so a
+divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
+user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 
 **A player is asked what to call themselves** the first time they open multiplayer, and
 cannot go online until they have chosen — the prompt is modal and, on a first run, has no

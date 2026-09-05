@@ -330,6 +330,24 @@ is refused by the server with a message naming both builds, rather than being le
 desync. Bump it whenever two builds stop being able to play together — the property's own
 comment says what counts.
 
+Three more the SERVER itself reads, all in the same resource:
+
+- `server_max_fps` caps the idle loop. A server with no clients and no match was burning about
+  a quarter of a core on nothing, because the engine spins as fast as it is allowed to.
+  Capping is only affordable because `flush_immediately` pushes packets out as they are made
+  rather than at the end of a frame — without it, a lower frame rate would sit on every
+  relayed turn.
+- `silent_timeout_seconds` is how long the relay lets a player go without sending a turn word
+  before giving up on them. It covers the case the disconnect grace does not: a peer whose
+  socket is fine and whose game has stopped. Without it every other player waits for ever.
+- `jitter_margin_ms` is head room on the input delay, and it is **0** — measured, not assumed.
+  See `Findings/2026-09-05-lockstep-review-2-response.md` for the numbers.
+
+**The server simulates nothing.** It relays orders, stamps which slot each came from, compares
+the world checksums peers report, and speaks for a player who has left so the rest are not
+frozen waiting on them. There is no world on it to inspect, and a `journalctl` will not show
+you a match — that is what a client's session log is for.
+
 ---
 
 ## When it does not work

@@ -22,7 +22,6 @@ Lobby="*res://Scripts/Multiplayer/LobbyService.gd"
 Commands="*res://Scripts/Multiplayer/CommandService.gd"
 Replication="*res://Scripts/Multiplayer/ReplicationService.gd"
 Lockstep="*res://Scripts/Multiplayer/LockstepService.gd"
-LockstepProbe="*res://Scripts/Dev/LockstepProbe.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
