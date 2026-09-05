@@ -277,9 +277,11 @@ press over a half-built maze fills in the rest. Nothing about placement is waive
 refuses a taken cell or one under rubble exactly as it refuses a build order — only the
 price, the build timer and the walk.
 
-**The LOAD half was reported not working on 2026-09-03 and has not been investigated.** Saving
-is believed fine. Treat this paragraph as what it is meant to do rather than as a report that
-it does.
+**Both halves work**, driven headless through the same order road a key press takes
+([Findings/2026-09-05-roster-sweep-and-endgame-load.md](Docs/Findings/2026-09-05-roster-sweep-and-endgame-load.md)).
+The reason loading LOOKS broken is the non-destructive rule above: pressing it with the maze
+already standing refuses every entry for a taken cell and places nothing, which reads exactly
+like a dead key. Clear the area first.
 
 The file is ordinary hand-editable Godot, and the format is deliberately the smallest honest
 one: a type id and a cell per entry, area-local, so a layout saved in one player's area

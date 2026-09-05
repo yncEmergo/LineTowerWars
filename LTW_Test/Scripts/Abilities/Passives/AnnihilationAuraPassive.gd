@@ -38,8 +38,20 @@ const TOUCH_SECONDS: float = 0.5
 @export_range(0.0, 1.0, 0.01) var damage_share: float = 0.15
 
 
-func on_tick(creep: Creep, _delta: float) -> void:
+func on_tick(creep: Creep, delta: float) -> void:
 	if damage_share <= 0.0 || !creep.is_alive():
+		return
+	# On a BEAT rather than every tick, which is what every other aura in this
+	# game does and what TOUCH_SECONDS was already sized for - the hold is
+	# twice the beat, so a tower standing in the aura never flickers out of it
+	# and one walking clear of it keeps the weakness for at most half a second.
+	#
+	# The SCAN is why it matters: buildings_in_radius walks every building in
+	# the lane, and an endgame maze is a couple of hundred of them. Running
+	# that twenty times a second per Statue made this creep several times the
+	# cost of an ordinary one, measured under load - see
+	# Findings/2026-09-05-roster-sweep-and-endgame-load.md.
+	if !creep.advance_passive_clock(self, TOUCH_SECONDS * 0.5, delta):
 		return
 	for tower: Building in TargetFinder.buildings_in_radius(
 			creep.area, creep.global_position, radius_cells):

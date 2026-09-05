@@ -609,6 +609,12 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   1v1 milestone is not at risk and twelve players needs the per-unit work -
   the per-node _physics_process dispatch first, the spatial hash second.
   See multiplayer.md 4.1 and Findings/2026-09-05-lockstep-hardening.md
+  - **that budget was measured against a maze of the CHEAPEST tower of each
+    line, and an endgame maze is Ultimates.** Re-measured against the saved
+    cheat layout on 2026-09-05 the line moves a long way in: a 1v1 keeps
+    headroom and twelve lanes is well past 2x over. The roster a load test
+    fills with is part of its answer - see
+    Findings/2026-09-05-roster-sweep-and-endgame-load.md
   - the replication path still exists behind `NetworkConfig.lockstep_enabled`
     and still sends the whole world every tick. It is kept switchable because
     it is the only honest way to compare the two under load, not because it is
