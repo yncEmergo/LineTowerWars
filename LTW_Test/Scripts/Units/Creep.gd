@@ -897,19 +897,14 @@ func take_damage(amount: int, damage_type: DamageTable.DamageType,
 ## sweep lands on, and two machines sweeping on different ticks would diverge
 ## for a while and then agree again, which is the hardest kind of desync to
 ## find. Better it is caught the moment the clocks part.
-func checksum_state() -> String:
-	var parts: PackedStringArray = PackedStringArray()
-	parts.append(super())
-	parts.append("p%d" % _path_index)
-	parts.append("ae%d" % roundi(_aura_elapsed * WorldChecksum.SCALE))
-	parts.append("aa%d" % _aura_armor)
-	parts.append("am%d" % roundi(_aura_move_ratio * WorldChecksum.SCALE))
-	parts.append("at%d" % roundi(_aura_attack_ratio * WorldChecksum.SCALE))
-	parts.append("ad%d" % roundi(_aura_damage_ratio * WorldChecksum.SCALE))
-	parts.append("ar%d" % roundi(_aura_regen * WorldChecksum.SCALE))
+func checksum_state(digest: WorldDigest) -> void:
+	super(digest)
+	digest.key(&"path").i(_path_index)
+	digest.key(&"aura").f(_aura_elapsed).i(_aura_armor)
+	digest.f(_aura_move_ratio).f(_aura_attack_ratio)
+	digest.f(_aura_damage_ratio).f(_aura_regen)
 	if _mana != null:
-		parts.append("m%d/%d" % [_mana.current, _mana.maximum])
-	return ",".join(parts)
+		digest.key(&"mana").f(_mana.current).f(_mana.maximum)
 
 
 func status_entries() -> Array[StatusEntry]:

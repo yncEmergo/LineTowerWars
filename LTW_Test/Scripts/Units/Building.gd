@@ -252,19 +252,19 @@ func status_entries() -> Array[StatusEntry]:
 ##
 ## `ability_state`'s keys are walked SORTED: it is a Dictionary, and two
 ## machines are not entitled to agree on its iteration order.
-func checksum_state() -> String:
-	var parts: PackedStringArray = PackedStringArray()
-	parts.append(super())
-	parts.append("m%d/%d" % [current_mana, max_mana])
-	parts.append("cd%d" % roundi(active_ability.cooldown() * WorldChecksum.SCALE))
-	parts.append("bc%d" % roundi(_construction_elapsed * WorldChecksum.SCALE))
+func checksum_state(digest: WorldDigest) -> void:
+	super(digest)
+	digest.key(&"mana").f(current_mana).f(max_mana)
+	digest.key(&"cd").f(active_ability.cooldown())
+	digest.key(&"build").f(_construction_elapsed)
 
+	# Sorted, because a Dictionary's own order is not something two machines are
+	# entitled to agree on and this feeds a comparison between them.
 	var keys: Array = ability_state.keys()
 	keys.sort()
+	digest.key(&"ability_state")
 	for key: Variant in keys:
-		parts.append("a%s=%s" % [key, ability_state[key]])
-
-	return ",".join(parts)
+		digest.text(str(key)).text(str(ability_state[key]))
 
 
 ## Everything reaching this tower right now, as the ONE list both machines can

@@ -478,10 +478,14 @@ func status_entries() -> Array[StatusEntry]:
 ##
 ## The base answer is health, because every unit has it. Position, id and owner
 ## are added by `WorldChecksum` itself and are deliberately not repeated here.
-func checksum_state() -> String:
-	# Quantised on the same grounds as a position: two machines agreeing to a
-	# thousandth agree, and hashing raw float bits would call that a mismatch.
-	return "h%d" % roundi(current_health * WorldChecksum.SCALE)
+##
+## Writes into a `WorldDigest` rather than returning a string: numbers go in as
+## numbers, EXACTLY. These used to be rounded to a thousandth on the reasoning
+## that two machines agreeing that closely agree - which belongs to a replicated
+## world and is backwards under lockstep, where peers agree bit for bit or have
+## already diverged.
+func checksum_state(digest: WorldDigest) -> void:
+	digest.key(&"hp").f(current_health)
 
 
 ## Damage standing in front of this unit's health right now, or 0 for anything

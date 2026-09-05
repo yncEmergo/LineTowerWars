@@ -40,13 +40,13 @@ const SCALE: float = 1000.0
 ## the setup, in the order the setup gave, which is exactly the claim being
 ## tested.
 static func of(setup: MatchSetup, areas: Array[PlayerArea], session: MatchSession) -> int:
-	var parts: PackedStringArray = PackedStringArray()
-	_add_setup(parts, setup)
-	_add_rng(parts, session)
-	_add_areas(parts, areas)
-	_add_units(parts, session)
-	_add_players(parts)
-	return "|".join(parts).hash()
+	var digest: WorldDigest = WorldDigest.new()
+	_add_setup(digest, setup)
+	_add_rng(digest, session)
+	_add_areas(digest, areas)
+	_add_units(digest, session)
+	_add_players(digest)
+	return digest.result()
 
 
 ## The match generator's own position in its stream.
@@ -64,11 +64,12 @@ static func of(setup: MatchSetup, areas: Array[PlayerArea], session: MatchSessio
 ## gets that backwards, one machine draws and the others do not, and this says so
 ## immediately instead of surfacing as half a millimetre of position a minute
 ## later.
-static func _add_rng(parts: PackedStringArray, session: MatchSession) -> void:
+static func _add_rng(digest: WorldDigest, session: MatchSession) -> void:
+	digest.key(&"rng")
 	if session == null:
-		parts.append("rng:none")
+		digest.i(-1)
 		return
-	parts.append("rng:%d" % session.rng().state)
+	digest.i(int(session.rng().state))
 	# **The match CLOCK, which nothing was comparing.** `tick()` is derived from
 	# the engine's physics frame with the time spent held subtracted, not from the
 	# turn number - so "the tick equals the turn minus whatever this peer paused
@@ -76,36 +77,36 @@ static func _add_rng(parts: PackedStringArray, session: MatchSession) -> void:
 	# drives creep unlocks and Sudden Death, so a peer whose clock slipped would
 	# unlock a creep early and only report it later and indirectly, as position
 	# drift with no obvious cause.
-	parts.append("tick:%d" % session.tick())
+	digest.key(&"tick").i(session.tick())
 
 
-static func _add_setup(parts: PackedStringArray, setup: MatchSetup) -> void:
+static func _add_setup(digest: WorldDigest, setup: MatchSetup) -> void:
+	digest.key(&"setup")
 	if setup == null:
-		parts.append("setup:none")
+		digest.i(-1)
 		return
 
-	parts.append("match:%s" % setup.match_id)
-	parts.append("seed:%d" % setup.rng_seed)
-	parts.append("players:%d" % setup.player_count())
+	digest.text(setup.match_id).i(setup.rng_seed).i(setup.player_count())
 	# In slot order rather than list order: the list is built from a roster and
 	# two machines have no reason to agree on how it was sorted.
 	for slot in range(1, setup.player_count() + 1):
 		var player: MatchPlayer = setup.player_for(slot)
+		digest.i(slot)
 		if player == null:
-			parts.append("p%d:missing" % slot)
+			digest.i(-1)
 			continue
-		parts.append("p%d:%s:%d" % [slot, player.display_name, player.network_id])
+		digest.text(player.display_name).i(player.network_id)
 
 	var config: GameConfig = References.game_config
 	if config != null:
-		parts.append("gold:%d" % config.starting_gold)
-		parts.append("income:%d" % config.starting_income)
-		parts.append("lives:%d" % config.starting_lives(setup.player_count()))
+		digest.key(&"start")
+		digest.i(config.starting_gold).i(config.starting_income)
+		digest.i(config.starting_lives(setup.player_count()))
 
 
 ## An area is a whole prefab, so its position and the shape of its grid are the
 ## two things a mismatch would show up in.
-static func _add_areas(parts: PackedStringArray, areas: Array[PlayerArea]) -> void:
+static func _add_areas(digest: WorldDigest, areas: Array[PlayerArea]) -> void:
 	var by_slot: Dictionary = {}
 	for area in areas:
 		if area != null:
@@ -115,44 +116,37 @@ static func _add_areas(parts: PackedStringArray, areas: Array[PlayerArea]) -> vo
 	slots.sort()
 	for slot in slots:
 		var area: PlayerArea = by_slot[slot] as PlayerArea
-		parts.append("area%d:%s:%dx%d:%d-%d" % [
-			slot,
-			_point(area.global_position),
-			area.internal_width(),
-			area.internal_depth(),
-			area.build_zone_first_row(),
-			area.build_zone_row_end(),
-		])
+		digest.key(&"area").i(slot).vec(area.global_position)
+		digest.i(area.internal_width()).i(area.internal_depth())
+		digest.i(area.build_zone_first_row()).i(area.build_zone_row_end())
 
 
 ## By unit id, which is the name both machines call a unit by (0.4). Walking
 ## the registry rather than the scene tree is the point: if the ids were handed
 ## out in a different order, the same units land under different keys and the
 ## checksum says so.
-static func _add_units(parts: PackedStringArray, session: MatchSession) -> void:
+static func _add_units(digest: WorldDigest, session: MatchSession) -> void:
+	digest.key(&"units")
 	if session == null:
-		parts.append("units:none")
+		digest.i(-1)
 		return
 
 	var ids: Array = session.unit_ids()
-	parts.append("units:%d" % ids.size())
+	digest.i(ids.size())
 	for id in ids:
 		var unit: Unit = session.unit_for(int(id))
+		digest.i(int(id))
 		if unit == null:
-			parts.append("u%d:missing" % id)
+			digest.i(-1)
 			continue
 		var stats_name: String = "-" if unit.stats == null else unit.stats.resource_path
 		# Identity, place, and then whatever the UNIT says about itself. That
 		# last part is virtual on purpose: a checksum that reached in here for
 		# each field would go blind the day somebody adds a resource and does
 		# not think of this file. See Unit.checksum_state.
-		parts.append("u%d:%d:%s:%s:%s" % [
-			id,
-			unit.owner_player_id,
-			stats_name,
-			_point(unit.global_position),
-			unit.checksum_state(),
-		])
+		digest.i(unit.owner_player_id).text(stats_name)
+		digest.vec(unit.global_position)
+		unit.checksum_state(digest)
 
 
 ## What each player OWNS, which is half of what a match is and none of which is
@@ -167,28 +161,15 @@ static func _add_units(parts: PackedStringArray, session: MatchSession) -> void:
 ## walk is what silently kept three whole systems off the wire once already
 ## (`CLAUDE.md`, known weaknesses). If mana is wanted here, it wants a virtual
 ## on `Unit` first, the way `status_entries()` had to become one.
-static func _add_players(parts: PackedStringArray) -> void:
+static func _add_players(digest: WorldDigest) -> void:
+	digest.key(&"players")
 	var manager: PlayerManager = References.player_manager
 	if manager == null:
-		parts.append("players:none")
+		digest.i(-1)
 		return
 
 	for state: PlayerState in manager.states_in_slot_order():
-		parts.append("s%d:%d:%d:%d" % [
-			state.player_id, state.gold, state.income, state.lives,
-		])
+		digest.i(state.player_id).i(state.gold).i(state.income).i(state.lives)
 
 
-## One position, as the exact bits of its three components.
-##
-## `PackedFloat64Array` rather than 32 so this is right under a double-precision
-## build as well: a component that is really a float32 widens to a double without
-## losing anything, and one that is really a double keeps every bit. Either way
-## both peers run the same build, so both take the same branch.
-static func _point(position: Vector3) -> String:
-	var bytes: PackedByteArray = PackedFloat64Array([
-		position.x, position.y, position.z,
-	]).to_byte_array()
-	return "%d,%d,%d" % [
-		bytes.decode_u64(0), bytes.decode_u64(8), bytes.decode_u64(16),
-	]
+
