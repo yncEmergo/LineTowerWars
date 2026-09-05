@@ -126,6 +126,10 @@ var _stalling: bool = false
 var _stalled_on: int = NO_TURN
 ## Physics frames spent in the current stall, for the repeating report.
 var _stall_frames: int = 0
+## Physics frames spent stalled across the whole match. The number that decides
+## whether a stall count means anything: six stalls of one tick is invisible, six
+## of a second each is a broken match, and a count alone cannot tell them apart.
+var _stalled_total: int = 0
 ## Physics frames this machine has spent in the match, and the turn clock built
 ## on it.
 ##
@@ -302,6 +306,7 @@ func _advance_turn(clock_turn: int) -> void:
 		# stops and nothing says why - so it has to keep saying what it wants
 		# rather than reporting once and going quiet.
 		_stall_frames += 1
+		_stalled_total += 1
 		if _stall_frames % STALL_REPORT_FRAMES == 1:
 			Log.warn("Waiting on a turn", {
 				"turn": turn,
@@ -390,15 +395,30 @@ func _wire_budget_ms() -> int:
 	# a lot, and wrong in the safe direction exactly when this machine is the
 	# slower of the two - which is the case that would otherwise stall.
 	var theirs: int = mine if _worst_one_way == NetworkService.UNKNOWN_RTT else _worst_one_way
-	return mine + theirs + margin
+	# The jitter, ONCE, on the whole path rather than once per leg. See
+	# _one_way_to.
+	var jitter: int = maxi(0, Net.round_trip_variance_ms(NetworkService.SERVER_PEER_ID))
+	return mine + theirs + jitter + margin
 
 
-## Half a measured round trip, plus how much that round trip has been varying.
+## Half a measured round trip. **The variance is NOT added here**, and that is a
+## measured correction rather than a tidy-up.
+##
+## It used to be, and `_wire_budget_ms` adds this for both legs, so the jitter was
+## being counted twice - and then `jitter_margin_ms` was added flat on top of the
+## pair, making three. On a 26 ms link that inflated a ~26 ms wire budget past the
+## 50 ms turn boundary and bought a whole extra turn of input delay for every
+## player, for ever.
+##
+## Measured on the rented server: dropping the flat margin alone took the median
+## from ~124 ms to ~65 ms and roughly quadrupled the stalls, which is too far the
+## other way. Counting the jitter ONCE, where it belongs, is the middle that is
+## not a guess.
 func _one_way_to(peer: int) -> int:
 	var rtt: int = Net.round_trip_ms(peer)
 	if rtt == NetworkService.UNKNOWN_RTT:
 		return NetworkService.UNKNOWN_RTT
-	return rtt / 2 + maxi(0, Net.round_trip_variance_ms(peer))
+	return rtt / 2
 
 
 ## Sends EMPTY turn words on behalf of a player who has stopped sending their
@@ -510,6 +530,11 @@ func announce_one_way(ms: int) -> void:
 	_worst_one_way = maxi(0, ms)
 
 
+## How long this match has spent held, in seconds, across every stall.
+func stalled_seconds() -> float:
+	return float(_stalled_total) * MatchSession.tick_seconds()
+
+
 ## Whether the world is being held right now waiting for somebody's turn.
 ##
 ## Public because a STALL IS THE ONLY THING IN THIS GAME THAT STOPS THE WORLD
@@ -596,6 +621,7 @@ func _reset_if_new_match() -> void:
 	_last_run_turn = NO_TURN
 	_stalled_on = NO_TURN
 	_stall_frames = 0
+	_stalled_total = 0
 	_frames = 0
 	_worst_one_way = NetworkService.UNKNOWN_RTT
 

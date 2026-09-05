@@ -287,6 +287,7 @@ func _finish() -> void:
 		"last_turn": _last_turn,
 		"orders_applied": _orders,
 		"stalls": _stalls,
+		"stalled_s": snappedf(Lockstep.stalled_seconds(), 0.01),
 		"desyncs": _desyncs,
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),

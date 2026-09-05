@@ -205,7 +205,7 @@ extends Resource
 ## The trade is exact and worth stating: every millisecond here is a millisecond
 ## of input delay for everybody, and every millisecond missing is a risk of a
 ## stall. A stall is worse than sluggishness, so this is deliberately generous.
-@export var jitter_margin_ms: int = 20
+@export var jitter_margin_ms: int = 0
 
 ## How often the world is checksummed and compared between machines, in TURNS.
 ##
