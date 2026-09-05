@@ -88,6 +88,11 @@ const STALL_REPORT_FRAMES: int = 40
 ## 20 Hz. See inject().
 const SYSTEM_LEAD_TURNS: int = 20
 
+## How far outside the turns anybody could plausibly be on a word is refused.
+## Generous, because the honest spread between two peers is `max_delay_turns` and
+## this only has to catch a number that is wrong by orders of magnitude.
+const TURN_SLACK: int = 200
+
 ## How many recent turns ride along in every unreliable echo. See _echo.
 ##
 ## Four covers three consecutive losses, which on any link worth playing on is
@@ -150,6 +155,18 @@ var _match_id: String = ""
 ## pairs. Sent again in every echo. See _echo.
 var _recent: Array = []
 
+## Relay only: the frame each peer was last heard from, so one that goes quiet
+## while still connected can be given up on. See _drop_silent_peers.
+var _last_heard: Dictionary = {}
+
+## Relay only: peer id -> the last turn the relay has spoken for on its behalf.
+## See _speak_for_the_departed.
+var _spoken_through: Dictionary = {}
+
+## Relay only: peers the relay has given up on and now speaks for, even though
+## the socket is still open. See _drop_silent_peers.
+var _departed: Dictionary = {}
+
 ## The highest turn any peer has been heard closing. The relay's only sense of
 ## where the match has got to, since it keeps no clock of its own. See inject().
 var _highest_seen: int = NO_TURN
@@ -202,6 +219,8 @@ func _physics_process(_delta: float) -> void:
 	if MatchSession.is_relay():
 		_frames += 1
 		_measure_and_announce()
+		_drop_silent_peers()
+		_speak_for_the_departed()
 		return
 
 	# **`_frames` counts ticks that have FINISHED, so the tick now beginning is
@@ -367,6 +386,74 @@ func _one_way_to(peer: int) -> int:
 	return rtt / 2 + maxi(0, Net.round_trip_variance_ms(peer))
 
 
+## Sends EMPTY turn words on behalf of a player who has stopped sending their
+## own, for as long as the match lasts.
+##
+## **This is the whole answer to a departure, and the obvious alternative
+## deadlocks.** The tempting design is an order in the turn stream saying "stop
+## waiting for B from turn T" - and it cannot work, because a peer waiting for B
+## is STALLED, its clock is frozen by definition, and it can never reach turn T
+## to be released by it. Built exactly that way first and watched a survivor run
+## 227 turns and stop: the order that unblocks the turn stream cannot ride the
+## turn stream.
+##
+## So the relay speaks for the departed instead. Every peer keeps expecting B and
+## keeps receiving B's word, empty, for every turn - which is the truth: a player
+## who has gone issues no orders. Nothing has to agree on a cut-off turn because
+## there is not one, and the expectation set never changes, so the two ENet
+## channels that used to race cannot.
+##
+## The cost is a few empty words a tick until the match ends, which is nothing
+## next to being wrong.
+func _speak_for_the_departed() -> void:
+	if _spoken_through.is_empty() && _departed.is_empty():
+		return
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for peer: int in _match_peers():
+		if peer in live && !_departed.has(peer):
+			continue
+		var through: int = int(_spoken_through.get(peer, NO_TURN))
+		while through < _highest_seen:
+			through += 1
+			_relay_turn_to_match(through, peer, [])
+		_spoken_through[peer] = through
+
+
+## Gives up on a player who is connected and has stopped talking.
+##
+## **The relay is the only machine that can do this**, because it is the only one
+## that hears from everybody, and it is the only one not frozen while it happens -
+## every player is stalled for exactly as long as this takes to decide.
+##
+## A peer sends a word every tick, so the first word sets its clock and silence
+## past the timeout means it has stopped rather than slowed.
+func _drop_silent_peers() -> void:
+	var limit: float = _silent_timeout_seconds()
+	if limit <= 0.0:
+		return
+	var frames: int = int(limit / maxf(0.001, MatchSession.tick_seconds()))
+
+	for peer: int in _match_peers():
+		if !_last_heard.has(peer):
+			# Never heard from at all yet. Its clock starts when the match does,
+			# not at connection, or a slow loader would be dropped for loading.
+			_last_heard[peer] = _frames
+			continue
+		if _frames - int(_last_heard[peer]) < frames:
+			continue
+		Log.warn("Player has gone silent, giving up on them", {
+			"peer": peer, "seconds": limit,
+		})
+		_last_heard[peer] = _frames
+		# **Marked explicitly, because this peer's SOCKET IS STILL OPEN.** It is
+		# a wedged game loop rather than a lost connection, so it stays in
+		# `multiplayer.get_peers()` for ever - and without this the relay would
+		# never start speaking for it and every other player would wait on it for
+		# the rest of the match. Exactly the freeze this check exists to end.
+		_departed[peer] = true
+		MatchStart.drop_silent_peer(peer)
+
+
 ## The server re-reads its connections and tells everyone when the answer moves.
 ##
 ## Only the server can do this: it is the one machine with a link to every peer.
@@ -481,6 +568,9 @@ func _reset_if_new_match() -> void:
 	_incoming.clear()
 	_ordered_at.clear()
 	_recent.clear()
+	_spoken_through.clear()
+	_departed.clear()
+	_last_heard.clear()
 	_highest_seen = NO_TURN
 	_turn_checksums.clear()
 	_told.clear()
@@ -722,7 +812,14 @@ func submit_turn(turn: int, payload: Array) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
+	if !_plausible_turn(turn):
+		Log.warn("Refused a turn word with an impossible turn", {
+			"turn": turn, "peer": sender, "highest_seen": _highest_seen,
+		})
+		return
 	_highest_seen = maxi(_highest_seen, turn)
+	_last_heard[sender] = _frames
+	_spoken_through[sender] = maxi(int(_spoken_through.get(sender, NO_TURN)), turn)
 	var stamped: Array = _stamped(payload, _slot_of_peer(sender))
 	# **A relay forwards a turn without keeping it.** It never runs turns, so
 	# nothing would ever erase what it recorded and `_incoming` would grow for
@@ -814,6 +911,8 @@ func submit_echo(recent: Array) -> void:
 		if pair == null || pair.size() != 2:
 			continue
 		var turn: int = int(pair[0])
+		if !_plausible_turn(turn):
+			continue
 		var stamped: Array = _stamped(pair[1] as Array, slot)
 		_highest_seen = maxi(_highest_seen, turn)
 		if !MatchSession.is_relay():
@@ -895,7 +994,37 @@ func receive_turn(turn: int, from_peer: int, payload: Array) -> void:
 	_record(turn, from_peer, payload)
 
 
+## Whether a turn number could plausibly belong to this match.
+##
+## **A client cannot lie about WHO it is - the relay stamps the slot - but until
+## this it could lie about WHEN.** `submit_turn(2_000_000_000, ...)` poisoned
+## `_highest_seen`, so every later server order was booked for a turn no peer
+## would ever reach and a drop simply never applied; and the word was forwarded
+## to every honest peer, each of which made an `_incoming` entry that
+## `_advance_turn` could never reach and never erase. Repeat it and every peer in
+## the match grows without bound.
+##
+## Checked against what this machine knows: the relay against the turns it has
+## heard, a player against its own clock.
+func _plausible_turn(turn: int) -> bool:
+	if turn < 0:
+		return false
+	var ceiling: int = _max_delay_turns() + TURN_SLACK
+	var here: int = _highest_seen if MatchSession.is_relay() else current_turn()
+	return turn <= maxi(here, 0) + ceiling
+
+
+func _max_delay_turns() -> int:
+	var config: NetworkConfig = _config()
+	return 12 if config == null else maxi(1, config.max_delay_turns)
+
+
 func _record(turn: int, peer: int, payload: Array) -> void:
+	if !_plausible_turn(turn):
+		Log.warn("Refused a turn number that cannot be real", {
+			"turn": turn, "peer": peer, "highest_seen": _highest_seen,
+		})
+		return
 	# A turn that has already run is finished with, and `_advance_turn` has
 	# erased it. Without this, the server's echo of a peer's own word - which
 	# now arrives AFTER that peer has run the turn, because it no longer waits
@@ -962,16 +1091,22 @@ func _expected_peers() -> PackedInt32Array:
 	# **The relay is not waited for**, because it has nothing to say: it
 	# simulates no world and issues no orders, so requiring its word every turn
 	# bought nothing and gave every turn a second way to be late.
+	#
+	# **And who has LEFT is the turn stream's answer, not the transport's.** It
+	# used to be `id in multiplayer.get_peers()`, which changes at a different
+	# wall-clock instant on every machine: Godot's peer notification and the
+	# relayed turn words ride different ENet channels with no ordering between
+	# them, so one peer could run a turn without a leaver's last order while
+	# another applied it. Now every peer stops waiting on the same TURN, because
+	# it is told to by an order like any other.
 	var peers: PackedInt32Array = PackedInt32Array()
-	var connected: PackedInt32Array = multiplayer.get_peers()
-	var me: int = multiplayer.get_unique_id()
-	for id: int in _match_peers():
-		# This machine is never in its own peer list, and a player who has left
-		# is no longer waited on - which is still the transport's answer to a
-		# question the turn stream should own. See the to-do on turn-synchronised
-		# drops; it is a race at three players and cannot bite a 1v1.
-		if id == me || id in connected:
-			peers.append(id)
+	var session: MatchSession = References.match_session
+	var setup: MatchSetup = null if session == null else session.setup()
+	if setup == null:
+		return peers
+	for player: MatchPlayer in setup.players:
+		if player != null && player.network_id != NetworkService.SERVER_PEER_ID:
+			peers.append(player.network_id)
 	return peers
 
 
@@ -1107,6 +1242,11 @@ func _ticks_per_turn() -> int:
 func _jitter_margin_ms() -> int:
 	var config: NetworkConfig = _config()
 	return 20 if config == null else maxi(0, config.jitter_margin_ms)
+
+
+func _silent_timeout_seconds() -> float:
+	var config: NetworkConfig = _config()
+	return 8.0 if config == null else maxf(0.0, config.silent_timeout_seconds)
 
 
 func _flush_immediately() -> bool:

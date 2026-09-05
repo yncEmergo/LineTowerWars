@@ -180,6 +180,21 @@ extends Resource
 ## a visible stutter for an invisible sluggishness nobody asked for.
 @export var max_delay_turns: int = 12
 
+## How long the relay lets a player go without sending a turn word before it
+## gives up on them, in SECONDS. 0 turns the check off.
+##
+## **A stall has no ceiling of its own: every other peer freezes for exactly as
+## long as one peer stays quiet, for ever.** The disconnect grace covers a peer
+## whose SOCKET died; it does nothing for one that is connected and simply not
+## producing turns - a wedged game loop, a machine that went to sleep, or a
+## modal dialog somebody is reading. Real lockstep games drop a peer that has
+## held the match past a threshold, and this is that threshold.
+##
+## Generously longer than any honest hiccup: a peer sends a word every tick, so
+## silence of several seconds is not a slow connection, it is a peer that has
+## stopped.
+@export var silent_timeout_seconds: float = 8.0
+
 ## Head room added on top of the measured round trip, in MILLISECONDS.
 ##
 ## A link averaging 30 ms that spikes to 70 needs the 70, and a mean cannot see

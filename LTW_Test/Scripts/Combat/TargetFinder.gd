@@ -175,8 +175,9 @@ static func nearest_building(area: PlayerArea, center: Vector3) -> Building:
 ## Both machines replay the same spawns, so both build the same Array and reach
 ## the same creep first. Sort that Array, pool it, or fill the index from a
 ## Dictionary, and two machines pick different targets on an exact score tie -
-## which is a desync with no visible cause. Add a tie-break on `unit_id` before
-## making any of those changes, not after.
+## which is a desync with no visible cause. **The tie-break on `unit_id` is now
+## in `_offer`**, so this is no longer load-bearing for correctness - only for
+## the order candidates are OFFERED in, which the tie-break makes irrelevant.
 static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats,
 		range_bonus: float = 0.0) -> Array[Creep]:
 	var best: Array[Creep] = []
@@ -217,9 +218,26 @@ static func _scan(area: PlayerArea, center: Vector3, stats: AttackStats,
 ## better, which is the order _score hands its answers back in.
 static func _offer(best: Array[Creep], scores: Array[float], slot: int, creep: Creep,
 		score: float) -> void:
-	if best[slot] == null || score < scores[slot]:
+	if best[slot] == null:
 		best[slot] = creep
 		scores[slot] = score
+		return
+	if score < scores[slot]:
+		best[slot] = creep
+		scores[slot] = score
+		return
+	# **The tie-break, and it is here BEFORE anything needs it.** On an exact
+	# score tie the winner would otherwise be whichever creep this loop happened
+	# to reach first, which is `PlayerArea._creeps` order - and the docstring
+	# above says plainly that this holds only while that order is identical on
+	# every machine. The spatial hash listed under known weaknesses in CLAUDE.md
+	# is exactly the change that breaks it, and a desync from it would have no
+	# visible cause at all.
+	#
+	# `unit_id` is authored, unique and identical everywhere, so it settles a tie
+	# the same way on every machine whatever order the candidates arrive in.
+	if score == scores[slot] && creep.unit_id < best[slot].unit_id:
+		best[slot] = creep
 
 
 ## Buildings are parented straight under the area, unlike creeps which have a

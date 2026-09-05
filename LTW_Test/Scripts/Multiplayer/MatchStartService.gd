@@ -513,6 +513,18 @@ func _announce_drop(slot: int) -> void:
 	Commands.submit_server_action(Command.PlayerAction.PLAYER_LEFT, slot)
 
 
+## Gives up on a player who is still CONNECTED but has stopped sending turn
+## words, at the relay's request. See NetworkConfig.silent_timeout_seconds.
+##
+## Not the same case as a disconnect and not covered by the grace: the socket is
+## fine, so no transport event will ever arrive, and without this every other
+## peer waits for ever.
+func drop_silent_peer(peer_id: int) -> void:
+	if !multiplayer.is_server() || !_in_match || !_expected.has(peer_id):
+		return
+	_drop_peer(peer_id, "went silent")
+
+
 ## Declares a player gone for good. **No reconnect, out is out** (D13), so
 ## there is nothing to keep for them.
 ##

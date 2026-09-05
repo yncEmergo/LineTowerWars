@@ -182,6 +182,8 @@ func is_player_order() -> bool:
 
 static func from_dict(data: Dictionary) -> Command:
 	var command: Command = Command.new()
+	# Absent from the wire since 2026-09-05; the default is the whole story for
+	# anything that arrives from a peer.
 	command.tick = int(data.get("tick", 0))
 	command.player_slot = int(data.get("slot", 0))
 	command.ability_id = int(data.get("ability", 0))
@@ -201,8 +203,11 @@ static func from_dict(data: Dictionary) -> Command:
 ## than per lobby refresh. Vector3 travels as itself: Godot encodes it as 12
 ## bytes, where three named floats would cost the names as well.
 func to_dict() -> Dictionary:
+	# `tick` is deliberately NOT here. It is set on every order, by every peer,
+	# every turn, and read by nothing - the authority applies a command on the
+	# turn it was scheduled for, not on the tick the sender claims. It survives
+	# as a field because DeterminismBench writes its own record and wants it.
 	var data: Dictionary = {
-		"tick": tick,
 		"slot": player_slot,
 		"ability": ability_id,
 		"units": unit_ids,
