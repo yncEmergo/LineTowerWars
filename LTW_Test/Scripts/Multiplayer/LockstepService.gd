@@ -91,6 +91,13 @@ const CHECKSUM_MEMORY_TURNS: int = 200
 ## 20 Hz. See inject().
 const SYSTEM_LEAD_TURNS: int = 20
 
+## How many recent turns ride along in every unreliable echo. See _echo.
+##
+## Four covers three consecutive losses, which on any link worth playing on is
+## already far past the point where the match has other problems. The cost is a
+## few dozen bytes on a packet that is usually empty.
+const ECHO_TURNS: int = 4
+
 ## How often the server re-measures the connections, in physics frames. One
 ## second at 20 Hz, and it only says anything when the answer has moved - a
 ## link that is behaving costs one comparison a second and no traffic at all.
@@ -141,6 +148,10 @@ var _told: Dictionary = {}
 
 ## The match all of the state above belongs to. See _reset_if_new_match.
 var _match_id: String = ""
+
+## The last few turns this machine closed, oldest first, as [turn, payload]
+## pairs. Sent again in every echo. See _echo.
+var _recent: Array = []
 
 ## The highest turn any peer has been heard closing. The relay's only sense of
 ## where the match has got to, since it keeps no clock of its own. See inject().
@@ -462,6 +473,7 @@ func _reset_if_new_match() -> void:
 	_outgoing.clear()
 	_incoming.clear()
 	_ordered_at.clear()
+	_recent.clear()
 	_highest_seen = NO_TURN
 	_turn_checksums.clear()
 	_told.clear()
@@ -667,6 +679,16 @@ func _emit(turn: int, payload: Array) -> void:
 	_record(turn, multiplayer.get_unique_id(), payload)
 	submit_turn.rpc_id(NetworkService.SERVER_PEER_ID, turn, payload)
 
+	_remember(turn, payload)
+	submit_echo.rpc_id(NetworkService.SERVER_PEER_ID, _recent)
+
+
+## Keeps the last few turns this machine has closed, for the echo to re-send.
+func _remember(turn: int, payload: Array) -> void:
+	_recent.append([turn, payload])
+	while _recent.size() > ECHO_TURNS:
+		_recent.remove_at(0)
+
 
 ## A client's orders for a turn, arriving at the server. Relayed on rather than
 ## applied: every peer needs every peer's orders, which is the whole shape of
@@ -740,6 +762,64 @@ func inject(command: Command) -> void:
 	# turn - commands_for orders by peer and the relay is peer 1 - so a drop is
 	# applied before anything a player did on the same turn.
 	receive_turn.rpc(turn, NetworkService.SERVER_PEER_ID, payload)
+
+
+## The last few turns a peer closed, sent again UNRELIABLY alongside the reliable
+## word for the newest of them.
+##
+## **The redundancy is the point, and it only works because this channel is
+## unreliable.** One reliable message per turn means a single lost packet freezes
+## every peer until ENet retransmits it - and a reliable channel is ORDERED, so
+## re-sending the turn inside the next reliable packet would buy nothing at all:
+## that packet cannot overtake the lost one either. It has to be a channel where
+## a later message can arrive despite an earlier one going missing, and that is
+## what unreliable means.
+##
+## So the reliable word stays as the guarantee that a turn is eventually
+## delivered - without it, four lost packets in a row would stall the match for
+## ever with no retransmit coming - and this rides alongside it to make the
+## common single-loss case cost nothing at all rather than a visible freeze.
+## A duplicate is harmless: `_record` overwrites one identical payload with
+## another, and refuses anything for a turn already run.
+##
+## Payloads are empty on the overwhelming majority of turns, so carrying four of
+## them is a few dozen bytes against the couple of hundred a packet costs to send
+## in the first place.
+@rpc("any_peer", "unreliable")
+func submit_echo(recent: Array) -> void:
+	if !multiplayer.is_server():
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	var slot: int = _slot_of_peer(sender)
+
+	var stamped_all: Array = []
+	for entry: Variant in recent:
+		var pair: Array = entry as Array
+		if pair == null || pair.size() != 2:
+			continue
+		var turn: int = int(pair[0])
+		var stamped: Array = _stamped(pair[1] as Array, slot)
+		_highest_seen = maxi(_highest_seen, turn)
+		if !MatchSession.is_relay():
+			_record(turn, sender, stamped)
+		stamped_all.append([turn, stamped])
+
+	if !stamped_all.is_empty():
+		receive_echo.rpc(sender, stamped_all)
+
+
+## The relayed echo, on every peer. Same rules as receive_turn: only the server
+## may send it, and it names whose orders these are rather than who forwarded
+## them.
+@rpc("any_peer", "call_remote", "unreliable")
+func receive_echo(from_peer: int, recent: Array) -> void:
+	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	for entry: Variant in recent:
+		var pair: Array = entry as Array
+		if pair == null || pair.size() != 2:
+			continue
+		_record(int(pair[0]), from_peer, pair[1] as Array)
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.
