@@ -58,6 +58,8 @@ func _ready() -> void:
 
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Log.warn("LockstepProbe starting", {"role": _role})
+	if "--session-log" in OS.get_cmdline_user_args():
+		SessionLog.enable(true)
 
 	Lockstep.turn_ready.connect(_on_turn_ready)
 	Lockstep.turn_stalled.connect(_on_turn_stalled)

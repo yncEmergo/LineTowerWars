@@ -12,7 +12,7 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
-[node name="LobbyRoom" type="Control" unique_id=1913598129 node_paths=PackedStringArray("_title_label", "_subtitle_label", "_slot_list", "_settings_panel", "_status_label", "_start_button", "_leave_button")]
+[node name="LobbyRoom" type="Control" unique_id=1913598129 node_paths=PackedStringArray("_title_label", "_subtitle_label", "_slot_list", "_settings_panel", "_status_label", "_start_button", "_leave_button", "_log_check")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,6 +28,7 @@ _settings_panel = NodePath("Margin/Column/SettingsPanel")
 _status_label = NodePath("Margin/Column/StatusLabel")
 _start_button = NodePath("Margin/Column/Footer/StartButton")
 _leave_button = NodePath("Margin/Column/Footer/LeaveButton")
+_log_check = NodePath("Margin/Column/Footer/LogCheck")
 _slot_scene = ExtResource("5_slot")
 
 [node name="References" type="Node" parent="." unique_id=926708942]
@@ -145,6 +146,11 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(170, 0)
 layout_mode = 2
 text = "Leave Lobby"
+
+[node name="LogCheck" type="CheckBox" parent="Margin/Column/Footer"]
+layout_mode = 2
+tooltip_text = "Writes this session's networking to a file in the game's user folder, for sending back after a test. Off unless you are asked for it."
+text = "Log this session"
 
 [node name="FooterSpacer" type="Control" parent="Margin/Column/Footer" unique_id=684004997]
 layout_mode = 2

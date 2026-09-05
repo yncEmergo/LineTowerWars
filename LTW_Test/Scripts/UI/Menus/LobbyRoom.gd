@@ -31,6 +31,8 @@ extends Control
 @export var _status_label: Label
 @export var _start_button: Button
 @export var _leave_button: Button
+## Turns the session log on for this run. See SessionLog.
+@export var _log_check: CheckBox
 
 @export_group("Settings")
 ## The slot row prefab. A node's own prefab stays a PackedScene export.
@@ -49,6 +51,7 @@ var _config: MenuConfig:
 
 func _ready() -> void:
 	_connect_buttons()
+	_setup_log_check()
 	Lobby.current_lobby_changed.connect(_on_current_lobby_changed)
 	Lobby.lobby_closed.connect(_on_lobby_closed)
 	Lobby.countdown_changed.connect(_on_countdown_changed)
@@ -260,6 +263,33 @@ func _connect_buttons() -> void:
 func _set_status(text_value: String) -> void:
 	if _status_label != null:
 		_status_label.text = text_value
+
+
+## The session log switch.
+##
+## **Off unless the player asks for it**, which it is by default because the
+## logger starts closed and nothing else opens it. A tester who was not asked to
+## reproduce anything does not need a file quietly growing on their disk.
+##
+## The box REFLECTS the current state rather than forcing it - an earlier version
+## reset it to off here, which quietly switched off a log the player had already
+## turned on if they stepped back into the lobby. Found by testing.
+##
+## It reaches past this screen on purpose: SessionLog is a static, so switching it
+## on here covers the match that follows and not just the lobby.
+func _setup_log_check() -> void:
+	if _log_check == null:
+		return
+	_log_check.button_pressed = SessionLog.is_enabled()
+	_log_check.toggled.connect(_on_log_toggled)
+
+
+func _on_log_toggled(on: bool) -> void:
+	SessionLog.enable(on)
+	if on:
+		_set_status("Session log: " + ProjectSettings.globalize_path(SessionLog.path()))
+	else:
+		_set_status("Session logging off.")
 
 
 func _stand_in_lobby() -> LobbyInfo:

@@ -328,6 +328,10 @@ func _report_latency(turn: int) -> void:
 		"ticks_per_turn": _ticks_per_turn(),
 		"delay_turns": delay_turns(),
 	})
+	# Into the session log as well, because "it felt laggy" is the report this
+	# number answers and no signal carries it.
+	SessionLog.note("order.ran", {"turn": turn, "waited_ms": waited,
+		"delay_turns": delay_turns()})
 
 
 ## The milliseconds this machine's word needs to reach the peer furthest from
