@@ -1242,6 +1242,10 @@ is SHOWN as a bare number with no unit written after it.
     being a wall the moment it falls. Only BUILDING there waits
   - which is what stops an attacker creep's work being undone the instant it
     finishes, and it is the only thing rubble does
+  - it is DRAWN, as a smoking patch over the square for exactly as long as the
+    square refuses a build, so a refused placement is never unexplained. The
+    patch is presentation and decides nothing: it is spawned beside the rule
+    rather than by it, and a dedicated server draws none
   - selling a tower leaves none, so a player can never lock their own cells
   - NOT REPLICATED: rubble is marked by the authority, which is the only
     machine that knows a tower was destroyed rather than sold. A client's build
@@ -1573,9 +1577,16 @@ never learns what the creep did with it.
     folded in with them: it runs LAST, after every ratio and every block, or a
     creep behind one would take a share of every hit forever instead of none of
     the first few. Sources add
-  - a **WARD** is a window in which the creep takes nothing at all. Not the
-    invulnerable armour type, which is permanent and also refuses heals - a
-    warded creep still regenerates, is still shot at and is still slowed
+  - a **WARD** is a window in which the creep takes nothing at all - no damage,
+    and nothing a tower would leave on it either: no slow, no stun, no eaten
+    armour, no poison and no aura's grip. Not the invulnerable armour type,
+    which is permanent and also refuses heals - a warded creep still
+    regenerates, is still shot at, is still hasted by its packmates and still
+    takes a shield
+    - what is REFUSED is what a tower tries to APPLY while the window runs.
+      Anything already on the creep when the ward landed goes on running and
+      counting down; a window that also swept the creep clean would be worth
+      more the harder it had just been hit
   - a **HASTE** is the mirror of a chill and is kept apart from one, so a creep
     that is both hurried and slowed ends up between the two rather than at
     whichever landed last

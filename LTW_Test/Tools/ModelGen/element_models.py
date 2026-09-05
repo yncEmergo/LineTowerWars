@@ -657,7 +657,15 @@ def build_firelord(m):
     """
     base = plinth(m, 0.32, 0.3, 0.15, 6)
     pool = m.step(0.2, 0.25, 0.32)
-    m.put("Pool", m.cyl(m.glow, pool, pool + 0.02, 0.04, 6), y=base + 0.02,
+    # SHADOWED STONE rather than the lit accent, and it is the one place this
+    # line deliberately spends less light than its own description asks for.
+    # Everything else on a Firelord is lit - a heart, six plumes and an ember
+    # aura - and the pool is a wide flat disc, so from the top down camera the
+    # game is actually played from it was the biggest emitting surface on the
+    # model and it drowned the parts that say WHICH tower this is. Dark, it
+    # reads as the crust the fire is standing in, which is the same idea told
+    # by the thing around the light instead of by more light.
+    m.put("Pool", m.cyl(m.deep, pool, pool + 0.02, 0.04, 6), y=base + 0.02,
           shadow=False)
     m.put("Legs", m.cyl(m.deep, m.step(0.19, 0.17, 0.16), 0.26,
                         m.step(0.18, 0.22, 0.26), 6),

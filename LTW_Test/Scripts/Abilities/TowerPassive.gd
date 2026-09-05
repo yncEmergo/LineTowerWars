@@ -195,6 +195,29 @@ func on_hit(_tower: Building, _target: Unit, _dealt: int, _is_primary: bool) -> 
 	pass
 
 
+## Runs once per creep caught only by the SPLASH, after it has taken the damage.
+## The half of a shot on_hit deliberately does not see.
+##
+## It exists because a share stated "of the damage dealt" means the whole shot
+## for a tower whose shot IS an area. An Ancient Warden deals full damage across
+## its blast, so a heal paid only out of the creep it aimed at pays a fraction
+## of what the tower did and drops to near nothing exactly when the tower is
+## doing the most - which is a healing tower that appears not to heal.
+##
+## Kept SEPARATE from on_hit rather than folded into it, and that separation is
+## the rule: on_hit is stated PER SHOT and nearly everything in it must stay
+## that way - a poison stack, mana gained by attacking, the damage a Leviathan
+## banks. Running those over a blast would pay a tower once per creep standing
+## about. So a passive that wants both overrides both, and says in each what it
+## is counting.
+##
+## `dealt` is what the splash cost that creep once the whole pipeline had run,
+## the same figure on_hit is handed and worked out the same way. There is no
+## `is_primary` because a splashed creep is never the one aimed at.
+func on_area_hit(_tower: Building, _target: Unit, _dealt: int) -> void:
+	pass
+
+
 ## Runs when a creep this tower struck dies, whoever finished it. The permanent
 ## damage the Alchemist and the Leviathan eat is bought here.
 func on_kill(_tower: Building, _target: Unit) -> void:

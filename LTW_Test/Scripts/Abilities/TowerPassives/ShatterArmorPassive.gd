@@ -36,10 +36,31 @@ func apply_debuffs(_tower: Building, target: Unit) -> void:
 		status.erode_armor(self, armor_per_hit, armor_floor)
 
 
-## Nature's Guidance, which is a share of what the SHOT cost and so is not part
-## of the debuff: a Warden eats the armour of everything its blast covers and
-## heals off the creep it actually hit.
+## Nature's Guidance: a share of what the shot COST, which for this line is
+## everything the blast covered rather than the creep it aimed at.
+##
+## The Ancient Warden deals FULL damage across its whole splash radius
+## (unit_data.md 4.2), so "2.35% of damage dealt" is a share of all of it. Paid
+## out of the aimed creep alone it was a share of one twentieth of the tower's
+## work, and it shrank exactly when the tower was doing the most - a healing
+## tower that read as healing nothing.
+##
+## Both hooks, and the same line in each: on_hit is the creep it struck, and
+## on_area_hit is every creep the blast reached. See TowerPassive.on_area_hit
+## for why those stay two hooks.
 func on_hit(tower: Building, _target: Unit, dealt: int, _is_primary: bool) -> void:
+	_heal(tower, dealt)
+
+
+func on_area_hit(tower: Building, _target: Unit, dealt: int) -> void:
+	_heal(tower, dealt)
+
+
+## A tower already at full health simply clamps, so the share is worked out and
+## thrown away for nearly every Warden nearly all of the time. Guarded on the
+## SHARE rather than on the health, because the tiers below the Ultimate author
+## no heal at all and that is the case worth costing nothing.
+func _heal(tower: Building, dealt: int) -> void:
 	if self_heal_share > 0.0:
 		tower.heal(int(round(float(dealt) * self_heal_share)))
 

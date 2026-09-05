@@ -173,16 +173,21 @@ func _return_fire(target: Unit, dealt: int) -> void:
 ## Damage from one of this attack's EFFECTS rather than from the attack itself,
 ## and the kill credit that comes with it. Every splash goes through here.
 ##
-## The three halves of a hit are deliberately split, and a splash gets two of
+## The four halves of a hit are deliberately split, and a splash gets three of
 ## them. A passive's on_hit is stated per SHOT - a poison stack worth a share
-## of the damage, a tower healing itself, a bonus banked per swing - and
+## of the damage, a bonus banked per swing, mana gained by attacking - and
 ## running it over a splash would pay a tower once per creep standing about,
-## which is why a splash has never run one.
+## which is why a splash has never run one and still does not.
 ##
 ## The DEBUFF is the other way round and is why apply_debuffs exists: a chill
 ## or an eaten armour point is stated per creep, so everything the blast
 ## covered gets it. A Warden that ate the armour of only the creep it aimed at
 ## would be describing an attack nobody watching it could recognise.
+##
+## AREA DAMAGE is the fourth and the newest, and it is on_hit's missing half
+## rather than a second copy of it: a share stated "of the damage dealt" means
+## the whole blast for a tower whose shot IS a blast. See on_area_hit, which
+## says why the two hooks stay apart.
 ##
 ## A KILL is the other way round again: unit_data.md says "per creep killed"
 ## and means whoever finished it, and a splash tower that finished a creep with
@@ -197,13 +202,26 @@ func splash_onto(creep: Creep, amount: int, damage_type: DamageTable.DamageType,
 	if creep == null || !is_instance_valid(creep) || !creep.is_alive():
 		return
 
+	var tower: Building = _live_source()
+	# Asked BEFORE the hit lands, for the reason _strike asks it there: a creep
+	# on its last point still took the whole blast as far as anything reading
+	# the figure is concerned, and the armour this same shot is about to eat
+	# must not be taken off the number the shot itself is measured by.
+	#
+	# It costs one more resolve per creep the blast covered, which is the same
+	# walk take_damage is about to make - the price of the primary hit's own
+	# figure, paid per creep instead of once. Skipped entirely for a shot whose
+	# tower has been sold, since there is nothing left to hand it to.
+	var dealt: int = 0 if tower == null else creep.resolve_damage(amount, damage_type, is_area)
+
 	creep.take_damage(amount, damage_type, is_area)
 	debuff(creep)
-	if creep.is_alive():
-		return
 
-	var tower: Building = _live_source()
 	if tower == null:
+		return
+	for passive in passives:
+		passive.on_area_hit(tower, creep, dealt)
+	if creep.is_alive():
 		return
 	for passive in passives:
 		passive.on_kill(tower, creep)

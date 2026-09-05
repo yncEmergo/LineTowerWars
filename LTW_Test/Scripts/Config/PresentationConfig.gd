@@ -41,6 +41,18 @@ enum OwnerColors {
 ## it is, 1 replaces it with flat colour.
 @export_range(0.0, 1.0, 0.05) var preview_foundation_tint: float = 0.55
 
+@export_group("Rubble", "rubble_")
+## The mark a DESTROYED tower leaves on its square, as a res:// path.
+##
+## Presentation, and it lives here rather than on GameConfig deliberately: how
+## long the square refuses a rebuild is a RULE and is GameConfig.rubble_seconds,
+## while what that looks like is only ever looked at. A dedicated server never
+## wires this resource, which is what stops it spawning anything.
+##
+## Empty means a destroyed tower leaves nothing to see, which is what the game
+## did before this existed and is a perfectly good setting to test against.
+@export_file("*.tscn") var rubble_smoke_scene_path: String = ""
+
 @export_group("Command Card", "card_")
 ## Seconds of a one-off wait that the cooldown fill actually sweeps through.
 ##
@@ -154,6 +166,29 @@ enum OwnerColors {
 	"Red", "Blue", "Teal", "Purple", "Yellow", "Orange",
 	"Green", "Pink", "Gray", "Light Blue", "Dark Green", "Brown",
 ])
+
+
+## The rubble patch, loaded on first use and kept.
+##
+## Cached here rather than by whoever spawns one, on the same terms every other
+## path in the project is - see UnitStats.scene(). There is exactly one of this
+## resource, so one cache serves every tower in the game, and a path that does
+## not resolve is reported ONCE rather than once per tower an attacker takes
+## down. Null covers both "authored empty" and "did not load", which is the same
+## answer to the only caller: draw nothing.
+var _cached_smoke: PackedScene = null
+var _smoke_loaded: bool = false
+
+
+## The rubble patch's scene, or null when there is none to draw.
+func rubble_smoke_scene() -> PackedScene:
+	if _smoke_loaded:
+		return _cached_smoke
+	_smoke_loaded = true
+	if rubble_smoke_scene_path.is_empty():
+		return null
+	_cached_smoke = SceneUtil.load_scene(rubble_smoke_scene_path, "rubble smoke")
+	return _cached_smoke
 
 
 ## How many colours a lobby has to hand out. The server checks a request

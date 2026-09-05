@@ -724,6 +724,86 @@ def ground_ring(name, ring_colour, inner_colour, dust_colour):
     return s
 
 
+def rubble_smoke():
+    """What a DESTROYED tower leaves on its square, for as long as the square
+    refuses a rebuild.
+
+    Rubble was invisible until now: an attacker creep took a tower down, the
+    cell went on refusing a build for seconds afterwards and nothing on the
+    field said why. This is that rule made visible, and it is the only effect in
+    the game whose life is a RULE's - GameConfig.rubble_seconds - rather than a
+    number chosen for how it looks. Whoever spawns it sets the duration, the way
+    the Harbinger's rift marker is told its delay.
+
+    AUTHORED AT ONE PLAYER CELL, which is every tower's footprint
+    (game_rules.md), and scaled by whoever spawns it if that ever stops being
+    true. Deliberately LOW: it is a mark on a square the player is about to try
+    to build on again, so it has to say "this cell" and never hide what is
+    standing next to it.
+
+    Two layers, and both are needed. The DUST is a still, dark patch on the
+    floor - the thing that is actually readable from a top down camera, and the
+    only part that is there between puffs. The SMOKE drifting off it is what
+    makes the patch read as fresh wreckage rather than as a shadow.
+
+    An ImpactBurst with no growth in it, exactly as rift_marker is: start and
+    end scale are both 1, so the only thing the burst machinery does here is
+    hold the patch at full strength and then take it away over the last share
+    of its life. See ImpactBurst.grow_share.
+    """
+    s = Scene()
+    dust_m = unshaded(s, "M_dust", (0.30, 0.27, 0.24), 0.55)
+    grit_m = unshaded(s, "M_grit", (0.20, 0.18, 0.16), 0.7)
+    smoke_m = unshaded(s, "M_smoke", (0.46, 0.44, 0.42), 0.32)
+
+    dust = mesh(s, "CylinderMesh", "Dust", [
+        "top_radius = 0.46", "bottom_radius = 0.46", "height = 0.02",
+        "radial_segments = 14", "rings = 0"], dust_m)
+    grit = mesh(s, "BoxMesh", "Grit", ["size = Vector3(0.13, 0.05, 0.13)"], grit_m)
+    puff = mesh(s, "SphereMesh", "Puff", [
+        "radius = 0.1", "height = 0.18",
+        "radial_segments = 6", "rings = 3"], smoke_m)
+
+    s.node("RubbleSmoke", "Node3D", ".",
+           script=s.ext("Script", BURST),
+           props=["duration = 7.0", "start_scale = 1.0", "end_scale = 1.0",
+                  "grow_share = 0.75"])
+    put(s, "Dust", dust, y=0.02)
+    # Broken stone left standing in it, so the patch is not a flat disc. Small
+    # and few: this is a smear on a cell, not a model.
+    for index, (x, z) in enumerate(((0.17, 0.09), (-0.13, 0.2), (-0.05, -0.19),
+                                    (0.21, -0.14))):
+        put(s, "Grit%d" % (index + 1), grit, x=x, y=0.04, z=z,
+            ry=0.4 + index * 0.5)
+    s.node("Smoke", "CPUParticles3D", ".", props=[
+        "transform = %s" % t3(y=0.06),
+        # Started by whoever spawns this, once it is standing where it belongs.
+        # See VisualEffect3D.play() for what emitting on the way into the tree
+        # does to a world-space emitter.
+        "emitting = false",
+        "amount = 12",
+        "lifetime = 2.2",
+        # Spread over the whole square rather than thrown from its centre, so
+        # what rises reads as the cell smouldering rather than as a chimney.
+        "emission_shape = 3",
+        "emission_box_extents = Vector3(0.34, 0.02, 0.34)",
+        'mesh = SubResource("%s")' % puff,
+        "direction = Vector3(0, 1, 0)",
+        "spread = 22.0",
+        # SLOW and damped, and gravity barely positive. The brief was not much
+        # height: at these numbers a puff rises about a third of a cell over its
+        # whole life, which keeps the effect below anything standing beside it.
+        "initial_velocity_min = 0.1",
+        "initial_velocity_max = 0.26",
+        "gravity = Vector3(0, 0.04, 0)",
+        "damping_min = 0.3",
+        "damping_max = 0.8",
+        "scale_amount_min = 0.7",
+        "scale_amount_max = 1.6",
+    ])
+    return s
+
+
 def burning_ground():
     """The patch a meteor leaves behind, authored at RADIUS 1.
 
@@ -985,4 +1065,5 @@ def generate():
           burst("ArcaneImpact", (0.70, 0.50, 1.05), (0.90, 0.82, 1.10), 0.36, 0.26, 1.0))
     write("%s/shockwave.tscn" % OUT, shockwave())
     write("%s/blood_spray.tscn" % OUT, blood_spray())
-    print("wrote %d effect scenes" % (8 + generate_elements()))
+    write("%s/rubble_smoke.tscn" % OUT, rubble_smoke())
+    print("wrote %d effect scenes" % (9 + generate_elements()))

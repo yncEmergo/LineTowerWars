@@ -12,4 +12,4 @@ slot = 6
 icon = ExtResource("2_ultimate_ancient_warden")
 armor_per_hit = 0.5
 armor_floor = 0
-self_heal_share = 0.0235
+self_heal_share = 0.047

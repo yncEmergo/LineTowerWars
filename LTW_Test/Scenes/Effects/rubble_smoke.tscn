@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Effects/ImpactBurst.gd" id="1_ImpactBurst"]
+
+[sub_resource type="StandardMaterial3D" id="M_dust"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.3, 0.27, 0.24, 0.55)
+
+[sub_resource type="StandardMaterial3D" id="M_grit"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.2, 0.18, 0.16, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="M_smoke"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.46, 0.44, 0.42, 0.32)
+
+[sub_resource type="CylinderMesh" id="Dust"]
+top_radius = 0.46
+bottom_radius = 0.46
+height = 0.02
+radial_segments = 14
+rings = 0
+material = SubResource("M_dust")
+
+[sub_resource type="BoxMesh" id="Grit"]
+size = Vector3(0.13, 0.05, 0.13)
+material = SubResource("M_grit")
+
+[sub_resource type="SphereMesh" id="Puff"]
+radius = 0.1
+height = 0.18
+radial_segments = 6
+rings = 3
+material = SubResource("M_smoke")
+
+[node name="RubbleSmoke" type="Node3D"]
+script = ExtResource("1_ImpactBurst")
+duration = 7.0
+start_scale = 1.0
+end_scale = 1.0
+grow_share = 0.75
+
+[node name="Dust" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+cast_shadow = 0
+mesh = SubResource("Dust")
+
+[node name="Grit1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9211, 0, 0.3894, 0, 1, 0, -0.3894, 0, 0.9211, 0.17, 0.04, 0.09)
+cast_shadow = 0
+mesh = SubResource("Grit")
+
+[node name="Grit2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6216, 0, 0.7833, 0, 1, 0, -0.7833, 0, 0.6216, -0.13, 0.04, 0.2)
+cast_shadow = 0
+mesh = SubResource("Grit")
+
+[node name="Grit3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.17, 0, 0.9854, 0, 1, 0, -0.9854, 0, 0.17, -0.05, 0.04, -0.19)
+cast_shadow = 0
+mesh = SubResource("Grit")
+
+[node name="Grit4" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.3233, 0, 0.9463, 0, 1, 0, -0.9463, -0, -0.3233, 0.21, 0.04, -0.14)
+cast_shadow = 0
+mesh = SubResource("Grit")
+
+[node name="Smoke" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+emitting = false
+amount = 12
+lifetime = 2.2
+emission_shape = 3
+emission_box_extents = Vector3(0.34, 0.02, 0.34)
+mesh = SubResource("Puff")
+direction = Vector3(0, 1, 0)
+spread = 22.0
+initial_velocity_min = 0.1
+initial_velocity_max = 0.26
+gravity = Vector3(0, 0.04, 0)
+damping_min = 0.3
+damping_max = 0.8
+scale_amount_min = 0.7
+scale_amount_max = 1.6

@@ -746,6 +746,9 @@ across the splash radius.
 **Nature's Guidance** *(Ultimate Ancient Warden)* - permanently -0.5 armour down to 0, full
 damage across the splash radius, and heals the tower for **2.35% of damage dealt**.
 
+> **The prototype runs the heal at 4.7%, double the source.** Overridden on the project
+> owner's instruction; `earth_ultimate_ancient_warden_ability.tres` is the authority.
+
 **Germinate (1)** *(Lesser Scorpion)* - after not attacking for over 1 second, the next 5
 attacks gain +10% damage per 0.5 sec of idling, up to +50%. Attacks can **critical strike for
 +50% damage**; the chance rises as the target's health falls, up to 50%.
@@ -1112,6 +1115,15 @@ cap **+200**, same 3 sec idle reset.
 **Hungering Void** *(Ultimate Leviathan)* - **-0.27 armour** per hit, **+8 attack damage**, cap
 **+600**. At maximum bonus the tower gains **10% life steal** against its primary target. Same
 3 sec idle reset.
+
+> **"Against its primary target" is deliberately not copied.** The Leviathan carries splash at
+> every tier, so paying the life steal out of the aimed creep alone is a share of a fraction of
+> what the tower deals - and it pays least against exactly the packed waves a tower holding a
+> lane is there for. The prototype pays it out of everything the shot cost, splash included.
+> The Ultimate Ancient Warden's Nature's Guidance and the Ultimate Divineshroom's Divine Spores
+> are read the same way; neither of those states a primary-target restriction, so for them it is
+> a reading of "damage dealt" rather than a departure. Overridden on the project owner's
+> instruction; see `FeastingVoidPassive` and `TowerPassive.on_area_hit`, which are the authority.
 
 ## 4.10 Water
 
@@ -1688,7 +1700,7 @@ Numbered traits are the same effect at increasing strength.
 | Chaos Barrier | Damage taken is reduced based on current mana percentage. Loses 5% mana every sec. Maximum mana 100. |
 | Mana Drain | At 0 mana, drains 33% of a tower's mana within 180 AoE and gains 500% of the amount, up to a maximum of 75 mana. Can only trigger on the same tower once every 7 sec. |
 | Abyssal Carapace | On spawn, 90% of maximum health is converted into a damage absorption shield. |
-| Elune's Grace | 15 sec invulnerability shield the first time damage is taken (once), plus a 5 sec shield at 50% health. |
+| Elune's Grace | 15 sec invulnerability shield the first time damage is taken (once), plus a 5 sec shield at 50% health. The prototype reads "invulnerability" as covering everything a maze applies, not damage alone: nothing new lands on a warded Huntress - no slow, stun, eaten armour, poison or aura grip - while what was already on it goes on running. On the project owner's instruction; see `StatusEffects._may_harm`. |
 | Quickness | 50% chance to dodge attacks from towers with 900 or more attack range. |
 | Blocked | Attack damage -8% for every Mountain Giant within 200 AoE (no effect at 3 or fewer), capped at -50%. |
 | Stoneskin Fortitude | 100% resistance to slow effects. |

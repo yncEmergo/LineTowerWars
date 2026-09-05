@@ -43,9 +43,18 @@ func apply_debuffs(_tower: Building, target: Unit) -> void:
 		status.erode_armor(self, armor_per_hit, armor_floor)
 
 
-## Divine Spores, a share of what the SHOT cost, so it is paid once per creep
-## struck rather than once per creep the blast reached.
+## Divine Spores, a share of what the SHOT cost - which is every creep it
+## reached and not only the one it aimed at.
+##
+## The Divineshroom line is a multishot with splash, so "10% of damage dealt"
+## in unit_data.md 4.4 is a share of the whole burst. Counting the primary
+## alone paid a fraction of it and paid least against the packed waves the
+## healing is for. See TowerPassive.on_area_hit.
 func on_hit(tower: Building, _target: Unit, dealt: int, _is_primary: bool) -> void:
+	_heal_towers(tower, dealt)
+
+
+func on_area_hit(tower: Building, _target: Unit, dealt: int) -> void:
 	_heal_towers(tower, dealt)
 
 

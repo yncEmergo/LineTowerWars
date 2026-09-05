@@ -4,3 +4,4 @@
 
 [resource]
 script = ExtResource("1_presentation_config")
+rubble_smoke_scene_path = "res://Scenes/Effects/rubble_smoke.tscn"

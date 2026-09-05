@@ -338,9 +338,11 @@ ABILITIES = {
     "earth_greater_ancient_warden": _p(
         SHATTER_ARMOR, "Devastating Attack", armor_per_hit=0.2,
         armor_floor=0.0),
+    # 4.7% rather than the source's 2.35%, doubled on the project owner's
+    # instruction. See unit_data.md 4.2.
     "earth_ultimate_ancient_warden": _p(
         SHATTER_ARMOR, "Nature's Guidance", armor_per_hit=0.5, armor_floor=0.0,
-        self_heal_share=0.0235),
+        self_heal_share=0.047),
     "earth_lesser_scorpion": _p(
         GERMINATE, "Germinate", idle_threshold=1.0,
         bonus_per_half_second=0.1, max_idle_bonus=0.5, idle_charges=5,

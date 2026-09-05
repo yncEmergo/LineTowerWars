@@ -36,6 +36,7 @@ script = ExtResource("2_AttackComponent")
 _unit = NodePath("..")
 _muzzle = NodePath("../Visual/Turret/Muzzle")
 _turret_head = NodePath("../Visual/Turret")
+turn_towards_target = false
 
 [node name="Sparks" type="Node" parent="." node_paths=PackedStringArray("_unit", "_sparks")]
 script = ExtResource("6_SparkAnimation3D")

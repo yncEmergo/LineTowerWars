@@ -508,7 +508,7 @@ func poison_damage() -> int:
 ## kind of slow anything in the roster resists specifically.
 func chill(source: UnitAbility, key: String, per_hit: float, cap: float,
 		seconds: float, cold: bool) -> void:
-	if !_may_write() || per_hit <= 0.0 || cap <= 0.0:
+	if !_may_harm() || per_hit <= 0.0 || cap <= 0.0:
 		return
 
 	# The creep's own resistance blunts the chill and its cap together. Blunting
@@ -533,7 +533,7 @@ func chill(source: UnitAbility, key: String, per_hit: float, cap: float,
 ## creep's slow-duration resistance - see _slow_seconds.
 func slow(source: UnitAbility, key: String, amount: float, seconds: float,
 		cold: bool, sustained: bool) -> void:
-	if !_may_write() || amount <= 0.0:
+	if !_may_harm() || amount <= 0.0:
 		return
 
 	var blunted: float = amount * _slow_ratio(cold)
@@ -584,7 +584,7 @@ func _chill_for(source: UnitAbility, key: String) -> Chill:
 ## never interfere. The key is authored, exactly as the chill key is - see
 ## chill() for why.
 func touch_aura(source: UnitAbility, key: String) -> float:
-	if !_may_write() || source == null || key.is_empty():
+	if !_may_harm() || source == null || key.is_empty():
 		return 0.0
 
 	var grip: Grip = _grips.get(key) as Grip
@@ -630,7 +630,7 @@ func aura_stacks(key: String) -> int:
 ## permanent. Lengthening slows as they ARE APPLIED gives the number the source
 ## states and cannot run away.
 func lengthen_slows(source: UnitAbility, seconds: float, window: float) -> void:
-	if !_may_write() || seconds <= 0.0:
+	if !_may_harm() || seconds <= 0.0:
 		return
 	_own(StatusEntry.Kind.SLOWS_LENGTHENED, source)
 	_slow_bonus = maxf(_slow_bonus, seconds)
@@ -640,14 +640,14 @@ func lengthen_slows(source: UnitAbility, seconds: float, window: float) -> void:
 ## Holds the creep still and stops it acting. The longer of the two wins, so a
 ## short stun landing on a long one cannot cut it short.
 func stun(source: UnitAbility, seconds: float) -> void:
-	if _may_write():
+	if _may_harm():
 		_own(StatusEntry.Kind.STUNNED, source)
 		_stun_left = maxf(_stun_left, _harmful_seconds(seconds))
 
 
 ## Pins a flyer where it is and lets ground towers reach it. Water 1.
 func paralyze(source: UnitAbility, seconds: float) -> void:
-	if _may_write():
+	if _may_harm():
 		_own(StatusEntry.Kind.PARALYZED, source)
 		_paralyze_left = maxf(_paralyze_left, _harmful_seconds(seconds))
 
@@ -659,7 +659,7 @@ func paralyze(source: UnitAbility, seconds: float) -> void:
 ## the creep's own armour so two towers eroding it cannot each drive it to the
 ## floor separately.
 func erode_armor(source: UnitAbility, amount: float, floor_value: float) -> void:
-	if !_may_write() || amount <= 0.0 || _creep == null:
+	if !_may_harm() || amount <= 0.0 || _creep == null:
 		return
 
 	_own(StatusEntry.Kind.ARMOR_ERODED, source)
@@ -672,7 +672,7 @@ func erode_armor(source: UnitAbility, amount: float, floor_value: float) -> void
 ## long as either would have lasted, so a weaker one cannot cut a stronger one
 ## short by landing a moment later.
 func change_armor(source: UnitAbility, delta: float, seconds: float) -> void:
-	if !_may_write():
+	if !_may_harm():
 		return
 	if absf(delta) >= absf(_armor_delta) || _armor_delta_left <= EPSILON:
 		_armor_delta = delta
@@ -682,7 +682,7 @@ func change_armor(source: UnitAbility, delta: float, seconds: float) -> void:
 
 ## Makes the creep take more SPELL damage from everything, for a window.
 func amplify_spell(source: UnitAbility, amount: float, seconds: float) -> void:
-	if !_may_write() || amount <= 0.0:
+	if !_may_harm() || amount <= 0.0:
 		return
 	if amount >= _spell_amp || _spell_amp_left <= EPSILON:
 		_own(StatusEntry.Kind.SPELL_VULNERABLE, source)
@@ -692,7 +692,7 @@ func amplify_spell(source: UnitAbility, amount: float, seconds: float) -> void:
 
 ## Makes the creep take more PHYSICAL damage from everything, for a window.
 func amplify_physical(source: UnitAbility, amount: float, seconds: float) -> void:
-	if !_may_write() || amount <= 0.0:
+	if !_may_harm() || amount <= 0.0:
 		return
 	if amount >= _physical_amp || _physical_amp_left <= EPSILON:
 		_own(StatusEntry.Kind.PHYSICALLY_VULNERABLE, source)
@@ -705,7 +705,7 @@ func amplify_physical(source: UnitAbility, amount: float, seconds: float) -> voi
 ## them would mean two timers that always expire together.
 func weaken_attack(source: UnitAbility, speed_share: float, damage_share: float,
 		seconds: float) -> void:
-	if !_may_write():
+	if !_may_harm():
 		return
 	if speed_share > 0.0:
 		if speed_share >= _attack_slow || _attack_slow_left <= EPSILON:
@@ -722,7 +722,7 @@ func weaken_attack(source: UnitAbility, speed_share: float, damage_share: float,
 ## Sets the creep alight for `seconds`, dealing `per_second` Spell Damage.
 ## Sources ADD, unlike everything else here: two fires burn twice as fast.
 func burn(source: UnitAbility, per_second: float, seconds: float) -> void:
-	if !_may_write() || per_second <= 0.0 || seconds <= 0.0:
+	if !_may_harm() || per_second <= 0.0 || seconds <= 0.0:
 		return
 	_own(StatusEntry.Kind.BURNING, source)
 	_burn_per_second += per_second
@@ -736,7 +736,7 @@ func burn(source: UnitAbility, per_second: float, seconds: float) -> void:
 ## Refused for a creep with none rather than sitting on it invisibly, so the
 ## debuff row never shows a player an effect that is doing nothing.
 func drain_mana(source: UnitAbility, per_second: float, seconds: float) -> void:
-	if !_may_write() || per_second <= 0.0 || seconds <= 0.0:
+	if !_may_harm() || per_second <= 0.0 || seconds <= 0.0:
 		return
 	if _creep == null || !is_instance_valid(_creep) || _creep.mana() == null:
 		return
@@ -759,7 +759,7 @@ func drain_mana(source: UnitAbility, per_second: float, seconds: float) -> void:
 ## The caller still owns WHEN it goes off, since that is its cooldown and its
 ## explosion; this only refuses to stack any higher.
 func add_poison(source: UnitAbility, damage: float, max_stacks: int) -> int:
-	if !_may_write() || damage <= 0.0 || max_stacks <= 0:
+	if !_may_harm() || damage <= 0.0 || max_stacks <= 0:
 		return _poison_stacks
 	_poison_max_stacks = maxi(_poison_max_stacks, max_stacks)
 	if _poison_stacks >= max_stacks:
@@ -784,7 +784,7 @@ func take_poison() -> int:
 ## Answers whether it took - Ultimate Alchemist's card shows the choice, and a
 ## creep already altered to that type refuses it rather than refreshing.
 func alter_armor_type(source: UnitAbility, armor_type: int, seconds: float) -> bool:
-	if !_may_write() || _armor_types_used.has(armor_type):
+	if !_may_harm() || _armor_types_used.has(armor_type):
 		return false
 	_own(StatusEntry.Kind.ARMOR_TYPE_ALTERED, source)
 	_armor_types_used[armor_type] = true
@@ -847,8 +847,10 @@ func spend_shield(landed: float) -> float:
 ## short ward landing on a long one cannot cut it short.
 ##
 ## NOT the invulnerable armour type, which is permanent and also refuses heals.
-## A warded creep still regenerates, is still shot at and is still slowed - it
-## simply takes nothing off its health while the window runs.
+## A warded creep still regenerates, is still shot at, is still hasted by its
+## packmates and still takes a shield - it simply takes NOTHING from a maze
+## while the window runs. Not damage, and not a debuff either: see _may_harm,
+## which every harmful mutator here asks and no boon does.
 func ward(source: UnitAbility, seconds: float) -> void:
 	if seconds <= 0.0 || !_may_write():
 		return
@@ -872,7 +874,7 @@ func ward(source: UnitAbility, seconds: float) -> void:
 ## says, and doing it the other way would make the disc a debuff on a wave
 ## rather than on a creep.
 func deny_auras(source: UnitAbility, seconds: float) -> void:
-	if seconds <= 0.0 || !_may_write():
+	if seconds <= 0.0 || !_may_harm():
 		return
 	seconds = _harmful_seconds(seconds)
 	if seconds > _aura_denied_left:
@@ -1342,3 +1344,32 @@ func _is_running() -> bool:
 ## so a chill applied here would be a slow the server never agreed to.
 func _may_write() -> bool:
 	return MatchSession.is_authority()
+
+
+## Whether a HARMFUL effect may be written onto this creep at all right now.
+##
+## _may_write() plus the one thing that refuses the lot: a WARD. Elune's Grace
+## is stated in unit_data.md 6.6 as an INVULNERABILITY shield rather than as
+## damage reduction, so a Huntress inside its window takes nothing from a maze -
+## not damage, and not the slow, stun, eaten armour, poison, burn or grip that
+## would otherwise still be piling up on it while it walked through untouchable.
+## Letting those land was the same creep arriving at the far end crippled by a
+## fight it had been immune to.
+##
+## Every harmful mutator above asks THIS and every boon asks _may_write(),
+## which is the whole of the rule: a warded creep still regenerates, is still
+## hasted by a packmate, still takes a shield and is still healed. See ward().
+##
+## Only what is APPLIED is refused. Whatever was already running when the ward
+## landed goes on running and counting down: the window shuts the door, it does
+## not clear the room. A ward that also swept the creep clean would make a
+## Huntress worth more the harder it had just been hit.
+##
+## The HIT THAT TRIGGERS the ward is the one edge worth knowing. Elune's Grace
+## lands from on_damage_taken, which runs inside take_damage and so BEFORE
+## AttackHit.debuff - so that shot's damage counts and its chill does not. That
+## is the strict reading of "invulnerable from this moment", and it costs one
+## debuff off one shot rather than an ordering rule nothing else in the pipeline
+## has.
+func _may_harm() -> bool:
+	return _may_write() && !is_warded()

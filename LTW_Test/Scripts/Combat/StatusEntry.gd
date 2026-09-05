@@ -167,7 +167,7 @@ const TEMPLATES: Dictionary = {
 	Kind.STUNNED: "Cannot move, attack or act.",
 	Kind.PARALYZED: "Held in place, and can be reached by attacks that only hit ground.",
 	Kind.SLOWED: "Moves %s%% slower.",
-	Kind.WARDED: "Takes no damage at all.",
+	Kind.WARDED: "Takes no damage, and nothing a tower does can be applied to it.",
 	Kind.SHIELDED: "Absorbs the next %s damage before any of it reaches its health.",
 	Kind.BURNING: "Takes %s spell damage per second.",
 	Kind.POISONED: "Holds %s poison damage, dealt at once when it is detonated.",

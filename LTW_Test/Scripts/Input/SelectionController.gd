@@ -10,14 +10,20 @@ extends Node
 ## Units are found through the UNIT_GROUP group and only ever duck-typed, so
 ## any future selectable unit works here without changing this script as long
 ## as it exposes selection_anchor(), selection_radius(), set_selected(),
-## selection_class() and an owner_player_id.
+## selection_class(), sweeps_with() and an owner_player_id.
 ##
 ## What may be selected TOGETHER is asked of the unit rather than decided here,
-## and the two gestures ask two different questions. A BOX takes one exact
-## type, the type of the unit nearest where the drag began. SHIFT takes
-## anything of the same selection_class(), so a mixture of tower types is
-## assembled by hand while a tower and the builder are never both in one
-## selection either way.
+## and the two gestures ask two different questions. A SWEEP - a box, or a
+## double click - takes one sweep group, asked with sweeps_with() against the
+## unit the player actually aimed at: the type, and on a building also what
+## that building is busy with. SHIFT takes anything of the same
+## selection_class(), so a mixture of tower types is assembled by hand while a
+## tower and the builder are never both in one selection either way.
+##
+## The split is deliberate: a sweep is a gesture nobody aimed at each unit it
+## caught, so it has to come back with a set one command card can describe;
+## shift is a player naming each unit and may mix whatever the card can still
+## draw.
 ##
 ## Everything it needs is shared, so it all comes through References.
 
@@ -205,8 +211,10 @@ func _is_click(rect: Rect2) -> bool:
 # --- Selection ----------------------------------------------------------
 
 ## A click selects the unit under it. A second click on that same unit inside
-## the double click window instead selects every unit of exactly its type, the
-## usual RTS shortcut for grabbing all your archers at once.
+## the double click window instead selects everything it sweeps with - its own
+## type, and on a building only the ones busy with the same thing - which is
+## the usual RTS shortcut for grabbing all your archers at once. See
+## Unit.sweeps_with.
 ##
 ## Holding shift adds instead of replacing, so double click tracking is skipped
 ## there: shift is for assembling a selection by hand, not for grabbing a type.
@@ -243,7 +251,7 @@ func _select_at_point(screen_pos: Vector2, additive: bool) -> void:
 
 	if unit == _last_clicked_unit && _within_double_click(_last_click_time):
 		_forget_click()
-		_set_selection(_units_of_same_type(unit))
+		_set_selection(_units_sweeping_with(unit))
 		return
 
 	_last_clicked_unit = unit
@@ -287,7 +295,7 @@ func _select_in_rect(rect: Rect2, additive: bool) -> void:
 
 	# _drag_start rather than the rect, which has been normalised and no longer
 	# remembers which of its corners the player aimed at.
-	_set_selection(_type_nearest(_prefer_mobile_units(caught), _drag_start))
+	_set_selection(_sweep_group_nearest(_prefer_mobile_units(caught), _drag_start))
 
 
 ## The single unit a box comes back with when it caught nothing the player can
@@ -362,8 +370,10 @@ func _can_join_selection(unit: Node) -> bool:
 	return unit.selection_class() == _selected[0].selection_class()
 
 
-## Narrows a box to ONE unit type: the type of the unit nearest where the drag
-## STARTED, that unit first in the result.
+## Narrows a box to ONE SWEEP GROUP: whatever the unit nearest where the drag
+## STARTED sweeps with, that unit first in the result. Usually its type, and on
+## a building also what that building is currently busy with - see
+## Unit.sweeps_with.
 ##
 ## The start of the gesture rather than the middle of the box or the type it
 ## caught most of, because the start is the one point the player actually
@@ -376,9 +386,9 @@ func _can_join_selection(unit: Node) -> bool:
 ## selection answers to: it is what a later shift click compares its class
 ## against, and it leads the panel.
 ##
-## Only the box narrows like this. Assembling a mixture of types is what shift
-## is for, and that goes through _can_join_selection instead.
-func _type_nearest(units: Array, anchor: Vector2) -> Array:
+## Only the box narrows like this. Assembling a mixture is what shift is for,
+## and that goes through the coarser _can_join_selection instead.
+func _sweep_group_nearest(units: Array, anchor: Vector2) -> Array:
 	if units.size() <= 1:
 		return units
 
@@ -388,10 +398,12 @@ func _type_nearest(units: Array, anchor: Vector2) -> Array:
 
 	var result: Array = [lead]
 	for unit in units:
-		# Compared by the stats resource, which IS the unit type - see
-		# Unit.is_same_type_as. Ownership needs no test here, because a box only
-		# ever sweeps up the local player's own units in the first place.
-		if unit != lead && unit.stats == lead.stats:
+		# The SAME question the double click asks, so the two gestures can never
+		# come back with different sets - see Unit.sweeps_with. It is the type
+		# plus, on a building, what that building is currently busy with:
+		# a tower mid-upgrade and a tower standing idle share a stats resource
+		# and share no command card at all.
+		if unit != lead && unit.sweeps_with(lead):
 			result.append(unit)
 	return result
 
@@ -414,12 +426,12 @@ func _nearest_to(units: Array, point: Vector2) -> Node:
 	return best
 
 
-## Every unit of exactly this one's type. Ownership is already covered, both
-## by only searching the local player's units and by the type test itself.
-func _units_of_same_type(prototype: Node) -> Array:
+## Everything on the field this unit sweeps with. Ownership is already covered,
+## both by only searching the local player's units and by the test itself.
+func _units_sweeping_with(prototype: Node) -> Array:
 	var result: Array = []
 	for unit in _commandable_units():
-		if unit.is_same_type_as(prototype):
+		if unit.sweeps_with(prototype):
 			result.append(unit)
 	return result
 
@@ -576,6 +588,9 @@ func _all_units() -> Array:
 ## and a double click sweep are for. Both halves are asked of the unit rather
 ## than compared here, so there is one definition of "mine" and one of "takes
 ## orders".
+##
+## What a sweep may put TOGETHER is a separate question and is asked later, once
+## there is something to compare against: see Unit.sweeps_with.
 func _commandable_units() -> Array:
 	var result: Array = []
 	for unit in _all_units():

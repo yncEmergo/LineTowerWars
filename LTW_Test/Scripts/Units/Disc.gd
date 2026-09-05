@@ -58,6 +58,16 @@ func _upgrade_time() -> float:
 ## Name of the layer an upgrade grows. See _apply_visual_height.
 const GLYPH_NODE: StringName = &"Glyph"
 
+## Name of the round worked plate under it, which is what a BUILD grows.
+##
+## The layer under THAT - the square foundation - is deliberately not named
+## here and is never scaled: it is the patch that says a building is here, and
+## it is at full size the instant one is ordered. A tower's is too, and gets it
+## for free rather than by rule, because a tower's ramp is on Y and a flat
+## square scaled on Y is the same flat square. A disc's ramp is on the two axes
+## it actually has, so what a tower gets for nothing this has to say out loud.
+const PLATE_NODE: StringName = &"Plate"
+
 
 ## A disc GROWS OUT rather than up, and an UPGRADE grows only its colour.
 ##
@@ -78,9 +88,14 @@ const GLYPH_NODE: StringName = &"Glyph"
 ## and nothing grows at all - a countdown that grew anything would be a picture
 ## of the opposite trade.
 ##
-## The inactive disc has no circle to grow, so its BUILD opens the whole thing
-## out from a point instead. That is the right answer for it too: nothing about
-## it is arriving in the middle of something already standing there.
+## The inactive disc has no circle to grow, so its BUILD opens the PLATE out
+## from a point instead. That is the right answer for it too: nothing about it
+## is arriving in the middle of something already standing there.
+##
+## What never moves either way is the square FOUNDATION under both layers. It
+## is the patch that says the square is claimed, and it is claimed the instant
+## the disc is ordered - so growing it would draw the claim arriving late, and
+## would be the one thing on the grid whose footprint appears to change size.
 ##
 ## Deliberately not a fade, which would be the obvious answer and is not
 ## available: opacity would have to be written per building, and gl_compatibility
@@ -90,17 +105,23 @@ func _apply_visual_height(progress: float) -> void:
 	var glyph: Node3D = root.get_node_or_null(NodePath(GLYPH_NODE)) as Node3D
 
 	if glyph == null:
-		# No circle to move. That is the inactive disc being BUILT, and opening
-		# the whole thing out from a point is the right answer for it - nothing
-		# about it is arriving in the middle of something already standing.
+		# No circle to move. That is the inactive disc being BUILT, so what
+		# opens out from a point is the PLATE - the round mechanism being set
+		# into a square of ground that is already claimed. The foundation under
+		# it does not move at all: it is the patch saying the square is taken,
+		# and a build that grew it would be drawing a claim arriving late.
 		#
 		# A RETURN never lands here: the disc keeps its own model for the whole
 		# countdown, so there is always a circle. If one ever did, leaving the
 		# scale alone is the honest answer - a morph DOWN has nothing to grow.
-		if !is_returning():
-			root.scale = Vector3(
-				lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress), 1.0,
-				lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress))
+		if is_returning():
+			return
+		var plate: Node3D = root.get_node_or_null(NodePath(PLATE_NODE)) as Node3D
+		if plate == null:
+			return
+		var opening: float = lerpf(CONSTRUCTION_START_HEIGHT, 1.0, progress)
+		root.scale = Vector3.ONE
+		plate.scale = Vector3(opening, 1.0, opening)
 		return
 
 	# A RETURN runs the same ramp BACKWARDS. Morphing down to a bare disc takes

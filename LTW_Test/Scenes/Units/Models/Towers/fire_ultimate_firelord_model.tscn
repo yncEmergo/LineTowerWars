@@ -21,7 +21,7 @@ bottom_radius = 0.4114
 height = 0.0304
 radial_segments = 6
 rings = 0
-material = ExtResource("4_energy_fire_t4")
+material = ExtResource("2_fire_stone_t4_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3"]
 top_radius = 0.1936

@@ -93,12 +93,26 @@ void fragment() {
 	// pushes the top tiers towards white.
 	color *= max(1.0, brightness);
 
-	// The climbing band, fading in over the top half of the ladder. fract
-	// gives it a hard restart at the bottom, which reads as a charge cycling
-	// rather than as a light sliding about.
+	// The climbing band, fading in over the top half of the ladder.
+	//
+	// IT HAS TO LEAVE THE MODEL BEFORE IT WRAPS, and that is what the padding
+	// on `travel` is for. fract() alone runs the band from 0 to 1 and then
+	// snaps back, so the frame before the wrap has the top of the piece fully
+	// lit and the frame after has the bottom fully lit - a hard colour change
+	// with nothing moving between the two. It reads as a fault rather than as
+	// a charge cycling, and it is worst on the elemental roster, where the lit
+	// parts are far shorter than the authored surge_height: `at` then clamps
+	// to 0 over most of a plume, so the snap switches the WHOLE piece at once.
+	//
+	// Running travel from -surge_width to 1 + surge_width instead means both
+	// ends of the cycle have the band entirely off the piece: at either end
+	// abs(at - travel) >= surge_width for every fragment, so band is exactly 0
+	// and the wrap is invisible. The band now rises out of the bottom and
+	// leaves through the top, which is what it was always meant to look like.
 	float surge_mix = smoothstep(surge_tier_start, 1.0, tier);
 	if (surge_mix > 0.0) {
-		float travel = fract(TIME * surge_speed);
+		float travel = fract(TIME * surge_speed) * (1.0 + 2.0 * surge_width)
+			- surge_width;
 		float at = clamp(local_height / surge_height, 0.0, 1.0);
 		float band = 1.0 - smoothstep(0.0, surge_width, abs(at - travel));
 		color += glow_color * band * surge_strength * surge_mix;

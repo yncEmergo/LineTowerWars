@@ -538,6 +538,15 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
     two accessors and three readings that fold it into an answer that already
     existed. Splitting mana out the same way is still the intended fix and is
     now the only one left
+- TowerPassive.gd went over gdlint's public-method ceiling when the heal
+  passives gained `on_area_hit` - the half of a shot `on_hit` deliberately
+  does not see, so a tower whose shot IS a blast can pay a share "of the
+  damage dealt" out of all of it. Folding it into `on_hit` instead is what
+  the hook exists to avoid: nearly everything else in there is stated PER
+  SHOT and would be paid once per creep standing about. The honest fix if
+  the count ever has to come down is to split the READ hooks (bonus_damage,
+  damage_type_for, extra_targets, pierce_*) off the WRITE ones, which is a
+  bigger change than it is worth today
 - MatchSession.gd is over gdlint's public-method ceiling, and was already over
   it before the match settings arrived - it answers for the roster, the RNG,
   the clock and the unit registry, and those four are what "what is true of

@@ -612,9 +612,22 @@ ELEMENTS = {
             "deep": ((0.11, 0.25, 0.36), (0.05, 0.13, 0.20)),
             "pale": ((0.38, 0.63, 0.72), (0.20, 0.38, 0.46)),
         },
-        "glow": (0.36, 0.86, 0.94),
-        "dim": (0.06, 0.26, 0.38),
-        "rim": (0.78, 0.98, 1.00),
+        # A REAL BLUE rather than the pale cyan this started as, and darker.
+        # Two elements were spending the same corner of the wheel: Ice is
+        # (0.58, 0.92, 1.00) and Water was within a hair of it, which is fine
+        # on a tower - the silhouettes are nothing alike - and useless on a
+        # DISC, where colour is the only thing carrying the element and two
+        # discs a maze apart have to be told apart at a glance. So Water moves
+        # down and towards blue, leaving Ice the pale end on its own.
+        #
+        # The three lit tones move; the body `tones` above deliberately do not.
+        # The disc glyph reads only glow and rim, and repainting the tower
+        # bodies as well would be a bigger change than the one that was asked
+        # for. The water projectile and impact keep their own colours too -
+        # they are authored in effects.py, not from this table.
+        "glow": (0.12, 0.40, 0.88),
+        "dim": (0.02, 0.12, 0.32),
+        "rim": (0.48, 0.74, 1.00),
     },
     "earth": {
         "sides": 5,

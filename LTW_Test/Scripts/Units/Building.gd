@@ -639,6 +639,44 @@ func selection_class() -> StringName:
 	return SELECT_TOWER
 
 
+## Two towers of the same type sweep together only while they are BUSY WITH THE
+## SAME THING.
+##
+## The type on its own is not enough here, and the reason is the command card: a
+## tower in the middle of a morph offers that morph's Cancel and nothing else,
+## so a sweep that mixed one with a working tower of the same type hands back a
+## selection whose card is the intersection of the two - which is empty. What a
+## sweep has to come back with is a set that can be commanded together.
+##
+## So three groups of Magma Wells never mix: the ones standing and shooting, the
+## ones upgrading into a Lesser Firelord, and the ones upgrading into a Lesser
+## Moonbeam. Each is internally identical and each has a card. A Magma Well
+## being taken back down to a Core is a fourth, which is why the DIRECTION is
+## asked as well as the target - the two are one phase with one clock and only
+## `_returning` tells them apart.
+##
+## A SALE is deliberately not asked about. A tower being sold is still shooting,
+## still blocking and still taking orders (see can_take_attack_order), so it is
+## one of the towers around it right up until it is gone - and Cancel Sale is
+## the only thing on its card, so a mixed sweep would empty the card the same
+## way. Add it here if that ever reads wrong; it is one more comparison.
+##
+## Asked through the other tower's PUBLIC answers rather than its fields, so
+## nothing here reaches into an instance it does not own.
+func sweeps_with(other: Unit) -> bool:
+	if !super(other):
+		return false
+
+	var them: Building = other as Building
+	if them == null:
+		return false
+	if _upgrading != them.is_upgrading() || _returning != them.is_returning():
+		return false
+	# Two idle towers are already answered by the type. Two morphing ones have
+	# to be going to the same place.
+	return !_upgrading || _upgrade_target == them.upgrade_target()
+
+
 ## The model, not the whole building. During an upgrade that is the model of
 ## the tier being BOUGHT, so a portrait shows what the player is waiting for
 ## rather than what is being replaced.
@@ -1246,7 +1284,63 @@ func _instantiate_upgrade(target: BuildingStats) -> Building:
 func _die() -> void:
 	if cell.x >= 0 && is_instance_valid(area):
 		area.mark_rubble(cell, footprint())
+		_show_rubble()
 	super()
+
+
+## Puts the smoking patch on the square the rubble was just marked on.
+##
+## PRESENTATION, and it says nothing the simulation reads - the cells were
+## already refused a rebuild by the line above. A dedicated server wires no
+## PresentationConfig and no effects root, and both of those are checked here,
+## so it draws nothing and pays nothing.
+##
+## SPAWNED HERE rather than by PlayerArea.mark_rubble, even though that is what
+## knows the cells: this is the event - a tower was DESTROYED - and the mark is
+## about the wreck rather than about the grid. mark_rubble is also called with
+## nothing to look at from a machine that only replicates.
+##
+## Parented to the effects root rather than to this building, which is about to
+## be freed and would take the patch with it - the same reason an impact flash
+## is not parented to the tower that fired.
+func _show_rubble() -> void:
+	var root: Node3D = References.effects_root
+	var presentation: PresentationConfig = References.presentation_config
+	if root == null || presentation == null:
+		return
+
+	# Loaded and cached by the config, so a path that does not resolve is one
+	# message rather than one per tower an attacker takes down.
+	var scene: PackedScene = presentation.rubble_smoke_scene()
+	if scene == null:
+		return
+	var patch: ImpactBurst = scene.instantiate() as ImpactBurst
+	if patch == null:
+		Log.err("Rubble smoke scene's root is not an ImpactBurst",
+			presentation.rubble_smoke_scene_path)
+		return
+
+	# Both BEFORE add_child. ImpactBurst reads the authored scale once in
+	# _ready and drives everything off that copy, so a scale written afterwards
+	# is overwritten on the next frame. The patch is authored at one player
+	# cell, which is every tower's footprint - see BuildingStats.footprint_cells.
+	var size: Vector2i = Vector2i.ONE
+	if _building_stats != null:
+		size = _building_stats.footprint_cells
+	patch.scale = Vector3(maxf(1.0, float(size.x)), 1.0, maxf(1.0, float(size.y)))
+	# The RULE's clock, not a number chosen for how it looks: the patch is on
+	# screen for exactly as long as the square refuses a rebuild.
+	if _config != null:
+		patch.duration = _config.rubble_seconds
+	root.add_child(patch)
+
+	# On the ground under where the tower stood. The area's own origin is the
+	# floor, the same reading GroundHazard.light takes.
+	var floor_y: float = global_position.y
+	if is_instance_valid(area):
+		floor_y = area.global_position.y
+	patch.global_position = Vector3(global_position.x, floor_y, global_position.z)
+	patch.play()
 
 
 # --- Construction -------------------------------------------------------

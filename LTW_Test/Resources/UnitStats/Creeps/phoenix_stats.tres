@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://4w1bsw7kant1" path="res://Scripts/Config/CreepStats.gd" id="1_creep_stats"]
 [ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
 [ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="7_attack_stats"]
-[ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="8_instant"]
+[ext_resource type="Script" uid="uid://c1amp6pgear0e" path="res://Scripts/Combat/ProjectileDelivery.gd" id="8_projectile"]
 [ext_resource type="Resource" uid="uid://s0vmh3n3pptf" path="res://Resources/Abilities/move_ability.tres" id="10_card"]
 [ext_resource type="Resource" uid="uid://bo2r4bfsi2pd0" path="res://Resources/Abilities/stop_ability.tres" id="11_card"]
 [ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="12_card"]
@@ -18,13 +18,18 @@
 [ext_resource type="Texture2D" uid="uid://becy5dabwaqp8" path="res://2DArt/Icons/phoenix.png" id="98_icon"]
 
 [sub_resource type="Resource" id="Delivery"]
-script = ExtResource("8_instant")
+script = ExtResource("8_projectile")
+projectile_scene_path = "res://Scenes/Effects/fire_bolt.tscn"
+speed = 15.0
+arc_height = 0.4
+impact_scene_path = "res://Scenes/Effects/flame_impact.tscn"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("7_attack_stats")
 damage_min = 900
 damage_max = 1100
 damage_type = 0
+attacks_per_second = 0.333
 target_class = 1
 attack_range = 2.0
 delivery = SubResource("Delivery")

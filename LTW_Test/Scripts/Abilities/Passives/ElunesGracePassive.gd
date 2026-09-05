@@ -21,7 +21,15 @@ extends CreepPassive
 ##
 ## A WARD, not the invulnerable armour type. The type is permanent and also
 ## refuses heals; this is a window, and a warded Huntress still regenerates,
-## is still shot at, still walks and can still be slowed. See StatusEffects.
+## still walks and is still shot at - the shots simply do nothing.
+##
+## NOTHING A MAZE DOES REACHES IT while the window runs, which is what
+## "invulnerability" in 6.6 is taken to mean: no damage, and no slow, stun,
+## eaten armour, poison or burn either. Letting the debuffs land was a Huntress
+## that walked its fifteen seconds untouchable and came out the far end
+## crippled by a fight it had been immune to. StatusEffects._may_harm is the
+## one gate that says so, so every effect in the roster obeys it and the next
+## one does too.
 
 @export_group("Settings")
 ## Seconds of the first ward, which lands on the first damage of any kind.

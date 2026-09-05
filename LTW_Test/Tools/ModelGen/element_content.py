@@ -682,12 +682,16 @@ def gen_prefab(row, heights):
         "cast_shadow = 0",
         'mesh = SubResource("SelectionRing")',
     ])
+    attack_props = ['_unit = NodePath("..")',
+                    '_muzzle = NodePath("../Visual/Turret/Muzzle")',
+                    '_turret_head = NodePath("../Visual/Turret")']
+    # A ring has no front to point at anything. See element_roster.STATIC_TURRET.
+    if row["shape"] in er.STATIC_TURRET:
+        attack_props.append("turn_towards_target = false")
     s.node("Attack", "Node", ".",
            node_paths=["_unit", "_muzzle", "_turret_head"],
            script=attack,
-           props=['_unit = NodePath("..")',
-                  '_muzzle = NodePath("../Visual/Turret/Muzzle")',
-                  '_turret_head = NodePath("../Visual/Turret")'])
+           props=attack_props)
     _add_animations(s, row["shape"])
     write(prefab_path(key), s.render("[gd_scene format=3]"))
 

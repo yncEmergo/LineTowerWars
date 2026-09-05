@@ -32,8 +32,15 @@ const IDLE_KEY: String = "feast_idle"
 
 @export_group("Hungering Void")
 ## Share of the damage dealt healed back at MAXIMUM bonus, or 0 on the tiers
-## with no life steal. Against the primary target only, which is what the
-## source states.
+## with no life steal.
+##
+## Against EVERYTHING the shot cost, splash included. unit_data.md 4.9 states
+## it "against its primary target" and this is a deliberate departure from the
+## source: the Leviathan carries splash at every tier, so the source's reading
+## paid the life steal out of a fraction of the tower's own damage and paid it
+## least against the packed waves a tower holding a lane is there for. The
+## Ancient Warden and the Divineshroom were read the same way for the same
+## reason - see TowerPassive.on_area_hit.
 @export var life_steal: float = 0.0
 
 
@@ -66,12 +73,31 @@ func apply_debuffs(_tower: Building, target: Unit) -> void:
 
 ## What the tower EATS, which is stated per hit rather than per creep - so a
 ## splash that brushed six creeps feeds it once, exactly as it did before the
-## armour half moved above.
-func on_hit(tower: Building, _target: Unit, dealt: int, is_primary: bool) -> void:
+## armour half moved above. That half stays HERE and must not move to
+## on_area_hit, or a Leviathan over a wave would reach its cap in one shot.
+func on_hit(tower: Building, _target: Unit, dealt: int, _is_primary: bool) -> void:
 	var held: float = float(tower.ability_state.get(BONUS_KEY, 0.0))
 	tower.ability_state[BONUS_KEY] = minf(damage_cap, held + damage_per_hit)
+	_steal(tower, dealt, held)
 
-	if life_steal > 0.0 && is_primary && held >= damage_cap:
+
+## The LIFE STEAL half, which is stated as a share of damage and so counts
+## every creep the shot cost - see the life_steal export for the departure from
+## the source that is. Nothing is banked here: the bonus is per shot and on_hit
+## has already banked it.
+func on_area_hit(tower: Building, _target: Unit, dealt: int) -> void:
+	_steal(tower, dealt, float(tower.ability_state.get(BONUS_KEY, 0.0)))
+
+
+## `held` is the bonus to test the cap against, and the two hooks read it a
+## beat apart on purpose. on_hit passes what the tower held BEFORE this shot
+## banked its own step, so the swing that arrives at the cap does not also pay
+## out - "at maximum bonus" means it had to already be there. The splash runs
+## after that bank and so reads the banked figure, which differs only on the
+## single shot that reaches the cap and only for the creeps around the one it
+## aimed at. Not worth a per-shot memo to make exact.
+func _steal(tower: Building, dealt: int, held: float) -> void:
+	if life_steal > 0.0 && held >= damage_cap:
 		tower.heal(int(round(float(dealt) * life_steal)))
 
 

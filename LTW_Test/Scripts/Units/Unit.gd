@@ -29,7 +29,7 @@ signal abilities_changed()
 ##
 ## Deliberately COARSER than the unit type: every tower is one class, so any
 ## tower boxes and groups with any other regardless of element or tier. It is
-## the double click sweep that stays exact - see is_same_type_as.
+## the double click sweep that stays exact - see sweeps_with.
 const SELECT_MOBILE: StringName = &"mobile"
 const SELECT_TOWER: StringName = &"tower"
 const SELECT_SEND_BUILDING: StringName = &"send_building"
@@ -262,7 +262,7 @@ func is_hostile_to(other: Unit) -> bool:
 	return other != null && other.owner_player_id != owner_player_id
 
 
-## Exactly the same unit type, which is what double click selects.
+## Exactly the same unit type, which is the base of what a sweep picks up.
 ##
 ## Identity is the stats resource itself: every Cannon references the one
 ## cannon_stats.tres, so they match, while a different tower carries its own
@@ -337,6 +337,21 @@ func allows_multi_selection() -> bool:
 ## steer, so selection needs both answers rather than one combined flag.
 func is_controllable() -> bool:
 	return true
+
+
+## Whether a SWEEP may pick these two up TOGETHER: a selection box, or a double
+## click grabbing every unit of one kind.
+##
+## The sweeps' own rule, and finer than the one a shift click obeys. Shift is a
+## selection assembled by hand, so it asks only selection_class() and lets a
+## player mix what they like; a sweep is a gesture nobody aimed at each unit it
+## caught, so what comes back has to be a set the command card can describe.
+##
+## Being the same TYPE is the whole of it here - the same stats resource and
+## the same owner, which is is_same_type_as. Building narrows it further,
+## because two towers of one type can still be busy with different things.
+func sweeps_with(other: Unit) -> bool:
+	return is_same_type_as(other)
 
 
 # --- Health -------------------------------------------------------------

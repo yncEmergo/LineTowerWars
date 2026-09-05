@@ -78,7 +78,11 @@ DELIVERY = {
     # target at all - it is CALLED DOWN on it, see SKY_LAUNCH below. An arc on
     # top of that dive would bow a falling rock upwards.
     "moonbeam": ("projectile", "res://Scenes/Effects/meteor.tscn", 12.8, 0.0),
-    "firelord": ("projectile", "res://Scenes/Effects/fire_bolt.tscn", 11.0, 0.4),
+    # Twice what the element's base tower throws, on review: a Firelord's bolt
+    # is the thing that KILLS the wave and it was arriving after the wave had
+    # walked out from under it. Same reasoning as the Arcane Orb below, applied
+    # to a fast tower rather than to a slow one.
+    "firelord": ("projectile", "res://Scenes/Effects/fire_bolt.tscn", 22.0, 0.4),
     # A plate rather than a bolt, on review, thrown nearly flat and slower than
     # the base pair's shot: what a Lich does is heavy and cold, not fast.
     "lich": ("projectile", "res://Scenes/Effects/frost_disc.tscn", 8.5, 0.12),
@@ -98,7 +102,10 @@ DELIVERY = {
     "arcane_orb": ("projectile", "res://Scenes/Effects/arcane_orb.tscn", 27.0, 0.0),
     "ancient_warden": ("projectile", "res://Scenes/Effects/boulder.tscn", 6.0, 2.4),
     "scorpion": ("projectile", "res://Scenes/Effects/thorn.tscn", 20.0, 0.0),
-    "gravedigger": ("projectile", "res://Scenes/Effects/poison_glob.tscn", 9.0, 0.5),
+    # Doubled with the Firelord's and for the same reason. A lobbed glob was
+    # the slowest shot in the game outside the Alchemist's flask, which is a
+    # mortar and means to be.
+    "gravedigger": ("projectile", "res://Scenes/Effects/poison_glob.tscn", 18.0, 0.5),
     "alchemist": ("projectile", "res://Scenes/Effects/acid_flask.tscn", 7.0, 2.0),
     "harbinger": ("projectile", "res://Scenes/Effects/void_bolt.tscn", 11.0, 0.0),
     "leviathan": ("instant", "", 0.0, 0.0),
@@ -243,6 +250,24 @@ ANIMATION = {
     "sludge_monstrosity": [],
     "primalist": [("recoil", "Turret/Geode", 0.04)],
     "beastmaster": [("slam", "Turret/Horns", "res://Scenes/Effects/dust_ring.tscn")],
+}
+
+# Paths whose Turret does NOT swing round to face what they are shooting.
+#
+# Turning is the default and is right for anything with a front: a barrel, an
+# arm, a face. It is wrong for a tower whose turret is a RING - the shape is
+# the same from every angle, so the swing is invisible while it is aimed and
+# very visible while it is moving, which reads as the tower being knocked
+# about rather than as it aiming.
+#
+# The Orb Keeper is that tower and is also an INSTANT attack, so there is no
+# shot leaving a muzzle for the facing to line up with. Nothing is lost by
+# standing still.
+#
+# Purely visual either way - AttackComponent.turn_towards_target can never cost
+# a shot, a tower fires whether or not it has finished turning.
+STATIC_TURRET = {
+    "orb_keeper",
 }
 
 # --- the elements -----------------------------------------------------------
