@@ -494,6 +494,9 @@ art at all so far - so this is the placement rule, not a description of the tree
   content at boot. Read it before authoring content; it carries no rules and no
   numbers, only the steps.
 - multiplayer.md is what the networked build is and where each part of it lives.
+  multiplayer-todo.md is what it still NEEDS, including the long view on getting input
+  latency below the ping between players on different continents. Keep the two apart:
+  built goes in the first, planned in the second.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
 - NEVER write a COUNT or a live value into a .md file. No "26 abilities", no
