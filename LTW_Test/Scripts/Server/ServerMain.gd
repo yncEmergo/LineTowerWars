@@ -46,6 +46,7 @@ func _ready() -> void:
 	if _title_label != null:
 		_title_label.text = "DEDICATED SERVER"
 
+	_cap_frame_rate()
 	_report_boot()
 
 	# Signals before hosting, so a peer that arrives during the same frame as
@@ -53,6 +54,20 @@ func _ready() -> void:
 	Net.peer_joined.connect(_on_peer_joined)
 	Net.peer_left.connect(_on_peer_left)
 	_start_hosting()
+
+
+## Stops the idle loop spinning as fast as the box allows.
+##
+## A dedicated server has nothing to draw, so its frame rate buys only how often
+## it polls the network - and `NetworkConfig.flush_immediately` takes that job
+## away by pushing packets out as they are made. Measured on 2026-09-05: an idle
+## server with no clients and no match was using about a quarter of a core.
+func _cap_frame_rate() -> void:
+	var config: NetworkConfig = References.network_config
+	if config == null || config.server_max_fps <= 0:
+		return
+	Engine.max_fps = config.server_max_fps
+	Log.info("Server frame rate capped", {"max_fps": Engine.max_fps})
 
 
 ## Appends one line to the log view AND to the ordinary log, because a headless

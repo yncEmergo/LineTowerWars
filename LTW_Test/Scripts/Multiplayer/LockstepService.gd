@@ -682,6 +682,11 @@ func _emit(turn: int, payload: Array) -> void:
 	_remember(turn, payload)
 	submit_echo.rpc_id(NetworkService.SERVER_PEER_ID, _recent)
 
+	# Onto the wire now rather than whenever this frame happens to end. See
+	# NetworkService.flush.
+	if _flush_immediately():
+		Net.flush()
+
 
 ## Keeps the last few turns this machine has closed, for the echo to re-send.
 func _remember(turn: int, payload: Array) -> void:
@@ -723,6 +728,10 @@ func submit_turn(turn: int, payload: Array) -> void:
 	# get_remote_sender_id() names on the second hop - so two clients' orders
 	# overwrote each other under one key and no turn was ever complete.
 	receive_turn.rpc(turn, sender, stamped)
+	# The relay's own half of the same saving: a forwarded turn should not wait
+	# for the end of the server's frame either.
+	if _flush_immediately():
+		Net.flush()
 
 
 ## Puts a SERVER order into the turn stream - today only a drop (D14).
@@ -806,6 +815,8 @@ func submit_echo(recent: Array) -> void:
 
 	if !stamped_all.is_empty():
 		receive_echo.rpc(sender, stamped_all)
+		if _flush_immediately():
+			Net.flush()
 
 
 ## The relayed echo, on every peer. Same rules as receive_turn: only the server
@@ -1049,6 +1060,11 @@ func _ticks_per_turn() -> int:
 func _jitter_margin_ms() -> int:
 	var config: NetworkConfig = _config()
 	return 20 if config == null else maxi(0, config.jitter_margin_ms)
+
+
+func _flush_immediately() -> bool:
+	var config: NetworkConfig = _config()
+	return true if config == null else config.flush_immediately
 
 
 func _checksum_every() -> int:

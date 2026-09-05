@@ -22,6 +22,33 @@ extends Resource
 @export_group("Server")
 ## The port the server listens on. Overridable with the port argument below.
 @export var port: int = 7777
+## What the dedicated server caps its frame rate at, or 0 to leave it uncapped.
+##
+## **A server with no clients and no match burns about a quarter of a core doing
+## nothing**, measured 2026-09-05, because nothing had ever set this and the
+## engine spins its idle loop as fast as it is allowed to. That is pure waste on
+## a rented box, and it is waste that scales with the number of servers rather
+## than with the number of players.
+##
+## It is not free to cap, and the reason is not obvious: Godot polls the
+## multiplayer peer on the IDLE frame, so a lower frame rate means a relayed turn
+## can sit for up to one frame before it is even looked at. `flush_immediately`
+## below is what pays that back - with packets pushed out as they are made, the
+## frame rate stops deciding how fast a turn travels.
+##
+## The simulation is unaffected either way: it lives in `_physics_process` and
+## Godot runs that on its own clock (D11).
+@export var server_max_fps: int = 120
+
+## Whether a turn word is pushed onto the wire when it is made, rather than at
+## the end of the frame.
+##
+## Godot QUEUES an rpc and flushes it when the frame ends, on both hops, so a
+## turn word waits twice for no reason - once on the peer that closed the turn,
+## once on the relay forwarding it. Off only so the two can be measured against
+## each other; see `CLAUDE.md` on paired measurement.
+@export var flush_immediately: bool = true
+
 ## Total simultaneous connections the SERVER accepts, across every lobby and
 ## match it is running at once.
 ##

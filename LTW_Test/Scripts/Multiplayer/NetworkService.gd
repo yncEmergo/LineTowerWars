@@ -221,6 +221,28 @@ func peer_id() -> int:
 	return multiplayer.get_unique_id()
 
 
+## Pushes whatever is queued onto the wire NOW instead of at the end of the
+## frame.
+##
+## **An rpc is not sent when it is called** - Godot queues it and flushes when the
+## frame ends, on both hops (`CLAUDE.md`). For a lockstep turn word that is dead
+## time on the one packet whose promptness the player actually feels, and it is
+## paid twice: once on the client that closed the turn, once on the relay
+## forwarding it.
+##
+## It also decouples latency from frame rate, which is what makes capping the
+## server's frame rate affordable: without this, a server limited to 60 fps would
+## sit on every relayed turn for up to 16 ms.
+##
+## Safe to call when there is nothing queued; ENet sends nothing.
+func flush() -> void:
+	if _peer == null || !is_online():
+		return
+	var host: ENetConnection = _peer.host
+	if host != null:
+		host.flush()
+
+
 ## The measured round trip to a peer in milliseconds, or UNKNOWN_RTT.
 ##
 ## **ENet already knows this and no extra packet is sent to ask.** Every
