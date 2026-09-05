@@ -188,7 +188,12 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 		return
 
 	if MatchSession.is_lockstep():
-		Lockstep.schedule(command)
+		# A relay has no turn clock to book against, so it puts the order
+		# straight onto the wire for a turn it knows nobody has reached.
+		if MatchSession.is_relay():
+			Lockstep.inject(command)
+		else:
+			Lockstep.schedule(command)
 		return
 	_queue(command)
 

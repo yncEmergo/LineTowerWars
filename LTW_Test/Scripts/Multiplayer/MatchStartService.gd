@@ -186,9 +186,13 @@ func report_loaded() -> void:
 
 ## The initial-world checksum (2.5), reported by `Main` once it has built.
 ##
-## Both roles call this same method: on the server it becomes the answer every
-## client is checked against, on a client it is sent there. Offline, or in a
-## match nobody else is in, it does nothing at all.
+## Both roles call this same method: on a server that HAS a world it becomes the
+## answer every client is checked against, on a client it is sent there.
+## Offline, or in a match nobody else is in, it does nothing at all.
+##
+## **A lockstep relay never reaches this**, because it never builds a world to
+## hash - `Main` returns before the call. The reference is then the first peer
+## to report and the rest are compared against it; see _compare_checksums.
 func report_world_checksum(checksum: int) -> void:
 	if _setup == null || !Net.is_online():
 		return
@@ -620,9 +624,31 @@ func _read_server_settings() -> void:
 ## 2.5: the same world, built twice from the same setup, must hash the same.
 ## A mismatch is not a crash - the match carries on and diverges - so it has to
 ## be said loudly here or it will be found by a player instead.
+##
+## **What the reference IS depends on whether the server has a world.** Under
+## replication it is the server's own, which is the authoritative answer by
+## definition. Under lockstep the server is a relay and has none, so the first
+## peer to report becomes the reference and the others are checked against it -
+## peer against peer, which is the only comparison that means anything once
+## nobody is authoritative.
+##
+## That is weaker on purpose, and the weakness is named: with two peers a
+## mismatch says they disagree, never which of them is right. A ranked match is
+## cancelled on one rather than resolved (decided 2026-09-05). Resolving it needs
+## the turn log replayed offline, which nothing does yet.
 func _compare_checksums() -> void:
 	if !_has_reference:
-		return
+		# Nobody authoritative, so the first peer to speak sets the standard.
+		# Its own entry is then dropped rather than compared with itself.
+		if _reported_checksums.is_empty() || !MatchSession.is_relay():
+			return
+		var first: int = int(_reported_checksums.keys()[0])
+		_reference_checksum = int(_reported_checksums[first])
+		_has_reference = true
+		_reported_checksums.erase(first)
+		Log.info("Initial world reference taken from a peer", {
+			"peer": first, "slot": _slot_of(first), "sum": _reference_checksum,
+		})
 
 	for peer_id in _reported_checksums.keys():
 		var reported: int = int(_reported_checksums[peer_id])
@@ -630,11 +656,11 @@ func _compare_checksums() -> void:
 			Log.info("Initial world agrees", {"peer": peer_id, "sum": reported})
 			continue
 
-		Log.err("Initial world DIFFERS from the server", {
+		Log.err("Initial world DIFFERS from the rest of the match", {
 			"peer": peer_id,
 			"slot": _slot_of(peer_id),
 			"client": reported,
-			"server": _reference_checksum,
+			"reference": _reference_checksum,
 		})
 		# The player is TOLD. Before this, a desync was one line in a server log
 		# nobody was watching while the client played on in a world nobody

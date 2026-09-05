@@ -83,6 +83,14 @@ const NO_TURN: int = -1
 ## How often a stall repeats itself, in physics frames. Two seconds at 20 Hz.
 const STALL_REPORT_FRAMES: int = 40
 
+## How many turns of world comparisons the relay keeps before forgetting them.
+## See _forget_old_checksums.
+const CHECKSUM_MEMORY_TURNS: int = 200
+
+## How far ahead of what it has SEEN a relay books a system order. One second at
+## 20 Hz. See inject().
+const SYSTEM_LEAD_TURNS: int = 20
+
 ## How often the server re-measures the connections, in physics frames. One
 ## second at 20 Hz, and it only says anything when the answer has moved - a
 ## link that is behaving costs one comparison a second and no traffic at all.
@@ -134,6 +142,10 @@ var _told: Dictionary = {}
 ## The match all of the state above belongs to. See _reset_if_new_match.
 var _match_id: String = ""
 
+## The highest turn any peer has been heard closing. The relay's only sense of
+## where the match has got to, since it keeps no clock of its own. See inject().
+var _highest_seen: int = NO_TURN
+
 ## The furthest any player is from the server, one way, in milliseconds.
 ##
 ## Measured by the SERVER, which is the only machine with a connection to every
@@ -170,6 +182,19 @@ func _physics_process(_delta: float) -> void:
 		return
 
 	_reset_if_new_match()
+
+	# **A relay keeps no turn clock.** It has no world to advance, nothing to
+	# say about a turn, and no checksum to take - all it does on a tick is
+	# re-read the connections so it can tell everyone how far apart they are.
+	# Relaying itself is event-driven and happens in submit_turn.
+	#
+	# This is also what makes `_measure_and_announce`'s gate on `_frames` safe:
+	# the counter stops during a stall, and the relay is the one machine that
+	# never stalls, so the measurement never stops on the machine that takes it.
+	if MatchSession.is_relay():
+		_frames += 1
+		_measure_and_announce()
+		return
 
 	# **`_frames` counts ticks that have FINISHED, so the tick now beginning is
 	# `_frames` itself and the turn it belongs to is `current_turn()`.**
@@ -437,6 +462,7 @@ func _reset_if_new_match() -> void:
 	_outgoing.clear()
 	_incoming.clear()
 	_ordered_at.clear()
+	_highest_seen = NO_TURN
 	_turn_checksums.clear()
 	_told.clear()
 	_closed_through = NO_TURN
@@ -662,13 +688,58 @@ func submit_turn(turn: int, payload: Array) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
+	_highest_seen = maxi(_highest_seen, turn)
 	var stamped: Array = _stamped(payload, _slot_of_peer(sender))
-	_record(turn, sender, stamped)
+	# **A relay forwards a turn without keeping it.** It never runs turns, so
+	# nothing would ever erase what it recorded and `_incoming` would grow for
+	# the whole match - one entry per peer per tick, for ever. Only a machine
+	# that will actually SIMULATE a turn has any reason to remember it.
+	if !MatchSession.is_relay():
+		_record(turn, sender, stamped)
 	# **The origin travels with the orders.** Relaying without it recorded every
 	# peer's turn under the SERVER's id, because that is who
 	# get_remote_sender_id() names on the second hop - so two clients' orders
 	# overwrote each other under one key and no turn was ever complete.
 	receive_turn.rpc(turn, sender, stamped)
+
+
+## Puts a SERVER order into the turn stream - today only a drop (D14).
+##
+## **A relay cannot use `schedule()`, and finding that out is what this method
+## is.** `schedule()` books an order into the next turn this machine has not
+## closed, and a relay closes no turns at all: the order would sit in `_outgoing`
+## for the rest of the match and simply never happen. That is the same silent
+## failure the scheduling rewrite already cost a run to find, arrived at from the
+## other direction.
+##
+## So the relay books off what it has HEARD instead. Every peer keeps reporting
+## its own turns whatever else is going on, so `_highest_seen` tracks the match
+## even when the relay is not in it.
+##
+## **`SYSTEM_LEAD_TURNS` is a margin, not a guarantee, and that is worth being
+## honest about.** Nobody waits for the relay's word - that is the whole point of
+## it being a relay - so a peer that ran the turn before this arrived would drop
+## it (`_record` refuses a turn already run) while the others applied it, and the
+## two would diverge. A peer closes turns only one or two ahead, so a second of
+## lead on an already-in-flight reliable packet is a margin of roughly twenty
+## times over. If it is ever missed the checksum says so on the next comparison
+## turn, and a ranked match is cancelled rather than resolved (2026-09-05).
+##
+## The hard version of this needs peers to wait on the relay again, which costs
+## every turn a second way to be late in order to make one event a match safe.
+func inject(command: Command) -> void:
+	if command == null || !_is_live() || !MatchSession.is_relay():
+		return
+
+	var turn: int = maxi(_highest_seen, 0) + SYSTEM_LEAD_TURNS
+	var payload: Array = [command.to_dict()]
+	Log.info("Relay injecting a server order", {
+		"turn": turn, "seen": _highest_seen, "action": command.player_action,
+	})
+	# Under the SERVER's own id, which is what makes it sort first within the
+	# turn - commands_for orders by peer and the relay is peer 1 - so a drop is
+	# applied before anything a player did on the same turn.
+	receive_turn.rpc(turn, NetworkService.SERVER_PEER_ID, payload)
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.
@@ -726,8 +797,8 @@ func _missing_peers(by_peer: Dictionary) -> PackedInt32Array:
 	return missing
 
 
-## Everyone whose orders a turn is waiting on: every connected peer, the server
-## itself - which plays no slot but still relays - and THIS MACHINE.
+## Everyone whose orders a turn is waiting on: every connected PLAYER, and THIS
+## MACHINE. Not the relay - see below.
 ##
 ## Including itself looks redundant and is not. `multiplayer.get_peers()` never
 ## names the local peer, so without this line a client's completeness test never
@@ -736,7 +807,10 @@ func _missing_peers(by_peer: Dictionary) -> PackedInt32Array:
 ## the question is asked. What it buys is that the day something stops recording
 ## locally, the match STALLS and says so, instead of diverging in silence.
 func _expected_peers() -> PackedInt32Array:
-	var peers: PackedInt32Array = PackedInt32Array([NetworkService.SERVER_PEER_ID])
+	# **The relay is not waited for**, because it has nothing to say: it
+	# simulates no world and issues no orders, so requiring its word every turn
+	# bought nothing and gave every turn a second way to be late.
+	var peers: PackedInt32Array = PackedInt32Array()
 	for id: int in multiplayer.get_peers():
 		if id != NetworkService.SERVER_PEER_ID:
 			peers.append(id)
@@ -746,6 +820,26 @@ func _expected_peers() -> PackedInt32Array:
 
 
 # --- agreeing on the result ----------------------------------------------
+
+## Throws away comparisons too old to still be waiting for anybody.
+##
+## Without this the table grows for the whole match: an entry per peer per
+## checksum turn, kept for ever because nothing ever erased one. Slow, but
+## unbounded is unbounded, and it is the relay - the one process that hosts match
+## after match without restarting - that pays it.
+##
+## A generous window rather than "erase once everybody has answered", because
+## peers report a turn at slightly different moments and erasing on the first
+## complete set would throw away the entry a straggler is about to be compared
+## against.
+func _forget_old_checksums(newest: int) -> void:
+	var cutoff: int = newest - CHECKSUM_MEMORY_TURNS
+	if cutoff < 0:
+		return
+	for key: Variant in _turn_checksums.keys():
+		if int(key) < cutoff:
+			_turn_checksums.erase(key)
+
 
 ## The world at the end of a turn, hashed and sent to the server to compare.
 ##
@@ -789,6 +883,7 @@ func _compare_turn(turn: int, peer: int, checksum: int) -> void:
 		_turn_checksums[turn] = {}
 	var by_peer: Dictionary = _turn_checksums[turn]
 	by_peer[peer] = checksum
+	_forget_old_checksums(turn)
 
 	var reference: int = 0
 	var has_reference: bool = false

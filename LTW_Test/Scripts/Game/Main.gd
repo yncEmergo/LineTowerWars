@@ -61,6 +61,23 @@ func _ready() -> void:
 		})
 	session.begin(setup)
 
+	# **A RELAY BUILDS NO WORLD**, and everything below this line builds one:
+	# player states, areas, builders, the camera, the opening technology, and the
+	# checksum of the result. A lockstep server forwards orders and stamps who
+	# sent them; it has no use for any of it, and paying for it was the whole
+	# thing the cutover was supposed to stop paying for. See MatchSession.is_relay.
+	#
+	# `session.begin` stays ABOVE this, because the setup is exactly what a relay
+	# does still need - `LockstepService` reads the slot table out of it to stamp
+	# an order with the slot its sender really owns.
+	if MatchSession.is_relay():
+		Log.info("Relay match ready, simulating nothing", {
+			"players": setup.player_count(),
+			"seed": setup.rng_seed,
+			"match": setup.match_id,
+		})
+		return
+
 	# Once, here, rather than on every hit of every fight: a broken damage
 	# matrix has to be loud, and per-hit logging would drown the log instead.
 	if References.damage_table == null:

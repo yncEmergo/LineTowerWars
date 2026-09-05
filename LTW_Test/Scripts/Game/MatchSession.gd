@@ -426,8 +426,37 @@ static func cheats_permitted() -> bool:
 ## because there is nobody to ask.
 static func is_authority() -> bool:
 	if _lockstep:
-		return true
+		# **Except on the relay, which simulates nothing at all.** Under lockstep
+		# every machine that HAS a world computes it, and the dedicated server
+		# deliberately does not have one - see is_relay().
+		return !Net.is_server()
 	return !Net.is_online() || Net.is_server()
+
+
+## Whether this process is the lockstep RELAY: the dedicated server, forwarding
+## orders between peers and simulating nothing.
+##
+## **This is what the cutover was FOR and it did not happen at first.** D2 was
+## changed on the reasoning that "a lockstep server is a relay that runs no game
+## loop", and then `is_authority()` was left answering true everywhere, the
+## server went on loading a full match scene, and every client waited on its word
+## for every turn. So the server carried the same per-creep cost it always had,
+## and it was now on the critical path of every client's tick - which is strictly
+## worse than before: an overloaded server used to send late snapshots, and under
+## lockstep it produces a hard freeze on every client instead.
+##
+## A relay keeps only what forwarding needs: the setup, so it can stamp which
+## slot an order came from, and the membership, so it knows who is still here. It
+## builds no areas, spawns no units, runs no economy and computes no checksum of
+## its own. The peers check each other.
+##
+## The cost, accepted deliberately on 2026-09-05: with no third world there is
+## nothing to arbitrate between two peers that disagree, so a ranked match is
+## simply CANCELLED on a desync rather than resolved. Working out who was right
+## needs the input log replayed offline, which the turn stream already contains
+## and nothing yet does.
+static func is_relay() -> bool:
+	return _lockstep && Net.is_server()
 
 
 ## Whether this match is running lockstep rather than replication. For the few
