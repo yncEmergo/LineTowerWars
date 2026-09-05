@@ -93,12 +93,14 @@ const SYSTEM_LEAD_TURNS: int = 20
 ## this only has to catch a number that is wrong by orders of magnitude.
 const TURN_SLACK: int = 200
 
-## How many recent turns ride along in every unreliable echo. See _echo.
+## How many recent turns ride along in every unreliable echo. See _emit.
 ##
-## Four covers three consecutive losses, which on any link worth playing on is
-## already far past the point where the match has other problems. The cost is a
-## few dozen bytes on a packet that is usually empty.
-const ECHO_TURNS: int = 4
+## **Two, not four.** Two covers a single loss with one to spare, which is the
+## case that actually happens; four covered three consecutive losses, which is a
+## connection that has already failed for other reasons. It matters because the
+## relay re-sends each peer's whole window to everybody, so this is the dominant
+## term in the echo's traffic and halving it halves that.
+const ECHO_TURNS: int = 2
 
 ## How often the server re-measures the connections, in physics frames. One
 ## second at 20 Hz, and it only says anything when the answer has moved - a
@@ -163,6 +165,11 @@ var _last_heard: Dictionary = {}
 ## See _speak_for_the_departed.
 var _spoken_through: Dictionary = {}
 
+## Relay only: what is waiting to go out to each peer this frame, reliable and
+## unreliable kept apart. See _flush_batches.
+var _out_reliable: Dictionary = {}
+var _out_unreliable: Dictionary = {}
+
 ## Relay only: peers the relay has given up on and now speaks for, even though
 ## the socket is still open. See _drop_silent_peers.
 var _departed: Dictionary = {}
@@ -200,6 +207,14 @@ func _ready() -> void:
 	# was scheduled for would take effect a tick later on this machine than the
 	# schedule says - and every machine has to agree about that to the tick.
 	set_physics_process(true)
+
+
+## The relay's outboxes go out here rather than on the tick, so a forwarded turn
+## is not held for a whole simulation step. Everything else this class does lives
+## in _physics_process; this is the one thing that wants to be sooner.
+func _process(_delta: float) -> void:
+	if MatchSession.is_relay() && _is_live():
+		_flush_batches()
 
 
 func _physics_process(_delta: float) -> void:
@@ -570,6 +585,8 @@ func _reset_if_new_match() -> void:
 	_recent.clear()
 	_spoken_through.clear()
 	_departed.clear()
+	_out_reliable.clear()
+	_out_unreliable.clear()
 	_last_heard.clear()
 	_highest_seen = NO_TURN
 	_turn_checksums.clear()
@@ -769,10 +786,10 @@ func _close_through(target: int) -> void:
 ## disagrees with everybody instead of being quietly corrected, which the
 ## checksum catches; the relay is still the only thing other peers believe.
 func _emit(turn: int, payload: Array) -> void:
-	if Net.is_server():
-		_record(turn, NetworkService.SERVER_PEER_ID, payload)
-		receive_turn.rpc(turn, NetworkService.SERVER_PEER_ID, payload)
-		return
+	# **Only a PLAYER reaches here.** There used to be a server branch; under
+	# lockstep every server is the relay (is_relay is is_lockstep and is_server),
+	# and a relay closes no turns, so nothing could ever call it. A relay puts a
+	# word of its own on the wire through inject() instead.
 	_record(turn, multiplayer.get_unique_id(), payload)
 	submit_turn.rpc_id(NetworkService.SERVER_PEER_ID, turn, payload)
 
@@ -832,10 +849,6 @@ func submit_turn(turn: int, payload: Array) -> void:
 	# get_remote_sender_id() names on the second hop - so two clients' orders
 	# overwrote each other under one key and no turn was ever complete.
 	_relay_turn_to_match(turn, sender, stamped)
-	# The relay's own half of the same saving: a forwarded turn should not wait
-	# for the end of the server's frame either.
-	if _flush_immediately():
-		Net.flush()
 
 
 ## Puts a SERVER order into the turn stream - today only a drop (D14).
@@ -874,7 +887,7 @@ func inject(command: Command) -> void:
 	# Under the SERVER's own id, which is what makes it sort first within the
 	# turn - commands_for orders by peer and the relay is peer 1 - so a drop is
 	# applied before anything a player did on the same turn.
-	receive_turn.rpc(turn, NetworkService.SERVER_PEER_ID, payload)
+	_queue(_out_reliable, [turn, NetworkService.SERVER_PEER_ID, payload], 0)
 
 
 ## The last few turns a peer closed, sent again UNRELIABLY alongside the reliable
@@ -921,22 +934,6 @@ func submit_echo(recent: Array) -> void:
 
 	if !stamped_all.is_empty():
 		_relay_echo_to_match(sender, stamped_all)
-		if _flush_immediately():
-			Net.flush()
-
-
-## The relayed echo, on every peer. Same rules as receive_turn: only the server
-## may send it, and it names whose orders these are rather than who forwarded
-## them.
-@rpc("any_peer", "call_remote", "unreliable")
-func receive_echo(from_peer: int, recent: Array) -> void:
-	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
-		return
-	for entry: Variant in recent:
-		var pair: Array = entry as Array
-		if pair == null || pair.size() != 2:
-			continue
-		_record(int(pair[0]), from_peer, pair[1] as Array)
 
 
 ## Sends one turn word to every player in the match and to nobody else.
@@ -948,14 +945,58 @@ func receive_echo(from_peer: int, recent: Array) -> void:
 ## -1, nothing was ever erased, and `_incoming` grew for as long as the match
 ## lasted on a machine that was not playing.
 func _relay_turn_to_match(turn: int, sender: int, stamped: Array) -> void:
-	for id: int in _match_peers():
-		receive_turn.rpc_id(id, turn, sender, stamped)
+	_queue(_out_reliable, [turn, sender, stamped], sender)
 
 
-## The same, for the unreliable echo.
+## The same, for the unreliable echo. `recent` is already a list of [turn,
+## payload] pairs, so it is flattened into the same triple shape here and the two
+## batches read identically at the far end.
 func _relay_echo_to_match(sender: int, recent: Array) -> void:
+	for entry: Variant in recent:
+		var pair: Array = entry as Array
+		if pair != null && pair.size() == 2:
+			_queue(_out_unreliable, [int(pair[0]), sender, pair[1]], sender)
+
+
+## Puts one triple in every match peer's outbox except the one it came from.
+##
+## **Not sent back to its own author**, which is a free saving: `_emit` already
+## recorded it locally the moment it was made, so the copy was pure traffic.
+func _queue(outbox: Dictionary, triple: Array, skip: int) -> void:
 	for id: int in _match_peers():
-		receive_echo.rpc_id(id, sender, recent)
+		if id == skip:
+			continue
+		if !outbox.has(id):
+			outbox[id] = []
+		(outbox[id] as Array).append(triple)
+
+
+## Sends each peer everything waiting for it as ONE message per channel.
+##
+## **The relay's traffic was O(N^2) in packets and this is what fixes it.** Every
+## peer sent two messages a tick and the relay answered EACH with a broadcast, so
+## `2 * N^2` packets per tick, every one of them addressed to a different peer.
+## ENet coalesces within a destination's queue, so it could not merge them: that
+## is 288 packets a tick at twelve players, about 5 Mbit/s of relay upload for a
+## match where nothing is happening. Batched it is one message per peer per
+## channel - twelve.
+##
+## Flushed on the RENDER frame rather than the tick, so nothing waits 50 ms for
+## the relay's next simulation step. The server is capped at 120 fps, so a word
+## waits at most about 8 ms and usually far less: every peer sends within a few
+## milliseconds of every other, so in the ordinary case a whole tick's words land
+## in one batch.
+func _flush_batches() -> void:
+	for id: Variant in _out_reliable:
+		receive_batch.rpc_id(int(id), _out_reliable[id])
+	for id: Variant in _out_unreliable:
+		receive_echo_batch.rpc_id(int(id), _out_unreliable[id])
+
+	var sent: bool = !_out_reliable.is_empty() || !_out_unreliable.is_empty()
+	_out_reliable.clear()
+	_out_unreliable.clear()
+	if sent && _flush_immediately():
+		Net.flush()
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.
@@ -984,14 +1025,34 @@ func _slot_of_peer(peer_id: int) -> int:
 ## them. `from_peer` is stamped by the server and cannot be set by the sender:
 ## a client only ever talks to the server, and the server names the sender from
 ## the connection it arrived on.
+## A batch of turn words, each `[turn, from_peer, payload]`.
+##
+## `_is_live()` as well as the sender check: a machine with no match of its own
+## has nothing to record a turn INTO, and recording one anyway is what let
+## `_incoming` grow without bound on a peer sitting in the lobby browser.
 @rpc("any_peer", "call_remote", "reliable")
-func receive_turn(turn: int, from_peer: int, payload: Array) -> void:
-	# `_is_live()` as well as the sender check: a machine with no match of its own
-	# has nothing to record a turn INTO, and recording one anyway is what let
-	# `_incoming` grow without bound on a peer sitting in the lobby browser.
+func receive_batch(entries: Array) -> void:
 	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
-	_record(turn, from_peer, payload)
+	_absorb(entries)
+
+
+## The same batch on the unreliable channel - the redundancy. Separate rpc rather
+## than a flag, because the CHANNEL is the whole point: a reliable channel is
+## ordered, so a re-send inside it could never overtake the loss it exists to
+## cover.
+@rpc("any_peer", "call_remote", "unreliable")
+func receive_echo_batch(entries: Array) -> void:
+	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	_absorb(entries)
+
+
+func _absorb(entries: Array) -> void:
+	for entry: Variant in entries:
+		var triple: Array = entry as Array
+		if triple != null && triple.size() == 3:
+			_record(int(triple[0]), int(triple[1]), triple[2] as Array)
 
 
 ## Whether a turn number could plausibly belong to this match.
