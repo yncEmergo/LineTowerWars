@@ -924,7 +924,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
 - Controlled by the player only
   - Holding the mouse wheel and dragging
   - Arrow keys
-  - Edge panning, currently switched off in the camera config
+  - Edge panning, which is a PLAYER SETTING on the options screen rather than
+    authored data: it moves the view without being asked to, so whoever is
+    sitting at the machine decides whether it does. Only how wide the edge
+    strip is stays in the camera config
   - The command card's letter keys are deliberately not used for the camera,
     they are reserved for ability hotkeys
 - A center-on-target function exists to snap the camera to the builder or any other unit or building

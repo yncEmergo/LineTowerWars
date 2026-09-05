@@ -19,9 +19,12 @@ extends Resource
 @export var field_of_view: float = 50.0
 ## World units per second while panning.
 @export var pan_speed: float = 20.0
-## Panning by pushing the cursor against a screen edge.
-@export var allow_edge_panning: bool = true
 ## How close the cursor must get to a screen edge to start panning.
+##
+## WHETHER it pans at all is not here: that is a preference of whoever is
+## sitting at the machine rather than authored data, so it lives on
+## UserSettings with the rest of the options screen. This is only how wide the
+## strip is once they have switched it on.
 @export var edge_margin_px: int = 12
 ## Arrow-key panning, used alongside edge panning.
 @export var allow_key_panning: bool = true

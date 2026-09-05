@@ -1,9 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bjiahd1ki3jn8"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Menus/OptionsMenu.gd" id="1_options_menu"]
-[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="2_menu_theme"]
+[ext_resource type="Script" uid="uid://cltjbvqsa44ue" path="res://Scripts/UI/Menus/OptionsMenu.gd" id="1_options_menu"]
+[ext_resource type="Theme" uid="uid://bfubasb74au3u" path="res://Resources/UI/menu_theme.tres" id="2_menu_theme"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/volume_row.tscn" id="3_volume_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/hotkey_row.tscn" id="4_hotkey_row"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_page"]
 content_margin_left = 28.0
@@ -21,15 +23,13 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
-
 [sub_resource type="ButtonGroup" id="ButtonGroup_window_mode"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_health_bars"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_keyboard_layout"]
 
-[node name="OptionsMenu" type="Control" node_paths=PackedStringArray("_tab_row", "_page_stack", "_window_mode_row", "_shadows_button", "_health_bar_row", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
+[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_window_mode_row", "_shadows_button", "_health_bar_row", "_edge_panning_button", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -44,6 +44,7 @@ _page_stack = NodePath("Layout/Column/PageStack")
 _window_mode_row = NodePath("Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices")
 _shadows_button = NodePath("Layout/Column/PageStack/VideoPage/ShadowsSetting/ShadowsButton")
 _health_bar_row = NodePath("Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices")
+_edge_panning_button = NodePath("Layout/Column/PageStack/GameplayPage/EdgePanningSetting/EdgePanningButton")
 _mute_button = NodePath("Layout/Column/PageStack/AudioPage/MuteSetting/MuteButton")
 _keyboard_layout_row = NodePath("Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices")
 _hotkey_list = NodePath("Layout/Column/PageStack/HotkeysPage/HotkeyList")
@@ -52,7 +53,7 @@ _hotkey_message = NodePath("Layout/Column/PageStack/HotkeysPage/MessageLabel")
 _reset_hotkeys_button = NodePath("Layout/Column/PageStack/HotkeysPage/ResetRow/ResetButton")
 _back_button = NodePath("Layout/Column/Footer/BackButton")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=370879621]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -61,7 +62,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.04, 0.045, 0.06, 1)
 
-[node name="Layout" type="MarginContainer" parent="."]
+[node name="Layout" type="MarginContainer" parent="." unique_id=249948951]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,21 +74,21 @@ theme_override_constants/margin_top = 36
 theme_override_constants/margin_right = 56
 theme_override_constants/margin_bottom = 32
 
-[node name="Column" type="VBoxContainer" parent="Layout"]
+[node name="Column" type="VBoxContainer" parent="Layout" unique_id=1192978870]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TitleLabel" type="Label" parent="Layout/Column"]
+[node name="TitleLabel" type="Label" parent="Layout/Column" unique_id=1211787857]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 28
 text = "Options"
 
-[node name="TabRow" type="HBoxContainer" parent="Layout/Column"]
+[node name="TabRow" type="HBoxContainer" parent="Layout/Column" unique_id=1738100486]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="VideoTab" type="Button" parent="Layout/Column/TabRow"]
+[node name="VideoTab" type="Button" parent="Layout/Column/TabRow" unique_id=1750765287]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 toggle_mode = true
@@ -95,57 +96,56 @@ button_pressed = true
 button_group = SubResource("ButtonGroup_tabs")
 text = "Video"
 
-[node name="AudioTab" type="Button" parent="Layout/Column/TabRow"]
+[node name="AudioTab" type="Button" parent="Layout/Column/TabRow" unique_id=1057819559]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_tabs")
 text = "Audio"
 
-[node name="GameplayTab" type="Button" parent="Layout/Column/TabRow"]
+[node name="GameplayTab" type="Button" parent="Layout/Column/TabRow" unique_id=1253133856]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_tabs")
 text = "Gameplay"
 
-[node name="HotkeysTab" type="Button" parent="Layout/Column/TabRow"]
+[node name="HotkeysTab" type="Button" parent="Layout/Column/TabRow" unique_id=1782908225]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_tabs")
 text = "Hotkeys"
 
-[node name="PageStack" type="PanelContainer" parent="Layout/Column"]
+[node name="PageStack" type="PanelContainer" parent="Layout/Column" unique_id=165362056]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_page")
 
-[node name="VideoPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+[node name="VideoPage" type="VBoxContainer" parent="Layout/Column/PageStack" unique_id=1858504505]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/VideoPage"]
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/VideoPage" unique_id=1138244229]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 20
 text = "Display"
 
-[node name="WindowModeSetting" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage"]
+[node name="WindowModeSetting" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage" unique_id=1483083905]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting"]
+[node name="Label" type="Label" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting" unique_id=48553943]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_vertical = 4
 text = "Window Mode"
 
-[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting"]
+[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting" unique_id=1855250271]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="WindowedButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+[node name="WindowedButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices" unique_id=970275485]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
@@ -153,125 +153,122 @@ button_pressed = true
 button_group = SubResource("ButtonGroup_window_mode")
 text = "Windowed"
 
-[node name="WindowedFullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+[node name="WindowedFullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices" unique_id=1775217841]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_window_mode")
 text = "Windowed Fullscreen"
 
-[node name="FullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices"]
+[node name="FullscreenButton" type="Button" parent="Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices" unique_id=1777383078]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_window_mode")
 text = "Fullscreen"
 
-[node name="ShadowsSetting" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage"]
+[node name="ShadowsSetting" type="HBoxContainer" parent="Layout/Column/PageStack/VideoPage" unique_id=1746652574]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="Layout/Column/PageStack/VideoPage/ShadowsSetting"]
+[node name="Label" type="Label" parent="Layout/Column/PageStack/VideoPage/ShadowsSetting" unique_id=1217133041]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_vertical = 4
 text = "Shadows"
 
-[node name="ShadowsButton" type="CheckButton" parent="Layout/Column/PageStack/VideoPage/ShadowsSetting"]
+[node name="ShadowsButton" type="CheckButton" parent="Layout/Column/PageStack/VideoPage/ShadowsSetting" unique_id=236658846]
 layout_mode = 2
 size_flags_vertical = 4
 button_pressed = true
 
-[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/VideoPage"]
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/VideoPage" unique_id=1275036230]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 13
 text = "Resolution, refresh rate and graphics quality are not settings yet."
 
-[node name="AudioPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+[node name="AudioPage" type="VBoxContainer" parent="Layout/Column/PageStack" unique_id=457184188]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/AudioPage"]
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/AudioPage" unique_id=22206005]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 20
 text = "Volume"
 
-[node name="VolumeList" type="VBoxContainer" parent="Layout/Column/PageStack/AudioPage"]
+[node name="VolumeList" type="VBoxContainer" parent="Layout/Column/PageStack/AudioPage" unique_id=985819946]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MasterRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="MasterRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=65921263 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 
-[node name="UIRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="UIRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=68889473 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 channel = 1
 
-[node name="SFXRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="SFXRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=257331751 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 channel = 2
 
-[node name="MusicRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="MusicRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=1334845369 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 channel = 3
 
-[node name="SpeechRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="SpeechRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=1670488544 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 channel = 4
 
-[node name="AtmoRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" instance=ExtResource("3_volume_row")]
+[node name="AtmoRow" parent="Layout/Column/PageStack/AudioPage/VolumeList" unique_id=153764029 instance=ExtResource("3_volume_row")]
 layout_mode = 2
 channel = 5
 
-[node name="MuteSetting" type="HBoxContainer" parent="Layout/Column/PageStack/AudioPage"]
+[node name="MuteSetting" type="HBoxContainer" parent="Layout/Column/PageStack/AudioPage" unique_id=436175669]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="Layout/Column/PageStack/AudioPage/MuteSetting"]
+[node name="Label" type="Label" parent="Layout/Column/PageStack/AudioPage/MuteSetting" unique_id=511648352]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_vertical = 4
 text = "Mute All"
 
-[node name="MuteButton" type="CheckButton" parent="Layout/Column/PageStack/AudioPage/MuteSetting"]
+[node name="MuteButton" type="CheckButton" parent="Layout/Column/PageStack/AudioPage/MuteSetting" unique_id=750110352]
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/AudioPage"]
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/AudioPage" unique_id=787838857]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 13
 text = "There is no sound in the build yet. These are remembered and take effect once there is."
 
-[node name="GameplayPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+[node name="GameplayPage" type="VBoxContainer" parent="Layout/Column/PageStack" unique_id=1171906410]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage"]
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage" unique_id=763315894]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 20
 text = "Interface"
 
-[node name="HealthBarSetting" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage"]
+[node name="HealthBarSetting" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage" unique_id=460132721]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting"]
+[node name="Label" type="Label" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting" unique_id=1404364780]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_vertical = 4
 text = "Unit Health Bars"
 
-[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting"]
+[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting" unique_id=851919517]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="AlwaysButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+[node name="AlwaysButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices" unique_id=793261273]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
@@ -279,52 +276,78 @@ button_pressed = true
 button_group = SubResource("ButtonGroup_health_bars")
 text = "Always"
 
-[node name="WhenDamagedButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+[node name="WhenDamagedButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices" unique_id=1801250594]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_health_bars")
 text = "Only When Damaged"
 
-[node name="NeverButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices"]
+[node name="NeverButton" type="Button" parent="Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices" unique_id=859561289]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_health_bars")
 text = "Never"
 
-[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage"]
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage" unique_id=369915756]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 13
 text = "The bars drawn over units in the world, yours and everyone else's alike."
 
-[node name="HotkeysPage" type="VBoxContainer" parent="Layout/Column/PageStack"]
+[node name="CameraLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage" unique_id=1840875904]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Camera"
+
+[node name="EdgePanningSetting" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage" unique_id=675251643]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/GameplayPage/EdgePanningSetting" unique_id=147630192]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Edge Panning"
+
+[node name="EdgePanningButton" type="CheckButton" parent="Layout/Column/PageStack/GameplayPage/EdgePanningSetting" unique_id=1025199908]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="CameraHintLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage" unique_id=1542012861]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "Pans the camera when the cursor is pushed against a screen edge. The arrow keys and a middle mouse drag pan either way."
+autowrap_mode = 3
+
+[node name="HotkeysPage" type="VBoxContainer" parent="Layout/Column/PageStack" unique_id=175074307]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="SectionLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage" unique_id=1677119367]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 20
 text = "Hotkeys"
 
-[node name="KeyboardLayoutSetting" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="KeyboardLayoutSetting" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage" unique_id=1171557443]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting"]
+[node name="Label" type="Label" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting" unique_id=2025704977]
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
-size_flags_vertical = 4
 text = "Keyboard Layout"
 
-[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting"]
+[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting" unique_id=1704544871]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="EuropeanButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices"]
+[node name="EuropeanButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices" unique_id=307082461]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
@@ -332,14 +355,14 @@ button_pressed = true
 button_group = SubResource("ButtonGroup_keyboard_layout")
 text = "European"
 
-[node name="AmericanButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices"]
+[node name="AmericanButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices" unique_id=26383066]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_keyboard_layout")
 text = "American"
 
-[node name="LayoutHintLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="LayoutHintLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage" unique_id=643363867]
 custom_minimum_size = Vector2(760, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
@@ -347,32 +370,32 @@ theme_override_font_sizes/font_size = 13
 text = "Swaps Y and Z on the bottom row of the command card and the Research Center. Everything else is in the same place on both boards."
 autowrap_mode = 3
 
-[node name="CommandsLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="CommandsLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage" unique_id=775321135]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 20
 text = "Commands"
 
-[node name="HotkeyList" type="VBoxContainer" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="HotkeyList" type="VBoxContainer" parent="Layout/Column/PageStack/HotkeysPage" unique_id=872416366]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MessageLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="MessageLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage" unique_id=1521462578]
 custom_minimum_size = Vector2(760, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
 
-[node name="ResetRow" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="ResetRow" type="HBoxContainer" parent="Layout/Column/PageStack/HotkeysPage" unique_id=724971003]
 layout_mode = 2
 
-[node name="ResetButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/ResetRow"]
+[node name="ResetButton" type="Button" parent="Layout/Column/PageStack/HotkeysPage/ResetRow" unique_id=1257735798]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 text = "Reset To Defaults"
 
-[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage"]
+[node name="HintLabel" type="Label" parent="Layout/Column/PageStack/HotkeysPage" unique_id=1910344171]
 custom_minimum_size = Vector2(760, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
@@ -380,15 +403,15 @@ theme_override_font_sizes/font_size = 13
 text = "Every other ability reads its key off the SQUARE it sits on, which is why only these few are here. Click a key to change it, then press the one you want - Escape keeps the old one, Delete leaves the command without a key. The command card's own letters are not on offer."
 autowrap_mode = 3
 
-[node name="Footer" type="HBoxContainer" parent="Layout/Column"]
+[node name="Footer" type="HBoxContainer" parent="Layout/Column" unique_id=240664108]
 layout_mode = 2
 
-[node name="Spacer" type="Control" parent="Layout/Column/Footer"]
+[node name="Spacer" type="Control" parent="Layout/Column/Footer" unique_id=72173270]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Layout/Column/Footer"]
+[node name="BackButton" type="Button" parent="Layout/Column/Footer" unique_id=775043313]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 text = "Back"

@@ -55,6 +55,10 @@ const AUDIO_NAMES: Array[String] = [
 
 const DEFAULT_VOLUME: float = 0.8
 const DEFAULT_AUDIO_MUTED: bool = false
+## Edge panning off to start with. It is the one camera control that moves the
+## view without being asked to, so a player who does not want it should not
+## have to find the switch that turns it off - only the one that turns it on.
+const DEFAULT_EDGE_PANNING: bool = false
 ## Shadows on by default: the game is meant to be looked at, and with the sun's
 ## cast distance trimmed to what the camera can actually see they are no longer
 ## the several-times-the-scene cost they used to be. This is the escape hatch
@@ -129,6 +133,10 @@ static var player_name: String = ""
 static var window_mode: WindowMode = DEFAULT_WINDOW_MODE
 static var shadows_enabled: bool = DEFAULT_SHADOWS_ENABLED
 static var health_bar_display: HealthBarDisplay = DEFAULT_HEALTH_BAR_DISPLAY
+## Whether pushing the cursor against a screen edge pans the camera. How WIDE
+## that edge strip is stays on CameraConfig - that is a tuning value and this
+## is a preference.
+static var edge_panning: bool = DEFAULT_EDGE_PANNING
 static var audio_muted: bool = DEFAULT_AUDIO_MUTED
 static var keyboard_layout: KeyboardLayout = DEFAULT_KEYBOARD_LAYOUT
 
@@ -176,6 +184,8 @@ static func load_from_disk() -> void:
 		DEFAULT_HEALTH_BAR_DISPLAY, HealthBarDisplay.size()) as HealthBarDisplay
 	shadows_enabled = bool(file.get_value(SECTION_VIDEO, "shadows",
 		DEFAULT_SHADOWS_ENABLED))
+	edge_panning = bool(file.get_value(SECTION_GAMEPLAY, "edge_panning",
+		DEFAULT_EDGE_PANNING))
 	audio_muted = bool(file.get_value(SECTION_AUDIO, "muted", DEFAULT_AUDIO_MUTED))
 
 	for channel: int in range(AUDIO_KEYS.size()):
@@ -214,6 +224,7 @@ static func save_to_disk() -> void:
 	file.set_value(SECTION_VIDEO, "window_mode", int(window_mode))
 	file.set_value(SECTION_VIDEO, "shadows", shadows_enabled)
 	file.set_value(SECTION_GAMEPLAY, "health_bar_display", int(health_bar_display))
+	file.set_value(SECTION_GAMEPLAY, "edge_panning", edge_panning)
 	file.set_value(SECTION_AUDIO, "muted", audio_muted)
 	for channel: int in range(AUDIO_KEYS.size()):
 		file.set_value(SECTION_AUDIO, AUDIO_KEYS[channel], _volumes[channel])
@@ -276,6 +287,15 @@ static func set_health_bar_display(mode: HealthBarDisplay) -> void:
 	if mode == health_bar_display:
 		return
 	health_bar_display = mode
+	save_to_disk()
+
+
+## Nothing has to be told: RTSCamera asks this every tick it reads pan input,
+## so a camera already standing in a match follows the change on its own.
+static func set_edge_panning(value: bool) -> void:
+	if value == edge_panning:
+		return
+	edge_panning = value
 	save_to_disk()
 
 

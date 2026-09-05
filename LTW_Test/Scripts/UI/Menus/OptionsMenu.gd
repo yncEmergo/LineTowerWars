@@ -42,6 +42,9 @@ signal closed
 @export var _shadows_button: BaseButton
 ## Always / Only when damaged / Never, in HealthBarDisplay order.
 @export var _health_bar_row: BoxContainer
+## Panning the camera by pushing the cursor against a screen edge. How wide
+## that strip is stays authored on CameraConfig; only the switch is here.
+@export var _edge_panning_button: BaseButton
 ## Silences everything at once, independently of the six levels.
 @export var _mute_button: BaseButton
 ## European / American, in UserSettings.KeyboardLayout order.
@@ -76,6 +79,8 @@ func _ready() -> void:
 
 	if _shadows_button != null:
 		_shadows_button.toggled.connect(_on_shadows_toggled)
+	if _edge_panning_button != null:
+		_edge_panning_button.toggled.connect(_on_edge_panning_toggled)
 	if _mute_button != null:
 		_mute_button.toggled.connect(_on_mute_toggled)
 	if _reset_hotkeys_button != null:
@@ -130,6 +135,8 @@ func _sync_from_settings() -> void:
 	if _shadows_button != null:
 		_shadows_button.set_pressed_no_signal(UserSettings.shadows_enabled)
 	_press_in_row(_health_bar_row, int(UserSettings.health_bar_display))
+	if _edge_panning_button != null:
+		_edge_panning_button.set_pressed_no_signal(UserSettings.edge_panning)
 	_press_in_row(_keyboard_layout_row, int(UserSettings.keyboard_layout))
 	if _mute_button != null:
 		_mute_button.set_pressed_no_signal(UserSettings.audio_muted)
@@ -206,6 +213,12 @@ func _on_shadows_toggled(pressed: bool) -> void:
 func _on_health_bar_pressed(index: int) -> void:
 	UserSettings.set_health_bar_display(index as UserSettings.HealthBarDisplay)
 	get_tree().call_group(HealthBar3D.GROUP, "refresh_visibility")
+
+
+## No live camera to tell: RTSCamera reads the setting every tick it looks at
+## pan input, so one already standing in a match picks this up by itself.
+func _on_edge_panning_toggled(pressed: bool) -> void:
+	UserSettings.set_edge_panning(pressed)
 
 
 func _on_mute_toggled(pressed: bool) -> void:

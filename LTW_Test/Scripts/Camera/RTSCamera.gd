@@ -266,7 +266,9 @@ func _read_pan_input() -> Vector2:
 
 
 func _read_edge_pan() -> Vector2:
-	if !_config.allow_edge_panning:
+	# A player setting rather than authored data, so it is asked every tick and
+	# the options screen has nothing to tell this camera when it changes.
+	if !UserSettings.edge_panning:
 		return Vector2.ZERO
 
 	# A middle drag routinely takes the cursor to a screen edge, and edge
