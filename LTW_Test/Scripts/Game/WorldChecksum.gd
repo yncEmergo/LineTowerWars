@@ -69,6 +69,14 @@ static func _add_rng(parts: PackedStringArray, session: MatchSession) -> void:
 		parts.append("rng:none")
 		return
 	parts.append("rng:%d" % session.rng().state)
+	# **The match CLOCK, which nothing was comparing.** `tick()` is derived from
+	# the engine's physics frame with the time spent held subtracted, not from the
+	# turn number - so "the tick equals the turn minus whatever this peer paused
+	# for" is an invariant that holds by construction and was never checked. It
+	# drives creep unlocks and Sudden Death, so a peer whose clock slipped would
+	# unlock a creep early and only report it later and indirectly, as position
+	# drift with no obvious cause.
+	parts.append("tick:%d" % session.tick())
 
 
 static func _add_setup(parts: PackedStringArray, setup: MatchSetup) -> void:

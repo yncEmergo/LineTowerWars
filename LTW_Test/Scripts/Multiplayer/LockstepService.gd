@@ -376,15 +376,21 @@ func _measure_and_announce() -> void:
 	if !Net.is_server() || _frames % MEASURE_EVERY_FRAMES != 0:
 		return
 
+	# Only the players. Measuring across every connected peer meant somebody
+	# browsing lobbies on a bad connection raised the input delay for the people
+	# actually in the match.
 	var worst: int = 0
-	for peer: int in multiplayer.get_peers():
-		if peer == NetworkService.SERVER_PEER_ID:
-			continue
+	var readable: bool = false
+	for peer: int in _match_peers():
 		var one_way: int = _one_way_to(peer)
 		if one_way != NetworkService.UNKNOWN_RTT:
 			worst = maxi(worst, one_way)
+			readable = true
 
-	if worst == _worst_one_way:
+	# Nothing readable yet is NOT the same as "everybody is close". Announcing
+	# the zero would tell every peer to size its delay for a perfect link, and
+	# under-estimating the budget is exactly what causes a stall.
+	if !readable || worst == _worst_one_way:
 		return
 	_worst_one_way = worst
 	announce_one_way.rpc(worst)
@@ -728,7 +734,7 @@ func submit_turn(turn: int, payload: Array) -> void:
 	# peer's turn under the SERVER's id, because that is who
 	# get_remote_sender_id() names on the second hop - so two clients' orders
 	# overwrote each other under one key and no turn was ever complete.
-	receive_turn.rpc(turn, sender, stamped)
+	_relay_turn_to_match(turn, sender, stamped)
 	# The relay's own half of the same saving: a forwarded turn should not wait
 	# for the end of the server's frame either.
 	if _flush_immediately():
@@ -815,7 +821,7 @@ func submit_echo(recent: Array) -> void:
 		stamped_all.append([turn, stamped])
 
 	if !stamped_all.is_empty():
-		receive_echo.rpc(sender, stamped_all)
+		_relay_echo_to_match(sender, stamped_all)
 		if _flush_immediately():
 			Net.flush()
 
@@ -825,13 +831,32 @@ func submit_echo(recent: Array) -> void:
 ## them.
 @rpc("any_peer", "call_remote", "unreliable")
 func receive_echo(from_peer: int, recent: Array) -> void:
-	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
 	for entry: Variant in recent:
 		var pair: Array = entry as Array
 		if pair == null || pair.size() != 2:
 			continue
 		_record(int(pair[0]), from_peer, pair[1] as Array)
+
+
+## Sends one turn word to every player in the match and to nobody else.
+##
+## **`rpc()` broadcasts to every CONNECTED peer**, which meant the whole match's
+## turn stream - and its whole bandwidth - was sent to anyone sitting in the lobby
+## browser. Worse, `receive_turn` recorded it: a machine not in a match never runs
+## `_reset_if_new_match` (it is behind `_is_live()`), so `_last_run_turn` stayed
+## -1, nothing was ever erased, and `_incoming` grew for as long as the match
+## lasted on a machine that was not playing.
+func _relay_turn_to_match(turn: int, sender: int, stamped: Array) -> void:
+	for id: int in _match_peers():
+		receive_turn.rpc_id(id, turn, sender, stamped)
+
+
+## The same, for the unreliable echo.
+func _relay_echo_to_match(sender: int, recent: Array) -> void:
+	for id: int in _match_peers():
+		receive_echo.rpc_id(id, sender, recent)
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.
@@ -862,7 +887,10 @@ func _slot_of_peer(peer_id: int) -> int:
 ## the connection it arrived on.
 @rpc("any_peer", "call_remote", "reliable")
 func receive_turn(turn: int, from_peer: int, payload: Array) -> void:
-	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+	# `_is_live()` as well as the sender check: a machine with no match of its own
+	# has nothing to record a turn INTO, and recording one anyway is what let
+	# `_incoming` grow without bound on a peer sitting in the lobby browser.
+	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
 	_record(turn, from_peer, payload)
 
@@ -889,8 +917,40 @@ func _missing_peers(by_peer: Dictionary) -> PackedInt32Array:
 	return missing
 
 
-## Everyone whose orders a turn is waiting on: every connected PLAYER, and THIS
-## MACHINE. Not the relay - see below.
+## Every peer id in THIS MATCH, from the roster rather than from the transport.
+##
+## **`multiplayer.get_peers()` answers "who is connected to this process", and
+## every caller here wanted "who is in this match".** Those were the same number
+## in every test ever run, because every headless run was one server and exactly
+## two clients who were both playing - a topology that cannot falsify the
+## assumption.
+##
+## They stop being the same the moment a THIRD person presses Multiplayer, which
+## connects them (D20) and, because `SceneMultiplayer.server_relay` defaults to
+## true, announces them to every other client. See _expected_peers for what that
+## did.
+func _match_peers() -> PackedInt32Array:
+	var ids: PackedInt32Array = PackedInt32Array()
+	var session: MatchSession = References.match_session
+	var setup: MatchSetup = null if session == null else session.setup()
+	if setup == null:
+		return ids
+	for player: MatchPlayer in setup.players:
+		if player != null && player.network_id != NetworkService.SERVER_PEER_ID:
+			ids.append(player.network_id)
+	return ids
+
+
+## Everyone whose orders a turn is waiting on: every PLAYER IN THIS MATCH who is
+## still connected, plus this machine. Not the relay - see below.
+##
+## **This used to read the transport's peer list, and that was a match-freezing
+## bug.** Anyone who pressed Multiplayer connected to the server, Godot announced
+## them to both players, and both players' expectation sets grew to include a peer
+## who was sitting in the lobby browser and would never send a turn for anything.
+## `_is_complete` then never returned true again and the world was held still for
+## the rest of the match, with the stall panel naming a peer id that was not in
+## the match. It needed three people on one server and no test had ever had that.
 ##
 ## Including itself looks redundant and is not. `multiplayer.get_peers()` never
 ## names the local peer, so without this line a client's completeness test never
@@ -903,11 +963,15 @@ func _expected_peers() -> PackedInt32Array:
 	# simulates no world and issues no orders, so requiring its word every turn
 	# bought nothing and gave every turn a second way to be late.
 	var peers: PackedInt32Array = PackedInt32Array()
-	for id: int in multiplayer.get_peers():
-		if id != NetworkService.SERVER_PEER_ID:
+	var connected: PackedInt32Array = multiplayer.get_peers()
+	var me: int = multiplayer.get_unique_id()
+	for id: int in _match_peers():
+		# This machine is never in its own peer list, and a player who has left
+		# is no longer waited on - which is still the transport's answer to a
+		# question the turn stream should own. See the to-do on turn-synchronised
+		# drops; it is a race at three players and cannot bite a 1v1.
+		if id == me || id in connected:
 			peers.append(id)
-	if !Net.is_server():
-		peers.append(multiplayer.get_unique_id())
 	return peers
 
 
