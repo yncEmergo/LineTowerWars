@@ -1189,6 +1189,10 @@ func _maybe_report_checksum(turn: int) -> void:
 	if session == null:
 		return
 	var sum: int = WorldChecksum.of(session.setup(), _areas(), session)
+	# Beside the input hashes in the same file, so a reader can line the two up:
+	# inputs agreeing while states diverge is a simulation bug, inputs diverging
+	# is a network one. See SessionLog.
+	SessionLog.note("turn.state", {"n": turn, "sum": sum})
 
 	if Net.is_server():
 		_compare_turn(turn, NetworkService.SERVER_PEER_ID, sum)

@@ -37,6 +37,23 @@ extends RefCounted
 ## Anything genuinely unusual also calls `note()` directly - a desync, an order
 ## running late - because those are the lines somebody reading this afterwards
 ## is actually looking for.
+##
+## ## The turn stream, and why it is the whole point
+##
+## **A checksum says WHICH TURN two worlds parted on. It says nothing about why,
+## and a desync a tester reports is otherwise unreproducible.** The turn stream is
+## the replay format: the same orders on the same turns from the same seed rebuild
+## the same match, because that is what determinism means. So every turn that
+## carried an order is written here, and `MatchSetup`'s seed is already in the
+## header.
+##
+## Two hashes are kept rather than one, which costs a line and answers a question
+## the state hash cannot. The INPUT hash covers the orders a turn carried; the
+## state hash covers the world they produced. If the inputs match and the states
+## diverge it is the SIMULATION - two machines computed differently from the same
+## orders. If the inputs diverge it is the NETWORK - they were not given the same
+## orders to begin with. Without the split those two are indistinguishable, and
+## they want completely different investigations.
 
 ## Where session logs are written.
 const DIRECTORY: String = "user://logs"
@@ -90,6 +107,12 @@ static func note(event: String, data: Variant = null) -> void:
 	# ended in a crash, and a buffered tail is exactly the part that would be
 	# lost.
 	_file.flush()
+
+
+## Whether this turn gets an input hash of its own. Same cadence as the health
+## line, so the two read together.
+static func _input_hash_every(turn: int) -> bool:
+	return turn % SAMPLE_EVERY_TURNS == 0
 
 
 # --- opening and closing ---------------------------------------------------
@@ -245,7 +268,17 @@ static func _on_stalled(turn: int, missing: PackedInt32Array) -> void:
 
 ## The periodic health line. Rides a signal that is already firing rather than
 ## keeping a timer, which is what lets this be a class with no node.
-static func _on_turn_ready(turn: int, _commands: Array) -> void:
+static func _on_turn_ready(turn: int, commands: Array) -> void:
+	# The stream itself. Empty turns are the overwhelming majority and are left
+	# out - a replay can assume "no orders" for any turn it does not name, which
+	# is what makes this affordable to keep for a whole match.
+	if !commands.is_empty():
+		note("turn", {"n": turn, "in": hash(commands), "orders": commands})
+	elif _input_hash_every(turn):
+		# A periodic input hash even on empty turns, so a divergence in what the
+		# peers were GIVEN is caught rather than inferred from its consequences.
+		note("turn.inputs", {"n": turn, "in": hash(commands)})
+
 	if turn % SAMPLE_EVERY_TURNS != 0:
 		return
 	note("lockstep.health", {
