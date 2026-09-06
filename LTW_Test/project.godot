@@ -12,6 +12,7 @@ config_version=5
 
 config/name="LTW_Test"
 run/main_scene="res://Scenes/Boot/boot.tscn"
+config/icon="res://2DArt/Icons/ultimate_firelord.png"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
