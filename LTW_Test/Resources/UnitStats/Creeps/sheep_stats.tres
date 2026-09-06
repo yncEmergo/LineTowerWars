@@ -15,6 +15,7 @@ creep_stats = ExtResource("5_timber_wolf")
 script = ExtResource("1_creep_stats")
 pack_size = 2
 pack_companions = Array[ExtResource("4_pack_entry")]([SubResource("Companion_timber_wolf")])
+unlock_seconds = 10.0
 body_radius = 0.16
 move_speed = 1.75
 turn_speed = 8.0

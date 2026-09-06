@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="SendCreepAbility" format=3]
+[gd_resource type="Resource" script_class="SendCreepAbility" format=3 uid="uid://cypd3a86iy0l"]
 
-[ext_resource type="Script" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
-[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/sheep_stats.tres" id="2_stats"]
+[ext_resource type="Script" uid="uid://deghcuvkphaad" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
+[ext_resource type="Resource" uid="uid://mx4t47d4bi6u" path="res://Resources/UnitStats/Creeps/sheep_stats.tres" id="2_stats"]
 
 [resource]
 script = ExtResource("1_send_creep")
+creep_stats = ExtResource("2_stats")
 ability_id = 41
 display_name = "Sheep"
 description = "Sends a pack into the enemy maze and raises your income permanently."
-targeting = 1
 slot = 0
 repeat_on_hold = true
-creep_stats = ExtResource("2_stats")

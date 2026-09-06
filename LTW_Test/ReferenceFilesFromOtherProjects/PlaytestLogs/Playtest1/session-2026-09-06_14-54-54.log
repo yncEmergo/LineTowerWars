@@ -1,0 +1,3 @@
+[    0.000] session.begin  { "utc": "2026-09-06T12:54:54", "platform": "Windows", "engine": "4.7.2-stable (official)", "debug_build": true, "build": "prototype · dev build" }
+[    0.000] config  { "protocol": 2, "lockstep": true, "ticks_per_turn": 1, "adaptive_delay": true, "delay_range": [1, 12], "jitter_margin_ms": 0, "address": "127.0.0.1", "port": 7777 }
+[   13.910] session.end  { "stalls": 0 }

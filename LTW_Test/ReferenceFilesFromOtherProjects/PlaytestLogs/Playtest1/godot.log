@@ -1,0 +1,16 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[godot_ai game_helper] registered mcp capture (debugger active=true, logger=true)
+[Boot:102]: [INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[NetworkService:647]: [INFO] Connecting { "address": 127.0.0.1, "port": 7777, "candidate": 1, "of": 2 }
+[NetworkService:360]: [INFO] No answer in time { "address": 127.0.0.1 }
+[NetworkService:647]: [INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 2, "of": 2 }
+[NetworkService:414]: [INFO] Connected to the server { "peer_id": 1011287896, "address": 167.233.153.19 }
+[NetworkService:456]: [INFO] The server is on the line
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 0 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 1, "host": true }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[SessionLog:143]: [INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-06_14-54-54.log }
+[SessionLog:153]: [INFO] Session logging off { "path": user://logs/session-2026-09-06_14-54-54.log }
+[NetworkService:404]: [INFO] Closing the connection on the way out

@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="SendCreepAbility" format=3]
+[gd_resource type="Resource" script_class="SendCreepAbility" format=3 uid="uid://c02xjp8vceoph"]
 
-[ext_resource type="Script" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
-[ext_resource type="Resource" path="res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres" id="2_stats"]
+[ext_resource type="Script" uid="uid://deghcuvkphaad" path="res://Scripts/Abilities/SendCreepAbility.gd" id="1_send_creep"]
+[ext_resource type="Resource" uid="uid://bpwtndmsrmbqs" path="res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres" id="2_stats"]
 
 [resource]
 script = ExtResource("1_send_creep")
+creep_stats = ExtResource("2_stats")
 ability_id = 44
 display_name = "Skeleton Warrior"
 description = "Sends a pack into the enemy maze and raises your income permanently."
-targeting = 1
 slot = 1
 repeat_on_hold = true
-creep_stats = ExtResource("2_stats")
