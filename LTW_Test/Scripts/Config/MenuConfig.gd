@@ -54,7 +54,9 @@ extends Resource
 ## the room. A ranked match never reaches any of them - it is played on the
 ## defaults - so these only ever bound a custom game.
 @export var max_lives_per_player: int = 500
-@export var max_starting_gold: int = 10000000
+## Never above GameConfig.gold_cap: a host who types a number the match will
+## silently trim has been told a lie by the room.
+@export var max_starting_gold: int = 9999999
 @export var max_free_technologies: int = 30
 @export var max_starting_income: int = 1000000
 ## Seconds. A floor as well as a ceiling: an income interval of zero is a

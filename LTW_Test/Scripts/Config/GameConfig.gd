@@ -267,6 +267,17 @@ extends Resource
 ## BuildingStats. One value until then, because a second one today would only
 ## ever read the same.
 @export_range(0.0, 1.0, 0.05) var sell_refund_ratio: float = 0.6
+## The most gold a player may ever hold. Anything earned over it is LOST rather
+## than banked - a payout is capped as it lands, not refused.
+##
+## Seven nines because that is what a gold field can show without the number
+## running out of the panel, and it is far above anything the economy reaches
+## by playing: the whole roster's most expensive tower is a fraction of it. It
+## is a ceiling on the arithmetic rather than a balance figure, which is why it
+## is here and not in MatchSettings - no host has a reason to choose it.
+##
+## 0 switches the cap off entirely.
+@export var gold_cap: int = 9999999
 
 @export_group("Technology")
 ## Technologies a player gets for nothing at the start of a match. Every one

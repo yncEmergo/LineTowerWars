@@ -2514,6 +2514,14 @@ fixed for the life of that match.
   ratio gets worse as creeps get stronger. Special creeps such as attackers are
   worse still, and some Tier 4 creeps grant no income at all
 - There is an income CAP, above which Tier 4 income gain is heavily reduced
+- **There is a GOLD CEILING, and gold earned above it is LOST rather than
+  banked.** BUILT. It holds for every road gold arrives by - an income tick, a
+  bounty, a refund, a developer cheat - because the ceiling is applied where
+  gold is paid in rather than at each payer. Spending under it frees the room
+  again, so a player at the ceiling is not stuck, only capped
+  - it is a ceiling on the arithmetic rather than a balance figure. Nothing in
+    the roster costs a fraction of it, and no host chooses it, which is why it
+    is in `game_config.tres` and not in the match settings
 - Killing creeps in your own area pays bounty gold, see Creeps
 - Every one of these numbers - send cost, income, bounty, the cap - is in
   `unit_data.md`, sections 1.7 and 6

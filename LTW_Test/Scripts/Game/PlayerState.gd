@@ -48,10 +48,14 @@ var creeps_unlocked: bool = false
 ## only holds the record.
 var tech: PlayerTech = PlayerTech.new()
 
+var _config: GameConfig:
+	get:
+		return References.game_config
+
 
 func setup(id: int, starting_gold: int, starting_income: int, starting_lives: int) -> void:
 	player_id = id
-	gold = starting_gold
+	gold = _capped(starting_gold)
 	income = starting_income
 	lives = starting_lives
 	creeps_unlocked = false
@@ -76,10 +80,20 @@ func spend(amount: int) -> bool:
 	return true
 
 
+## Pays gold in, up to the ceiling. Anything over it is LOST rather than
+## banked, which is what the cap means: a player sitting at the top earns
+## nothing more until they spend.
+##
+## Silent about it on purpose - it fires on every income tick and every bounty,
+## and a player who has reached the ceiling has not made a mistake worth
+## telling them about.
 func gain(amount: int) -> void:
 	if amount <= 0:
 		return
-	gold += amount
+	var wanted: int = _capped(gold + amount)
+	if wanted == gold:
+		return
+	gold = wanted
 	gold_changed.emit(gold)
 
 
@@ -111,8 +125,13 @@ func set_replicated(
 	new_creeps_unlocked: bool
 ) -> void:
 	creeps_unlocked = new_creeps_unlocked
-	if gold != new_gold:
-		gold = new_gold
+	# Capped here as well, though the authority has already capped it: this is
+	# the one number a client takes on trust, and a build whose config says
+	# something different should not be able to draw a figure its own rules
+	# forbid.
+	var capped_gold: int = _capped(new_gold)
+	if gold != capped_gold:
+		gold = capped_gold
 		gold_changed.emit(gold)
 	if income != new_income:
 		income = new_income
@@ -168,3 +187,13 @@ func steal_life_from(victim: PlayerState, count: int = 1) -> int:
 	victim.lives_changed.emit(victim.lives)
 	lives_changed.emit(lives)
 	return stolen
+
+
+## An amount held down to the ceiling GameConfig names, or left alone when it
+## names none. Never below zero: gold is spent through spend(), which refuses
+## what cannot be afforded, so a negative here would be a bug elsewhere.
+func _capped(amount: int) -> int:
+	var config: GameConfig = _config
+	if config == null || config.gold_cap <= 0:
+		return maxi(0, amount)
+	return clampi(amount, 0, config.gold_cap)
