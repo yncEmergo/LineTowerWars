@@ -10,6 +10,13 @@ __pycache__/
 Reports/
 
 # Windows shadow copies of a file being overwritten while something held it
-# open - "~name~RF<hex>.TMP" next to the original. Antivirus and the GodotSteam
-# DLLs produced a dozen of them, all committed by accident.
+# open - "~name~RF<hex>.TMP" next to the original. Godot makes one every time it
+# loads the GodotSteam GDExtension and does not always manage to clean it up, so
+# they accumulate at four megabytes each.
+#
+# Two of them were committed before this rule existed, and BEING TRACKED BEATS
+# BEING IGNORED - git applies this file only to paths it is not already
+# following, so the rule sat here looking correct while the two it was written
+# for went on being versioned. They were removed with `git rm --cached` on
+# 2026-09-06; adding the pattern was never going to be enough on its own.
 ~*.TMP
