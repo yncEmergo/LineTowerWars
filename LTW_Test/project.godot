@@ -12,8 +12,12 @@ config_version=5
 
 config/name="LTW_Test"
 run/main_scene="res://Scenes/Boot/boot.tscn"
-config/icon="res://2DArt/Icons/ultimate_firelord.png"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://2DArt/Icons/ultimate_firelord.png"
+
+[audio]
+
+buses/default_bus_layout="res://Resources/Config/default_bus_layout.tres"
 
 [autoload]
 
@@ -38,6 +42,18 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/log/
 [gui]
 
 timers/tooltip_delay_sec=0.0
+
+[importer_defaults]
+
+wav={
+"compress/mode": 0,
+"edit/loop_mode": 0,
+"edit/normalize": false,
+"edit/trim": false,
+"force/8_bit": false,
+"force/max_rate": false,
+"force/mono": false
+}
 
 [input]
 

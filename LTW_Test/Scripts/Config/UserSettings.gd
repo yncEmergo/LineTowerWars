@@ -53,6 +53,23 @@ const AUDIO_NAMES: Array[String] = [
 	"Master Volume", "UI", "SFX", "Music", "Speech", "Atmo",
 ]
 
+## The AudioServer bus each channel drives, same order, spelled exactly as
+## Resources/Config/default_bus_layout.tres names it.
+##
+## A third parallel array rather than a reuse of either above, for the reason
+## the first two are already separate: these three names answer to three
+## different owners. AUDIO_KEYS is what a player's saved file calls it and may
+## never change, AUDIO_NAMES is what the options screen prints and may change
+## whenever the wording is wrong, and this is what the bus layout calls it.
+##
+## **Resolved by NAME and never by index.** The enum's numbers happen to match
+## the layout's bus order today, and relying on that is the trap: reordering
+## the buses in the editor would silently aim every slider at the wrong one,
+## with no error anywhere. See apply_volumes().
+const AUDIO_BUS_NAMES: Array[StringName] = [
+	&"Master", &"UI", &"SFX", &"Music", &"Speech", &"Atmo",
+]
+
 const DEFAULT_VOLUME: float = 0.8
 const DEFAULT_AUDIO_MUTED: bool = false
 ## Edge panning off to start with. It is the one camera control that moves the
@@ -358,12 +375,7 @@ static func volume(channel: AudioChannel) -> float:
 	return _volumes[index]
 
 
-## Stores a channel's level.
-##
-## Deliberately does NOT touch AudioServer. There is not a sound in the build
-## yet and therefore no bus layout to aim at, so wiring one here would be
-## guessing at names nothing has claimed. When audio arrives this is the one
-## function that has to learn about buses - everything else already asks it.
+## Stores a channel's level and pushes it straight onto its bus.
 static func set_volume(channel: AudioChannel, value: float) -> void:
 	var index: int = int(channel)
 	if index < 0 || index >= _volumes.size():
@@ -373,6 +385,7 @@ static func set_volume(channel: AudioChannel, value: float) -> void:
 	if is_equal_approx(clamped, _volumes[index]):
 		return
 	_volumes[index] = clamped
+	_apply_volume(channel)
 	save_to_disk()
 
 
@@ -380,7 +393,57 @@ static func set_audio_muted(value: bool) -> void:
 	if value == audio_muted:
 		return
 	audio_muted = value
+	_apply_mute()
 	save_to_disk()
+
+
+## Pushes every stored level and the mute flag onto the actual buses.
+##
+## Called once at boot and again on every change, exactly as apply_window_mode()
+## is, and it steps aside on the same terms: a headless process has no output
+## device, and a dedicated server must never be reshaped by a file some player
+## edited. Presentation, never simulation.
+static func apply_volumes() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+
+	for channel: int in range(AUDIO_BUS_NAMES.size()):
+		_apply_volume(channel as AudioChannel)
+	_apply_mute()
+
+
+## MUTE IS THE MASTER BUS'S OWN FLAG, not a volume of zero.
+##
+## Zeroing the levels would work and would then have thrown the player's chosen
+## levels away: unmuting has to put six numbers back, and the only copy of them
+## is the one being overwritten. The flag leaves every slider exactly where it
+## was and costs nothing to lift.
+static func _apply_mute() -> void:
+	var index: int = AudioServer.get_bus_index(AUDIO_BUS_NAMES[int(AudioChannel.MASTER)])
+	if index < 0:
+		return
+	AudioServer.set_bus_mute(index, audio_muted)
+
+
+## One channel onto its bus, by name.
+##
+## A missing bus is LOUD. get_bus_index() answers -1 for a name nothing claims
+## and AudioServer takes that index without complaint, so the quiet version of
+## this is a slider that moves nothing and never says why - which is the exact
+## failure the whole by-name rule above exists to avoid.
+static func _apply_volume(channel: AudioChannel) -> void:
+	var slot: int = int(channel)
+	if slot < 0 || slot >= AUDIO_BUS_NAMES.size():
+		return
+
+	var bus_name: StringName = AUDIO_BUS_NAMES[slot]
+	var index: int = AudioServer.get_bus_index(bus_name)
+	if index < 0:
+		Log.err("UserSettings found no audio bus by that name", bus_name)
+		return
+
+	# linear_to_db(0) is -inf, which Godot accepts and which reads as silence.
+	AudioServer.set_bus_volume_db(index, linear_to_db(volume(channel)))
 
 
 ## Which board the two grids read their bottom row off. Live only in the sense

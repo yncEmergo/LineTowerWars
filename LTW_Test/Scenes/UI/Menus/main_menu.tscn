@@ -5,8 +5,8 @@
 [ext_resource type="Resource" uid="uid://c3omktbk173rd" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
 [ext_resource type="Resource" path="res://Resources/Config/build_info.tres" id="4_build_info"]
 [ext_resource type="Theme" uid="uid://bfubasb74au3u" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/options_menu.tscn" id="5_options_menu"]
-[ext_resource type="Resource" path="res://Resources/Config/controls_config.tres" id="6_controls_config"]
+[ext_resource type="PackedScene" uid="uid://bjiahd1ki3jn8" path="res://Scenes/UI/Menus/options_menu.tscn" id="5_options_menu"]
+[ext_resource type="Resource" uid="uid://dntbwmi5dakuc" path="res://Resources/Config/controls_config.tres" id="6_controls_config"]
 
 [node name="MainMenu" type="Control" unique_id=824899437 node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_options_button", "_quit_button", "_options_menu")]
 layout_mode = 3
@@ -27,9 +27,9 @@ _options_menu = NodePath("OptionsMenu")
 
 [node name="References" type="Node" parent="." unique_id=209356455]
 script = ExtResource("2_references")
+_controls_config = ExtResource("6_controls_config")
 _menu_config = ExtResource("3_menu_config")
 _build_info = ExtResource("4_build_info")
-_controls_config = ExtResource("6_controls_config")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1433203273]
 layout_mode = 1
@@ -78,13 +78,13 @@ theme_override_constants/separation = 12
 
 [node name="PlayButton" type="Button" parent="Layout/Buttons" unique_id=619301661]
 layout_mode = 2
-text = "Play Prototype"
+text = "Singleplayer Test Scene"
 
 [node name="MultiplayerButton" type="Button" parent="Layout/Buttons" unique_id=1621390831]
 layout_mode = 2
 text = "Multiplayer"
 
-[node name="OptionsButton" type="Button" parent="Layout/Buttons"]
+[node name="OptionsButton" type="Button" parent="Layout/Buttons" unique_id=1148233934]
 layout_mode = 2
 text = "Options"
 
@@ -110,5 +110,5 @@ theme_override_font_sizes/font_size = 13
 text = "prototype"
 horizontal_alignment = 2
 
-[node name="OptionsMenu" parent="." instance=ExtResource("5_options_menu")]
-visible = false
+[node name="OptionsMenu" parent="." unique_id=451240543 instance=ExtResource("5_options_menu")]
+layout_mode = 1

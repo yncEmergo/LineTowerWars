@@ -70,6 +70,11 @@ func _dispatch() -> void:
 		# watching a window flash and then resize. The server branch never asks:
 		# it has no window, and nothing a player wrote in a file may reshape it.
 		UserSettings.apply_window_mode()
+		# Same terms as the window above: a player who turned the music down
+		# last time gets it down before the menu's first sound rather than
+		# after it, and the server branch never asks because it has no output
+		# device and nothing a player wrote in a file may quieten it.
+		UserSettings.apply_volumes()
 		_open("client", _client_scene_path())
 
 
