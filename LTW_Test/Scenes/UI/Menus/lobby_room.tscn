@@ -10,6 +10,7 @@
 [ext_resource type="Resource" uid="uid://cj8d776kvb2yv" path="res://Resources/Config/game_config.tres" id="6_game_config"]
 [ext_resource type="PackedScene" uid="uid://bl5vjeuaxaso3" path="res://Scenes/UI/Menus/lobby_settings_panel.tscn" id="7_settings"]
 [ext_resource type="Resource" uid="uid://bqef376tkn1sl" path="res://Resources/Config/presentation_config.tres" id="8_presentation_config"]
+[ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="900_audio_config"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -39,6 +40,7 @@ _menu_config = ExtResource("3_menu_config")
 _network_config = ExtResource("5_network_config")
 _build_info = ExtResource("12_build_info")
 _presentation_config = ExtResource("8_presentation_config")
+_audio_config = ExtResource("900_audio_config")
 
 [node name="Background" type="ColorRect" parent="." unique_id=258442987]
 layout_mode = 1

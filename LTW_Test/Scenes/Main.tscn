@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_hud.tscn" id="27_hud"]
 [ext_resource type="Script" path="res://Scripts/Input/CheatController.gd" id="29_cheat"]
 [ext_resource type="Script" path="res://Scripts/Effects/OrderOverlay.gd" id="30_orders"]
+[ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="900_audio_config"]
 
 [sub_resource type="Environment" id="Environment_50glp"]
 background_mode = 1
@@ -106,3 +107,4 @@ _menu_config = ExtResource("20_menucfg")
 _content_config = ExtResource("22_content")
 _network_config = ExtResource("90_netcfg")
 _presentation_config = ExtResource("23_present")
+_audio_config = ExtResource("900_audio_config")

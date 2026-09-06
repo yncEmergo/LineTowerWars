@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AudioConfig" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Audio/AudioConfig.gd" id="1_audio_config"]
+
+[resource]
+script = ExtResource("1_audio_config")
+ui_click_path = "res://Audio/Placeholder/click.wav"
+ui_hover_path = "res://Audio/Placeholder/click_hover.wav"
+ui_refused_path = "res://Audio/Placeholder/click_disabled.wav"
+build_placed_path = "res://Audio/Generated/Match/build_place.wav"
+build_denied_path = "res://Audio/Generated/Match/build_refused.wav"
+build_sold_path = ""
+match_gold_path = "res://Audio/Generated/Match/gold_gain.wav"
+match_life_lost_path = "res://Audio/Generated/Match/life_lost.wav"
+match_life_taken_path = ""
+match_eliminated_path = ""
+match_victory_path = ""
+match_defeat_path = ""
+music_menu_path = ""
+music_match_path = ""

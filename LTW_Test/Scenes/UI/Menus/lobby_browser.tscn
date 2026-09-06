@@ -8,6 +8,7 @@
 [ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_list_entry.tscn" id="5_entry"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/name_prompt.tscn" id="6_name_prompt"]
+[ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="900_audio_config"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -57,6 +58,7 @@ script = ExtResource("2_references")
 _menu_config = ExtResource("3_menu_config")
 _network_config = ExtResource("5_network_config")
 _build_info = ExtResource("9_build_info")
+_audio_config = ExtResource("900_audio_config")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

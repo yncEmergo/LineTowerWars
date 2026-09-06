@@ -81,6 +81,10 @@ extends Node
 ## server leaves it null and everything that reads it falls back to a sane
 ## look rather than refusing to run - see multiplayer.md.
 @export var _presentation_config: PresentationConfig
+## Which sound answers which event, and the mixing rules. PRESENTATION ONLY, on
+## the same terms as the config above: a dedicated server leaves it null, and
+## AudioHub falls silent rather than refusing to run.
+@export var _audio_config: AudioConfig
 
 static var instance: References
 
@@ -221,6 +225,12 @@ static var presentation_config: PresentationConfig:
 		if instance == null:
 			return null
 		return instance._presentation_config
+
+static var audio_config: AudioConfig:
+	get:
+		if instance == null:
+			return null
+		return instance._audio_config
 
 ## Claimed on entering the tree rather than in _init, so the static handle
 ## only ever points at a node that is actually live. _init would also fire

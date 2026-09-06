@@ -39,6 +39,14 @@ where it is. Nothing about a build is committed - an export is reproducible from
 was made at, and the server is deployed from that same commit so the two cannot disagree.
 [Docs/building.md](Docs/building.md) is the procedure.
 
+**It has a mixer, and buttons make a noise.** Six buses behind the volume sliders that were
+already in the options screen, a single autoload that everything plays through, and every
+button in the project gets its click, hover and refused-click sound without one of them being
+wired by hand. Nothing in the WORLD makes a sound yet — no tower, creep or impact — and the
+placeholder effects for them are generated rather than recorded, by a tool that writes them
+from plain maths so a roster this size sounds like one game. See [Docs/audio.md](Docs/audio.md)
+and `Tools/SfxGen/README.md`.
+
 **A player is asked what to call themselves** the first time they open multiplayer, and
 cannot go online until they have chosen — the prompt is modal and, on a first run, has no
 way past it. It suggests the machine's login name without accepting it as the answer, refuses
