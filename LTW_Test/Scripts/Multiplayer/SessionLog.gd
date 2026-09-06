@@ -161,8 +161,24 @@ static func _write_header() -> void:
 		"platform": OS.get_name(),
 		"engine": Engine.get_version_info().get("string", "?"),
 		"debug_build": OS.is_debug_build(),
+		"build": _build_text(),
 	})
 	_write_config()
+
+
+## Which build wrote this file, as the menu corner states it.
+##
+## **This is what ties a log somebody sends back to a commit.** The label is on
+## screen too, but that relies on a tester reading it out and copying it
+## correctly into a message; this rides along with the evidence by itself.
+##
+## Empty rather than absent when the resource is not wired into the scene that
+## opened the log, so the key is always there to be searched for.
+static func _build_text() -> String:
+	var info: BuildInfo = References.build_info
+	if info == null:
+		return ""
+	return info.label_text()
 
 
 ## The configuration this session is running, written as soon as it can be.

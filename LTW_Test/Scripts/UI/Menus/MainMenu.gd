@@ -7,9 +7,10 @@ extends Control
 ## browser, or out of the game entirely. Nothing here knows anything about
 ## networking - "Multiplayer" is a scene change like any other.
 ##
-## The title and version strings come off MenuConfig rather than being typed
-## into the scene, because the game has no name yet and there will be more than
-## one screen showing it.
+## The title comes off MenuConfig rather than being typed into the scene, because
+## the game has no name yet and there will be more than one screen showing it.
+## The corner line comes off BuildInfo, which is the file the build script
+## stamps - so what a tester reads back is the build they are actually running.
 
 @export_group("References")
 @export var _title_label: Label
@@ -42,7 +43,21 @@ func _apply_branding() -> void:
 	if _title_label != null:
 		_title_label.text = _config.game_title
 	if _version_label != null:
-		_version_label.text = _config.version_text
+		_version_label.text = _build_label()
+
+
+## What the corner says: the stage the project is at, and the stamp the build
+## script wrote. One answer from one file - the stage word used to sit in
+## MenuConfig, and a second place to say it is a second place for it to be wrong.
+##
+## Empty rather than a guess when the resource is missing, because a menu that
+## states the wrong build is worse than one that states none.
+func _build_label() -> String:
+	var info: BuildInfo = References.build_info
+	if info == null:
+		Log.err("MainMenu found no BuildInfo on References, the corner cannot name this build")
+		return ""
+	return info.label_text()
 
 
 func _connect_buttons() -> void:

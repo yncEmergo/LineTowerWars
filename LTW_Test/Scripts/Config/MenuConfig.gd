@@ -28,7 +28,6 @@ extends Resource
 ## Working title. The game has no name yet, so every screen reads it from here
 ## instead of spelling it out.
 @export var game_title: String = "LINE TOWER WARS"
-@export var version_text: String = "prototype"
 
 @export_group("Lobby")
 ## Free for all only, no team modes, see game_rules.md. Two is the smallest

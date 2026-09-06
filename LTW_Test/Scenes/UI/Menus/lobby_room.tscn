@@ -5,6 +5,7 @@
 [ext_resource type="Resource" uid="uid://c3omktbk173rd" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
 [ext_resource type="Theme" uid="uid://bfubasb74au3u" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
 [ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="5_network_config"]
+[ext_resource type="Resource" path="res://Resources/Config/build_info.tres" id="12_build_info"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_slot.tscn" id="5_slot"]
 [ext_resource type="Resource" uid="uid://cj8d776kvb2yv" path="res://Resources/Config/game_config.tres" id="6_game_config"]
 [ext_resource type="PackedScene" uid="uid://bl5vjeuaxaso3" path="res://Scenes/UI/Menus/lobby_settings_panel.tscn" id="7_settings"]
@@ -36,6 +37,7 @@ script = ExtResource("2_references")
 _game_config = ExtResource("6_game_config")
 _menu_config = ExtResource("3_menu_config")
 _network_config = ExtResource("5_network_config")
+_build_info = ExtResource("12_build_info")
 _presentation_config = ExtResource("8_presentation_config")
 
 [node name="Background" type="ColorRect" parent="." unique_id=258442987]

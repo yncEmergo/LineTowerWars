@@ -34,12 +34,53 @@ once per machine is in `server.md`.
 From the project root:
 
 ```powershell
-& $env:GODOT --path . --headless --export-release "Windows Desktop"
+.\Toolsuild_client.ps1            # stamp, export, restore
+.\Toolsuild_client.ps1 -Zip       # and zip the result for upload
 ```
 
 It writes beside the project, into `..\Builds\Windows\`, which is **outside the Godot project
 on purpose**: an exe or a pck sitting in the project tree is something Godot's filesystem
 would try to take an interest in. It is git-ignored from the repository root.
+
+The script refuses to build from a tree with uncommitted changes, because the stamp it writes
+names a commit — and a stamp naming a commit the build does not actually contain is worse than
+no stamp at all, since it makes a bug report point at the wrong code with total confidence.
+`-Force` overrides that for a throwaway build.
+
+### What the stamp is, and why a script has to do it
+
+`Resources/Config/build_info.tres` carries the stage word, the build time in UTC and the short
+commit. The game shows all three in the corner of the main menu and writes them into the header
+of a session log, so a report that comes back names the build it came from.
+
+The script writes the stamp immediately before the export and restores the file byte for byte
+immediately afterwards, in a `finally`, so the committed resource always reads empty and a
+build stamp never appears in a diff. An empty stamp is meaningful rather than missing: it is
+what an editor run is, and the label reads `dev build` instead of inventing a date.
+
+The stamp is INSERTED after the `script = ExtResource(...)` line rather than substituted into
+existing lines, because the editor drops any property equal to its script default when it saves
+a `.tres` — so `built_at` and `commit` may not be in the file to substitute into.
+
+### Two Windows traps this script is built around
+
+Both cost a build on 2026-09-06, and both produced a **stale build reported as a fresh one**,
+which is the failure worth recognising rather than either mechanism.
+
+**`& $godot` does not wait.** The editor binary is a Windows GUI-subsystem executable, so
+PowerShell starts it and carries straight on: the call returns before the export has written a
+byte, `$LASTEXITCODE` is never set from it, and its output goes to the console rather than down
+the pipeline. The stamp was restored while Godot was still starting, and the script then listed
+the previous build's files and called it a success. `Start-Process -Wait -PassThru` waits
+properly and yields a real exit code.
+
+**`Start-Process` does not quote for you.** An argument holding a space arrives split in two,
+and both of the ones here hold one — the project path and the preset name. The call operator
+had been quoting them silently, so this only appeared once the launch moved to `Start-Process`.
+
+So the script **asserts the effect rather than the command**: it checks the pack is newer than
+the moment the export started, exactly as `deploy_server.ps1` compares the service pid rather
+than trusting that `systemctl restart` ran.
 
 Three files come out — the game, a console wrapper, and the pck. **All three go in the zip**;
 the game will not start without the pck beside it.
@@ -114,6 +155,6 @@ exporting and running the thing, because neither branch is reachable from the ed
 
 - **No application icon.** The build wears Godot's. Setting `application/icon` in the preset to
   a square PNG in the repo is all it takes, once there is one to point at.
-- **No version shown in the game.** A tester reporting a bug cannot say which build they are
-  on, and the session log's header does not carry it either. Worth fixing before the number of
-  builds in circulation is greater than one.
+- **The stage word is set by hand.** `stage` in `build_info.tres` says `prototype`; nothing
+  moves it to `alpha` but somebody deciding it has. That is the intent — it tracks where the
+  project is, not when a build was made — but it will be wrong for a while after it changes.

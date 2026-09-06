@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/UI/Menus/MainMenu.gd" id="1_main_menu"]
 [ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
 [ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Resource" path="res://Resources/Config/build_info.tres" id="4_build_info"]
 [ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
 
 [node name="MainMenu" type="Control" node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_quit_button")]
@@ -23,6 +24,7 @@ _quit_button = NodePath("Layout/Buttons/QuitButton")
 [node name="References" type="Node" parent="."]
 script = ExtResource("2_references")
 _menu_config = ExtResource("3_menu_config")
+_build_info = ExtResource("4_build_info")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

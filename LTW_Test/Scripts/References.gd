@@ -71,6 +71,9 @@ extends Node
 ## Which entry scene this process opens. Only the boot scene wires this, and
 ## nothing after it ever reads it again.
 @export var _boot_config: BootConfig
+## What this build is and when it was made. Wired by the menu scenes, which are
+## where it is shown; a match never asks.
+@export var _build_info: BuildInfo
 ## Where the server listens and where a client dials. Wired by every scene
 ## that can touch the network: the lobby screens and the server.
 @export var _network_config: NetworkConfig
@@ -206,6 +209,12 @@ static var network_config: NetworkConfig:
 		if instance == null:
 			return null
 		return instance._network_config
+
+static var build_info: BuildInfo:
+	get:
+		if instance == null:
+			return null
+		return instance._build_info
 
 static var presentation_config: PresentationConfig:
 	get:

@@ -474,6 +474,26 @@ art at all so far - so this is the placement rule, not a description of the tree
     - so a remote action is not done because a script said it was. The script
       now proves the restart by comparing the service pid before and after,
       and that is the shape to copy: assert the EFFECT, not the command
+  - **THE SAME LIE, LOCALLY: `& $godot` DOES NOT WAIT.** The editor binary is a
+    Windows GUI-subsystem executable, so PowerShell starts it and carries
+    straight on - the call returns before the export has written a byte,
+    `$LASTEXITCODE` is never set from it, and its output goes to the console
+    rather than down the pipeline where an assignment could catch it
+    - it cost a build on 2026-09-06 in the worst way: a stamp was written, the
+      export "returned" instantly, the stamp was restored while Godot was still
+      starting, and the script then listed the PREVIOUS build's files and
+      reported success. A stale build presented as a fresh one
+    - `Start-Process -FilePath $exe -ArgumentList $args -NoNewWindow -Wait
+      -PassThru` waits properly and `.ExitCode` is then real
+    - but **`Start-Process` does not quote for you**, and `&` did: an argument
+      holding a space arrives split in two. Both of this project's hold one -
+      the project path ("LTW Standalone") and the preset name ("Windows
+      Desktop") - so the fix for the first trap walks straight into the second
+    - the Bash tool waits correctly, which is what makes this specific to the
+      `.ps1` scripts and invisible when the same command is run by hand
+    - `Tools/build_client.ps1` is the worked example, and it also checks the
+      pack is newer than the build it just ran. Same rule as above: assert the
+      EFFECT, not the command
   - reading git - log, diff, blame, status - was always fine and still is
 - README.md is the way in: what the project is, what works, and which file answers
   what. Keep its Status section honest - it is the first thing a new reader trusts.
