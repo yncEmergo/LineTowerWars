@@ -1,12 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bhqmlfh16ssja"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Menus/MainMenu.gd" id="1_main_menu"]
-[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
-[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Script" uid="uid://dkbtrs8js5tpx" path="res://Scripts/UI/Menus/MainMenu.gd" id="1_main_menu"]
+[ext_resource type="Script" uid="uid://bbot6m1ktkinp" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" uid="uid://c3omktbk173rd" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
 [ext_resource type="Resource" path="res://Resources/Config/build_info.tres" id="4_build_info"]
-[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+[ext_resource type="Theme" uid="uid://bfubasb74au3u" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/options_menu.tscn" id="5_options_menu"]
+[ext_resource type="Resource" path="res://Resources/Config/controls_config.tres" id="6_controls_config"]
 
-[node name="MainMenu" type="Control" node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_quit_button")]
+[node name="MainMenu" type="Control" unique_id=824899437 node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_options_button", "_quit_button", "_options_menu")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,14 +21,17 @@ _title_label = NodePath("Layout/TitleLabel")
 _version_label = NodePath("VersionLabel")
 _play_button = NodePath("Layout/Buttons/PlayButton")
 _multiplayer_button = NodePath("Layout/Buttons/MultiplayerButton")
+_options_button = NodePath("Layout/Buttons/OptionsButton")
 _quit_button = NodePath("Layout/Buttons/QuitButton")
+_options_menu = NodePath("OptionsMenu")
 
-[node name="References" type="Node" parent="."]
+[node name="References" type="Node" parent="." unique_id=209356455]
 script = ExtResource("2_references")
 _menu_config = ExtResource("3_menu_config")
 _build_info = ExtResource("4_build_info")
+_controls_config = ExtResource("6_controls_config")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1433203273]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -36,7 +41,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.055, 0.062, 0.082, 1)
 
-[node name="Layout" type="VBoxContainer" parent="."]
+[node name="Layout" type="VBoxContainer" parent="." unique_id=924281318]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -46,44 +51,48 @@ grow_vertical = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="Layout"]
+[node name="TitleLabel" type="Label" parent="Layout" unique_id=1631625396]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 54
 text = "LINE TOWER WARS"
 horizontal_alignment = 1
 
-[node name="TaglineLabel" type="Label" parent="Layout"]
+[node name="TaglineLabel" type="Label" parent="Layout" unique_id=2132024265]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
 theme_override_font_sizes/font_size = 16
-text = "Build the maze. Send the flood."
+text = "Prototype"
 horizontal_alignment = 1
 
-[node name="TitleSpacer" type="Control" parent="Layout"]
+[node name="TitleSpacer" type="Control" parent="Layout" unique_id=37494439]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Buttons" type="VBoxContainer" parent="Layout"]
+[node name="Buttons" type="VBoxContainer" parent="Layout" unique_id=838034435]
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="Layout/Buttons"]
+[node name="PlayButton" type="Button" parent="Layout/Buttons" unique_id=619301661]
 layout_mode = 2
 text = "Play Prototype"
 
-[node name="MultiplayerButton" type="Button" parent="Layout/Buttons"]
+[node name="MultiplayerButton" type="Button" parent="Layout/Buttons" unique_id=1621390831]
 layout_mode = 2
 text = "Multiplayer"
 
-[node name="QuitButton" type="Button" parent="Layout/Buttons"]
+[node name="OptionsButton" type="Button" parent="Layout/Buttons"]
+layout_mode = 2
+text = "Options"
+
+[node name="QuitButton" type="Button" parent="Layout/Buttons" unique_id=1712481487]
 layout_mode = 2
 text = "Quit"
 
-[node name="VersionLabel" type="Label" parent="."]
+[node name="VersionLabel" type="Label" parent="." unique_id=1690504710]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -96,8 +105,10 @@ offset_right = -16.0
 offset_bottom = -10.0
 grow_horizontal = 0
 grow_vertical = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.42, 0.44, 0.5, 1)
 theme_override_font_sizes/font_size = 13
 text = "prototype"
 horizontal_alignment = 2
+
+[node name="OptionsMenu" parent="." instance=ExtResource("5_options_menu")]
+visible = false

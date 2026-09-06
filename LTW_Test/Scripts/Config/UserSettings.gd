@@ -273,6 +273,35 @@ static func apply_window_mode() -> void:
 		_:
 			Log.err("UserSettings has a window mode it does not know", window_mode)
 
+	_apply_cursor_confinement()
+
+
+## Keeps the cursor inside the window in exclusive fullscreen, and lets it go
+## everywhere else.
+##
+## **This is part of what FULLSCREEN means here rather than a preference of its
+## own.** Edge panning is a primary camera control, and on more than one monitor
+## the cursor simply slides onto the next screen: the camera stops instead of
+## panning, and the player is left holding the mouse against an edge that does
+## nothing. Godot does not confine anything by itself in any window mode, which
+## is why exclusive fullscreen was indistinguishable from the borderless one.
+##
+## **WINDOWED_FULLSCREEN is deliberately NOT confined.** Being able to leave is
+## the entire reason that mode exists - it is the borderless window you pick so a
+## second monitor stays reachable - so locking the cursor into it would remove
+## the only thing separating it from FULLSCREEN. A player who wants edge panning
+## to work everywhere picks FULLSCREEN; one who wants their other screen picks
+## this. The two options now actually differ.
+##
+## CONFINED rather than CONFINED_HIDDEN: an RTS cursor has to stay visible.
+## Godot releases the clip while the window is not focused and restores it
+## afterwards, so alt-tabbing out is unaffected.
+static func _apply_cursor_confinement() -> void:
+	if window_mode == WindowMode.FULLSCREEN:
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
 
 static func set_window_mode(mode: WindowMode) -> void:
 	if mode == window_mode:

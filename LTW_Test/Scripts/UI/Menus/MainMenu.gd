@@ -17,7 +17,15 @@ extends Control
 @export var _version_label: Label
 @export var _play_button: Button
 @export var _multiplayer_button: Button
+@export var _options_button: Button
 @export var _quit_button: Button
+## The same screen the in-match menu opens, instanced here too.
+##
+## Instanced rather than routed to as a scene of its own, because it edits
+## UserSettings directly and has nothing to say back - so there is no state to
+## carry across a scene change, and coming BACK from it would otherwise mean
+## rebuilding this menu.
+@export var _options_menu: OptionsMenu
 
 var _config: MenuConfig:
 	get:
@@ -67,6 +75,26 @@ func _connect_buttons() -> void:
 		_multiplayer_button.pressed.connect(_on_multiplayer_pressed)
 	if _quit_button != null:
 		_quit_button.pressed.connect(_on_quit_pressed)
+
+	if _options_menu == null:
+		if _options_button != null:
+			# A button that does nothing is worse than one that says it cannot
+			# be pressed - the same call GameMenu makes.
+			_options_button.disabled = true
+		Log.err("MainMenu has no OptionsMenu assigned, its Options button is dead")
+		return
+
+	_options_menu.closed.connect(_on_options_closed)
+	if _options_button != null:
+		_options_button.pressed.connect(_options_menu.open)
+
+
+## Focus goes back to the button that opened the screen rather than to the top of
+## the menu, so backing out with the keyboard leaves the cursor where the player
+## left it.
+func _on_options_closed() -> void:
+	if _options_button != null:
+		_options_button.grab_focus()
 
 
 func _on_play_pressed() -> void:
