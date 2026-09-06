@@ -14,8 +14,8 @@
 [ext_resource type="Texture2D" uid="uid://cn735mrtrwki0" path="res://2DArt/UI/Icons/stat_placement.png" id="11_stat_placement"]
 [ext_resource type="Texture2D" uid="uid://bb3cr34v8tgyv" path="res://2DArt/UI/Icons/stat_population.png" id="12_stat_population"]
 [ext_resource type="Texture2D" uid="uid://cgwo0gw0q1cjy" path="res://2DArt/UI/Icons/stat_timer.png" id="13_stat_timer"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/control_group_bar.tscn" id="14_control_groups"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" uid="uid://cimbya3sr27g3" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
@@ -218,7 +218,7 @@ theme_override_constants/separation = 2
 
 [node name="Minimap" parent="." unique_id=413366510 instance=ExtResource("14_minimap")]
 
-[node name="ControlGroupBar" parent="." instance=ExtResource("14_control_groups")]
+[node name="ControlGroupBar" parent="." unique_id=2101457511 instance=ExtResource("14_control_groups")]
 
 [node name="ResearchCenter" parent="." unique_id=1568332434 instance=ExtResource("15_research")]
 

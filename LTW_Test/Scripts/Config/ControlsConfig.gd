@@ -12,6 +12,19 @@ const MODIFIER_KEYS: Array[int] = [
 	KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META, KEY_CAPSLOCK,
 ]
 
+## The mouse buttons that can carry a control group, in the order they are
+## handed out past the numbered ones.
+##
+## A CONST rather than a setting, because this is a fact about the hardware and
+## not a choice: a mouse has these two side buttons or it has none. What IS a
+## choice - whether the game uses them - is control_group_mouse_buttons below.
+const MOUSE_GROUP_BUTTONS: Array[int] = [
+	MOUSE_BUTTON_XBUTTON1, MOUSE_BUTTON_XBUTTON2,
+]
+## What each of those buttons draws on its square. Kept short deliberately: it
+## shares a 32 pixel square with a unit count, and "Mouse Button 4" does not.
+const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
+
 @export_group("Selection")
 ## How quickly a second click must land to count as a double click, in seconds.
 ## Used both for selecting every unit of a type and for centring on a control
@@ -93,6 +106,14 @@ const MODIFIER_KEYS: Array[int] = [
 ## How many control groups exist. They bind to the number keys starting at 1,
 ## so nine fills the row.
 @export_range(0, 9) var control_group_count: int = 9
+## Whether the two side buttons of the mouse carry a control group each, past
+## the numbered ones.
+##
+## Worth a group and not merely allowed one: they are under the thumb already,
+## so a group reached by one costs no hand movement at all, and this game asks
+## for nothing else from them. Off gives them back to whatever the player's own
+## mouse software wants them for.
+@export var control_group_mouse_buttons: bool = true
 
 @export_group("Hold to repeat")
 ## Grace period before holding an ability key starts repeating it, so a normal
@@ -178,7 +199,7 @@ func reserved_key_reason(key: Key) -> String:
 		return "A modifier on its own is not a key."
 	if _is_grid_key(key):
 		return "%s is a command card square." % OS.get_keycode_string(key)
-	if _is_control_group_key(key):
+	if control_group_for_key(key) > 0:
 		return "%s selects a control group." % OS.get_keycode_string(key)
 	return ""
 
@@ -213,13 +234,53 @@ func _is_grid_key(key: Key) -> bool:
 	return false
 
 
-## Whether a key is one of the control group digits. They run from 1, so the
-## count is how far along the row they reach.
-func _is_control_group_key(key: Key) -> bool:
+## How many control groups there are altogether: the numbered ones, and the
+## mouse buttons that carry one each when they are switched on.
+##
+## The two kinds share ONE index space, the mouse groups coming after the
+## numbers, so everything that draws or recalls a group works in group indexes
+## and never has to ask which kind it is holding.
+func control_group_total() -> int:
+	var total: int = maxi(0, control_group_count)
+	if control_group_mouse_buttons:
+		total += MOUSE_GROUP_BUTTONS.size()
+	return total
+
+
+## Which group a key recalls, or 0 for a key that is not one of them. The
+## numbered groups run from 1, so the count is how far along the row they reach.
+func control_group_for_key(key: Key) -> int:
 	if control_group_count <= 0:
-		return false
-	var first: int = int(KEY_1)
-	return int(key) >= first && int(key) < first + mini(control_group_count, 9)
+		return 0
+	var index: int = int(key) - int(KEY_1) + 1
+	if index < 1 || index > mini(control_group_count, 9):
+		return 0
+	return index
+
+
+## Which group a mouse button recalls, or 0 for a button that is not one of
+## them - which is every button on the mouse while the setting is off.
+func control_group_for_button(button: MouseButton) -> int:
+	if !control_group_mouse_buttons:
+		return 0
+	var at: int = MOUSE_GROUP_BUTTONS.find(int(button))
+	if at < 0:
+		return 0
+	return maxi(0, control_group_count) + at + 1
+
+
+## What a group's square draws in its corner. The one authority on it, so the
+## picture and the press cannot disagree about which group is which.
+func control_group_label(index: int) -> String:
+	var numbered: int = maxi(0, control_group_count)
+	if index >= 1 && index <= numbered:
+		return OS.get_keycode_string((int(KEY_1) + index - 1) as Key)
+
+	var at: int = index - numbered - 1
+	if control_group_mouse_buttons && at >= 0 && at < MOUSE_GROUP_LABELS.size():
+		return MOUSE_GROUP_LABELS[at]
+
+	return ""
 
 
 ## Squares one Research Center grid holds.

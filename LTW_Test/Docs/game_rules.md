@@ -538,16 +538,25 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The same number twice inside the double click window also centres the camera
     on the group's first unit
   - Units that die or are sold drop out of every group they were in
+  - The mouse's SIDE BUTTONS carry a group each as well, past the numbered
+    ones, and answer to everything a number does: control held to assign, the
+    button alone to recall, twice to centre. They are under the thumb already
+    and this game asks nothing else of them
+    - A setting hands them back to whatever the player's own mouse software
+      wants them for, leaving only the numbered groups
   - Every group that holds something is drawn as a square in the top left
-    corner: the first unit's picture, the number that recalls it, and how many
-    units it holds. Clicking one selects the group, and clicking it twice
-    centres the camera the way the key does
-    - A group that holds nothing is not drawn at all, so the row appears when
-      the first group is made and goes away with the last one
+    corner: the first unit's picture, what recalls it, and how many units it
+    holds. Clicking one selects the group, and clicking it twice centres the
+    camera the way the press does
+    - A group that holds nothing is not drawn at all, so the squares appear
+      when the first group is made and go away with the last one
+    - They are a GRID rather than one long row, so a build with more groups
+      than a corner can hold wraps downwards instead of walking across the top
+      of the screen
     - It shares the corner with the Research Center, which covers it while it
       is open
-    - An option hides the row outright, for a player who would rather have the
-      corner. The number keys still work either way
+    - An option hides the squares outright, for a player who would rather have
+      the corner. Every group is still recalled by its own press either way
 - A unit can never be ordered out of its owner's area
   - An order aimed outside it walks the unit as close as it can get, as in WC3,
     rather than being dropped

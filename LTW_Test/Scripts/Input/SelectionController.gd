@@ -149,6 +149,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
+	# The mouse SIDE buttons carry a group each, so they are asked here for the
+	# same reason and ahead of everything a mouse button otherwise means.
+	var button: InputEventMouseButton = event as InputEventMouseButton
+	if button != null && button.pressed && _handle_control_group_button(button):
+		get_viewport().set_input_as_handled()
+		return
+
 	# While an ability is armed the left click confirms its target instead of
 	# selecting. Checked here as well as consumed there, so this never depends
 	# on which controller happens to see the event first.
@@ -156,13 +163,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_abort_drag()
 		return
 
-	if event is InputEventMouseButton:
-		var button: InputEventMouseButton = event as InputEventMouseButton
-		if button.button_index == MOUSE_BUTTON_LEFT:
-			if button.pressed:
-				_begin_drag(button.position)
-			else:
-				_end_drag(button.position)
+	if button != null && button.button_index == MOUSE_BUTTON_LEFT:
+		if button.pressed:
+			_begin_drag(button.position)
+		else:
+			_end_drag(button.position)
 
 	elif event is InputEventMouseMotion && _dragging:
 		var motion: InputEventMouseMotion = event as InputEventMouseMotion
@@ -479,30 +484,41 @@ func _within_double_click(previous_time: float) -> bool:
 ## would otherwise need a second action per group, doubling nine bindings to
 ## eighteen for no gain.
 func _handle_control_group_key(key: InputEventKey) -> bool:
-	var index: int = _control_group_index(key.keycode)
+	if _controls_config == null:
+		return false
+
+	var index: int = _controls_config.control_group_for_key(key.keycode)
 	if index <= 0:
 		return false
 
+	_press_control_group(index)
+	return true
+
+
+## The mouse side buttons do exactly what the numbers do, and are told apart
+## only by the lookup: past that point a group is a group.
+func _handle_control_group_button(button: InputEventMouseButton) -> bool:
+	if _controls_config == null:
+		return false
+
+	var index: int = _controls_config.control_group_for_button(button.button_index)
+	if index <= 0:
+		return false
+
+	_press_control_group(index)
+	return true
+
+
+## What a press on a group means, whichever button carried it.
+func _press_control_group(index: int) -> void:
 	# Live keyboard state rather than the event's own modifier flag, so this
 	# behaves the same for physical input and for injected events.
 	if Input.is_key_pressed(KEY_CTRL):
 		_control_groups.assign(index, _selected)
 		Log.info("Control group assigned", {"group": index, "units": _selected.size()})
-		return true
+		return
 
 	_recall_control_group(index)
-	return true
-
-
-func _control_group_index(keycode: Key) -> int:
-	var count: int = 9
-	if _controls_config != null:
-		count = _controls_config.control_group_count
-
-	var index: int = int(keycode) - int(KEY_1) + 1
-	if index < 1 || index > count:
-		return 0
-	return index
 
 
 func _recall_control_group(index: int) -> void:

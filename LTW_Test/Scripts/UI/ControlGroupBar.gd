@@ -1,7 +1,7 @@
 class_name ControlGroupBar
 extends Control
 
-## The row of numbered control groups in the top left corner.
+## The grid of control groups in the top left corner.
 ##
 ## Shows only the groups that hold something, so it costs the corner nothing
 ## until the player makes one and disappears again when the last unit of the
@@ -27,7 +27,11 @@ const GROUP: String = "control_group_bars"
 @export_group("References")
 ## Parent for the squares. Filled at runtime, because how many groups exist is
 ## authored on ControlsConfig and this bar should not hold a second copy.
-@export var _slot_row: BoxContainer
+##
+## A GRID rather than a row, and its column count is what keeps the corner a
+## corner: groups past the fifth wrap onto a second line instead of walking
+## across the top of the screen towards the status bar.
+@export var _slot_grid: GridContainer
 @export var _slot_scene: PackedScene
 
 var _slots: Array[ControlGroupSlot] = []
@@ -71,7 +75,8 @@ func refresh() -> void:
 		hide()
 		return
 
-	if !UserSettings.show_control_groups:
+	var config: ControlsConfig = _controls
+	if config == null || !UserSettings.show_control_groups:
 		hide()
 		return
 
@@ -82,7 +87,7 @@ func refresh() -> void:
 		if units.is_empty():
 			slot.clear()
 			continue
-		slot.show_group(units)
+		slot.show_group(units, config.control_group_label(slot.group_index))
 		any = true
 
 	visible = any
@@ -92,19 +97,19 @@ func refresh() -> void:
 ## controls config wired draws no bar rather than guessing at a count.
 func _build_slots() -> void:
 	var config: ControlsConfig = _controls
-	if _slot_row == null || _slot_scene == null:
-		Log.err("ControlGroupBar is missing its row or its slot scene, it will be empty")
+	if _slot_grid == null || _slot_scene == null:
+		Log.err("ControlGroupBar is missing its grid or its slot scene, it will be empty")
 		return
 	if config == null:
 		Log.err("ControlGroupBar found no ControlsConfig, it will be empty")
 		return
 
-	for index: int in range(1, config.control_group_count + 1):
+	for index: int in range(1, config.control_group_total() + 1):
 		var slot: ControlGroupSlot = _slot_scene.instantiate() as ControlGroupSlot
 		if slot == null:
 			Log.err("Control group slot scene does not have a ControlGroupSlot script")
 			return
-		_slot_row.add_child(slot)
+		_slot_grid.add_child(slot)
 		slot.group_index = index
 		slot.clear()
 		slot.group_activated.connect(_on_group_activated)

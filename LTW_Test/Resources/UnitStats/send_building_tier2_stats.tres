@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="UnitStats" format=3]
+[gd_resource type="Resource" script_class="UnitStats" format=3 uid="uid://chbuecqvw7rb0"]
 
-[ext_resource type="Script" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
-[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Script" uid="uid://bd7dgorq33rgt" path="res://Scripts/Config/UnitStats.gd" id="1_send_stats"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_knight_ability.tres" id="3_knight"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_vengeful_spirit_ability.tres" id="4_vengeful_spirit"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_forest_troll_ability.tres" id="5_forest_troll"]
@@ -13,11 +13,13 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_banshee_ability.tres" id="11_banshee"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_kobold_geomancer_ability.tres" id="12_kobold_geomancer"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_siege_engine_ability.tres" id="13_siege_engine"]
+[ext_resource type="Texture2D" uid="uid://bg1k1wr6husmc" path="res://2DArt/Icons/send_building.png" id="14_2avc3"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_infernal_ability.tres" id="14_infernal"]
 
 [resource]
 script = ExtResource("1_send_stats")
 unit_type_id = 159
 display_name = "Send Building II"
+icon = ExtResource("14_2avc3")
 max_health = 1
 abilities = Array[ExtResource("2_ability")]([ExtResource("3_knight"), ExtResource("4_vengeful_spirit"), ExtResource("5_forest_troll"), ExtResource("6_wyvern"), ExtResource("7_voidwalker"), ExtResource("8_faceless_one"), ExtResource("9_dragonspawn"), ExtResource("10_sea_turtle"), ExtResource("11_banshee"), ExtResource("12_kobold_geomancer"), ExtResource("13_siege_engine"), ExtResource("14_infernal")])

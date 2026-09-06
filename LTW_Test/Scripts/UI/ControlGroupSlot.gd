@@ -23,9 +23,9 @@ signal group_activated(index: int)
 ## How many units the group holds, in the bottom right corner.
 @export var _count_label: Label
 
-## Which group this square stands for. 1-based, matching the key. Set once,
-## when the bar builds its row, and never again: a square keeps its number
-## whether or not the group behind it holds anything.
+## Which group this square stands for. 1-based. Set once, when the bar builds
+## its grid, and never again: a square keeps its group whether or not that
+## group holds anything.
 var group_index: int = 0
 
 
@@ -36,11 +36,15 @@ func _ready() -> void:
 ## Draws a group that holds something. The icon is the FIRST unit's, which is
 ## also the unit a double tap centres the camera on, so the picture and the
 ## camera agree about what the group is "of".
-func show_group(units: Array) -> void:
+##
+## The corner label is asked of the controls rather than worked out here: a
+## group is recalled by a number or by a mouse button depending on where in the
+## row it sits, and only the config knows which.
+func show_group(units: Array, label: String) -> void:
 	visible = true
 	disabled = false
 	if _hotkey_label != null:
-		_hotkey_label.text = OS.get_keycode_string((int(KEY_1) + group_index - 1) as Key)
+		_hotkey_label.text = label
 	if _count_label != null:
 		_count_label.text = str(units.size())
 	# The prefab sets expand_icon, without which a Button grows to fit whatever
