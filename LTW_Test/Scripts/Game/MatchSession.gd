@@ -324,11 +324,15 @@ func hold(reason: StringName, held: bool) -> void:
 ##
 ## What it means is in game_rules.md and unit_data.md 1.7: the whole of tier 4
 ## unlocks at once and tiers 1 to 3 stop being sendable.
+##
+## Through unlock_clock() rather than against sudden_death_seconds directly,
+## so the opening phase moves this with everything else the match clock times.
+## See GameConfig.start_delay_seconds.
 func is_sudden_death() -> bool:
 	var config: GameConfig = References.game_config
 	if config == null || config.sudden_death_seconds <= 0.0:
 		return false
-	return elapsed_seconds() >= config.sudden_death_seconds
+	return elapsed_seconds() >= config.unlock_clock(config.sudden_death_seconds)
 
 
 ## Seconds until Sudden Death, or 0 once it has arrived. What a dead send
@@ -338,7 +342,8 @@ func sudden_death_remaining() -> float:
 	var config: GameConfig = References.game_config
 	if config == null || config.sudden_death_seconds <= 0.0:
 		return -1.0
-	return maxf(0.0, config.sudden_death_seconds - elapsed_seconds())
+	var at: float = config.unlock_clock(config.sudden_death_seconds)
+	return maxf(0.0, at - elapsed_seconds())
 
 
 ## Seconds per simulation tick, read from the engine rather than duplicated, so

@@ -439,7 +439,16 @@ func unlock_remaining(creep_stats: CreepStats) -> float:
 	# rather than anything on the creep.
 	if is_sudden_death_tier:
 		return maxf(0.0, session.sudden_death_remaining())
-	return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
+
+	# The creep's own delay is authored from the start of PLAY, and the match
+	# clock runs from the start of the MATCH - the opening phase is the gap
+	# between the two, and unlock_clock is the one place it is closed. See
+	# GameConfig.start_delay_seconds.
+	var config: GameConfig = References.game_config
+	if config == null:
+		return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
+	var at: float = config.unlock_clock(creep_stats.unlock_seconds)
+	return maxf(0.0, at - session.elapsed_seconds())
 
 
 ## When this creep first becomes sendable, as a match clock time.
@@ -453,16 +462,22 @@ func unlock_remaining(creep_stats: CreepStats) -> float:
 ##
 ## The same split unlock_remaining() above already makes, and for the same
 ## reason: the creep owns its delay, the sender owns the rule.
+##
+## Both halves go through GameConfig.unlock_clock, so what a tooltip quotes is
+## the time the slot actually opens rather than the delay the creep was
+## authored with - the opening phase moves the two together.
 func unlock_text(creep_stats: CreepStats) -> String:
 	if creep_stats == null:
 		return ""
-	if !is_sudden_death_tier:
-		return creep_stats.unlock_text()
-
 	var config: GameConfig = References.game_config
-	if config == null || config.sudden_death_seconds <= 0.0:
+	if config == null:
 		return creep_stats.unlock_text()
-	return CreepStats.clock_text(config.sudden_death_seconds)
+	if !is_sudden_death_tier:
+		return CreepStats.clock_text(config.unlock_clock(creep_stats.unlock_seconds))
+
+	if config.sudden_death_seconds <= 0.0:
+		return creep_stats.unlock_text()
+	return CreepStats.clock_text(config.unlock_clock(config.sudden_death_seconds))
 
 
 ## Whether this player is at their population ceiling.

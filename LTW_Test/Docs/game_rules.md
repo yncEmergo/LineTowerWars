@@ -2355,6 +2355,19 @@ is another entry in its file rather than a rule anywhere.
 - Creeps unlock over game time, each on its own start delay. BUILT.
   - the delay is per CREEP and never per tier, one every thirty seconds in
     ascending cost order. The delays are in `unit_data.md` section 6
+  - **THE OPENING PHASE comes before all of them.** The source game starts its
+    clock at -0:20 and the first creep opens as it reaches 0:00, which buys
+    twenty seconds of building and picking technologies with nothing able to be
+    sent at you. BUILT.
+    - the prototype buys the same opening without a negative clock: its match
+      clock runs from 0 and every TIMING measured against it is moved back by
+      the length of the phase instead. So the source's 0:00 Sheep opens at 0:20
+      here and its 0:30 Skeleton at 0:50, and `unit_data.md` section 6 goes on
+      quoting the source's own times rather than the prototype's
+    - EVERYTHING timed off the start of the match moves with it: every creep's
+      start delay, the first income payment, and Sudden Death. Nothing a player
+      does with what they already have does - building, selling and technology
+      are open from the first frame, because they are what the phase is FOR
   - it also removes the need for a separate rule disabling sending at the start:
     at the first second only the Sheep is unlocked, so there is nothing else to
     send

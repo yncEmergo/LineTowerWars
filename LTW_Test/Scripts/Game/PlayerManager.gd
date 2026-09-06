@@ -28,6 +28,9 @@ var _states: Dictionary = {}
 ## because the states exist before any area does: the economy is created first
 ## so nothing can be built before there is gold to build it with.
 var _areas: Dictionary = {}
+## Seconds toward the next payout. Starts NEGATIVE by the opening phase, which
+## is what holds the first payment back to one interval after play begins
+## rather than after the match does - see create_states.
 var _income_elapsed: float = 0.0
 ## Latched rather than recomputed, so match_ended fires exactly once.
 var _over: bool = false
@@ -78,7 +81,12 @@ func create_states(setup: MatchSetup, config: GameConfig) -> void:
 		_states[player.slot] = state
 
 	_income_interval = settings.income_interval
-	_income_elapsed = 0.0
+	# Started NEGATIVE by the opening phase, so the first payment lands one
+	# whole interval after play begins rather than after the match does - the
+	# same opening every creep's start delay is moved back by, and the reason a
+	# player spends it on their starting gold alone. See
+	# GameConfig.start_delay_seconds.
+	_income_elapsed = -maxf(0.0, config.start_delay_seconds)
 	_over = false
 
 

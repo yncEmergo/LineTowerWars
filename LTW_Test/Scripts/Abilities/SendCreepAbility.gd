@@ -118,7 +118,7 @@ func tooltip_data(hotkey_label: String = "",
 	# a Sudden Death creep carries no start delay of its own and would read
 	# "0:00" off its own file. Falls back to the creep for a tooltip asked
 	# about an ability that is on nobody's card yet.
-	var unlocks: String = info.unlock_text()
+	var unlocks: String = _fallback_unlock_text(info)
 	if unit != null && unit.has_method("unlock_text"):
 		unlocks = unit.unlock_text(info)
 	data.add_stat("Unlocks", unlocks)
@@ -158,6 +158,18 @@ func validate(seen: Dictionary) -> bool:
 		complete = false
 
 	return complete
+
+
+## The creep's own answer, with the opening phase added the way the sender
+## would add it. Only ever reached by a tooltip asked about a send that is on
+## nobody's card - but a number quoted from a resource that skipped the phase
+## would be one whole opening early, and there is no reading allowed to
+## disagree with the slot. See GameConfig.start_delay_seconds.
+func _fallback_unlock_text(info: CreepStats) -> String:
+	var config: GameConfig = References.game_config
+	if config == null:
+		return info.unlock_text()
+	return CreepStats.clock_text(config.unlock_clock(info.unlock_seconds))
 
 
 func _stock_on(unit: Unit) -> CreepStock:

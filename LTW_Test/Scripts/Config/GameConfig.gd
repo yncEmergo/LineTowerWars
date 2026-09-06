@@ -298,6 +298,25 @@ extends Resource
 ## Ceiling on a player's living sent creeps, as the sum of their population
 ## costs. Displayed today; nothing enforces it yet.
 @export var population_cap: int = 100
+## Seconds of preparation before the match's timings start counting.
+##
+## THE OPENING. The source game starts its clock at -0:20 and the first Sheep
+## unlocks as it reaches 0:00, which is twenty seconds of building and picking
+## technologies with nothing able to be sent at you. The prototype buys the
+## same opening without a negative clock: the match clock still runs from 0,
+## and every TIMING authored against it is moved back by this instead - so the
+## source's 0:00 Sheep opens at 0:20 here and its 0:30 Skeleton at 0:50.
+##
+## What moves is everything timed off the start of the match: every creep's
+## own start delay, the first income payment, and Sudden Death. What does NOT
+## move is anything a player does with what they already have - building,
+## selling and technology are open from the first frame, because they are what
+## the opening is FOR. 0 removes the phase.
+##
+## Authored here as ONE number rather than added into each creep's
+## unlock_seconds, so unit_data.md 6.2 goes on holding the source game's own
+## times and the prototype's opening stays a single knob to tune.
+@export var start_delay_seconds: float = 20.0
 
 @export_group("Sudden Death")
 ## Seconds into the match at which Sudden Death begins, or 0 to switch the
@@ -374,6 +393,17 @@ extends Resource
 ## keeping several means copying the file, and the folder is named in the log
 ## line every save prints.
 @export var cheat_layout_path: String = "user://Layouts/tower_layout.tres"
+
+
+## The match clock time at which a timing authored as `seconds` from the start
+## of play actually arrives, i.e. that timing with the opening phase added.
+##
+## One place the opening is added, so a send slot's greying, the countdown
+## drawn on it and the time its tooltip quotes cannot disagree about when a
+## creep opens - and so switching the phase off is one number rather than a
+## hunt through everything that reads the clock. See start_delay_seconds.
+func unlock_clock(seconds: float) -> float:
+	return seconds + maxf(0.0, start_delay_seconds)
 
 
 ## Whether a cheat may fire at all: the master switch, and then the networked

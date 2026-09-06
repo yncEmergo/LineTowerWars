@@ -206,7 +206,8 @@ compensate). Regeneration on a creep now comes only from an ability or an aura.
 - **Income cap: 4,000,000.** Above that, Tier 4 income gain is reduced by 75% (12.4a).
   **BUILT.**
 - Sudden Death starts at **25:00 game time** and *is* Tier 4: tiers 1-3 can no longer be
-  used from that point, and every Tier 4 creep unlocks at once. **BUILT.**
+  used from that point, and every Tier 4 creep unlocks at once. **BUILT.** Game time, so
+  the prototype's own clock reaches it one opening phase later - see 6.1.
 - On entering Sudden Death, any player below 1,000,000 income is raised to 1,000,000.
   **BUILT.**
 - The creep damage-taken modifier starts at 100% and falls by **1% per minute** during
@@ -1405,6 +1406,12 @@ becomes available when the match clock reaches it - one at a time, every 30 seco
 ascending cost order (12.0a; it used to be two per minute). Tiers appear to "unlock" only
 because the creeps inside one share a stretch of the clock. The Unlock column in each table
 below is the authority; the tier is just where that creep happens to sit.
+
+**Every time in this section is SOURCE GAME time, which starts at -0:20.** The source's
+clock counts up from there and the Sheep opens as it reaches 0:00. The prototype's own
+clock runs from 0 instead and moves every timing back by the length of that opening phase,
+so what it shows is the times below plus twenty seconds. Nothing in this document is
+rewritten for it - see `game_rules.md`, the opening phase.
 
 Each of tiers 1 to 3 holds twelve creeps and tier 4 holds eleven, which is why the source
 game can give each tier **its own send building**: twelve is exactly one 4 x 3 command card.
