@@ -29,7 +29,7 @@ corner_radius_bottom_left = 5
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_keyboard_layout"]
 
-[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_window_mode_row", "_shadows_button", "_health_bar_row", "_edge_panning_button", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
+[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_edge_panning_button", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -44,6 +44,7 @@ _page_stack = NodePath("Layout/Column/PageStack")
 _window_mode_row = NodePath("Layout/Column/PageStack/VideoPage/WindowModeSetting/Choices")
 _shadows_button = NodePath("Layout/Column/PageStack/VideoPage/ShadowsSetting/ShadowsButton")
 _health_bar_row = NodePath("Layout/Column/PageStack/GameplayPage/HealthBarSetting/Choices")
+_control_groups_button = NodePath("Layout/Column/PageStack/GameplayPage/ControlGroupSetting/ControlGroupsButton")
 _edge_panning_button = NodePath("Layout/Column/PageStack/GameplayPage/EdgePanningSetting/EdgePanningButton")
 _mute_button = NodePath("Layout/Column/PageStack/AudioPage/MuteSetting/MuteButton")
 _keyboard_layout_row = NodePath("Layout/Column/PageStack/HotkeysPage/KeyboardLayoutSetting/Choices")
@@ -295,6 +296,28 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 13
 text = "The bars drawn over units in the world, yours and everyone else's alike."
+
+[node name="ControlGroupSetting" type="HBoxContainer" parent="Layout/Column/PageStack/GameplayPage"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/GameplayPage/ControlGroupSetting"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Control Group Bar"
+
+[node name="ControlGroupsButton" type="CheckButton" parent="Layout/Column/PageStack/GameplayPage/ControlGroupSetting"]
+layout_mode = 2
+size_flags_vertical = 4
+button_pressed = true
+
+[node name="ControlGroupHintLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage"]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 13
+text = "The squares in the top left corner, one per control group you have made. Left on, they appear only once a group holds something. The number keys still recall a group either way."
+autowrap_mode = 3
 
 [node name="CameraLabel" type="Label" parent="Layout/Column/PageStack/GameplayPage" unique_id=1840875904]
 layout_mode = 2

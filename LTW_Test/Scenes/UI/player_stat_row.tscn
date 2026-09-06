@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://ci0073fvabhxt"]
 
-[ext_resource type="Script" path="res://Scripts/UI/PlayerStatRow.gd" id="1_row"]
+[ext_resource type="Script" uid="uid://cqjb00nljr0w8" path="res://Scripts/UI/PlayerStatRow.gd" id="1_row"]
 
-[node name="PlayerStatRow" type="HBoxContainer" node_paths=PackedStringArray("_name_label", "_life_label", "_income_label", "_value_label", "_placement_label")]
+[node name="PlayerStatRow" type="HBoxContainer" unique_id=1257443188 node_paths=PackedStringArray("_name_label", "_life_label", "_income_label", "_value_label", "_placement_label")]
 offset_right = 292.0
 offset_bottom = 24.0
 theme_override_constants/separation = 6
@@ -13,7 +13,7 @@ _income_label = NodePath("IncomeLabel")
 _value_label = NodePath("ValueLabel")
 _placement_label = NodePath("PlacementLabel")
 
-[node name="NameLabel" type="Label" parent="."]
+[node name="NameLabel" type="Label" parent="." unique_id=1028563446]
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -22,30 +22,30 @@ text = "Player"
 clip_text = true
 text_overrun_behavior = 3
 
-[node name="LifeLabel" type="Label" parent="."]
+[node name="LifeLabel" type="Label" parent="." unique_id=1252763463]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "0"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
-[node name="IncomeLabel" type="Label" parent="."]
+[node name="IncomeLabel" type="Label" parent="." unique_id=863431440]
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "0"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
-[node name="ValueLabel" type="Label" parent="."]
+[node name="ValueLabel" type="Label" parent="." unique_id=1972905230]
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "0"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
-[node name="PlacementLabel" type="Label" parent="."]
+[node name="PlacementLabel" type="Label" parent="." unique_id=1498963453]
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "---"
-horizontal_alignment = 2
+horizontal_alignment = 1

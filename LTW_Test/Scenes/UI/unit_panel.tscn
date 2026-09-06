@@ -82,7 +82,7 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -500.0
-offset_top = -150.0
+offset_top = -158.0
 offset_right = 500.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -162,14 +162,13 @@ theme_override_constants/separation = 0
 [node name="NameLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1778605030]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 13
 text = "Builder"
-horizontal_alignment = 1
 
 [node name="DamageLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1804016724]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/normal_font_size = 11
 bbcode_enabled = true
 text = "Damage:   0 - 0"
 fit_content = true
@@ -179,7 +178,7 @@ autowrap_mode = 0
 [node name="ArmorLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1558229312]
 layout_mode = 2
 mouse_filter = 1
-theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/normal_font_size = 11
 bbcode_enabled = true
 text = "Armor:   Invulnerable"
 fit_content = true
@@ -189,7 +188,7 @@ autowrap_mode = 0
 [node name="SpeedLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1558229313]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/normal_font_size = 11
 bbcode_enabled = true
 text = "Speed:   6"
 fit_content = true
@@ -199,7 +198,7 @@ autowrap_mode = 0
 [node name="AttackLabel" type="RichTextLabel" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1671254138]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/normal_font_size = 11
 bbcode_enabled = true
 text = "Attack:   1 APS,  4 range"
 fit_content = true
@@ -208,7 +207,7 @@ autowrap_mode = 0
 
 [node name="SplashLabel" type="Label" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=540095211]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Splash:   None,   Multishot:   None"
 
 [node name="JobRow" type="HBoxContainer" parent="Layout/InfoPanel/InfoRow/InfoColumn" unique_id=1571155405]

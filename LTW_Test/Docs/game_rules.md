@@ -538,6 +538,16 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The same number twice inside the double click window also centres the camera
     on the group's first unit
   - Units that die or are sold drop out of every group they were in
+  - Every group that holds something is drawn as a square in the top left
+    corner: the first unit's picture, the number that recalls it, and how many
+    units it holds. Clicking one selects the group, and clicking it twice
+    centres the camera the way the key does
+    - A group that holds nothing is not drawn at all, so the row appears when
+      the first group is made and goes away with the last one
+    - It shares the corner with the Research Center, which covers it while it
+      is open
+    - An option hides the row outright, for a player who would rather have the
+      corner. The number keys still work either way
 - A unit can never be ordered out of its owner's area
   - An order aimed outside it walks the unit as close as it can get, as in WC3,
     rather than being dropped

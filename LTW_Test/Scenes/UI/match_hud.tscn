@@ -2,18 +2,11 @@
 
 [ext_resource type="Script" uid="uid://cjvgxgqp2yvm" path="res://Scripts/UI/SelectionBoxOverlay.gd" id="1_selection_box"]
 [ext_resource type="PackedScene" uid="uid://blfftwryikbwo" path="res://Scenes/UI/unit_panel.tscn" id="2_unit_panel"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="Script" uid="uid://cqjqej3lral7e" path="res://Scripts/UI/MatchStatusBar.gd" id="3_status_bar"]
 [ext_resource type="Texture2D" uid="uid://cht2c4h7xacq" path="res://2DArt/UI/Icons/stat_gold.png" id="4_c6esv"]
 [ext_resource type="Script" uid="uid://b76phvckprwr1" path="res://Scripts/UI/PlayerStatsPanel.gd" id="4_player_stats"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
+[ext_resource type="PackedScene" uid="uid://ci0073fvabhxt" path="res://Scenes/UI/player_stat_row.tscn" id="5_stat_row"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/game_menu.tscn" id="6_game_menu"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/stall_panel.tscn" id="91_stall"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/research_center.tscn" id="15_research"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="Texture2D" uid="uid://bb1sxtbxor6sj" path="res://2DArt/UI/Icons/stat_player.png" id="7_stat_player"]
 [ext_resource type="Texture2D" uid="uid://bdq0ogm6osuay" path="res://2DArt/UI/Icons/stat_life.png" id="8_stat_life"]
 [ext_resource type="Texture2D" uid="uid://bglm4ehnvx88i" path="res://2DArt/UI/Icons/stat_income.png" id="9_stat_income"]
@@ -21,6 +14,14 @@
 [ext_resource type="Texture2D" uid="uid://cn735mrtrwki0" path="res://2DArt/UI/Icons/stat_placement.png" id="11_stat_placement"]
 [ext_resource type="Texture2D" uid="uid://bb3cr34v8tgyv" path="res://2DArt/UI/Icons/stat_population.png" id="12_stat_population"]
 [ext_resource type="Texture2D" uid="uid://cgwo0gw0q1cjy" path="res://2DArt/UI/Icons/stat_timer.png" id="13_stat_timer"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/control_group_bar.tscn" id="14_control_groups"]
+[ext_resource type="PackedScene" uid="uid://cimbya3sr27g3" path="res://Scenes/UI/research_center.tscn" id="15_research"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/stall_panel.tscn" id="91_stall"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
 content_margin_left = 16.0
@@ -55,19 +56,18 @@ script = ExtResource("1_selection_box")
 
 [node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
 
-[node name="LeakLog" parent="." instance=ExtResource("18_leak_log")]
+[node name="LeakLog" parent="." unique_id=1603083672 instance=ExtResource("18_leak_log")]
 
-[node name="SendBar" parent="." instance=ExtResource("16_send_bar")]
+[node name="SendBar" parent="." unique_id=1270894077 instance=ExtResource("16_send_bar")]
 anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -211.0
-offset_top = -192.0
+offset_top = -206.0
 offset_right = -27.0
-offset_bottom = -144.0
-grow_horizontal = 1
+offset_bottom = -158.0
 grow_vertical = 0
 
 [node name="MatchStatusBar" type="PanelContainer" parent="." unique_id=1375302278 node_paths=PackedStringArray("_gold_label", "_population_label", "_income_label", "_gold_icon", "_population_icon", "_timer_icon")]
@@ -216,18 +216,22 @@ stretch_mode = 5
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Minimap" parent="." instance=ExtResource("14_minimap")]
+[node name="Minimap" parent="." unique_id=413366510 instance=ExtResource("14_minimap")]
 
-[node name="ResearchCenter" parent="." instance=ExtResource("15_research")]
+[node name="ControlGroupBar" parent="." instance=ExtResource("14_control_groups")]
+
+[node name="ResearchCenter" parent="." unique_id=1568332434 instance=ExtResource("15_research")]
 
 [node name="GameMenu" parent="." unique_id=1407213534 instance=ExtResource("6_game_menu")]
 process_mode = 3
 
-[node name="DraftPanel" parent="." instance=ExtResource("17_draft")]
+[node name="DraftPanel" parent="." unique_id=126930803 instance=ExtResource("17_draft")]
+process_mode = 3
+visible = false
+
+[node name="DesyncNotice" parent="." unique_id=1093841439 instance=ExtResource("90_desync")]
 process_mode = 3
 
-[node name="DesyncNotice" parent="." instance=ExtResource("90_desync")]
+[node name="StallPanel" parent="." unique_id=710171808 instance=ExtResource("91_stall")]
 process_mode = 3
-
-[node name="StallPanel" parent="." instance=ExtResource("91_stall")]
-process_mode = 3
+visible = false

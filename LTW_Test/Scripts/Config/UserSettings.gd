@@ -64,6 +64,10 @@ const DEFAULT_EDGE_PANNING: bool = false
 ## the several-times-the-scene cost they used to be. This is the escape hatch
 ## for a machine that still cannot afford them - see SunLight.
 const DEFAULT_SHADOWS_ENABLED: bool = true
+## The control group bar is shown by default. It only draws groups that
+## actually hold something, so a player who never makes one never sees it, and
+## a player who does has no reason to be told twice that they made it.
+const DEFAULT_SHOW_CONTROL_GROUPS: bool = true
 
 ## How the game window is presented.
 ##
@@ -137,6 +141,10 @@ static var health_bar_display: HealthBarDisplay = DEFAULT_HEALTH_BAR_DISPLAY
 ## that edge strip is stays on CameraConfig - that is a tuning value and this
 ## is a preference.
 static var edge_panning: bool = DEFAULT_EDGE_PANNING
+## Whether the control group bar is drawn at all. Off hides it even while
+## groups exist, which is the only reason it is a setting: on, it hides itself
+## whenever there is nothing to say.
+static var show_control_groups: bool = DEFAULT_SHOW_CONTROL_GROUPS
 static var audio_muted: bool = DEFAULT_AUDIO_MUTED
 static var keyboard_layout: KeyboardLayout = DEFAULT_KEYBOARD_LAYOUT
 
@@ -186,6 +194,8 @@ static func load_from_disk() -> void:
 		DEFAULT_SHADOWS_ENABLED))
 	edge_panning = bool(file.get_value(SECTION_GAMEPLAY, "edge_panning",
 		DEFAULT_EDGE_PANNING))
+	show_control_groups = bool(file.get_value(SECTION_GAMEPLAY,
+		"show_control_groups", DEFAULT_SHOW_CONTROL_GROUPS))
 	audio_muted = bool(file.get_value(SECTION_AUDIO, "muted", DEFAULT_AUDIO_MUTED))
 
 	for channel: int in range(AUDIO_KEYS.size()):
@@ -225,6 +235,7 @@ static func save_to_disk() -> void:
 	file.set_value(SECTION_VIDEO, "shadows", shadows_enabled)
 	file.set_value(SECTION_GAMEPLAY, "health_bar_display", int(health_bar_display))
 	file.set_value(SECTION_GAMEPLAY, "edge_panning", edge_panning)
+	file.set_value(SECTION_GAMEPLAY, "show_control_groups", show_control_groups)
 	file.set_value(SECTION_AUDIO, "muted", audio_muted)
 	for channel: int in range(AUDIO_KEYS.size()):
 		file.set_value(SECTION_AUDIO, AUDIO_KEYS[channel], _volumes[channel])
@@ -296,6 +307,16 @@ static func set_edge_panning(value: bool) -> void:
 	if value == edge_panning:
 		return
 	edge_panning = value
+	save_to_disk()
+
+
+## The bar already standing in a match is refreshed by the CALLER, the same way
+## the health bars and the sun are: this class holds no tree. OptionsMenu does
+## that part, through ControlGroupBar.GROUP.
+static func set_show_control_groups(value: bool) -> void:
+	if value == show_control_groups:
+		return
+	show_control_groups = value
 	save_to_disk()
 
 

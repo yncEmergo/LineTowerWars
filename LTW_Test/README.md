@@ -389,7 +389,10 @@ because the tick is the beat the world appears on and a headless run barely has 
 frames at all. The minimap is one of its children and is the only piece
 that reads the world back rather than being told about it — `Scripts/UI/Minimap.gd` walks
 `MatchSession`'s live units and frames `GameConfig.map_bounds()`, the same rectangle the
-camera pans over.
+camera pans over. `Scenes/UI/control_group_bar.tscn` draws the player's numbered groups in
+the top left corner and shares that corner with the Research Center — it is authored BEFORE
+it in the HUD on purpose, so the screen the player deliberately opened covers the row they
+did not.
 
 The options screen is `Scenes/UI/Menus/options_menu.tscn`, and it is a child of the game
 menu rather than a screen of its own — so Escape peels one layer at a time and only

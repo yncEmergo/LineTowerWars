@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/ControlGroupSlot.gd" id="1_control_group_slot"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.16, 0.17, 0.22, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.34, 0.36, 0.44, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.22, 0.24, 0.3, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.54, 0.62, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="ControlGroupSlot" type="Button" node_paths=PackedStringArray("_hotkey_label", "_count_label")]
+custom_minimum_size = Vector2(40, 40)
+offset_right = 40.0
+offset_bottom = 40.0
+expand_icon = true
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_normal")
+clip_text = true
+script = ExtResource("1_control_group_slot")
+_hotkey_label = NodePath("HotkeyLabel")
+_count_label = NodePath("CountLabel")
+
+[node name="HotkeyLabel" type="Label" parent="."]
+anchors_preset = 0
+offset_left = 3.0
+offset_top = 1.0
+offset_right = 21.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
+text = "1"
+vertical_alignment = 1
+
+[node name="CountLabel" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -21.0
+offset_top = -14.0
+offset_right = -3.0
+offset_bottom = -1.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.93, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 2

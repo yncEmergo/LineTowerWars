@@ -6,6 +6,14 @@ extends RefCounted
 ## Membership is stored per group index. A unit leaving the tree - sold,
 ## cancelled or destroyed - drops out of every group it was in, so a group
 ## never hands back a freed node.
+##
+## Every change is announced, because the HUD draws these groups and nothing
+## else would tell it: a group gains units without the selection moving, and
+## loses them when a tower somewhere off screen dies.
+
+## A group's contents changed. Carries the index rather than the units, so a
+## reader that draws several groups is not tempted to keep the array.
+signal changed(index: int)
 
 var _groups: Dictionary = {}
 
@@ -20,6 +28,7 @@ func assign(index: int, units: Array) -> void:
 		_watch(unit)
 
 	_groups[index] = stored
+	changed.emit(index)
 
 
 ## The units in a group, as a copy so callers cannot mutate the group by
@@ -60,6 +69,7 @@ func replace(old_unit: Node, new_unit: Node) -> void:
 		if !watched:
 			_watch(new_unit)
 			watched = true
+		changed.emit(index)
 
 
 func size_of(index: int) -> int:
@@ -77,5 +87,8 @@ func _watch(unit: Node) -> void:
 
 
 func _on_unit_exiting(unit: Node) -> void:
-	for index in _groups:
-		(_groups[index] as Array).erase(unit)
+	for index: int in _groups:
+		var stored: Array = _groups[index]
+		if stored.has(unit):
+			stored.erase(unit)
+			changed.emit(index)

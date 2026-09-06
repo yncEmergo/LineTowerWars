@@ -88,6 +88,11 @@ const STALL_REPORT_FRAMES: int = 40
 ## 20 Hz. See inject().
 const SYSTEM_LEAD_TURNS: int = 20
 
+## How often a peer tells the relay it is still alive, in physics frames. Twice a
+## second at 20 Hz, against a timeout measured in seconds - so a dozen of these
+## have to go missing before anybody is given up on. See _beat.
+const HEARTBEAT_FRAMES: int = 10
+
 ## How far outside the turns anybody could plausibly be on a word is refused.
 ## Generous, because the honest spread between two peers is `max_delay_turns` and
 ## this only has to catch a number that is wrong by orders of magnitude.
@@ -160,6 +165,17 @@ var _match_id: String = ""
 ## The last few turns this machine closed, oldest first, as [turn, payload]
 ## pairs. Sent again in every echo. See _echo.
 var _recent: Array = []
+
+## Ticks since this machine last said it is alive.
+##
+## **Counted separately from `_frames`, and that separation is the whole fix.**
+## `_frames` STOPS during a stall - which is exactly the moment a peer most needs
+## to be able to say it is still here.
+var _since_heartbeat: int = 0
+
+## Relay only: the turn each peer last reported being on, for the log when one is
+## given up on. Says who was actually behind rather than only who was dropped.
+var _reported_turn: Dictionary = {}
 
 ## Relay only: the frame each peer was last heard from, so one that goes quiet
 ## while still connected can be given up on. See _drop_silent_peers.
@@ -250,6 +266,8 @@ func _physics_process(_delta: float) -> void:
 	# one it belongs to, so every order in the game ran 50 ms later than the
 	# schedule said it should. Measured at 126-134 ms on loopback where the
 	# arithmetic says 50-100.
+	_beat()
+
 	var turn: int = current_turn()
 
 	# Closed FIRST, so this machine's word is on the wire before anything else
@@ -468,25 +486,42 @@ func _drop_silent_peers() -> void:
 		return
 	var frames: int = int(limit / maxf(0.001, MatchSession.tick_seconds()))
 
+	# **The WORST offender only, one per pass**, and this is a backstop rather
+	# than the fix - the heartbeat above is what makes silence mean something.
+	# It is here because the failure this guards against loses a player their
+	# match with no error and no desync to catch it, so it is worth making two
+	# peers impossible to lose in the same instant whatever else goes wrong. A
+	# genuine double failure simply resolves a tick later.
+	var worst: int = 0
+	var worst_silence: int = 0
 	for peer: int in _match_peers():
 		if !_last_heard.has(peer):
 			# Never heard from at all yet. Its clock starts when the match does,
 			# not at connection, or a slow loader would be dropped for loading.
 			_last_heard[peer] = _frames
 			continue
-		if _frames - int(_last_heard[peer]) < frames:
-			continue
-		Log.warn("Player has gone silent, giving up on them", {
-			"peer": peer, "seconds": limit,
-		})
-		_last_heard[peer] = _frames
-		# **Marked explicitly, because this peer's SOCKET IS STILL OPEN.** It is
-		# a wedged game loop rather than a lost connection, so it stays in
-		# `multiplayer.get_peers()` for ever - and without this the relay would
-		# never start speaking for it and every other player would wait on it for
-		# the rest of the match. Exactly the freeze this check exists to end.
-		_departed[peer] = true
-		MatchStart.drop_silent_peer(peer)
+		var silence: int = _frames - int(_last_heard[peer])
+		if silence >= frames && silence > worst_silence:
+			worst = peer
+			worst_silence = silence
+
+	if worst == 0:
+		return
+
+	Log.warn("Player has gone silent, giving up on them", {
+		"peer": worst,
+		"seconds": snappedf(float(worst_silence) * MatchSession.tick_seconds(), 0.1),
+		"their_turn": _reported_turn.get(worst, -1),
+		"relay_turn": _highest_seen,
+	})
+	_last_heard[worst] = _frames
+	# **Marked explicitly, because this peer's SOCKET IS STILL OPEN.** It is a
+	# wedged game loop rather than a lost connection, so it stays in
+	# `multiplayer.get_peers()` for ever - and without this the relay would never
+	# start speaking for it and every other player would wait on it for the rest
+	# of the match. Exactly the freeze this check exists to end.
+	_departed[worst] = true
+	MatchStart.drop_silent_peer(worst)
 
 
 ## The server re-reads its connections and tells everyone when the answer moves.
@@ -610,6 +645,8 @@ func _reset_if_new_match() -> void:
 	_recent.clear()
 	_spoken_through.clear()
 	_departed.clear()
+	_reported_turn.clear()
+	_since_heartbeat = 0
 	_out_reliable.clear()
 	_out_unreliable.clear()
 	_last_heard.clear()
@@ -761,6 +798,37 @@ func commands_for(turn: int) -> Array:
 
 
 # --- exchanging them ------------------------------------------------------
+
+## Tells the relay this machine is still running, whether or not it has anything
+## to say about turns.
+##
+## **A STALLED PEER IS SILENT BY DESIGN, and treating that silence as failure cost
+## an innocent player their match.** While `_stalling`, `_frames` does not advance,
+## so `current_turn()` does not move, so `_close_through` has nothing new to close
+## and this machine emits NOTHING. That is correct - it has genuinely nothing to
+## say - but the relay used a turn word as its only evidence of life, so a healthy
+## peer waiting for a departed one looked exactly like a peer that had itself
+## stopped. Both crossed the timeout in the same pass and both were dropped, with
+## every machine agreeing perfectly about a roster that was wrong. No checksum can
+## catch that: it is not a divergence, it is consistent agreement on a bad
+## decision.
+##
+## So liveness is now its own signal, and it discriminates correctly because of
+## what it depends on. This service is `PROCESS_MODE_ALWAYS` - it has to be, or a
+## stall could never clear - so a peer that is merely WAITING keeps ticking and
+## keeps sending this. A peer whose game loop has actually stopped does not, and
+## is still given up on.
+##
+## Unreliable on purpose: it is a heartbeat, not a fact about the world. A dozen
+## of them fit inside the timeout, so losing several changes nothing, and it must
+## never queue behind the reliable turn stream it exists to be independent of.
+func _beat() -> void:
+	_since_heartbeat += 1
+	if _since_heartbeat < HEARTBEAT_FRAMES:
+		return
+	_since_heartbeat = 0
+	submit_alive.rpc_id(NetworkService.SERVER_PEER_ID, current_turn())
+
 
 ## Says this machine's final word on every turn up to and including `target`.
 ##
@@ -1023,6 +1091,20 @@ func _flush_batches() -> void:
 	_out_unreliable.clear()
 	if sent && _flush_immediately():
 		Net.flush()
+
+
+## A peer saying it is still running, and which turn it is on.
+##
+## The turn is carried because it costs nothing and it is what makes the log
+## useful: when somebody is given up on, it can say who was actually behind rather
+## than only who was dropped.
+@rpc("any_peer", "unreliable")
+func submit_alive(turn: int) -> void:
+	if !multiplayer.is_server():
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	_last_heard[sender] = _frames
+	_reported_turn[sender] = turn
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.

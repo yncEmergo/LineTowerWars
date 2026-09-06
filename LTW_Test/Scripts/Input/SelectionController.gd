@@ -93,6 +93,20 @@ func get_selection() -> Array:
 	return _selected
 
 
+## The numbered groups themselves, so the HUD can draw them and hear when one
+## changes. Handed over rather than mirrored: a second copy of the membership
+## is a second thing to keep right.
+func control_groups() -> ControlGroups:
+	return _control_groups
+
+
+## Selects a group, the same way pressing its number does - including the
+## double tap that also snaps the camera to it, so clicking the button twice
+## behaves like pressing the key twice.
+func recall_control_group(index: int) -> void:
+	_recall_control_group(index)
+
+
 ## Narrows the selection to one unit. Used by the multi-selection panel when a
 ## unit's tile is clicked.
 func select_single(unit: Node) -> void:

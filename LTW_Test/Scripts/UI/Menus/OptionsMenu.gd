@@ -42,6 +42,9 @@ signal closed
 @export var _shadows_button: BaseButton
 ## Always / Only when damaged / Never, in HealthBarDisplay order.
 @export var _health_bar_row: BoxContainer
+## The row of control group squares in the top left corner. Off hides it even
+## while groups exist - left on it hides itself whenever they are all empty.
+@export var _control_groups_button: BaseButton
 ## Panning the camera by pushing the cursor against a screen edge. How wide
 ## that strip is stays authored on CameraConfig; only the switch is here.
 @export var _edge_panning_button: BaseButton
@@ -79,6 +82,8 @@ func _ready() -> void:
 
 	if _shadows_button != null:
 		_shadows_button.toggled.connect(_on_shadows_toggled)
+	if _control_groups_button != null:
+		_control_groups_button.toggled.connect(_on_control_groups_toggled)
 	if _edge_panning_button != null:
 		_edge_panning_button.toggled.connect(_on_edge_panning_toggled)
 	if _mute_button != null:
@@ -135,6 +140,8 @@ func _sync_from_settings() -> void:
 	if _shadows_button != null:
 		_shadows_button.set_pressed_no_signal(UserSettings.shadows_enabled)
 	_press_in_row(_health_bar_row, int(UserSettings.health_bar_display))
+	if _control_groups_button != null:
+		_control_groups_button.set_pressed_no_signal(UserSettings.show_control_groups)
 	if _edge_panning_button != null:
 		_edge_panning_button.set_pressed_no_signal(UserSettings.edge_panning)
 	_press_in_row(_keyboard_layout_row, int(UserSettings.keyboard_layout))
@@ -213,6 +220,14 @@ func _on_shadows_toggled(pressed: bool) -> void:
 func _on_health_bar_pressed(index: int) -> void:
 	UserSettings.set_health_bar_display(index as UserSettings.HealthBarDisplay)
 	get_tree().call_group(HealthBar3D.GROUP, "refresh_visibility")
+
+
+## The bar standing in a match behind this screen is told, the same way the
+## health bars are and for the same reason: nothing about the selection or the
+## groups has moved, so it would never notice on its own.
+func _on_control_groups_toggled(pressed: bool) -> void:
+	UserSettings.set_show_control_groups(pressed)
+	get_tree().call_group(ControlGroupBar.GROUP, "refresh")
 
 
 ## No live camera to tell: RTSCamera reads the setting every tick it looks at
