@@ -21,8 +21,10 @@ in `Docs/` may.
 | [2026-09-05-lockstep-hardening.md](2026-09-05-lockstep-hardening.md) | Acting on that review after verifying it - two of its findings were wrong. Four silent desyncs closed, the server actually made a relay, turn redundancy proven by disabling the reliable path, and the client tick budget measured at last: a 1v1 has 2.3x headroom, twelve players is 2x over. Also why a single latency median on this link is worth nothing. |
 | [2026-09-05-lockstep-review-2.md](2026-09-05-lockstep-review-2.md) | A second, independent read after the hardening pass. The model is right; the edges are not. A third connection to the server freezes the running match for ever, the turn stream is broadcast to peers who are not in it, a disconnect is not turn-synchronised, and a client's turn numbers are unvalidated. Plus where the input delay actually goes on a good link, and why relay batching was under-ranked. |
 | [2026-09-05-lockstep-review-2-response.md](2026-09-05-lockstep-review-2-response.md) | Closing that review. A third connection froze any running match permanently; the turn-synchronised drop the review suggested DEADLOCKS and why; the jitter margin measured against time-actually-held rather than a stall count, halving input latency. |
-| [2026-09-06-playtest-1-freezes.md](2026-09-06-playtest-1-freezes.md) | First real playtest. The ~1 s freezes both players saw were scene loading on first use, not the network - proved by aligning both peers' logs BY TURN rather than by wall clock. Also why the jitter margin measured headless did not transfer to a client with a renderer. |
+
 | [2026-09-05-roster-sweep-and-endgame-load.md](2026-09-05-roster-sweep-and-endgame-load.md) | The first sweep of the whole roster: every tower, disc and creep exercised headless, and every disc's boon read off the tower it lends to. Two things wrong - a lagging player can take a healthy one out of the match with them, and two Ultimate Orb Keepers brick each other - plus what a real endgame maze costs at twelve lanes, which is worse than the Lesser-tower mix said. |
+| [2026-09-06-relay-sent-to-departed-peers.md](2026-09-06-relay-sent-to-departed-peers.md) | The relay went on speaking for a player it had already given up on, to peers who had already forgotten them. Why the leak was silent, and why a roster and a transport peer list disagreeing is the same bug in a third place. |
+| [2026-09-06-playtest-1-freezes.md](2026-09-06-playtest-1-freezes.md) | First real playtest. The ~1 s freezes both players saw were ONE machine loading content on first use, with the other merely waiting for it - and the first version of this finding got that wrong, so it also records how "we both froze" fooled the analysis when it is the expected shape of any stall. Aligning both peers' logs BY TURN is the right first step but does not name the slow peer; asking who was ON TIME does. |
 
 ## Writing one
 
@@ -47,6 +49,15 @@ Cover these, in whatever order suits the work:
 **Do not update it.** If the numbers change, that is a new finding with a new date. An edited
 finding is worse than a stale one, because the date at the top stops being true and nothing
 says so.
+
+The one exception, and it is narrow: **a finding whose CONCLUSION turns out to be wrong may be
+corrected on the day it was written**, before anything has been built on it. The date stays
+true, so the reason for the rule does not apply. Such a document has to say at the top that it
+was rewritten and keep a section explaining how the wrong answer was reached - the wrong
+reasoning is usually worth more than the right conclusion, because it is what the next person
+is about to repeat. `2026-09-06-playtest-1-freezes.md` is the worked example. After the day it
+was written, this stops being available and a correction is a new finding that supersedes the
+old one by name.
 
 **Do not cite its numbers anywhere else.** A finding's numbers are safe here precisely because
 the date is attached. Copied into `README.md` or a docstring they become an undated claim about

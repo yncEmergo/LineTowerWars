@@ -22,7 +22,9 @@ seed and the same orders, so there is no state stream at all — the server forw
 stamps who sent them, and compares world checksums so a disagreement is caught rather than
 papered over. An order is booked a turn or two ahead and run by every peer on that turn, and
 how far ahead is MEASURED from the live connection rather than authored, so the input delay
-tracks the ping instead of being a constant everybody pays. See
+tracks the ping instead of being a constant everybody pays — and from the machine's own frame
+times as well as the wire, because a tick that runs long sends its word late and the far end
+cannot tell the two apart. See
 [multiplayer.md](Docs/multiplayer.md) §11.4 for how that works, and
 [Findings/2026-09-04-input-delay.md](Docs/Findings/2026-09-04-input-delay.md) for what it
 measured on the day.
@@ -32,6 +34,16 @@ for it. It records the connection, the match, every stall and who it was waiting
 input delay as it adapts, and the turn stream itself — which is the replay format, so a
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
+
+**The match does not stop the first time something is spawned.** Everything a match can put
+in the world — every unit, model, disc, projectile, impact and sound — is loaded on the load
+screen rather than the first time it appears. That matters more under lockstep than it would
+otherwise: every machine simulates every lane, so one machine stopping to load a scene stops
+everybody, and the player it happens to is not necessarily the player who caused it. The load
+screen is longer for it, which is the trade being made deliberately — that is a moment a
+player expects to wait, and the middle of a fight is not.
+[Findings/2026-09-06-playtest-1-freezes.md](Docs/Findings/2026-09-06-playtest-1-freezes.md) is
+how it was found, including the answer that was published first and was wrong.
 
 **It exports to a Windows build**, which is how a tester who is not on the dev machines plays
 it: one release preset, and a handed-out build reaches the rented server without being told

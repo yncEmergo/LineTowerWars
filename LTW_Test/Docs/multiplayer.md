@@ -141,7 +141,8 @@ it leaves.
 | `Scripts/Util/CommandLineUtil.gd` | Reading launch arguments — both spellings, both arg lists, one place. |
 | `Scripts/Multiplayer/LobbyService.gd` | The autoload **`Lobby`**: the registry on the server, the mirror of it on a client, and the start countdown (D24). |
 | `Scripts/Multiplayer/MatchStartService.gd` | The autoload **`MatchStart`**: the handshake from "countdown ran out" to "the match exists on every machine". Nothing beyond that. |
-| `Scripts/UI/Menus/MatchLoading.gd` + `Scenes/UI/Menus/match_loading.tscn` | The loading screen: a threaded load with a real progress bar, and who is still loading. |
+| `Scripts/UI/Menus/MatchLoading.gd` + `Scenes/UI/Menus/match_loading.tscn` | The loading screen: a threaded load with a real progress bar, who is still loading, and the content warm that runs before this machine says it is ready. |
+| `Scripts/Game/ContentWarmer.gd` | Loads every scene and sound the match can spawn, up front, so no turn ever pays for a first instantiation (D36). Walks the content graph reflectively and holds what it loads for the life of the process. |
 | `Scripts/Game/WorldChecksum.gd` | One number for the world a machine just built, so two machines can compare theirs in one message. |
 | `Scripts/Multiplayer/Command.gd` | One player order on its way to the server: ids and numbers, never object references. |
 | `Scripts/Multiplayer/CommandService.gd` | The autoload **`Commands`**: the one road every order takes, and the server-side validation of it. |
@@ -392,17 +393,24 @@ order has no business deciding whether two worlds match.
 `server_main.tscn` now wires a `BootConfig` into its `References` - it had none, which is the
 one bug the first end-to-end run found.
 
-**Three things worth not re-deriving:**
+**Four things worth not re-deriving:**
 
 1. **Loading is not building.** The loading screen gets the PackedScene into memory and says
    so; the world is created afterwards, from the roster that comes back with `match_start`.
    That order is forced by D15: "no player area spawns for a missing player" can only be true
    if nothing was placed before we knew who was missing.
-2. **The server comes back.** When the last player of a match disconnects, the process
+2. **Loading is not only the match scene.** `Main.tscn` names most of what a match needs by
+   `res://` PATH rather than holding it, so getting the scene into memory gets almost none of
+   the content into memory. `ContentWarmer` is the second half and is the slower one: it walks
+   the content graph and loads every scene and sound it can reach (D36). **It runs BEFORE
+   `report_loaded`**, deliberately - the point is that nobody starts until everybody is warm,
+   and reporting first would race the match start against the loading it exists to get out of
+   the way.
+3. **The server comes back.** When the last player of a match disconnects, the process
    returns to `server_main.tscn` and the lobby is unlocked. Without it, one match per server
    process meant one match per *run*, which is unbearable while testing. `ServerMain` no
    longer assumes it is running for the first time.
-3. **A match id travels with every answer.** `report_ready` and `report_checksum` both carry
+4. **A match id travels with every answer.** `report_ready` and `report_checksum` both carry
    it, so a late answer about a match that is already over cannot count towards the next one.
 
 ---
@@ -1435,6 +1443,13 @@ One consequence worth remembering, because it will look like a bug otherwise:
 lobby that starts as three therefore gives everyone MORE lives than four would have. That is
 correct — the pool is shared — but the lobby will have shown one number and the match another.
 
+**Warming the content (D36) happens inside that window, and has a ceiling of its own.** A
+machine that cannot finish warming would otherwise never report ready and would be started
+without - trading the freezes warming exists to remove for the far worse outcome of missing the
+match entirely. So `MatchLoading` gives up on warming after `warm_timeout_seconds`, says so in
+the log, and joins anyway with whatever it managed to load. That ceiling has to stay well under
+this one, or the fallback never gets the chance to fire.
+
 ### 11.3 One process per match (D16)
 
 Yes, and more scalable for a reason worth being precise about.
@@ -1523,6 +1538,30 @@ One honest counterweight, recorded rather than buried: AoE's own 1997 playtestin
 tolerance, not perceived responsiveness, and neither argues the delay is unavoidable. The
 same AoE paper is far more useful on what actually hurts: *"a consistent 500 msec command
 latency was playable, but one that varied was considered jerky and hard to use."*
+
+#### The margin, and the term a headless run cannot see (D37)
+
+The budget above is about the WIRE. There is a second way a peer's word arrives late that has
+nothing to do with the network: **the machine does not finish its ticks on time.** A word is
+sent from a tick, so a tick that runs long sends late, and at the far end the two are
+indistinguishable.
+
+`jitter_margin_ms` was the flat allowance for both, and it was set to 0 on paired runs that
+were HEADLESS. With no renderer there is almost no frame-time variance, so those runs measured
+the network term honestly and silently zeroed a term that only exists when something is
+drawing. Playtest 1 is the case it could not have predicted: the connection was clean on both
+sides, and one machine's words were late because its own ticks were.
+
+So the margin now has two parts. The authored `jitter_margin_ms` stays, at whatever a bad link
+is judged to need. On top of it, `adaptive_local_jitter` measures how much longer than a tick
+each tick actually took, keeps a few seconds of that, and adds a high percentile of it, capped
+by `max_local_jitter_ms`. A machine that is keeping up measures zero and pays nothing; a
+machine in trouble books further ahead for as long as the trouble lasts, which is the only
+thing that can help it. `Lockstep.local_jitter_ms()` is in the session log's health line.
+
+**The percentile and the cap are not measured.** They were chosen from the shape of the
+problem, because the only honest measurement needs two machines. That is what the health line
+is for.
 
 #### Feedback and prediction (D17)
 
