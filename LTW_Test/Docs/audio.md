@@ -127,6 +127,22 @@ and same reasoning as a `.tres` naming a scene. `AudioHub` owns one cache for
 the whole game, keyed by path — which is what lets the Phase 2 per-unit sounds
 share it rather than growing a cache each.
 
+**The streams are warmed on the load screen**, so nothing loads one mid-match.
+`ContentWarmer` reflects over the unit stats folder and over
+`ContentConfig.shared_config_folder` — which is where `audio_config.tres` lives
+— collecting any String property that names a `.wav`, `.ogg` or `.mp3`, and
+holds them for the life of the process. `ResourceLoader` then hands `AudioHub`
+the cached resource, so the lazy loads cost nothing from the first frame.
+Nothing calls into audio to make that happen and nothing should.
+
+Two silent couplings follow from that, neither of which errors:
+
+- **Move `audio_config.tres` out of that folder and its sounds stop being
+  warmed.** The symptom is a hitch on the first click, not a message.
+- A sound named anywhere other than a resource in those folders is not warmed
+  either. `AudioHub.warm()` exists for that case and is currently called by
+  nothing.
+
 `References.audio_config` is **wired per scene**, like every other `References`
 entry, and a missing wire fails silently — the getter returns null and the
 sounds simply never play.
