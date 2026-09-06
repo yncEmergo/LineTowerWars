@@ -1080,13 +1080,48 @@ func _queue(outbox: Dictionary, triple: Array, skip: int) -> void:
 ## waits at most about 8 ms and usually far less: every peer sends within a few
 ## milliseconds of every other, so in the ordinary case a whole tick's words land
 ## in one batch.
+##
+## **A PEER STILL IN THE ROSTER IS NOT STILL ON THE END OF A SOCKET.** An outbox
+## is filled from `_match_peers()`, which is the match ROSTER - and a roster is
+## never pruned, deliberately: slots and lanes are keyed to it, and who has left
+## is the turn stream's answer rather than the transport's (see
+## `_expected_peers`). So somebody who leaves stays in every outbox for the rest
+## of the match, and `rpc_id` to them fails with "Attempt to call RPC with
+## unknown peer ID" - once per flush, on the render frame, which on the capped
+## server is tens of times a second with a full GDScript backtrace each, for as
+## long as the match runs. Found in a real match's journal on 2026-09-06.
+##
+## Asking `multiplayer.get_peers()` here is NOT the mistake `CLAUDE.md` warns
+## about. That warning is against using the transport's list to answer "who is in
+## this match", which decides simulation and must be identical on every machine.
+## This asks "is there a socket to address", which is the transport's own
+## business, is asked only by the relay, and decides nothing about the world -
+## `_speak_for_the_departed` reads it the same way and for the same reason.
+##
+## It is checked HERE rather than in `_queue` on purpose. This is the last moment
+## before the send, so it also covers a peer that drops between being queued for
+## and being flushed to - and `_queue` runs several times per turn against this
+## once per frame, so the same guard there would allocate a peer list far more
+## often than it would save an array append.
+##
+## Nothing is logged when a peer is skipped. The departure is already reported
+## once by `MatchStartService`, and a line here would be the flood this removes.
 func _flush_batches() -> void:
-	for id: Variant in _out_reliable:
-		receive_batch.rpc_id(int(id), _out_reliable[id])
-	for id: Variant in _out_unreliable:
-		receive_echo_batch.rpc_id(int(id), _out_unreliable[id])
+	var live: PackedInt32Array = multiplayer.get_peers()
+	var sent: bool = false
 
-	var sent: bool = !_out_reliable.is_empty() || !_out_unreliable.is_empty()
+	for id: Variant in _out_reliable:
+		if int(id) in live:
+			receive_batch.rpc_id(int(id), _out_reliable[id])
+			sent = true
+	for id: Variant in _out_unreliable:
+		if int(id) in live:
+			receive_echo_batch.rpc_id(int(id), _out_unreliable[id])
+			sent = true
+
+	# `sent` is what was ACTUALLY sent rather than what was waiting, so a flush
+	# holding nothing but words for departed peers no longer pushes an empty
+	# packet out of the socket.
 	_out_reliable.clear()
 	_out_unreliable.clear()
 	if sent && _flush_immediately():
