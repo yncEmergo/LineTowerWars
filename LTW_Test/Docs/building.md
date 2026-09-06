@@ -34,8 +34,8 @@ once per machine is in `server.md`.
 From the project root:
 
 ```powershell
-.\Toolsuild_client.ps1            # stamp, export, restore
-.\Toolsuild_client.ps1 -Zip       # and zip the result for upload
+.\Tools\build_client.ps1            # stamp, export, restore
+.\Tools\build_client.ps1 -Zip       # and zip the result for upload
 ```
 
 It writes beside the project, into `..\Builds\Windows\`, which is **outside the Godot project
