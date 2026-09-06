@@ -146,7 +146,28 @@ a line turns out wrong.
 UI sounds are hand-made and live in `Audio/Placeholder/`. That is where a real
 recording is worth most and where there are fewest of them.
 
-## 7. Not built yet
+## 7. The one step still outstanding
+
+`AudioHub` is written, tested and committed, but **it is not yet an autoload**,
+so at runtime `AudioHub.instance` is null and every call no-ops. Nothing breaks
+— the project boots clean and silent — but no sound plays until this lands.
+
+Add to `project.godot`, in the existing `[autoload]` section:
+
+```
+AudioHub="*res://Scripts/Audio/AudioHub.gd"
+```
+
+**Godot's editor must be closed when this is written.** The editor holds its own
+copy of ProjectSettings, does not re-read the file, and a filesystem scan does
+not help — an autoload added from outside reads as "Identifier not found" until
+the editor is restarted. Headless runs are unaffected, which is what makes it
+confusing. See `CLAUDE.md`.
+
+To confirm it took, boot and press a button in the main menu: it should click.
+`AudioHub.is_available()` returns true once the instance exists.
+
+## 8. Not built yet
 
 - **Nothing in the world makes a sound.** Towers, creeps and impacts have no
   sound wired; the paths on `AttackStats` and `CreepStats` do not exist yet.
