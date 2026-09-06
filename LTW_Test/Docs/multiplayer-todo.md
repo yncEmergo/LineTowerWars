@@ -13,6 +13,55 @@ edited freely as things land or turn out differently.
 
 ## 1. Near term
 
+### 1.0 Warm content before it is first used  — NEXT, and it has a measured cause
+
+**Playtest 1 froze both players for ~1 s, five times, and every one was a scene loading on
+first use.** `UnitStats.scene()` loads synchronously on the game thread the first time
+something spawns one; the load screen thread-loads only `Main.tscn`. Under lockstep both peers
+hit the same load on the same turn, so both freeze together. Full evidence and method in
+`Findings/2026-09-06-playtest-1-freezes.md`.
+
+Decided with the user: **preloading belongs on the LOAD SCREEN**, because that is a moment the
+player already expects to wait, against a freeze mid-fight that hits both of them.
+
+**Step by step:**
+
+1. **Measure first — do not guess the load-screen cost.** A throwaway bench that walks the
+   content graph, loads every scene it reaches, and reports wall time per scene and total,
+   plus memory delta. `Main._validate_content` already walks that graph, so the traversal
+   exists and only the timing is new. This answers "would it drag the load screen out" with a
+   number.
+2. **A `ContentWarmer`** taking the match roster and threaded-loading the reachable set with
+   progress, slotted into `MatchLoading`, which already does threaded loading with a bar.
+3. **Split by REACHABILITY, which this game makes easy.** Nobody can afford an Ultimate in the
+   first minute, so the long tail is provably unreachable for minutes. Load screen covers what
+   is reachable early - the enabled creep roster, tier-1 towers, projectiles, impacts -
+   and the upgrade tiers are warmed in the background during play, a few per second, while
+   nobody can afford them. That caps the load screen at the small set and still removes every
+   freeze.
+4. **The shader half.** Preloading a `PackedScene` does not compile its shaders: under
+   `gl_compatibility` that happens on first DRAW. Removing the whole hitch means instantiating
+   and rendering one of each for a frame.
+   **Hazard, and it is a real one:** `Unit._ready` claims a unit id from `MatchSession`, so
+   warming a full unit prefab inside a live match corrupts the id sequence and desyncs. Warm
+   the MODEL scenes, which are plain `Node3D`/mesh and claim nothing, or do it strictly before
+   `MatchSession.begin()`.
+5. **Prove it.** Two-peer run, asserting no gap over 0.5 s at any first-use turn. The
+   turn-aligned analysis in the finding IS the test: freezes at matching turn numbers on both
+   sides is the signature, and it should be gone.
+
+### 1.0b Give the jitter margin back some head room
+
+`jitter_margin_ms` is 0, set on paired runs that were **headless** - no renderer, so almost no
+frame-time variance. On a real client the margin absorbs frame-time jitter as well as network
+jitter, and at `delay_turns: 1` there is only ~30 ms of slack before a tick overrun makes a
+peer's word late. Playtest 1 lost **14.8% of its last minute** to stalls as the world filled.
+
+The fix is not simply to put 20 back: make the margin follow OBSERVED TICK OVERRUN, not only
+RTT, since frame time is the term that actually bit. Whatever is chosen has to be measured with
+a renderer running, which is the mistake that produced the 0.
+
+
 ### 1.1 Prove determinism across two machines
 
 **The largest untested assumption in the whole system.** Every test ever run has been two
