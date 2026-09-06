@@ -302,5 +302,10 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		"delay_turns": Lockstep.delay_turns(),
 		"rtt_ms": Net.round_trip_ms(NetworkService.SERVER_PEER_ID),
 		"rtt_var_ms": Net.round_trip_variance_ms(NetworkService.SERVER_PEER_ID),
+		# What THIS machine's own frame times are costing, which the two figures
+		# above cannot show. Playtest 1 was diagnosed the long way round for want
+		# of it: the connection was clean on both sides and one machine was
+		# simply not finishing its ticks on time.
+		"local_jitter_ms": Lockstep.local_jitter_ms(),
 		"stalls": _stalls,
 	})

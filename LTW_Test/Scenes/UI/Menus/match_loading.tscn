@@ -5,6 +5,8 @@
 [ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
 [ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
 [ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="5_network_config"]
+[ext_resource type="Resource" path="res://Resources/Config/content_config.tres" id="7_content_config"]
+[ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="8_audio_config"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_slot.tscn" id="6_slot"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
@@ -29,6 +31,8 @@ _slot_scene = ExtResource("6_slot")
 script = ExtResource("2_references")
 _menu_config = ExtResource("3_menu_config")
 _network_config = ExtResource("5_network_config")
+_content_config = ExtResource("7_content_config")
+_audio_config = ExtResource("8_audio_config")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

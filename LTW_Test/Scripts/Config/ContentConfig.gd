@@ -34,6 +34,16 @@ extends Resource
 ## no walk that could ever find one - this folder is the only way they are
 ## found at all.
 @export_dir var tech_folder: String = "res://Resources/Tech"
+## Configuration resources that NAME assets without being reachable from a unit.
+##
+## Not a registry folder like the three above - nothing in it carries an id, and
+## nothing here is validated for one. It exists because the content walk starts
+## at a unit and some assets are named by a config instead: the interface sounds
+## on `AudioConfig` are loaded lazily by path exactly like a tower's model is,
+## and would otherwise be loaded the first time somebody clicked a button.
+##
+## Only `ContentWarmer` reads it. See it for why warming is not optional.
+@export_dir var shared_config_folder: String = "res://Resources/Config"
 
 
 ## Reports every folder that does not resolve. Called at boot alongside the
@@ -44,6 +54,7 @@ func validate() -> bool:
 	complete = _validate_folder(abilities_folder, "abilities_folder") && complete
 	complete = _validate_folder(unit_stats_folder, "unit_stats_folder") && complete
 	complete = _validate_folder(tech_folder, "tech_folder") && complete
+	complete = _validate_folder(shared_config_folder, "shared_config_folder") && complete
 	return complete
 
 

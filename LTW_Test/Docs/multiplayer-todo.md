@@ -13,54 +13,63 @@ edited freely as things land or turn out differently.
 
 ## 1. Near term
 
-### 1.0 Warm content before it is first used  — NEXT, and it has a measured cause
+### 1.0 Warm content before it is first used  — DONE 2026-09-06
 
-**Playtest 1 froze both players for ~1 s, five times, and every one was a scene loading on
-first use.** `UnitStats.scene()` loads synchronously on the game thread the first time
-something spawns one; the load screen thread-loads only `Main.tscn`. Under lockstep both peers
-hit the same load on the same turn, so both freeze together. Full evidence and method in
+Playtest 1 froze both players for about a second, five times, and every one was a first
+instantiation. The full diagnosis, including the wrong answer that was published first, is in
 `Findings/2026-09-06-playtest-1-freezes.md`.
 
-Decided with the user: **preloading belongs on the LOAD SCREEN**, because that is a moment the
-player already expects to wait, against a freeze mid-fight that hits both of them.
+Built: `ContentWarmer`, run by `MatchLoading` before it reports itself loaded. It walks the unit
+stats folder and `ContentConfig.shared_config_folder` reflectively, loads every scene and sound
+they name on Godot's worker threads while the main thread reflects, and holds the lot statically
+for the life of the process so nothing is ever freed and reloaded.
 
-**Step by step:**
+What the paired measurement said, three alternating runs of `warm=off` against `warm=on`, placing
+one never-before-seen tower or creep every few ticks with a renderer running:
 
-1. **Measure first — do not guess the load-screen cost.** A throwaway bench that walks the
-   content graph, loads every scene it reaches, and reports wall time per scene and total,
-   plus memory delta. `Main._validate_content` already walks that graph, so the traversal
-   exists and only the timing is new. This answers "would it drag the load screen out" with a
-   number.
-2. **A `ContentWarmer`** taking the match roster and threaded-loading the reachable set with
-   progress, slotted into `MatchLoading`, which already does threaded loading with a bar.
-3. **Split by REACHABILITY, which this game makes easy.** Nobody can afford an Ultimate in the
-   first minute, so the long tail is provably unreachable for minutes. Load screen covers what
-   is reachable early - the enabled creep roster, tier-1 towers, projectiles, impacts -
-   and the upgrade tiers are warmed in the background during play, a few per second, while
-   nobody can afford them. That caps the load screen at the small set and still removes every
-   freeze.
-4. **The shader half.** Preloading a `PackedScene` does not compile its shaders: under
-   `gl_compatibility` that happens on first DRAW. Removing the whole hitch means instantiating
-   and rendering one of each for a frame.
-   **Hazard, and it is a real one:** `Unit._ready` claims a unit id from `MatchSession`, so
-   warming a full unit prefab inside a live match corrupts the id sequence and desyncs. Warm
-   the MODEL scenes, which are plain `Node3D`/mesh and claim nothing, or do it strictly before
-   `MatchSession.begin()`.
-5. **Prove it.** Two-peer run, asserting no gap over 0.5 s at any first-use turn. The
-   turn-aligned analysis in the finding IS the test: freezes at matching turn numbers on both
-   sides is the signature, and it should be gone.
+| | cold | warm |
+| --- | --- | --- |
+| tick p50 | 0.90 ms | 0.90 ms |
+| tick p99 | 11.2-11.5 ms | 7.4-7.7 ms |
+| worst tick | 13.5-13.7 ms | 8.8-9.1 ms |
 
-### 1.0b Give the jitter margin back some head room
+No overlap between the groups, and p50 unchanged - warming should not touch an ordinary tick, and
+it does not. The load screen went from about 0.8 s to 1.5 s on the machine that measured it.
 
-`jitter_margin_ms` is 0, set on paired runs that were **headless** - no renderer, so almost no
-frame-time variance. On a real client the margin absorbs frame-time jitter as well as network
-jitter, and at `delay_turns: 1` there is only ~30 ms of slack before a tick overrun makes a
-peer's word late. Playtest 1 lost **14.8% of its last minute** to stalls as the world filled.
+Three things worth keeping from doing it:
 
-The fix is not simply to put 20 back: make the margin follow OBSERVED TICK OVERRUN, not only
-RTT, since frame time is the term that actually bit. Whatever is chosen has to be measured with
-a renderer running, which is the mistake that produced the 0.
+**The reachability split was designed against a cost that had not been measured, and was dropped
+once it was.** Half a second for the whole graph left nothing to split. A plan that survives its
+own first measurement is the exception.
 
+**A bench that LOADS is not a bench that DRAWS.** The first version measured `ResourceLoader.load`
+only, which under `gl_compatibility` cannot see shader compilation at all - that happens on first
+draw. The draw test was written only because the load numbers did not add up against the reported
+freeze; it turned out shaders are not a factor here, because the placeholder roster shares one
+standard material. The next roster may not.
+
+**It still is not measured on the target.** The whole graph costs half a second here and cost the
+tester something like a hundred times more per asset. Warming moves that cost to the load screen
+whatever it is, which is why the fix did not need the multiplier to be understood - but a load
+screen that is 1.5 s here could be much longer there, and nobody has watched one yet.
+
+### 1.0b Give the jitter margin back some head room  — DONE 2026-09-06, UNVERIFIED under load
+
+`jitter_margin_ms` was 0, set on paired runs that were **headless** - no renderer, so almost no
+frame-time variance. That measured the network term honestly and silently zeroed a term that only
+exists when something is drawing.
+
+Built: `NetworkConfig.adaptive_local_jitter` and `max_local_jitter_ms`. `LockstepService` keeps a
+three-second window of how much longer than a tick each tick actually took and adds the 90th
+percentile of it to the wire budget, capped. Zero on a machine that is keeping up, so it costs
+nothing in the normal case; a machine in trouble books further ahead for as long as the trouble
+lasts. `Lockstep.local_jitter_ms()` is in the session log's health line, which is the thing that
+was missing when playtest 1 had to be diagnosed the long way round.
+
+**What is NOT done is measuring it against a real link.** A percentile and a cap were chosen from
+the shape of the problem rather than from data, because the only honest data comes from two
+machines and there is one here. The next playtest measures it; the health line now carries the
+number needed to say whether the cap is right.
 
 ### 1.1 Prove determinism across two machines
 

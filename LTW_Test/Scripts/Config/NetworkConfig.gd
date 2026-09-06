@@ -225,6 +225,36 @@ extends Resource
 ## next person should be able to measure it rather than trust this.
 @export var jitter_margin_ms: int = 0
 
+## Whether the input delay also allows for THIS MACHINE's own frame-time
+## variance, measured live, on top of the network's.
+##
+## **The flat margin above was set to 0 on a measurement that did not transfer,
+## and this is the repair.** Those runs were HEADLESS - no renderer, so almost no
+## frame-time variance - which measured the network term and silently zeroed a
+## term that only exists when something is drawing. On a real client at
+## `delay_turns` 1 there is about 30 ms of slack in a 50 ms turn, and a frame that
+## overruns eats it.
+##
+## Playtest 1 is what it is for. One player's machine fell behind on its own
+## ticks, its words arrived late, and BOTH players froze - the other one had done
+## nothing wrong and was on time to within 10 ms every time. A margin measured
+## from the wire could not have seen that coming, because nothing was wrong with
+## the wire. See `Findings/2026-09-06-playtest-1-freezes.md`.
+##
+## Costs nothing on a machine that keeps up: the measured overrun is zero and the
+## budget is exactly what it was. It is a machine in trouble that books further
+## ahead, and only for as long as the trouble lasts.
+@export var adaptive_local_jitter: bool = true
+
+## The most the measurement above may add, in milliseconds.
+##
+## A ceiling rather than a trust exercise. The allowance is derived from observed
+## frame times, and a machine that hitches for a completely unrelated reason - a
+## driver stutter, another program - would otherwise book input delay for it and
+## keep it. Whatever is happening, half a turn of extra delay is enough of an
+## apology for it.
+@export var max_local_jitter_ms: int = 25
+
 ## How often the world is checksummed and compared between machines, in TURNS.
 ##
 ## Every turn is the strictest and the most expensive; comparing rarely means a

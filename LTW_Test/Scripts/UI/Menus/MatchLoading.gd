@@ -15,6 +15,18 @@ extends Control
 ## only be true if nothing was placed before we knew who was missing. See
 ## MatchStartService.
 ##
+## **It also warms the content**, which is the slower half of what it does and
+## the reason the screen exists at all rather than being a frame of black. Every
+## scene and sound the match can spawn is loaded here, so that no turn in the
+## match ever pays for a first instantiation - under lockstep that cost lands on
+## both players at the same turn and freezes them together. See `ContentWarmer`
+## and `Findings/2026-09-06-playtest-1-freezes.md`.
+##
+## Warming happens BEFORE this machine reports itself loaded, deliberately. The
+## whole point is that nobody starts until everybody is warm; reporting first and
+## warming afterwards would race the match start against the loading it exists to
+## get out of the way.
+##
 ## It owns no state of its own. Who is in the match and who has loaded both
 ## come off the `MatchStart` autoload, which outlives this scene and the next.
 
@@ -27,11 +39,25 @@ extends Control
 @export var _slot_list: VBoxContainer
 
 @export_group("Settings")
+## What loading the game scene is worth on the bar, with warming the content
+## worth the rest. Roughly the measured split on the machine this was written
+## on - a bar that spends most of its travel on the shorter half looks stuck.
+@export_range(0.1, 0.9, 0.05) var scene_share: float = 0.4
+## How long warming may take before the screen gives up and joins the match
+## anyway. A warm that never finishes must not cost somebody their match: the
+## worst case without this is that the server starts without them (D15), which
+## is a far worse outcome than the freezes warming was avoiding.
+@export var warm_timeout_seconds: float = 20.0
+
 ## The row prefab, shared with the lobby room: the same row, saying a different
 ## thing about the same player.
 @export var _slot_scene: PackedScene
 
 var _setup: MatchSetup = null
+## Non-null only while warming, which is also what tells _process which of its
+## two jobs it is doing.
+var _warmer: ContentWarmer = null
+var _warm_started_msec: int = 0
 ## Held so the scene stays in the cache until the change of scene, which would
 ## otherwise load it a second time.
 var _scene: PackedScene = null
@@ -98,16 +124,20 @@ func _begin_loading() -> void:
 ## load has. Deliberately _process and not _physics_process: there is no
 ## simulation on this screen, and the bar has to move on a render frame.
 func _process(_delta: float) -> void:
+	if _warmer != null:
+		_advance_warming()
+		return
+
 	var progress: Array = []
 	var status: int = ResourceLoader.load_threaded_get_status(_scene_path, progress)
 
 	match status:
 		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			if !progress.is_empty():
-				_set_progress(float(progress[0]))
+				_set_progress(float(progress[0]) * scene_share)
 		ResourceLoader.THREAD_LOAD_LOADED:
 			set_process(false)
-			_set_progress(1.0)
+			_set_progress(scene_share)
 			_scene = ResourceLoader.load_threaded_get(_scene_path) as PackedScene
 			_on_scene_loaded()
 		_:
@@ -123,6 +153,56 @@ func _on_scene_loaded() -> void:
 		return
 
 	Log.info("Match scene loaded", {"match": _setup.match_id, "path": _scene_path})
+	_begin_warming()
+
+
+# --- warming the content --------------------------------------------------
+
+## Loads everything the match can spawn, so the match itself never has to.
+##
+## A failure here is never fatal: every path out of this ends in
+## `_report_loaded`, because a player who cannot warm should still get to play
+## with the freezes rather than not play at all.
+func _begin_warming() -> void:
+	var content: ContentConfig = References.content_config
+	if content == null:
+		Log.err("MatchLoading found no ContentConfig on References, nothing can be warmed")
+		_report_loaded({})
+		return
+
+	_warmer = ContentWarmer.new()
+	_warm_started_msec = Time.get_ticks_msec()
+	_warmer.begin(PackedStringArray([
+		content.unit_stats_folder, content.shared_config_folder,
+	]))
+	_set_status("Preparing the world...")
+	set_process(true)
+
+
+func _advance_warming() -> void:
+	_warmer.advance()
+	_set_progress(scene_share + (1.0 - scene_share) * _warmer.ratio())
+
+	var seconds: float = float(Time.get_ticks_msec() - _warm_started_msec) / 1000.0
+	if !_warmer.is_finished() && seconds < warm_timeout_seconds:
+		return
+
+	if !_warmer.is_finished():
+		Log.warn("Content warming did not finish in time, starting anyway", {
+			"seconds": warm_timeout_seconds,
+			"so_far": _warmer.report(),
+		})
+
+	set_process(false)
+	var report: Dictionary = _warmer.report()
+	_warmer = null
+	_report_loaded(report)
+
+
+## The one place this screen says it is ready, whatever happened on the way.
+func _report_loaded(warm_report: Dictionary) -> void:
+	_set_progress(1.0)
+	SessionLog.note("match.warmed", warm_report)
 	MatchStart.report_loaded()
 	_set_status("Ready. Waiting for the other players...")
 	_build_rows()
@@ -170,6 +250,7 @@ func _fill_row(slot: LobbySlot, player: MatchPlayer, is_loaded: bool) -> void:
 ## for the frame before the scene changes.
 func _on_match_cancelled(reason: String) -> void:
 	set_process(false)
+	_warmer = null
 	_set_status(reason)
 
 
@@ -178,6 +259,7 @@ func _on_match_cancelled(reason: String) -> void:
 ## the way in.
 func _on_server_disconnected() -> void:
 	set_process(false)
+	_warmer = null
 	MenuNavigation.pending_notice = "Lost connection to the server while loading."
 	MenuNavigation.to_lobby_browser(self)
 

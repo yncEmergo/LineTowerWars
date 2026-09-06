@@ -93,6 +93,20 @@ const SYSTEM_LEAD_TURNS: int = 20
 ## have to go missing before anybody is given up on. See _beat.
 const HEARTBEAT_FRAMES: int = 10
 
+## How many tick intervals the local-jitter window remembers. Three seconds at
+## 20 Hz: long enough to hold a hitch that matters, short enough that the delay
+## comes back down once the machine recovers.
+const JITTER_SAMPLES: int = 60
+
+## How many of those must be collected before the window is believed. A match
+## opens with the world being built, which is not what a settled tick costs.
+const JITTER_MIN_SAMPLES: int = 20
+
+## How often the percentile is recomputed, in frames. Sorting sixty floats is
+## cheap, and doing it four times a second rather than twenty keeps it off the
+## hot path entirely.
+const JITTER_REFRESH_FRAMES: int = 5
+
 ## How far outside the turns anybody could plausibly be on a word is refused.
 ## Generous, because the honest spread between two peers is `max_delay_turns` and
 ## this only has to catch a number that is wrong by orders of magnitude.
@@ -173,6 +187,14 @@ var _recent: Array = []
 ## to be able to say it is still here.
 var _since_heartbeat: int = 0
 
+## The rolling window of how much longer than a tick each tick actually took, in
+## milliseconds. Written round-robin, so nothing is allocated per tick.
+var _overruns: PackedFloat32Array = PackedFloat32Array()
+var _overruns_filled: int = 0
+var _last_tick_usec: int = 0
+var _jitter_cache: int = -1
+var _jitter_measured_at: int = -1000
+
 ## Relay only: the turn each peer last reported being on, for the log when one is
 ## given up on. Says who was actually behind rather than only who was dropped.
 var _reported_turn: Dictionary = {}
@@ -242,6 +264,7 @@ func _physics_process(_delta: float) -> void:
 		return
 
 	_reset_if_new_match()
+	_sample_tick_interval()
 
 	# **A relay keeps no turn clock.** It has no world to advance, nothing to
 	# say about a turn, and no checksum to take - all it does on a tick is
@@ -398,7 +421,7 @@ func _report_latency(turn: int) -> void:
 ## so its word travels one leg. A client's word climbs to the middle and comes
 ## back down the far side, so it pays both.
 func _wire_budget_ms() -> int:
-	var margin: int = _jitter_margin_ms()
+	var margin: int = _jitter_margin_ms() + local_jitter_ms()
 	if Net.is_server():
 		if _worst_one_way == NetworkService.UNKNOWN_RTT:
 			return -1
@@ -565,6 +588,65 @@ func announce_one_way(ms: int) -> void:
 	_worst_one_way = maxi(0, ms)
 
 
+## How much this machine's own frame times are currently costing, in
+## milliseconds, as an allowance added to the input delay.
+##
+## **This is the term a headless measurement cannot see**, and the one that
+## actually bit in playtest 1: a peer whose ticks run late sends its word late,
+## which is indistinguishable at the far end from a slow network and is not
+## fixable by anything the network does.
+##
+## A high percentile rather than a mean, because a mean cannot see the spike that
+## is the whole problem, and a maximum would let one unrelated hitch hold the
+## delay up for the length of the window. Zero on a machine that is keeping up,
+## which is the normal case and costs nothing.
+func local_jitter_ms() -> int:
+	if !_adaptive_local_jitter():
+		return 0
+	if _frames - _jitter_measured_at < JITTER_REFRESH_FRAMES && _jitter_cache >= 0:
+		return _jitter_cache
+	_jitter_measured_at = _frames
+	_jitter_cache = _measure_local_jitter()
+	return _jitter_cache
+
+
+## The 90th percentile overrun across the sample window, capped.
+func _measure_local_jitter() -> int:
+	var filled: int = mini(_overruns_filled, _overruns.size())
+	if filled < JITTER_MIN_SAMPLES:
+		return 0
+	var window: Array[float] = []
+	for index: int in range(filled):
+		window.append(_overruns[index])
+	window.sort()
+	var at: int = clampi(int(float(filled) * 0.9), 0, filled - 1)
+	return clampi(int(window[at]), 0, _max_local_jitter_ms())
+
+
+## One tick interval, folded into the window.
+##
+## The interval is WALL CLOCK between two ticks, not the engine's fixed delta,
+## which is a constant and would measure nothing. Godot may also run several
+## physics ticks back to back to catch up after a long frame, which shows here as
+## one large interval followed by tiny ones - the percentile is chosen so that
+## shape reads as the one overrun it is rather than as a run of fast ticks.
+func _sample_tick_interval() -> void:
+	# Sized here rather than only in the reset, because the first match of a
+	# process reaches this before anything has been reset and a zero-length
+	# window would divide by zero.
+	if _overruns.size() != JITTER_SAMPLES:
+		_overruns.resize(JITTER_SAMPLES)
+		_overruns.fill(0.0)
+	var now: int = Time.get_ticks_usec()
+	if _last_tick_usec > 0:
+		var interval_ms: float = float(now - _last_tick_usec) * 0.001
+		var ideal_ms: float = MatchSession.tick_seconds() * 1000.0
+		var slot: int = _overruns_filled % _overruns.size()
+		_overruns[slot] = maxf(0.0, interval_ms - ideal_ms)
+		_overruns_filled += 1
+	_last_tick_usec = now
+
+
 ## How long this match has spent held, in seconds, across every stall.
 func stalled_seconds() -> float:
 	return float(_stalled_total) * MatchSession.tick_seconds()
@@ -645,6 +727,14 @@ func _reset_if_new_match() -> void:
 	_recent.clear()
 	_spoken_through.clear()
 	_departed.clear()
+	# A new match on a machine that struggled through the last one starts from
+	# no opinion about it, rather than inheriting the delay it earned.
+	_overruns.resize(JITTER_SAMPLES)
+	_overruns.fill(0.0)
+	_overruns_filled = 0
+	_last_tick_usec = 0
+	_jitter_cache = -1
+	_jitter_measured_at = -1000
 	_reported_turn.clear()
 	_since_heartbeat = 0
 	_out_reliable.clear()
@@ -1450,6 +1540,16 @@ func _ticks_per_turn() -> int:
 func _jitter_margin_ms() -> int:
 	var config: NetworkConfig = _config()
 	return 20 if config == null else maxi(0, config.jitter_margin_ms)
+
+
+func _adaptive_local_jitter() -> bool:
+	var config: NetworkConfig = _config()
+	return true if config == null else config.adaptive_local_jitter
+
+
+func _max_local_jitter_ms() -> int:
+	var config: NetworkConfig = _config()
+	return 25 if config == null else maxi(0, config.max_local_jitter_ms)
 
 
 func _silent_timeout_seconds() -> float:
