@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SaveBlueprintsAbility" format=3 uid="uid://derd331t25rmw"]
+
+[ext_resource type="Script" uid="uid://duwhvxpnoilsq" path="res://Scripts/Abilities/SaveBlueprintsAbility.gd" id="1_save_blueprint_menu"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Texture2D" uid="uid://v61i378h1ohm" path="res://2DArt/UI/Icons/ability_blueprint_save.png" id="3_ability_blueprint_save"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_1.tres" id="11_save_blueprint_1"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_2.tres" id="12_save_blueprint_2"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_3.tres" id="13_save_blueprint_3"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_4.tres" id="14_save_blueprint_4"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_5.tres" id="15_save_blueprint_5"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_6.tres" id="16_save_blueprint_6"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_7.tres" id="17_save_blueprint_7"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_8.tres" id="18_save_blueprint_8"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_9.tres" id="19_save_blueprint_9"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_1.tres" id="11_save_blueprint_1"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_2.tres" id="12_save_blueprint_2"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_3.tres" id="13_save_blueprint_3"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_4.tres" id="14_save_blueprint_4"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_5.tres" id="15_save_blueprint_5"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_6.tres" id="16_save_blueprint_6"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_7.tres" id="17_save_blueprint_7"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_8.tres" id="18_save_blueprint_8"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_9.tres" id="19_save_blueprint_9"]
+
+[resource]
+script = ExtResource("1_save_blueprint_menu")
+slots = Array[ExtResource("2_UnitAbility")]([ExtResource("11_save_blueprint_1"), ExtResource("12_save_blueprint_2"), ExtResource("13_save_blueprint_3"), ExtResource("14_save_blueprint_4"), ExtResource("15_save_blueprint_5"), ExtResource("16_save_blueprint_6"), ExtResource("17_save_blueprint_7"), ExtResource("18_save_blueprint_8"), ExtResource("19_save_blueprint_9")])
+ability_id = 464
+display_name = "Save Blueprint"
+description = "Store the maze you have built as one of your nine plans, so you can lay it out again from memory next match."
+icon = ExtResource("3_ability_blueprint_save")
+targeting = 4
+slot = 11

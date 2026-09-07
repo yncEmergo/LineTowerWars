@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ShowBlueprintsAbility" format=3 uid="uid://bey2wko3cpk5b"]
+
+[ext_resource type="Script" uid="uid://dagd6f4o5fjpv" path="res://Scripts/Abilities/ShowBlueprintsAbility.gd" id="1_show_blueprint_menu"]
+[ext_resource type="Script" uid="uid://cpyxeerdq65do" path="res://Scripts/Abilities/UnitAbility.gd" id="2_UnitAbility"]
+[ext_resource type="Texture2D" uid="uid://6dt3je2c3exx" path="res://2DArt/UI/Icons/ability_blueprint.png" id="3_ability_blueprint"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_1.tres" id="11_show_blueprint_1"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_2.tres" id="12_show_blueprint_2"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_3.tres" id="13_show_blueprint_3"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_4.tres" id="14_show_blueprint_4"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_5.tres" id="15_show_blueprint_5"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_6.tres" id="16_show_blueprint_6"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_7.tres" id="17_show_blueprint_7"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_8.tres" id="18_show_blueprint_8"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprint_9.tres" id="19_show_blueprint_9"]
+
+[resource]
+script = ExtResource("1_show_blueprint_menu")
+slots = Array[ExtResource("2_UnitAbility")]([ExtResource("11_show_blueprint_1"), ExtResource("12_show_blueprint_2"), ExtResource("13_show_blueprint_3"), ExtResource("14_show_blueprint_4"), ExtResource("15_show_blueprint_5"), ExtResource("16_show_blueprint_6"), ExtResource("17_show_blueprint_7"), ExtResource("18_show_blueprint_8"), ExtResource("19_show_blueprint_9")])
+ability_id = 463
+display_name = "Blueprints"
+description = "Pick a saved plan to draw over your zone. Press it again while a plan is up to take it away."
+icon = ExtResource("3_ability_blueprint")
+slot = 8

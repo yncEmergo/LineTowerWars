@@ -242,9 +242,9 @@ func effect_text() -> String:
 
 ## The beast's own scene, checked once at boot like every other declared path -
 ## the editor does not rewrite one when a scene moves. See Main._validate_content.
-func validate(_seen: Dictionary) -> bool:
+func validate(seen: Dictionary) -> bool:
 	if SceneUtil.exists(beast_scene_path):
-		return true
+		return super(seen)
 	Log.err("Bloodthirst names a beast scene that does not resolve", {
 		"ability": display_name,
 		"path": beast_scene_path,

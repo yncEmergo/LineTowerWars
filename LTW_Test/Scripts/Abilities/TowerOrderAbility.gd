@@ -193,7 +193,7 @@ func validate(seen: Dictionary) -> bool:
 		Log.err("Tower ability has no tower stats assigned", display_name)
 		return false
 
-	var complete: bool = tower_stats.validate(seen)
+	var complete: bool = super(seen) && tower_stats.validate(seen)
 	if tower_stats.scene_path.is_empty():
 		Log.err("Tower ability names a tower with no scene_path, nothing could be placed", {
 			"ability": display_name,

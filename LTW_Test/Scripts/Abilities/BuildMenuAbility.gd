@@ -31,7 +31,10 @@ func can_execute(unit: Unit) -> bool:
 ## Everything the menu can build, so a tower reachable only through the build
 ## card is still checked at boot.
 func validate(seen: Dictionary) -> bool:
-	var complete: bool = true
+	# super() first, because the base check is not about paths at all: it refuses
+	# a SUBMENU that opens onto nothing, which is what an emptied .tres array
+	# looks like. An override that skips it skips that. See CLAUDE.md.
+	var complete: bool = super(seen)
 	for entry in buildable:
 		var ability: UnitAbility = entry as UnitAbility
 		if ability != null && !ability.validate(seen):

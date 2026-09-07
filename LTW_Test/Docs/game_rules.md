@@ -1001,6 +1001,34 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - Labels are only visible while the grid is visible
   - TBD: column labels along the bottom
 
+## Blueprints
+- A BLUEPRINT is a saved maze layout a player can draw over their own zone as
+  a guide, so a maze that has to be built the same way every match does not
+  have to be held in the head
+  - It marks POSITIONS and nothing else: one square on every cell the plan puts
+    a tower on, in a colour nothing else on the ground uses. It does not say
+    which tower goes where, and it is never an order to build anything
+  - A square disappears the moment anything is built on its cell, so what is
+    still marked is exactly what is still to place
+  - It draws over the player's OWN zone only. Unlike the grid overlay, a plan
+    is a note to yourself rather than a reading of the board
+  - Purely local: it lives in a file on the player's own machine, the server is
+    never told about one, and no other player can see one
+- A player keeps a fixed number of them, and they are reached from the builder:
+  one command opens the list to pick one, another opens the same list of slots
+  to SAVE the maze standing right now into one
+  - The list is a command card like any other, so the slots answer to card
+    squares. A slot answers to the same square on both cards
+  - The command that opens the list is a TOGGLE while a plan is up: it is lit,
+    and pressing it puts the plan away rather than opening the list again
+  - Saving over a slot that already holds a plan asks first, in a box that
+    blocks the rest of the game until it is answered. Saving into an empty one
+    does not ask
+- Some blueprints SHIP WITH THE GAME, so a new player opens with a set of
+  worked mazes rather than nine empty squares
+  - They are ordinary blueprints in every other way, and saving over one
+    replaces it on that machine
+
 # Mazing
 - Players place towers to lengthen the creep path
 - A creep path from entrance to exit must always exist

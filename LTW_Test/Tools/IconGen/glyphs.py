@@ -276,6 +276,45 @@ def show_ranges(mask):
     mask.circle(CENTER, CENTER, 8.0)
 
 
+def _plan_sheet(mask):
+    """The sheet both blueprint icons are drawn on: a plan with a folded corner.
+
+    Shared, because the two are a PAIR - one shows a plan, the other puts one
+    away - and the only honest way to say that in a flat silhouette is for them
+    to be the same object with something different cut into it. The folded
+    corner is what keeps it from reading as the build grid's nine cells.
+    """
+    mask.round_rect(10.0, 7.0, 44.0, 50.0, 4.0)
+    mask.erase(mask.polygon, [(37.0, 3.0), (58.0, 24.0), (58.0, 3.0)])
+
+
+def blueprint(mask):
+    """A plan sheet with four cells cut out of it: where the towers go.
+
+    Cells rather than lines of writing, because that is what THIS plan holds -
+    positions on a grid. Four of them rather than nine: nine at this size is
+    the build grid icon with a border round it.
+    """
+    _plan_sheet(mask)
+    for row in range(2):
+        for col in range(2):
+            mask.erase(mask.round_rect,
+                       18.0 + col * 17.0, 25.0 + row * 17.0, 11.0, 11.0, 2.0)
+
+
+def blueprint_save(mask):
+    """The same sheet with an arrow cut down into it: this maze, into a plan.
+
+    Down and INTO the sheet rather than a separate object beside it, so the
+    pair reads as one verb on one noun. An arrow is a diagram and the set
+    prefers objects, but the alternative was a floppy disk in a game with no
+    computers in it.
+    """
+    _plan_sheet(mask)
+    mask.erase(mask.capsule, (32.0, 16.0), (32.0, 32.0), 5.0)
+    mask.erase(mask.polygon, [(32.0, 49.0), (18.0, 31.0), (46.0, 31.0)])
+
+
 ## Every icon this tool writes: file stem to the function that draws it.
 ##
 ## The stem is what the .tres names, so renaming one here is a content edit
@@ -300,6 +339,8 @@ GLYPHS = {
     "ability_choose_element": choose_element,
     "ability_stampede_target": stampede_target,
     "ability_show_ranges": show_ranges,
+    "ability_blueprint": blueprint,
+    "ability_blueprint_save": blueprint_save,
 }
 
 

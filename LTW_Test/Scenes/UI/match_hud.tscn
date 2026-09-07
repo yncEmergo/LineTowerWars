@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/stall_panel.tscn" id="91_stall"]
 
@@ -226,6 +227,10 @@ theme_override_constants/separation = 2
 process_mode = 3
 
 [node name="DraftPanel" parent="." unique_id=126930803 instance=ExtResource("17_draft")]
+process_mode = 3
+visible = false
+
+[node name="ConfirmPrompt" parent="." instance=ExtResource("80_confirm")]
 process_mode = 3
 visible = false
 

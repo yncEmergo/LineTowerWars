@@ -193,6 +193,29 @@
   node to its own unit from _ready - build it lazily on first use instead
 - The editor rewrites hand-written files when it saves them, so re-check exports
   afterwards if the scene has been opened
+- **A TYPED ARRAY IN A .TRES IS ALL OR NOTHING, AND THE EDITOR THEN MAKES IT
+  PERMANENT.** `abilities = Array[ExtResource("...")]([...])` comes back EMPTY
+  if a single one of its entries fails to load - not short by one, empty - with
+  no error anywhere. That much is recoverable. What is not: the editor writes
+  that emptiness back on the next save of that file and PRUNES the ext_resource
+  lines nothing references any more, so a transient load failure becomes data
+  loss on disk
+  - it spreads, because the array that was emptied is usually a card. Editing
+    one ability's `slot` in the inspector cost the builder its WHOLE `abilities`
+    array and two menu resources their contents - three files, two of which
+    nobody had opened
+  - and it is not undone by undoing the edit that triggered it. The array is
+    already gone from the file; reverting the value that was typed changes a
+    line that was never the problem
+  - the symptom is a unit with NO COMMAND CARD and a clean log, which reads as
+    a bug in the panel rather than as a file that lost its contents. `git diff`
+    on the .tres is what actually says so
+  - three checks now refuse it at boot rather than leaving it silent:
+    `UnitAbility.validate` refuses a SUBMENU that opens onto nothing,
+    `BuilderStats.validate` refuses a builder with no abilities, and
+    `ShowBlueprintsAbility` checks its own list. **A `validate()` override that
+    forgets `super()` opts out of the first of those**, which is the override
+    rule above reached the expensive way
 - Saving a .tres from the editor also drops every property that equals its script
   default, so a hand-written file loses the lines that only restated defaults.
   Nothing is lost, those values still read back the same
@@ -246,6 +269,32 @@
   - `disconnect_peer(id, false)` does NOT save you. The `now = false` flag defers
     ENet's own disconnect until ITS queue drains, and Godot's rpc has not reached
     that queue yet
+
+- A MULTIMESH CANNOT BE READ BACK UNDER `--headless`. Its instance data lives
+  in the RenderingServer, and the dummy driver a headless run installs accepts
+  every `set_instance_transform` and stores none of them - so
+  `get_instance_transform` hands back IDENTITY however carefully the transform
+  was worked out, with no error anywhere
+  - `instance_count` DOES survive, because it is a property of the resource
+    rather than of the server. So a headless check can prove how many
+    instances there are and never where any of them is, which is the shape
+    that makes this cost a debugging cycle: half the test passes
+  - reproduced on a bare four-line MultiMesh outside this project, so it is
+    the engine and not the code under test
+  - the fix is to make the ARITHMETIC askable - a function returning the
+    transform, called by both the draw loop and the test - and to leave the
+    pixels to a human. `BlueprintOverlay._square_transform` is the worked
+    example
+  - the general form is CLAUDE.md's own rule about a negative result only
+    counting if the test exercised the right case: a readback of something the
+    renderer owns is a test of the renderer
+  - and SETTING `instance_count` IS A REALLOCATION: it frees the buffer,
+    clears every transform in it and re-uploads the lot. So the natural
+    "rebuild the visible set on every change" shape pays for the whole thing
+    to say that one item changed, and stutters the frame it happens on. Size
+    it once for the WHOLE set and hide an individual instance with a zero
+    scale - there is no per-instance visibility. `BlueprintOverlay` is the
+    worked example, where the headless half of that cost alone was 8x
 
 - A NEW SCRIPT IN AN EXISTING FOLDER is not imported by a `godot --path` run. A
   new FOLDER is scanned; a new file dropped into a folder Godot already knows is

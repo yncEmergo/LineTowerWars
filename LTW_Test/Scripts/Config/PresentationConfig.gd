@@ -77,6 +77,26 @@ enum OwnerColors {
 ## off, and anything with longer left than this simply draws clear.
 @export var status_expiry_sweep_seconds: float = 5.0
 
+@export_group("Blueprints", "blueprint_")
+## Colour of the square drawn on every cell a saved plan puts a tower on.
+##
+## Blue on purpose and worth writing down: nothing else the game draws on the
+## ground is blue. The build ghost is green or red, rubble is grey, the range
+## overlay is the tower's own colour - so a plan cannot be mistaken for an
+## answer about whether something may be built, which is exactly what it is
+## NOT. See BlueprintOverlay.
+##
+## The alpha is the whole of how strongly it reads. Well under half, because a
+## plan covers most of a maze and the player still has to see their own ground,
+## their own creeps and the grid underneath it.
+@export var blueprint_color: Color = Color(0.28, 0.55, 1.0, 0.42)
+## How often the plan on screen re-checks which of its cells are still empty.
+##
+## A beat rather than every frame: nothing it watches can change faster than a
+## tower goes up, and the check walks every building in the area. A quarter
+## second is under the time it takes to notice a square is gone.
+@export var blueprint_refresh_seconds: float = 0.25
+
 @export_group("Leak Log", "leak_")
 ## Seconds a leak message stays at full strength before it starts to go.
 ##

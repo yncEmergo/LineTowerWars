@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SaveBlueprintAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/SaveBlueprintAbility.gd" id="1_save_blueprint"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_blueprint_save.png" id="2_ability_blueprint_save"]
+
+[resource]
+script = ExtResource("1_save_blueprint")
+ability_id = 454
+display_name = "Save as Blueprint 1"
+description = "Store the maze standing right now in this slot. A slot that already holds a plan asks before it is written over."
+targeting = 1
+slot = 0
+icon = ExtResource("2_ability_blueprint_save")
+blueprint_slot = 1

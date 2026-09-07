@@ -223,6 +223,14 @@ the order is now HELD until the target dies rather than thrown away when it is o
 which is what lets a player line up which creep a tower hits next. **The builder can fight**,
 badly and slowly, with a hammer it swings on the attack's own windup.
 
+**Blueprints** are the newest thing in: a player can save the maze they have built into one of
+nine slots on their own machine and draw any of them back over their own zone as a guide — one
+blue square on every cell still to build on, which disappears as soon as something is built
+there. It is a memory aid and nothing else: it names no tower types, orders nothing, and never
+leaves the machine. A set of worked mazes will ship with the game and behaves like any other
+slot, saving over one included. Both commands live on the builder's card, and saving over a
+slot that already holds a plan asks first.
+
 **The map is a fixed 6 x 2 grid of twelve lane slots**, whoever turned up. A 1v1 fills two of
 them and the other ten are black ground, which the camera and the minimap both still cover.
 
@@ -414,7 +422,9 @@ the top left corner and shares that corner with the Research Center — it is au
 it in the HUD on purpose, so the screen the player deliberately opened covers the squares
 they did not. Which presses carry a group, and what each square draws in its corner, are
 both answered by `ControlsConfig` rather than worked out here, so the picture and the press
-cannot disagree.
+cannot disagree. `Scenes/UI/confirm_prompt.tscn` is the HUD's one modal yes-or-no
+box, borrowed by anything about to do something that cannot be undone — it dims the screen,
+eats every key while it is up, and carries no wording of its own.
 
 The options screen is `Scenes/UI/Menus/options_menu.tscn`, and it is a child of the game
 menu rather than a screen of its own — so Escape peels one layer at a time and only
@@ -426,6 +436,13 @@ remembered and waits for there to be a sound to apply it to. The player's multip
 lives in that file too, though it is not set from this screen — the lobby browser asks for
 it. It is there for the same reason the rest is: typed at runtime, on this machine, by
 whoever is sitting at it.
+
+`user://` holds one other thing, on the same grounds and in `user://blueprints/`: the maze
+plans a player saves from the builder's card, one `TowerLayout` `.tres` per slot. A slot
+falls back to the plan shipped in `Resources/Blueprints/` when the player has never saved
+into it, so nothing is copied at boot and deleting a user file gives that slot its default
+back. `Scripts/Game/BlueprintLibrary.gd` is the whole of it; `Docs/content.md` says how to
+author a default.
 
 Hotkeys is the one page with a second file behind it. The command card is a grid and an
 ability's key is read off the square it sits on, so there is nothing per-ability to

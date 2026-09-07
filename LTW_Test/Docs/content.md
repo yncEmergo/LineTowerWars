@@ -112,6 +112,42 @@ authors the `.tres` that points at it and fills in its numbers.
 
 ---
 
+## Adding a default blueprint
+
+A blueprint that ships with the game is an ordinary `TowerLayout` `.tres` under
+`Resources/Blueprints/`, named `blueprint_<slot>.tres` — the slot number in the file name is
+which square of the blueprint card it fills.
+
+There is no editor for one, and none is needed: **make it by playing.**
+
+1. build the maze you want in a match
+2. save it into that slot with the builder's Save Blueprint command
+3. take the file it wrote out of `user://blueprints/` — on Windows that is
+   `%APPDATA%\Godot\app_userdata\<project>\blueprints\` — and drop it into
+   `Resources/Blueprints/` under the same name
+
+A slot reads its user file first and falls back to the shipped one, so a default is not
+copied anywhere at boot and nothing has to be reset: **deleting a player's user file for a
+slot gives that slot its default back.** Saving over a default only writes the user file that
+from then on shadows it.
+
+Two things worth knowing:
+
+- **A layout carries `unit_type_id`s, and the overlay draws none of them.** A blueprint only
+  answers WHERE today. The types are stored anyway, because the file that has them costs
+  nothing extra and the file that threw them away could never grow the feature back.
+- **An exported build converts `.tres` to `.res`.** `BlueprintLibrary` looks for both
+  spellings for exactly this reason — a default that was only ever tried in the editor would
+  otherwise be a slot that quietly emptied itself the day the game was exported.
+
+The nine squares on each of the two cards are nine authored `.tres` files each, under
+`Resources/Abilities/Blueprints/`, and each owns a permanent `ability_id` like every other
+command. Changing how many slots there are means authoring more of them and raising
+`BlueprintLibrary.SLOT_COUNT` — the count is not derived from the folder, because an id has to
+be authored rather than taken from a position in a list.
+
+---
+
 ## What refuses bad content, and when
 
 Everything below runs at boot, so **booting once is the whole check**. Read the editor log,

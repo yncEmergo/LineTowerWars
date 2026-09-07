@@ -45,6 +45,21 @@ extends Node
 ## grey ghost of every tower ordered and not started yet. Reached from
 ## OrderQueue, which is a RefCounted with no tree to walk.
 @export var _order_overlay: OrderOverlay
+## Draws the saved maze plan the player currently has up, over their own zone.
+##
+## PRESENTATION ONLY, and local from end to end: a blueprint is a file this
+## machine wrote and the squares it puts down change nothing. A dedicated
+## server leaves this null and the abilities that reach it stand down - see
+## multiplayer.md.
+@export var _blueprint_overlay: BlueprintOverlay
+## The match's one modal yes-or-no box, borrowed by whatever needs to ask
+## before doing something that cannot be undone.
+##
+## Shared rather than one per caller because it is MODAL: only one question can
+## be on screen at a time by definition, so a second box would be a second
+## thing that must never happen at once. PRESENTATION ONLY; a server has
+## nobody to ask.
+@export var _confirm_prompt: ConfirmPrompt
 ## Parent for every unit that is not parented to an area: the builders, and
 ## the send buildings. Shared because replication spawns into it too, which is
 ## what moved it here from Main's own @export.
@@ -153,6 +168,18 @@ static var order_overlay: OrderOverlay:
 		if instance == null:
 			return null
 		return instance._order_overlay
+
+static var blueprint_overlay: BlueprintOverlay:
+	get:
+		if instance == null:
+			return null
+		return instance._blueprint_overlay
+
+static var confirm_prompt: ConfirmPrompt:
+	get:
+		if instance == null:
+			return null
+		return instance._confirm_prompt
 
 static var units_root: Node3D:
 	get:

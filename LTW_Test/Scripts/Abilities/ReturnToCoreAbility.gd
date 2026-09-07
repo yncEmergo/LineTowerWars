@@ -136,5 +136,5 @@ func _return_seconds(config: GameConfig) -> float:
 ## A path that does not resolve is a dead button, and this one sits on most of
 ## the elemental roster. core_stats() caches, so the reason is reported once
 ## however many cards ask.
-func validate(_seen: Dictionary) -> bool:
-	return core_stats() != null
+func validate(seen: Dictionary) -> bool:
+	return super(seen) && core_stats() != null

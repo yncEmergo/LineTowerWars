@@ -149,7 +149,7 @@ func validate(seen: Dictionary) -> bool:
 		Log.err("SendCreepAbility has no creep stats assigned", display_name)
 		return false
 
-	var complete: bool = creep_stats.validate(seen)
+	var complete: bool = super(seen) && creep_stats.validate(seen)
 	if creep_stats.scene_path.is_empty():
 		Log.err("Sendable creep has no scene_path, nothing could be spawned", {
 			"ability": display_name,

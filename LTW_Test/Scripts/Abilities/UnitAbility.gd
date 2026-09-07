@@ -369,8 +369,27 @@ func tooltip_text(hotkey_label: String = "") -> String:
 ##
 ## seen is threaded through so a stats resource on two cards is checked, and
 ## reported, exactly once.
+##
+## **It also refuses a SUBMENU that opens onto nothing**, which is not a path
+## question at all but is caught here because this is the one walk that visits
+## every ability in the build. A menu with no entries draws a square that opens
+## an empty card, and the only symptom is a button that appears to do nothing.
+##
+## The reason that is worth a check of its own: **a typed array in a .tres is
+## all or nothing.** One element that fails to load empties the WHOLE array,
+## silently - and the editor then writes that emptiness back on the next save,
+## pruning the ext_resource lines with it. So a menu losing its contents is a
+## real thing that happens to a file nobody edited, and it has to be loud at
+## boot rather than a card square that quietly stopped working. See CLAUDE.md.
 func validate(_seen: Dictionary) -> bool:
-	return true
+	if targeting != Targeting.SUBMENU || !submenu_abilities().is_empty():
+		return true
+
+	Log.err("Submenu ability has no entries, its card would open empty", {
+		"ability": display_name,
+		"id": ability_id,
+	})
+	return false
 
 
 ## Whether this ability changes only what THIS machine sees, and so must never
