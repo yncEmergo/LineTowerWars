@@ -9,4 +9,5 @@ element = 8
 kind = 0
 display_name = "Void Technology: Basic"
 description = "Unlocks the Void Elemental Core morph and the upgrade above it. Required before either Void path."
+tower_stats_path = "res://Resources/UnitStats/Towers/void_voidalisk_stats.tres"
 slot = 24

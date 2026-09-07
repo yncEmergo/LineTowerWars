@@ -21,15 +21,28 @@ extends PanelContainer
 ## signals for either would mean touching every one of those paths to report
 ## something only a label cares about.
 ##
+## The two are polled at DIFFERENT RATES, though, and the countdown is the
+## expensive-looking one on purpose. Re-reading a whole-second countdown four
+## times a second does not draw it four times a second - it draws it on a
+## quarter-second grid, so the second it flips on is up to a quarter second
+## late and the gaps between flips come out uneven. That reads as the clock
+## running at different speeds, and it is what made this bar disagree with the
+## countdown on a send slot, which has always re-read every frame.
+##
+## So the countdown is re-read every frame and the TEXT is only rewritten when
+## the whole second actually changes, which is what CommandSlot does with a
+## lockout. Population keeps the quarter-second poll: it walks the unit
+## registry, and nobody can see a population change land a fifth of a second
+## late.
+##
 ## Connects on a deferred call rather than straight away, because the player
 ## states are created in Main._ready, which runs after every child's _ready.
 
 const GOLD_COLOR: Color = Color(1.0, 0.84, 0.32, 1.0)
 const POPULATION_COLOR: Color = Color(0.72, 0.78, 0.88, 1.0)
 const INCOME_COLOR: Color = Color(0.62, 0.86, 0.55, 1.0)
-## How often the polled halves are re-read. Four times a second is smooth
-## enough for a countdown shown in whole seconds and cheap enough to walk the
-## unit registry for.
+## How often the POPULATION is re-read. Four times a second is cheap enough to
+## walk the unit registry for and far faster than anybody can notice.
 const REFRESH_SECONDS: float = 0.25
 
 @export_group("References")
@@ -44,6 +57,9 @@ const REFRESH_SECONDS: float = 0.25
 
 var _state: PlayerState
 var _elapsed: float = 0.0
+## Whole seconds currently written into the income label, so the text is only
+## rebuilt when the number a player can actually see has changed.
+var _shown_income: int = -1
 
 var _manager: PlayerManager:
 	get:
@@ -77,11 +93,12 @@ func _connect_state() -> void:
 func _process(delta: float) -> void:
 	if _state == null:
 		return
+	_refresh_income()
 	_elapsed += delta
 	if _elapsed < REFRESH_SECONDS:
 		return
 	_elapsed = 0.0
-	_refresh_polled()
+	_refresh_population()
 
 
 func _on_gold_changed(gold: int) -> void:
@@ -90,19 +107,32 @@ func _on_gold_changed(gold: int) -> void:
 
 
 func _refresh_polled() -> void:
+	_refresh_population()
+	_refresh_income()
+
+
+func _refresh_population() -> void:
 	var manager: PlayerManager = _manager
-	if manager == null:
+	if manager == null || _population_label == null:
 		return
+	_population_label.text = "%d / %d" % [
+		manager.population_for(_state.player_id), _population_cap(),
+	]
 
-	if _population_label != null:
-		_population_label.text = "%d / %d" % [
-			manager.population_for(_state.player_id), _population_cap(),
-		]
 
-	if _income_label != null:
-		# Rounded UP, so the last part-second still reads as 1 rather than
-		# sitting on 0 while nothing has been paid yet.
-		_income_label.text = "%ds" % ceili(manager.seconds_until_income())
+## The countdown, off the match clock by way of PlayerManager. Rounded UP, so
+## the last part-second still reads as 1 rather than sitting on 0 while nothing
+## has been paid yet - the same rounding a send slot's lockout uses, which is
+## half of what keeps the two numbers agreeing.
+func _refresh_income() -> void:
+	var manager: PlayerManager = _manager
+	if manager == null || _income_label == null:
+		return
+	var seconds: int = ceili(manager.seconds_until_income())
+	if seconds == _shown_income:
+		return
+	_shown_income = seconds
+	_income_label.text = "%ds" % seconds
 
 
 func _population_cap() -> int:

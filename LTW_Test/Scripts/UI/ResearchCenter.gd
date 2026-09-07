@@ -26,22 +26,36 @@ const FALLBACK_COLUMNS: int = 6
 const FALLBACK_ROWS: int = 5
 
 @export_group("References")
-## Opens and closes the screen. Sits over the unit panel, which is where the
-## source game puts it.
-@export var _toggle_button: Button
 ## Everything that is hidden while the screen is closed. Separate from this
-## node, which stays visible so the toggle button does.
+## node, which stays in the tree answering the toggle key.
+##
+## What OPENS it is not in here: the button lives on the ActionBar, beside the
+## builder and the send squares, because that is where a player looks for a
+## button. This screen is opened by whoever asks, and answers its own key.
 @export var _panel: Control
 @export var _grid: GridContainer
 ## Rolls one of the twenty Ultimate towers and buys what it still needs.
 @export var _random_button: Button
-## Takes back the most recent press, while its window is still open.
+## Takes back the most recent press, while its window is still open. Takes back
+## a whole Ultimate the same way, because that is one press too.
 @export var _undo_button: Button
+## Ticks the row of Ultimates below the grid on and off.
+@export var _ultimates_toggle: BaseButton
+## One square per Ultimate tower in the build. Hidden until the toggle is
+## ticked, and it IS the row - there is no wrapper around it, so hiding it
+## hides the whole feature.
+@export var _ultimates_grid: GridContainer
 ## Made up from this when the grid is short of squares, the same way the
 ## command card makes up its own.
 @export var _tech_slot_scene: PackedScene
+## One per Ultimate. Built in code rather than authored, unlike the grid above:
+## how many there are is a property of the CONTENT - one per path technology -
+## where the grid's shape is a property of the KEYBOARD, which ControlsConfig
+## owns and a player can change.
+@export var _ultimate_button_scene: PackedScene
 
 var _slots: Array[TechSlot] = []
+var _ultimate_buttons: Array[UltimateButton] = []
 var _built: bool = false
 ## Whose screen this is. Fixed for the life of the match: a player never looks
 ## at somebody else's research.
@@ -64,9 +78,10 @@ func _ready() -> void:
 	_panel.hide()
 	set_process(false)
 	add_to_group(HotkeyAction.READERS_GROUP)
-	if _toggle_button != null:
-		_toggle_button.pressed.connect(toggle)
-		_label_toggle_button()
+	if _ultimates_grid != null:
+		_ultimates_grid.hide()
+	if _ultimates_toggle != null:
+		_ultimates_toggle.toggled.connect(_on_ultimates_toggled)
 	if _random_button != null:
 		_random_button.pressed.connect(_on_random_pressed)
 	if _undo_button != null:
@@ -77,8 +92,6 @@ func _ready() -> void:
 ## options screen. Its own button, and each square's letter - which follows the
 ## keyboard layout and is otherwise written once when the grid is built.
 func refresh_hotkeys() -> void:
-	if _toggle_button != null:
-		_label_toggle_button()
 	if _built:
 		_fill_slots()
 
@@ -100,6 +113,9 @@ func close() -> void:
 		return
 	_panel.hide()
 	set_process(false)
+	# The mouse never leaves a square that is taken out from under it, so the
+	# frames it lit would otherwise still be there on the next open.
+	_highlight_none()
 
 
 func toggle() -> void:
@@ -176,17 +192,6 @@ func _card_answers(key: InputEventKey) -> bool:
 	return panel.claims_key(key.keycode)
 
 
-## Draws the toggle key on the button that does the same job, so the letter the
-## player reads is the letter ControlsConfig actually answers to. A screen with
-## no letter authored draws no letter, which is what a button-only screen
-## should look like.
-func _label_toggle_button() -> void:
-	var config: ControlsConfig = _controls
-	if config == null:
-		return
-	_toggle_button.text = config.research_toggle_label()
-
-
 ## The two buttons at the foot move on their own - the undo window runs out on
 ## a clock, and what can be rolled moves with gold - so they are re-read while
 ## the screen is open, the same way each square is.
@@ -225,6 +230,39 @@ func _build() -> void:
 		_slots[index].name = "TechSlot%d" % index
 		_slots[index].tech_activated.connect(_on_tech_activated)
 	_fill_slots()
+	_build_ultimates()
+
+
+## One square per Ultimate tower, which is one per PATH technology - twenty of
+## them, and the registry answers in ascending id order so every machine builds
+## the same row.
+##
+## Four to a line on purpose: the ids run three to an element, so a row of four
+## holds exactly the two elements that the grid above puts on one of its own
+## rows of six. The two rows line up element for element without either having
+## to know the other's shape.
+func _build_ultimates() -> void:
+	if _ultimates_grid == null || _ultimate_button_scene == null:
+		return
+
+	var session: MatchSession = References.match_session
+	if session == null:
+		return
+
+	for tech in session.techs().path_techs():
+		var button: UltimateButton = _ultimate_button_scene.instantiate() as UltimateButton
+		if button == null:
+			Log.err("Ultimate button scene does not have an UltimateButton script")
+			return
+		_ultimates_grid.add_child(button)
+		button.set_tech(tech, _player_id)
+		button.hovered.connect(_on_ultimate_hovered)
+		button.unhovered.connect(_on_ultimate_unhovered)
+		button.chosen.connect(_on_ultimate_chosen)
+		_ultimate_buttons.append(button)
+
+	if _ultimate_buttons.is_empty():
+		Log.warn("Research Center found no Ultimates to show")
 
 
 ## Brings the authored squares in line with the shape ControlsConfig asks for.
@@ -304,6 +342,49 @@ func _on_random_pressed() -> void:
 
 func _on_undo_pressed() -> void:
 	Commands.submit_player_action(Command.PlayerAction.UNDO_RESEARCH)
+
+
+## Opening the row builds it on the first tick it is asked for, the same way
+## the grid itself is built on first open, and closing it takes the frames with
+## it - a square hidden under the mouse never gets its mouse_exited.
+func _on_ultimates_toggled(shown: bool) -> void:
+	if _ultimates_grid != null:
+		_ultimates_grid.visible = shown
+	if !shown:
+		_highlight_none()
+
+
+## Frames the four squares this Ultimate is made of. What the four ARE is
+## TechManager's answer, never worked out here: the row must name the same set
+## the press would buy, or it teaches the player something false.
+func _on_ultimate_hovered(tech: TechDefinition) -> void:
+	var manager: TechManager = _manager
+	if manager == null:
+		return
+
+	var wanted: PackedInt32Array = PackedInt32Array()
+	for needed in manager.ultimate_requirement(tech):
+		wanted.append(needed.tech_id)
+	for slot in _slots:
+		slot.set_highlighted(slot.holds_any(wanted))
+
+
+func _on_ultimate_unhovered(_tech: TechDefinition) -> void:
+	_highlight_none()
+
+
+func _highlight_none() -> void:
+	for slot in _slots:
+		slot.set_highlighted(false)
+
+
+## Leaves by the same door every other press does. Whether the free allowance
+## still covers it is TechManager's to refuse, so a click it will not take
+## changes nothing - and the Undo button takes back a whole Ultimate exactly as
+## it takes back one square, because the four were bought as one press.
+func _on_ultimate_chosen(tech: TechDefinition) -> void:
+	if tech != null:
+		Commands.submit_player_action(Command.PlayerAction.CHOOSE_ULTIMATE, tech.tech_id)
 
 
 ## Greys the two buttons at the foot, and counts the undo window down on the

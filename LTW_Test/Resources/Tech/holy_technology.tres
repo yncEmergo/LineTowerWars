@@ -9,4 +9,5 @@ element = 3
 kind = 0
 display_name = "Holy Technology: Basic"
 description = "Unlocks the Holy Elemental Core morph and the upgrade above it. Required before either Holy path."
+tower_stats_path = "res://Resources/UnitStats/Towers/holy_holy_lantern_stats.tres"
 slot = 18

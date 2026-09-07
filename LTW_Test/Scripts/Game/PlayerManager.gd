@@ -28,10 +28,21 @@ var _states: Dictionary = {}
 ## because the states exist before any area does: the economy is created first
 ## so nothing can be built before there is gold to build it with.
 var _areas: Dictionary = {}
-## Seconds toward the next payout. Starts NEGATIVE by the opening phase, which
-## is what holds the first payment back to one interval after play begins
-## rather than after the match does - see create_states.
-var _income_elapsed: float = 0.0
+## MATCH CLOCK TIME of the next payout, not a clock of its own.
+##
+## **Read off MatchSession rather than accumulated here, so the countdown the
+## HUD draws and the countdown a send slot draws are the SAME number.** They
+## used to be two: this was a float that grew by `delta` from whenever this
+## node first ticked, while a creep unlock has always been answered against
+## `MatchSession.elapsed_seconds()`. Two clocks started a frame apart and
+## rounded separately never quite agree, and a player watching both at once
+## sees exactly that - see SendBuilding.unlock_remaining, which this now
+## mirrors.
+##
+## It also means a CLIENT has a working countdown. The accumulator only ever
+## advanced on the authority, so a peer that simulates nothing showed a frozen
+## number; the clock is every machine's own and needs nothing sent to it.
+var _next_income_at: float = 0.0
 ## Latched rather than recomputed, so match_ended fires exactly once.
 var _over: bool = false
 ## Whether the one-off raise that Sudden Death brings has already been paid.
@@ -81,12 +92,13 @@ func create_states(setup: MatchSetup, config: GameConfig) -> void:
 		_states[player.slot] = state
 
 	_income_interval = settings.income_interval
-	# Started NEGATIVE by the opening phase, so the first payment lands one
-	# whole interval after play begins rather than after the match does - the
-	# same opening every creep's start delay is moved back by, and the reason a
-	# player spends it on their starting gold alone. See
-	# GameConfig.start_delay_seconds.
-	_income_elapsed = -maxf(0.0, config.start_delay_seconds)
+	# Through unlock_clock, for the reason everything else timed from the start
+	# of PLAY goes through it: the opening phase is added in ONE place. So the
+	# first payment lands one whole interval after play begins rather than
+	# after the match does - the same opening every creep's start delay is
+	# moved back by, and the reason a player spends it on their starting gold
+	# alone. See GameConfig.start_delay_seconds.
+	_next_income_at = config.unlock_clock(_income_interval)
 	_over = false
 
 
@@ -271,9 +283,12 @@ func local_state() -> PlayerState:
 
 ## Seconds until the next payout, for the HUD readout.
 func seconds_until_income() -> float:
-	if _income_interval <= 0.0:
+	var session: MatchSession = References.match_session
+	if _income_interval <= 0.0 || session == null:
 		return 0.0
-	return maxf(0.0, _income_interval - _income_elapsed)
+	# Clamped, which is also what an ENDED match reads: nothing more is coming,
+	# so the countdown sits at zero rather than running negative.
+	return maxf(0.0, _next_income_at - session.elapsed_seconds())
 
 
 # --- Elimination and the end of the match -------------------------------
@@ -416,7 +431,7 @@ func _sorted_slots() -> Array:
 ## Simulation, so it runs on the fixed tick rather than the render frame.
 ## See multiplayer.md: every machine must advance this the same way, and a
 ## render frame is whatever the player's GPU felt like doing.
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	# 3.4: a client runs no simulation of its own. What it draws is what the
 	# server sent, so anything that would advance the world here has to stand
 	# aside. See MatchSession.is_authority().
@@ -430,19 +445,25 @@ func _physics_process(delta: float) -> void:
 	# for it, and must be out before anything else reads the ring.
 	_settle_standings()
 
-	# The match is decided, so nothing accrues any more (game_rules.md). The
-	# clock is left where it stopped rather than reset, since nobody is waiting
-	# on it.
+	# The match is decided, so nothing is paid any more (game_rules.md). The
+	# next payout time is left where it stood rather than pushed on, since
+	# nobody is waiting on it.
 	if is_match_over():
 		return
 
 	_check_sudden_death()
 
-	_income_elapsed += delta
+	var session: MatchSession = References.match_session
+	if session == null:
+		return
+
 	# A while loop rather than an if, so a long stall pays every interval it
-	# covered instead of silently dropping the extras.
-	while _income_elapsed >= _income_interval:
-		_income_elapsed -= _income_interval
+	# covered instead of silently dropping the extras. Each payout moves the
+	# NEXT one on by a whole interval, so the schedule stays pinned to the
+	# match clock and cannot drift away from it a rounding at a time.
+	var now: float = session.elapsed_seconds()
+	while now >= _next_income_at:
+		_next_income_at += _income_interval
 		_pay_all()
 
 

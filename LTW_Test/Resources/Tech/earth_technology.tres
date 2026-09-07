@@ -9,4 +9,5 @@ element = 1
 kind = 0
 display_name = "Earth Technology: Basic"
 description = "Unlocks the Earth Elemental Core morph and the upgrade above it. Required before either Earth path."
+tower_stats_path = "res://Resources/UnitStats/Towers/earth_avalanche_stats.tres"
 slot = 15

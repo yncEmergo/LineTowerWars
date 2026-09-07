@@ -1,17 +1,9 @@
-[gd_resource type="Resource" script_class="NetworkConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="NetworkConfig" format=3 uid="uid://d034mimjv5gda"]
 
-[ext_resource type="Script" path="res://Scripts/Config/NetworkConfig.gd" id="1_network_config"]
+[ext_resource type="Script" uid="uid://cmmoncmgmk7y6" path="res://Scripts/Config/NetworkConfig.gd" id="1_network_config"]
 
 [resource]
 script = ExtResource("1_network_config")
-port = 7777
-max_peers = 32
 server_addresses = PackedStringArray("127.0.0.1", "167.233.153.19")
-connect_timeout_seconds = 3.0
-protocol_version = 2
-lockstep_enabled = true
-ticks_per_turn = 1
+jitter_margin_ms = 20
 checksum_every_turns = 10
-handshake_timeout_seconds = 5.0
-address_argument = "--address"
-port_argument = "--port"

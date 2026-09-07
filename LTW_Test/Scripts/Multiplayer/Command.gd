@@ -45,6 +45,14 @@ enum PlayerAction {
 	UNDO_RESEARCH,
 	## Roll one of the twenty Ultimate towers and buy what it still needs.
 	RANDOM_ULTIMATE,
+	## Take the Ultimate named by tech_id - the PATH technology that leads to
+	## it - and buy the four technologies it is made of as one press.
+	##
+	## The Show Ultimates row of the Research Center, and the deliberate
+	## opening the design is built around (unit_data.md 2.3): it is offered only
+	## while the free allowance still covers the whole set, so it spends the
+	## opening rather than gold. Undone by UNDO_RESEARCH like any other press.
+	CHOOSE_ULTIMATE,
 	## Take one of the three Ultimates a DRAFT is offering, named by tech_id.
 	## The one order a paused match still accepts, because it is what the
 	## match is paused FOR. See StartingTech.

@@ -9,4 +9,5 @@ element = 2
 kind = 0
 display_name = "Fire Technology: Basic"
 description = "Unlocks the Fire Elemental Core morph and the upgrade above it. Required before either Fire path."
+tower_stats_path = "res://Resources/UnitStats/Towers/fire_magma_well_stats.tres"
 slot = 0

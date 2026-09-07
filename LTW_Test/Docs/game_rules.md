@@ -870,15 +870,25 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     grid; then the creep's passives
   - Pack size is deliberately not shown, so a player cannot currently read how
     many creeps one send buys. Open question
-- The RESEARCH CENTER opens from a button over the unit panel, and is the one
-  screen that is not about the selection: it belongs to the player
+- Left of the send squares, in the same style and size, sit two more squares
+  that belong to the PLAYER rather than to the selection: one selects the
+  builder, one opens the Research Center
+  - the builder square shows the builder's own picture and does nothing else -
+    it selects, which is presentation, and the card that selection puts on
+    screen is what gives orders
+  - the Research Center square draws the key that does the same job, so the
+    letter a player reads is the letter the screen answers to
+  - they are here rather than each beside the thing they reach, because a
+    player looks for a button in the row of buttons
+- The RESEARCH CENTER is the one screen that is not about the selection: it
+  belongs to the player
   - a grid of every technology, laid out exactly as a command card is - the key
     is read off the SQUARE and the square draws the letter it answers to, so
     the shape is learned once for both
   - it is deeper than a card can be, so its bottom rows are the same letters
     with Shift held
   - it also has ONE key of its own, which opens and closes it and is drawn on
-    the button that does the same job. It is not read off a square, because the
+    the square that does the same job. It is not read off a square, because the
     screen is not a unit and has no card to sit on, and like the other keys of
     their own it can be rebound
   - THE SELECTION ALWAYS WINS A KEY, this one included. A letter the selected
@@ -892,7 +902,11 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - a square is lit once it is researched and greyed while it cannot be bought.
     Hovering one says what it would cost, what it leads to, and why it is
     refused when it is
-  - two buttons at its foot: roll a random Ultimate, and undo
+  - two buttons at its foot: roll a random Ultimate, and undo. Under those, a
+    tick that opens the row of Ultimates described under Technology
+  - each square carries the picture of the tower it unlocks, taken off that
+    tower rather than authored twice: an element's Basic square shows its 800g
+    upgrade, and a path square shows that path's 4,000g Lesser tower
 - Gold sits in the top right, with income and the countdown to the next payout
 - Across the TOP MIDDLE: gold, living population against the cap, and the
   countdown to the next income payout
@@ -1827,6 +1841,15 @@ The roster, the names, the prices and the twenty cross requirements are in
 - RANDOM ULTIMATE rolls one of the twenty and buys whatever its requirement is
   still missing, as one press. It only offers Ultimates the player can pay for
   in full, so the button never spends a click on an answer it cannot afford
+- SHOW ULTIMATES is the same press with the choosing done by the player: a row
+  under the grid holding one square per Ultimate tower, hovering one frames the
+  four squares it is made of, and pressing it buys them
+  - offered only while the free allowance still covers the WHOLE set, so it is
+    a way of spending the opening rather than a cheap way to an Ultimate later.
+    A player who has bought even one technology by hand researches the rest
+    square by square, at the price the grid quotes
+  - it is one press like the random roll, so the undo button takes the whole
+    Ultimate back rather than picking it apart
 - What a technology unlocks is BUILT: the Elemental Core morphs into the
   elements whose Basic technology their owner has researched, and each path's
   4,000g upgrade is gated on that path's own technology. See The Elemental Core

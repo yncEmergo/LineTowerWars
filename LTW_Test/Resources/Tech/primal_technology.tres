@@ -9,4 +9,5 @@ element = 6
 kind = 0
 display_name = "Primal Technology: Basic"
 description = "Unlocks the Primal Elemental Core morph and the upgrade above it. Required before either Primal path."
+tower_stats_path = "res://Resources/UnitStats/Towers/primal_coreway_stats.tres"
 slot = 27

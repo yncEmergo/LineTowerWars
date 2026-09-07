@@ -34,11 +34,19 @@ const RESEARCHED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
 ## Hotkey in the top left corner, WC3 style. "Q", or "S+Q" on the rows that
 ## are pressed with Shift held.
 @export var _hotkey_label: Label
-## Two-character label across the middle, e.g. "F1". Placeholder for the icon
-## this square will carry once there is art - thirty blank squares would be
-## unreadable - and deliberately terse, because the colour behind it is doing
-## most of the work.
+## The tower this technology unlocks. A TextureRect rather than the Button's
+## own `icon` because the element hue has to sit BEHIND the picture: a Button
+## draws its icon itself and its children afterwards, so the colour would
+## simply cover it up.
+@export var _icon_rect: TextureRect
+## Two-character label across the middle, e.g. "F1". The fallback for a
+## technology whose tower has no picture, and deliberately terse - the colour
+## behind it is doing most of the work.
 @export var _name_label: Label
+## Drawn over the square while the Show Ultimates row is pointing at it, to
+## call out the four technologies one Ultimate needs. A border and no fill, so
+## it frames the icon rather than hiding it.
+@export var _highlight: Control
 ## The element's own hue, filling the square behind everything else. Also a
 ## placeholder standing in for the icon, and the reason the labels can be as
 ## short as they are: a row reads as one element before a letter is read.
@@ -59,6 +67,9 @@ var tech: TechDefinition
 var _player_id: int = 0
 ## Label this square answers to, kept for the tooltip.
 var _hotkey: String = ""
+## Whether an Ultimate button is currently pointing at this square. Presentation
+## only - it changes nothing about what the square can be pressed for.
+var _highlighted: bool = false
 
 var _manager: TechManager:
 	get:
@@ -80,12 +91,17 @@ func set_tech(new_tech: TechDefinition, player_id: int, hotkey: String) -> void:
 	_player_id = player_id
 	_hotkey = hotkey
 	disabled = false
-	icon = tech.icon
 	# Godot only offers a tooltip at all while the text is non-empty, so this
 	# doubles as the fallback for a missing tooltip scene.
 	tooltip_text = tech.display_name
 	_apply_label(_hotkey_label, _hotkey)
-	_apply_label(_name_label, "" if tech.icon != null else tech.grid_label())
+
+	# Read off the TOWER this unlocks rather than authored here, so the square
+	# and the command card that builds that tower show the same picture. The
+	# two-letter label is what is left when a build has no art for it.
+	var picture: Texture2D = tech.tech_icon()
+	_apply_icon(picture)
+	_apply_label(_name_label, "" if picture != null else tech.grid_label())
 	if _background != null:
 		_background.color = tech.element_color()
 	_refresh_state()
@@ -98,13 +114,32 @@ func clear() -> void:
 	_player_id = 0
 	_hotkey = ""
 	disabled = true
-	icon = null
 	tooltip_text = ""
 	modulate = Color.WHITE
+	set_highlighted(false)
+	_apply_icon(null)
 	if _background != null:
 		_background.color = Color.TRANSPARENT
 	_apply_label(_hotkey_label, "")
 	_apply_label(_name_label, "")
+
+
+## Frames this square while the Show Ultimates row points at it, so hovering an
+## Ultimate says which four technologies it is made of.
+##
+## Told rather than asked: only the screen above knows what is being hovered,
+## and a square that polled for it would ask the same question thirty times a
+## frame.
+func set_highlighted(value: bool) -> void:
+	_highlighted = value
+	if _highlight != null:
+		_highlight.visible = value
+
+
+## Whether this square holds one of the technologies named, which is how the
+## screen finds the four to frame without keeping a second map of the grid.
+func holds_any(tech_ids: PackedInt32Array) -> bool:
+	return tech != null && tech.tech_id in tech_ids
 
 
 ## Availability moves on its own: gold is spent elsewhere, and the element this
@@ -132,6 +167,13 @@ func _refresh_state() -> void:
 		modulate = Color.WHITE
 	else:
 		modulate = UNAVAILABLE_MODULATE
+
+
+func _apply_icon(picture: Texture2D) -> void:
+	if _icon_rect == null:
+		return
+	_icon_rect.texture = picture
+	_icon_rect.visible = picture != null
 
 
 func _apply_label(label: Label, text: String) -> void:

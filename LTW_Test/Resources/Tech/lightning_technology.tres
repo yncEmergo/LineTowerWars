@@ -9,4 +9,5 @@ element = 5
 kind = 0
 display_name = "Lightning Technology: Basic"
 description = "Unlocks the Lightning Elemental Core morph and the upgrade above it. Required before either Lightning path."
+tower_stats_path = "res://Resources/UnitStats/Towers/lightning_power_generator_stats.tres"
 slot = 12

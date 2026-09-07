@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dmv4hukcs3knd" path="res://Scripts/UI/ResearchCenter.gd" id="1_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tech_slot.tscn" id="2_tech_slot"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/ultimate_button.tscn" id="3_ultimate_button"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 10.0
@@ -19,7 +20,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="ResearchCenter" type="Control" unique_id=888755325 node_paths=PackedStringArray("_toggle_button", "_panel", "_grid", "_random_button", "_undo_button")]
+[node name="ResearchCenter" type="Control" unique_id=888755325 node_paths=PackedStringArray("_panel", "_grid", "_random_button", "_undo_button", "_ultimates_toggle", "_ultimates_grid")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,29 +29,14 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_research")
-_toggle_button = NodePath("ToggleButton")
 _panel = NodePath("Panel")
 _grid = NodePath("Panel/Column/Grid")
 _random_button = NodePath("Panel/Column/Footer/RandomButton")
 _undo_button = NodePath("Panel/Column/Footer/UndoButton")
+_ultimates_toggle = NodePath("Panel/Column/UltimatesToggle")
+_ultimates_grid = NodePath("Panel/Column/UltimatesGrid")
 _tech_slot_scene = ExtResource("2_tech_slot")
-
-[node name="ToggleButton" type="Button" parent="." unique_id=1090114067]
-custom_minimum_size = Vector2(40, 40)
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -263.0
-offset_top = -203.0
-offset_right = -223.0
-offset_bottom = -160.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_font_sizes/font_size = 25
-text = "R"
+_ultimate_button_scene = ExtResource("3_ultimate_button")
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=1193153839]
 layout_mode = 1
@@ -183,3 +169,17 @@ custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Undo"
+
+[node name="UltimatesToggle" type="CheckBox" parent="Panel/Column" unique_id=1471002983]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 11
+text = "Show Ultimates"
+
+[node name="UltimatesGrid" type="GridContainer" parent="Panel/Column" unique_id=1471002984]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 3
+columns = 4

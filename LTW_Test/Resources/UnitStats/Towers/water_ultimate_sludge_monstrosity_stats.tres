@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/water_ultimate_sludge_monstrosity_ability.tres" id="7_water_ultimate_sludge_monstrosity_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres" id="8_return_to_elemental_core_ability"]
 [ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="9_attack_ability"]
+[ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="9_fsob5"]
 [ext_resource type="Resource" path="res://Resources/Abilities/prioritize_ability.tres" id="10_prioritize_ability"]
 [ext_resource type="Resource" uid="uid://dvy6fqltn05m0" path="res://Resources/Abilities/sell_ability.tres" id="11_sell_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="12_show_ranges_ability"]

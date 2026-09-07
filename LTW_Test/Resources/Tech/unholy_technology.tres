@@ -9,4 +9,5 @@ element = 7
 kind = 0
 display_name = "Unholy Technology: Basic"
 description = "Unlocks the Unholy Elemental Core morph and the upgrade above it. Required before either Unholy path."
+tower_stats_path = "res://Resources/UnitStats/Towers/unholy_defiled_fountain_stats.tres"
 slot = 3

@@ -9,4 +9,5 @@ element = 4
 kind = 0
 display_name = "Ice Technology: Basic"
 description = "Unlocks the Ice Elemental Core morph and the upgrade above it. Required before either Ice path."
+tower_stats_path = "res://Resources/UnitStats/Towers/ice_runic_monolith_stats.tres"
 slot = 6

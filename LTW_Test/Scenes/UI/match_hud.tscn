@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" uid="uid://cimbya3sr27g3" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
@@ -68,6 +69,18 @@ anchor_bottom = 1.0
 offset_left = -211.0
 offset_top = -206.0
 offset_right = -27.0
+offset_bottom = -158.0
+grow_vertical = 0
+
+[node name="ActionBar" parent="." instance=ExtResource("19_action_bar")]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -315.0
+offset_top = -206.0
+offset_right = -219.0
 offset_bottom = -158.0
 grow_vertical = 0
 

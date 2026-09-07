@@ -1,0 +1,1611 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.86 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Main found no pending match, standing in a single player setup
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 1, "local_slot": 1, "seed": 1183095910, "starting_lives": 200, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Ability armed, waiting for target { "ability": Elemental Core }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (4,30), "tower": &"LesserArcher_4_30", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (6,30), "tower": &"LesserArcher_6_30", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (8,30), "tower": &"LesserArcher_8_30", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (10,30), "tower": &"LesserArcher_10_30", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Ability cancelled
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 1057992081, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Peer joined 420111103
+[INFO] Lobby list received { "lobbies": 0 }
+[INFO] Peer left 420111103
+[INFO] Lobby list received { "lobbies": 0 }
+[INFO] In lobby { "id": lobby-6, "name": Ync's Game, "players": 1, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Session logging on { "path": C:/Users/Emergo Entertainment/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-07_15-09-36.log }
+[INFO] Peer joined 1387070541
+[INFO] In lobby { "id": lobby-6, "name": Ync's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-6, "name": Ync's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-6, "name": Ync's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Match starting { "match": match-3, "slot": 2, "players": 2 }
+[INFO] Match scene loaded { "match": match-3, "path": res://Scenes/Main.tscn }
+[WARN] ContentWarmer found nothing to warm [ res://Resources/UnitStats, res://Resources/Config ]
+WARNING: ContentWarmer found nothing to warm [ res://Resources/UnitStats, res://Resources/Config ]
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match start { "match": match-3, "slot": 2, "players": 2 }
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 2, "local_slot": 2, "seed": 1441399291, "starting_lives": 100, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Lockstep reset for a new match { "match": match-3 }
+[INFO] Match paused { "tick": 1, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 0, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 0, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 0, "waited_on": 0 }
+[INFO] Match resumed { "tick": 1, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 23, "waited_ms": 168, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 25, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 30, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Match paused { "tick": 36, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 35, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 36, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 35, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 36, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 35, "waited_on": 35 }
+[INFO] Match resumed { "tick": 36, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 37, "waited_ms": 184, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 40, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 39, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 40, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 39, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 40, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 39, "waited_on": 39 }
+[INFO] Match resumed { "tick": 40, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 40, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 44, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 43, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 44, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 43, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 44, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 43, "waited_on": 43 }
+[INFO] Match resumed { "tick": 44, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 43, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 46, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 48, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 47, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 48, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 47, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 48, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 47, "waited_on": 47 }
+[INFO] Match resumed { "tick": 48, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 52, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 51, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 52, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 51, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 52, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 51, "waited_on": 51 }
+[INFO] Match resumed { "tick": 52, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 51, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 54, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 56, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 55, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 56, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 55, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 56, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 55, "waited_on": 55 }
+[INFO] Match resumed { "tick": 56, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 58, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 61, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 63, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 62, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 63, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 62, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 63, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 62, "waited_on": 62 }
+[INFO] Match resumed { "tick": 63, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 65, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 68, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 67, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 68, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 67, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 68, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 67, "waited_on": 67 }
+[INFO] Match resumed { "tick": 68, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 69, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 71, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 70, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 71, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 70, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 71, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 70, "waited_on": 70 }
+[INFO] Match resumed { "tick": 71, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 72, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 71, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 72, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 71, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 72, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 71, "waited_on": 71 }
+[INFO] Match resumed { "tick": 72, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 72, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Ability cancelled
+[INFO] Match paused { "tick": 88, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 87, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 89, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 87, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 89, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 87, "waited_on": 87 }
+[INFO] Match resumed { "tick": 88, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 88, "waited_ms": 133, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 90, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 98, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 97, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 98, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 97, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 98, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 97, "waited_on": 97 }
+[INFO] Match resumed { "tick": 98, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 104, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 107, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 106, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 107, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 106, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 107, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 106, "waited_on": 106 }
+[INFO] Match resumed { "tick": 107, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 108, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 107, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 108, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 107, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 108, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 107, "waited_on": 107 }
+[INFO] Match resumed { "tick": 108, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 110, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 113, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 117, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 116, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 117, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 116, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 117, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 116, "waited_on": 116 }
+[INFO] Match resumed { "tick": 117, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Move }
+[INFO] Match paused { "tick": 123, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 122, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 123, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 122, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 123, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 122, "waited_on": 122 }
+[INFO] Match resumed { "tick": 123, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 130, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 129, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 130, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 129, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 130, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 129, "waited_on": 129 }
+[INFO] Match resumed { "tick": 130, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability cancelled
+[INFO] Order ran { "turn": 138, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 143, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 142, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 143, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 142, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 143, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 142, "waited_on": 142 }
+[INFO] Match resumed { "tick": 143, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 142, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 146, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 145, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 146, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 145, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 146, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 145, "waited_on": 145 }
+[INFO] Match resumed { "tick": 146, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 145, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 148, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 151, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 150, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 151, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 150, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 151, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 150, "waited_on": 150 }
+[INFO] Match resumed { "tick": 151, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 160, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 159, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 160, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 159, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 160, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 159, "waited_on": 159 }
+[INFO] Match resumed { "tick": 160, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Order ran { "turn": 161, "waited_ms": 72, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 164, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 163, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 164, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 163, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 164, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 163, "waited_on": 163 }
+[INFO] Match resumed { "tick": 164, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 176, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 175, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 176, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 175, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 176, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 175, "waited_on": 175 }
+[INFO] Match resumed { "tick": 176, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 181, "waited_ms": 68, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 183, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 182, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 183, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 182, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 183, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 182, "waited_on": 182 }
+[INFO] Match resumed { "tick": 183, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Move }
+[INFO] Match paused { "tick": 185, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 184, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 185, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 184, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 185, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 184, "waited_on": 184 }
+[INFO] Match resumed { "tick": 185, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Match paused { "tick": 189, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 188, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 189, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 188, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 189, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 188, "waited_on": 188 }
+[INFO] Match resumed { "tick": 189, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 194, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 193, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 194, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 193, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 194, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 193, "waited_on": 193 }
+[INFO] Match resumed { "tick": 194, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability cancelled
+[INFO] Match paused { "tick": 204, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 203, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 204, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 203, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 204, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 203, "waited_on": 203 }
+[INFO] Match resumed { "tick": 204, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 214, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 213, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 214, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 213, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 214, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 213, "waited_on": 213 }
+[INFO] Match resumed { "tick": 214, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 218, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 217, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 218, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 217, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 218, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 217, "waited_on": 217 }
+[INFO] Match resumed { "tick": 218, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 218, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 222, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 221, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 222, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 221, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 222, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 221, "waited_on": 221 }
+[INFO] Match resumed { "tick": 222, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Match paused { "tick": 225, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 224, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 225, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 224, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 225, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 224, "waited_on": 224 }
+[INFO] Match resumed { "tick": 225, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 224, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 227, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 231, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 230, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 231, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 230, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 231, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 230, "waited_on": 230 }
+[INFO] Match resumed { "tick": 231, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 235, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 234, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 235, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 234, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 235, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 234, "waited_on": 234 }
+[INFO] Match resumed { "tick": 235, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 239, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 238, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 239, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 238, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 239, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 238, "waited_on": 238 }
+[INFO] Match resumed { "tick": 239, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 244, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 243, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 244, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 243, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 244, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 243, "waited_on": 243 }
+[INFO] Match resumed { "tick": 244, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 249, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 248, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 249, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 248, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 249, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 248, "waited_on": 248 }
+[INFO] Match resumed { "tick": 249, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 253, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 252, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 253, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 252, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 253, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 252, "waited_on": 252 }
+[INFO] Match resumed { "tick": 253, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Order ran { "turn": 255, "waited_ms": 53, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 257, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 256, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 257, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 256, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 257, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 256, "waited_on": 256 }
+[INFO] Match resumed { "tick": 257, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 262, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 261, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 262, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 261, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 262, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 261, "waited_on": 261 }
+[INFO] Match resumed { "tick": 262, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 263, "waited_ms": 66, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 266, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 265, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 266, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 265, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 266, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 265, "waited_on": 265 }
+[INFO] Match resumed { "tick": 266, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 270, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 269, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 270, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 269, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 270, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 269, "waited_on": 269 }
+[INFO] Match resumed { "tick": 270, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 270, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 272, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 274, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 273, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 274, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 273, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 274, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 273, "waited_on": 273 }
+[INFO] Match resumed { "tick": 274, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 276, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 275, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 276, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 275, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 276, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 275, "waited_on": 275 }
+[INFO] Match resumed { "tick": 276, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 281, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 280, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 281, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 280, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 281, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 280, "waited_on": 280 }
+[INFO] Match resumed { "tick": 281, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 287, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 286, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 287, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 286, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 287, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 286, "waited_on": 286 }
+[INFO] Match resumed { "tick": 287, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability cancelled
+[INFO] Match paused { "tick": 291, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 290, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 291, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 290, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 291, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 290, "waited_on": 290 }
+[INFO] Match resumed { "tick": 291, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 295, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 294, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 295, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 294, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 295, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 294, "waited_on": 294 }
+[INFO] Match resumed { "tick": 295, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 295, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 298, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 297, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 298, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 297, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 298, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 297, "waited_on": 297 }
+[INFO] Match resumed { "tick": 298, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 302, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 301, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 302, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 301, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 302, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 301, "waited_on": 301 }
+[INFO] Match resumed { "tick": 302, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 302, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 306, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 305, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 306, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 305, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 306, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 305, "waited_on": 305 }
+[INFO] Match resumed { "tick": 306, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 313, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 312, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 313, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 312, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 313, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 312, "waited_on": 312 }
+[INFO] Match resumed { "tick": 313, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 317, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 319, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 318, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 319, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 318, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 319, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 318, "waited_on": 318 }
+[INFO] Match resumed { "tick": 319, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 322, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 327, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 326, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 327, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 326, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 327, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 326, "waited_on": 326 }
+[INFO] Match resumed { "tick": 327, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 334, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 333, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 334, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 333, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 334, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 333, "waited_on": 333 }
+[INFO] Match resumed { "tick": 334, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 333, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 336, "waited_ms": 66, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 339, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 338, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 339, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 338, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 339, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 338, "waited_on": 338 }
+[INFO] Match resumed { "tick": 339, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 343, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 342, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 343, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 342, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 343, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 342, "waited_on": 342 }
+[INFO] Match resumed { "tick": 343, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 342, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 351, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 350, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 351, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 350, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 351, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 350, "waited_on": 350 }
+[INFO] Match resumed { "tick": 351, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 351, "waited_ms": 184, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 357, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 356, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 357, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 356, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 357, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 356, "waited_on": 356 }
+[INFO] Match resumed { "tick": 357, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 362, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 361, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 362, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 361, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 362, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 361, "waited_on": 361 }
+[INFO] Match resumed { "tick": 362, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 363, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 362, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 363, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 362, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 363, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 362, "waited_on": 362 }
+[INFO] Match resumed { "tick": 363, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 362, "waited_ms": 184, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 370, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 369, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 370, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 369, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 370, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 369, "waited_on": 369 }
+[INFO] Match resumed { "tick": 370, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 371, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 374, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 373, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 374, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 373, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 374, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 373, "waited_on": 373 }
+[INFO] Match resumed { "tick": 374, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (4,34), "tower": &"LesserArcher_4_34", "cost": 10 }
+[INFO] Order ran { "turn": 381, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 389, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 388, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 389, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 388, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 389, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 388, "waited_on": 388 }
+[INFO] Match resumed { "tick": 389, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 389, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 398, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 397, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 398, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 397, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 398, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 397, "waited_on": 397 }
+[INFO] Match resumed { "tick": 398, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (6,36), "tower": &"LesserArcher_6_36", "cost": 10 }
+[INFO] Match paused { "tick": 412, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 411, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 412, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 411, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 412, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 411, "waited_on": 411 }
+[INFO] Match resumed { "tick": 412, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 416, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 415, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 416, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 415, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 416, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 415, "waited_on": 415 }
+[INFO] Match resumed { "tick": 416, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 418, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 417, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 418, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 417, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 418, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 417, "waited_on": 417 }
+[INFO] Match resumed { "tick": 418, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 422, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 421, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 422, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 421, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 422, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 421, "waited_on": 421 }
+[INFO] Match resumed { "tick": 422, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 424, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 423, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 424, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 423, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 424, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 423, "waited_on": 423 }
+[INFO] Match resumed { "tick": 424, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 424, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 429, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 428, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 429, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 428, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 429, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 428, "waited_on": 428 }
+[INFO] Match resumed { "tick": 429, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 428, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 431, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 436, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 435, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 436, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 435, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 436, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 435, "waited_on": 435 }
+[INFO] Match resumed { "tick": 436, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 435, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Tower placed { "cell": (8,38), "tower": &"LesserArcher_8_38", "cost": 10 }
+[INFO] Match paused { "tick": 441, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 440, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 441, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 440, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 441, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 440, "waited_on": 440 }
+[INFO] Match resumed { "tick": 441, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 445, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 444, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 445, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 444, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 445, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 444, "waited_on": 444 }
+[INFO] Match resumed { "tick": 445, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 455, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 454, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 455, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 454, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 455, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 454, "waited_on": 454 }
+[INFO] Match resumed { "tick": 455, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 463, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 462, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 463, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 462, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 463, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 462, "waited_on": 462 }
+[INFO] Match resumed { "tick": 463, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 473, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 472, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 473, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 472, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 473, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 472, "waited_on": 472 }
+[INFO] Match resumed { "tick": 473, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 477, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 476, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 477, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 476, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 477, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 476, "waited_on": 476 }
+[INFO] Match resumed { "tick": 477, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 482, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 481, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 482, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 481, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 482, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 481, "waited_on": 481 }
+[INFO] Match resumed { "tick": 482, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 483, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 482, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 483, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 482, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 483, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 482, "waited_on": 482 }
+[INFO] Match resumed { "tick": 483, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 488, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 487, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 488, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 487, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 488, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 487, "waited_on": 487 }
+[INFO] Match resumed { "tick": 488, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 492, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 491, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 492, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 491, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 492, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 491, "waited_on": 491 }
+[INFO] Match resumed { "tick": 492, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 506, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 505, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 506, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 505, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 506, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 505, "waited_on": 505 }
+[INFO] Match resumed { "tick": 506, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 513, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 512, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 513, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 512, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 513, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 512, "waited_on": 512 }
+[INFO] Match resumed { "tick": 513, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 520, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 519, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 520, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 519, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 520, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 519, "waited_on": 519 }
+[INFO] Match resumed { "tick": 520, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 524, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 523, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 524, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 523, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 524, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 523, "waited_on": 523 }
+[INFO] Match resumed { "tick": 524, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 532, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 531, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 532, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 531, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 532, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 531, "waited_on": 531 }
+[INFO] Match resumed { "tick": 532, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 541, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 540, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 541, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 540, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 541, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 540, "waited_on": 540 }
+[INFO] Match resumed { "tick": 541, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (2,32), "tower": &"LesserArcher_2_32", "cost": 10 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Match paused { "tick": 549, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 548, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 549, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 548, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 549, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 548, "waited_on": 548 }
+[INFO] Match resumed { "tick": 549, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 553, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 552, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 553, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 552, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 553, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 552, "waited_on": 552 }
+[INFO] Match resumed { "tick": 553, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 558, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 557, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 558, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 557, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 558, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 557, "waited_on": 557 }
+[INFO] Match resumed { "tick": 558, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 563, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 562, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 563, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 562, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 563, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 562, "waited_on": 562 }
+[INFO] Match resumed { "tick": 563, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 569, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 568, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 569, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 568, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 569, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 568, "waited_on": 568 }
+[INFO] Match resumed { "tick": 569, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 577, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 576, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 577, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 576, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 577, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 576, "waited_on": 576 }
+[INFO] Match resumed { "tick": 577, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 0 }
+[INFO] Match paused { "tick": 589, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 588, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 589, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 588, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 589, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 588, "waited_on": 588 }
+[INFO] Match resumed { "tick": 589, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 596, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 595, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 596, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 595, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 596, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 595, "waited_on": 595 }
+[INFO] Match resumed { "tick": 596, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 602, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 601, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 602, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 601, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 602, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 601, "waited_on": 601 }
+[INFO] Match resumed { "tick": 602, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 607, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 606, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 607, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 606, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 607, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 606, "waited_on": 606 }
+[INFO] Match resumed { "tick": 607, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 611, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 610, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 611, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 610, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 611, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 610, "waited_on": 610 }
+[INFO] Match resumed { "tick": 611, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 616, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 615, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 616, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 615, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 616, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 615, "waited_on": 615 }
+[INFO] Match resumed { "tick": 616, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 620, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 619, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 620, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 619, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 620, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 619, "waited_on": 619 }
+[INFO] Match resumed { "tick": 620, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 625, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 624, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 625, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 624, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 625, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 624, "waited_on": 624 }
+[INFO] Match resumed { "tick": 625, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 630, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 629, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 630, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 629, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 630, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 629, "waited_on": 629 }
+[INFO] Match resumed { "tick": 630, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 634, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 633, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 634, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 633, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 634, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 633, "waited_on": 633 }
+[INFO] Match resumed { "tick": 634, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 638, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 637, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 638, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 637, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 638, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 637, "waited_on": 637 }
+[INFO] Match resumed { "tick": 638, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 642, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 641, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 642, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 641, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 642, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 641, "waited_on": 641 }
+[INFO] Match resumed { "tick": 642, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (0,30), "tower": &"LesserArcher_0_30", "cost": 10 }
+[INFO] Match paused { "tick": 648, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 647, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 648, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 647, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 648, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 647, "waited_on": 647 }
+[INFO] Match resumed { "tick": 648, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 652, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 651, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 652, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 651, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 652, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 651, "waited_on": 651 }
+[INFO] Match resumed { "tick": 652, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 656, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 655, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 656, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 655, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 656, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 655, "waited_on": 655 }
+[INFO] Match resumed { "tick": 656, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 661, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 660, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 661, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 660, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 661, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 660, "waited_on": 660 }
+[INFO] Match resumed { "tick": 661, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 665, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 664, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 665, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 664, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 665, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 664, "waited_on": 664 }
+[INFO] Match resumed { "tick": 665, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Match paused { "tick": 669, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 668, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 669, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 668, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 669, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 668, "waited_on": 668 }
+[INFO] Match resumed { "tick": 669, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 674, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 673, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 674, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 673, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 674, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 673, "waited_on": 673 }
+[INFO] Match resumed { "tick": 674, "by": &"lockstep", "holders": [  ] }
+[INFO] Control group assigned { "group": 1, "units": 1 }
+[INFO] Match paused { "tick": 678, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 677, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 678, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 677, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 678, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 677, "waited_on": 677 }
+[INFO] Match resumed { "tick": 678, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 682, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 681, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 682, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 681, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 682, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 681, "waited_on": 681 }
+[INFO] Match resumed { "tick": 682, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 684, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 683, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 684, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 683, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 684, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 683, "waited_on": 683 }
+[INFO] Match resumed { "tick": 684, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 688, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 687, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 688, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 687, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 688, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 687, "waited_on": 687 }
+[INFO] Match resumed { "tick": 688, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 692, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 691, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 692, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 691, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 692, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 691, "waited_on": 691 }
+[INFO] Match resumed { "tick": 692, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 696, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 695, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 696, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 695, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 696, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 695, "waited_on": 695 }
+[INFO] Match resumed { "tick": 696, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 700, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 699, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 700, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 699, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 700, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 699, "waited_on": 699 }
+[INFO] Match resumed { "tick": 700, "by": &"lockstep", "holders": [  ] }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Order ran { "turn": 699, "waited_ms": 110, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 704, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 703, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 704, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 703, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 704, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 703, "waited_on": 703 }
+[INFO] Match resumed { "tick": 704, "by": &"lockstep", "holders": [  ] }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Order ran { "turn": 705, "waited_ms": 87, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 708, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 707, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 708, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 707, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 708, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 707, "waited_on": 707 }
+[INFO] Match resumed { "tick": 708, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 712, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 711, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 712, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 711, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 712, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 711, "waited_on": 711 }
+[INFO] Match resumed { "tick": 712, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 716, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 715, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 716, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 715, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 716, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 715, "waited_on": 715 }
+[INFO] Match resumed { "tick": 716, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 720, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 719, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 720, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 719, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 720, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 719, "waited_on": 719 }
+[INFO] Match resumed { "tick": 720, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 724, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 723, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 724, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 723, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 724, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 723, "waited_on": 723 }
+[INFO] Match resumed { "tick": 724, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 728, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 727, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 728, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 727, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 728, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 727, "waited_on": 727 }
+[INFO] Match resumed { "tick": 728, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 732, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 731, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 732, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 731, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 732, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 731, "waited_on": 731 }
+[INFO] Match resumed { "tick": 732, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 736, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 735, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 736, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 735, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 736, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 735, "waited_on": 735 }
+[INFO] Match resumed { "tick": 736, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 740, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 739, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 740, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 739, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 740, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 739, "waited_on": 739 }
+[INFO] Match resumed { "tick": 740, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Match paused { "tick": 744, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 743, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 744, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 743, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 744, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 743, "waited_on": 743 }
+[INFO] Match resumed { "tick": 744, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (10,36), "tower": &"LesserArcher_10_36", "cost": 10 }
+[INFO] Match paused { "tick": 748, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 747, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 748, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 747, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 748, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 747, "waited_on": 747 }
+[INFO] Match resumed { "tick": 748, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 750, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 752, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 751, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 752, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 751, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 752, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 751, "waited_on": 751 }
+[INFO] Match resumed { "tick": 752, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 756, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 755, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 756, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 755, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 756, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 755, "waited_on": 755 }
+[INFO] Match resumed { "tick": 756, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 755, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 760, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 759, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 760, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 759, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 760, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 759, "waited_on": 759 }
+[INFO] Match resumed { "tick": 760, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 759, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 764, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 763, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 764, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 763, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 764, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 763, "waited_on": 763 }
+[INFO] Match resumed { "tick": 764, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 763, "waited_ms": 133, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 766, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 768, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 767, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 768, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 767, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 768, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 767, "waited_on": 767 }
+[INFO] Match resumed { "tick": 768, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 770, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 772, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 771, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 772, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 771, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 772, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 771, "waited_on": 771 }
+[INFO] Match resumed { "tick": 772, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 773, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 776, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 775, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 776, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 775, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 776, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 775, "waited_on": 775 }
+[INFO] Match resumed { "tick": 776, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 780, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 779, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 780, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 779, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 780, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 779, "waited_on": 779 }
+[INFO] Match resumed { "tick": 780, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 779, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 784, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 783, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 784, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 783, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 784, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 783, "waited_on": 783 }
+[INFO] Match resumed { "tick": 784, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 788, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 787, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 788, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 787, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 788, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 787, "waited_on": 787 }
+[INFO] Match resumed { "tick": 788, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 792, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 791, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 792, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 791, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 792, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 791, "waited_on": 791 }
+[INFO] Match resumed { "tick": 792, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 792, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 796, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 795, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 796, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 795, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 796, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 795, "waited_on": 795 }
+[INFO] Match resumed { "tick": 796, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 800, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 800, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 800, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 799, "waited_on": 799 }
+[INFO] Match resumed { "tick": 800, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 804, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 803, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 804, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 803, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 804, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 803, "waited_on": 803 }
+[INFO] Match resumed { "tick": 804, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 808, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 807, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 808, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 807, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 808, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 807, "waited_on": 807 }
+[INFO] Match resumed { "tick": 808, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 812, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 811, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 812, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 811, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 812, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 811, "waited_on": 811 }
+[INFO] Match resumed { "tick": 812, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 816, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 815, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 816, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 815, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 816, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 815, "waited_on": 815 }
+[INFO] Match resumed { "tick": 816, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 820, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 819, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 820, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 819, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 820, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 819, "waited_on": 819 }
+[INFO] Match resumed { "tick": 820, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 824, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 823, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 824, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 823, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 824, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 823, "waited_on": 823 }
+[INFO] Match resumed { "tick": 824, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 828, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 827, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 828, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 827, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 828, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 827, "waited_on": 827 }
+[INFO] Match resumed { "tick": 828, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 830, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 832, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 831, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 832, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 831, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 832, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 831, "waited_on": 831 }
+[INFO] Match resumed { "tick": 832, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (12,34), "tower": &"LesserArcher_12_34", "cost": 10 }
+[INFO] Order ran { "turn": 834, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 837, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 836, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 837, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 836, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 837, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 836, "waited_on": 836 }
+[INFO] Match resumed { "tick": 837, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 838, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 841, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 840, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 841, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 840, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 841, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 840, "waited_on": 840 }
+[INFO] Match resumed { "tick": 841, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 845, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 844, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 845, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 844, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 845, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 844, "waited_on": 844 }
+[INFO] Match resumed { "tick": 845, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 849, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 848, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 849, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 848, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 849, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 848, "waited_on": 848 }
+[INFO] Match resumed { "tick": 849, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 853, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 852, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 853, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 852, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 853, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 852, "waited_on": 852 }
+[INFO] Match resumed { "tick": 853, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 857, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 856, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 857, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 856, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 857, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 856, "waited_on": 856 }
+[INFO] Match resumed { "tick": 857, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 861, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 860, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 861, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 860, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 861, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 860, "waited_on": 860 }
+[INFO] Match resumed { "tick": 861, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 865, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 864, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 865, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 864, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 865, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 864, "waited_on": 864 }
+[INFO] Match resumed { "tick": 865, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 869, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 868, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 869, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 868, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 869, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 868, "waited_on": 868 }
+[INFO] Match resumed { "tick": 869, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 874, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 873, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 874, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 873, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 874, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 873, "waited_on": 873 }
+[INFO] Match resumed { "tick": 874, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 879, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 878, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 879, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 878, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 879, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 878, "waited_on": 878 }
+[INFO] Match resumed { "tick": 879, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 882, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 881, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 882, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 881, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 882, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 881, "waited_on": 881 }
+[INFO] Match resumed { "tick": 882, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 887, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 886, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 887, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 886, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 887, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 886, "waited_on": 886 }
+[INFO] Match resumed { "tick": 887, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 889, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 888, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 889, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 888, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 889, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 888, "waited_on": 888 }
+[INFO] Match resumed { "tick": 889, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 894, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 893, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 894, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 893, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 894, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 893, "waited_on": 893 }
+[INFO] Match resumed { "tick": 894, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 899, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 898, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 899, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 898, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 899, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 898, "waited_on": 898 }
+[INFO] Match resumed { "tick": 899, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 910, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 909, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 910, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 909, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 910, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 909, "waited_on": 909 }
+[INFO] Match resumed { "tick": 910, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 917, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 916, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 917, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 916, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 917, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 916, "waited_on": 916 }
+[INFO] Match resumed { "tick": 917, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 934, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 939, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 938, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 939, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 938, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 939, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 938, "waited_on": 938 }
+[INFO] Match resumed { "tick": 939, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 938, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 944, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 943, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 944, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 943, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 944, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 943, "waited_on": 943 }
+[INFO] Match resumed { "tick": 944, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 944, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 947, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 950, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 949, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 950, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 949, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 950, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 949, "waited_on": 949 }
+[INFO] Match resumed { "tick": 950, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (14,37), "tower": &"LesserArcher_14_37", "cost": 10 }
+[INFO] Match paused { "tick": 955, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 954, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 955, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 954, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 955, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 954, "waited_on": 954 }
+[INFO] Match resumed { "tick": 955, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 962, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 961, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 962, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 961, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 962, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 961, "waited_on": 961 }
+[INFO] Match resumed { "tick": 962, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 967, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 966, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 967, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 966, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 967, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 966, "waited_on": 966 }
+[INFO] Match resumed { "tick": 967, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Order ran { "turn": 967, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 972, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 971, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 972, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 971, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 972, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 971, "waited_on": 971 }
+[INFO] Match resumed { "tick": 972, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 972, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 976, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 978, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 977, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 978, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 977, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 978, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 977, "waited_on": 977 }
+[INFO] Match resumed { "tick": 978, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 982, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 981, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 982, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 981, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 982, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 981, "waited_on": 981 }
+[INFO] Match resumed { "tick": 982, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 987, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 986, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 987, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 986, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 987, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 986, "waited_on": 986 }
+[INFO] Match resumed { "tick": 987, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 992, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 991, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 992, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 991, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 992, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 991, "waited_on": 991 }
+[INFO] Match resumed { "tick": 992, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 996, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 995, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 996, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 995, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 996, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 995, "waited_on": 995 }
+[INFO] Match resumed { "tick": 996, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1000, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 999, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1000, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 999, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1000, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 999, "waited_on": 999 }
+[INFO] Match resumed { "tick": 1000, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1004, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1003, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1004, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1003, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1004, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1003, "waited_on": 1003 }
+[INFO] Match resumed { "tick": 1004, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1008, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1007, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1008, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1007, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1008, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1007, "waited_on": 1007 }
+[INFO] Match resumed { "tick": 1008, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1012, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1011, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1012, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1011, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1012, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1011, "waited_on": 1011 }
+[INFO] Match resumed { "tick": 1012, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1016, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1015, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1016, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1015, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1016, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1015, "waited_on": 1015 }
+[INFO] Match resumed { "tick": 1016, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1020, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1019, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1020, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1019, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1020, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1019, "waited_on": 1019 }
+[INFO] Match resumed { "tick": 1020, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1024, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1023, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1024, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1023, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1024, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1023, "waited_on": 1023 }
+[INFO] Match resumed { "tick": 1024, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1028, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1027, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1028, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1027, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1028, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1027, "waited_on": 1027 }
+[INFO] Match resumed { "tick": 1028, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1027, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1032, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1031, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1032, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1031, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1032, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1031, "waited_on": 1031 }
+[INFO] Match resumed { "tick": 1032, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1034, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1036, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1035, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1036, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1035, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1036, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1035, "waited_on": 1035 }
+[INFO] Match resumed { "tick": 1036, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1040, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1039, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1040, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1039, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1040, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1039, "waited_on": 1039 }
+[INFO] Match resumed { "tick": 1040, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (12,39), "tower": &"LesserArcher_12_39", "cost": 10 }
+[INFO] Order ran { "turn": 1041, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1044, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1043, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1044, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1043, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1044, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1043, "waited_on": 1043 }
+[INFO] Match resumed { "tick": 1044, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 1048, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1047, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1048, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1047, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1048, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1047, "waited_on": 1047 }
+[INFO] Match resumed { "tick": 1048, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1052, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1051, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1052, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1051, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1052, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1051, "waited_on": 1051 }
+[INFO] Match resumed { "tick": 1052, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1056, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1055, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1056, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1055, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1056, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1055, "waited_on": 1055 }
+[INFO] Match resumed { "tick": 1056, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1060, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1059, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1060, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1059, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1060, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1059, "waited_on": 1059 }
+[INFO] Match resumed { "tick": 1060, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1066, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1065, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1066, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1065, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1066, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1065, "waited_on": 1065 }
+[INFO] Match resumed { "tick": 1066, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Order ran { "turn": 1066, "waited_ms": 103, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1071, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1070, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1071, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1070, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1071, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1070, "waited_on": 1070 }
+[INFO] Match resumed { "tick": 1071, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability armed, waiting for target { "ability": Move }
+[INFO] Match paused { "tick": 1078, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1077, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1078, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1077, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1078, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1077, "waited_on": 1077 }
+[INFO] Match resumed { "tick": 1078, "by": &"lockstep", "holders": [  ] }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[INFO] Ability cancelled
+[INFO] Match paused { "tick": 1084, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1083, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1084, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1083, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1084, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1083, "waited_on": 1083 }
+[INFO] Match resumed { "tick": 1084, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1095, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1100, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1099, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1100, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1099, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1100, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1099, "waited_on": 1099 }
+[INFO] Match resumed { "tick": 1100, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1099, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 1103, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Order ran { "turn": 1116, "waited_ms": 71, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 1126, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1125, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1126, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1125, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1126, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1125, "waited_on": 1125 }
+[INFO] Match resumed { "tick": 1126, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1131, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 1141, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1140, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1141, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1140, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1141, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1140, "waited_on": 1140 }
+[INFO] Match resumed { "tick": 1141, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1145, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1144, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1145, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1144, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1145, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1144, "waited_on": 1144 }
+[INFO] Match resumed { "tick": 1145, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1149, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1148, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1149, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1148, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1149, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1148, "waited_on": 1148 }
+[INFO] Match resumed { "tick": 1149, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1153, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1152, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1153, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1152, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1153, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1152, "waited_on": 1152 }
+[INFO] Match resumed { "tick": 1153, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1157, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1156, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1157, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1156, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1157, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1156, "waited_on": 1156 }
+[INFO] Match resumed { "tick": 1157, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Match paused { "tick": 1161, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1160, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1161, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1160, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1161, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1160, "waited_on": 1160 }
+[INFO] Match resumed { "tick": 1161, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1165, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1164, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1165, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1164, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1165, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1164, "waited_on": 1164 }
+[INFO] Match resumed { "tick": 1165, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1169, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1168, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1169, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1168, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1169, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1168, "waited_on": 1168 }
+[INFO] Match resumed { "tick": 1169, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1174, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1173, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1174, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1173, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1174, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1173, "waited_on": 1173 }
+[INFO] Match resumed { "tick": 1174, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1178, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1177, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1178, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1177, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1178, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1177, "waited_on": 1177 }
+[INFO] Match resumed { "tick": 1178, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1182, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1181, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1182, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1181, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1182, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1181, "waited_on": 1181 }
+[INFO] Match resumed { "tick": 1182, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1186, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1185, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1186, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1185, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1186, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1185, "waited_on": 1185 }
+[INFO] Match resumed { "tick": 1186, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1190, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1189, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1190, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1189, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1190, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1189, "waited_on": 1189 }
+[INFO] Match resumed { "tick": 1190, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1194, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1193, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1194, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1193, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1194, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1193, "waited_on": 1193 }
+[INFO] Match resumed { "tick": 1194, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1198, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1197, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1198, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1197, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1198, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1197, "waited_on": 1197 }
+[INFO] Match resumed { "tick": 1198, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1199, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1198, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1199, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1198, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1199, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1198, "waited_on": 1198 }
+[INFO] Match resumed { "tick": 1199, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1203, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1202, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1203, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1202, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1203, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1202, "waited_on": 1202 }
+[INFO] Match resumed { "tick": 1203, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1207, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1206, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1207, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1206, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1207, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1206, "waited_on": 1206 }
+[INFO] Match resumed { "tick": 1207, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1211, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1210, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1211, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1210, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1211, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1210, "waited_on": 1210 }
+[INFO] Match resumed { "tick": 1211, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1213, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1212, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1213, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1212, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1213, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1212, "waited_on": 1212 }
+[INFO] Match resumed { "tick": 1213, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1221, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1220, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1221, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1220, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1221, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1220, "waited_on": 1220 }
+[INFO] Match resumed { "tick": 1221, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1220, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Order ran { "turn": 1223, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1226, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1225, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1226, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1225, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1226, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1225, "waited_on": 1225 }
+[INFO] Match resumed { "tick": 1226, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1229, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1231, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1230, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1231, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1230, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1231, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1230, "waited_on": 1230 }
+[INFO] Match resumed { "tick": 1231, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 1232, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[INFO] Match paused { "tick": 1239, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1238, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1239, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1238, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1239, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1238, "waited_on": 1238 }
+[INFO] Match resumed { "tick": 1239, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1247, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1246, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1247, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1246, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1247, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1246, "waited_on": 1246 }
+[INFO] Match resumed { "tick": 1247, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1252, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1251, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1252, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1251, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1252, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1251, "waited_on": 1251 }
+[INFO] Match resumed { "tick": 1252, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1258, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1257, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1258, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1257, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1258, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1257, "waited_on": 1257 }
+[INFO] Match resumed { "tick": 1258, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1263, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1262, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1263, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1262, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1263, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1262, "waited_on": 1262 }
+[INFO] Match resumed { "tick": 1263, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (10,41), "tower": &"LesserArcher_10_41", "cost": 10 }
+[INFO] Match paused { "tick": 1280, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1279, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1280, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1279, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1280, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1279, "waited_on": 1279 }
+[INFO] Match resumed { "tick": 1280, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1287, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1286, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1287, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1286, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1287, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1286, "waited_on": 1286 }
+[INFO] Match resumed { "tick": 1287, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1298, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1297, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1298, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1297, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1298, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1297, "waited_on": 1297 }
+[INFO] Match resumed { "tick": 1298, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1302, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1301, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1302, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1301, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1302, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1301, "waited_on": 1301 }
+[INFO] Match resumed { "tick": 1302, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 1303, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1302, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1303, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1302, "missing": [1387070541], "have": [ 1057992081 ], "expected": [1387070541, 1057992081], "closed_through": 1303, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Turn arrived, resuming { "turn": 1302, "waited_on": 1302 }
+[INFO] Match resumed { "tick": 1303, "by": &"lockstep", "holders": [  ] }
+[INFO] Closing the connection on the way out

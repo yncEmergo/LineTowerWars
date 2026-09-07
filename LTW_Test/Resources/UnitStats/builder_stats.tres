@@ -7,11 +7,11 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/build_menu_ability.tres" id="4_build"]
 [ext_resource type="Resource" path="res://Resources/Abilities/toggle_grid_ability.tres" id="5_grid"]
 [ext_resource type="Resource" uid="uid://bvr0w22ph6i1" path="res://Resources/Abilities/attack_ability.tres" id="6_attack"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprints_ability.tres" id="9_blueprints"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprints_ability.tres" id="10_save_blueprint"]
 [ext_resource type="Script" uid="uid://dtw3tve4m3gwb" path="res://Scripts/Config/AttackStats.gd" id="7_AttackStats"]
 [ext_resource type="Script" uid="uid://cwu432uh7toy1" path="res://Scripts/Combat/AttackEffect.gd" id="8_d8c4i"]
 [ext_resource type="Script" uid="uid://bt58s37uyciuh" path="res://Scripts/Combat/InstantDelivery.gd" id="8_InstantDelivery"]
+[ext_resource type="Resource" uid="uid://bey2wko3cpk5b" path="res://Resources/Abilities/Blueprints/show_blueprints_ability.tres" id="9_blueprints"]
+[ext_resource type="Resource" uid="uid://derd331t25rmw" path="res://Resources/Abilities/Blueprints/save_blueprints_ability.tres" id="10_save_blueprint"]
 [ext_resource type="Texture2D" uid="uid://cprox40ksgavs" path="res://2DArt/Icons/builder.png" id="98_icon"]
 
 [sub_resource type="Resource" id="Delivery"]

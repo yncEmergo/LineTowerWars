@@ -9,4 +9,5 @@ element = 0
 kind = 0
 display_name = "Arcane Technology: Basic"
 description = "Unlocks the Arcane Elemental Core morph and the upgrade above it. Required before either Arcane path."
+tower_stats_path = "res://Resources/UnitStats/Towers/arcane_sorcerer_stats.tres"
 slot = 21

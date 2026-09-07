@@ -99,6 +99,21 @@ const NO_SLOT: int = -1
 @export var display_name: String = ""
 @export_multiline var description: String = ""
 @export var icon: Texture2D
+## The tower this technology's square PICTURES, by `res://` path: an element's
+## 800g upgrade for a Basic technology, and the 4,000g Lesser tower of the path
+## for a path one (unit_data.md 4). Read for its icon and for nothing else.
+##
+## A PATH rather than the resource, for the reason CLAUDE.md gives for scenes.
+## A tower's stats name the upgrade above them, so an `ext_resource` here would
+## drag that element's whole chain - four more towers, their abilities, their
+## projectiles - in behind it every time anything so much as read a
+## technology's price. The path costs nothing until the Research Center is
+## opened, and by then ContentWarmer is holding the file anyway.
+##
+## Named rather than worked out, because nothing on a tower says which element
+## or which price tier it is: that shape lives in ModelGen's roster, not in the
+## .tres. This is the one place the two are tied together.
+@export_file("*.tres") var tower_stats_path: String = ""
 
 @export_group("Research grid")
 ## Which square of the Research Center grid this claims, counting from 0 at the
@@ -124,6 +139,25 @@ const NO_SLOT: int = -1
 ## ext_resources around it would be a reference cycle and would not load. An id
 ## costs nothing until something resolves it, exactly as a scene path does.
 @export var ultimate_cross_tech_id: int = 0
+## The Ultimate tower this path leads to, by `res://` path, on the same terms
+## as tower_stats_path above. Empty on a Basic technology, which leads to no
+## Ultimate of its own.
+##
+## What the Show Ultimates row draws each of its twenty buttons from. Also the
+## authority on what `ultimate_name` says: the name is authored for the
+## tooltips, this is the picture, and the checks below refuse a file whose
+## display name is not the name.
+@export_file("*.tres") var ultimate_stats_path: String = ""
+
+
+## The two icons read off the towers above. Cached because every user of this
+## SHARED resource would work out the same answer, which is the one kind of
+## value an ability-shaped resource may hold (CLAUDE.md). Read flags rather
+## than a null check, so a tower with no icon is not looked up again per frame.
+var _tower_icon: Texture2D = null
+var _tower_icon_read: bool = false
+var _ultimate_icon: Texture2D = null
+var _ultimate_icon_read: bool = false
 
 
 ## Whether this unlocks a tower path, as opposed to the element itself.
@@ -186,6 +220,49 @@ func grid_label() -> String:
 	return "%s%d" % [initial, path_number()]
 
 
+## The picture this technology's square carries: the tower it unlocks, or
+## whatever was authored into `icon` for a technology that wants to override
+## the roster.
+##
+## Read off the TOWER rather than copied into this file, so the square and the
+## command card that builds that tower can never show two different pictures.
+## Null while a build has no art for it, which the square draws grid_label()
+## for instead.
+func tech_icon() -> Texture2D:
+	if icon != null:
+		return icon
+	if !_tower_icon_read:
+		_tower_icon_read = true
+		_tower_icon = _icon_on(tower_stats_path)
+	return _tower_icon
+
+
+## The picture of the Ultimate this path leads to. Null on a Basic technology,
+## which leads to none.
+func ultimate_icon() -> Texture2D:
+	if !_ultimate_icon_read:
+		_ultimate_icon_read = true
+		_ultimate_icon = _icon_on(ultimate_stats_path)
+	return _ultimate_icon
+
+
+## The icon of the tower a path names, loaded on first ask.
+##
+## `load()` rather than an `ext_resource`, and that is the whole point of the
+## path: nothing is read until somebody opens the Research Center, and by then
+## ContentWarmer has already loaded every stats file in the build, so this is a
+## cache hit rather than a disk read.
+static func _icon_on(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+
+	var stats: UnitStats = ResourceLoader.load(path) as UnitStats
+	if stats == null:
+		Log.err("Technology names a tower stats file that did not load", path)
+		return null
+	return stats.icon
+
+
 ## The hue this technology's element owns. Every square of an element draws the
 ## same one, which is what makes a row read as one element at a glance.
 func element_color() -> Color:
@@ -208,5 +285,34 @@ func validate() -> bool:
 	if !is_path() && ultimate_cross_tech_id != 0:
 		Log.err("Basic technology names a cross requirement, which only a path has",
 			display_name)
+		complete = false
+	return _validate_towers() && complete
+
+
+## The two tower paths, which the editor does NOT rewrite when a stats file is
+## renamed - the same cost every other authored path in the project carries,
+## and the same answer: check the lot at boot rather than leave the first
+## player to open the screen to find a blank square.
+func _validate_towers() -> bool:
+	var complete: bool = true
+	if !SceneUtil.exists(tower_stats_path):
+		Log.err("Technology names a tower stats file that does not resolve", {
+			"tech": display_name,
+			"path": tower_stats_path,
+		})
+		complete = false
+
+	if !is_path():
+		if !ultimate_stats_path.is_empty():
+			Log.err("Basic technology names an Ultimate tower, which only a path has",
+				display_name)
+			complete = false
+		return complete
+
+	if !SceneUtil.exists(ultimate_stats_path):
+		Log.err("Path technology names an Ultimate stats file that does not resolve", {
+			"tech": display_name,
+			"path": ultimate_stats_path,
+		})
 		complete = false
 	return complete

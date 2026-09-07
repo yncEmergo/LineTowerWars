@@ -9,4 +9,5 @@ element = 9
 kind = 0
 display_name = "Water Technology: Basic"
 description = "Unlocks the Water Elemental Core morph and the upgrade above it. Required before either Water path."
+tower_stats_path = "res://Resources/UnitStats/Towers/water_tidecaller_stats.tres"
 slot = 9

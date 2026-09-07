@@ -151,6 +151,31 @@ func undo_ticks_left(player_id: int) -> int:
 	return 0 if tech == null else tech.undo_ticks_left()
 
 
+## Why this player cannot take a named Ultimate outright, or ALLOWED when they
+## can. The Show Ultimates row's question, and the same shape as refusal_for:
+## the button greys on it and the server refuses with the very same call.
+##
+## **Only while the free allowance still covers the whole set.** Taking one is
+## the opening the design is built around (unit_data.md 2.3) - four
+## technologies for nothing, chosen rather than rolled - and it is not a way to
+## buy an Ultimate cheaply later. A player who has spent any of the allowance
+## researches the rest square by square, at the price the grid quotes.
+func refusal_for_ultimate(player_id: int, path: TechDefinition) -> String:
+	if path == null || !path.is_path():
+		return "not a technology that leads to an Ultimate"
+
+	var state: PlayerState = _state_of(player_id)
+	if state == null:
+		return "no such player"
+
+	var missing: Array[TechDefinition] = _missing_of(state.tech, path)
+	if missing.is_empty():
+		return "already researched"
+	if free_left(player_id) < missing.size():
+		return "only while the free technologies are unspent"
+	return ALLOWED
+
+
 ## Whether there is any Ultimate this player could complete right now, which is
 ## the whole of what the random button needs to know before it is pressed.
 func can_roll_random_ultimate(player_id: int) -> bool:
@@ -201,6 +226,11 @@ func apply_order(player_id: int, action: Command.PlayerAction, tech_id: int) -> 
 			return undo(player_id)
 		Command.PlayerAction.RANDOM_ULTIMATE:
 			return roll_random_ultimate(player_id)
+		Command.PlayerAction.CHOOSE_ULTIMATE:
+			var chosen: TechRegistry = _registry()
+			if chosen == null:
+				return "this build contains no technologies"
+			return choose_ultimate(player_id, chosen.tech_for(tech_id))
 		_:
 			return "not a player order"
 
@@ -277,6 +307,22 @@ func roll_random_ultimate(player_id: int) -> String:
 	# machine has to be able to arrive at the same world from the same seed.
 	var index: int = MatchSession.match_rng().randi_range(0, affordable.size() - 1)
 	return _buy_batch(player_id, state, affordable[index] as Array)
+
+
+## Takes the Ultimate a player POINTED AT, as one press that can be taken back.
+##
+## The same batch the random roll buys, with the choosing done by a player
+## rather than by the RNG - so it is charged, recorded and undone by exactly
+## the same code, and the undo history is deliberately NOT closed afterwards.
+## That is the whole difference from grant_ultimate() below: what a match DEALT
+## you is not a purchase to reconsider, and what you picked off the row is.
+func choose_ultimate(player_id: int, path: TechDefinition) -> String:
+	var reason: String = refusal_for_ultimate(player_id, path)
+	if reason != ALLOWED:
+		return reason
+
+	var state: PlayerState = _state_of(player_id)
+	return _buy_batch(player_id, state, _missing_of(state.tech, path))
 
 
 ## Hands a player everything one Ultimate still needs, free of charge and with

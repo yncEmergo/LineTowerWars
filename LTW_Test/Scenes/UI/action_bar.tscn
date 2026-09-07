@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/ActionBar.gd" id="1_action_bar"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/hud_action_button.tscn" id="2_hud_action_button"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar"]
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+bg_color = Color(0.09, 0.1, 0.13, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.26, 0.28, 0.35, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="ActionBar" type="PanelContainer" node_paths=PackedStringArray("_builder_button", "_research_button")]
+theme_override_styles/panel = SubResource("StyleBoxFlat_bar")
+script = ExtResource("1_action_bar")
+_builder_button = NodePath("Row/BuilderButton")
+_research_button = NodePath("Row/ResearchButton")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BuilderButton" parent="Row" instance=ExtResource("2_hud_action_button")]
+layout_mode = 2
+
+[node name="ResearchButton" parent="Row" instance=ExtResource("2_hud_action_button")]
+layout_mode = 2

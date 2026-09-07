@@ -203,26 +203,52 @@ extends Resource
 ## Head room added on top of the measured round trip AND its variance, in
 ## milliseconds.
 ##
-## **Zero, and that is measured rather than assumed.** The budget already counts
-## the round trip and ENet's own variance, each exactly once; this is a flat
-## constant on top of both, and a constant is the one term that cannot adapt to
-## anything.
+## **`delay_turns()` is `ceil(budget / turn_ms)`, so without this the delay is
+## the smallest whole number of turns that REACHES the estimate** - and the
+## estimate is a mean round trip plus ENet's smoothed variance, which is not the
+## same thing as how long a turn word actually takes to arrive. What is missing
+## from it is every granularity in the path: the relay only flushes on its render
+## frame, and a receiver only sees a packet when its main loop next polls.
 ##
-## Paired alternating runs against the rented server at 26 ms ping, with the time
-## every peer spent HELD measured alongside the latency - because a stall COUNT
-## cannot tell six invisible hitches from six visible freezes, and every earlier
-## attempt to tune this traded against a count without knowing what it cost:
+## **When the true word time approaches one whole turn, one turn of budget is not
+## a tight fit, it is an oscillator.** Playtest 2 is the worked example. Every
+## peer stalled on 25-30% of ticks, and the stalls were not random: a gap of one
+## turn between consecutive stalls appeared 2.5% of the time where randomness at
+## that rate predicts 24.9%, while gaps of two to four carried 83% of them. That
+## is a limit cycle, not packet loss - a peer that stalls slips one tick, which
+## over-corrects and makes its neighbour the late one, and the two hand the delay
+## back and forth for the length of the match. The world ran at 63-71 ms per
+## 50 ms turn all session.
+##
+## **The mean ping barely moved and cannot be the explanation**: playtest 1 saw
+## 0.6% of ticks stalled at the same 35-39 ms estimated budget where playtest 2
+## saw 27.5%. Correlating stalls against the budget ACROSS the two sessions gives
+## a clean-looking curve and it is an artefact of pooling two different networks.
+## See `Findings/2026-09-07-playtest-2-delay-cliff.md`.
+##
+## **Twenty, because two turns of budget breaks the cycle whatever is causing the
+## extra time**, which is the honest reason - the term that pushed playtest 2 over
+## one turn has never been measured, because nothing in this codebase records how
+## long a word actually took. It buys a second turn from about 30 ms of estimate
+## upward, so a link measuring 39 ms books two turns and a LAN at 20 ms still
+## books one.
+##
+## The measurement that set this to zero was not wrong. Paired alternating runs
+## against the rented server at 26 ms ping, with time HELD measured alongside
+## latency:
 ##
 ##     margin  0   median  85 ms   2.10 s held across both peers, per ~50 s played
 ##     margin 20   median 131 ms   1.25 s held
 ##
-## So twenty bought 0.85 s less holding per match - half a dozen stalls of one or
-## two ticks each, well under the 0.6 s the stall panel waits before it even
-## appears - and charged 46 ms on every single order to do it. Invisible benefit,
-## felt cost.
+## Twenty bought 0.85 s less holding and charged 46 ms on every order - invisible
+## benefit, felt cost, and the right call on that link. It was taken where the
+## path was comfortably inside one turn, so the margin genuinely bought nothing.
+## **A knob measured at one operating point says nothing about the shape of the
+## curve**, and this one turns out to have a threshold in it rather than a slope.
 ##
-## It stays as a knob because a genuinely bad link may want one, and because the
-## next person should be able to measure it rather than trust this.
+## The authored value lives in `network_config.tres`; the zero here is the script
+## default the file overrides, and leaving it at zero is what stops the editor
+## stripping that line on its next save.
 @export var jitter_margin_ms: int = 0
 
 ## Whether the input delay also allows for THIS MACHINE's own frame-time

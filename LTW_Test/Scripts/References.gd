@@ -23,6 +23,11 @@ extends Node
 @export var _command_controller: CommandController
 @export var _selection_box_overlay: SelectionBoxOverlay
 @export var _unit_panel: UnitPanel
+## The technology screen. Held here because the button that opens it does not
+## live inside it: it is a square on the ActionBar, beside the builder and the
+## senders, where a player looks for a button. A dedicated server leaves this
+## null and nothing asks.
+@export var _research_center: ResearchCenter
 @export var _player_manager: PlayerManager
 ## Who is in THIS match, the shared RNG and the unit registry.
 @export var _match_session: MatchSession
@@ -132,6 +137,12 @@ static var unit_panel: UnitPanel:
 		if instance == null:
 			return null
 		return instance._unit_panel
+
+static var research_center: ResearchCenter:
+	get:
+		if instance == null:
+			return null
+		return instance._research_center
 
 static var player_manager: PlayerManager:
 	get:

@@ -328,6 +328,27 @@ func _update_ratio() -> void:
 
 # --- finding things --------------------------------------------------------
 
+## Every stats resource under a folder, by the path something would LOAD it by.
+##
+## **The name on disk is not the name in the source tree, and matching only
+## `.tres` here made this whole class a no-op in every exported build.** An
+## export converts text resources to binary: `foo.tres` becomes `foo.res` with a
+## `foo.tres.remap` left beside it, so a directory listing of the pack contains
+## not one entry ending in `.tres`. The walk found nothing, `begin` warned
+## "ContentWarmer found nothing to warm", the load screen filled instantly and
+## every first-spawn cost was paid mid-match exactly as before - which is the
+## freeze this class was written to remove. Found in playtest 2's journals.
+##
+## The three registries already knew: `AbilityRegistry._scan_file` and both its
+## copies trim `.remap` before looking at the extension, and say why. This is the
+## same trap reached from the one place that had not met it yet.
+##
+## `.tres.remap` is trimmed back to the `.tres` it stands for rather than
+## followed to the `.res` it points at, because that is the path everything else
+## in the build names - `ResourceLoader` resolves the remap itself. A bare `.res`
+## is deliberately NOT collected: every converted file leaves a remap behind, so
+## taking both spellings would find each resource twice in a build and once in
+## the editor.
 func _tres_files(root: String) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	var dir: DirAccess = DirAccess.open(root)
@@ -339,8 +360,8 @@ func _tres_files(root: String) -> PackedStringArray:
 		var full: String = root.path_join(entry)
 		if dir.current_is_dir():
 			out.append_array(_tres_files(full))
-		elif entry.ends_with(".tres"):
-			out.append(full)
+		elif full.trim_suffix(".remap").ends_with(".tres"):
+			out.append(full.trim_suffix(".remap"))
 		entry = dir.get_next()
 	dir.list_dir_end()
 	return out

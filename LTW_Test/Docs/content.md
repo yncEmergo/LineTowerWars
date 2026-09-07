@@ -162,6 +162,10 @@ not the game log — `Log.err` from a running game surfaces there with a stack t
   the whole upgrade chain, so a broken `.tres` in the middle of a line is caught.
 - **The three registries** — `AbilityRegistry`, `UnitTypeRegistry`, `TechRegistry` — every id
   unique within its namespace.
+- **`TechDefinition.validate()`**, over every technology in the folder — the two tower paths a
+  technology names resolve, and only a path technology names an Ultimate. Same price and same
+  payment as the stats paths above: the editor does not rewrite a path string when a `.tres`
+  is renamed.
 
 Two failure modes that do **not** look like content errors:
 
@@ -184,6 +188,15 @@ its `CreepStats`. The ability reads it off there, so the number cannot drift bet
 
 An ability may cache a value derived only from its OWN exports, because every user of that
 shared resource would compute the same answer. It may hold nothing else.
+
+The same rule decides where a PICTURE lives. A technology does not carry an icon of its own: it
+names the tower it unlocks by `res://` path — an element's Basic names that element's 800g
+upgrade, a path names its 4,000g Lesser tower and the Ultimate at the top of the line — and
+reads the icon off that tower's stats when the Research Center first asks. So the research
+square and the command card that builds that tower cannot show two different pictures, and a
+regenerated icon reaches both. A path rather than an `ext_resource` for the usual reason: a
+tower's stats name the upgrade above them, so a hard reference would drag the element's whole
+chain into memory behind anything that merely read a technology's price.
 
 ---
 
