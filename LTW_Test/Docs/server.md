@@ -93,14 +93,27 @@ engine argument and refuses to start, so `--server` has to come after it.
 
 Where the editor lives is a **per-machine** detail, not a project setting — the repo is
 developed on more than one PC and they do not agree on the path or the patch version. So the
-script never hardcodes yours. It looks in three places, in order:
+script never hardcodes yours, and normally **nothing has to be set at all**: it finds the
+editor itself. `Tools/godot_path.ps1` does that for `run_server.ps1`, `run_bench.ps1` and
+`build_client.ps1` alike, in this order:
 
 1. the `-Godot` argument
 2. the `GODOT` environment variable
-3. a legacy `Desktop\Godot 4.7.1.exe` fallback, kept only so an already-working machine that
-   never set `GODOT` does not break
+3. the path this machine remembered last time, in `Tools/godot_path.local.txt`
+4. a look in the usual places — Desktop, Downloads, `Program Files\Godot`, `<drive>:\Godot`
 
-**Set `GODOT` once per machine** and the fallback stops mattering:
+Step 4 only accepts an editor whose **major.minor matches `config/features` in
+`project.godot`**, so a machine with a shelf of Godot builds on its desktop still gets the one
+this project is on, and bumping the engine re-finds the editor instead of quietly using the
+old one. Of the matching ones it takes the newest patch, preferring plain over mono and
+windowed over console. The version is read from the **file name**, so a renamed
+`Godot 4.7.1.exe` is recognised but a `godot.exe` carrying no number is not.
+
+What it finds is written to `Tools/godot_path.local.txt`, which is git-ignored and per-machine
+— edit it to pin a different editor, delete it to make the next run look again. It is only a
+cache: a path in it that no longer exists, or no longer matches the project, is re-derived.
+
+The two overrides are still there for a machine that keeps the editor somewhere unusual:
 
 ```powershell
 # permanent, survives reboots — run once per PC, then reopen the terminal
@@ -110,8 +123,10 @@ script never hardcodes yours. It looks in three places, in order:
 $env:GODOT = "C:\path\to\Godot.exe"
 ```
 
-Point it at the **real `.exe`**, not a `.lnk` shortcut — PowerShell's call operator cannot
-launch a shortcut.
+Point either at the **real `.exe`**, not a `.lnk` shortcut — PowerShell's call operator cannot
+launch a shortcut. A named path is used as given: if its version does not match the project
+you get a warning rather than a refusal, because building against another patch is a thing
+somebody may be doing on purpose.
 
 Anything that inherits the environment — the Godot editor, a terminal, the MCP server — only
 sees the variable if it was **started after** it was set.

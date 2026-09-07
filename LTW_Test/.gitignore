@@ -20,3 +20,9 @@ Reports/
 # for went on being versioned. They were removed with `git rm --cached` on
 # 2026-09-06; adding the pattern was never going to be enough on its own.
 ~*.TMP
+
+# Where the Godot editor is on THIS machine, remembered by Tools/godot_path.ps1
+# after it finds one. Per-machine by definition - the project is built on more
+# than one PC and they keep the editor in different places - so it is the one
+# piece of build configuration that must never be committed.
+Tools/godot_path.local.txt

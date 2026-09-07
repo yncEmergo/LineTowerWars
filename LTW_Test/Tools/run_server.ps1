@@ -20,22 +20,14 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path $PSScriptRoot -Parent
 
 
-# Where Godot is: the -Godot argument, then the GODOT environment variable,
-# then the usual spot. Nothing here is a project setting, it is just where this
-# machine happens to keep the editor.
-$exe = $Godot
-if ([string]::IsNullOrWhiteSpace($exe)) { $exe = $env:GODOT }
-if ([string]::IsNullOrWhiteSpace($exe)) { $exe = Join-Path $env:USERPROFILE "Desktop\Godot 4.7.1.exe" }
-
-if (-not (Test-Path $exe)) {
-    Write-Host "Godot executable not found:" -ForegroundColor Red
-    Write-Host "  $exe"
-    Write-Host ""
-    Write-Host "Point this script at it once, either way:"
-    Write-Host '  $env:GODOT = "C:\path\to\Godot.exe"      (this terminal only)'
-    Write-Host '  .\Tools\run_server.ps1 -Godot "C:\path\to\Godot.exe"'
-    exit 1
-}
+# Where Godot is: the -Godot argument, then $env:GODOT, then the path this
+# machine remembered, then a look in the usual places. Nothing here is a project
+# setting, it is just where this PC happens to keep the editor - and the hunt
+# for it is shared with build_client.ps1 and run_bench.ps1 rather than guessed
+# at three times over. godot_path.ps1 has the reasoning.
+. (Join-Path $PSScriptRoot "godot_path.ps1")
+$exe = Resolve-GodotExe -Explicit $Godot -ProjectRoot $projectRoot -ScriptName "run_server.ps1"
+if ([string]::IsNullOrWhiteSpace($exe)) { exit 1 }
 
 # Refuse to start a second server on the same port. Without this the second one
 # fails deep inside ENet with "Could not open the server port", which reads like

@@ -66,17 +66,13 @@ function Read-Git([string[]] $Arguments) {
 }
 
 
-# Where Godot is: the -Godot argument, then the GODOT environment variable. Not
-# a project setting - it is just where this machine keeps the editor.
-$exe = $Godot
-if ([string]::IsNullOrWhiteSpace($exe)) { $exe = $env:GODOT }
-if ([string]::IsNullOrWhiteSpace($exe) -or -not (Test-Path $exe)) {
-    Write-Host "Godot executable not found:" -ForegroundColor Red
-    Write-Host "  $exe"
-    Write-Host ""
-    Write-Host 'Point this script at it:  $env:GODOT = "C:\path\to\Godot.exe"'
-    exit 1
-}
+# Where Godot is: the -Godot argument, then $env:GODOT, then the path this
+# machine remembered, then a look in the usual places. Not a project setting -
+# it is just where this PC keeps the editor, and this project is built on more
+# than one PC. godot_path.ps1 is the whole of that story.
+. (Join-Path $PSScriptRoot "godot_path.ps1")
+$exe = Resolve-GodotExe -Explicit $Godot -ProjectRoot $projectRoot -ScriptName "build_client.ps1"
+if ([string]::IsNullOrWhiteSpace($exe)) { exit 1 }
 
 
 # A build has to be reproducible from a commit, and it has to match the server -
@@ -127,6 +123,17 @@ Write-Host "  stamp   $builtAt"
 Write-Host "  commit  $commit"
 Write-Host ""
 
+# The output folder has to EXIST before Godot is asked to write into it. It
+# refuses with "Prepare Template: The given export path doesn't exist." rather
+# than creating it - and since Builds/ is git-ignored, a machine that has never
+# built before never has it. That is a fresh-checkout failure that looks like a
+# broken preset, and it is the second half of what stopped this script working
+# on a second PC.
+$outDir = Join-Path (Split-Path $projectRoot -Parent) "Builds\Windows"
+if (-not (Test-Path -LiteralPath $outDir)) {
+    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+}
+
 $startedAt = Get-Date
 $exportCode = 1
 try {
@@ -144,8 +151,6 @@ if ($exportCode -ne 0) {
     Write-Host "Export failed (Godot returned $exportCode)." -ForegroundColor Red
     exit 1
 }
-
-$outDir = Join-Path (Split-Path $projectRoot -Parent) "Builds\Windows"
 
 # **Assert the EFFECT, not the command.** An exit code says Godot finished, not
 # that it wrote anything - and the failure this guards against left a stale

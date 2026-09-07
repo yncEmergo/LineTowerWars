@@ -24,8 +24,11 @@ into `templates/`. That folder's contents go to `%APPDATA%\Godot\export_template
 where `<version>` is the string inside the archive's own `version.txt` — copy it from there
 rather than typing it, because the folder name has to match it character for character.
 
-Check which editor the templates have to match with `& $env:GODOT --version`. Setting `GODOT`
-once per machine is in `server.md`.
+Which editor the templates have to match is whichever one the build script picks, and it
+prints that on every run — so build once, read the version off the first line of Godot's own
+output, and install the templates to match. **Nothing has to be configured to point the script
+at the editor**: it finds one whose version matches `project.godot` and remembers it per
+machine. `server.md` has the search order and the two ways to override it.
 
 ---
 
@@ -40,7 +43,10 @@ From the project root:
 
 It writes beside the project, into `..\Builds\Windows\`, which is **outside the Godot project
 on purpose**: an exe or a pck sitting in the project tree is something Godot's filesystem
-would try to take an interest in. It is git-ignored from the repository root.
+would try to take an interest in. It is git-ignored from the repository root, so a machine
+that has never built has no such folder — the script creates it, because Godot does not. Left
+to itself the export fails with *"Prepare Template: The given export path doesn't exist"*,
+which reads like a broken preset rather than a missing folder.
 
 The script refuses to build from a tree with uncommitted changes, because the stamp it writes
 names a commit — and a stamp naming a commit the build does not actually contain is worse than

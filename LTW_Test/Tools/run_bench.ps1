@@ -31,22 +31,12 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path $PSScriptRoot -Parent
 
 
-# Where Godot is: the -Godot argument, then the GODOT environment variable,
-# then the usual spot. Same order as run_server.ps1, and for the same reason -
-# none of it is a project setting.
-$exe = $Godot
-if ([string]::IsNullOrWhiteSpace($exe)) { $exe = $env:GODOT }
-if ([string]::IsNullOrWhiteSpace($exe)) { $exe = Join-Path $env:USERPROFILE "Desktop\Godot 4.7.1.exe" }
-
-if (-not (Test-Path $exe)) {
-    Write-Host "Godot executable not found:" -ForegroundColor Red
-    Write-Host "  $exe"
-    Write-Host ""
-    Write-Host "Point this script at it once, either way:"
-    Write-Host '  $env:GODOT = "C:\path\to\Godot.exe"      (this terminal only)'
-    Write-Host '  .\Tools\run_bench.ps1 -Godot "C:\path\to\Godot.exe"'
-    exit 1
-}
+# Where Godot is: same hunt as run_server.ps1 and build_client.ps1, written
+# once in godot_path.ps1 - the argument, then $env:GODOT, then what this machine
+# remembered, then the usual places. None of it is a project setting.
+. (Join-Path $PSScriptRoot "godot_path.ps1")
+$exe = Resolve-GodotExe -Explicit $Godot -ProjectRoot $projectRoot -ScriptName "run_bench.ps1"
+if ([string]::IsNullOrWhiteSpace($exe)) { exit 1 }
 
 $seconds = if ($Quick) { 6 } else { 20 }
 
