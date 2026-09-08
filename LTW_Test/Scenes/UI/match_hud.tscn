@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/stall_panel.tscn" id="91_stall"]
+[ext_resource type="Script" path="res://Scripts/UI/StallInput.gd" id="92_stall_input"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
 content_margin_left = 16.0
@@ -253,3 +254,7 @@ process_mode = 3
 [node name="StallPanel" parent="." unique_id=710171808 instance=ExtResource("91_stall")]
 process_mode = 3
 visible = false
+
+[node name="StallInput" type="Node" parent="." node_paths=PackedStringArray("_order_ui")]
+script = ExtResource("92_stall_input")
+_order_ui = [NodePath("../UnitPanel"), NodePath("../SendBar"), NodePath("../ActionBar"), NodePath("../ResearchCenter"), NodePath("../ControlGroupBar"), NodePath("../Minimap")]

@@ -320,6 +320,60 @@ extends Resource
 ## world nobody is checking. See `netcode-rework.md`, amendment 10.
 @export var max_peer_lag_turns: int = 200
 
+@export_subgroup("Sealed stream")
+## **THE CUTOVER SWITCH.** Off, a peer waits for every other peer's word before
+## it may simulate a turn, and one slow machine holds the whole match still. On,
+## the relay seals one authoritative turn per tick from whatever has arrived and
+## broadcasts it, and a peer waits for NOBODY BUT THE RELAY - so a machine that
+## hitches costs its own player input delay and costs everybody else nothing.
+##
+## **Shaped like `lockstep_enabled` on purpose, and for the same reason.** The
+## claim being made is a performance one - "the healthy peer stops stalling when
+## the other one hitches" - and `CLAUDE.md` requires that measured paired, same
+## commit, alternating runs. Deleting the old path in the commit that adds the
+## new one would make the variable un-flippable and the measurement impossible.
+##
+## **Both ends must agree, and today nothing checks that they do.** A sealed
+## peer against a legacy relay receives no seals at all; a legacy peer against a
+## sealed relay never hears the other player. Both stall at turn 0 and say so,
+## which is loud rather than silent - but it is still a build mismatch, and the
+## follow-up commit that deletes the old gate bumps `protocol_version` to make
+## it refuse the connection outright.
+@export var sealed_stream: bool = false
+
+## How many turns behind the local clock a peer plays the sealed stream, which
+## IS its jitter buffer and so its input delay.
+##
+## **Zero is legal and is not the same as no buffer.** A peer's clock starts
+## when its world is built, which is already later than the relay's seal clock
+## by one one-way trip, so even at zero there is a real cushion - this only adds
+## to it. What it buys is the opening seconds: without it the first seals arrive
+## just barely in time and the match opens stuttering until the lead has grown
+## itself.
+##
+## **And it only ever grows.** Without catch-up a peer runs exactly one turn per
+## tick, so every packet gap it recovers from is added to this permanently.
+## Bringing it back down is phase 6's job; see `netcode-rework.md` amendment 10.
+@export_range(0, 20, 1) var sealed_lead_turns: int = 2
+
+## How many un-played sealed turns a peer holds before it gives up on the match.
+##
+## **The buffer size is the ONLY bound on how far behind a peer may fall**, and
+## that is deliberate: under the sealed stream a peer may not refuse a turn the
+## relay sent it, however far ahead it looks, because the turn it is refusing is
+## the one it is starving for. See `netcode-rework.md` amendment 1.
+##
+## Four hundred turns is twenty seconds at the authored tick rate - long enough
+## that no honest hitch reaches it, short enough that a wedged machine stops
+## eating memory. Reaching it ends the match for that player alone.
+@export var max_sealed_turns: int = 400
+
+## How many orders one peer may have waiting for the next seal before the relay
+## starts refusing them. A flood guard, not a gameplay limit: orders are sent on
+## the render frame, so an honest client contributes a handful per seal even
+## while holding a repeat-on-hold ability down.
+@export var max_pending_orders: int = 128
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20
@@ -457,6 +511,18 @@ func validate() -> bool:
 
 	if max_peer_lag_turns < 1:
 		Log.err("NetworkConfig max_peer_lag_turns must be at least one", max_peer_lag_turns)
+		complete = false
+
+	if sealed_lead_turns < 0:
+		Log.err("NetworkConfig sealed_lead_turns cannot be negative", sealed_lead_turns)
+		complete = false
+
+	if max_sealed_turns < 1:
+		Log.err("NetworkConfig max_sealed_turns must be at least one", max_sealed_turns)
+		complete = false
+
+	if max_pending_orders < 1:
+		Log.err("NetworkConfig max_pending_orders must be at least one", max_pending_orders)
 		complete = false
 	if checksum_every_turns < 1:
 		Log.err("NetworkConfig checksum_every_turns must be at least one",

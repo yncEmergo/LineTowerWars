@@ -33,6 +33,11 @@ const SETTLE_SECONDS: float = 2.0
 ## test that has to outlast the disconnect grace can say so.
 const PLAY_SECONDS: float = 25.0
 
+## How long a deliberate hitch blocks the main thread for, in milliseconds.
+## Sized on playtest 1, where one machine took 650-900 ms the first time each
+## kind of content was spawned.
+const HITCH_MSEC: int = 900
+
 var _role: String = ""
 var _elapsed: float = 0.0
 var _started: bool = false
@@ -49,6 +54,8 @@ var _browsing: bool = false
 var _joining: bool = false
 var _corrupted: bool = false
 var _wedged: bool = false
+var _hitches: int = 0
+var _drops: int = 0
 
 
 func _ready() -> void:
@@ -65,6 +72,12 @@ func _ready() -> void:
 	Lockstep.turn_ready.connect(_on_turn_ready)
 	Lockstep.turn_stalled.connect(_on_turn_stalled)
 	MatchStart.desync_detected.connect(_on_desync)
+	# **The positive control for a player DROP, and its absence is what let a
+	# critical bug through.** A wedged peer leaving looks identical from the
+	# survivor's side whether or not the survivor actually processed it: the
+	# match carries on either way. Only this signal says the leaver's maze was
+	# really erased.
+	MatchStart.player_dropped.connect(_on_player_dropped)
 	Lobby.current_lobby_changed.connect(_on_lobby_changed)
 	Lobby.request_refused.connect(_on_refused)
 	MatchStart.match_starting.connect(_on_match_starting)
@@ -115,6 +128,18 @@ func _on_connect_failed(_result: NetworkService.Result) -> void:
 ## The joiner takes the first lobby it sees that is not full and not already
 ## playing.
 func _on_lobby_list(lobbies: Array[LobbyInfo]) -> void:
+	# **The `browse` role connects and then does NOTHING, which is the whole
+	# point of it.** Pressing Multiplayer connects a peer to the server (D20)
+	# and `SceneMultiplayer.server_relay` announces them to everybody already in
+	# a match - so this is the third machine that is NOT in the match, and it is
+	# the topology that has broken this project twice: once when
+	# `_expected_peers` read the transport's peer list and froze every running
+	# match, and once when a bare `rpc()` sent the whole turn stream to it.
+	#
+	# The sealed seal is a NEW broadcast, so it meets that trap again. Nothing
+	# else in any obvious test setup contains this case.
+	if _role == "browse":
+		return
 	if Lobby.is_in_lobby() || _joining:
 		return
 	for lobby: LobbyInfo in lobbies:
@@ -163,6 +188,11 @@ func _on_turn_stalled(turn: int, missing: PackedInt32Array) -> void:
 		Log.warn("PROBE stall", {"turn": turn, "missing": missing})
 
 
+func _on_player_dropped(slot: int) -> void:
+	_drops += 1
+	Log.warn("PROBE saw a player dropped", {"slot": slot})
+
+
 func _on_desync(tick: int, _detail: String) -> void:
 	_desyncs += 1
 	Log.err("PROBE DESYNC", {"tick": tick})
@@ -200,6 +230,13 @@ func _process(delta: float) -> void:
 			Net.join()
 		return
 
+	# The browser never enters a match on purpose. It just sits there being
+	# connected, which is the whole experiment.
+	if _role == "browse":
+		if _elapsed >= _play_seconds():
+			_finish()
+		return
+
 	# Nothing to drive until the match is up.
 	if !_in_match:
 		if _elapsed > SETTLE_SECONDS * 20.0:
@@ -213,12 +250,47 @@ func _process(delta: float) -> void:
 		Log.warn("PROBE playing")
 		return
 
-	_drive()
+	# A wedged machine sends NOTHING. Driving on would keep refreshing the
+	# relay's liveness clock through `submit_order`, so the peer that has
+	# visibly stopped playing would never be given up on - which is a fair
+	# description of the machine but a useless simulation of one that has died.
+	if !_wedged:
+		_drive()
 	_maybe_corrupt()
 	_maybe_wedge()
+	_maybe_hitch()
 
 	if _elapsed >= _play_seconds():
 		_finish()
+
+
+## DELIBERATELY blocks this machine's whole main thread for most of a second, on
+## --hitch <seconds>, repeatedly.
+##
+## **This is what playtest 1 actually measured**, and it is the scenario phase 4
+## exists to fix: a peer whose FIRST spawn of each kind of content cost it
+## 650-900 ms on the game thread, and which passed that freeze to the other
+## player who was doing nothing wrong.
+##
+## `OS.delay_msec` blocks the thread rather than skipping a frame, so the engine
+## really does miss its ticks the way a slow load does. A `set_physics_process`
+## pause would not - the render frame would carry on and the rpcs would still
+## flush, which is the opposite of what a stalled machine does.
+##
+## **The number that matters is the OTHER peer's `stalled_s`.** That asymmetry
+## IS the design: the hitching machine must pay for its own hitch, and nobody
+## else may pay anything at all.
+func _maybe_hitch() -> void:
+	var every: float = -1.0
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	for index: int in range(args.size()):
+		if args[index] == "--hitch" && index + 1 < args.size():
+			every = maxf(0.5, float(args[index + 1]))
+	if every < 0.0 || _elapsed < every * float(_hitches + 1):
+		return
+	_hitches += 1
+	Log.warn("PROBE hitching", {"ms": HITCH_MSEC, "n": _hitches})
+	OS.delay_msec(HITCH_MSEC)
 
 
 ## DELIBERATELY wedges this peer's game loop while leaving its SOCKET open, on
@@ -315,6 +387,14 @@ func _finish() -> void:
 		"stalls": _stalls,
 		"stalled_s": snappedf(Lockstep.stalled_seconds(), 0.01),
 		"desyncs": _desyncs,
+		"hitches": _hitches,
+		"drops_seen": _drops,
+		# **The positive control for the whole phase.** A run where `sealed` is
+		# false measured nothing about the cutover however good the numbers
+		# look, and `sealed_held` greater than zero is what proves seals were
+		# actually being played rather than the flag merely being set.
+		"sealed": Lockstep.sealed_stream(),
+		"sealed_held": Lockstep.sealed_held(),
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),
 	})

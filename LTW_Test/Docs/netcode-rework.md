@@ -845,7 +845,31 @@ docstring says it cannot catch cross-machine float divergence. **Phase 4 is the 
 it hardest to test afterwards** — today a divergence is caught within a few tens of turns because
 peers are turn-locked; after the cutover peers are legitimately seconds apart.
 
-### Phase 4 — The cutover, behind a flag.
+### Phase 4 — The cutover, behind a flag.  — DONE 2026-09-08, flag still OFF
+
+**Measured, paired, alternating: the healthy peer went from 5.10/5.40 s held to 0.85/0.75 s while
+the other machine hitched 900 ms six times, and a hard-wedged peer cost it nothing at all.** All of
+the residual is one stall on turn 0. See `Findings/2026-09-08-sealed-stream-cutover.md` for the
+table, the six scenarios each with its own positive control, and the three bugs an adversarial pass
+over the diff found that none of the runs could see.
+
+Landed differently from the text below in two ways, both deliberate:
+
+- **nothing was deleted.** The `delay_turns` / `_wire_budget_ms` / `announce_one_way` chain,
+  `_speak_for_the_departed`, `SYSTEM_LEAD_TURNS`, the local self-record and `_queue`'s `skip` all
+  remain, because the flag has to be flippable for the paired measurement and every one of them
+  belongs to the path the flag turns off. The `SessionLog` / `NetworkConfig.validate()` parse
+  failure the audit warned about therefore never arose. They go in the follow-up commit that
+  removes the old gate and bumps `protocol_version`
+- **B2 is solved by a ready-gate rather than by buffering.** A peer sends `submit_ready` once its
+  world is built and the relay's seal clock does not start until every player has, with an
+  8 s backstop against a client that reports loaded and then never arrives. Measured at 9 frames
+  of wait in a local match, and no seal is ever broadcast into the void
+
+Amendment 6 landed as `Scripts/UI/StallInput.gd` rather than as `process_mode` in the scene, which
+the text did not anticipate: written into `match_hud.tscn` it would also un-mute the command card
+during the technology DRAFT, which is a rule change. The node releases the order UI only while
+`lockstep` is the SOLE holder of the pause, and only when the flag is on.
 
 Flip the gate to `_sealed.has(turn)`, **delete the local self-record in the same commit**, and
 delete `_speak_for_the_departed`, `SYSTEM_LEAD_TURNS`, the `delay_turns` / `_wire_budget_ms` /
@@ -884,7 +908,16 @@ written by an unreliable rpc that can move it backwards. Decide amendment 9's pr
 carries no determinism risk and shares no code with the gate flip. This would be the first time a
 dropped player is told why.
 
-### Phase 5 — Decide whether the servo is needed.
+### Phase 5 — Decide whether the servo is needed.  — MEASURED 2026-09-08, PROVISIONALLY NO
+
+Threshold stated before the run, as this section demands: *a servo is needed if a healthy peer's
+lead drifts by more than one turn (50 ms) per match minute in steady state.* Measured over 5900
+turns of a clean sealed match: the lead held at **0** for the whole run and both peers ran at 20.0
+turns per second against the relay's 20. Not under the threshold — not measurable.
+
+**But both peers shared one machine's clock**, and drift comes from two different crystals. This
+rules out Godot's own tick scheduling and says nothing about two real PCs, so the answer is
+provisional and the two-PC run is what reopens it. Judge that run against the same threshold.
 
 **From a post-cutover drift run, not from phase 0's.** Under the current gate `_frames` stops
 while stalling, so what phase 0 records is dominated by accumulated stall time rather than
@@ -896,7 +929,31 @@ measurement can refute the no-servo position instead of being interpreted after 
 
 If drift is negligible, **stop here indefinitely.**
 
-### Phase 6 — Delta refactor, then servo, then catch-up.
+### Phase 6 — Delta refactor, then servo, then catch-up.  — BLOCKED, and on more than time
+
+Re-scoped 2026-09-08 after phase 5 came back negative, because two of its three parts turned out to
+rest on something this document had not named.
+
+**The servo is not wanted**, on phase 5's evidence, and the delta refactor across 29
+`_physics_process(delta)` sites exists only to serve it. Both wait for the two-PC drift run.
+
+**Catch-up needs an architectural change this plan never priced.** The obvious reading is "run more
+than one turn per tick when behind", and it cannot work as written: applying two turns' ORDERS in
+one engine tick still advances the world by ONE `_physics_process`, because the simulation is
+driven by Godot's per-node dispatch rather than by the turn loop. Every peer that caught up would
+therefore compute a different world from every peer that did not — a silent divergence, and the
+worst kind, since catching up is exactly what a struggling machine does.
+
+Real catch-up means driving the simulation step from the turn loop instead of from
+`_physics_process`, which is the per-node dispatch change `CLAUDE.md` already lists under Known
+weaknesses as unstarted, and which is the same work the twelve-player budget needs. **That is a
+project, not a phase.** Doing it badly desyncs every match, so it wants its own plan.
+
+Until it lands, amendment 10 stands unmitigated and should be stated plainly to players rather than
+hidden: **a peer's lead only ever grows.** Every packet gap it recovers from is added to its input
+delay permanently, bounded only by `max_sealed_turns` and then by giving up. In a healthy local
+match that never moved off zero in five minutes; on a real link it is what 4b and 4c exist to
+notice and to explain.
 
 Land the refactor **alone**: every gameplay `_physics_process` stops consuming the engine delta.
 

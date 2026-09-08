@@ -131,6 +131,25 @@ var _seen: Dictionary = {}
 var _assets_done: int = 0
 var _scenes_done: int = 0
 
+## Whether the loading may be handed to worker threads at all.
+##
+## **False under `--headless`, and that is a CRASH FIX rather than a tuning
+## choice.** A headless run installs Godot's dummy rendering driver, and a
+## `PackedScene` full of meshes and materials reaches it from whichever worker
+## thread loaded the scene. The dummy driver does not survive that: the log
+## fills with "Initializing already initialized RID" and "Parameter mem is
+## null", and the process segfaults - sometimes. One of two identical headless
+## clients died and the other finished, which is what a race looks like.
+##
+## The same resources are still warmed, on this thread, one at a time. Nothing
+## headless is watching a progress bar, so the only thing threading was buying
+## there was the crash.
+##
+## **Real clients are unaffected and keep the threads**, which is why this was
+## invisible until the netcode test loop - which is headless by design, see
+## `CLAUDE.md` - started running the load screen.
+var _threaded: bool = true
+
 var _started_msec: int = 0
 var _elapsed_ms: float = 0.0
 var _ratio: float = 0.0
@@ -153,6 +172,7 @@ static func held_count() -> int:
 ## equally usable from the load screen, from a test and from a tool.
 func begin(folders: PackedStringArray) -> void:
 	_started_msec = Time.get_ticks_msec()
+	_threaded = !_is_headless()
 	if _warm:
 		# A second match in the same process. Everything is still held, so there
 		# is nothing to do and pretending otherwise would put a bar on screen
@@ -187,7 +207,10 @@ func advance() -> void:
 	_request_assets()
 
 	_retire_stats(until)
-	_retire_assets()
+	if _threaded:
+		_retire_assets()
+	else:
+		_load_assets_here(until)
 
 	_update_ratio()
 
@@ -259,6 +282,8 @@ func _retire_stats(until: int) -> void:
 
 
 func _request_assets() -> void:
+	if !_threaded:
+		return
 	while _pending.size() < MAX_IN_FLIGHT && !_queue.is_empty():
 		var path: String = _queue[0]
 		_queue.remove_at(0)
@@ -270,6 +295,32 @@ func _request_assets() -> void:
 			_pending.append(path)
 		else:
 			Log.warn("ContentWarmer could not start an asset load", path)
+
+
+## The same work with no workers, for a headless run. Bounded by the frame
+## budget exactly as the threaded path is, so a caller that pumps this per frame
+## still gets its frames - it is simply slower, which headless can afford.
+func _load_assets_here(until: int) -> void:
+	while !_queue.is_empty() && Time.get_ticks_usec() < until:
+		var path: String = _queue[0]
+		_queue.remove_at(0)
+		_assets_done += 1
+		if path.ends_with(".tscn"):
+			_scenes_done += 1
+		var res: Resource = ResourceLoader.load(path)
+		if res == null:
+			Log.warn("ContentWarmer could not load an asset", path)
+			continue
+		_held.append(res)
+
+
+## Whether this process has a real renderer behind it.
+##
+## `DisplayServer` is the honest question rather than `OS.has_feature`: a
+## `--headless` run and a server export both end up on the dummy driver, and it
+## is the DRIVER that cannot take a resource load from a worker thread.
+func _is_headless() -> bool:
+	return DisplayServer.get_name() == "headless"
 
 
 ## Cheap on purpose: reading a finished resource back is a pointer, and none of

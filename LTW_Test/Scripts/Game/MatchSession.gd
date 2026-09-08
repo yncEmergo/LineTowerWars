@@ -419,6 +419,27 @@ func holders() -> Array:
 ## is the physics frame and the engine goes on counting those while nothing is
 ## processing them. Without this, a ten second draft would be ten seconds every
 ## creep unlock in the match had silently already served.
+## **A match that has left the tree may not still be holding it still.**
+##
+## `hold` pauses the WHOLE TREE, and the only thing that ever un-pauses it is
+## another `hold(..., false)`. So any road out of a match taken while something
+## was holding - a lockstep peer giving up, a desync notice, a crash out of the
+## draft - freed the match scene and left `tree.paused` true, which freezes the
+## main menu for the rest of the process with nothing on screen to say why.
+##
+## Nothing reached this before the sealed stream, because every existing exit
+## happened to run through a release first. That is not a property worth relying
+## on: the cost of being wrong is the whole application, and the fix is four
+## lines in the one place that always runs.
+func _exit_tree() -> void:
+	_holds.clear()
+	if _paused:
+		_paused = false
+		var tree: SceneTree = get_tree()
+		if tree != null:
+			tree.paused = false
+
+
 func hold(reason: StringName, held: bool) -> void:
 	var had: bool = reason in _holds
 	if held == had:
