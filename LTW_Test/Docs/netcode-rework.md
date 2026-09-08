@@ -8,6 +8,14 @@ worse.
 This is a PLAN, not a record. When a phase lands, move what it built into `multiplayer.md` and
 strike it here.
 
+**Revised 2026-09-08 after an implementation audit.** Fourteen agents re-checked every claim in
+section 4 against the code and hunted for what this document missed. Section 4's line references
+all held. What did not hold was section 8: **almost every phase's stated falsification test could
+not detect the failure it names**, and two blockers were found that would have broken the first
+match after the cutover. Section 8 has been rewritten; sections 4, 5 and 7 have additions marked
+*(audit 2026-09-08)*. Nothing in sections 1, 2, 3 or 6 changed — the diagnosis and the design
+survived intact.
+
 ---
 
 ## 0. Orientation, if you have never seen this project
@@ -311,6 +319,49 @@ Two smaller things, both real: `Creep.gd:1144` reads `Engine.physics_ticks_per_s
 as does `MatchSession.gd:352`. And `Scripts/Dev/LockstepProbe.gd` still exists despite CLAUDE.md
 saying it is gone — it is inert (not in `[autoload]`) but it hooks signals this change moves.
 
+
+### Two blockers the first draft did not have *(audit 2026-09-08)*
+
+**B1 — a turn-derived clock has no driver when there are no turns.** `MatchSession._lockstep`
+requires `lockstep_enabled && Net.is_online()` (`MatchSession.gd:81`) and
+`LockstepService._is_live()` requires the same (`:1511`). Offline, and on the replication path
+section 9 insists on keeping, **no turn is ever applied**, so a purely turn-derived counter sits at
+0 for ever. What that breaks, all verified: `ReplicationService` stamps its snapshot sequence with
+`session.tick()` (`:382`) and discards `tick <= _applied_tick` (`:611`), so a replication client
+applies exactly ONE snapshot and freezes; income never pays (`PlayerManager.gd:464`); creeps never
+unlock (`SendBuilding.gd:449`); Sudden Death never arrives (`MatchSession.gd:331`); the research
+undo window never closes (`TechManager.gd:58`); and both `DeterminismBench` and `PerfBench` drive
+offline matches, so **phase 6's falsifier would be measuring a dead clock**. Phase 1 must keep
+`Engine.get_physics_frames()` whenever `!is_lockstep()`.
+
+**B2 — the relay is sealing before any client can receive, and the seals are destroyed.**
+`MatchStartService._start_match` rpcs the go signal and opens the relay's own match scene in the
+same call (`:401-418`), so the relay is live within a frame. A client needs one trip, a scene
+change and a whole world build (`Main.gd:96-116`) — hundreds of milliseconds, i.e. many 20 Hz
+seals. Every seal broadcast in that window hits `receive_batch`'s `if !_is_live(): return`
+(`:1266`) and **is gone for ever**: under the sealed stream there is exactly one copy of turn N,
+no author-side record and no echo. The peer then wants turn 0, which no longer exists, and
+amendment 1 declares it hopelessly behind — at match start, every match. Today this cannot happen
+because each peer authors its own stream from turn 0 whenever its clock starts (`:932-946`). The
+seal clock must be gated on peers being live, or pre-live seals buffered, or the relay must
+backfill on request.
+
+### Six more things that must change, all verified *(audit 2026-09-08)*
+
+| Where | What |
+| --- | --- |
+| `SessionLog.gd:302`, `:309`, `:204` | Calls `Lockstep.delay_turns()` and `local_jitter_ms()`, and reads `min/max_delay_turns`. `Lockstep` is a typed autoload, so deleting those in phase 4 is a **parse-time failure — the project stops booting**. `NetworkConfig.validate()` (`:408-420`) also still errors on the deleted knobs. |
+| `LockstepService.gd:1084-1121` | The unreliable **echo is the only cheap loss recovery**, and its docstring says why: the reliable channel is ORDERED, so a re-send cannot overtake a loss. Section 5 collapses N streams into one and discusses dedupe only on the up-leg. **Nothing replaces the echo on the relay→peer leg, which is the only leg left.** |
+| `LockstepService.gd:1022` vs `:1231` | `_last_heard` has two writers: `submit_turn` (**reliable**, every tick) and `submit_alive` (**unreliable**, twice a second). Section 5 deletes the per-turn word, so a peer doing nothing sends the relay nothing reliable ever again — and amendment 2 then makes ending a player's match a decision taken solely on packets with no delivery guarantee. |
+| `LockstepService.gd:1226-1232` | `submit_alive` assigns `_reported_turn[sender] = turn` with **no monotonicity guard**, over UDP. Amendment 2 promotes that into a drop decision. Reordering makes it go backwards; lost heartbeats age it at the seal rate. Clamp with `maxi()` first. |
+| `LockstepService.gd:716-760` | `_reset_if_new_match` is not mentioned anywhere in this plan. The relay's `(peer, seq)` high-water mark and each peer's sealed buffer **must be added to it**, or the second match on a relay process silently dedupes away every order from a client that restarted its `seq` — no error, no stall, the player clicks and nothing happens. Its own docstring records that this exact class of bug already cost a debugging cycle. |
+| `LockstepService.gd:682`, `:1335` | `_missing_for` walks `_expected_peers()`, which **deliberately excludes the relay**. After the cutover the only party that can be late IS the relay, so `lockstep.stalled`'s `missing` field, the `turn_stalled` signal and `waiting_on()` would all name innocent opponents for a purely local hold — inverting the very thing section 11 tells the next investigator to trust. |
+
+**And one thing section 4 overstated.** The `:506` row calls the 8 s timeout "the only ceiling on
+a stall". It measures SILENCE via `_last_heard`, which the heartbeat refreshes — so a peer that is
+late but still beating never trips it and **that stall has no ceiling at all.** Amendment 2 is
+what closes this; the table row read alone is misleading.
+
 ---
 
 ## 5. The design
@@ -381,6 +432,40 @@ load-bearing.
    gameplay `_physics_process(delta)` loops to stop consuming the engine delta. It is deferred,
    but it must not be lost.
 
+### Seven more amendments *(audit 2026-09-08)*
+
+6. **The order UI must survive a hold.** `MatchSession.hold` sets `tree.paused`, and only five
+   nodes opt out with `PROCESS_MODE_ALWAYS` — GameMenu, DraftPanel, ConfirmPrompt, DesyncNotice,
+   StallPanel (`match_hud.tscn:240-254`). `UnitPanel`, `SendBar`, `ActionBar`, `ResearchCenter`
+   and `CommandController` do not, and Godot suppresses `_unhandled_input` under a pause. So
+   today a stalled peer cannot click anything — which was harmless when everyone stalled
+   together, and **defeats the whole design the moment a peer stalls alone**: it would be frozen
+   AND mute. Accepting an order mid-stall is newly safe precisely because no client names a turn
+   any more. This is the most player-visible half of the change and it is easy to miss.
+7. **Replace the echo, or say why not.** See the table above. One dropped seal now costs a full
+   ENet retransmit of held time on the only channel left, which is exactly the micro-stutter
+   Recoil's comment in section 3 warns about, now unmitigated.
+8. **Gate the seal clock on peers being live** (B2), and put the relay's `(peer, seq)` high-water
+   mark and the peer's sealed buffer into `_reset_if_new_match`.
+9. **Say which kill switch wins.** Amendment 1 ends the match locally on buffer overflow;
+   amendment 2 drops the peer from the relay. Their relationship is undefined and they do
+   different things — the relay's drop injects PLAYER_LEFT, which erases the leaver's maze on
+   every peer (`PlayerManager.gd:62` → `:217`), while a local end says nothing on the wire at
+   all. Make the local one leave through `MatchStart.leave_match()` so the existing path runs.
+10. **Size amendment 2's threshold as a ceiling on ACCUMULATED trailing, not as a spike
+    detector.** Without catch-up a peer runs exactly one turn per tick (I3), so every packet gap
+    it recovers from is added to its lead permanently and its input delay only ever grows.
+    Nothing else bounds that. The threshold is therefore "how bad is a player's input delay
+    allowed to get before we end it for them", which is a different question from "is this peer
+    hitching" and wants a different number.
+11. **Fix the `missing` field** so a local hold cannot name an opponent (see the table above).
+    The session log is the artefact a tester sends back, and section 11 tells the next
+    investigator to trust that field.
+12. **`_forget_old_turns` and `_plausible_turn` are call-site-scoped edits, not deletions.**
+    `_plausible_turn` has three call sites: `:1317` in `_record` is the peer-side ceiling
+    amendment 1 kills, while `:1016` in `submit_turn` and `:1111` are **relay-side cheat guards**
+    that stay until the turn parameter itself goes.
+
 ### Two things deliberately rejected
 
 A variant that seals only up to the highest turn any peer has reported makes the relay's tempo
@@ -440,11 +525,18 @@ never *what* it computes.
 ## 7. What it costs, honestly
 
 **The local player pays their own round trip on their own clicks, where today they pay none.**
-This is the deliberate trade and it is unavoidable once the client stops naming the turn. Against
-the measured links it roughly washes against today's `own + worst`; against the *best case* of the
-current configuration it is a small regression. But that configuration is the one that produced
-270 stalls in a match, and unlike an integer `delay_turns` the lead is continuously tunable.
-**Presentation feedback is therefore a prerequisite, not a follow-up.** It is phase 2.
+This is the deliberate trade and it is unavoidable once the client stops naming the turn.
+
+*(audit 2026-09-08)* **Against what is actually shipping it is an improvement, not a regression.**
+The first draft compared against a `delay_turns` of 1. `jitter_margin_ms` was raised to 20 on
+2026-09-07 to stop the oscillation described in
+`Findings/2026-09-07-playtest-2-delay-cliff.md`, so the shipped configuration now books two turns
+rather than one. At the round trips that playtest measured, one round trip plus half a seal
+interval is materially less than two turns. Unlike an integer `delay_turns` the lead is also
+continuously tunable. Phase 2 is therefore **worth doing on its own merits rather than as a debt
+being paid off**, which is a weaker reason than the first draft gave it — but it is still a
+prerequisite for the cutover, because the lead is the knob that will be tuned afterwards and
+nobody should be tuning it against a UI that answers nothing until the round trip completes.
 
 **A mean half-tick seal wait is added** and is irreducible at the current seal rate. An order
 arriving just after a seal waits nearly a full turn.
@@ -471,97 +563,239 @@ structural point is that **latency coupling and stall coupling become separable*
 latency floor can be restored for ranked without restoring the gate. Today they are welded
 together.
 
-**Order traffic changes shape.** Orders arrive unbatched, so a `repeat_on_hold` flood lands at
-once. Needs a client-side coalescer and a relay-side cap. OpenTTD's precedent is two commands per
-client per frame with a kick at sixteen queued.
+**Order traffic changes shape.** Orders arrive unbatched rather than a turn at a time.
+*(audit 2026-09-08)* The "flood" framing was wrong: `repeat_on_hold` is already rate-limited by
+`hold_repeat_min_interval` (`ControlsConfig.gd:126`), whose authored floor is longer than a seal
+interval — so at most one order every few turns. And deleting the per-turn word and its echo makes
+total wire traffic **fall**, not rise. So the client coalescer and the relay-side cap are
+anti-abuse floors against a modified client, not a fix for the shipped UI. OpenTTD's precedent is
+two commands per client per frame with a kick at sixteen queued.
 
 ---
 
 ## 8. The plan
 
-Each phase is independently landable and independently falsifiable. **Do not skip phase 0 or 1.**
+**Rewritten 2026-09-08.** The first draft's phases were right about what to build and wrong about
+how to know it worked: **almost every "falsifies" clause named a test that could not detect the
+failure it described.** Three were run in the one topology where both candidate answers agree —
+which is section 11's own trap, reached three times. Two phases have been split because they
+bundled a UI change with a netcode change, and phase 4's stated action made phase 4's stated
+measurement impossible.
 
-### Phase 0 — Instrument arrival time. No behaviour change.
+Each phase is independently landable. **Do not skip phase 0 or 1.**
 
-Record, per turn per peer, how long a word actually took to arrive **relative to when the turn was
-due**, and log the distribution in `lockstep.health`. Also log relay `_frames` against each peer's
-`_reported_turn` over a full match, to measure clock drift.
+### Phase 0 — Instrument. No behaviour change.
 
-- *Measured:* arrival-lead distribution; `stalled_seconds()` (**duration, never count**); drift.
-- *Falsifies:* if arrival lead p99 is small and stalls still happen, the network-jitter story is
-  wrong and so is every budget in the file.
-- Worth doing on its own merits: nothing in the codebase records this today, and that is why this
-  problem was misdiagnosed twice.
+Nothing in this codebase records how long a turn word actually took to arrive, which is why this
+problem was misdiagnosed twice. Everything below is local state plus log output: no wire change,
+no rpc signature change, `protocol_version` untouched.
+
+**Arrival lead** — three hooks in `LockstepService`, verified in place:
+
+- `_advance_turn`, right after the `if turn > clock_turn` guard: write-once `_due_at[turn]`. The
+  first tick that passes that guard IS the instant the turn became due on this machine.
+- `_record`, after its two existing guards, beside the `_incoming` write: write-once
+  `_arrived_at[turn][peer]`. `_record` is the single funnel — `_emit`, `submit_turn`,
+  `submit_echo` and `_absorb` all pass through it. **Write-once is load-bearing, not tidiness:**
+  the unreliable echo can beat the reliable batch, and the question is when this machine FIRST
+  held the word.
+- `_advance_turn` again, after `_last_run_turn = turn` and **before `turn_ready.emit`** — fold
+  `arrived - due` per peer into a ring modelled on `_overruns`, then erase both entries alongside
+  `_incoming.erase(turn)`. It must precede the emit or every health line reports a stale window.
+
+Key it `(turn, from_peer)`, taken verbatim from `_record`'s own two parameters. **That survives
+phase 4 unchanged**: `turn` is the local consumption index, not a client's request — today the
+client authors that field and after the cutover the relay authors the same field position. Do NOT
+key on `scheduled_turn()`/`_closed_through`, which phase 4 deletes, and do NOT key on the future
+`seq`, which is a client→relay dedupe key while this metric measures the down-leg.
+
+**Drift** — `_report_drift()` in the relay branch of `_physics_process`, gated on a frame count
+the way `_measure_and_announce` already is. Compare `current_turn()` against `_reported_turn`, not
+raw `_frames` (different units once `ticks_per_turn` moves off 1). Log **each peer's
+`_frames + _stalled_total`, not `_frames` alone**, and log **the relay's own achieved seal
+interval against its own wall clock** — without both, phase 5 cannot tell a drifting peer clock
+(which a servo fixes) from a relay sealing slow (which it does not).
+
+**Also in this phase, and each one is here for a reason:**
+
+- `lockstep.health` gains `stalled_s` from the existing public `stalled_seconds()`. `stalls` is a
+  COUNT, which CLAUDE.md and section 10 both forbid as a measure.
+- **Split `MatchSession.tick_seconds()` into a simulation constant and a separate wall-clock
+  reading.** Moved forward from phase 6, because `stalled_seconds()` and the seal-interval
+  `ideal_ms` are both built on it and both are the metric every later phase is judged by. Under a
+  servo they would silently stop meaning seconds.
+- **Re-key `_ordered_at` from turn to a client-local monotonic `seq`.** Diagnostic-only today,
+  and it introduces exactly the `seq` phase 4 needs. Without it `order.ran waited_ms` — the one
+  number that says whether any of this worked — has no key after the cutover.
+- **Demote the `Log.info` on the stall-clearing path to `Log.debug`**, and name it in the commit
+  as a deliberate change to log output. It and the `Log.warn` above it sit **inside the interval
+  being measured**, and at the stall rates of playtest 2 that is seconds of `get_stack` and
+  `print_rich` inside the window.
+- **No `Log.*` call at either per-tick site, at any level** — data only. The distribution goes out
+  through `SessionLog.note`, which does no `get_stack`. The single new `Log.*` is the relay drift
+  line and it must be `Log.debug`.
+- Add both new dicts to `_reset_if_new_match`.
+- `LockstepService` is one public method under gdlint's ceiling, so phase 0 may add exactly one.
+
+**Measure it at `jitter_margin_ms = 0`, then put the value back.** The margin raised on
+2026-09-07 suppresses the very oscillation this instrument exists to characterise; a clean reading
+through it would be an artefact rather than a finding.
+
+- *Measured:* arrival-lead distribution; `stalled_seconds()` (duration, never count); drift.
+- *Falsifies:* if arrival-lead p99 is small and stalls still happen, the network-jitter story is
+  wrong and so is every budget in this file.
 
 ### Phase 1 — Turn-derived match clock, under the current gate.
 
-`MatchSession.tick()` becomes a counter advanced once per applied turn, skipped while a
-**non-lockstep** holder is active (the technology draft holds the tree, and `LockstepService` is
-`PROCESS_MODE_ALWAYS` and applies turns through it — that is how draft picks travel).
+`MatchSession.tick()` becomes a counter advanced once per applied turn — **and keeps
+`Engine.get_physics_frames()` whenever `!is_lockstep()`** (blocker B1). Skipped while a
+**non-lockstep** holder is active, which needs a new cheap predicate: `is_paused()` cannot tell a
+draft hold from a lockstep one and `holders()` copies and sorts an Array on every call.
 
-- *Measured:* under the current gate every peer pauses for identical turns, so the new counter
-  **must** equal the old `tick()` at every turn on every peer. Assert it directly.
-- *Falsifies:* any disagreement means the draft-hold or refund reasoning is wrong, and nothing
-  after this is safe.
-- This is the highest-blast-radius change and **the only moment it is cheaply falsifiable.**
+**Evaluate the hold state AFTER `Commands.apply_turn`, not before.** The draft hold is released
+from *inside* `apply_turn`, and the tick that releases it does simulate and is counted by the old
+clock. Also note `_start_frame` is stamped in `Main._ready` while `_frames = 0` is set on
+`LockstepService`'s first physics tick — different instants, nothing pinning them — and
+`LockstepService` runs ahead of the whole match scene, so **assert equality of DIFFERENCES, not of
+absolute values**, and decide the increment's placement deliberately.
+
+- *Measured:* the new counter equals **`_last_run_turn` minus the turns applied while a
+  non-lockstep holder was active** — not "equals the old `tick()`". Run it **offline as well as
+  online**, and **in a DRAFT-mode match as well as the shipped default.**
+- *Falsifies:* nothing, if run as first written. Under the current gate a lockstep stall applies
+  no turn at all while a draft hold applies turns, so *"skip while held by anybody"* and *"skip
+  while held by a non-lockstep holder"* give identical counters on every tick — and the wrong
+  choice would stay invisible until phase 4, when a peer stalls alone. The draft-mode and offline
+  runs are what make this phase falsifiable at all.
+- **`ticks_per_turn > 1` silently redefines the second** if the counter advances by 1. Advance by
+  `_ticks_per_turn()`, or pin the knob and refuse anything else at boot.
+- Re-record the `DeterminismBench` baseline in the same commit — `WorldChecksum` hashes the clock.
 
 ### Phase 2 — Presentation feedback (`multiplayer-todo.md` §1.2).
 
-Build ghost at the clicked cell, send stock decrementing on click, tower greying on sell. Zero
-desync risk; pays for the round trip phase 4 adds. Also here: widen `_forget_old_turns` (`:1494`)
-to cover the lag threshold, **before** peers can legitimately be seconds apart.
+Build ghost at the clicked cell, send stock decrementing on click, tower greying on sell.
 
-### Phase 3 — Shadow the seal.
+- **Define what removes the drawn intent when the order is REFUSED**, not only when it lands.
+  Nothing anywhere says this today.
+- **Any `command_rejected` listener must filter on the local slot.** `_reject` runs inside
+  `apply_turn` on *every* peer, so the signal fires on the opponent's machine carrying the
+  ordering player's slot.
+- *Falsifies:* two peers running the same seeded match, one of them drawing local intent for
+  every order it issues, must report identical world checksums at every comparison turn. "Zero
+  desync risk" is otherwise an assertion about code nobody has written yet — and the send bar's
+  stock is real simulated state, which is exactly where drawing intent is easiest to get wrong.
 
-The relay seals and broadcasts `receive_seal` **alongside** the existing `receive_batch`. Peers
-ignore it and instead log what they would have merged, for offline diffing against what the relay
-sealed.
+### Phase 2b — Widen `_forget_old_turns`. Its own landing.
 
-- *Measured:* zero disagreements over a full match.
-- *Falsifies:* any ordering or dedupe difference — caught here, with both formats on the wire and
-  nothing depending on the new one.
-- This step is free and it is the one that de-risks the cutover.
+Split out of phase 2: a UI change and a change to desync-detection scope share nothing but a slot
+in a list and should not be judged by one review. Must land **before** peers can legitimately be
+seconds apart, and must cover amendment 10's lag threshold.
 
-### Phase 4 — The cutover.
+### Phase 3a — Send bare orders alongside the turn word.
 
-Bump `protocol_version` 2→3 so a stale tester build refuses rather than deadlocks.
+Clients additionally send `(order, seq)` at press time; the relay dedupes on `(peer, seq)` and
+seals from **arrival order**, not from the turn number the old word still carries. Nothing
+consumes the seal yet.
 
-Flip the gate to `_sealed.has(turn)`, **delete the local self-record at `:972` in the same
-commit**, and delete `_speak_for_the_departed`, `SYSTEM_LEAD_TURNS`, the
-`delay_turns` / `_wire_budget_ms` / `announce_one_way` chain, and the client-side
-`_plausible_turn`. Add `seq` dedupe, `(slot, seq)` sort, order caps, `notify_lagging` /
-`notify_dropped`, the relay-side lag drop, and the three-state stall panel.
+Split out because the first draft's phase 3 sealed from today's batched, turn-stamped, delay-ahead
+ingress — so it would have validated the sort key against an arrival pattern phase 4 replaces, and
+left `seq` dedupe, press-time arrival and the order caps untested until they were load-bearing.
+
+### Phase 3b — Shadow the seal and compare in-process.
+
+The relay broadcasts `receive_seal` alongside `receive_batch`. Peers ignore it for play and
+compare it against their own `commands_for(turn)` **in the same process, with a `Log.err` on any
+mismatch.** Not an offline diff: that is a human step that fails silently when nobody takes it,
+and the peer already holds both answers.
+
+- *Measured:* **the per-peer subsequence** — each peer's orders appear in the sealed stream
+  exactly once, in `seq` order, none lost and none duplicated.
+- *Not* per-turn equality. A peer books into `current_turn + delay_turns + 1` while the relay
+  seals on arrival, so **the two disagree on every turn holding an order, by construction**, and
+  no constant shift repairs it. The first draft's "zero disagreements over a full match" could
+  never have passed.
+- **Move the third-peer-connecting-mid-match scenario here**, where both formats are on the wire
+  and a disagreement costs a log line rather than a match.
+- **Phase 3 is free on the wire but not free to deploy.** `NetworkService.rpc_signature()`
+  already refuses any build whose rpc surface differs, so adding `receive_seal` forces every
+  tester to rebuild. The phase-4 `protocol_version` bump is a readable second check, not the
+  mechanism.
+
+### Prerequisite before phase 4 — cross-machine determinism.
+
+`multiplayer-todo.md` §1.1: a real match between the two dev PCs, session logging on, turn streams
+compared. It is called the largest untested assumption in the system, and `DeterminismBench`'s own
+docstring says it cannot catch cross-machine float divergence. **Phase 4 is the change that makes
+it hardest to test afterwards** — today a divergence is caught within a few tens of turns because
+peers are turn-locked; after the cutover peers are legitimately seconds apart.
+
+### Phase 4 — The cutover, behind a flag.
+
+Flip the gate to `_sealed.has(turn)`, **delete the local self-record in the same commit**, and
+delete `_speak_for_the_departed`, `SYSTEM_LEAD_TURNS`, the `delay_turns` / `_wire_budget_ms` /
+`announce_one_way` chain **and its callers in `SessionLog` and `NetworkConfig.validate()`**, and
+the peer-side `_plausible_turn` only. Add `(slot, seq)` sort, order caps, and amendment 6's
+`PROCESS_MODE_ALWAYS` on the order UI. Remove `_queue`'s `skip = sender`. Handle B2.
+
+**Land it behind a `NetworkConfig` boolean shaped like `lockstep_enabled`, and take the paired
+measurement against that flag. Bump `protocol_version` and delete the old gate in a separate
+follow-up commit.** The first draft bumped the version and deleted the old path in the same phase
+that demanded "paired, same commit, alternating runs" — a version bump makes the two builds
+mutually refusing and the deletions make the variable un-flippable, so the measurement it asked
+for was impossible to take.
 
 Rebuild the dev probe from the scenario list in
-`Findings/2026-09-05-lockstep-review-2-response.md` — plain 1v1, a peer hard-killed mid-match, **a
-third peer connecting mid-match** (the case no obvious test topology contains), a planted desync —
-plus a new one: **one peer given a deliberate ~900 ms freeze.**
+`Findings/2026-09-05-lockstep-review-2-response.md`, plus **one peer given a deliberate ~900 ms
+freeze**.
 
-- *Measured, paired, same commit, alternating runs on the rented server:* the healthy peer's
-  `stalled_seconds()` while the other is deliberately hitched. **That asymmetry IS the design.**
-- *Falsifies:* if both peers improve equally, the coupling was never the cause. If the healthy peer
-  still stalls, the relay is the problem.
+- *Measured, paired, alternating against the flag:* the healthy peer's `stalled_seconds()` while
+  the other is deliberately hitched. **That asymmetry IS the design.** Add the relay's own
+  seal-interval percentile read straight from `_overruns`, so "the healthy peer still stalls" can
+  be attributed to a relay overrun rather than to an untuned lead.
+- *Falsifies:* if both peers improve equally, the coupling was never the cause. If the healthy
+  peer still stalls, the relay is the problem.
 - Then delete `Scripts/Dev` and write the finding.
 
-### Phase 5 — Decide whether the servo is needed, from phase 0's drift data.
+### Phase 4b — The relay-side lag drop.
+
+Lands only after a measured post-cutover session has produced a real
+`sealed_turn - reported_turn` distribution. **Clamp `_reported_turn` monotonically first** — it is
+written by an unreliable rpc that can move it backwards. Decide amendment 9's precedence here.
+
+### Phase 4c — Tell the player.
+
+`notify_lagging`, `notify_dropped(reason)`, the three-state stall panel. Split out because it
+carries no determinism risk and shares no code with the gate flip. This would be the first time a
+dropped player is told why.
+
+### Phase 5 — Decide whether the servo is needed.
+
+**From a post-cutover drift run, not from phase 0's.** Under the current gate `_frames` stops
+while stalling, so what phase 0 records is dominated by accumulated stall time rather than
+free-running clock drift, and a peer whose clock runs *fast* is invisible entirely because the
+gate converts its drift into stall time. Phase 0's drift number is a baseline, not the decision.
+
+**State the threshold in milliseconds of drift per match minute before the run happens**, so the
+measurement can refute the no-servo position instead of being interpreted after the fact.
 
 If drift is negligible, **stop here indefinitely.**
 
 ### Phase 6 — Delta refactor, then servo, then catch-up.
 
-Land the ~14-file refactor **alone**: every gameplay `_physics_process` stops consuming the engine
-delta and uses `MatchSession.tick_seconds()`; `tick_seconds()` and `Creep._aura_phase` move to the
-authored constant.
+Land the refactor **alone**: every gameplay `_physics_process` stops consuming the engine delta.
 
-- *Measured:* provably a no-op at the fixed rate — the determinism bench
-  (`Scenes/Tools/determinism_bench.tscn`, record/replay modes) must produce a byte-identical trace
-  from the same seed.
-- *Falsifies:* any divergence means a call site was missed.
+- *Falsifies:* **run the determinism bench at two different `physics_ticks_per_second` values
+  with the authored constant pinned, and require a byte-identical trace.** At a single fixed rate
+  the engine delta already equals `tick_seconds()` exactly, so substituting one for the other
+  cannot change a bit and a missed call site is invisible by construction — the first draft's
+  test would have passed over any refactor at all. Additionally, record the baseline **on the
+  parent commit** and copy it out of `user://` before the refactor lands; two post-refactor traces
+  agree trivially and prove determinism rather than the no-op being claimed.
 
 Then prove the rate change in single player before any netcode depends on it; then the servo
 (small, symmetric corrections); then catch-up capped at **+50%, not 4x** — a tower defence
-fast-forwarded 4x through a leak is unreadable, and recovery must not cost the player the ability
-to react.
+fast-forwarded through a leak is unreadable, and recovery must not cost the player the ability to
+react.
 
 ---
 
@@ -635,6 +869,16 @@ third person opened the multiplayer menu.
 
 **AN @RPC IS NOT SENT WHEN IT IS CALLED.** Godot queues it and flushes at the end of the frame, so
 anything that destroys the channel in that same frame throws the packet away.
+
+**A FALSIFICATION TEST RUN IN THE TOPOLOGY THAT CANNOT DISTINGUISH THE ANSWERS IS NOT A TEST.**
+*(audit 2026-09-08)* This document's own first draft carried five of them, and three failed the
+same way: phase 1 asserted a rule under the current gate, where both candidate rules give
+identical answers on every tick; phase 3 asserted an equality that is false by construction; phase
+6 asserted a no-op with a test that at a fixed rate cannot fail. **Every one looked rigorous.**
+The check that catches it costs one sentence — *name the failure, then say what the test would
+print if that failure were present* — and if the answer is "the same thing it prints now", the
+test is decoration. This is the same trap as the entry below it and the one two above it, arriving
+through the test rather than through the topology or the symptom.
 
 **A SHARED SYMPTOM IS NOT SHARED CAUSATION.** Under lockstep every freeze is felt by everybody, by
 design. "We both froze" is the expected shape of ANY stall and carries no information about where

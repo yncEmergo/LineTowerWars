@@ -14,8 +14,10 @@ edited freely as things land or turn out differently.
 > **The largest item is no longer in this file.** One lagging player currently freezes every
 > other player, which is an architectural defect rather than a tuning problem, and the research,
 > the code audit, the design and the phased plan for it are all in
-> [netcode-rework.md](netcode-rework.md). Start there. §1.2 below is a prerequisite for its
-> phase 4, and §2.3 and §3 are explicitly deferred by it.
+> [netcode-rework.md](netcode-rework.md). Start there. **§1.1 and §1.2 below are both
+> prerequisites for its phase 4** — §1.1 because the cutover is the change that makes
+> cross-machine determinism hardest to test afterwards — and §2.3 and §3 are explicitly deferred
+> by it. That plan was revised 2026-09-08 after an implementation audit; read its header note.
 
 ## 1. Near term
 
