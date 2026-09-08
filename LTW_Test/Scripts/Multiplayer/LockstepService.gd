@@ -280,6 +280,29 @@ var _arrived_at: Dictionary = {}
 var _leads: Dictionary = {}
 var _leads_n: Dictionary = {}
 
+## Phase 3 shadow. **None of this is played from; it exists to be compared.**
+##
+## Relay: orders that have arrived bare since the last seal, each as
+## [slot, seq, stamped dict], plus the highest seq accepted per peer so a
+## re-send cannot be counted twice.
+var _pending_orders: Array = []
+var _seq_seen: Dictionary = {}
+
+## Peer: the same orders reached this machine twice, by two different roads -
+## once inside a turn word it waited for, once inside a seal the relay composed
+## on arrival. Kept per SLOT rather than per peer id, because a slot is the same
+## number on every machine and a peer id is not.
+##
+## They are compared as SUBSEQUENCES, never per turn: a peer books into
+## `current_turn + delay_turns + 1` while the relay seals on arrival, so the two
+## disagree about which turn holds an order by construction and no constant shift
+## repairs it. What must hold is that each author's orders appear in the sealed
+## stream exactly once, in the order they were pressed, none lost and none
+## duplicated. A matched prefix is dropped from both, so neither grows.
+var _seal_seen: Dictionary = {}
+var _legacy_seen: Dictionary = {}
+var _shadow_told: bool = false
+
 
 func _ready() -> void:
 	# **Immune to the pause it causes itself**, and this is not optional: a stall
@@ -327,6 +350,7 @@ func _physics_process(_delta: float) -> void:
 		_measure_and_announce()
 		_drop_silent_peers()
 		_speak_for_the_departed()
+		_seal_turn()
 		_report_drift()
 		return
 
@@ -442,6 +466,12 @@ func _advance_turn(clock_turn: int) -> void:
 	_maybe_report_checksum(turn)
 
 	var orders: Array = commands_for(turn)
+	# Phase 3b: the same orders, filed under the road they took, so the seal can
+	# be checked against what was really played. Costs a hash per order.
+	for entry: Variant in orders:
+		var played: Dictionary = entry as Dictionary
+		if played != null:
+			_remember_shadow(_legacy_seen, int(played.get("slot", 0)), hash(played))
 	_incoming.erase(turn)
 	turn_ready.emit(turn, orders)
 	if !orders.is_empty():
@@ -946,6 +976,11 @@ func _reset_if_new_match() -> void:
 	_ordered_at.clear()
 	_order_seq = 0
 	_seqs_for_turn.clear()
+	_pending_orders.clear()
+	_seq_seen.clear()
+	_seal_seen.clear()
+	_legacy_seen.clear()
+	_shadow_told = false
 	_due_at.clear()
 	_arrived_at.clear()
 	_leads.clear()
@@ -1099,6 +1134,13 @@ func schedule(command: Command) -> int:
 	var seqs: Array = _seqs_for_turn.get(turn, [])
 	seqs.append(_order_seq)
 	_seqs_for_turn[turn] = seqs
+
+	# **Phase 3a: the same order, again, with no turn number on it.** The relay
+	# decides which turn it lands in from when it arrives; this machine's guess
+	# above is still what the match actually plays. Two roads for one order, so
+	# the new one can be checked against the old one before anything depends on
+	# it - see _compare_shadow.
+	submit_order.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict(), _order_seq)
 	return turn
 
 
@@ -1462,6 +1504,142 @@ func submit_alive(turn: int) -> void:
 	var sender: int = multiplayer.get_remote_sender_id()
 	_last_heard[sender] = _frames
 	_reported_turn[sender] = turn
+
+
+## **Phase 3a. One order, arriving bare, with no turn number on it.**
+##
+## This is the ingress the cutover keeps and the turn word is the one it
+## replaces. Nothing plays from it yet: the relay files it, seals it into a turn
+## of its own choosing, and broadcasts that seal for peers to CHECK against the
+## turn they actually ran. See _compare_shadow.
+##
+## `seq` is the sender's own monotonic press counter, and dedupe is a high-water
+## mark rather than a set because this arrives on the reliable ordered channel -
+## a re-send can never overtake the original, so anything at or below the highest
+## seq already accepted is a duplicate.
+##
+## The slot is stamped here from the roster, exactly as `submit_turn` does it,
+## and for the same reason: it is the only defence against a forged slot, and a
+## forged slot does not desync - every peer would apply the same forged order and
+## agree perfectly about a maze somebody else paid for.
+@rpc("any_peer", "reliable")
+func submit_order(payload: Dictionary, seq: int) -> void:
+	if !multiplayer.is_server():
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	if seq <= int(_seq_seen.get(sender, 0)):
+		return
+	_seq_seen[sender] = seq
+
+	# **Refused unless the sender is a PLAYER IN THIS MATCH.** `_slot_of_peer`
+	# answers 0 for anyone else, and anyone else can reach here: pressing
+	# Multiplayer connects a peer to this process long before it is in a match,
+	# which is the shape of the bug D33 records. Filing their orders under slot 0
+	# would put them in the seal.
+	var slot: int = _slot_of_peer(sender)
+	if slot == 0:
+		return
+	var order: Dictionary = payload.duplicate()
+	order["slot"] = slot
+	_pending_orders.append([slot, seq, order])
+
+
+## Closes one turn from whatever has arrived, on the relay's own clock.
+##
+## **The relay never waits here, and that is the whole point of the phase.** A
+## turn is sealed from the orders in hand; anything still in flight lands in a
+## later one, and its author is the only machine that feels the difference.
+##
+## Sorted by (slot, seq), which is a total key and a pure function of the member
+## set - so what a turn contains cannot depend on the order two packets happened
+## to arrive in, even at the relay.
+##
+## **Empty seals are not broadcast in shadow mode.** They carry no orders to
+## check and would double the relay's upload for nothing. The cutover MUST send
+## one every turn - an empty seal is the heartbeat that tells a peer the turn
+## happened and was empty - so that path is deliberately still untested here and
+## is called out in `netcode-rework.md` phase 4.
+func _seal_turn() -> void:
+	if _pending_orders.is_empty():
+		return
+	var pending: Array = _pending_orders
+	_pending_orders = []
+	pending.sort_custom(func(a: Array, b: Array) -> bool:
+		if int(a[0]) != int(b[0]):
+			return int(a[0]) < int(b[0])
+		return int(a[1]) < int(b[1]))
+
+	var orders: Array = []
+	for entry: Array in pending:
+		orders.append(entry[2])
+
+	# **To the match roster, never a bare `rpc()`.** A broadcast goes to every
+	# connected peer, and somebody sitting in the lobby browser is a connected
+	# peer - they would file a seal against a match they are not in. Same rule as
+	# `_queue`, same reason, and D33 is what it cost the first time.
+	for peer: int in _match_peers():
+		receive_seal.rpc_id(peer, _frames, orders)
+
+
+## **Phase 3b. The relay's answer, for checking only.** A peer files it and plays
+## nothing from it.
+@rpc("authority", "call_remote", "reliable")
+func receive_seal(turn: int, orders: Array) -> void:
+	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	for entry: Variant in orders:
+		var order: Dictionary = entry as Dictionary
+		if order == null:
+			continue
+		_remember_shadow(_seal_seen, int(order.get("slot", 0)), hash(order))
+
+
+## Files one order under its author, in the stream it arrived on, and checks the
+## two streams against each other as far as both have got.
+func _remember_shadow(into: Dictionary, slot: int, fingerprint: int) -> void:
+	var list: Array = into.get(slot, [])
+	list.append(fingerprint)
+	into[slot] = list
+	_compare_shadow(slot)
+
+
+## **Compares the two roads one author's orders took, and is the only thing
+## phase 3 measures.**
+##
+## Prefix by prefix, as far as both streams have reached, dropping what has
+## matched so that neither grows over a match. A mismatch means the sealed
+## stream lost, duplicated or reordered somebody's orders, which is exactly what
+## the cutover would then do to the match itself.
+##
+## Fingerprints are `hash()` of the order dictionary, which is safe HERE and
+## would not be on the wire: both streams are hashed in the same process, so
+## only within-process determinism is needed.
+##
+## Told once. A stream that has parted stays parted, and every later order
+## disagrees too - reporting each buries the first, which is the only one with
+## any diagnostic value.
+func _compare_shadow(slot: int) -> void:
+	var sealed: Array = _seal_seen.get(slot, [])
+	var legacy: Array = _legacy_seen.get(slot, [])
+	var shared: int = mini(sealed.size(), legacy.size())
+	var index: int = 0
+	while index < shared:
+		if sealed[index] != legacy[index]:
+			if !_shadow_told:
+				_shadow_told = true
+				Log.err("The sealed order stream disagrees with the turn stream", {
+					"slot": slot,
+					"at": index,
+					"sealed": sealed[index],
+					"played": legacy[index],
+					"sealed_pending": sealed.size(),
+					"played_pending": legacy.size(),
+				})
+			return
+		index += 1
+	if index > 0:
+		_seal_seen[slot] = sealed.slice(index)
+		_legacy_seen[slot] = legacy.slice(index)
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.

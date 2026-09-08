@@ -766,7 +766,7 @@ late checksum now logs a warning instead of silently resurrecting a turn.
 where a deliberately hitched peer should produce comparisons that still happen rather than
 warnings that say they did not.
 
-### Phase 3a — Send bare orders alongside the turn word.
+### Phase 3a — Send bare orders alongside the turn word.  — DONE 2026-09-08
 
 Clients additionally send `(order, seq)` at press time; the relay dedupes on `(peer, seq)` and
 seals from **arrival order**, not from the turn number the old word still carries. Nothing
@@ -776,7 +776,7 @@ Split out because the first draft's phase 3 sealed from today's batched, turn-st
 ingress — so it would have validated the sort key against an arrival pattern phase 4 replaces, and
 left `seq` dedupe, press-time arrival and the order caps untested until they were load-bearing.
 
-### Phase 3b — Shadow the seal and compare in-process.
+### Phase 3b — Shadow the seal and compare in-process.  — CODE DONE 2026-09-08, UNPROVEN
 
 The relay broadcasts `receive_seal` alongside `receive_batch`. Peers ignore it for play and
 compare it against their own `commands_for(turn)` **in the same process, with a `Log.err` on any
@@ -795,6 +795,32 @@ and the peer already holds both answers.
   already refuses any build whose rpc surface differs, so adding `receive_seal` forces every
   tester to rebuild. The phase-4 `protocol_version` bump is a readable second check, not the
   mechanism.
+
+**What landed, and what is deliberately not tested yet.**
+
+`schedule()` sends the order a second time with no turn number on it (`submit_order`), the relay
+files it, seals on its own tick sorted by `(slot, seq)`, and broadcasts `receive_seal`. Peers file
+both roads per SLOT and `_compare_shadow` checks them prefix by prefix, dropping what matched so
+neither list grows. `Log.err` once on any divergence.
+
+Two bugs of D33's own shape were caught by reading before this landed, and both are worth
+remembering because the seal is a NEW broadcast and every new broadcast meets them again:
+a bare `rpc()` reaches every CONNECTED peer, including somebody sitting in the lobby browser who
+would file a seal for a match they are not in — it goes to `_match_peers()` instead; and
+`submit_order` now refuses a sender whose `_slot_of_peer` is 0, or a lobby browser's orders would
+be filed under slot 0 and sealed.
+
+**EMPTY SEALS ARE NOT BROADCAST.** In shadow mode they carry nothing to check and would double the
+relay's upload for no measurement. **The cutover must send one every turn** — an empty seal is the
+heartbeat that tells a peer the turn happened and was empty — so that path is untested and phase 4
+must add and test it.
+
+**UNPROVEN: the comparison has never run.** It needs two peers and a relay, which is exactly the
+scenario phase 3b exists to be safe in. Boot is clean and the code is reviewed, but nothing has yet
+observed `_compare_shadow` execute even once. **Before phase 4, run the two-peer headless match and
+confirm the positive control: orders were issued, both lists were fed, and the comparison actually
+compared** — a silent pass here is indistinguishable from a comparison that never ran, which is
+`CLAUDE.md`'s own most-repeated trap.
 
 ### Prerequisite before phase 4 — cross-machine determinism.
 
