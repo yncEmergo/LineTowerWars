@@ -1,0 +1,374 @@
+[    0.000] session.begin  { "utc": "2026-09-08T17:47:01", "platform": "Windows", "engine": "4.7.2-stable (official)", "debug_build": true, "build": "prototype · dev build" }
+[    0.000] config  { "protocol": 2, "lockstep": true, "ticks_per_turn": 1, "adaptive_delay": true, "delay_range": [1, 12], "jitter_margin_ms": 20, "address": "127.0.0.1", "port": 7777 }
+[    6.849] match.starting  { "match": "match-2", "players": 2, "seed": 1799488415, "local_slot": 2 }
+[    8.526] match.warmed  { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 663.0 }
+[    8.617] lockstep.stalled  { "turn": 0, "missing": [1113604901], "stalls_so_far": 1 }
+[    8.943] turn.state  { "n": 0, "sum": 1362770246 }
+[    8.943] turn.inputs  { "n": 0, "in": 4100093049 }
+[    8.943] lockstep.health  { "turn": 0, "delay_turns": 6, "rtt_ms": 200, "rtt_var_ms": 57, "local_jitter_ms": 0, "shadow_ok": 0, "arrival_ms": { 963015017: { "n": 1, "p50": 0, "p90": 0, "p99": 0, "max": 0 }, 1113604901: { "n": 1, "p50": 321, "p90": 321, "p99": 321, "max": 321 } }, "stalls": 1, "stalled_s": 0.4 }
+[    9.438] turn.state  { "n": 10, "sum": 792317968 }
+[    9.938] turn.state  { "n": 20, "sum": 3176786720 }
+[   10.388] lockstep.stalled  { "turn": 29, "missing": [1113604901], "stalls_so_far": 2 }
+[   10.489] turn.state  { "n": 30, "sum": 1010448058 }
+[   10.989] turn.state  { "n": 40, "sum": 2302618936 }
+[   11.485] turn.state  { "n": 50, "sum": 2128202757 }
+[   11.985] turn.state  { "n": 60, "sum": 1007679562 }
+[   12.485] turn.state  { "n": 70, "sum": 1741405515 }
+[   12.985] turn.state  { "n": 80, "sum": 4191881776 }
+[   13.485] turn.state  { "n": 90, "sum": 2582285046 }
+[   13.985] turn.state  { "n": 100, "sum": 1442792947 }
+[   13.985] turn.inputs  { "n": 100, "in": 4100093049 }
+[   13.985] lockstep.health  { "turn": 100, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 7, "local_jitter_ms": 0, "shadow_ok": 0, "arrival_ms": { 963015017: { "n": 101, "p50": -50, "p90": -50, "p99": -46, "max": 0 }, 1113604901: { "n": 101, "p50": -46, "p90": -41, "p99": 9, "max": 321 } }, "stalls": 2, "stalled_s": 0.45 }
+[   14.485] turn.state  { "n": 110, "sum": 3371741341 }
+[   14.985] turn.state  { "n": 120, "sum": 1306923448 }
+[   15.486] turn.state  { "n": 130, "sum": 271334449 }
+[   15.986] turn.state  { "n": 140, "sum": 103717820 }
+[   16.486] turn.state  { "n": 150, "sum": 3624117404 }
+[   16.986] turn.state  { "n": 160, "sum": 826639288 }
+[   17.487] turn.state  { "n": 170, "sum": 238232473 }
+[   17.990] turn.state  { "n": 180, "sum": 3542336147 }
+[   18.041] turn  { "n": 181, "in": 1526221570, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (18.76362, 0.000001, 15.99326), "has_at": true }] }
+[   18.041] order.ran  { "turn": 181, "waited_ms": 67, "delay_turns": 1 }
+[   18.390] turn  { "n": 188, "in": 4219682983, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.66672, 0.0, 16.80728), "has_at": true }] }
+[   18.391] order.ran  { "turn": 188, "waited_ms": 65, "delay_turns": 1 }
+[   18.491] turn.state  { "n": 190, "sum": 3484658640 }
+[   18.991] turn.state  { "n": 200, "sum": 2130625283 }
+[   18.991] turn.inputs  { "n": 200, "in": 4100093049 }
+[   18.991] lockstep.health  { "turn": 200, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 2, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -49, "max": -46 }, 1113604901: { "n": 200, "p50": -46, "p90": -38, "p99": -37, "max": 9 } }, "stalls": 2, "stalled_s": 0.45 }
+[   19.140] turn  { "n": 203, "in": 2137518484, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (16.93605, 0.0, 17.76653), "has_at": true }] }
+[   19.141] order.ran  { "turn": 203, "waited_ms": 83, "delay_turns": 1 }
+[   19.491] turn.state  { "n": 210, "sum": 3629774877 }
+[   19.587] turn  { "n": 212, "in": 1023147689, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.68994, 0.0, 17.49308), "has_at": true }] }
+[   19.588] order.ran  { "turn": 212, "waited_ms": 91, "delay_turns": 1 }
+[   19.786] turn  { "n": 216, "in": 3277021651, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.43437, 0.0, 17.46806), "has_at": true }] }
+[   19.787] order.ran  { "turn": 216, "waited_ms": 83, "delay_turns": 1 }
+[   19.987] turn.state  { "n": 220, "sum": 23491477 }
+[   20.038] turn  { "n": 221, "in": 2012050086, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (14.23891, 0.0, 17.14011), "has_at": true }] }
+[   20.038] order.ran  { "turn": 221, "waited_ms": 97, "delay_turns": 1 }
+[   20.487] turn.state  { "n": 230, "sum": 2617876691 }
+[   20.987] turn.state  { "n": 240, "sum": 3307870935 }
+[   21.487] turn.state  { "n": 250, "sum": 2995760080 }
+[   21.587] turn  { "n": 252, "in": 30893481, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.36209, 0.0, 17.08923), "has_at": true }] }
+[   21.587] order.ran  { "turn": 252, "waited_ms": 83, "delay_turns": 1 }
+[   21.987] turn.state  { "n": 260, "sum": 766132348 }
+[   22.487] turn.state  { "n": 270, "sum": 3523578308 }
+[   22.687] turn  { "n": 274, "in": 3288942524, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (14.70814, 0.0, 16.81741), "has_at": true }] }
+[   22.688] order.ran  { "turn": 274, "waited_ms": 50, "delay_turns": 1 }
+[   22.937] turn  { "n": 279, "in": 752958968, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (14.77463, 0.0, 16.98744), "has_at": true }] }
+[   22.938] order.ran  { "turn": 279, "waited_ms": 63, "delay_turns": 1 }
+[   22.987] turn.state  { "n": 280, "sum": 3521852369 }
+[   23.137] turn  { "n": 283, "in": 3423032607, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.08947, 0.0, 17.76654), "has_at": true }] }
+[   23.138] order.ran  { "turn": 283, "waited_ms": 74, "delay_turns": 1 }
+[   23.488] turn.state  { "n": 290, "sum": 4147933548 }
+[   23.688] turn  { "n": 294, "in": 2972075356, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (15.11046, 0.0, 17.59291), "has_at": true }] }
+[   23.699] order.ran  { "turn": 294, "waited_ms": 86, "delay_turns": 1 }
+[   23.983] turn.state  { "n": 300, "sum": 2111511655 }
+[   23.983] turn.inputs  { "n": 300, "in": 4100093049 }
+[   23.983] lockstep.health  { "turn": 300, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 11, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -45, "max": -45 }, 1113604901: { "n": 200, "p50": -42, "p90": -38, "p99": -37, "max": -37 } }, "stalls": 2, "stalled_s": 0.45 }
+[   24.183] turn  { "n": 304, "in": 2963826532, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (16.07438, 0.0, 18.51934), "has_at": true }] }
+[   24.185] order.ran  { "turn": 304, "waited_ms": 76, "delay_turns": 1 }
+[   24.483] turn.state  { "n": 310, "sum": 1971773776 }
+[   24.734] turn  { "n": 315, "in": 1878067535, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (17.12251, 0.0, 19.68084), "has_at": true }] }
+[   24.736] order.ran  { "turn": 315, "waited_ms": 81, "delay_turns": 1 }
+[   24.983] turn.state  { "n": 320, "sum": 1510200129 }
+[   25.183] turn  { "n": 324, "in": 3716303841, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (18.00294, 0.0, 20.50104), "has_at": true }] }
+[   25.185] order.ran  { "turn": 324, "waited_ms": 59, "delay_turns": 1 }
+[   25.484] turn.state  { "n": 330, "sum": 1108401708 }
+[   25.984] turn.state  { "n": 340, "sum": 2031703166 }
+[   26.184] turn  { "n": 344, "in": 2100402455, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.00264, 0.0, 16.52177), "has_at": true }] }
+[   26.184] order.ran  { "turn": 344, "waited_ms": 70, "delay_turns": 1 }
+[   26.385] turn  { "n": 348, "in": 482315385, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (14.21708, 0.0, 16.44327), "has_at": true }] }
+[   26.386] order.ran  { "turn": 348, "waited_ms": 84, "delay_turns": 1 }
+[   26.484] turn.state  { "n": 350, "sum": 434671727 }
+[   26.984] turn.state  { "n": 360, "sum": 3668986395 }
+[   27.134] turn  { "n": 363, "in": 1106869394, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (14.00029, 0.0, 16.3645), "has_at": true }] }
+[   27.138] order.ran  { "turn": 363, "waited_ms": 58, "delay_turns": 1 }
+[   27.484] turn.state  { "n": 370, "sum": 1645781290 }
+[   27.985] turn.state  { "n": 380, "sum": 3752957927 }
+[   27.985] turn  { "n": 380, "in": 768428412, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (13.00915, 0.0, 15.25992), "has_at": true }] }
+[   27.987] order.ran  { "turn": 380, "waited_ms": 94, "delay_turns": 1 }
+[   28.484] turn.state  { "n": 390, "sum": 801616026 }
+[   28.484] turn  { "n": 390, "in": 2617703310, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (12.52661, -0.000001, 13.83807), "has_at": true }] }
+[   28.486] order.ran  { "turn": 390, "waited_ms": 68, "delay_turns": 1 }
+[   28.834] turn  { "n": 397, "in": 3082688388, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (13.50296, 0.000001, 13.75), "has_at": true }] }
+[   28.836] order.ran  { "turn": 397, "waited_ms": 81, "delay_turns": 1 }
+[   28.984] turn.state  { "n": 400, "sum": 551188586 }
+[   28.984] turn.inputs  { "n": 400, "in": 4100093049 }
+[   28.984] lockstep.health  { "turn": 400, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 20, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -49, "p99": -45, "max": -45 }, 1113604901: { "n": 200, "p50": -45, "p90": -41, "p99": -40, "max": -37 } }, "stalls": 2, "stalled_s": 0.45 }
+[   29.484] turn.state  { "n": 410, "sum": 1624370721 }
+[   29.634] turn  { "n": 413, "in": 22908130, "orders": [{ "slot": 2, "ability": 5, "units": [18], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   29.635] order.ran  { "turn": 413, "waited_ms": 74, "delay_turns": 1 }
+[   29.988] turn.state  { "n": 420, "sum": 3483781058 }
+[   30.284] turn  { "n": 426, "in": 795519304, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (13.51208, 0.0, 13.95501), "has_at": true }] }
+[   30.289] order.ran  { "turn": 426, "waited_ms": 75, "delay_turns": 1 }
+[   30.485] turn.state  { "n": 430, "sum": 3819328496 }
+[   30.985] turn.state  { "n": 440, "sum": 2647735459 }
+[   31.485] turn.state  { "n": 450, "sum": 4205895547 }
+[   31.985] turn.state  { "n": 460, "sum": 934763922 }
+[   32.485] turn.state  { "n": 470, "sum": 2842509797 }
+[   32.807] lockstep.stalled  { "turn": 474, "missing": [1113604901], "stalls_so_far": 3 }
+[   33.135] turn.state  { "n": 480, "sum": 191228349 }
+[   33.635] turn.state  { "n": 490, "sum": 3899943272 }
+[   34.131] turn.state  { "n": 500, "sum": 380040859 }
+[   34.131] turn.inputs  { "n": 500, "in": 4100093049 }
+[   34.131] lockstep.health  { "turn": 500, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 22, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -49, "p99": -46, "max": 0 }, 1113604901: { "n": 200, "p50": -46, "p90": -38, "p99": -37, "max": 2 } }, "stalls": 3, "stalled_s": 0.6 }
+[   34.631] turn.state  { "n": 510, "sum": 3386094412 }
+[   35.131] turn.state  { "n": 520, "sum": 3175757923 }
+[   35.636] turn.state  { "n": 530, "sum": 1358943320 }
+[   36.136] turn.state  { "n": 540, "sum": 1102822846 }
+[   36.486] turn  { "n": 547, "in": 4077446117, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (1.855578, 0.0, 18.81643), "has_at": true }] }
+[   36.636] turn.state  { "n": 550, "sum": 3828280807 }
+[   36.636] turn  { "n": 550, "in": 920154792, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (1.085976, 0.0, 17.04483), "has_at": true }] }
+[   36.836] turn  { "n": 554, "in": 3102369805, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (0.58104, -0.000001, 15.94252), "has_at": true }] }
+[   37.036] turn  { "n": 558, "in": 1523382966, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (0.893574, 0.0, 16.28946), "has_at": true }] }
+[   37.136] turn.state  { "n": 560, "sum": 2170088709 }
+[   37.636] turn.state  { "n": 570, "sum": 1603132443 }
+[   37.836] turn  { "n": 574, "in": 1011520834, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (3.027965, 0.0, 17.72598), "has_at": true }] }
+[   38.136] turn.state  { "n": 580, "sum": 376284963 }
+[   38.586] turn  { "n": 589, "in": 3023061757, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (2.020113, 0.0, 16.36877), "has_at": true }] }
+[   38.636] turn.state  { "n": 590, "sum": 2754892691 }
+[   39.136] turn.state  { "n": 600, "sum": 656066161 }
+[   39.136] turn  { "n": 600, "in": 509738844, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (0.956548, 0.0, 15.42588), "has_at": true }] }
+[   39.137] lockstep.health  { "turn": 600, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 29, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -46, "max": 0 }, 1113604901: { "n": 200, "p50": -42, "p90": -37, "p99": -33, "max": 2 } }, "stalls": 3, "stalled_s": 0.6 }
+[   39.636] turn.state  { "n": 610, "sum": 2685806020 }
+[   39.936] turn  { "n": 616, "in": 425230418, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (0.558588, -0.000001, 13.95068), "has_at": true }] }
+[   40.137] turn.state  { "n": 620, "sum": 1902030159 }
+[   40.387] turn  { "n": 625, "in": 948441331, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (1.495657, 0.0, 14.09658), "has_at": true }] }
+[   40.637] turn.state  { "n": 630, "sum": 4138672941 }
+[   41.137] turn.state  { "n": 640, "sum": 1376180167 }
+[   41.387] turn  { "n": 645, "in": 4243536295, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (2.576053, 0.0, 15.03771), "has_at": true }] }
+[   41.637] turn.state  { "n": 650, "sum": 1597763277 }
+[   41.737] turn  { "n": 652, "in": 2353122526, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (4.226347, 0.0, 18.69793), "has_at": true }] }
+[   42.137] turn.state  { "n": 660, "sum": 3489303863 }
+[   42.387] turn  { "n": 665, "in": 3922817462, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (4.090688, 0.0, 18.62652), "has_at": true }] }
+[   42.637] turn.state  { "n": 670, "sum": 3646000619 }
+[   43.137] turn.state  { "n": 680, "sum": 1052607747 }
+[   43.337] turn  { "n": 684, "in": 1631568113, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (5.085835, 0.0, 19.60531), "has_at": true }] }
+[   43.637] turn.state  { "n": 690, "sum": 4092427031 }
+[   44.138] turn.state  { "n": 700, "sum": 1229445755 }
+[   44.138] turn.inputs  { "n": 700, "in": 4100093049 }
+[   44.138] lockstep.health  { "turn": 700, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 35, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -50, "max": -50 }, 1113604901: { "n": 200, "p50": -49, "p90": -37, "p99": -36, "max": -33 } }, "stalls": 3, "stalled_s": 0.6 }
+[   44.638] turn.state  { "n": 710, "sum": 1516916245 }
+[   45.138] turn.state  { "n": 720, "sum": 1636210337 }
+[   45.638] turn.state  { "n": 730, "sum": 2150036140 }
+[   46.139] turn.state  { "n": 740, "sum": 778122054 }
+[   46.638] turn.state  { "n": 750, "sum": 2768372096 }
+[   47.138] turn.state  { "n": 760, "sum": 3882057336 }
+[   47.338] turn  { "n": 764, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   47.585] turn  { "n": 769, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   47.635] turn.state  { "n": 770, "sum": 1480273233 }
+[   48.134] turn.state  { "n": 780, "sum": 2607442590 }
+[   48.634] turn.state  { "n": 790, "sum": 352261482 }
+[   48.789] turn  { "n": 793, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   48.793] order.ran  { "turn": 793, "waited_ms": 93, "delay_turns": 1 }
+[   48.888] turn  { "n": 795, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   48.893] order.ran  { "turn": 795, "waited_ms": 54, "delay_turns": 1 }
+[   49.134] turn.state  { "n": 800, "sum": 1678353148 }
+[   49.135] turn.inputs  { "n": 800, "in": 4100093049 }
+[   49.135] lockstep.health  { "turn": 800, "delay_turns": 1, "rtt_ms": 9, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 39, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -47, "max": -46 }, 1113604901: { "n": 200, "p50": -49, "p90": -41, "p99": -37, "max": -33 } }, "stalls": 3, "stalled_s": 0.6 }
+[   49.184] turn  { "n": 801, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   49.188] order.ran  { "turn": 801, "waited_ms": 82, "delay_turns": 1 }
+[   49.334] turn  { "n": 804, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   49.338] order.ran  { "turn": 804, "waited_ms": 91, "delay_turns": 1 }
+[   49.635] turn.state  { "n": 810, "sum": 1128831426 }
+[   50.135] turn.state  { "n": 820, "sum": 1318541699 }
+[   50.635] turn.state  { "n": 830, "sum": 2153150167 }
+[   51.135] turn.state  { "n": 840, "sum": 864773637 }
+[   51.635] turn.state  { "n": 850, "sum": 2394648677 }
+[   51.785] turn  { "n": 853, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   51.935] turn  { "n": 856, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   52.136] turn.state  { "n": 860, "sum": 3730269567 }
+[   52.635] turn.state  { "n": 870, "sum": 2208598951 }
+[   53.135] turn.state  { "n": 880, "sum": 1585922202 }
+[   53.635] turn.state  { "n": 890, "sum": 2283091810 }
+[   54.136] turn.state  { "n": 900, "sum": 832157588 }
+[   54.136] turn.inputs  { "n": 900, "in": 4100093049 }
+[   54.136] lockstep.health  { "turn": 900, "delay_turns": 1, "rtt_ms": 10, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 43, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -46, "max": -41 }, 1113604901: { "n": 200, "p50": -42, "p90": -41, "p99": -33, "max": -32 } }, "stalls": 3, "stalled_s": 0.6 }
+[   54.636] turn.state  { "n": 910, "sum": 596044043 }
+[   55.136] turn.state  { "n": 920, "sum": 232782208 }
+[   55.636] turn.state  { "n": 930, "sum": 3818554412 }
+[   56.136] turn.state  { "n": 940, "sum": 2709093871 }
+[   56.636] turn.state  { "n": 950, "sum": 3862688984 }
+[   57.132] turn.state  { "n": 960, "sum": 3692590399 }
+[   57.632] turn.state  { "n": 970, "sum": 2051384489 }
+[   58.132] turn.state  { "n": 980, "sum": 3032025557 }
+[   58.632] turn.state  { "n": 990, "sum": 811134030 }
+[   59.133] turn.state  { "n": 1000, "sum": 2313337733 }
+[   59.133] turn.inputs  { "n": 1000, "in": 4100093049 }
+[   59.133] lockstep.health  { "turn": 1000, "delay_turns": 1, "rtt_ms": 10, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 43, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -46, "max": -41 }, 1113604901: { "n": 200, "p50": -41, "p90": -33, "p99": -32, "max": -29 } }, "stalls": 3, "stalled_s": 0.6 }
+[   59.633] turn.state  { "n": 1010, "sum": 1077582056 }
+[   60.133] turn.state  { "n": 1020, "sum": 3008962623 }
+[   60.633] turn.state  { "n": 1030, "sum": 4189130179 }
+[   61.134] turn.state  { "n": 1040, "sum": 2213275722 }
+[   61.637] turn.state  { "n": 1050, "sum": 1065380905 }
+[   62.137] turn.state  { "n": 1060, "sum": 2855975013 }
+[   62.637] turn.state  { "n": 1070, "sum": 2618638406 }
+[   63.137] turn.state  { "n": 1080, "sum": 3888394487 }
+[   63.637] turn.state  { "n": 1090, "sum": 1259841399 }
+[   64.138] turn.state  { "n": 1100, "sum": 781549545 }
+[   64.138] turn.inputs  { "n": 1100, "in": 4100093049 }
+[   64.138] lockstep.health  { "turn": 1100, "delay_turns": 1, "rtt_ms": 9, "rtt_var_ms": 5, "local_jitter_ms": 0, "shadow_ok": 43, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -46, "max": -46 }, 1113604901: { "n": 200, "p50": -41, "p90": -33, "p99": -33, "max": -29 } }, "stalls": 3, "stalled_s": 0.6 }
+[   64.638] turn.state  { "n": 1110, "sum": 2894133940 }
+[   65.138] turn.state  { "n": 1120, "sum": 1147834926 }
+[   65.638] turn.state  { "n": 1130, "sum": 805247285 }
+[   66.138] turn.state  { "n": 1140, "sum": 1321959262 }
+[   66.638] turn.state  { "n": 1150, "sum": 1186016243 }
+[   67.138] turn.state  { "n": 1160, "sum": 1580609238 }
+[   67.638] turn.state  { "n": 1170, "sum": 531844701 }
+[   68.139] turn.state  { "n": 1180, "sum": 2409061512 }
+[   68.639] turn.state  { "n": 1190, "sum": 3415099991 }
+[   69.139] turn.state  { "n": 1200, "sum": 1987354840 }
+[   69.139] turn  { "n": 1200, "in": 655141145, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.42701, 0.0, 16.77993), "has_at": true }] }
+[   69.139] lockstep.health  { "turn": 1200, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 44, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -49, "max": -49 }, 1113604901: { "n": 200, "p50": -46, "p90": -37, "p99": -33, "max": -33 } }, "stalls": 3, "stalled_s": 0.6 }
+[   69.139] order.ran  { "turn": 1200, "waited_ms": 58, "delay_turns": 1 }
+[   69.639] turn.state  { "n": 1210, "sum": 627004724 }
+[   70.139] turn.state  { "n": 1220, "sum": 1367644611 }
+[   70.636] turn.state  { "n": 1230, "sum": 582907566 }
+[   71.085] turn  { "n": 1239, "in": 3499204019, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (18.02762, 0.0, 16.8033), "has_at": true }] }
+[   71.086] order.ran  { "turn": 1239, "waited_ms": 51, "delay_turns": 1 }
+[   71.136] turn.state  { "n": 1240, "sum": 2166702140 }
+[   71.636] turn.state  { "n": 1250, "sum": 3965936427 }
+[   71.835] turn  { "n": 1254, "in": 3230288163, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (19.81576, -0.000001, 18.16008), "has_at": true }] }
+[   71.836] order.ran  { "turn": 1254, "waited_ms": 84, "delay_turns": 1 }
+[   72.136] turn.state  { "n": 1260, "sum": 1493389967 }
+[   72.585] turn  { "n": 1269, "in": 4162723777, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (19.57512, 0.000001, 19.06603), "has_at": true }] }
+[   72.586] order.ran  { "turn": 1269, "waited_ms": 91, "delay_turns": 1 }
+[   72.635] turn.state  { "n": 1270, "sum": 570266664 }
+[   72.735] turn  { "n": 1272, "in": 1060183003, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (19.43772, 0.0, 19.77931), "has_at": true }] }
+[   72.736] order.ran  { "turn": 1272, "waited_ms": 62, "delay_turns": 1 }
+[   72.985] turn  { "n": 1277, "in": 2846099161, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (18.85229, 0.0, 20.86098), "has_at": true }] }
+[   72.986] order.ran  { "turn": 1277, "waited_ms": 82, "delay_turns": 1 }
+[   73.136] turn.state  { "n": 1280, "sum": 528137831 }
+[   73.636] turn.state  { "n": 1290, "sum": 300961665 }
+[   73.936] turn  { "n": 1296, "in": 242081981, "orders": [{ "slot": 2, "ability": 4, "units": [14], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   73.937] order.ran  { "turn": 1296, "waited_ms": 54, "delay_turns": 1 }
+[   74.136] turn.state  { "n": 1300, "sum": 1742838443 }
+[   74.136] turn.inputs  { "n": 1300, "in": 4100093049 }
+[   74.136] lockstep.health  { "turn": 1300, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 50, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -48, "max": -45 }, 1113604901: { "n": 200, "p50": -46, "p90": -42, "p99": -38, "max": -37 } }, "stalls": 3, "stalled_s": 0.6 }
+[   74.636] turn.state  { "n": 1310, "sum": 3805902930 }
+[   75.036] turn  { "n": 1318, "in": 4243997810, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (5.559513, 0.0, 19.91191), "has_at": true }] }
+[   75.136] turn.state  { "n": 1320, "sum": 1679118148 }
+[   75.186] turn  { "n": 1321, "in": 1613497198, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (6.201147, 0.0, 20.43132), "has_at": true }] }
+[   75.636] turn.state  { "n": 1330, "sum": 2277557678 }
+[   75.836] turn  { "n": 1334, "in": 2246498073, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (5.323091, 0.0, 20.73244), "has_at": true }] }
+[   76.136] turn.state  { "n": 1340, "sum": 1175715403 }
+[   76.236] turn  { "n": 1342, "in": 2697896945, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (6.6471, 0.0, 21.52249), "has_at": true }] }
+[   76.536] turn  { "n": 1348, "in": 1706950295, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (7.881467, 0.0, 21.67699), "has_at": true }] }
+[   76.636] turn.state  { "n": 1350, "sum": 3809373864 }
+[   76.836] turn  { "n": 1354, "in": 362512582, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (6.291876, 0.0, 18.32667), "has_at": true }] }
+[   76.986] turn  { "n": 1357, "in": 3888520153, "orders": [{ "slot": 1, "ability": 1, "units": [9], "target_unit": 0, "at": (5.103421, 0.0, 16.34286), "has_at": true }] }
+[   77.136] turn.state  { "n": 1360, "sum": 3996297764 }
+[   77.586] turn  { "n": 1369, "in": 3677507097, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (3.644845, -0.000001, 15.97613), "has_at": true }] }
+[   77.636] turn.state  { "n": 1370, "sum": 3020721514 }
+[   78.036] turn  { "n": 1378, "in": 1177508455, "orders": [{ "slot": 1, "ability": 67, "units": [9], "target_unit": 0, "at": (4.493939, 0.0, 16.97795), "has_at": true }] }
+[   78.136] turn.state  { "n": 1380, "sum": 884802404 }
+[   78.633] turn.state  { "n": 1390, "sum": 2308722797 }
+[   79.133] turn.state  { "n": 1400, "sum": 4062252464 }
+[   79.133] turn.inputs  { "n": 1400, "in": 4100093049 }
+[   79.133] lockstep.health  { "turn": 1400, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 59, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -46, "max": -45 }, 1113604901: { "n": 200, "p50": -46, "p90": -43, "p99": -38, "max": -37 } }, "stalls": 3, "stalled_s": 0.6 }
+[   79.183] turn  { "n": 1401, "in": 919304832, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (17.55175, -0.000001, 20.88673), "has_at": true }] }
+[   79.183] order.ran  { "turn": 1401, "waited_ms": 92, "delay_turns": 1 }
+[   79.583] turn  { "n": 1409, "in": 2429690425, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (17.30713, 0.0, 20.39242), "has_at": true }] }
+[   79.587] order.ran  { "turn": 1409, "waited_ms": 62, "delay_turns": 1 }
+[   79.634] turn.state  { "n": 1410, "sum": 2121940117 }
+[   79.983] turn  { "n": 1417, "in": 1412653553, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (18.38168, 0.0, 21.47092), "has_at": true }] }
+[   79.985] order.ran  { "turn": 1417, "waited_ms": 94, "delay_turns": 1 }
+[   80.133] turn.state  { "n": 1420, "sum": 3516264668 }
+[   80.183] turn  { "n": 1421, "in": 2531882540, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (19.82768, 0.0, 21.44584), "has_at": true }] }
+[   80.184] order.ran  { "turn": 1421, "waited_ms": 84, "delay_turns": 1 }
+[   80.483] turn  { "n": 1427, "in": 1117153663, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (17.99791, -0.000001, 15.69112), "has_at": true }] }
+[   80.483] order.ran  { "turn": 1427, "waited_ms": 96, "delay_turns": 1 }
+[   80.633] turn.state  { "n": 1430, "sum": 3164036108 }
+[   80.633] turn  { "n": 1430, "in": 619515159, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (16.74759, 0.0, 16.84852), "has_at": true }] }
+[   80.633] order.ran  { "turn": 1430, "waited_ms": 57, "delay_turns": 1 }
+[   81.134] turn.state  { "n": 1440, "sum": 2800549676 }
+[   81.184] turn  { "n": 1441, "in": 1192374221, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (16.25772, 0.000001, 17.15234), "has_at": true }] }
+[   81.184] order.ran  { "turn": 1441, "waited_ms": 67, "delay_turns": 1 }
+[   81.433] turn  { "n": 1446, "in": 394790495, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (14.94704, 0.000001, 15.38563), "has_at": true }] }
+[   81.433] order.ran  { "turn": 1446, "waited_ms": 82, "delay_turns": 1 }
+[   81.633] turn.state  { "n": 1450, "sum": 1832623535 }
+[   82.084] turn  { "n": 1459, "in": 1142002291, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (14.58768, 0.000001, 15.00996), "has_at": true }] }
+[   82.088] order.ran  { "turn": 1459, "waited_ms": 91, "delay_turns": 1 }
+[   82.133] turn.state  { "n": 1460, "sum": 3035078966 }
+[   82.533] turn  { "n": 1468, "in": 3946065924, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (15.82928, 0.0, 15.98019), "has_at": true }] }
+[   82.535] order.ran  { "turn": 1468, "waited_ms": 55, "delay_turns": 1 }
+[   82.634] turn.state  { "n": 1470, "sum": 348603452 }
+[   82.733] turn  { "n": 1472, "in": 4017210941, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (15.85026, 0.0, 16.03604), "has_at": true }] }
+[   82.734] order.ran  { "turn": 1472, "waited_ms": 87, "delay_turns": 1 }
+[   83.134] turn.state  { "n": 1480, "sum": 224265313 }
+[   83.283] turn  { "n": 1483, "in": 2410500918, "orders": [{ "slot": 2, "ability": 5, "units": [61], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   83.284] order.ran  { "turn": 1483, "waited_ms": 92, "delay_turns": 1 }
+[   83.633] turn.state  { "n": 1490, "sum": 297995954 }
+[   83.933] turn  { "n": 1496, "in": 740931609, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (15.68366, -0.000001, 15.95222), "has_at": true }] }
+[   83.937] order.ran  { "turn": 1496, "waited_ms": 74, "delay_turns": 1 }
+[   84.134] turn.state  { "n": 1500, "sum": 2402988718 }
+[   84.134] turn.inputs  { "n": 1500, "in": 4100093049 }
+[   84.134] lockstep.health  { "turn": 1500, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 72, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -48, "max": -46 }, 1113604901: { "n": 200, "p50": -44, "p90": -41, "p99": -38, "max": -37 } }, "stalls": 3, "stalled_s": 0.6 }
+[   84.284] turn  { "n": 1503, "in": 2451527820, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (16.56003, -0.000001, 16.96554), "has_at": true }] }
+[   84.285] order.ran  { "turn": 1503, "waited_ms": 80, "delay_turns": 1 }
+[   84.634] turn.state  { "n": 1510, "sum": 1618298760 }
+[   84.634] turn  { "n": 1510, "in": 2058635823, "orders": [{ "slot": 2, "ability": 67, "units": [10], "target_unit": 0, "at": (17.46482, -0.000001, 17.75558), "has_at": true }] }
+[   84.636] order.ran  { "turn": 1510, "waited_ms": 89, "delay_turns": 1 }
+[   85.134] turn.state  { "n": 1520, "sum": 3701358875 }
+[   85.134] turn  { "n": 1520, "in": 1884229768, "orders": [{ "slot": 2, "ability": 1, "units": [10], "target_unit": 0, "at": (19.8892, -0.000001, 17.96169), "has_at": true }] }
+[   85.134] order.ran  { "turn": 1520, "waited_ms": 83, "delay_turns": 1 }
+[   85.635] turn.state  { "n": 1530, "sum": 2606351369 }
+[   85.684] turn  { "n": 1531, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   85.688] order.ran  { "turn": 1531, "waited_ms": 61, "delay_turns": 1 }
+[   85.884] turn  { "n": 1535, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   85.887] order.ran  { "turn": 1535, "waited_ms": 71, "delay_turns": 1 }
+[   86.035] turn  { "n": 1538, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   86.039] order.ran  { "turn": 1538, "waited_ms": 66, "delay_turns": 1 }
+[   86.134] turn.state  { "n": 1540, "sum": 991289009 }
+[   86.634] turn.state  { "n": 1550, "sum": 901496624 }
+[   87.134] turn.state  { "n": 1560, "sum": 137242612 }
+[   87.639] turn.state  { "n": 1570, "sum": 460674830 }
+[   87.688] turn  { "n": 1571, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   87.888] turn  { "n": 1575, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   88.043] turn  { "n": 1578, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   88.139] turn.state  { "n": 1580, "sum": 722358172 }
+[   88.188] turn  { "n": 1581, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   88.639] turn.state  { "n": 1590, "sum": 2724414511 }
+[   89.135] turn.state  { "n": 1600, "sum": 3724274273 }
+[   89.135] turn.inputs  { "n": 1600, "in": 4100093049 }
+[   89.135] lockstep.health  { "turn": 1600, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 0, "shadow_ok": 82, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -49, "p99": -46, "max": -46 }, 1113604901: { "n": 200, "p50": -44, "p90": -41, "p99": -41, "max": -37 } }, "stalls": 3, "stalled_s": 0.6 }
+[   89.635] turn.state  { "n": 1610, "sum": 2565225739 }
+[   90.135] turn.state  { "n": 1620, "sum": 2593107083 }
+[   90.635] turn.state  { "n": 1630, "sum": 768264747 }
+[   91.085] turn  { "n": 1639, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   91.139] turn.state  { "n": 1640, "sum": 3246366482 }
+[   91.289] turn  { "n": 1643, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   91.439] turn  { "n": 1646, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   91.589] turn  { "n": 1649, "in": 2799573515, "orders": [{ "slot": 1, "ability": 41, "units": [1], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   91.639] turn.state  { "n": 1650, "sum": 2430372602 }
+[   92.139] turn.state  { "n": 1660, "sum": 663483092 }
+[   92.440] turn  { "n": 1666, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   92.443] order.ran  { "turn": 1666, "waited_ms": 84, "delay_turns": 1 }
+[   92.539] turn  { "n": 1668, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   92.544] order.ran  { "turn": 1668, "waited_ms": 79, "delay_turns": 1 }
+[   92.586] turn  { "n": 1669, "in": 3048186515, "orders": [{ "slot": 2, "ability": 41, "units": [5], "target_unit": 0, "at": (0.0, 0.0, 0.0), "has_at": false }] }
+[   92.590] order.ran  { "turn": 1669, "waited_ms": 95, "delay_turns": 1 }
+[   92.640] turn.state  { "n": 1670, "sum": 790708714 }
+[   93.141] turn.state  { "n": 1680, "sum": 1685880392 }
+[   93.637] turn.state  { "n": 1690, "sum": 1812998518 }
+[   94.140] turn.state  { "n": 1700, "sum": 2130286919 }
+[   94.140] turn.inputs  { "n": 1700, "in": 4100093049 }
+[   94.140] lockstep.health  { "turn": 1700, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 3, "local_jitter_ms": 2, "shadow_ok": 89, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -49, "p99": -45, "max": -44 }, 1113604901: { "n": 200, "p50": -46, "p90": -43, "p99": -39, "max": -37 } }, "stalls": 3, "stalled_s": 0.6 }
+[   94.636] turn.state  { "n": 1710, "sum": 1341867867 }
+[   95.136] turn.state  { "n": 1720, "sum": 99654017 }
+[   95.636] turn.state  { "n": 1730, "sum": 4087265567 }
+[   96.136] turn.state  { "n": 1740, "sum": 2024109141 }
+[   96.636] turn.state  { "n": 1750, "sum": 2175572018 }
+[   97.137] turn.state  { "n": 1760, "sum": 296807109 }
+[   97.637] turn.state  { "n": 1770, "sum": 2412534231 }
+[   98.137] turn.state  { "n": 1780, "sum": 921594795 }
+[   98.637] turn.state  { "n": 1790, "sum": 4243854879 }
+[   99.137] turn.state  { "n": 1800, "sum": 2087618299 }
+[   99.137] turn.inputs  { "n": 1800, "in": 4100093049 }
+[   99.137] lockstep.health  { "turn": 1800, "delay_turns": 1, "rtt_ms": 8, "rtt_var_ms": 4, "local_jitter_ms": 0, "shadow_ok": 89, "arrival_ms": { 963015017: { "n": 200, "p50": -50, "p90": -50, "p99": -45, "max": -44 }, 1113604901: { "n": 200, "p50": -47, "p90": -45, "p99": -40, "max": -39 } }, "stalls": 3, "stalled_s": 0.6 }
+[   99.637] turn.state  { "n": 1810, "sum": 1675253198 }
+[  100.133] turn.state  { "n": 1820, "sum": 2203301209 }
+[  100.634] turn.state  { "n": 1830, "sum": 4138908506 }
+[  101.133] turn.state  { "n": 1840, "sum": 1364748132 }
+[  101.633] turn.state  { "n": 1850, "sum": 1698792530 }
+[  102.133] turn.state  { "n": 1860, "sum": 86328745 }

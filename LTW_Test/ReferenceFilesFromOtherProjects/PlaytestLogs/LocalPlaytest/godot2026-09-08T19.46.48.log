@@ -1,0 +1,56 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[godot_ai game_helper] registered mcp capture (debugger active=true, logger=true)
+[Boot:102]: [INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[NetworkService:647]: [INFO] Connecting { "address": 127.0.0.1, "port": 7777, "candidate": 1, "of": 2 }
+[NetworkService:414]: [INFO] Connected to the server { "peer_id": 538770700, "address": 127.0.0.1 }
+[NetworkService:456]: [INFO] The server is on the line
+[NetworkService:458]: [INFO] Peer joined 1410563643
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 0 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Mil[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": false }[[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": false [L[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": false[Lo[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[SessionLog:143]: [INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-08_19-41-08.log }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": false }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": fal[Lobb[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[MatchStartService:285]: [INFO] Match starting { "match": match-1, "slot": 1, "players": 2 }
+[MatchLoading:155]: [INFO] Match scene loaded { "match": match-1, "path": res://Scenes/Main.tscn }[[ContentWarmer:307]: [INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 654.0 }
+[MatchStartService:306]: [INFO] Match start { "match": match-1, "slot": 1, "players": 2 }
+[Main:315]: [INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[StartingTech:238]: [INFO] Draft opened { "options": [ Ultimate Spellslinger, U[Main:74]: [INFO] Relay match ready, simulating nothing { "players": 2, "seed": 3939758227, "match": match-1 }
+[LockstepService:1039]: [INFO] Lockstep reset for a new match { "match": match-1 }
+[MatchStartService:665]: [INFO] Initial world reference taken from a peer { "peer": 538770700, "slot": 1, "sum": 3200109602 }
+[MatchStartService:672]: [INFO] Initial world agrees { "peer": 1410563643, "sum": 3200109602 }
+[NetworkService:463]: [INFO] Peer left 538770700
+[MatchStartService:458]: [INFO] Player went quiet, holding { "peer": 538770700, "seconds": 10.0 }
+[NetworkService:463]: [INFO] Peer left 1410563643
+[MatchStartService:458]: [INFO] Player went quiet, holding { "peer": 1410563643, "seconds": 10.0 }
+[LobbyService:619]: [INFO] Lobby closed { "id": lobby-1, "reason": The host left the lobby. }
+[LockstepService:660]: [WARN] Player has gone silent, giving up on them { "peer": 538770700, "seconds": 8.0, "their_turn": 183, "relay_turn": 212 }
+WARNING: [LockstepService:660]: Player has gone silent, giving up on them { "peer": 538770700, "seconds": 8.0, "their_turn": 183, "relay_turn": 212 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _drop_silent_peers (res://Scripts/Multiplayer/LockstepService.gd:660)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:358)
+[MatchStartService:554]: [INFO] Player dropped from the match { "peer": 538770700, "slot": 1, "why": went silent, "left_in_match": 1 }
+[LockstepService:1358]: [INFO] Relay injecting a server order { "turn": 232, "seen": 212, "action": 11 }
+[LockstepService:660]: [WARN] Player has gone silent, giving up on them { "peer": 1410563643, "seconds": 8.0, "their_turn": 202, "relay_turn": 212 }
+WARNING: [LockstepService:660]: Player has gone silent, giving up on them { "peer": 1410563643, "seconds": 8.0, "their_turn": 202, "relay_turn": 212 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _drop_silent_peers (res://Scripts/Multiplayer/LockstepService.gd:660)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:358)
+[MatchStartService:554]: [INFO] Player dropped from the match { "peer": 1410563643, "slot": 2, "why": went silent, "left_in_match": 0 }
+[LockstepService:1358]: [INFO] Relay injecting a server order { "turn": 232, "seen": 212, "action": 11 }
+[MatchStartService:565]: [INFO] Match over, everybody has left match-1
+[ServerMain:70]: [INFO] Server frame rate capped { "max_fps": 120 }
+[ServerMain:76]: [INFO] [server] Server process started
+[ServerMain:76]: [INFO] [server] Process id: 42328
+[ServerMain:76]: [INFO] [server] Feature tag dedicated_server: false
+[ServerMain:76]: [INFO] [server] Display server: headless
+[ServerMain:76]: [INFO] [server] Simulation tick: 20 Hz
+[ServerMain:76]: [INFO] [server] Back from a match, still listening on port 7777

@@ -1,0 +1,203 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[godot_ai game_helper] registered mcp capture (debugger active=true, logger=true)
+[Boot:102]: [INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[NetworkService:647]: [INFO] Connecting { "address": 127.0.0.1, "port": 7777, "candidate": 1, "of": 2 }
+[NetworkService:414]: [INFO] Connected to the server { "peer_id": 1113604901, "address": 127.0.0.1 }
+[NetworkService:456]: [INFO] The server is on the line
+[NetworkService:458]: [INFO] Peer joined 963015017
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 0 }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-2, "name": Milo's Game, "players": 2, "host": false }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[SessionLog:143]: [INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-08_19-47-01.log }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-2, "name": Milo's Game, "players": 2, "host": false [L[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[LobbyService:668]: [INFO] In lobby { "id": lobby-2, "name": Milo's Game, "players": 2, "host": false }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[MatchStartService:285]: [INFO] Match starting { "match": match-2, "slot": 2, "players": 2 }
+[MatchLoading:155]: [INFO] Match scene loaded { "match": match-2, "path": res://Scenes/Main.tscn }
+[ContentWarmer:307]: [INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 663.0 }
+[MatchStartService:306]: [INFO] Match start { "match": match-2, "slot": 2, "players": 2 }
+[Main:315]: [INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[Main:122]: [INFO] Match ready { "players": 2, "local_slot": 2, "seed": 1799488415, "starting_lives": 100, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[LockstepService:1039]: [INFO] Lockstep reset for a new match { "match": match-2 }
+[MatchSession:443]: [INFO] Match paused { "tick": 0, "by": &"lockstep", "holders": [ &"lockstep" ] }[[LockstepService:440]: [WARN] Waiting on a turn { "turn": 0, "missing": [1113604901], "have": [ 9630[LockstepService:440]: [WARN] Waiting on a turn { "turn": 0, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 1, "seconds": 0.1 }
+WARNING: [LockstepService:440]: Waiting on a turn { "turn": 0, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 1, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _advance_turn (res://Scripts/Multiplayer/Loc[MatchSession:443]: [INFO] Match resumed { "tick": 0, "by": &"lockstep", "holders": [  ] }
+[MatchSession:443]: [INFO] Match paused { "tick": 29, "by": &"lockstep", "holders": [ &"lockstep" ] [Builder:165]: [INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (11,40), "tower": &"LesserArcher_11_40", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (2,26), "tower": &"LesserArcher_2_26", "cost": 10 }
+[Building:731]: [INFO] Construction cancelled { "building": &"LesserArcher_2_26", "refund": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[MatchSession:443]: [INFO] Match paused { "tick": 474, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[LockstepService:440]: [WARN] Waiting on a turn { "turn": 474, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 475, "seconds": 0.1 }
+WARNING: [LockstepService:440]: Waiting on a turn { "turn": 474, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 475, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _advance_turn (res://Scripts/Multiplayer/LockstepService.gd:440)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:380)
+[MatchSession:443]: [INFO] Match resumed { "tick": 474, "by": &"lockstep", "holders": [  ] }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[LockstepService:531]: [INFO] Order ran { "turn": 547, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 1 }
+[LockstepService:531]: [INFO] Order ran { "turn": 550, "waited_ms": 50, "ticks_per_turn": 1, "delay_turns": 1 }
+[LockstepService:531]: [INFO] Order ran { "turn": 554, "waited_ms": 62, "ticks_per_turn": 1, "delay_turns": 1 }
+[LockstepService:531]: [INFO] Order ran { "turn": 558, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 574, "waited_ms": 56, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 589, "waited_ms": 80, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 600, "waited_ms": 85, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 616, "waited_ms": 60, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 625, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for ta[NetworkService:463]: [INFO] Peer left 963015017
+[MatchStartService:458]: [INFO] Player went quiet, holding { "peer": 963015017, "seconds": 10.0 }
+[NetworkService:463]: [INFO] Peer left 1113604901
+[MatchStartService:458]: [INFO] Player went quiet, holding { "peer": 1113604901, "seconds": 10.0 }
+[LobbyService:619]: [INFO] Lobby closed { "id": lobby-2, "reason": The host left the lobby. }
+[LockstepService:660]: [WARN] Player has gone silent, giving up on them { "peer": 963015017, "seconds": 8.0, "their_turn": 1857, "relay_turn": 1872 }
+WARNING: [LockstepService:660]: Player has gone silent, giving up on them { "peer": 963015017, "seconds": 8.0, "their_turn": 1857, "relay_turn": 1872 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _drop_silent_peers (res://Scripts/Multiplayer/LockstepService.gd:660)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:358)
+[MatchStartService:554]: [INFO] Player dropped from the match { "peer": 963015017, "slot": 2, "why": went silent, "left_in_match": 1 }
+[LockstepService:1358]: [INFO] Relay injecting a server order { "turn": 1892, "seen": 1872, "action": 11 }
+[LockstepService:660]: [WARN] Player has gone silent, giving up on them { "peer": 1113604901, "seconds": 8.0, "their_turn": 1866, "relay_turn": 1872 }
+WARNING: [LockstepService:660]: Player has gone silent, giving up on them { "peer": 1113604901, "seconds": 8.0, "their_turn": 1866, "relay_turn": 1872 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _drop_silent_peers (res://Scripts/Multiplayer/LockstepService.gd:660)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:358)
+[MatchStartService:554]: [INFO] Player dropped from the match { "peer": 1113604901, "slot": 1, "why": went silent, "left_in_match": 0 }
+[LockstepService:1358]: [INFO] Relay injecting a server order { "turn": 1892, "seen": 1872, "action": 11 }
+[MatchStartService:565]: [INFO] Match over, everybody has left match-2
+[ServerMain:70]: [INFO] Server frame rate capped { "max_fps": 120 }
+[ServerMain:76]: [INFO] [server] Server process started
+[ServerMain:76]: [INFO] [server] Process id: 42328
+[ServerMain:76]: [INFO] [server] Feature tag dedicated_server: false
+[ServerMain:76]: [INFO] [server] Display server: headless
+[ServerMain:76]: [INFO] [server] Simulation tick: 20 Hz
+[ServerMain:76]: [INFO] [server] Back from a match, still listening on port 7777
+ "turn": 1321, "waited_ms": 71, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1334, "waited_ms": 61, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 1342, "waited_ms": 89, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (12,42), "tower": &"LesserArcher_12_42", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 1348, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (14,42), "tower": &"LesserArcher_14_42", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1354, "waited_ms": 75, "ticks_per_turn": 1, "delay_turns": 1 }
+[Building:781]: [INFO] Building sold { "building": &"LesserArcher_11_40", "refund": 6 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1357, "waited_ms": 49, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 1369, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (6,31), "tower": &"LesserArcher_6_31", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (8,33), "tower": &"LesserArcher_8_33", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1378, "waited_ms": 75, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (12,42), "tower": &"LesserArcher_12_42", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (14,42), "tower": &"LesserArcher_14_42", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (7,31), "tower": &"LesserArcher_7_31", "cost": 10 }
+[Building:731]: [INFO] Construction cancelled { "building": &"LesserArcher_7_31", "refund": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (6,31), "tower": &"LesserArcher_6_31", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (8,33), "tower": &"LesserArcher_8_33", "cost": 10 }
+[Builder:165]: [INFO] Tower placed { "cell": (10,35), "tower": &"LesserArcher_10_35", "cost": 10 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1571, "waited_ms": 55, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1575, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1578, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1581, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1639, "waited_ms": 67, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1643, "waited_ms": 90, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1646, "waited_ms": 87, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 12 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1649, "waited_ms": 91, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[MatchSession:443]: [INFO] Match paused { "tick": 1862, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[LockstepService:440]: [WARN] Waiting on a turn { "turn": 1862, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 1863, "seconds": 0.1 }
+WARNING: [LockstepService:440]: Waiting on a turn { "turn": 1862, "missing": [963015017], "have": [ 1113604901 ], "expected": [1113604901, 963015017], "closed_through": 1863, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _advance_turn (res://Scripts/Multiplayer/LockstepService.gd:440)
+       [2] _physics_process (res://Scripts/Multiplayer/LockstepService.gd:380)
+[NetworkService:463]: [INFO] Peer left 963015017
+[LobbyService:668]: [INFO] In lobby { "id": lobby-2, "name": Milo's Game, "players": 1, "host": true }
+[LobbyService:661]: [INFO] Lobby list received { "lobbies": 1 }
+[MatchSession:443]: [INFO] Match resumed { "tick": 1862, "by": &"lockstep", "holders": [  ] }
+[NetworkService:404]: [INFO] Closing the connection on the way out
+r ran { "turn": 1468, "waited_ms": 55, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (7,31), "tower": &"LesserArcher_7_31", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1472, "waited_ms": 87, "ticks_per_turn": 1, "delay_turns": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[Building:731]: [INFO] Construction cancelled { "building": &"LesserArcher_7_31", "refund": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1483, "waited_ms": 92, "ticks_per_turn": 1, "delay_turns": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:165]: [INFO] Tower placed { "cell": (6,31), "tower": &"LesserArcher_6_31", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1496, "waited_ms": 74, "ticks_per_turn": 1, "delay_turns": 1 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 1503, "waited_ms": 80, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (8,33), "tower": &"LesserArcher_8_33", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[LockstepService:531]: [INFO] Order ran { "turn": 1510, "waited_ms": 89, "ticks_per_turn": 1, "delay_turns": 1 }
+[Builder:165]: [INFO] Tower placed { "cell": (10,35), "tower": &"LesserArcher_10_35", "cost": 10 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1520, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1531, "waited_ms": 61, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1535, "waited_ms": 71, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1538, "waited_ms": 66, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 12 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1666, "waited_ms": 84, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1668, "waited_ms": 79, "ticks_per_turn": 1, "delay_turns": 1 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[LockstepService:531]: [INFO] Order ran { "turn": 1669, "waited_ms": 95, "ticks_per_turn": 1, "delay_turns": 1 }
+[NetworkService:404]: [INFO] Closing the connection on the way out
