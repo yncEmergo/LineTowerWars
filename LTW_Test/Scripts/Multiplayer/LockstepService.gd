@@ -107,6 +107,15 @@ const JITTER_MIN_SAMPLES: int = 20
 ## hot path entirely.
 const JITTER_REFRESH_FRAMES: int = 5
 
+## How many arrival samples per peer the lead window remembers. Ten seconds at
+## 20 Hz - long enough that a p99 means something, short enough to follow a link
+## that changes during a match.
+const LEAD_SAMPLES: int = 200
+
+## How often the relay reports drift, in frames. Five seconds at 20 Hz, matching
+## the peer-side health line so the two logs join on the same cadence.
+const DRIFT_EVERY_FRAMES: int = 100
+
 ## How far outside the turns anybody could plausibly be on a word is refused.
 ## Generous, because the honest spread between two peers is `max_delay_turns` and
 ## this only has to catch a number that is wrong by orders of magnitude.
@@ -228,9 +237,36 @@ var _highest_seen: int = NO_TURN
 ## the middle of the star can see. UNKNOWN_RTT until the first announcement.
 var _worst_one_way: int = NetworkService.UNKNOWN_RTT
 
-## When THIS machine's player gave the first order riding a turn, in wall-clock
-## milliseconds, keyed by that turn. Diagnostic only - see _report_latency.
+## When THIS machine's player pressed, in wall-clock milliseconds, keyed by a
+## CLIENT-LOCAL ORDER SEQUENCE rather than by a turn. Diagnostic only - see
+## _report_latency.
+##
+## **Keyed by seq because the turn key is about to stop existing.** Once the
+## relay seals the stream a client no longer names the turn its order lands in,
+## so a stopwatch keyed by turn would have no key and `order.ran waited_ms` -
+## the one number that says whether any of this worked - would be lost exactly
+## when it is needed to judge the change. The seq is local and never goes on the
+## wire yet; the cutover puts it there and resolves the turn from the seal
+## instead of from `scheduled_turn()`.
 var _ordered_at: Dictionary = {}
+## Monotonic, per match, per machine. Never leaves this process in phase 0.
+var _order_seq: int = 0
+## turn -> the order seqs booked into it, so a run turn can find its presses.
+var _seqs_for_turn: Dictionary = {}
+
+## Phase 0 instrumentation. Wall-clock milliseconds: when each turn became DUE
+## on this machine's clock, and when each peer's word for it FIRST arrived.
+##
+## **Nothing in the simulation may read any of this.** Two machines do not share
+## a clock, so a value derived from these would differ per peer and desync them -
+## the same rule `_report_latency` already states.
+var _due_at: Dictionary = {}
+var _arrived_at: Dictionary = {}
+## peer id -> a ring of how late that peer's words have been, in milliseconds,
+## and how many samples have gone into it. Written round-robin, so nothing is
+## allocated per turn once a peer has been seen.
+var _leads: Dictionary = {}
+var _leads_n: Dictionary = {}
 
 
 func _ready() -> void:
@@ -279,6 +315,7 @@ func _physics_process(_delta: float) -> void:
 		_measure_and_announce()
 		_drop_silent_peers()
 		_speak_for_the_departed()
+		_report_drift()
 		return
 
 	# **`_frames` counts ticks that have FINISHED, so the tick now beginning is
@@ -334,6 +371,14 @@ func _advance_turn(clock_turn: int) -> void:
 	if turn > clock_turn:
 		return
 
+	# **The first tick that gets past the guard above IS the instant this turn
+	# became due on this machine's clock**, which is the reference every arrival
+	# is measured against. Write-once, so the repeated stall passes below cost a
+	# lookup rather than a write - and NO log call of any level here, this is the
+	# per-tick path.
+	if !_due_at.has(turn):
+		_due_at[turn] = Time.get_ticks_msec()
+
 	if !_is_complete(turn):
 		if !_stalling:
 			_stalling = true
@@ -355,12 +400,19 @@ func _advance_turn(clock_turn: int) -> void:
 				"have": (_incoming.get(turn, {}) as Dictionary).keys(),
 				"expected": _expected_peers(),
 				"closed_through": _closed_through,
-				"seconds": snappedf(float(_stall_frames) * MatchSession.tick_seconds(), 0.1),
+				"seconds": snappedf(float(_stall_frames) * _engine_tick_seconds(), 0.1),
 			})
 		return
 
 	if _stalling:
-		Log.info("Turn arrived, resuming", {
+		# **Deliberately `debug` rather than `info`.** This fires on the tick that
+		# CLEARS a stall, so under the failure this whole rework exists to remove
+		# it is a per-tick path, not a per-player-action one - and `Log.info`
+		# calls `get_stack()` and `print_rich()` before anything else. It and the
+		# warning above it also sit INSIDE the interval `_sample_arrivals` is
+		# measuring, so leaving them at `info` would have biased phase 0's own
+		# numbers. See `CLAUDE.md` on Log.info in a per-tick path.
+		Log.debug("Turn arrived, resuming", {
 			"turn": turn, "waited_on": _stalled_on,
 		})
 		_stalling = false
@@ -368,6 +420,7 @@ func _advance_turn(clock_turn: int) -> void:
 		_set_held(false)
 
 	_last_run_turn = turn
+	_sample_arrivals(turn)
 
 	# **Checksummed BEFORE the orders are applied**, so the number describes a
 	# point every machine can name without ambiguity: the boundary of this turn,
@@ -381,6 +434,17 @@ func _advance_turn(clock_turn: int) -> void:
 	turn_ready.emit(turn, orders)
 	if !orders.is_empty():
 		Commands.apply_turn(orders)
+
+	# **AFTER the orders, never before them.** The match clock is the turn stream
+	# under lockstep rather than this machine's physics frames, and whether this
+	# turn counts depends on whether anything but lockstep is holding the world -
+	# which an order in this very turn is entitled to change. A technology pick
+	# ends the draft from inside `apply_turn`, and the tick that ends it does
+	# simulate. See MatchSession.advance_clock.
+	var session: MatchSession = References.match_session
+	if session != null:
+		session.advance_clock(_ticks_per_turn())
+
 	_report_latency(turn)
 
 
@@ -398,10 +462,23 @@ func _advance_turn(clock_turn: int) -> void:
 ## per player action, so `Log.info` is affordable here by the rule in
 ## `CLAUDE.md`. A turn nobody ordered on costs one Dictionary lookup.
 func _report_latency(turn: int) -> void:
-	if !_ordered_at.has(turn):
+	if !_seqs_for_turn.has(turn):
 		return
-	var waited: int = Time.get_ticks_msec() - (_ordered_at[turn] as int)
-	_ordered_at.erase(turn)
+	var seqs: Array = _seqs_for_turn[turn]
+	_seqs_for_turn.erase(turn)
+
+	# The EARLIEST press booked into this turn, which is what the turn-keyed
+	# version reported when it took the first press and ignored the rest.
+	var earliest: int = 0
+	for seq: Variant in seqs:
+		var at: int = int(_ordered_at.get(seq, 0))
+		_ordered_at.erase(seq)
+		if at > 0 && (earliest == 0 || at < earliest):
+			earliest = at
+	if earliest == 0:
+		return
+
+	var waited: int = Time.get_ticks_msec() - earliest
 	Log.info("Order ran", {
 		"turn": turn,
 		"waited_ms": waited,
@@ -507,7 +584,7 @@ func _drop_silent_peers() -> void:
 	var limit: float = _silent_timeout_seconds()
 	if limit <= 0.0:
 		return
-	var frames: int = int(limit / maxf(0.001, MatchSession.tick_seconds()))
+	var frames: int = int(limit / maxf(0.001, _engine_tick_seconds()))
 
 	# **The WORST offender only, one per pass**, and this is a backstop rather
 	# than the fix - the heartbeat above is what makes silence mean something.
@@ -533,7 +610,7 @@ func _drop_silent_peers() -> void:
 
 	Log.warn("Player has gone silent, giving up on them", {
 		"peer": worst,
-		"seconds": snappedf(float(worst_silence) * MatchSession.tick_seconds(), 0.1),
+		"seconds": snappedf(float(worst_silence) * _engine_tick_seconds(), 0.1),
 		"their_turn": _reported_turn.get(worst, -1),
 		"relay_turn": _highest_seen,
 	})
@@ -612,15 +689,29 @@ func local_jitter_ms() -> int:
 
 ## The 90th percentile overrun across the sample window, capped.
 func _measure_local_jitter() -> int:
-	var filled: int = mini(_overruns_filled, _overruns.size())
-	if filled < JITTER_MIN_SAMPLES:
+	if mini(_overruns_filled, _overruns.size()) < JITTER_MIN_SAMPLES:
 		return 0
+	return clampi(int(_overrun_ms(0.9)), 0, _max_local_jitter_ms())
+
+
+## One percentile of the tick-overrun window, RAW - not capped, and not gated on
+## `adaptive_local_jitter`.
+##
+## The capped reading above is an input to the input delay and is deliberately
+## bounded so one unrelated hitch cannot book delay for the length of the window.
+## This one is a MEASUREMENT, and on the relay it is the achieved seal interval -
+## the number that says whether a peer's complaint is the relay running late
+## rather than its own buffer being short. Capping that would hide exactly the
+## case worth finding.
+func _overrun_ms(fraction: float) -> float:
+	var filled: int = mini(_overruns_filled, _overruns.size())
+	if filled <= 0:
+		return 0.0
 	var window: Array[float] = []
 	for index: int in range(filled):
 		window.append(_overruns[index])
 	window.sort()
-	var at: int = clampi(int(float(filled) * 0.9), 0, filled - 1)
-	return clampi(int(window[at]), 0, _max_local_jitter_ms())
+	return window[clampi(int(float(filled) * fraction), 0, filled - 1)]
 
 
 ## One tick interval, folded into the window.
@@ -640,7 +731,7 @@ func _sample_tick_interval() -> void:
 	var now: int = Time.get_ticks_usec()
 	if _last_tick_usec > 0:
 		var interval_ms: float = float(now - _last_tick_usec) * 0.001
-		var ideal_ms: float = MatchSession.tick_seconds() * 1000.0
+		var ideal_ms: float = _engine_tick_seconds() * 1000.0
 		var slot: int = _overruns_filled % _overruns.size()
 		_overruns[slot] = maxf(0.0, interval_ms - ideal_ms)
 		_overruns_filled += 1
@@ -648,8 +739,125 @@ func _sample_tick_interval() -> void:
 
 
 ## How long this match has spent held, in seconds, across every stall.
+##
+## **Engine rate, not simulation rate.** A stalled tick is a tick of real time
+## that elapsed, so this has to follow the clock the machine actually ran at. See
+## `_engine_tick_seconds`.
 func stalled_seconds() -> float:
-	return float(_stalled_total) * MatchSession.tick_seconds()
+	return float(_stalled_total) * _engine_tick_seconds()
+
+
+## How late each peer's words have been arriving, per peer, in milliseconds.
+##
+## `{peer: {n, p50, p90, p99, max}}`, where the number is `arrived - due` and
+## POSITIVE MEANS LATE - so it reads in the same direction as every other latency
+## figure in this file, and p99 is the bad tail rather than the good one.
+##
+## **This is the measurement nothing in this codebase had**, and its absence is
+## why the same problem was diagnosed wrongly twice: the system logged the
+## ESTIMATED wire budget every hundred turns and never once recorded what a word
+## actually cost. A negative or near-zero p99 here with stalls still happening
+## falsifies the network story outright.
+func arrival_leads() -> Dictionary:
+	var out: Dictionary = {}
+	for peer: Variant in _leads:
+		var count: int = mini(int(_leads_n[peer]), LEAD_SAMPLES)
+		if count <= 0:
+			continue
+		var ring: PackedFloat32Array = _leads[peer]
+		var window: Array[float] = []
+		for index: int in range(count):
+			window.append(ring[index])
+		window.sort()
+		out[int(peer)] = {
+			"n": count,
+			"p50": int(window[clampi(int(float(count) * 0.5), 0, count - 1)]),
+			"p90": int(window[clampi(int(float(count) * 0.9), 0, count - 1)]),
+			"p99": int(window[clampi(int(float(count) * 0.99), 0, count - 1)]),
+			"max": int(window[count - 1]),
+		}
+	return out
+
+
+## Folds one finished turn's arrivals into the per-peer windows and frees them.
+##
+## Called from `_advance_turn` the moment a turn is accepted, which must be
+## BEFORE `turn_ready.emit` - that signal is what drives the health line, so
+## folding afterwards would make every line report a window one turn stale.
+##
+## The two dictionaries are erased here on the same turn `_incoming` is, because
+## a match is thousands of turns long and they would otherwise grow for all of it.
+func _sample_arrivals(turn: int) -> void:
+	# Both erased before anything can return, or a turn that arrived without a
+	# due stamp leaks its entry for the rest of the match.
+	#
+	# **Asked with `has` rather than against a zero**, because `Time.get_ticks_msec()`
+	# CAN legitimately be zero and a sentinel that collides with a real value is
+	# the same mistake `UNKNOWN_RTT` is negative to avoid. It cost nothing to get
+	# right and the check that found it took one line.
+	var known: bool = _due_at.has(turn)
+	var due: int = int(_due_at.get(turn, 0))
+	_due_at.erase(turn)
+	var arrived: Dictionary = _arrived_at.get(turn, {})
+	_arrived_at.erase(turn)
+	if !known:
+		return
+
+	for peer: Variant in arrived:
+		var id: int = int(peer)
+		if !_leads.has(id):
+			var fresh: PackedFloat32Array = PackedFloat32Array()
+			fresh.resize(LEAD_SAMPLES)
+			fresh.fill(0.0)
+			_leads[id] = fresh
+			_leads_n[id] = 0
+		# Read out, write, put back: a packed array is copy-on-write, so writing
+		# through the Dictionary lookup would edit a temporary.
+		var ring: PackedFloat32Array = _leads[id]
+		var count: int = int(_leads_n[id])
+		ring[count % LEAD_SAMPLES] = float(int(arrived[peer]) - due)
+		_leads[id] = ring
+		_leads_n[id] = count + 1
+
+
+## Relay only: how far behind each peer is, and how well the relay is keeping its
+## own tick. Into the journal rather than a session log, because the relay writes
+## no session log.
+##
+## **`Log.debug`, checked before `get_stack()` runs**, and gated to a few times a
+## minute besides. It reports `current_turn()` rather than `_frames` because the
+## two stop meaning the same thing the moment `ticks_per_turn` moves off one.
+##
+## What this CANNOT answer on its own is whether a peer is behind because its own
+## clock runs slow or because it spent the time stalled - the peer knows both and
+## the relay knows neither, so the peer's `lockstep.health` line carries
+## `stalled_s` and the two are joined by turn afterwards.
+func _report_drift() -> void:
+	if _frames % DRIFT_EVERY_FRAMES != 0:
+		return
+	var behind: Dictionary = {}
+	for peer: int in _match_peers():
+		behind[peer] = current_turn() - int(_reported_turn.get(peer, NO_TURN))
+	Log.debug("Relay drift", {
+		"relay_turn": current_turn(),
+		"behind_turns": behind,
+		"seal_p90_ms": int(_overrun_ms(0.9)),
+		"seal_max_ms": int(_overrun_ms(1.0)),
+	})
+
+
+## Seconds per ENGINE physics tick, for wall-clock arithmetic only.
+##
+## **Deliberately not `MatchSession.tick_seconds()`, and the split is the point.**
+## That one is the SIMULATION rate: it converts authored seconds into ticks and
+## ticks back into match time, and every peer must agree about it to the bit.
+## This one is what the machine's clock is actually doing. They are the same
+## number today and phase 6 makes them differ - a servo paces the engine while
+## the simulation's second stays fixed - at which point every metric built on the
+## wrong one silently stops meaning seconds. Since those metrics are exactly what
+## phases 0 and 4 are judged by, the split is made here rather than there.
+func _engine_tick_seconds() -> float:
+	return 1.0 / maxf(1.0, float(Engine.physics_ticks_per_second))
 
 
 ## Whether the world is being held right now waiting for somebody's turn.
@@ -724,6 +932,12 @@ func _reset_if_new_match() -> void:
 	_outgoing.clear()
 	_incoming.clear()
 	_ordered_at.clear()
+	_order_seq = 0
+	_seqs_for_turn.clear()
+	_due_at.clear()
+	_arrived_at.clear()
+	_leads.clear()
+	_leads_n.clear()
 	_recent.clear()
 	_spoken_through.clear()
 	_departed.clear()
@@ -844,7 +1058,7 @@ func delay_turns() -> int:
 		# for an instant, guessing low stalls the opening of the match.
 		return ceiling_turns
 
-	var turn_ms: float = maxf(1.0, MatchSession.tick_seconds() * float(_ticks_per_turn()) * 1000.0)
+	var turn_ms: float = maxf(1.0, _engine_tick_seconds() * float(_ticks_per_turn()) * 1000.0)
 	return clampi(ceili(float(budget) / turn_ms), floor_turns, ceiling_turns)
 
 
@@ -864,9 +1078,13 @@ func schedule(command: Command) -> int:
 		_outgoing[turn] = []
 	(_outgoing[turn] as Array).append(command.to_dict())
 
-	# The stopwatch starts where the player pressed, not where the tick opened.
-	if !_ordered_at.has(turn):
-		_ordered_at[turn] = Time.get_ticks_msec()
+	# The stopwatch starts where the player pressed, not where the tick opened,
+	# and is keyed by an order sequence rather than by the turn. See _ordered_at.
+	_order_seq += 1
+	_ordered_at[_order_seq] = Time.get_ticks_msec()
+	var seqs: Array = _seqs_for_turn.get(turn, [])
+	seqs.append(_order_seq)
+	_seqs_for_turn[turn] = seqs
 	return turn
 
 
@@ -1326,6 +1544,17 @@ func _record(turn: int, peer: int, payload: Array) -> void:
 	# match. Harmless to the simulation, unbounded in memory.
 	if turn <= _last_run_turn:
 		return
+
+	# **Write-once per (turn, peer), and that is load-bearing rather than tidy.**
+	# The unreliable echo is a duplicate that can arrive BEFORE the reliable
+	# batch, and `_incoming` below deliberately overwrites duplicates - but the
+	# question being measured is when this machine FIRST held a word for this
+	# turn from this peer, so the first stamp has to win. No log call here
+	# either: this fires once per peer per turn.
+	var when: Dictionary = _arrived_at.get(turn, {})
+	if !when.has(peer):
+		when[peer] = Time.get_ticks_msec()
+		_arrived_at[turn] = when
 
 	if !_incoming.has(turn):
 		_incoming[turn] = {}

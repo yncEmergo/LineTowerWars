@@ -307,5 +307,16 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		# of it: the connection was clean on both sides and one machine was
 		# simply not finishing its ticks on time.
 		"local_jitter_ms": Lockstep.local_jitter_ms(),
+		# **What a word actually COST, which nothing above can show.** Every
+		# figure beside it is an ESTIMATE of the wire - a mean round trip, its
+		# smoothed variance, this machine's frame times - and the same problem
+		# was diagnosed wrongly twice from those estimates alone. This is the
+		# measurement: `arrived - due` per peer, positive meaning late.
+		"arrival_ms": Lockstep.arrival_leads(),
 		"stalls": _stalls,
+		# **A stall COUNT is not a stall COST**, and `stalls` above is a count.
+		# Two configurations with the same number of stalls can differ by an
+		# order of magnitude in time actually held, and every tuning decision
+		# taken against the count alone is taken blind. See `CLAUDE.md`.
+		"stalled_s": snappedf(Lockstep.stalled_seconds(), 0.01),
 	})

@@ -20,7 +20,7 @@ extends Node
 ##
 ## Three modes, one scene:
 ##
-##     record=res://... seed=1 ticks=400   ->  run and write a trace
+##     out=user://a.json seed=1 ticks=400  ->  run and write a trace
 ##     replay=<trace>                      ->  run again, feeding the RECORDED
 ##                                             commands rather than generating
 ##                                             them, and write a second trace
