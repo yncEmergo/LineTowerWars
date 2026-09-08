@@ -1406,6 +1406,13 @@ So the leaver's remaining lives are not thrown away, they are handed to whoever 
 attacking them. No special elimination path, no separate "player left" state to reconcile
 with the win condition. The one genuinely new behaviour is erasing the maze.
 
+**Everyone still playing is told.** The drop is written to the same on-screen stack the leak
+log uses (`LeakLog`), off `MatchStart.player_dropped` — which under lockstep every peer emits
+for itself as it applies the `PLAYER_LEFT` order, so both machines say so on the same turn and
+nothing extra crosses the wire. Under the replication path that signal only ever fires on the
+server, so the notice is a lockstep-only thing; the same asymmetry `_announce_drop` already
+describes and for the same reason.
+
 Details still open, none of them blocking:
 
 - **Nothing forces the drain.** Lives only leave through leaks, so a leaver whose neighbour

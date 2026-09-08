@@ -1,14 +1,24 @@
 class_name LeakLog
 extends VBoxContainer
 
-## The running account of who is taking lives off whom, stacked above the
+## The running account of what is happening BETWEEN players, stacked above the
 ## command card. Newest at the bottom, older ones pushed up, gone after a few
 ## seconds.
+##
+## Two things reach it today. A LEAK - who is taking lives off whom - and a
+## DEPARTURE, a player who is gone and whose lane the match is carrying on
+## without (D13, D14). They share this stack rather than getting one each
+## because they are the same kind of thing to a reader: a sentence about
+## somebody else that is worth a glance and then worth forgetting.
 ##
 ## **Only the local player's own leaks.** A life is stolen rather than lost
 ## (game_rules.md), so every leak has two ends, and the two that matter are the
 ## ones you are at. A twelve player free for all generates a leak somewhere
 ## almost every second and a log that showed all of them would say nothing.
+##
+## A DEPARTURE is not filtered that way, and deliberately: there is one of them
+## per player per match, it changes what the rest of the match is, and "who is
+## still in this" is worth knowing about a player you never share a creep with.
 ##
 ## The server tells every client about every leak - see
 ## ReplicationService.report_leak - and the filter is here rather than there
@@ -40,6 +50,16 @@ func _ready() -> void:
 	# until somebody picked a technology.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Replication.leak_reported.connect(_on_leak_reported)
+	# MatchStart rather than a channel of its own: under lockstep a drop rides
+	# a turn as a PLAYER_LEFT order and every peer emits this signal locally
+	# when it applies one, so both machines write this line on the same turn
+	# without anything new crossing the wire.
+	#
+	# Under the REPLICATION path it only ever fires on the server, so this line
+	# is a lockstep-only thing. That is not a hole to plug here: it is the same
+	# asymmetry MatchStartService._announce_drop describes, and the fix for it
+	# is that path's, not this one's.
+	MatchStart.player_dropped.connect(_on_player_dropped)
 
 
 ## Ages every line and drops the ones that have finished fading.
@@ -58,13 +78,28 @@ func _process(delta: float) -> void:
 ## player is not part of, which is most of them in a big match.
 func _on_leak_reported(thief: int, victim: int, lives: int) -> void:
 	var session: MatchSession = References.match_session
-	if session == null || _message_scene == null:
+	if session == null:
 		return
 
 	var is_gain: bool = session.is_local_player(thief)
 	if !is_gain && !session.is_local_player(victim):
 		return
-	_write(victim if is_gain else thief, is_gain, lives)
+	var kind: LeakMessage.Kind = LeakMessage.Kind.GAIN if is_gain else LeakMessage.Kind.LOSS
+	_write(victim if is_gain else thief, kind, lives)
+
+
+## A player is gone for good and the match is carrying on without them.
+##
+## The LOCAL player's own slot is skipped. It can arrive here - a machine that
+## stopped sending turn words is dropped by the relay while still receiving
+## them, so it applies the order announcing its own departure - and "You have
+## left the match." is not news to the person reading it. What that player
+## needs instead is the reason and a way out, which is StallPanel's job.
+func _on_player_dropped(slot: int) -> void:
+	var session: MatchSession = References.match_session
+	if session == null || session.is_local_player(slot):
+		return
+	_write(slot, LeakMessage.Kind.DEPARTED, 0)
 
 
 ## Adds the line, or adds to the one already at the bottom.
@@ -72,11 +107,24 @@ func _on_leak_reported(thief: int, victim: int, lives: int) -> void:
 ## Only the BOTTOM line is ever merged into. Merging into an older one would
 ## reorder the log - a line would suddenly grow above two newer ones - and the
 ## order is the only thing saying which of these just happened.
-func _write(other_slot: int, is_gain: bool, lives: int) -> void:
-	var key: StringName = LeakMessage.message_key(other_slot, is_gain)
+##
+## Whether a kind merges at all is LeakMessage's answer rather than a test
+## here, because it is a fact about what the sentence MEANS: see
+## LeakMessage.counts_lives.
+func _write(other_slot: int, kind: LeakMessage.Kind, lives: int) -> void:
+	if _message_scene == null:
+		return
+
+	var key: StringName = LeakMessage.message_key(other_slot, kind)
 	var newest: LeakMessage = _newest()
 	if newest != null && newest.key == key:
-		newest.add_lives(lives)
+		# A kind that counts adds to the number; one that does not simply
+		# starts its clock again, so the same notice arriving twice is one
+		# line held a little longer rather than the same sentence stacked.
+		if LeakMessage.counts_lives(kind):
+			newest.add_lives(lives)
+		else:
+			newest.refresh()
 		return
 
 	var message: LeakMessage = _message_scene.instantiate() as LeakMessage
@@ -84,7 +132,7 @@ func _write(other_slot: int, is_gain: bool, lives: int) -> void:
 		Log.err("LeakLog message prefab root does not have a LeakMessage script")
 		return
 	add_child(message)
-	message.show_leak(other_slot, is_gain, lives)
+	message.show_notice(other_slot, kind, lives)
 	_trim()
 
 

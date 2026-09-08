@@ -2653,6 +2653,12 @@ BUILT.
     rather than the same sentence twice, and the second one restarts its clock
   - the stack has a CEILING. A line pushed past it by newer ones is gone at once
     rather than fading, so a bad wave cannot walk the log up the screen
+  - a PLAYER LEAVING is announced on the same stack, and is the one line there
+    that is not a leak. It names who, it carries no number, and it is shown to
+    every player except the one it is about - a departure is not filtered to two
+    ends the way a leak is, because there is one per player per match and it
+    changes what the rest of the match is even for somebody who never shared a
+    creep with them. What happens to their maze is under Disconnects
   - what is deliberately NOT in it, unlike the source game, is which creep leaked
     and at what health
 - **CATCH-UP GOLD.** BUILT. When a player is eliminated, whoever they were
