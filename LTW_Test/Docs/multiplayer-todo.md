@@ -11,6 +11,12 @@ edited freely as things land or turn out differently.
 
 ---
 
+> **The largest item is no longer in this file.** One lagging player currently freezes every
+> other player, which is an architectural defect rather than a tuning problem, and the research,
+> the code audit, the design and the phased plan for it are all in
+> [netcode-rework.md](netcode-rework.md). Start there. §1.2 below is a prerequisite for its
+> phase 4, and §2.3 and §3 are explicitly deferred by it.
+
 ## 1. Near term
 
 ### 1.0 Warm content before it is first used  — DONE 2026-09-06

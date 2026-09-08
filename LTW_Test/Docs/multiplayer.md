@@ -1513,10 +1513,15 @@ What the primary sources actually say:
   communications turn *"was roughly the round-trip ping time for a message"* and was adapted
   continuously by their Speed Control system. Turn length tracks the network; the frames
   inside a turn track the slowest CPU. Two independent knobs, neither of them fixed.
-- **Warcraft III**, patch 1.28.4: *"The artificial latency on all Battle.net realms has been
-  reduced from 250ms to 100ms."* LAN was 100 ms throughout. WC3 does not schedule turns
-  ahead at all - it flushes whatever orders arrived on a timer, so its command latency is
-  `RTT + uniform(0, 100 ms)`. At 30 ms ping that is ~80 ms.
+- **Warcraft III**, patch 1.28.4. **The widely-quoted "artificial latency on all Battle.net
+  realms has been reduced from 250ms to 100ms" is NOT a Blizzard statement** - the archived
+  thread was read directly on 2026-09-07 and the official note says only *"Game turn rate
+  adjusted to match LAN settings of 12 turns per second"*, which is 83.3 ms rather than 100. The
+  numbers come from wikis and the community; Blizzard confirmed the mechanism and never restated
+  them. The MECHANISM is well attested and is what matters: WC3 does not schedule turns ahead at
+  all - it flushes whatever orders arrived on a timer, and **that interval is a fixed constant,
+  never computed from any player's ping**, so a distant player raises nobody else's input delay.
+  See `netcode-rework.md` section 3.
 - **StarCraft** ran the same engine at a 125 ms budget on LAN and 500 ms on Battle.net purely
   by configuration, and Remastered shipped Dynamic Turn Rate to choose between them.
 - **Spring/Recoil** has no command-delay constant anywhere in the engine. **Warzone 2100**
