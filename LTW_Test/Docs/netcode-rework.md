@@ -584,7 +584,39 @@ measurement impossible.
 
 Each phase is independently landable. **Do not skip phase 0 or 1.**
 
-### Phase 0 — Instrument. No behaviour change.
+### What to do next, in order  *(2026-09-08 handoff)*
+
+1. **Close phase 1's draft gap.** Make `LockstepProbe` resolve a draft: gate the pick on
+   `References.match_session != null` rather than on `_in_match`, and check the pick is actually
+   applied rather than resubmitted 386 times. Then one `--draft` run of both roles with a freshly
+   restarted relay. If `_check_clock` stays quiet, phase 1 is done in all three configurations.
+2. **Take phase 0's measurement.** Two machines, `jitter_margin_ms = 0`, session logging on, a
+   real match. Read `arrival_ms` and `stalled_s` out of `lockstep.health` and the relay's drift
+   line out of journald. **This is the number the whole rework has been reasoning without**, and
+   phase 5's servo decision depends on it. Put the value back to 20 afterwards.
+3. Then phase 2 as written.
+
+**Nothing is pushed.** Phases 0 and 1 are committed locally and `main` is two commits ahead of
+`origin/main`.
+
+### Phase 0 — Instrument. No behaviour change.  — DONE 2026-09-08 (`6d18be6`)
+
+> **Landed as specified.** Three hooks, the relay drift report, `stalled_s` and `arrival_ms` in
+> `lockstep.health`, `_ordered_at` re-keyed to a client-local `seq`, the stall-clearing log
+> demoted to `debug`, and the `tick_seconds()` split pulled forward from phase 6 — six wall-clock
+> call sites in `LockstepService` moved to a private `_engine_tick_seconds()`, three simulation
+> ones left alone.
+>
+> Proven with a throwaway headless check (22 assertions: percentile indices, ring wrap-around, an
+> early word reading negative, `_overrun_ms` picking the index the capped reading used to). **One
+> assertion failed and found a real bug** — `_sample_arrivals` used `0` as both "no due stamp" and
+> a legitimate `Time.get_ticks_msec()`, the sentinel collision `UNKNOWN_RTT` is negative to avoid.
+> A 68-agent adversarial review afterwards raised 25 findings and refuted all 25, which is worth
+> recording mostly as evidence that the review was not where the value was.
+>
+> **The measurement itself has NOT been taken.** That needs two machines and
+> `jitter_margin_ms = 0`, and it is the first thing to do — see "What to do next" below.
+
 
 Nothing in this codebase records how long a turn word actually took to arrive, which is why this
 problem was misdiagnosed twice. Everything below is local state plus log output: no wire change,
@@ -645,7 +677,29 @@ through it would be an artefact rather than a finding.
 - *Falsifies:* if arrival-lead p99 is small and stalls still happen, the network-jitter story is
   wrong and so is every budget in this file.
 
-### Phase 1 — Turn-derived match clock, under the current gate.
+### Phase 1 — Turn-derived match clock.  — DONE 2026-09-08 (`3e1f7a4`), draft case unproven
+
+> **Landed as specified**, including the `!is_lockstep()` fallback (B1), the hold read AFTER
+> `apply_turn`, and `begin()` clearing `_holds` — which was a latent bug until the clock's advance
+> condition became a read of that set. `_check_clock` ships enabled and compares the turn clock
+> against the retained `_legacy_tick()` by difference from a baseline, `Log.err` on a mismatch,
+> capped at five.
+>
+> | Case | Result |
+> | --- | --- |
+> | Offline | Determinism-bench traces **byte-identical** across the change, same seed and ticks, 13 checksum samples. `WorldChecksum` hashes `tick()`, so any drift would have moved them. |
+> | Online, no draft | Two headless peers on a local relay: 425 turns each, 44 orders, **0 desyncs, 0 clock complaints**. Genuinely exercised — the only holds in either log are `lockstep`, so `advance_clock` incremented on every turn. |
+> | **Draft** | **NOT PROVEN.** See below. |
+>
+> **The draft case is the one that matters and it is still open.** `LockstepProbe` cannot resolve
+> a draft: teaching it to submit `PICK_DRAFT_TECH` was not enough, because `_in_match` is set when
+> the match STARTS and the pick fires before `References.match_session` exists, and the picks that
+> do land never clear the hold. So the world stayed held all match, `advance_clock` returned early
+> on every turn, and `_check_clock` never made a single comparison — a green run that measured
+> nothing. **Reading the hold before or after `apply_turn` differs by exactly one tick only on the
+> turn that RELEASES the draft**, so today that ordering is reasoned rather than measured. The
+> check ships enabled, so the first draft match anybody plays reports the drift if it is wrong.
+
 
 `MatchSession.tick()` becomes a counter advanced once per applied turn — **and keeps
 `Engine.get_physics_frames()` whenever `!is_lockstep()`** (blocker B1). Skipped while a

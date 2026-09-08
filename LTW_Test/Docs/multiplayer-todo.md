@@ -18,6 +18,12 @@ edited freely as things land or turn out differently.
 > prerequisites for its phase 4** — §1.1 because the cutover is the change that makes
 > cross-machine determinism hardest to test afterwards — and §2.3 and §3 are explicitly deferred
 > by it. That plan was revised 2026-09-08 after an implementation audit; read its header note.
+>
+> **Status 2026-09-08, end of day.** Phase 0 (instrumentation) and phase 1 (turn-derived match
+> clock) are BUILT AND COMMITTED, locally — `main` is two commits ahead of `origin/main` and
+> nothing is pushed. Phase 1 is proven offline and online-without-a-draft and is **unproven in a
+> draft match**, which is the one case its ordering decision turns on. The plan's §8 carries the
+> evidence for each and a numbered "What to do next"; start there rather than here.
 
 ## 1. Near term
 
@@ -126,6 +132,20 @@ a few percent loss injected.
   somebody has a reason to cheat.
 - **Majority-vote desync attribution.** With two peers a mismatch says they disagree and never
   which is right. Meaningless below three players.
+
+---
+
+### 1.5 Close phase 1's draft gap  — the immediate next task
+
+`LockstepProbe` cannot resolve a technology draft, so the one case that distinguishes phase 1's
+two candidate rules has never been run. Details and the fix in `netcode-rework.md` §8 phase 1.
+Small, and it finishes a phase that is otherwise done.
+
+### 1.6 Take phase 0's measurement  — needs two machines
+
+The instrument is built and has never been read against a real link. `jitter_margin_ms` must be
+put back to 0 for the run, or the margin raised on 2026-09-07 suppresses the very stalls being
+characterised. Phase 5's whole decision rests on the drift half of it.
 
 ---
 

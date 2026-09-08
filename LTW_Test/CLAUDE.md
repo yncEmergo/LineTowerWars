@@ -349,6 +349,31 @@
   - a negative result only counts if the test exercised the right case. A probe
     that never fires because the wrong unit was spawned looks identical to a
     probe that disproves the theory
+  - **so CHECK THE POSITIVE CONTROL FIRED before believing a green result.** The
+    rule above is easy to agree with and easy to walk straight past, because
+    every one of these reads as a pass. Three in one afternoon on 2026-09-08:
+    `| head -40` closed the pipe before the probe printed its result line, so
+    "no errors" was measured on a stream that had been cut; a relay reused
+    between runs kept a stale lobby, so the second run failed in a way that
+    looks exactly like a code bug; and a draft that never resolved meant the
+    clock check under test never ran a single comparison
+    - the check is one question and it costs nothing: **what in this output
+      proves the thing I am testing actually executed?** A turn count, a
+      sample count, an assertion that fired. If the answer is "the absence of
+      an error", the test has not run yet
+    - it is the same trap as the peer-list one below and the shared-symptom one
+      in `Docs/netcode-rework.md`, reached through the harness rather than
+      through the topology
+  - **`| head -N` IN A TEST PIPELINE DISCARDS THE ANSWER.** The summary a probe
+    prints comes LAST, so a head that caps the noise caps the result off with
+    it - and `head` closing the pipe can end the run early. Redirect the whole
+    output to a file and grep the file
+  - **to prove a change is a no-op, run the determinism bench either side of
+    it.** Record a trace on the parent commit, apply the change, record again
+    with the same seed and tick count, and compare the files byte for byte -
+    `WorldChecksum` hashes the match clock and the RNG state, so anything that
+    moved shows up. It is how phase 1's offline half was settled in two runs.
+    Note the argument is `out=`, not the `record=` its docstring used to claim
 - **A TRANSPORT'S PEER LIST IS NOT A MATCH ROSTER.** `multiplayer.get_peers()`
   answers "who is connected to this process"; nearly every call site wants "who
   is in this match". They are the same number in every test that runs one server

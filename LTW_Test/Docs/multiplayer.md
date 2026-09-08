@@ -83,6 +83,8 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D35 | **A player who is connected and silent is dropped by the relay.** | 2026-09-05 | A stall had no ceiling; the disconnect grace covers a dead socket and does nothing for a wedged game loop. `silent_timeout_seconds`. |
 | D36 | **Every scene and sound a match can spawn is loaded on the LOAD SCREEN**, not on first use. | 2026-09-06 | `ContentWarmer`, run by `MatchLoading` before it reports loaded. Under lockstep one machine paying a first-instantiation cost freezes EVERYBODY - in playtest 1 the guest stalled 0.65-0.9 s five times and the host, on time to within 10 ms every time, simply waited. The user's call that it belongs on the load screen rather than trickled in during play; the reachability split that was planned died when the whole graph measured at half a second. Resources are held statically for the process, so a later `load()` of any of them is free and no other system has to be told. `Findings/2026-09-06-playtest-1-freezes.md`. |
 | D37 | **The input delay allows for THIS MACHINE's frame-time overrun as well as the network's jitter.** | 2026-09-06 | `adaptive_local_jitter`. The flat `jitter_margin_ms` was zeroed on HEADLESS paired runs, which have no renderer and therefore almost no frame-time variance - an honest measurement of the network term that silently zeroed a term only a drawing client has. Playtest 1 is the case: nothing was wrong with the wire, and a peer's words were late because its own ticks were. Measured live as a 90th percentile over three seconds and capped, so a machine keeping up pays nothing. **Not yet verified against a real link** - the percentile and the cap are chosen from the shape of the problem, and the session log's health line now carries the number that will say whether they are right. |
+| D38 | **The turn stream is measured, not only estimated.** | 2026-09-08 | Every figure in the health line was an ESTIMATE of the wire - a mean round trip, its smoothed variance, this machine's frame times - and the same problem was diagnosed wrongly twice from them. `LockstepService` now stamps when each turn became DUE and when each peer's word FIRST arrived, and reports `arrival_ms` per peer (p50/p90/p99/max, positive meaning late) plus `stalled_s` - a DURATION, because a stall count cannot tell six invisible hitches from six visible freezes. The relay reports each peer's turns-behind and its own achieved seal interval. **Not yet read against a real link**; that needs two machines and `jitter_margin_ms` put back to 0 for the run. |
+| D39 | **The match clock is the turn stream under lockstep, not this machine's physics frames.** | 2026-09-08 | `tick()` is hashed into every checksum through `elapsed_seconds()`, and it agreed between peers only BY CONSTRUCTION - every peer holds for the same turns today. The netcode rework stops that being true, so the derivation had to become an identity before anything else was safe. Off lockstep - single player, the replication path, both benches - there is no turn stream at all, so the physics-frame clock stays. See `netcode-rework.md` phase 1. |
 | D32 | **The input delay is MEASURED from the live connection**, never authored. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Also the only way to use more than one CPU core — see §11.3. |
 | D15 | **Load timeout 60 s**, then start without whoever is missing, provided `min_players` are ready. No area spawns for them. | 2026-08-21 | See §11.2. |
@@ -175,8 +177,9 @@ session.begin(setup)          # called by Main before anything is built
 session.setup()               # the MatchSetup
 session.rng()                 # the one seeded generator for the match
 MatchSession.match_rng()      # static: the same generator, without holding the session
-MatchSession.tick_seconds()   # static: seconds per simulation tick
+MatchSession.tick_seconds()   # static: seconds per SIMULATION tick - never for wall clock
 session.tick()                # simulation ticks since the match began, from 0
+                              # under lockstep this is the TURN COUNT; otherwise physics frames
 session.local_slot()          # which slot this machine plays; 0 on a server
 session.is_local_player(slot)
 session.player_count()
@@ -1331,10 +1334,12 @@ knowing how:
     the snapshot that announces it both travel that way. On the HUD only the draft screen and
     the menu that lets a player leave do, which is what stops a held player from building or
     sending their way past the choice.
-  - the MATCH CLOCK is given back what the hold took. The tick counter is the physics frame
-    and the engine goes on counting those while nothing is processing them, so without that
-    correction a ten second draft would be ten seconds every creep unlock had silently
-    already served.
+  - the MATCH CLOCK does not run through the hold, so a ten second draft is not ten seconds
+    every creep unlock has silently already served. HOW that is achieved changed on
+    2026-09-08: under lockstep the clock is now the count of turns applied, and a turn applied
+    while a NON-LOCKSTEP holder is active is not counted; off lockstep it is still the physics
+    frame with the paused frames refunded. The rule is the same either way and it is the rule
+    that matters - see `netcode-rework.md` for why the derivation had to change.
 - A player who drops during the draft stops being waited for (D13), so one crashed client
   cannot hold everybody else for the rest of the match.
 
