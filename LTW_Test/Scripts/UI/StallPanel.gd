@@ -63,6 +63,15 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# **Shown at once when this machine has given up**, with no appearance
+	# delay: that state is terminal rather than a hiccup, so the usual "wait and
+	# see if it clears" is exactly wrong.
+	if Lockstep.has_given_up():
+		if _panel != null && !_panel.visible:
+			_panel.show()
+		_refresh()
+		return
+
 	if !Lockstep.is_stalled():
 		_stalled_for = 0.0
 		if _panel != null && _panel.visible:
@@ -81,11 +90,34 @@ func _process(delta: float) -> void:
 	_refresh()
 
 
+## Three states, and each one describes only THIS machine.
+##
+## **That is the whole point of the sealed stream reaching the UI.** Before it,
+## a stall meant the whole match was frozen and naming the peer responsible was
+## the useful thing to say. Now a stall is usually local, so the honest message
+## is about the local machine - and telling a player their opponent is at fault
+## when the opponent is playing happily would be worse than saying nothing.
 func _refresh() -> void:
+	if Lockstep.has_given_up():
+		if _status_label != null:
+			_status_label.text = "Your game fell too far behind to catch up"
+		if _elapsed_label != null:
+			_elapsed_label.text = "The match carried on without you. Leave to return to the menu."
+		return
+
 	if _status_label != null:
 		_status_label.text = "Waiting for %s" % _waiting_for_text()
 	if _elapsed_label != null:
-		_elapsed_label.text = "%.0f seconds" % _stalled_for
+		# The BACKLOG as well as the wait, when there is one. A player whose
+		# machine is trailing feels heavy input rather than a freeze, and the
+		# two have completely different causes - so the number that separates
+		# them belongs on the screen that gets photographed and sent back.
+		var behind: float = Lockstep.sealed_lag_seconds()
+		if behind >= 1.0:
+			_elapsed_label.text = "%.0f seconds - your game is %.1fs behind" \
+				% [_stalled_for, behind]
+		else:
+			_elapsed_label.text = "%.0f seconds" % _stalled_for
 
 
 ## Who the match is waiting on, by the name they chose rather than by peer id.

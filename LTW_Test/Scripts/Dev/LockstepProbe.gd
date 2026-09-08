@@ -389,6 +389,8 @@ func _finish() -> void:
 		"desyncs": _desyncs,
 		"hitches": _hitches,
 		"drops_seen": _drops,
+		"gave_up": Lockstep.has_given_up(),
+		"lag_s": snappedf(Lockstep.sealed_lag_seconds(), 0.1),
 		# **The positive control for the whole phase.** A run where `sealed` is
 		# false measured nothing about the cutover however good the numbers
 		# look, and `sealed_held` greater than zero is what proves seals were

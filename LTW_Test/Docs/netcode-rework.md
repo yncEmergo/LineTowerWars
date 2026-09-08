@@ -896,13 +896,55 @@ freeze**.
   peer still stalls, the relay is the problem.
 - Then delete `Scripts/Dev` and write the finding.
 
-### Phase 4b — The relay-side lag drop.
+### Phase 4b — The relay-side lag drop.  — DEFERRED 2026-09-08, deliberately
+
+**The clamp landed; the drop did not, and should not until there is field data.**
+`_reported_turn` is now `maxi`-clamped in `submit_alive`, which was an outright bug rather than a
+policy: it rides an unreliable rpc, so reordering moved it backwards and a lost heartbeat aged it
+at the seal rate. Any threshold built on the raw reading was being read off a number that wanders.
+
+The DROP itself is deferred, and the case for deferring got stronger once the cutover was measured.
+The gap it fills is narrower than the plan assumed:
+
+- a peer that is genuinely silent is already given up on by `_drop_silent_peers` at
+  `silent_timeout_seconds`
+- a peer that is hopelessly behind now **gives up on itself** at `max_sealed_turns`, and says so -
+  see phase 4c
+
+What is left is only the middle case: alive, talking, and never catching up. That peer terminates
+itself, so the relay-side drop buys tidiness rather than liveness. **Its threshold is a judgement
+about how much input delay a player should be made to tolerate before their match is ended FOR
+them, and picking that from a loopback run would be guessing.** Revisit when a real session
+produces a `sealed_turn - reported_turn` distribution; the clamp above is what makes that
+distribution trustworthy when it arrives.
 
 Lands only after a measured post-cutover session has produced a real
 `sealed_turn - reported_turn` distribution. **Clamp `_reported_turn` monotonically first** — it is
 written by an unreliable rpc that can move it backwards. Decide amendment 9's precedence here.
 
-### Phase 4c — Tell the player.
+### Phase 4c — Tell the player.  — DONE 2026-09-08
+
+**Smaller than the plan assumed, because `notify_lagging` turned out to be unnecessary.** The plan
+had the relay telling a peer it was lagging; the peer already knows exactly, because the backlog
+waiting to be played IS the lag and it is sitting in that machine's own dictionary. A round trip
+could only tell it something it already knew, later and less accurately. `sealed_lag_seconds()`
+reads it locally and nothing crosses the wire.
+
+`StallPanel` now has the three states, and every one of them describes only the LOCAL machine -
+which is the point of the cutover reaching the UI. Before it, a stall meant the whole match was
+frozen and naming the responsible peer was the useful thing to say; now a stall is usually local,
+and telling a player their opponent is at fault while that opponent plays on would be worse than
+silence. A stall that is not terminal also carries the backlog in seconds, because a trailing
+machine feels HEAVY rather than frozen and the two have completely different causes.
+
+**Giving up no longer yanks the player to the menu.** It clears the backlog, holds the world and
+puts up a terminal message; the player leaves by pressing the button, exactly as they do on
+`DesyncNotice`. Amendment 9's concern was that a local end must not say nothing on the wire, and a
+deliberate leave says it - what is added is that a dropped player is told why, which has never
+happened in this project before.
+
+`notify_dropped(reason)` as an rpc is therefore also unbuilt and unneeded for this case. It comes
+back only with 4b, which is the one road out that the player did not choose.
 
 `notify_lagging`, `notify_dropped(reason)`, the three-state stall panel. Split out because it
 carries no determinism risk and shares no code with the gate flip. This would be the first time a

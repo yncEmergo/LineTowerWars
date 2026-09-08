@@ -944,6 +944,30 @@ func sealed_held() -> int:
 	return _sealed.size()
 
 
+## How far behind the relay this machine is playing, in seconds of real time.
+##
+## **The peer works this out entirely by itself, which is why phase 4c needs no
+## message from the relay at all.** The plan assumed a `notify_lagging` rpc, and
+## it is not needed: the backlog waiting to be played IS the lag, exactly, and
+## it is sitting in this machine's own dictionary. A round trip could only tell
+## it something it already knows, later and less accurately.
+##
+## Wall clock, for a human. Nothing in the simulation may read it.
+func sealed_lag_seconds() -> float:
+	if !_sealed_stream():
+		return 0.0
+	return float(_sealed.size()) * _engine_tick_seconds() * float(_ticks_per_turn())
+
+
+## Whether this machine has fallen so far behind that it has stopped playing.
+##
+## **A terminal state, and the panel says so rather than this leaving quietly.**
+## Being yanked back to the main menu with no explanation is what a dropped
+## player gets today, and it is the thing phase 4c exists to end.
+func has_given_up() -> bool:
+	return _gave_up
+
+
 ## How long this match has spent held, in seconds, across every stall.
 ##
 ## **Engine rate, not simulation rate.** A stalled tick is a tick of real time
@@ -1755,7 +1779,13 @@ func submit_alive(turn: int) -> void:
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
 	_last_heard[sender] = _frames
-	_reported_turn[sender] = turn
+	# **Clamped, because this arrives UNRELIABLY and can therefore go
+	# BACKWARDS.** Two heartbeats can be reordered by the network, and a lost
+	# one ages the reading at the seal rate - so the raw value wanders, and
+	# 4b would build "how far behind is this peer, and should the match end for
+	# them" on top of it. A peer's own turn count never decreases, so anything
+	# that says it did is the transport talking, not the peer.
+	_reported_turn[sender] = maxi(int(_reported_turn.get(sender, NO_TURN)), turn)
 
 
 ## **Phase 3a. One order, arriving bare, with no turn number on it.**
@@ -2021,6 +2051,10 @@ func receive_seal(turn: int, orders: Array) -> void:
 ## same road the in-game menu takes, so the relay is told at once and the other
 ## players see a clean departure rather than sitting out the disconnect grace.
 func _absorb_seal(turn: int, orders: Array) -> void:
+	# Nothing more is played on a machine that has given up, and nothing more is
+	# kept either - the relay goes on sealing until this peer actually leaves.
+	if _gave_up:
+		return
 	# A turn already played is finished with. It cannot arrive twice on a
 	# reliable ordered channel from a single sender, and it costs one comparison
 	# to be certain rather than to assume.
@@ -2049,18 +2083,23 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 	SessionLog.note("lockstep.gave_up", {
 		"held": _sealed.size(), "playing": _last_run_turn, "sealed": turn,
 	})
-	# **Released BEFORE leaving, or this machine goes back to a frozen menu.**
-	# Reaching the ceiling means this peer is stalling, and a stall holds the
-	# whole TREE - `MatchSession.hold` sets `tree.paused`. Nothing clears that
-	# when the match scene goes away, so leaving while held pauses the main menu
-	# for the rest of the process. `MatchSession._exit_tree` now covers the
-	# general case; this covers it at the one moment the session still exists to
-	# be asked.
-	if _stalling:
-		_stalling = false
-		_stalled_on = NO_TURN
-		_set_held(false)
-	MatchStart.leave_match()
+	# **Stopped and EXPLAINED rather than quietly yanked to the menu.**
+	#
+	# Amendment 9 asked that a local end go through `MatchStart.leave_match()`
+	# so the existing departure path runs, and it still does - but the player
+	# presses the button, exactly as they do on `DesyncNotice`. The concern
+	# behind the amendment was that a local end must not say nothing on the
+	# wire; a deliberate leave says it. What is added is that the player finds
+	# out why their match stopped, which no dropped player has ever been told.
+	#
+	# The backlog is dropped here and refused above, so a machine sitting on
+	# this screen is not still eating memory. The world stays held: there is
+	# nothing left to play, and the hold is what keeps `StallPanel` up.
+	_sealed.clear()
+	if !_stalling:
+		_stalling = true
+		_stalled_on = _last_run_turn + 1
+		_set_held(true)
 
 
 ## Files one order under its author, in the stream it arrived on, and checks the
