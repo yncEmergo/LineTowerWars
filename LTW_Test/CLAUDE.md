@@ -305,6 +305,37 @@
     it on its own when it notices the file. Check
     `.godot/global_script_class_cache.cfg` to confirm which it is
 
+- **AN EXPORTED BUILD CONTAINS NO `.tres` AT ALL, AND TWO ORDINARY-LOOKING CALLS
+  GO WRONG BECAUSE OF IT.** The export converts every text resource to binary,
+  leaves a `foo.tres.remap` stub where `foo.tres` stood, and files the binary
+  away under `.godot/exported/<hash>/` under a name nothing may construct. So a
+  res:// resource read at runtime has to be reached the right way, and both of
+  the wrong ways are correct in the editor, correct headless, correct in every
+  test, and wrong only in the thing players download
+  - `FileAccess.file_exists("res://.../foo.tres")` is FALSE in a build, and so
+    is the `.res` spelling - the binary is NOT a sibling of the original, so
+    trying both spellings buys nothing. **Ask `ResourceLoader.exists(path)`**,
+    which follows the remap. It is also the better question anywhere: what a
+    caller wants to know is whether a resource can be loaded, not whether a
+    file is sitting there
+  - **NEVER pass a type hint naming a SCRIPT class.**
+    `ResourceLoader.load(path, "MyClass")` returns null in a build and
+    `ResourceLoader.exists(path, "MyClass")` returns false, because the loader
+    is picked by extension-for-type: the TEXT loader answers "tres" for any
+    type at all, while the BINARY loader asks ClassDB, which has never heard of
+    a script class. Pass `""` and let the `as MyClass` cast do the checking it
+    was already doing. An ENGINE class - "PackedScene" - is fine
+  - anything ENUMERATING resource files by extension must trim `.remap` first,
+    or it is right in the editor and empty in the build
+  - it has now cost three separate features: the content warmer, the shipped
+    blueprints, and the layout loader underneath them. **When the words "only
+    in a build" come up, reproduce it OUTSIDE the repo** - a throwaway project,
+    `--export-pack`, then `--main-pack`, runs the same code from source and
+    from a pack with one variable changed and needs no autoload, no editor
+    restart and nothing to delete afterwards. See
+    Docs/Findings/2026-09-08-shipped-blueprints-vanish-in-an-export.md, which
+    has the full table and the worked reproduction
+
 # Testing
 - Verify cheaply, then hand the rest over
   - boot the project once to confirm it loads with no errors

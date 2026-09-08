@@ -46,10 +46,15 @@ const DEFAULT_FOLDER: String = "res://Resources/Blueprints"
 ## and the file that overrides it are named the same thing in two places.
 const FILE_PATTERN: String = "blueprint_%d.%s"
 
-## What a resource file can be called. Two spellings because an exported build
-## converts text resources to binary - the same reason AbilityRegistry carries
-## this list. Only ever needed for the shipped defaults; a user file is written
-## by us and is always .tres.
+## What a resource file can be called. Two spellings because a default could be
+## authored either way in the source tree - the same reason AbilityRegistry
+## carries this list. A user file is written by us and is always .tres.
+##
+## It is NOT what covers the export: an exported .tres does not become a .res
+## NEXT TO ITSELF, it becomes a .remap in its place pointing at a binary file
+## under a hashed path nothing may name. Asking for both spellings and then
+## asking the FILESYSTEM about them is what made every shipped default vanish
+## from a build - see _default_path.
 const RESOURCE_EXTENSIONS: Array[String] = ["tres", "res"]
 
 ## Slot number to the layout in it, or to null for a slot that is empty.
@@ -147,13 +152,25 @@ static func clear_cache() -> void:
 
 ## The shipped default for a slot, or "" when the build has none.
 ##
-## Both spellings are tried because an exported build converts .tres to .res,
-## and a default that only existed in the editor would be a slot that quietly
-## emptied itself the day the game was exported.
+## **ASKED OF ResourceLoader, NEVER OF FileAccess, and that is the whole of the
+## bug this used to have.** An export converts text resources to binary and
+## leaves a `.remap` where the original stood, so in a build there is no file
+## at `res://Resources/Blueprints/blueprint_1.tres` and none at `.res` either -
+## the binary lives under `.godot/exported/<hash>/` beside a name nothing may
+## construct. `FileAccess.file_exists` answers no to both spellings, so every
+## default was correct in the editor and gone the moment the game was exported,
+## which is the worst way round and is exactly what a player downloading a
+## build reported. `ResourceLoader.exists` follows the remap and answers yes.
+##
+## Both spellings are still tried, because a default may be authored as either
+## in the source tree; the remap makes the first one enough in a build.
+##
+## No type hint on `exists`. A hint is matched against ClassDB, TowerLayout is
+## a SCRIPT class and is not in it, and the answer would be a flat no.
 static func _default_path(slot: int) -> String:
 	for extension: String in RESOURCE_EXTENSIONS:
 		var path: String = "%s/%s" % [DEFAULT_FOLDER, FILE_PATTERN % [slot, extension]]
-		if FileAccess.file_exists(path):
+		if ResourceLoader.exists(path):
 			return path
 	return ""
 
@@ -163,7 +180,11 @@ static func _default_path(slot: int) -> String:
 ## The existence check is here rather than left to load_file so an empty slot
 ## is silent: load_file says where it looked, which is right for a cheat key
 ## somebody pressed and wrong for nine squares that are simply unused.
+##
+## ResourceLoader rather than FileAccess for the reason _default_path spells
+## out, and it is the right question for a user file too: what is being asked
+## is not "is there a file there" but "can a resource be loaded from there".
 static func _read(path: String) -> TowerLayout:
-	if path.is_empty() || !FileAccess.file_exists(path):
+	if path.is_empty() || !ResourceLoader.exists(path):
 		return null
 	return TowerLayout.load_file(path)

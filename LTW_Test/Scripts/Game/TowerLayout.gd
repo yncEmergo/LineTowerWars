@@ -155,13 +155,36 @@ func save_file(path: String) -> bool:
 ## `load_file` rather than `load`: a static is reached through the SCRIPT, which
 ## is itself a Resource, so a static sharing a name with something Object
 ## already owns binds to that instead and silently does nothing. See CLAUDE.md.
+##
+## **NO TYPE HINT, AND THE EXISTENCE CHECK IS ResourceLoader'S, NOT
+## FileAccess'S.** Both were wrong here in the same way and for the same
+## reason, and both were right in the editor and broken in an exported build -
+## which is why a layout SHIPPED under res:// worked all the way through
+## development and reached players as nine empty squares.
+##
+## An export converts a text resource to binary and leaves a `.remap` where the
+## original stood. Two things fall over on the far side of that:
+##
+##   - `FileAccess.file_exists` answers NO for the `.tres`, because there is no
+##     longer a file there, and no for the `.res` spelling too - the binary
+##     lives under `.godot/exported/<hash>/` beside a name nothing may build.
+##   - a type hint naming a SCRIPT class stops matching. The loader picks by
+##     extension-for-type, and the text loader answers "tres" for any type at
+##     all while the binary one asks ClassDB - which has never heard of
+##     TowerLayout. So the hint costs nothing from source and refuses the load
+##     outright from a pack, with `null` and no explanation a reader could act
+##     on.
+##
+## Neither is a rule about layouts, so both are written down in CLAUDE.md.
+## `as TowerLayout` below is what actually checks the type, and it did all
+## along - the hint was never buying anything the cast was not already.
 static func load_file(path: String) -> TowerLayout:
-	if path.is_empty() || !FileAccess.file_exists(path):
+	if path.is_empty() || !ResourceLoader.exists(path):
 		Log.warn("No layout file to load", {"path": path})
 		return null
 
 	var layout: TowerLayout = ResourceLoader.load(
-		path, "TowerLayout", ResourceLoader.CACHE_MODE_IGNORE
+		path, "", ResourceLoader.CACHE_MODE_IGNORE
 	) as TowerLayout
 	if layout == null:
 		Log.err("That file did not load as a tower layout", {"path": path})

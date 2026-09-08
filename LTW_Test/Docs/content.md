@@ -136,9 +136,13 @@ Two things worth knowing:
 - **A layout carries `unit_type_id`s, and the overlay draws none of them.** A blueprint only
   answers WHERE today. The types are stored anyway, because the file that has them costs
   nothing extra and the file that threw them away could never grow the feature back.
-- **An exported build converts `.tres` to `.res`.** `BlueprintLibrary` looks for both
-  spellings for exactly this reason — a default that was only ever tried in the editor would
-  otherwise be a slot that quietly emptied itself the day the game was exported.
+- **A default only ever tried in the editor is not tested.** An exported build converts every
+  text resource to binary and leaves a `.tres.remap` where the file stood, so there is no
+  `.tres` and no sibling `.res` for `FileAccess` to find. `BlueprintLibrary` and
+  `TowerLayout.load_file` therefore ask `ResourceLoader`, with no type hint, and both of those
+  are load-bearing — asking the wrong way shipped a card of empty squares to players once
+  already. `../CLAUDE.md` carries the rule and
+  `Findings/2026-09-08-shipped-blueprints-vanish-in-an-export.md` the proof.
 
 The nine squares on each of the two cards are nine authored `.tres` files each, under
 `Resources/Abilities/Blueprints/`, and each owns a permanent `ability_id` like every other
