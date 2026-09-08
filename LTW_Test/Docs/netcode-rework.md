@@ -679,6 +679,21 @@ through it would be an artefact rather than a finding.
 
 ### Phase 1 — Turn-derived match clock.  — DONE 2026-09-08 (`3e1f7a4`), draft case unproven
 
+> **The draft case may not be provable yet, and not for a netcode reason.** The owner reports on
+> 2026-09-08 that the technology DRAFT has never been tested and may not be fully implemented.
+> What is known from a real two-client run that day: the server side works — `StartingTech` logged
+> `Draft opened` with three Ultimates rolled, and held the world exactly as designed. What is NOT
+> known is whether the panel renders and whether a pick travels; that run was abandoned because
+> neither player could pick, and the world stayed held for the rest of it.
+>
+> So the phase 1 question — is the hold read on the right side of `Commands.apply_turn` — is
+> blocked behind a GAMEPLAY task rather than a netcode one. Do not spend netcode time on it.
+> The clock check ships enabled and will report the drift the first time a draft resolves, which
+> is the correct place to leave it.
+>
+> **It also means a lobby option currently bricks a match.** Worth fixing or hiding before any
+> tester sees it, independently of this document.
+
 > **Landed as specified**, including the `!is_lockstep()` fallback (B1), the hold read AFTER
 > `apply_turn`, and `begin()` clearing `_holds` — which was a latent bug until the clock's advance
 > condition became a read of that set. `_check_clock` ships enabled and compares the turn clock
