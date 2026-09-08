@@ -346,8 +346,19 @@ func sudden_death_remaining() -> float:
 	return maxf(0.0, at - elapsed_seconds())
 
 
-## Seconds per simulation tick, read from the engine rather than duplicated, so
+## Seconds per SIMULATION tick, read from the engine rather than duplicated, so
 ## there is exactly one place the rate is set.
+##
+## **This is the simulation's second and every peer must agree about it to the
+## bit.** It converts an authored duration into ticks and the tick count back
+## into match time, so anything derived from it is hashed into the checksum
+## through `elapsed_seconds()`.
+##
+## **It is therefore NOT the number to use for wall-clock arithmetic** - how long
+## a stall lasted, how many frames a timeout is, how many milliseconds of wire
+## time a turn buys. Those follow the rate the machine is actually running at,
+## and the two stop being the same number as soon as anything paces the engine.
+## `LockstepService._engine_tick_seconds` is that reading, and it says why.
 static func tick_seconds() -> float:
 	return 1.0 / float(Engine.physics_ticks_per_second)
 
