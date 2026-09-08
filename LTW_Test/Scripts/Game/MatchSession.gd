@@ -28,6 +28,10 @@ signal unit_replaced(old_unit: Unit, new_unit: Unit)
 ## Ids count from 1 so 0 can mean "no unit" without ambiguity.
 const NO_UNIT: int = 0
 
+## How many times the phase 1 clock check may complain before it goes quiet. A
+## clock that has drifted once drifts every tick afterwards.
+const CLOCK_COMPLAINT_LIMIT: int = 5
+
 ## Stands in when there is no session at all, so a bare test scene still runs.
 ## Never used by a real match.
 static var _fallback_rng: RandomNumberGenerator = null
@@ -46,6 +50,17 @@ var _paused: bool = false
 ## The frame the hold began on, so resuming can give the clock back what the
 ## hold took.
 var _pause_frame: int = 0
+## The match clock UNDER LOCKSTEP: ticks accumulated from the turn stream rather
+## than from this machine's physics frames. See tick().
+var _turn_ticks: int = 0
+## Phase 1 check. The legacy clock and the turn clock at the first tick they were
+## compared on, so the two can be compared by DIFFERENCE - their absolute values
+## cannot agree, because `_start_frame` is stamped in `Main._ready` while the
+## turn stream starts counting on `LockstepService`'s first physics tick and
+## nothing pins those two instants together.
+var _clock_base: int = -1
+var _clock_turn_base: int = 0
+var _clock_complaints: int = 0
 var _abilities: AbilityRegistry = AbilityRegistry.new()
 var _unit_types: UnitTypeRegistry = UnitTypeRegistry.new()
 var _techs: TechRegistry = TechRegistry.new()
@@ -82,6 +97,14 @@ func begin(match_setup: MatchSetup) -> void:
 	_units.clear()
 	_next_unit_id = 1
 	_start_frame = Engine.get_physics_frames()
+	_turn_ticks = 0
+	_clock_base = -1
+	_clock_turn_base = 0
+	_clock_complaints = 0
+	# **Cleared here as well as in hold(), because `_paused` is and `_holds` was
+	# not.** A second match in the same process inheriting a holder from the last
+	# one would freeze a clock that nothing would ever release.
+	_holds.clear()
 
 	_rng = RandomNumberGenerator.new()
 	if _setup != null:
@@ -219,13 +242,26 @@ func _color_name_for(slot: int) -> String:
 ## This is what a command will be stamped with, and what the server and a
 ## client compare when they disagree. See multiplayer.md.
 func tick() -> int:
-	# Frozen while the world is held still. The engine goes on counting physics
-	# frames whether or not anything is processing them, so without this the
-	# clock would run through a pause and every creep unlock would come out of
-	# it having silently served time. See hold().
-	if _paused:
-		return _pause_frame - _start_frame
-	return Engine.get_physics_frames() - _start_frame
+	# **Under lockstep the clock is the TURN STREAM, not this machine's physics
+	# frames**, and that is the whole of invariant I4 in `netcode-rework.md`.
+	#
+	# It holds today by construction rather than by enforcement: every peer
+	# pauses for exactly the same turns, so every peer's physics-frame count
+	# minus its own paused frames comes out the same. The cutover is what stops
+	# that being true - a peer will hold for a word nobody else is waiting on -
+	# and this number is hashed into every checksum through `elapsed_seconds()`,
+	# so two peers whose clocks disagreed by one would desync with no other
+	# symptom. Deriving it from the turns makes the invariant an identity.
+	if _lockstep:
+		return _turn_ticks
+
+	# **The physics-frame clock survives for everything that has no turn stream**,
+	# and it has to: `_lockstep` needs a network, so a single player run, the
+	# replication path and both benches never apply a turn at all. A purely
+	# turn-derived clock would sit at zero for ever there - no income, no creep
+	# unlock, no Sudden Death - and `ReplicationService` dedupes its snapshots on
+	# this number, so a client would apply exactly one and freeze.
+	return _legacy_tick()
 
 
 ## Seconds this match has been running, which is what a creep unlock is timed
@@ -238,6 +274,101 @@ func tick() -> int:
 ## that arrives too early whatever the button showed.
 func elapsed_seconds() -> float:
 	return float(tick()) * tick_seconds()
+
+
+## Moves the match clock on by one turn's worth of ticks. Lockstep only.
+##
+## **Called from `LockstepService._advance_turn` AFTER the turn's orders have
+## been applied, and the ordering is load-bearing.** The technology draft
+## releases its own hold from inside `Commands.apply_turn` - a pick is an order
+## like any other - and `hold()`'s own measurement says a pause change made from
+## an earlier node's `_physics_process` takes effect in that same physics frame.
+## So the tick that ends the draft DOES simulate, and asking before the orders
+## ran would refuse to count it.
+##
+## **Skipped while anything OTHER than lockstep holds the world.** The draft is
+## the case that exists today: `LockstepService` is `PROCESS_MODE_ALWAYS` and
+## goes on applying turns through it - which it must, or the very picks that end
+## the draft could never arrive - while nothing else in the world moves. Counting
+## those turns would be the exact bug the refund in `hold()` exists to prevent: a
+## ten second draft would be ten seconds every creep unlock had silently already
+## served.
+##
+## A lockstep stall needs no such test and must not get one. A stalled peer
+## applies no turn at all, so it never reaches here.
+func advance_clock(ticks: int) -> void:
+	if !_lockstep:
+		return
+	if _held_by_other_than(&"lockstep"):
+		return
+	_turn_ticks += ticks
+	_check_clock()
+
+
+## Whether anything except `reason` is holding the world still.
+##
+## Cheap on purpose: this is asked once per applied turn. `holders()` duplicates
+## and sorts the array, which is fine for a log line and not for here.
+func _held_by_other_than(reason: StringName) -> bool:
+	for holder: StringName in _holds:
+		if holder != reason:
+			return true
+	return false
+
+
+## The match clock as it was computed before the turn stream drove it.
+##
+## Kept alive because everything without a turn stream still uses it, and because
+## it is what `_check_clock` compares against.
+func _legacy_tick() -> int:
+	# Frozen while the world is held still. The engine goes on counting physics
+	# frames whether or not anything is processing them, so without this the
+	# clock would run through a pause and every creep unlock would come out of
+	# it having silently served time. See hold().
+	if _paused:
+		return _pause_frame - _start_frame
+	return Engine.get_physics_frames() - _start_frame
+
+
+## **Phase 1's falsification test, and the only moment it is cheap.**
+##
+## Under the CURRENT gate every peer holds for exactly the same turns, so the
+## turn-derived clock and the physics-frame clock must agree - and if they do
+## not, the reasoning about the draft hold or about the refund is wrong and
+## nothing built on top of this is safe. After the cutover they are entitled to
+## disagree and this check stops meaning anything, which is why it is worth
+## spending now rather than later.
+##
+## Compared by DIFFERENCE from the first tick both were seen on. The absolutes
+## cannot match: `_start_frame` is stamped in `Main._ready` and the turn stream
+## starts on `LockstepService`'s first physics tick, with nothing pinning the two
+## together, and the opening stall while peers find each other sits between them.
+##
+## `Log.err` because `CLAUDE.md` records that it reaches the editor log with a
+## full stack from a running game, which is the channel for a rare correctness
+## assertion. Capped, because a clock that has drifted once drifts every tick
+## afterwards and an uncapped per-tick `push_error` is a flood.
+func _check_clock() -> void:
+	if _clock_complaints >= CLOCK_COMPLAINT_LIMIT:
+		return
+	if _clock_base < 0:
+		_clock_base = _legacy_tick()
+		_clock_turn_base = _turn_ticks
+		return
+	var legacy_delta: int = _legacy_tick() - _clock_base
+	var turn_delta: int = _turn_ticks - _clock_turn_base
+	if legacy_delta == turn_delta:
+		return
+	_clock_complaints += 1
+	Log.err("Match clock disagrees with the physics-frame clock", {
+		"turn_ticks": _turn_ticks,
+		"legacy_tick": _legacy_tick(),
+		"turn_delta": turn_delta,
+		"legacy_delta": legacy_delta,
+		"drift": turn_delta - legacy_delta,
+		"holders": holders(),
+		"complaint": _clock_complaints,
+	})
 
 
 ## Whether the world is being held still, by anybody. See hold().

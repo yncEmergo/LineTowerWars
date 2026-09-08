@@ -434,6 +434,17 @@ func _advance_turn(clock_turn: int) -> void:
 	turn_ready.emit(turn, orders)
 	if !orders.is_empty():
 		Commands.apply_turn(orders)
+
+	# **AFTER the orders, never before them.** The match clock is the turn stream
+	# under lockstep rather than this machine's physics frames, and whether this
+	# turn counts depends on whether anything but lockstep is holding the world -
+	# which an order in this very turn is entitled to change. A technology pick
+	# ends the draft from inside `apply_turn`, and the tick that ends it does
+	# simulate. See MatchSession.advance_clock.
+	var session: MatchSession = References.match_session
+	if session != null:
+		session.advance_clock(_ticks_per_turn())
+
 	_report_latency(turn)
 
 
