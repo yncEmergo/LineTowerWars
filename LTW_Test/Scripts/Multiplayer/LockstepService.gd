@@ -302,6 +302,13 @@ var _seq_seen: Dictionary = {}
 var _seal_seen: Dictionary = {}
 var _legacy_seen: Dictionary = {}
 var _shadow_told: bool = false
+## How many orders the shadow check has actually MATCHED.
+##
+## **The positive control, and without it this phase cannot be tested at all.**
+## A clean run and a comparison that never executed look identical from the
+## outside - no error either way - which is `CLAUDE.md`'s most repeated trap. A
+## test passes only if this is greater than zero.
+var _shadow_ok: int = 0
 
 
 func _ready() -> void:
@@ -780,6 +787,14 @@ func _sample_tick_interval() -> void:
 	_last_tick_usec = now
 
 
+## How many orders the sealed stream and the played stream have agreed on.
+##
+## Zero means the check never ran, which is a FAILED test rather than a clean
+## one - see _shadow_ok.
+func shadow_verified() -> int:
+	return _shadow_ok
+
+
 ## How long this match has spent held, in seconds, across every stall.
 ##
 ## **Engine rate, not simulation rate.** A stalled tick is a tick of real time
@@ -981,6 +996,7 @@ func _reset_if_new_match() -> void:
 	_seal_seen.clear()
 	_legacy_seen.clear()
 	_shadow_told = false
+	_shadow_ok = 0
 	_due_at.clear()
 	_arrived_at.clear()
 	_leads.clear()
@@ -1638,6 +1654,7 @@ func _compare_shadow(slot: int) -> void:
 			return
 		index += 1
 	if index > 0:
+		_shadow_ok += index
 		_seal_seen[slot] = sealed.slice(index)
 		_legacy_seen[slot] = legacy.slice(index)
 
