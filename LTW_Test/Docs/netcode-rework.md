@@ -739,11 +739,32 @@ Build ghost at the clicked cell, send stock decrementing on click, tower greying
   desync risk" is otherwise an assertion about code nobody has written yet — and the send bar's
   stock is real simulated state, which is exactly where drawing intent is easiest to get wrong.
 
-### Phase 2b — Widen `_forget_old_turns`. Its own landing.
+### Phase 2b — Widen `_forget_old_turns`. Its own landing.  — DONE 2026-09-08
 
 Split out of phase 2: a UI change and a change to desync-detection scope share nothing but a slot
 in a list and should not be judged by one review. Must land **before** peers can legitimately be
 seconds apart, and must cover amendment 10's lag threshold.
+
+**What landed.** `NetworkConfig.max_peer_lag_turns` replaces `checksum_every_turns * 4` as the
+retention window, because those were unrelated questions tied to one number — how OFTEN the world
+is hashed had been setting how far apart two peers may be. The default is derived rather than
+chosen: it must exceed the largest spread that can legitimately exist, and today that is bounded
+by `silent_timeout_seconds`. It is marked in the config as wanting measurement.
+
+**A second failure was found and fixed in the same place.** A report arriving for a turn already
+forgotten did not just miss its comparison — `_compare_turn` re-created the entry, so the late
+answer sat alone in a fresh dictionary with nothing to measure it against, and a comparison that
+never happens is indistinguishable from one that passed. It is now refused with a warning
+(`_pruned_through`), so the case is loud instead of silent.
+
+**This is inert until phase 4.** Under the current gate peers can never be more than `delay_turns`
+apart, so the window never binds and the guard never fires. That is the point: it is correctness
+banked before the change that needs it. The one behaviour visible today is that a dropped peer's
+late checksum now logs a warning instead of silently resurrecting a turn.
+
+*Falsifies:* nothing today, by construction — which is why it must be re-checked at phase 4,
+where a deliberately hitched peer should produce comparisons that still happen rather than
+warnings that say they did not.
 
 ### Phase 3a — Send bare orders alongside the turn word.
 

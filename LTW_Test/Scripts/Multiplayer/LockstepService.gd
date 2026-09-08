@@ -182,6 +182,18 @@ var _turn_checksums: Dictionary = {}
 ## Peers already told their world diverged, so each is told once per match.
 var _told: Dictionary = {}
 
+## Relay only: the highest turn whose checksums have been forgotten.
+##
+## Kept so that a report arriving for a turn that is already gone can be REFUSED
+## rather than quietly re-creating the entry. Without it a late report lands
+## alone in a fresh dictionary, is compared against nothing, and reads exactly
+## like agreement. See _compare_turn.
+var _pruned_through: int = NO_TURN
+
+## Relay only: how many late reports have been refused, so the log says it once
+## rather than once per checksum turn for the rest of the match.
+var _late_reports: int = 0
+
 ## The match all of the state above belongs to. See _reset_if_new_match.
 var _match_id: String = ""
 
@@ -957,6 +969,8 @@ func _reset_if_new_match() -> void:
 	_highest_seen = NO_TURN
 	_turn_checksums.clear()
 	_told.clear()
+	_pruned_through = NO_TURN
+	_late_reports = 0
 	_closed_through = NO_TURN
 	_last_checksum_turn = NO_TURN
 	_last_run_turn = NO_TURN
@@ -1677,6 +1691,22 @@ func report_turn_checksum(turn: int, checksum: int) -> void:
 ## judging one. What it can say for certain is that they DIFFER, and which turn
 ## it started on. Who is wrong is a different question and may have no answer.
 func _compare_turn(turn: int, peer: int, checksum: int) -> void:
+	# **A report for a turn already forgotten is refused, not resurrected.**
+	# Re-creating the entry would put this peer's answer in an empty dictionary
+	# with nothing to measure it against, and a comparison that never happens is
+	# indistinguishable from one that passed. That is the failure this whole
+	# window exists to prevent, so it says so instead.
+	if turn <= _pruned_through:
+		_late_reports += 1
+		if _late_reports <= 1:
+			Log.warn("A checksum arrived for a turn already forgotten, so it was never compared", {
+				"turn": turn,
+				"peer": peer,
+				"pruned_through": _pruned_through,
+				"window_turns": _retention_turns(),
+			})
+		return
+
 	if !_turn_checksums.has(turn):
 		_turn_checksums[turn] = {}
 	var by_peer: Dictionary = _turn_checksums[turn]
@@ -1720,10 +1750,29 @@ func _compare_turn(turn: int, peer: int, checksum: int) -> void:
 
 ## Keeps the last few turns and drops the rest. A match is thousands of turns
 ## long and every one of them would otherwise be held forever.
+##
+## **The window is how far apart two peers may be, NOT a multiple of how often
+## the world is hashed.** It used to be the latter, which tied an unrelated
+## number to the one that matters and came out around a second - so any peer
+## further behind than that had its report refused by the guard above and was
+## never checked against anybody. See NetworkConfig.max_peer_lag_turns.
+##
+## `now` is the turn just reported rather than the highest ever seen, which is
+## deliberately conservative: a report from the peer that is BEHIND prunes less,
+## never more.
 func _forget_old_turns(now: int) -> void:
+	var window: int = _retention_turns()
 	for turn: Variant in _turn_checksums.keys():
-		if now - int(turn) > _checksum_every() * 4:
+		if now - int(turn) > window:
 			_turn_checksums.erase(turn)
+			_pruned_through = maxi(_pruned_through, int(turn))
+
+
+## How many turns of checksums are kept: the furthest a peer may legitimately be
+## behind, plus a checksum interval so that a peer exactly at the ceiling still
+## has its last report compared rather than refused on the boundary.
+func _retention_turns() -> int:
+	return _max_peer_lag_turns() + _checksum_every() * 2
 
 
 # --- lookups --------------------------------------------------------------
@@ -1789,6 +1838,11 @@ func _silent_timeout_seconds() -> float:
 func _flush_immediately() -> bool:
 	var config: NetworkConfig = _config()
 	return true if config == null else config.flush_immediately
+
+
+func _max_peer_lag_turns() -> int:
+	var config: NetworkConfig = _config()
+	return 200 if config == null else maxi(1, config.max_peer_lag_turns)
 
 
 func _checksum_every() -> int:

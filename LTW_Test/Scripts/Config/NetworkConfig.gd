@@ -288,6 +288,38 @@ extends Resource
 ## no correction to send. See MatchStartService.receive_desync.
 @export var checksum_every_turns: int = 5
 
+## How far behind the rest of the match a peer may legitimately fall, in TURNS.
+##
+## **This is the width of the desync-detection window, and getting it wrong makes
+## divergence invisible rather than loud.** The relay holds each peer's checksum
+## for a turn until it can compare them; a peer whose report arrives after that
+## turn has been forgotten is never compared to anybody, and a world that has
+## quietly parted goes on being played. Nothing says so - there is no error,
+## because the comparison simply never happens.
+##
+## It used to be `checksum_every_turns * 4`, which tied the window to how OFTEN
+## the world is hashed rather than to how far apart two peers can be. Those are
+## unrelated questions, and at the authored cadence the window came out around a
+## second - far shorter than the eight seconds a peer is allowed to be silent
+## before the relay gives up on it. Anything between those two figures diverged
+## undetected.
+##
+## The default is DERIVED rather than chosen: it must exceed the largest spread
+## that can legitimately exist, and today that is bounded by
+## `silent_timeout_seconds`, past which the relay stops waiting. Two hundred
+## turns is that bound with margin at the authored tick rate. **It wants
+## measuring against a real link rather than trusting** - phase 0's instrumentation
+## is what will say.
+##
+## Cheap to be generous with: one entry per checksum turn holding one integer per
+## peer.
+##
+## After the cutover this becomes the ceiling on ACCUMULATED trailing that the
+## relay gives up on a peer for, and the two must stay the same number - a peer
+## that is tolerated for longer than its checksums are kept is a peer playing a
+## world nobody is checking. See `netcode-rework.md`, amendment 10.
+@export var max_peer_lag_turns: int = 200
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20
@@ -423,6 +455,9 @@ func validate() -> bool:
 		Log.err("NetworkConfig jitter_margin_ms cannot be negative", jitter_margin_ms)
 		complete = false
 
+	if max_peer_lag_turns < 1:
+		Log.err("NetworkConfig max_peer_lag_turns must be at least one", max_peer_lag_turns)
+		complete = false
 	if checksum_every_turns < 1:
 		Log.err("NetworkConfig checksum_every_turns must be at least one",
 			checksum_every_turns)
