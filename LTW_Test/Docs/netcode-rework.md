@@ -1177,3 +1177,539 @@ recalled. Where a source is second-hand it says so.
 - Baughman & Levine, *Cheat-proof playout for centralized and distributed online games* — the
   formal statement that a lockstep group runs at the speed of its slowest member, and the
   *Asynchronous Synchronisation* idea deferred in section 9.
+
+---
+
+## 13. Phase 6 in full — explicit simulation stepping, then catch-up
+
+Written 2026-09-09 from a full audit of every `_physics_process` and `_process` in `Scripts/`, two
+independently drafted designs and an adversarial review of each. **This supersedes the Phase 6 stub
+in section 8**, which named the problem and priced none of it. It is written for an implementer who
+has this document and the code and nothing else.
+
+**The design taken is a scene-owned stepper driving a node group, not a hand-built registry of
+buckets.** The runner-up mirrored the scene tree in typed lists — one per area, one per root — which
+is equally deterministic and strictly more code, and it converts today's dispatch order into a
+hardcoded list that a drag in the scene dock silently falsifies. `SceneTree.get_nodes_in_group()`
+sorts with the same node comparator Godot's own physics dispatch uses and returns a copy, so a
+custom group reproduces today's order *by the same mechanism* rather than by a list somebody has to
+keep true — verified on a nested Godot 4.7.2 tree built deliberately out of insertion order, where
+group order, dispatch order and tree order came back identical, and where a node added from inside
+`_physics_process` was **not** stepped that frame. That second property is what makes the spawn-tick
+behaviour below free instead of a rule. What is grafted from the runner-up is everything that makes
+the change *checkable*: the sabotage matrix as the falsifier's positive control, the audit that
+hunts a `_physics_process` nobody knew about, per-instance membership assertions instead of a boot
+sweep, and pulling the step-counted clock forward into 6a — which the review showed is not optional,
+because without it the only test that can catch a missed loop cannot run.
+
+### 13.1 What phase 6 is, and why the obvious version fails
+
+A peer that falls behind stays behind for the rest of the match. It runs at most one turn per engine
+tick (`LockstepService._advance_turn`: `var turn: int = _last_run_turn + 1; if turn > clock_turn:
+return`), so every packet gap and every local hitch it recovers from is added to its input delay
+permanently. Nothing gives it back. That is amendment 10 restated as a lived defect: **a peer's lead
+only ever grows.**
+
+The obvious fix is "run more than one turn per tick when behind", and it cannot work. Applying two
+turns' ORDERS in one engine tick still advances the world by ONE step, because the world is not
+advanced by the turn loop at all — it is advanced by Godot calling `_physics_process` on every
+gameplay node once per engine tick. `MatchSession.advance_clock` only increments `_turn_ticks`; it
+steps nothing. So a peer that "caught up" would have a world in which less time passed than on a
+peer that did not: creeps moved once instead of twice, towers fired once instead of twice, burns
+ticked once instead of twice. **It diverges on empty turns too — the orders were never the
+problem.** This is the silent, unrecoverable class of desync, arriving exactly when a struggling
+machine tries to help itself.
+
+Phase 6 therefore takes the simulation step away from Godot's per-node dispatch and drives it
+explicitly from the turn loop, so the world can step N times inside one engine frame. `CLAUDE.md`
+already lists the same change under Known weaknesses as the first half of the twelve-player tick
+budget work ("the per-node `_physics_process` dispatch first, the spatial hash second"). One job,
+two payoffs.
+
+Split, and the split is not negotiable:
+
+- **6a — explicit stepping, still exactly one step per tick, behaviour bit-identical.** No catch-up.
+  The only phase in which "this changed nothing" is a provable claim.
+- **6b — more than one step per frame.** Small in diff, large in consequence, and every commit in it
+  changes behaviour on purpose and needs its own baseline.
+
+### 13.2 The prerequisite — three things, none of them code
+
+**1. The two-machine determinism run, which has still never happened.** Section 8's "Prerequisite
+before phase 4" is still outstanding: a real match between the two dev PCs with session logging on
+and the turn streams compared. `DeterminismBench`'s own docstring says what it cannot do — two runs
+of the same binary on the same machine catch iteration order and unseeded randomness, and catch
+cross-machine float divergence never. If two PCs diverge today, phase 6 is not the next piece of
+work and neither is anything else; see 13.7. **Run it before writing a line of 6a**, because 6a is a
+change that makes a divergence harder to attribute afterwards.
+
+**2. The falsifier is not strong enough as it stands, and the reason is structural rather than a
+coverage gap.** At one fixed rate, a loop left on `_physics_process` runs once per tick and a loop
+moved onto the stepper runs once per tick. They are the same. A byte-identical trace would therefore
+be produced by a correct refactor, by a refactor that missed ten loops, and by the refactor never
+having happened. This is section 11's own recorded trap — *a falsification test run in the topology
+that cannot distinguish the answers is not a test* — and it is the exact failure this document's
+first Phase 6 draft carried.
+
+**3. What must be added, and it goes in `DeterminismBench`, not in `WorldChecksum`.** The checksum's
+docstring records that it was deliberately not widened: it is shipping code with a shipping cost,
+and what it carries is a design question rather than something a harness decides. The bench's
+`_deep_hash` walks `session.unit_ids()` and nothing else, so the following are invisible to every
+trace this project can currently produce:
+
+- **Projectiles, piercing projectiles, beast charges and ground hazards.** All four extend
+  `VisualEffect3D`, none is a registered `Unit`, and all four deal damage on a `delta`-driven
+  schedule. Four damage-dealing loops sit outside the falsifier entirely. Hash the children of
+  `References.projectiles_root` in child order: class name, quantised position, elapsed.
+- **`AttackComponent._cooldown`, `_windup_left`, `_scan_wait`.** `Building.checksum_state` records
+  only `active_ability.cooldown()`. A missed attack step surfaces only later and indirectly, as
+  creep health drifting. Reach them through new read-only accessors.
+- **`SendBuilding` stock.** It overrides `checksum_state` at all — only `Unit`, `Building` and
+  `Creep` do — so every `CreepStock` reserve timer is unhashed. A missed send step stops sends
+  mid-match and no trace says so.
+- **`PlayerArea` rubble.** `WorldChecksum._add_areas` hashes position, grid width and depth, and the
+  build-zone rows. Rubble decides whether a rebuild is legal, is not replicated by design, and is in
+  nothing.
+- **The unhashed accumulators inside units:** `Creep._stall_elapsed` (crossing it re-plans a path —
+  the highest-consequence unhashed float in the file), `Creep._march_elapsed`,
+  `Building._upgrade_elapsed`, `Building._sell_elapsed`, and a digest of the `StatusEffects` timers.
+
+**And the bench's driver only sends creeps.** `_drive_tick` issues `CHEAT_GOLD`,
+`CHEAT_UNLOCK_CREEPS` and send orders. It never builds, upgrades, sells or gives a unit order — so
+`Builder`, `MobileUnit`, the upgrade clock, the sell clock and the rubble timer are never exercised,
+and a trace that never touched them cannot report them. Extend the driver to build, upgrade and sell
+at least once, deterministically off the seed.
+
+**Then record the baseline on the parent commit** — two seeds, byte-compared against each other
+first to prove the harness itself is stable, then copied out of `user://` before anything moves.
+Redirect the whole run to a file and grep the file; `| head` closes the pipe before a bench prints
+its summary, and the summary is the answer.
+
+**Then run the sabotage matrix, and watch it fail.** One bench run per gameplay loop with a new
+`skip=<ClassName>` argument that calls `set_physics_process(false)` on every instance of that class.
+Any loop whose omission leaves the trace byte-identical is a hole in the falsifier, not a loop that
+does not matter — widen the hash until it goes red. **Until every one of them has been watched to
+fail, a green 6a run means nothing**, and this is the one hour that decides whether the rest of the
+phase is evidence or decoration.
+
+### 13.3 Phase 6a — explicit stepping, commit by commit
+
+The shape. One new file, `Scripts/Game/Simulation.gd` (`class_name Simulation extends Node`), added
+as a node to `Scenes/main.tscn` and `Scenes/Server/server_match.tscn` and exported through
+`Scripts/References.gd` — a scene node rather than an autoload, because the step count is per-match
+state that should die with the match, and because `CLAUDE.md` forbids editing `[autoload]` while the
+editor is open. Every gameplay loop renames `_physics_process(delta)` to `_sim_step(dt: float)` and
+joins the group `&"sim"`; the stepper takes `get_nodes_in_group(&"sim")` and calls each entry.
+Leading underscore deliberately: `Building`, `Creep`, `PlayerArea` and `MobileUnit` are already over
+gdlint's public-method ceiling, `_sim_step` is exactly as public as the `_physics_process` it
+replaces, and it is not an `Object` virtual so it does not walk into the `_set` trap.
+
+Five properties of that stepper, each replacing something the change removes:
+
+1. **The snapshot.** `get_nodes_in_group` returns a copy, so a creep added by `SendBuilding` or a
+   projectile added inside `AttackComponent._fire` is not stepped on its spawn step — which is
+   exactly what Godot's own copy-before-call does today, and is required for byte-identity on the
+   first send.
+2. **The pause.** `MatchSession.hold` sets `tree.paused`, and **that is the only reason a stall or a
+   draft stops the world.** An explicitly driven loop is not suppressed by a paused tree, so the
+   stepper must refuse to step while held. `hold` goes on setting `tree.paused` for presentation and
+   input; the stepper adds one guard. Nothing in the sim set sets `process_mode` or calls
+   `set_physics_process` itself, so one guard is a faithful replacement for all of them — record
+   that constraint in the stepper's docstring, because anything added later that wants to run
+   through a hold will find no place to say so.
+3. **The step counter increments at the TOP of the step**, before the snapshot, never after. A
+   counter incremented afterwards is constant for the whole step, and any reader running between two
+   steps then stamps a cache with the number the next step will also see.
+   `Engine.get_physics_frames()` is correct today precisely because it increments before the tick.
+4. **`is_instance_valid` and nothing else.** No `is_queued_for_deletion` filter in 6a: today a unit
+   that dies early in a tick still receives `_physics_process` later in that same tick if it sorts
+   later. Reproduce it. Retirement is 6b's problem and 6b's re-baseline.
+5. **One step per tick, hardcoded.** Call the step once, and `Log.err` at boot if
+   `NetworkConfig.ticks_per_turn` is not 1 for the duration of 6a. Wiring the count to
+   `_ticks_per_turn()` looks like generality and is 6b arriving early, with none of 6b's
+   prerequisites in place — `CreepIndex` still keyed on the engine frame, the clock still counting
+   frames, `WalkAnimation3D` still diffing positions.
+
+**6a-0 — widen the bench, record the baseline, run the sabotage matrix.** All of 13.2's third item,
+plus positive controls in `_finish()` that fail loudly: samples greater than zero, units seen,
+projectiles seen, at least one non-zero attack cooldown, and the RNG state observed to change
+between two samples. A green trace over a world that never fired a shot proves nothing about
+ordering. Plus a throwaway `Scripts/Dev/StepOrderProbe.gd` that records, per tick, the ordered list
+of stepped node names under the *current* dispatch — the reference the new order is diffed against,
+and it can only be recorded before the change. *Positive control:* the sabotage matrix went red for
+every loop.
+
+**6a-1 — the stepper, wired, stepping nothing.** New file; run `godot --path <project> --headless
+--import` or its `class_name` never reaches the global class cache. Node into both match scenes, and
+into each scene's `References` `node_paths=PackedStringArray(...)` line, or the export silently
+stays null. Drive it from `_advance_turn` immediately after `session.advance_clock(...)` under
+lockstep, and from its own `_physics_process` otherwise. *Falsifier:* the group is empty, so the
+trace must be byte-identical. *Positive control:* the stepper's own step count is non-zero in the
+run — otherwise the no-op is the no-op of a node that never ran.
+
+**6a-2 — the rename, in four commits, one per subtree.** Each commit is a **tree prefix**: the
+migrated set runs inside the stepper (placed as the first child of the match root) in its own
+relative order, the unmigrated remainder runs after it on Godot's dispatch in its own relative
+order, and the global sequence is unchanged at every intermediate commit. That is what makes each
+one individually bench-provable. The order follows the scene: `Scenes/main.tscn` runs
+Areas → Units → Projectiles → … → PlayerManager → MatchSession → TechManager, and
+`Scenes/Server/server_match.tscn` agrees.
+
+  (a) **Areas subtree:** `PlayerArea`, `Building`, `AttackComponent`, `SendBuilding`, `Creep`.
+  `Building` and `AttackComponent` must move in the same commit — split, every building would
+  advance before any component fires, and a tower finishing an upgrade mid-step changes what its own
+  component does. Join the group from `Unit._ready`, which covers `MobileUnit`, `Creep`, `Builder`,
+  `Building` and `SendBuilding` at once because all of them call `super()`.
+  (b) **Units subtree:** `MobileUnit`, `Builder`.
+  (c) **Projectiles subtree:** `Projectile`, `PiercingProjectile`, `BeastCharge`, and
+  `GroundHazard`'s `_physics_process` half only — its `_process` keeps the flicker and its own
+  `_shown` clock, for the reason its docstring gives. That file is the project's own worked example
+  of this split done right.
+  (d) **Managers:** `PlayerManager`, `TechManager`.
+
+  Reproduce the three hand-made answers to the `super()` question exactly. `Builder._sim_step` calls
+  `super(dt)` as it does today. **`Creep._sim_step` does not**, and the comment saying why —
+  MobileUnit walks towards an ordered target and a creep is driven by the area's route instead —
+  must be carried onto the new method verbatim, or the next reader restores it and double-walks
+  every creep. `Builder` is the regression test for the whole rule: if it stops calling `super` it
+  still starts builds when in range and never walks to them, a unit that never arrives.
+  *Falsifier per commit:* byte-identical trace against both 6a-0 baselines, and `StepOrderProbe`'s
+  dump diffs clean against the recorded one. *Positive control:* the probe's dump is non-empty and
+  contains an instance of every class migrated in that commit — an order diff that is clean because
+  nothing was recorded is the same green as a pass.
+
+**6a-3 — the delta.** The stepper passes `MatchSession.tick_seconds()`, never the engine delta. At
+20 Hz the two are the same float, so the trace must not move — and that is itself a small control
+that the authored constant really is the rate the engine is running. **The rename IS the delta
+refactor** (amendment 5): once a loop has no `_physics_process`, nothing can hand it an engine
+delta, and a site that was missed still has one and is caught by the audit rather than by hoping.
+
+**6a-4 — the authored rate.** `MatchSession.tick_seconds()` stops reading
+`Engine.physics_ticks_per_second` and reads a new authored `GameConfig` value; `Creep._aura_phase`
+reads the same. Both are I4's named must-fixes. `project.godot`'s `physics_ticks_per_second` then
+paces only the engine. `Main._validate_content` warns when the two disagree outside a bench run.
+Byte-identical while the numbers agree.
+
+**6a-5 — the clock counts STEPS.** `MatchSession` gains a step count, incremented by the stepper;
+`tick()` returns `_turn_ticks` under lockstep and the step count otherwise; `_legacy_tick`,
+`_start_frame` and `hold`'s `_pause_frame` refund all go, because a held world now takes no steps
+and there is nothing to refund — two mechanisms doing that job would refund time that was never
+spent. `_check_clock` stays until the last moment as the comparison and goes with `_legacy_tick`.
+*Falsifier:* byte-identical, because at one step per tick a step counter equals the frame delta. If
+the trace shifts by exactly one tick uniformly, that is the origin alignment between `Main._ready`
+and the first step — seed the counter to close it, do not explain it away.
+
+**This commit is a prerequisite for the next one and the review found that out the hard way.** The
+two-rate falsifier cannot run while `_legacy_tick` counts engine frames: `DeterminismBench` is not
+on the lockstep path, so `tick()` is the frame count, and at engine 60 / sim 20 the match clock
+would run three times fast, moving creep unlocks, Sudden Death, income and `session.tick()` itself,
+which is hashed directly. The trace would diverge at the first sample for reasons having nothing to
+do with a missed loop, and the signal would be gone.
+
+**6a-6 — the test that can actually fail.** Bench argument `engine_rate=<n>`. Run the bench with the
+engine paced at 60 and the authored sim rate pinned at 20, same seed, same sim-step count, and
+byte-compare against the run where the two agree. The bench must drive and sample off the stepper's
+own step count rather than off `_physics_process` for this run, or the two traces are not sampled at
+the same world time and the comparison silently stops meaning anything. **Name the failure before
+running it:** a `Projectile` left on Godot's dispatch flies three times as far per sim step and lands
+one to three sim ticks early, so the first sampled creep health after the first volley differs and
+the trace diverges near the start rather than at the end. If it prints the same thing as the
+matched-rate run, either nothing was missed or the world never fired — and 6a-0's positive controls
+are what tell you which.
+
+**6a-7 — the guards, because a test proves this commit and an audit protects the next year.**
+Three, behind a debug flag:
+
+- **The missed loop.** Walk the match scene at match start and on a slow beat; for each node read
+  `get_script()` and its base chain and ask `get_script_method_list()` whether that script declares
+  `_physics_process`. A script that does and is not on the presentation allowlist is a `Log.err`
+  naming the file. This is the only guard that works against a site nobody has written yet.
+- **Membership, asserted at the instance and not at boot.** A boot sweep is worthless here:
+  `Main._validate_content` runs inside `Main._ready`, before any creep, tower, attack component,
+  projectile or hazard exists, so it would inspect areas, send buildings, builders and the two
+  managers and never see the classes that draw the RNG and deal the damage. Worse, it tests the
+  wrong direction — the failure that exists is a class that *has* `_sim_step` and never joined the
+  group, which is `CLAUDE.md`'s `super()` trap wearing a different hat, and it is live:
+  `AttackComponent._ready` has two early returns before any line a join would sit on, and
+  `PlayerArea` has no `_ready` at all. Assert membership in each class's own `_ready`, after
+  `super()`.
+- **Completeness.** Each steppable stamps the step index it was last stepped on; at the end of a
+  step the stepper walks `session.unit_ids()` and errs on any registered unit whose stamp is stale.
+  This is what catches `SendBuilding` — a registered `Unit` with its own loop that a hierarchy walk
+  misses, since it extends `Unit` and not `Building`.
+
+Then re-run the sabotage matrix through the new path, with `skip=` dropping a class from the group
+instead, and confirm each one is caught by a guard **before** the trace goes red. A guard that only
+fires after the checksum already did adds nothing.
+
+**6a-8 — the lockstep check the bench cannot do.** The determinism bench never touches the lockstep
+path, and **one part of 6a is genuinely not bit-identical there.** Today the world steps on every
+engine tick whether or not a turn ran; during the opening lead ramp `_advance_turn` returns early
+without setting a hold, so the world moves while `_turn_ticks` stays put. After 6a the world steps
+only when a turn runs. That is invariant I3 going from nearly-true to true, it is a fix, and it is
+invisible to every offline test — so it only gets checked if somebody runs the two-peer headless
+harness from section 10 and `Findings/2026-09-05-lockstep-review-2-response.md`'s scenario list.
+Clean 1v1, checksums agreeing at every compared boundary, plus a planted desync showing the detector
+still reports. Kill any stray relay first and assert the new one listened; a lobby left from the
+last run looks exactly like a bug in this one.
+
+**6a-9 — presentation tidy, last.** `StrikeAnimation3D`, `ActionBar` and `SendBar` move to
+`_process`; `SlamAnimation3D`'s exported choice of callback collapses to the render frame, because a
+node that is data-driven about which clock it is on double-counts in every future audit by grep. The
+trace must be unaffected by construction — a diff here means one of them was not presentation.
+
+### 13.4 Phase 6b — catch-up
+
+Three commits change behaviour on purpose. Each lands alone, with its own recorded baseline and a
+written explanation of the first differing tick. "A harmless one-tick difference" is the sentence to
+refuse.
+
+**6b-0 — death leaves the world at once.** `Unit._die` emits and calls `queue_free()`; the registry
+entry only comes back in `Unit._exit_tree`, `Building`'s grid cells only in `Building._exit_tree`,
+and `PlayerArea`'s creep list only loses the creep when `child_exiting_tree` fires — all of which
+Godot runs when the deletion queue flushes at the END OF THE FRAME. `PlayerArea`'s own docstring
+says so: a death does not reach the creep list until the frame ends. **`queue_free` is a per-frame
+boundary the simulation silently depends on, and 6b puts two steps inside one frame.** On a catch-up
+frame, step 2 sees a tower that is dead, still registered, still holding its cells and still a legal
+target, while a peer that did not catch up saw it gone. `PlayerManager.erase_player` already carries
+the reasoning in its own comment — generalise it into a single retirement call from `_die`, with
+`_exit_tree` calling the same thing idempotently. **Expect a trace diff:** `TargetFinder` filters
+dead creeps, but the burn, trample and pierce paths walk `creeps_in_radius` and read
+`global_position` without all going through it.
+
+**6b-1 — per-step caches.** `CreepIndex._rebuild_if_stale` keys on `Engine.get_physics_frames()`.
+Two steps in one frame share that number, so step 2 answers every targeting, splash, trample, pierce
+and burn query from step 1's creep positions. It is the worst single item the audit found and the
+grep for `func _physics_process` does not find it. Re-key on the stepper's step index — which is why
+13.3 insists the counter increments at the top. Keep `invalidate()`; the frame key was never
+sufficient alone, and the render-frame readers still need it. **Re-check `UnitPanel` against the new
+key**: `CreepIndex`'s docstring records that reader crashing once on a freed creep. Same commit,
+audit every other `Engine.get_physics_frames()` reader. *Positive control:* count index rebuilds and
+require one per step — a re-key that never rebuilt is another green whose control never fired.
+
+**6b-2 — the loop.** `_advance_turn` returns whether it ran, and the caller becomes a bounded loop:
+run a turn, step the world, advance the clock, repeat while sealed turns remain and the budget
+allows. **Never hoist the clock advance out of the loop** — advancing it N times while stepping once
+is precisely the divergence this phase exists to remove, and `PlayerManager` is the site that proves
+it: it ignores delta entirely and pays income from a `while now >= _next_income_at` drain against
+`elapsed_seconds()`, so it is already correct for N steps *provided the clock moved with the world*,
+and catastrophically wrong if it did not. It is also the shape every other loop should be measured
+against. `TechManager` inherits the same correctness from `session.tick()` for free.
+
+**The rate policy.** Budget an extra step on a fractional credit accumulator, capped at **+50%, not
+4x** — section 8's existing number, and it is a FEEL decision, not an implementation one: a tower
+defence fast-forwarded through a leak is unreadable, and recovery must not cost the player the
+ability to react. **Do not gate catch-up on the machine being CPU-healthy** (amendment 3): that
+disables it exactly when it is needed, and `CLAUDE.md` records twelve lanes running about 2x over
+the tick budget, so the state is reachable. A peer that cannot sustain the rate cannot play the
+match — say so and end it, do not wedge it. The rate is a local decision and peers are explicitly
+allowed to differ on it, **provided nothing in the simulation ever branches on it** (I4): not on
+`is_stalled()`, not on buffer depth, not on the budget.
+
+**What the player sees, and the parts that are the owner's call rather than the implementer's.**
+
+- **The world runs visibly fast during a burst.** Bounded by the cap. Whether +50% is the right
+  number is the feel decision, and it should be judged on a real match with a real leak on screen,
+  not on a bench.
+- **`WalkAnimation3D` derives gait speed by diffing the unit's position between calls.** Left on the
+  engine tick it sees one call covering two steps and reads double speed, so legs whir for the
+  duration of a burst. Cosmetic, not a desync, and it is the visible tell that a catch-up is
+  happening — which may be desirable. The honest fix is for `MobileUnit` to publish the distance it
+  moved last step; whether to fix it or keep it as feedback is the owner's call.
+- **`StallPanel` wants a fourth state.** It is on the render frame deliberately, because its whole
+  job is to draw while the world is held. "Catching up" is the state it does not yet have.
+- **A fairness coupling, and it is a fairness question rather than a correctness one.**
+  `UnitPanel`'s hold-repeat runs on `_process`, at the render rate, so a player holding the send key
+  during a catch-up burst produces fewer sends per unit of GAME time than a healthy player does. The
+  orders still go through `Commands` and are still sealed by the relay, so nothing desyncs. It is
+  the same trade FFF-147 records Factorio declining to pay, arriving from the other direction.
+- **`notify_lagging` should now be able to clear**, which today it structurally cannot, and
+  amendment 10's threshold changes meaning: it stops being a ceiling on permanently accumulated lead
+  and becomes a ceiling on lead a peer cannot recover from. Re-derive the number rather than
+  inheriting it.
+
+**How it is measured.** First offline, with no relay and no second machine: a bench argument that
+makes the stepper deliberately run zero steps on some frames and two on others, seeded from the
+bench seed. **The trace must be byte-identical to the plain one-step-per-frame run at the same
+seed.** That is the strongest test 6b has and it is available before any network is involved. Then
+the two-peer harness with the deliberate 900 ms hitch, judged against
+`Findings/2026-09-08-sealed-stream-cutover.md`'s table — same commit, flip the one variable in
+place, alternating runs. **The positive control is that the hitching peer's lead comes back down**,
+which today it cannot; a run where the lead only grows never exercised catch-up and proves nothing.
+And measure the DURATION with `Lockstep.stalled_seconds()`, never the stall count.
+
+### 13.5 The complete site list
+
+This is the checklist. Missing one is a silent desync. The audit behind it has the per-site
+reasoning; this is the grouping the work splits along. Nothing here may be skipped because it
+"looks like presentation" — four of the loops below are `VisualEffect3D` and all four deal damage.
+
+**Group A — the sim loops that rename to `_sim_step` and join the group.** Areas subtree:
+`Scripts/Game/PlayerArea.gd` (rubble), `Scripts/Units/Building.gd`,
+`Scripts/Combat/AttackComponent.gd`, `Scripts/Units/SendBuilding.gd`, `Scripts/Units/Creep.gd`.
+Units subtree: `Scripts/Units/MobileUnit.gd`, `Scripts/Units/Builder.gd`. Projectiles subtree:
+`Scripts/Combat/Projectile.gd`, `Scripts/Combat/PiercingProjectile.gd`,
+`Scripts/Combat/BeastCharge.gd`, `Scripts/Combat/GroundHazard.gd` (`_physics_process` half only).
+Managers: `Scripts/Game/PlayerManager.gd`, `Scripts/Tech/TechManager.gd`.
+
+**Group B — the driver and the clock.** `Scripts/Game/Simulation.gd` (new).
+`Scripts/Game/MatchSession.gd`: the step count, `tick()`, `tick_seconds()` off the config, delete
+`_legacy_tick` / `_start_frame` / `_pause_frame` / the `hold` refund / `_check_clock`; `hold` keeps
+setting `tree.paused`. `Scripts/Multiplayer/LockstepService.gd`: `_advance_turn` calls the step; 6b
+turns it into a bounded loop; `_sample_tick_interval`'s docstring must say whether its percentile is
+now per frame or per step, because the numbers in `Findings/2026-09-08-sealed-stream-cutover.md` are
+per tick and comparability is the point. `Scripts/References.gd` plus the `node_paths` line of the
+`References` node in `Scenes/main.tscn` AND `Scenes/Server/server_match.tscn`.
+`Scripts/Multiplayer/CommandService.gd`: no code change in 6a — under lockstep orders arrive through
+`apply_turn` and never through the pending queue, and the stepper is a scene node so autoloads still
+precede it — but its docstring's claim that the ordering is "free rather than arranged" is now half
+the story and must say what actually arranges it.
+
+**Group C — rate and cache readers.** `Scripts/Units/Creep.gd` `_aura_phase` (reads
+`Engine.physics_ticks_per_second` to spread aura sweeps, so two machines at different engine rates
+sweep on different ticks — a divergence that heals and reopens). `Scripts/Game/CreepIndex.gd`
+`_rebuild_if_stale`. Every remaining `Engine.get_physics_frames()` reader.
+
+**Group D — the falsifier.** `Scripts/Tools/DeterminismBench.gd`: the four blind spots, the widened
+driver, the positive controls, `skip=`, `engine_rate=`, driving and sampling off the step count. A
+new `checksum_state` on `SendBuilding`; `AttackComponent` accessors folded into `Building` and
+`Creep`; the unhashed accumulators. `Scripts/Tools/PerfBench.gd` samples around the stepper's call
+rather than by `process_physics_priority`, which stops ordering anything the stepper drives.
+`Scripts/Dev/StepOrderProbe.gd` (new, and **delete it with the rest of `Scripts/Dev` when done**).
+
+**Group E — 6b only, each its own commit.** Retirement in `Scripts/Units/Unit.gd` `_die` /
+`_exit_tree`, `Scripts/Units/Building.gd` `_exit_tree`, `Scripts/Game/PlayerArea.gd`'s creep list.
+`Scripts/Components/WalkAnimation3D.gd` and `Scripts/Units/MobileUnit.gd` publishing step distance.
+`Scripts/UI/StallPanel.gd`'s fourth state.
+
+**Group F — presentation, moved for hygiene and nothing else, last.**
+`Scripts/Components/StrikeAnimation3D.gd`, `Scripts/Components/SlamAnimation3D.gd`,
+`Scripts/UI/ActionBar.gd`, `Scripts/UI/SendBar.gd` to `_process`. Everything else on `_process`
+stays exactly where it is: camera, input, the build ghost, order markers, the range overlay, impact
+and lightning visuals, the whole HUD, and `NetworkService` / `LobbyService` / `MatchStartService`,
+whose wall clocks are deliberate and say so in place. `ReplicationService` stays on Godot's dispatch
+behind `NetworkConfig.lockstep_enabled`; its `process_physics_priority` stops guaranteeing that it
+runs last, so on the replication path the snapshot must be taken after the stepper's call by
+arrangement rather than by a priority number. Its own comment records that getting this wrong once
+built the snapshot from the previous tick.
+
+### 13.6 Traps
+
+**The ones this change walks straight into.**
+
+- **A green trace whose positive control never fired.** Said three ways in this document already and
+  it is still the likeliest way phase 6 goes wrong, because every gate here reads as a pass. One
+  question, spent per run: *what in this output proves the thing I am testing executed?* A step
+  count, a sample count, a sabotage run that went red. "No errors" is not an answer.
+- **`tree.paused` is doing load-bearing work that nothing in the code names.** It is the entire
+  mechanism by which a stall and the technology draft stop the world. Explicit stepping deletes it
+  for everything the stepper drives, and the network autoloads are all `PROCESS_MODE_ALWAYS`, so a
+  stepper written as "step the world N times" simulates straight through a stall — diverging by
+  exactly the length of the stall, the one state the phase exists to recover from.
+- **An override must call `super()`, and this change makes the trap easier to hit, not harder.**
+  Godot calls only the most derived `_physics_process`, which is why `OrderQueue.advance` is called
+  from each unit rather than being a loop of its own — and that reasoning stops being true the
+  moment a driver *can* call a base-class method. Rewrite the docstring; do not leave it to mislead.
+  `Creep` deliberately does not call `super`; `Builder` deliberately does.
+- **A node added mid-tick does not step that tick, and the simulation spawns nodes mid-tick
+  constantly** — sends, projectiles, hazards, upgraded towers, new buildings. The group snapshot
+  preserves it. Any future iteration over a live list breaks it, and the symptom is every send and
+  every shot gaining a tick of head start, which is exactly the size of difference that gets
+  explained away.
+- **`Creep._recycle_into` reparents a leaking creep into the next player's area mid-step and draws
+  the shared match RNG doing it.** An area-by-area walk would meet that creep twice in one step and
+  draw the RNG in a different order — not a small position error, a desync of the shared stream and
+  every damage roll after it. One flat snapshot cannot; that is a positive reason for the group, not
+  a convenience.
+- **The RNG is drawn from far more places than the attack path.** `AttackHit`, `HitPattern`,
+  `TowerBuffs`, six passives including a death passive that draws from inside the loop iterating the
+  dead, `TechManager.roll_random_ultimate`, `StartingTech`'s draft roll, and `PlayerArea`'s spawn
+  points. Every one rides the step order, and `WorldChecksum._add_rng` hashes the generator state, so
+  a reordering is caught on the turn it happens rather than as position drift a minute later. That
+  is also why 6a must not reorder anything: an id-ordered walk is the stronger invariant and the
+  right eventual destination, but it changes the draw order, so it cannot be the phase whose only
+  proof is a byte-identical trace. Half the sim set has no `unit_id` anyway.
+- **`process_priority` does not order `_physics_process`,** and two nodes rely on
+  `process_physics_priority` today. Both guarantees dissolve when the world is stepped explicitly.
+- **A new script in an existing folder is not imported by a `godot --path` run**, and after changing
+  a function signature the editor keeps the old parse and reports a bogus "Too many arguments" at
+  the call site. Both apply to every commit in 6a-2.
+- **`| head` in a bench pipeline discards the answer**, because the summary comes last.
+
+**What the reviews found and the design does not fully solve.**
+
+- **`AttackComponent` is both halves in one loop and 6a leaves it whole.** Its cooldown, scan
+  counter, windup and the RNG draw are simulation; `_aim` is barrel rotation and is presentation.
+  Splitting it changes behaviour and forfeits byte-identity, so 6a moves it entire — which means
+  under 6b a client's barrels are aimed by the sim step and turn N times per frame during a burst.
+  Cosmetic, and named as a follow-on rather than fixed. `_advance_windup` writes the windup point
+  from the target's position and that write is simulation; it must not be dragged onto the render
+  frame when the split finally happens.
+- **`AttackComponent` has no authority gate.** Only `Engine.is_editor_hint()`. Under lockstep every
+  peer is an authority so it is currently harmless, but the stepper must not assume the gate is
+  there, and the replication path still needs it.
+- **`PlayerManager` and `TechManager` are outside the two-rate falsifier.** Both ignore delta and
+  drain idempotent `while` loops off the clock, so running them three times too often changes
+  nothing and no trace can see whether they were migrated. They are covered by the audit and the
+  membership assertion, not by evidence. Say so rather than counting them as tested.
+- **`get_nodes_in_group`'s ordering is an engine implementation detail, not a documented guarantee.**
+  It was verified empirically on 4.7.2 and it matches because no sim node sets
+  `process_physics_priority`. If it ever drifts, the fallback is the stepper sorting the snapshot
+  itself with the same comparator — same design, one more function — and 6a-2's four prefix commits
+  each go red the moment it is wrong.
+- **The stepper's position as the first child of the match root is load-bearing and lives in a
+  `.tscn`,** where a drag in the scene dock silently undoes it. Assert its index at boot.
+- **6b-0's retirement diff will be small, per-unit and easy to wave through.** It must be explained
+  unit by unit or it is not landed.
+
+### 13.7 What would make us abandon this
+
+**The two-machine determinism run shows a divergence.** Then lockstep itself is unsound on real
+hardware and phase 6 is not the problem to solve — nothing built on top of a simulation that two PCs
+compute differently is worth building, and the correct next move is the replication path behind
+`NetworkConfig.lockstep_enabled`, which is why it was kept.
+
+**The two-machine run shows the lead never grows.** This is the honest one. Phase 6b exists to give
+back input delay that a peer accumulated, and section 8 records that in a healthy local match the
+lead never moved off zero in five minutes. If a real match between two real PCs on a real link shows
+the same — the lead recovering on its own, or never accumulating past a turn or two — then **6b is
+solving a problem this game does not have**, and amendment 10's threshold plus 4c's message are a
+complete answer. State the threshold in turns of accumulated lead per match minute **before** the
+run, so the measurement can refute the case for catch-up rather than being interpreted afterwards.
+6a would still be worth doing on the twelve-player budget alone, but it stops being urgent and
+should be scheduled against the spatial hash rather than against the netcode.
+
+> **MEASURED 2026-09-09, and this condition is now half-met.** Playtest 5, two real PCs against the
+> rented relay with `sealed_stream` on: the struggling laptop's lead went to 4 turns and **stayed
+> there** across 900 turns, dipping to 3 once. It does not accumulate. So the runaway this phase was
+> written against does not happen on real hardware, and 6b's stated purpose - giving back delay a
+> peer banked - is the wrong description of the problem.
+>
+> **What the same run also shows is that the 4 turns are worth having back.** Measured input delay
+> was 105 ms on the desktop and 300 ms on the laptop, and 4 turns is 200 ms of that 195 ms gap. The
+> case for 6b is therefore not "the delay grows" but "one machine carries 200 ms of standing buffer
+> it banked at match start and can never drain". That is a smaller and much better defined problem,
+> and it may be answerable by the engine-rate servo alone - which needs the delta refactor but NOT
+> the dispatch change 13.3 is built around. **Judge 6a and 6b against that reframing before
+> starting either.** See `Findings/2026-09-09-sealed-stream-on-two-machines.md`.
+
+**The sabotage matrix cannot be made to go red for a loop.** If a gameplay loop can be disabled
+entirely and the trace does not move, the falsifier cannot see that part of the world, and no amount
+of care in the refactor substitutes. Either widen the hash until it can, or land that loop's
+migration with it written down in the commit message as unproven. Do not proceed on the assumption
+that a green run covers it.
+
+**6a cannot be made byte-identical after a fair attempt.** If a commit's trace moves and the reason
+cannot be explained to the tick, stop. The claim "this changed nothing" is the only thing standing
+between the refactor and every future desync being blamed on it, and a phase that has to be argued
+for rather than demonstrated has already lost the property it was built to have.
+
+**The measured cost is worse on the target.** `get_nodes_in_group` allocates and re-sorts whenever
+membership changed, which under a full lane is every step. The claim is that this is what the engine
+already pays every tick; the claim is untested. Measure it with `Tools/run_bench.ps1` on the server,
+paired and alternating on the same commit — a dev PC's answer here is a profile of the platform.
+
+**Catch-up at the cap is unreadable.** If a real leak fast-forwarded at the cap costs the player the
+ability to react, the cap comes down until it does not, and if there is no cap at which recovery is
+both useful and readable, 6b is the wrong answer and the right one is ending the session cleanly
+with amendment 2's drop and 4c's message.
