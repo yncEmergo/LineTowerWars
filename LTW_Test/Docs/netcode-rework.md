@@ -1335,7 +1335,7 @@ fail, a green 6a run means nothing.**
 | `Building` | red | 2 |
 | `SendBuilding` | red | 8 |
 | `Builder` | red | 2 |
-| `AttackComponent` | red | 22 |
+| `AttackComponent` | red | 26 |
 | `Projectile` | red | 5 |
 
 Two runs of the unsabotaged bench are byte-identical, so the harness is stable, and `perturb=200`
@@ -1366,9 +1366,24 @@ harness should not push shipping classes further over it to watch itself work. *
 if a field is renamed** — a missing property answers null, hashes the same every run, and the trace
 stays green while covering nothing — so the bench asserts its own coverage and separates three
 outcomes: MISSING (renamed, the real failure), never set (the field exists and the DRIVER never made
-it happen), and resolved. `Creep._status` currently reports *never set*: it is built lazily and no
-creep in the run is ever chilled or stunned, so the `StatusEffects` timers are hashed but unproven.
-**That is the one loop still without a red row**, and it wants a driver that lands a slowing attack.
+it happen), and resolved. `Creep._status` reports *never set*: it is built lazily and no creep in the
+run is ever chilled or stunned.
+
+**The `StatusEffects` timers are therefore hashed, verified to exist, and unexercised, and those are
+three different things.** The dangerous one is closed: a field on an object the run never builds is
+never probed at all, so a rename would not even report MISSING - the probe only sees what the run
+constructs. So the four timers are checked against a fresh `StatusEffects` instance instead, which
+needs no creep, and they are listed by name in the report rather than left implied. What remains is
+that nothing in the run lands a chill, and `StatusEffects` is ticked by `Creep`, whose own row is
+red - so the loop is covered even though these fields never move off zero.
+
+**Making them move was attempted and abandoned, which is worth recording.** The driver was taught to
+prefer building a tower whose passive applies a slow, and then to upgrade one, since an element
+arrives by upgrade. The upgrades were never applied, so no chill ever landed - and the tower the new
+sort preferred fires no projectile, which silently cost `skip=Projectile` its red row. **A driver
+tuned toward one uncovered loop uncovered another**, and the second failure was only visible because
+the matrix reports nodes-disabled. Both changes were reverted; the class-level verification was
+kept. Landing a chill wants a driver that can complete an upgrade, which is its own piece of work.
 
 ### 13.3 Phase 6a — explicit stepping, commit by commit
 

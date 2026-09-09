@@ -241,9 +241,35 @@ func _drive_tick() -> void:
 	# and only shoots after that. Ordered late in a short run it is still
 	# scaffolding when the trace ends, and the projectile road is never
 	# exercised - which is exactly how `skip=Projectile` came back NOT TESTED.
-	if _tick == 8 || _tick == 20:
+	# **Two DIFFERENT towers, because one is not enough to cover both loops.**
+	# The status-preferring sort picks a tower whose attack applies a chill, and
+	# that tower turned out not to fire a projectile - so `skip=Projectile`
+	# disabled zero nodes and came back NOT TESTED the moment the sort changed.
+	# The second build takes the next choice down, so a projectile tower exists
+	# whatever the first one is.
+	if _tick == 8:
 		for area: PlayerArea in _areas:
-			_build_from(area)
+			_build_from(area, 0)
+		return
+	if _tick == 20:
+		# **The SAME tower again, not the next one down.** Building a second,
+		# different tower was tried and the second placement does not take -
+		# so the area ends up with one tower rather than two, its rate of fire
+		# halves, and no projectile exists at a tick boundary for the sabotage
+		# walk to find. Two of the same is what actually keeps the projectile
+		# road busy.
+		for area: PlayerArea in _areas:
+			_build_from(area, 0)
+		return
+
+	# **Then upgrade it, which is the only road to an ELEMENT.** A basic tower
+	# carries no element and therefore no status-applying passive, so a driver
+	# that only builds leaves `Creep._status` null for the whole run and the
+	# `StatusEffects` timers hashed but never proven. It also exercises the
+	# upgrade clock, which 13.2 wants and nothing else reaches.
+	if _tick == 300 || _tick == 420:
+		for area: PlayerArea in _areas:
+			_upgrade_in(area)
 		return
 
 	# Every player holds the send key, which is the heaviest ordinary load the
@@ -254,6 +280,76 @@ func _drive_tick() -> void:
 		_send_from(area)
 
 
+## Orders one finished tower upgraded, preferring an upgrade that leads to a
+## tower which applies a status.
+func _upgrade_in(area: PlayerArea) -> void:
+	var session: MatchSession = References.match_session
+	if session == null:
+		return
+	for id: Variant in session.unit_ids():
+		var unit: Unit = session.unit_for(int(id))
+		if !(unit is Building) || unit.owner_player_id != area.player_id:
+			continue
+		if unit.stats == null:
+			continue
+		# **`upgrading_abilities` is the CANCEL button shown while an upgrade
+		# runs, not the list of upgrades.** The upgrade itself sits in
+		# `abilities` beside the attack and the sell, which is why reading the
+		# obvious field found nothing and reported it as nothing to upgrade.
+		var choices: Array = []
+		for entry: Variant in unit.stats.abilities:
+			var ability: UnitAbility = entry as UnitAbility
+			if ability == null:
+				continue
+			if _tower_of(ability) != null:
+				choices.append(ability)
+			else:
+				choices.append_array(ability.submenu_abilities())
+		choices.sort_custom(func(a: Variant, b: Variant) -> bool:
+			return _applies_status(a) && !_applies_status(b))
+		for entry: Variant in choices:
+			var ability: UnitAbility = entry as UnitAbility
+			if ability == null || _tower_of(ability) == null:
+				continue
+			var command: Command = Command.create(
+				ability.ability_id, [unit], AbilityTarget.none(), false
+			)
+			command.tick = _tick
+			command.player_slot = area.player_id
+			Commands.call("_queue", command)
+			_sent_this_run += 1
+			return
+
+
+## The tower an ability would produce, whether it BUILDS one or UPGRADES into
+## one. Asked by property rather than by class, because the two are different
+## subclasses that both carry `tower_stats`.
+static func _tower_of(ability: UnitAbility) -> Resource:
+	if ability == null:
+		return null
+	return ability.get("tower_stats") as Resource
+
+
+## Whether this tower carries a passive that puts a status on what it hits.
+##
+## Asked by PROPERTY rather than by class name: a passive exposing `slow_per_hit`
+## or `stun_seconds` is one that reaches `StatusEffects`, and that stays true for
+## a passive nobody has written yet.
+func _applies_status(ability: Variant) -> bool:
+	var stats: Resource = _tower_of(ability as UnitAbility)
+	if stats == null:
+		return false
+	for entry: Variant in stats.get("abilities"):
+		var passive: TowerPassive = entry as TowerPassive
+		if passive == null:
+			continue
+		for property: Dictionary in passive.get_property_list():
+			var name: String = String(property.get("name", ""))
+			if name == "slow_per_hit" || name == "stun_seconds":
+				return true
+	return false
+
+
 ## Orders one tower built, from whichever unit in this area owns a
 ## `BuildTowerAbility`.
 ##
@@ -262,7 +358,7 @@ func _drive_tick() -> void:
 ## order does - the ability's own rules refuse an illegal cell, which is the
 ## point: a driver that bypassed them would be testing a world the game cannot
 ## reach.
-func _build_from(area: PlayerArea) -> void:
+func _build_from(area: PlayerArea, choice: int) -> void:
 	var session: MatchSession = References.match_session
 	if session == null:
 		return
@@ -279,14 +375,31 @@ func _build_from(area: PlayerArea) -> void:
 			var ability: UnitAbility = entry as UnitAbility
 			if ability == null:
 				continue
-			if ability is BuildTowerAbility:
+			if _tower_of(ability) != null:
 				offered.append(ability)
 			else:
 				offered.append_array(ability.submenu_abilities())
 
+		# **A tower that applies a STATUS if one is offered.** `StatusEffects` is
+		# ticked by `Creep`, so its loop is already covered by `skip=Creep` - but
+		# `_status` is built lazily and stays null until something chills or
+		# stuns, so a driver that only ever fires plain damage leaves those
+		# timers hashed and unproven. Preferring a frost or stunning tower is
+		# what turns that from coverage into evidence.
+		# **No status-preferring sort here, and that is a decision rather than an
+		# omission.** Ordering the buildable list to favour a chilling tower was
+		# tried, to make `Creep._status` resolve; the upgrades it needed were
+		# never applied, so it did not, and the tower it did pick fires no
+		# projectile - which silently cost `skip=Projectile` its red row. A
+		# driver tuned toward one uncovered loop must not uncover another.
+
+		var picked: int = 0
 		for entry: Variant in offered:
-			var build: BuildTowerAbility = entry as BuildTowerAbility
-			if build == null:
+			var build: UnitAbility = entry as UnitAbility
+			if build == null || _tower_of(build) == null:
+				continue
+			if picked < choice:
+				picked += 1
 				continue
 			var row: int = area.build_zone_first_row()
 			var column: int = _driver_rng.randi_range(2, 8)
@@ -518,6 +631,21 @@ func _probe(node: Object, owner_name: String, field: String) -> Variant:
 	return value
 
 
+## Records whether each named field exists on a class, without needing the run to
+## have produced an instance of it.
+func _verify_class(sample: Object, owner_name: String, fields: PackedStringArray) -> void:
+	if sample == null:
+		return
+	var present: Dictionary = {}
+	for entry: Dictionary in sample.get_property_list():
+		present[String(entry.get("name", ""))] = true
+	for field: String in fields:
+		var key: String = "%s.%s" % [owner_name, field]
+		_declared[key] = present.has(field)
+		if !_probed.has(key):
+			_probed[key] = false
+
+
 func _sample() -> void:
 	var session: MatchSession = References.match_session
 	_samples.append({
@@ -740,6 +868,18 @@ func _finish() -> void:
 	# **The positive control for the hash itself.** A field that never resolved
 	# hashed as zero on every sample and covered nothing, which looks exactly
 	# like a field that was simply always zero.
+	# **A field on an object that is never built is never probed at all**, so it
+	# would not even be reported as MISSING - the probe only sees what the run
+	# happens to construct. `StatusEffects` is built lazily on the first creep to
+	# be chilled or stunned, so a run where nothing lands a slow leaves its
+	# timers both unexercised AND unverified, which is the worse half.
+	#
+	# Checked against a fresh instance instead, which needs no creep. This closes
+	# the rename risk; the "never exercised" half is reported separately and
+	# honestly.
+	_verify_class(StatusEffects.new(null), "StatusEffects",
+		["_stun_left", "_paralyze_left", "_armor_eroded", "_armor_delta"])
+
 	var missing: PackedStringArray = PackedStringArray()
 	var never_set: PackedStringArray = PackedStringArray()
 	for key: Variant in _probed:
