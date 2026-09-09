@@ -738,7 +738,12 @@ func wire_config() -> String:
 	var config: NetworkConfig = References.network_config
 	if config == null:
 		return "?"
-	return "sealed=%d" % (1 if config.sealed_stream else 0)
+	# `sealed_stream` was the first thing this carried and is gone - the sealed
+	# stream is the only path now, so no build can disagree about it. What is
+	# left that changes the WIRE without changing the code is the turn-to-tick
+	# ratio: the relay seals one turn per tick and every peer derives its turns
+	# from ticks, so two builds that disagree here desync rather than refuse.
+	return "tpt=%d" % maxi(1, config.ticks_per_turn)
 
 
 func rpc_signature() -> String:

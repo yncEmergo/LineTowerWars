@@ -395,7 +395,6 @@ func _finish() -> void:
 		# false measured nothing about the cutover however good the numbers
 		# look, and `sealed_held` greater than zero is what proves seals were
 		# actually being played rather than the flag merely being set.
-		"sealed": Lockstep.sealed_stream(),
 		"sealed_held": Lockstep.sealed_held(),
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),

@@ -299,7 +299,6 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		return
 	note("lockstep.health", {
 		"turn": turn,
-		"delay_turns": Lockstep.delay_turns(),
 		"rtt_ms": Net.round_trip_ms(NetworkService.SERVER_PEER_ID),
 		"rtt_var_ms": Net.round_trip_variance_ms(NetworkService.SERVER_PEER_ID),
 		# What THIS machine's own frame times are costing, which the two figures
@@ -310,12 +309,9 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		# Phase 3's positive control. A run where this stays 0 proves nothing,
 		# however clean it looks. See LockstepService.shadow_verified.
 		"shadow_ok": Lockstep.shadow_verified(),
-		# **Which side of the cutover this run is, and how far behind the relay
-		# this machine is playing.** The phase 4 measurement is paired across a
-		# flag, so a log that does not say which value the flag had is a log that
-		# cannot be paired with anything - the two runs are minutes apart and
-		# otherwise identical. See LockstepService.sealed_lead.
-		"sealed": Lockstep.sealed_stream(),
+		# How far behind the relay this machine is playing. It is the peer's
+		# input delay in turns, and the number the catch-up servo drives back
+		# down - see LockstepService._pace_engine.
 		"sealed_held": Lockstep.sealed_held(),
 		# **What a word actually COST, which nothing above can show.** Every
 		# figure beside it is an ESTIMATE of the wire - a mean round trip, its

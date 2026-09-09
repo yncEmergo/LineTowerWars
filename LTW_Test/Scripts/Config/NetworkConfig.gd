@@ -105,7 +105,7 @@ extends Resource
 ## WorldChecksum stays the backstop underneath this. A version number catches
 ## two builds that were never meant to meet; the checksum catches two builds
 ## that agree on their version and still built different worlds.
-@export var protocol_version: int = 2
+@export var protocol_version: int = 3
 ## How long the server waits for a freshly connected peer to state its version
 ## before dropping it.
 ##
@@ -321,25 +321,6 @@ extends Resource
 @export var max_peer_lag_turns: int = 200
 
 @export_subgroup("Sealed stream")
-## **THE CUTOVER SWITCH.** Off, a peer waits for every other peer's word before
-## it may simulate a turn, and one slow machine holds the whole match still. On,
-## the relay seals one authoritative turn per tick from whatever has arrived and
-## broadcasts it, and a peer waits for NOBODY BUT THE RELAY - so a machine that
-## hitches costs its own player input delay and costs everybody else nothing.
-##
-## **Shaped like `lockstep_enabled` on purpose, and for the same reason.** The
-## claim being made is a performance one - "the healthy peer stops stalling when
-## the other one hitches" - and `CLAUDE.md` requires that measured paired, same
-## commit, alternating runs. Deleting the old path in the commit that adds the
-## new one would make the variable un-flippable and the measurement impossible.
-##
-## **Both ends must agree, and today nothing checks that they do.** A sealed
-## peer against a legacy relay receives no seals at all; a legacy peer against a
-## sealed relay never hears the other player. Both stall at turn 0 and say so,
-## which is loud rather than silent - but it is still a build mismatch, and the
-## follow-up commit that deletes the old gate bumps `protocol_version` to make
-## it refuse the connection outright.
-@export var sealed_stream: bool = false
 
 ## How many turns behind the local clock a peer plays the sealed stream, which
 ## IS its jitter buffer and so its input delay.

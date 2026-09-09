@@ -144,12 +144,9 @@ const MAX_PRESSES_HELD: int = 256
 # --- local state, on every machine ----------------------------------------
 ## Orders this machine has issued that have not been sent yet, keyed by the
 ## turn they are scheduled to run on.
-var _outgoing: Dictionary = {}
 ## Orders received per turn, keyed by turn then by peer id.
-var _incoming: Dictionary = {}
 ## The highest turn this machine has said its final word on. Everything above
 ## it is still open to an order. See _close_through.
-var _closed_through: int = NO_TURN
 ## The last turn this machine checksummed, on the same reasoning.
 var _last_checksum_turn: int = NO_TURN
 ## The last turn whose orders were actually run, so a turn runs exactly once.
@@ -204,7 +201,6 @@ var _match_id: String = ""
 
 ## The last few turns this machine closed, oldest first, as [turn, payload]
 ## pairs. Sent again in every echo. See _echo.
-var _recent: Array = []
 
 ## Ticks since this machine last said it is alive.
 ##
@@ -231,12 +227,9 @@ var _last_heard: Dictionary = {}
 
 ## Relay only: peer id -> the last turn the relay has spoken for on its behalf.
 ## See _speak_for_the_departed.
-var _spoken_through: Dictionary = {}
 
 ## Relay only: what is waiting to go out to each peer this frame, reliable and
 ## unreliable kept apart. See _flush_batches.
-var _out_reliable: Dictionary = {}
-var _out_unreliable: Dictionary = {}
 
 ## Relay only: peers the relay has given up on and now speaks for, even though
 ## the socket is still open. See _drop_silent_peers.
@@ -252,7 +245,6 @@ var _highest_seen: int = NO_TURN
 ## peer, and announced to the rest. A client cannot work this out: its ENet host
 ## holds one link, to the server, so the other player's distance is a fact only
 ## the middle of the star can see. UNKNOWN_RTT until the first announcement.
-var _worst_one_way: int = NetworkService.UNKNOWN_RTT
 
 ## When THIS machine's player pressed, in wall-clock milliseconds, keyed by a
 ## CLIENT-LOCAL ORDER SEQUENCE rather than by a turn. Diagnostic only - see
@@ -265,11 +257,9 @@ var _worst_one_way: int = NetworkService.UNKNOWN_RTT
 ## when it is needed to judge the change. The seq is local and never goes on the
 ## wire yet; the cutover puts it there and resolves the turn from the seal
 ## instead of from `scheduled_turn()`.
-var _ordered_at: Dictionary = {}
 ## Monotonic, per match, per machine. Never leaves this process in phase 0.
 var _order_seq: int = 0
 ## turn -> the order seqs booked into it, so a run turn can find its presses.
-var _seqs_for_turn: Dictionary = {}
 
 ## Phase 0 instrumentation. Wall-clock milliseconds: when each turn became DUE
 ## on this machine's clock, and when each peer's word for it FIRST arrived.
@@ -307,18 +297,14 @@ var _pending_count: Dictionary = {}
 ## repairs it. What must hold is that each author's orders appear in the sealed
 ## stream exactly once, in the order they were pressed, none lost and none
 ## duplicated. A matched prefix is dropped from both, so neither grows.
-var _seal_seen: Dictionary = {}
-var _legacy_seen: Dictionary = {}
-var _shadow_told: bool = false
 ## How many orders the shadow check has actually MATCHED.
 ##
 ## **The positive control, and without it this phase cannot be tested at all.**
 ## A clean run and a comparison that never executed look identical from the
 ## outside - no error either way - which is `CLAUDE.md`'s most repeated trap. A
 ## test passes only if this is greater than zero.
-var _shadow_ok: int = 0
 
-## --- the sealed stream, all of it behind NetworkConfig.sealed_stream --------
+## --- the sealed stream ------------------------------------------------------
 
 ## Peer: turns the relay has sealed and this machine has not played yet, keyed
 ## by turn. **This replaces `_incoming` entirely when the flag is on**, and the
@@ -385,14 +371,6 @@ func _ready() -> void:
 	set_physics_process(true)
 
 
-## The relay's outboxes go out here rather than on the tick, so a forwarded turn
-## is not held for a whole simulation step. Everything else this class does lives
-## in _physics_process; this is the one thing that wants to be sooner.
-func _process(_delta: float) -> void:
-	if MatchSession.is_relay() && _is_live():
-		_flush_batches()
-
-
 func _physics_process(_delta: float) -> void:
 	if !_is_live():
 		return
@@ -410,13 +388,8 @@ func _physics_process(_delta: float) -> void:
 	# never stalls, so the measurement never stops on the machine that takes it.
 	if MatchSession.is_relay():
 		_frames += 1
-		_measure_and_announce()
 		_drop_silent_peers()
-		if _sealed_stream():
-			_seal_stream()
-		else:
-			_speak_for_the_departed()
-			_seal_turn()
+		_seal_stream()
 		_report_drift()
 		return
 
@@ -433,25 +406,17 @@ func _physics_process(_delta: float) -> void:
 
 	var turn: int = current_turn()
 
-	if _sealed_stream():
-		# **Nothing is closed and nothing is emitted.** A peer under the sealed
-		# stream has no word to say about a turn: it sent its orders bare when
-		# they were pressed and the relay decided which turn they land in. All
-		# that is left here is playing back what arrives.
-		#
-		# The clock is held back by the lead, which is this machine's jitter
-		# buffer. `_advance_turn` runs one turn per tick at most and only ever
-		# the next one, so a lead of L means a seal has L turns of slack to
-		# arrive in before it is missed.
-		_advance_turn(turn - _sealed_lead_turns())
-		_pace_engine()
-	else:
-		# Closed FIRST, so this machine's word is on the wire before anything
-		# else in the tick can hold it up. Nothing in the simulation depends on
-		# the order of these three.
-		_close_through(turn + delay_turns())
-		_advance_turn(turn)
-	_measure_and_announce()
+	# **Nothing is closed and nothing is emitted.** A peer under the sealed
+	# stream has no word to say about a turn: it sent its orders bare when
+	# they were pressed and the relay decided which turn they land in. All
+	# that is left here is playing back what arrives.
+	#
+	# The clock is held back by the lead, which is this machine's jitter
+	# buffer. `_advance_turn` runs one turn per tick at most and only ever
+	# the next one, so a lead of L means a seal has L turns of slack to
+	# arrive in before it is missed.
+	_advance_turn(turn - _sealed_lead_turns())
+	_pace_engine()
 
 	# Held only by a stall. Everything else the world stops for - the draft
 	# above all - must NOT stop the turns, or the very orders that would end it
@@ -513,9 +478,9 @@ func _advance_turn(clock_turn: int) -> void:
 			Log.warn("Waiting on a turn", {
 				"turn": turn,
 				"missing": _missing_for(turn),
-				"have": [] if _sealed_stream() 					else (_incoming.get(turn, {}) as Dictionary).keys(),
-				"expected": PackedInt32Array([NetworkService.SERVER_PEER_ID]) 					if _sealed_stream() else _expected_peers(),
-				"held": _sealed.size() if _sealed_stream() else _closed_through,
+				"have": [],
+				"expected": PackedInt32Array([NetworkService.SERVER_PEER_ID]),
+				"held": _sealed.size(),
 				"seconds": snappedf(float(_stall_frames) * _engine_tick_seconds(), 0.1),
 			})
 		return
@@ -546,21 +511,12 @@ func _advance_turn(clock_turn: int) -> void:
 	_maybe_report_checksum(turn)
 
 	var orders: Array = commands_for(turn)
-	if _sealed_stream():
-		# **No shadow comparison here, because there is nothing left to compare
-		# to.** Phase 3 fed this from `commands_for` and the seal from
-		# `receive_seal`, which under the flag are the SAME array arriving by the
-		# same road - checking it against itself would pass unconditionally and
-		# report a positive control that means nothing.
-		_sealed.erase(turn)
-	else:
-		# Phase 3b: the same orders, filed under the road they took, so the seal
-		# can be checked against what was really played. A hash per order.
-		for entry: Variant in orders:
-			var played: Dictionary = entry as Dictionary
-			if played != null:
-				_remember_shadow(_legacy_seen, int(played.get("slot", 0)), hash(played))
-		_incoming.erase(turn)
+	# **No shadow comparison here, because there is nothing left to compare
+	# to.** Phase 3 fed this from `commands_for` and the seal from
+	# `receive_seal`, which under the flag are the SAME array arriving by the
+	# same road - checking it against itself would pass unconditionally and
+	# report a positive control that means nothing.
+	_sealed.erase(turn)
 	turn_ready.emit(turn, orders)
 	if !orders.is_empty():
 		Commands.apply_turn(orders)
@@ -592,36 +548,7 @@ func _advance_turn(clock_turn: int) -> void:
 ## per player action, so `Log.info` is affordable here by the rule in
 ## `CLAUDE.md`. A turn nobody ordered on costs one Dictionary lookup.
 func _report_latency(turn: int, orders: Array) -> void:
-	if _sealed_stream():
-		_report_sealed_latency(turn, orders)
-		return
-	if !_seqs_for_turn.has(turn):
-		return
-	var seqs: Array = _seqs_for_turn[turn]
-	_seqs_for_turn.erase(turn)
-
-	# The EARLIEST press booked into this turn, which is what the turn-keyed
-	# version reported when it took the first press and ignored the rest.
-	var earliest: int = 0
-	for seq: Variant in seqs:
-		var at: int = int(_ordered_at.get(seq, 0))
-		_ordered_at.erase(seq)
-		if at > 0 && (earliest == 0 || at < earliest):
-			earliest = at
-	if earliest == 0:
-		return
-
-	var waited: int = Time.get_ticks_msec() - earliest
-	Log.info("Order ran", {
-		"turn": turn,
-		"waited_ms": waited,
-		"ticks_per_turn": _ticks_per_turn(),
-		"delay_turns": delay_turns(),
-	})
-	# Into the session log as well, because "it felt laggy" is the report this
-	# number answers and no signal carries it.
-	SessionLog.note("order.ran", {"turn": turn, "waited_ms": waited,
-		"delay_turns": delay_turns()})
+	_report_sealed_latency(turn, orders)
 
 
 ## The same number under the sealed stream, paired off BY ORDER rather than by
@@ -673,85 +600,10 @@ func _report_sealed_latency(turn: int, orders: Array) -> void:
 		"delay_turns": _sealed_lead_turns()})
 
 
-## The milliseconds this machine's word needs to reach the peer furthest from
-## it, or -1 while there is nothing measurable yet.
-##
-## The two cases differ because the star has a middle. The server IS the middle,
-## so its word travels one leg. A client's word climbs to the middle and comes
-## back down the far side, so it pays both.
-func _wire_budget_ms() -> int:
-	var margin: int = _jitter_margin_ms() + local_jitter_ms()
-	if Net.is_server():
-		if _worst_one_way == NetworkService.UNKNOWN_RTT:
-			return -1
-		return _worst_one_way + margin
-
-	var mine: int = _one_way_to(NetworkService.SERVER_PEER_ID)
-	if mine == NetworkService.UNKNOWN_RTT:
-		return -1
-
-	# Until the server has said how far the furthest OTHER player is, assume
-	# they are as far off as this machine. Wrong only when the two pings differ
-	# a lot, and wrong in the safe direction exactly when this machine is the
-	# slower of the two - which is the case that would otherwise stall.
-	var theirs: int = mine if _worst_one_way == NetworkService.UNKNOWN_RTT else _worst_one_way
-	# The jitter, ONCE, on the whole path rather than once per leg. See
-	# _one_way_to.
-	var jitter: int = maxi(0, Net.round_trip_variance_ms(NetworkService.SERVER_PEER_ID))
-	return mine + theirs + jitter + margin
 
 
-## Half a measured round trip. **The variance is NOT added here**, and that is a
-## measured correction rather than a tidy-up.
-##
-## It used to be, and `_wire_budget_ms` adds this for both legs, so the jitter was
-## being counted twice - and then `jitter_margin_ms` was added flat on top of the
-## pair, making three. On a 26 ms link that inflated a ~26 ms wire budget past the
-## 50 ms turn boundary and bought a whole extra turn of input delay for every
-## player, for ever.
-##
-## Measured on the rented server: dropping the flat margin alone took the median
-## from ~124 ms to ~65 ms and roughly quadrupled the stalls, which is too far the
-## other way. Counting the jitter ONCE, where it belongs, is the middle that is
-## not a guess.
-func _one_way_to(peer: int) -> int:
-	var rtt: int = Net.round_trip_ms(peer)
-	if rtt == NetworkService.UNKNOWN_RTT:
-		return NetworkService.UNKNOWN_RTT
-	return rtt / 2
 
 
-## Sends EMPTY turn words on behalf of a player who has stopped sending their
-## own, for as long as the match lasts.
-##
-## **This is the whole answer to a departure, and the obvious alternative
-## deadlocks.** The tempting design is an order in the turn stream saying "stop
-## waiting for B from turn T" - and it cannot work, because a peer waiting for B
-## is STALLED, its clock is frozen by definition, and it can never reach turn T
-## to be released by it. Built exactly that way first and watched a survivor run
-## 227 turns and stop: the order that unblocks the turn stream cannot ride the
-## turn stream.
-##
-## So the relay speaks for the departed instead. Every peer keeps expecting B and
-## keeps receiving B's word, empty, for every turn - which is the truth: a player
-## who has gone issues no orders. Nothing has to agree on a cut-off turn because
-## there is not one, and the expectation set never changes, so the two ENet
-## channels that used to race cannot.
-##
-## The cost is a few empty words a tick until the match ends, which is nothing
-## next to being wrong.
-func _speak_for_the_departed() -> void:
-	if _spoken_through.is_empty() && _departed.is_empty():
-		return
-	var live: PackedInt32Array = multiplayer.get_peers()
-	for peer: int in _match_peers():
-		if peer in live && !_departed.has(peer):
-			continue
-		var through: int = int(_spoken_through.get(peer, NO_TURN))
-		while through < _highest_seen:
-			through += 1
-			_relay_turn_to_match(through, peer, [])
-		_spoken_through[peer] = through
 
 
 ## Gives up on a player who is connected and has stopped talking.
@@ -806,45 +658,8 @@ func _drop_silent_peers() -> void:
 	MatchStart.drop_silent_peer(worst)
 
 
-## The server re-reads its connections and tells everyone when the answer moves.
-##
-## Only the server can do this: it is the one machine with a link to every peer.
-## It says nothing while the number is unchanged, so a well behaved match sends
-## this once and then never again.
-func _measure_and_announce() -> void:
-	if !Net.is_server() || _frames % MEASURE_EVERY_FRAMES != 0:
-		return
-
-	# Only the players. Measuring across every connected peer meant somebody
-	# browsing lobbies on a bad connection raised the input delay for the people
-	# actually in the match.
-	var worst: int = 0
-	var readable: bool = false
-	for peer: int in _match_peers():
-		var one_way: int = _one_way_to(peer)
-		if one_way != NetworkService.UNKNOWN_RTT:
-			worst = maxi(worst, one_way)
-			readable = true
-
-	# Nothing readable yet is NOT the same as "everybody is close". Announcing
-	# the zero would tell every peer to size its delay for a perfect link, and
-	# under-estimating the budget is exactly what causes a stall.
-	if !readable || worst == _worst_one_way:
-		return
-	_worst_one_way = worst
-	announce_one_way.rpc(worst)
 
 
-## How far the furthest player is, from the only machine that can see them all.
-##
-## Advisory: a client that never hears this still plays, on its own ping doubled
-## (see _wire_budget_ms). Losing it costs accuracy, never correctness - the
-## delay cannot desync anybody, whatever value it takes.
-@rpc("authority", "call_remote", "reliable")
-func announce_one_way(ms: int) -> void:
-	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
-		return
-	_worst_one_way = maxi(0, ms)
 
 
 ## How much this machine's own frame times are currently costing, in
@@ -920,22 +735,8 @@ func _sample_tick_interval() -> void:
 	_last_tick_usec = now
 
 
-## How many orders the sealed stream and the played stream have agreed on.
-##
-## Zero means the check never ran, which is a FAILED test rather than a clean
-## one - see _shadow_ok.
-func shadow_verified() -> int:
-	return _shadow_ok
 
 
-## Which side of the cutover this machine is playing, for the session log.
-##
-## **A paired measurement whose logs do not say which value the flag had cannot
-## be paired.** The two runs are minutes apart and otherwise identical, and
-## `CLAUDE.md` requires the comparison be made against the flag rather than
-## across two builds - so the flag has to be in the artefact.
-func sealed_stream() -> bool:
-	return _sealed_stream()
 
 
 ## How many sealed turns are waiting to be played - this machine's lead over the
@@ -959,8 +760,6 @@ func sealed_held() -> int:
 ##
 ## Wall clock, for a human. Nothing in the simulation may read it.
 func sealed_lag_seconds() -> float:
-	if !_sealed_stream():
-		return 0.0
 	return float(_sealed.size()) * _engine_tick_seconds() * float(_ticks_per_turn())
 
 
@@ -1075,7 +874,7 @@ func _report_drift() -> void:
 	# does - it waits for every peer's world to be built (B2) - so reading the
 	# frame counter here would report every peer as permanently behind by
 	# however long the slowest one took to load.
-	var mine: int = _highest_seen if _sealed_stream() else current_turn()
+	var mine: int = _highest_seen
 	var behind: Dictionary = {}
 	for peer: int in _match_peers():
 		behind[peer] = mine - int(_reported_turn.get(peer, NO_TURN))
@@ -1126,14 +925,7 @@ func _is_complete(turn: int) -> bool:
 	# NO OTHER PLAYER EVER APPEARS IN THIS MACHINE'S WAIT CONDITION AGAIN. A
 	# machine that hitches now costs its own player input delay and costs
 	# everybody else nothing at all.
-	if _sealed_stream():
-		return _sealed.has(turn)
-
-	var by_peer: Dictionary = _incoming.get(turn, {})
-	for peer: int in _expected_peers():
-		if !by_peer.has(peer):
-			return false
-	return true
+	return _sealed.has(turn)
 
 
 func _missing_for(turn: int) -> PackedInt32Array:
@@ -1147,9 +939,7 @@ func _missing_for(turn: int) -> PackedInt32Array:
 	#
 	# `StallPanel` already renders this id as "the server", so the panel needs
 	# no change to say the honest thing.
-	if _sealed_stream():
-		return PackedInt32Array([NetworkService.SERVER_PEER_ID])
-	return _missing_peers(_incoming.get(turn, {}))
+	return PackedInt32Array([NetworkService.SERVER_PEER_ID])
 
 
 ## Holds or releases the world. Routed through the session so the match clock is
@@ -1190,18 +980,10 @@ func _reset_if_new_match() -> void:
 		return
 
 	_match_id = id
-	_outgoing.clear()
-	_incoming.clear()
-	_ordered_at.clear()
 	_order_seq = 0
-	_seqs_for_turn.clear()
 	_pending_orders.clear()
 	_pending_count.clear()
 	_seq_seen.clear()
-	_seal_seen.clear()
-	_legacy_seen.clear()
-	_shadow_told = false
-	_shadow_ok = 0
 	# **Amendment 8, and its own docstring above says why this list matters.**
 	# A relay hosts one match after another in the same process, so a `_seq_seen`
 	# high-water mark left over from the last one would silently dedupe away
@@ -1221,8 +1003,6 @@ func _reset_if_new_match() -> void:
 	_arrived_at.clear()
 	_leads.clear()
 	_leads_n.clear()
-	_recent.clear()
-	_spoken_through.clear()
 	_departed.clear()
 	# A new match on a machine that struggled through the last one starts from
 	# no opinion about it, rather than inheriting the delay it earned.
@@ -1234,22 +1014,18 @@ func _reset_if_new_match() -> void:
 	_jitter_measured_at = -1000
 	_reported_turn.clear()
 	_since_heartbeat = 0
-	_out_reliable.clear()
-	_out_unreliable.clear()
 	_last_heard.clear()
 	_highest_seen = NO_TURN
 	_turn_checksums.clear()
 	_told.clear()
 	_pruned_through = NO_TURN
 	_late_reports = 0
-	_closed_through = NO_TURN
 	_last_checksum_turn = NO_TURN
 	_last_run_turn = NO_TURN
 	_stalled_on = NO_TURN
 	_stall_frames = 0
 	_stalled_total = 0
 	_frames = 0
-	_worst_one_way = NetworkService.UNKNOWN_RTT
 
 	# Never left holding the tree for a match that no longer exists.
 	if _stalling:
@@ -1275,76 +1051,8 @@ func first_tick_of(turn: int) -> int:
 	return turn * _ticks_per_turn()
 
 
-## The turn an order given RIGHT NOW will run on: the first one this machine has
-## not already spoken for.
-##
-## **Counted from what has been CLOSED, not from the turn the clock is in**, and
-## the difference is not academic. Orders arrive on render frames; closing
-## happens on the physics tick. An order booked for a turn whose packet had
-## already gone out sat in the outgoing pile for ever and simply never happened
-## - it cost a full two-peer run to see, because nothing errors: the turns all
-## run, the checksums all agree, and the orders are quietly dropped.
-func scheduled_turn() -> int:
-	return _closed_through + 1
 
 
-## How far ahead of itself this machine closes turns - THE INPUT DELAY.
-##
-## Measured, not guessed. What it has to cover is the trip from this machine to
-## the peer that is furthest away, because that peer may not simulate the turn
-## until this machine's word about it has arrived:
-##
-##     a client:  my one way up  +  the furthest player's one way down
-##     the server: the furthest player's one way down
-##
-## ENet supplies both halves - it acknowledges every reliable packet and keeps a
-## smoothed round trip and a variance from those acknowledgements, so the match's
-## own traffic is the measurement and nothing is sent to obtain it. The variance
-## goes in because a mean cannot see a spike, and `jitter_margin_ms` sits on top
-## of both for what neither measures.
-##
-## Rounded UP to a whole turn, because a turn is the only granularity a schedule
-## has, and clamped so that neither a garbage reading nor a genuinely terrible
-## connection can push it somewhere useless.
-##
-## **Changing it is free and cannot desync anybody** - see the note at the top of
-## this file. That is the whole reason it is allowed to move at all.
-## **NOT SMOOTHED, and that is a measured decision rather than an oversight.**
-##
-## The Age of Empires post-mortem is emphatic that a consistent slower response
-## beat one that varied, so damping this looks obviously right, and Warzone 2100
-## really does slew its own latency asymmetrically - down 5 ms at a time, up 60.
-## An asymmetric slew was built here and MEASURED FOUR TIMES WORSE: 370 ms mean
-## against 79, with the delay ratcheting to the ceiling and staying there,
-## because a rise taken at once plus a fall that has to be earned turns one
-## spike into a permanent tax.
-##
-## The spikes it was reacting to are an artefact of the only test available -
-## three headless Godot processes contending for one desktop's cores, which is
-## not a network. Damping the wrong signal made the wrong signal permanent.
-##
-## So this stays raw until it can be judged against a REAL connection, where the
-## question is whether the reading is spiky at all. If it is, the fix belongs in
-## the measurement below - a decaying peak, or dropping the variance term - and
-## not in a ratchet on the answer. See `Docs/Findings`.
-func delay_turns() -> int:
-	var config: NetworkConfig = _config()
-	if config == null:
-		return 2
-	var floor_turns: int = maxi(1, config.min_delay_turns)
-	var ceiling_turns: int = maxi(floor_turns, config.max_delay_turns)
-	if !config.adaptive_delay:
-		return clampi(config.fixed_delay_turns, 1, ceiling_turns)
-
-	var budget: int = _wire_budget_ms()
-	if budget < 0:
-		# Nothing measurable yet, which on a live connection lasts about a
-		# frame. The CEILING rather than the floor: guessing high costs feel
-		# for an instant, guessing low stalls the opening of the match.
-		return ceiling_turns
-
-	var turn_ms: float = maxf(1.0, _engine_tick_seconds() * float(_ticks_per_turn()) * 1000.0)
-	return clampi(ceili(float(budget) / turn_ms), floor_turns, ceiling_turns)
 
 
 # --- collecting orders ----------------------------------------------------
@@ -1365,31 +1073,17 @@ func schedule(command: Command) -> int:
 	_order_seq += 1
 	submit_order.rpc_id(NetworkService.SERVER_PEER_ID, command.to_dict(), _order_seq)
 
-	if _sealed_stream():
-		# **Nothing is booked locally, and booking it anyway would lose it.**
-		# This machine closes no turns any more, so an entry in `_outgoing`
-		# would sit there for the whole match and simply never happen - the same
-		# silent failure the scheduling rewrite already cost a run to find.
-		#
-		# The stopwatch still starts where the player pressed. It is paired off
-		# by order rather than by turn: see _report_sealed_latency.
-		_my_presses.append(Time.get_ticks_msec())
-		while _my_presses.size() > MAX_PRESSES_HELD:
-			_my_presses.pop_front()
-		return NO_TURN
-
-	var turn: int = scheduled_turn()
-	if !_outgoing.has(turn):
-		_outgoing[turn] = []
-	(_outgoing[turn] as Array).append(command.to_dict())
-
-	# The stopwatch starts where the player pressed, not where the tick opened,
-	# and is keyed by an order sequence rather than by the turn. See _ordered_at.
-	_ordered_at[_order_seq] = Time.get_ticks_msec()
-	var seqs: Array = _seqs_for_turn.get(turn, [])
-	seqs.append(_order_seq)
-	_seqs_for_turn[turn] = seqs
-	return turn
+	# **Nothing is booked locally, and booking it anyway would lose it.**
+	# This machine closes no turns any more, so an entry in `_outgoing`
+	# would sit there for the whole match and simply never happen - the same
+	# silent failure the scheduling rewrite already cost a run to find.
+	#
+	# The stopwatch still starts where the player pressed. It is paired off
+	# by order rather than by turn: see _report_sealed_latency.
+	_my_presses.append(Time.get_ticks_msec())
+	while _my_presses.size() > MAX_PRESSES_HELD:
+		_my_presses.pop_front()
+	return NO_TURN
 
 
 ## Every command known for a turn, in a deterministic order.
@@ -1404,17 +1098,7 @@ func commands_for(turn: int) -> Array:
 	# key and a pure function of the member set - so every peer receives the
 	# identical array and the client-side merge sort below has nothing left to
 	# decide.
-	if _sealed_stream():
-		return _sealed.get(turn, [])
-
-	var by_peer: Dictionary = _incoming.get(turn, {})
-	var peers: Array = by_peer.keys()
-	peers.sort()
-
-	var ordered: Array = []
-	for peer: Variant in peers:
-		ordered.append_array(by_peer[peer] as Array)
-	return ordered
+	return _sealed.get(turn, [])
 
 
 # --- exchanging them ------------------------------------------------------
@@ -1450,119 +1134,12 @@ func _beat() -> void:
 	submit_alive.rpc_id(NetworkService.SERVER_PEER_ID, current_turn())
 
 
-## Says this machine's final word on every turn up to and including `target`.
-##
-## **A RANGE rather than one turn per tick, and that is what makes the delay
-## changeable at all.** Closing exactly one turn per tick is correct only while
-## the delay never moves: raise it and the turn skipped over is never closed, so
-## every peer waits on it for ever; lower it and the same turn is closed twice.
-## Asking instead "which turns have I not closed yet" is right under both, and
-## under a delay that moves every second.
-##
-## It also subsumes the PRIMING that used to be a special case with a flag. On
-## the first tick nothing has been closed and `_closed_through` is -1, so this
-## closes turn 0 through 0 + delay in one go - which is exactly what priming
-## was, and from turn zero rather than from wherever this peer's clock happened
-## to start, which is what made a late-loading peer stall the whole match.
-##
-## Every turn goes out even when empty: "I have nothing for this one" is the
-## message that lets a turn close, and silence is indistinguishable from a lost
-## packet.
-func _close_through(target: int) -> void:
-	while _closed_through < target:
-		_closed_through += 1
-		var payload: Array = _outgoing.get(_closed_through, [])
-		_outgoing.erase(_closed_through)
-		_emit(_closed_through, payload)
 
 
-## One turn's word, onto the wire - and into this machine's own record of the
-## turn at the same moment.
-##
-## **A peer records its OWN word locally rather than waiting to hear it back**,
-## and that is a correctness fix, not an optimisation. A client used to learn its
-## own orders only from the server's relay of them, so its own word took a full
-## round trip to reach it. If that echo ever arrived after the turn had run,
-## `_is_complete` passed without it, `commands_for` returned the turn short of
-## this peer's own orders, and `_incoming.erase` threw the echo away - so this
-## machine alone applied a different turn from everybody else, with NO stall and
-## NO error, discoverable only at the next checksum.
-##
-## It was covered before only by accident: the announced worst one-way is taken
-## across every peer INCLUDING the receiving one, so the budget happened to
-## always exceed a peer's own round trip. Anyone tightening that loop would have
-## broken it silently. Recording locally removes the dependency instead of
-## resting on it, and costs a client half its own latency into the bargain.
-##
-## What the server stamps is the SLOT, and an honest client writes the same
-## value into `to_dict()` that the server writes over it - so the local record
-## and the relayed one are identical. A client that lies about its slot now
-## disagrees with everybody instead of being quietly corrected, which the
-## checksum catches; the relay is still the only thing other peers believe.
-func _emit(turn: int, payload: Array) -> void:
-	# **Only a PLAYER reaches here.** There used to be a server branch; under
-	# lockstep every server is the relay (is_relay is is_lockstep and is_server),
-	# and a relay closes no turns, so nothing could ever call it. A relay puts a
-	# word of its own on the wire through inject() instead.
-	_record(turn, multiplayer.get_unique_id(), payload)
-	submit_turn.rpc_id(NetworkService.SERVER_PEER_ID, turn, payload)
-
-	_remember(turn, payload)
-	submit_echo.rpc_id(NetworkService.SERVER_PEER_ID, _recent)
-
-	# Onto the wire now rather than whenever this frame happens to end. See
-	# NetworkService.flush.
-	if _flush_immediately():
-		Net.flush()
 
 
-## Keeps the last few turns this machine has closed, for the echo to re-send.
-func _remember(turn: int, payload: Array) -> void:
-	_recent.append([turn, payload])
-	while _recent.size() > ECHO_TURNS:
-		_recent.remove_at(0)
 
 
-## A client's orders for a turn, arriving at the server. Relayed on rather than
-## applied: every peer needs every peer's orders, which is the whole shape of
-## lockstep and the reason the server stops being an authority under it.
-##
-## **Every order is STAMPED with the sender's slot on the way through, and that
-## is the one thing the relay must not stop doing.** Under D2 the same line
-## lived in `CommandService.submit_command`, and its comment is worth repeating
-## because it matters more here: whatever a client writes into the slot field is
-## discarded, so the worst a modified client can do is issue orders as itself.
-##
-## Without it lockstep is WEAKER than replication, not stronger. A forged slot
-## does not desync - every peer would apply the same forged order and agree
-## perfectly about a maze somebody else paid for. Desync catches a peer that
-## simulates differently; it cannot catch one that lies about who it is. Only
-## the relay knows which peer owns which slot, so only the relay can refuse it.
-@rpc("any_peer", "reliable")
-func submit_turn(turn: int, payload: Array) -> void:
-	if !multiplayer.is_server() || _sealed_stream():
-		return
-	var sender: int = multiplayer.get_remote_sender_id()
-	if !_plausible_turn(turn):
-		Log.warn("Refused a turn word with an impossible turn", {
-			"turn": turn, "peer": sender, "highest_seen": _highest_seen,
-		})
-		return
-	_highest_seen = maxi(_highest_seen, turn)
-	_last_heard[sender] = _frames
-	_spoken_through[sender] = maxi(int(_spoken_through.get(sender, NO_TURN)), turn)
-	var stamped: Array = _stamped(payload, _slot_of_peer(sender))
-	# **A relay forwards a turn without keeping it.** It never runs turns, so
-	# nothing would ever erase what it recorded and `_incoming` would grow for
-	# the whole match - one entry per peer per tick, for ever. Only a machine
-	# that will actually SIMULATE a turn has any reason to remember it.
-	if !MatchSession.is_relay():
-		_record(turn, sender, stamped)
-	# **The origin travels with the orders.** Relaying without it recorded every
-	# peer's turn under the SERVER's id, because that is who
-	# get_remote_sender_id() names on the second hop - so two clients' orders
-	# overwrote each other under one key and no turn was ever complete.
-	_relay_turn_to_match(turn, sender, stamped)
 
 
 ## Puts a SERVER order into the turn stream - today only a drop (D14).
@@ -1593,185 +1170,39 @@ func inject(command: Command) -> void:
 	if command == null || !_is_live() || !MatchSession.is_relay():
 		return
 
-	if _sealed_stream():
-		# **The whole `SYSTEM_LEAD_TURNS` hazard goes away here.** The relay owns
-		# the clock now, so it books its own order into the very next turn it
-		# seals rather than guessing a turn far enough ahead that nobody has
-		# reached it. There is no margin to be missed and no divergence to catch
-		# on the following checksum.
-		#
-		# Slot 0 is the relay's own, and it sorts before every player slot -
-		# which is what the old path bought by filing under peer id 1. So a drop
-		# still applies before anything a player did on the same turn.
-		# **The sort key and the payload's slot are deliberately DIFFERENT
-		# numbers here, and conflating them silently disabled every player
-		# drop.** The tuple's own leading 0 is what sorts the relay's order
-		# before every player's; the dictionary's `slot` is what the order is
-		# ABOUT. For `PLAYER_LEFT` - the relay's only injected order - that is
-		# the slot of the player who LEFT, and `_apply_player_left` returns on
-		# its first line if it reads 0. Stamping it cost nothing visible: the
-		# leaver's maze simply stayed, on every peer, with nothing logged
-		# anywhere. If it happened during the draft it hung the match for good.
-		_server_seq += 1
-		_pending_orders.append([0, _server_seq, command.to_dict()])
-		Log.info("Relay injecting a server order", {
-			"seq": _server_seq, "into": _seal_next, "action": command.player_action,
-		})
-		return
-
-	var turn: int = maxi(_highest_seen, 0) + SYSTEM_LEAD_TURNS
-	var payload: Array = [command.to_dict()]
+	# **The whole `SYSTEM_LEAD_TURNS` hazard goes away here.** The relay owns
+	# the clock now, so it books its own order into the very next turn it
+	# seals rather than guessing a turn far enough ahead that nobody has
+	# reached it. There is no margin to be missed and no divergence to catch
+	# on the following checksum.
+	#
+	# Slot 0 is the relay's own, and it sorts before every player slot -
+	# which is what the old path bought by filing under peer id 1. So a drop
+	# still applies before anything a player did on the same turn.
+	# **The sort key and the payload's slot are deliberately DIFFERENT
+	# numbers here, and conflating them silently disabled every player
+	# drop.** The tuple's own leading 0 is what sorts the relay's order
+	# before every player's; the dictionary's `slot` is what the order is
+	# ABOUT. For `PLAYER_LEFT` - the relay's only injected order - that is
+	# the slot of the player who LEFT, and `_apply_player_left` returns on
+	# its first line if it reads 0. Stamping it cost nothing visible: the
+	# leaver's maze simply stayed, on every peer, with nothing logged
+	# anywhere. If it happened during the draft it hung the match for good.
+	_server_seq += 1
+	_pending_orders.append([0, _server_seq, command.to_dict()])
 	Log.info("Relay injecting a server order", {
-		"turn": turn, "seen": _highest_seen, "action": command.player_action,
+		"seq": _server_seq, "into": _seal_next, "action": command.player_action,
 	})
-	# Under the SERVER's own id, which is what makes it sort first within the
-	# turn - commands_for orders by peer and the relay is peer 1 - so a drop is
-	# applied before anything a player did on the same turn.
-	_queue(_out_reliable, [turn, NetworkService.SERVER_PEER_ID, payload], 0)
 
 
-## The last few turns a peer closed, sent again UNRELIABLY alongside the reliable
-## word for the newest of them.
-##
-## **The redundancy is the point, and it only works because this channel is
-## unreliable.** One reliable message per turn means a single lost packet freezes
-## every peer until ENet retransmits it - and a reliable channel is ORDERED, so
-## re-sending the turn inside the next reliable packet would buy nothing at all:
-## that packet cannot overtake the lost one either. It has to be a channel where
-## a later message can arrive despite an earlier one going missing, and that is
-## what unreliable means.
-##
-## So the reliable word stays as the guarantee that a turn is eventually
-## delivered - without it, four lost packets in a row would stall the match for
-## ever with no retransmit coming - and this rides alongside it to make the
-## common single-loss case cost nothing at all rather than a visible freeze.
-## A duplicate is harmless: `_record` overwrites one identical payload with
-## another, and refuses anything for a turn already run.
-##
-## Payloads are empty on the overwhelming majority of turns, so carrying four of
-## them is a few dozen bytes against the couple of hundred a packet costs to send
-## in the first place.
-@rpc("any_peer", "unreliable")
-func submit_echo(recent: Array) -> void:
-	if !multiplayer.is_server() || _sealed_stream():
-		return
-	var sender: int = multiplayer.get_remote_sender_id()
-	var slot: int = _slot_of_peer(sender)
-
-	var stamped_all: Array = []
-	for entry: Variant in recent:
-		var pair: Array = entry as Array
-		if pair == null || pair.size() != 2:
-			continue
-		var turn: int = int(pair[0])
-		if !_plausible_turn(turn):
-			continue
-		var stamped: Array = _stamped(pair[1] as Array, slot)
-		_highest_seen = maxi(_highest_seen, turn)
-		if !MatchSession.is_relay():
-			_record(turn, sender, stamped)
-		stamped_all.append([turn, stamped])
-
-	if !stamped_all.is_empty():
-		_relay_echo_to_match(sender, stamped_all)
 
 
-## Sends one turn word to every player in the match and to nobody else.
-##
-## **`rpc()` broadcasts to every CONNECTED peer**, which meant the whole match's
-## turn stream - and its whole bandwidth - was sent to anyone sitting in the lobby
-## browser. Worse, `receive_turn` recorded it: a machine not in a match never runs
-## `_reset_if_new_match` (it is behind `_is_live()`), so `_last_run_turn` stayed
-## -1, nothing was ever erased, and `_incoming` grew for as long as the match
-## lasted on a machine that was not playing.
-func _relay_turn_to_match(turn: int, sender: int, stamped: Array) -> void:
-	_queue(_out_reliable, [turn, sender, stamped], sender)
 
 
-## The same, for the unreliable echo. `recent` is already a list of [turn,
-## payload] pairs, so it is flattened into the same triple shape here and the two
-## batches read identically at the far end.
-func _relay_echo_to_match(sender: int, recent: Array) -> void:
-	for entry: Variant in recent:
-		var pair: Array = entry as Array
-		if pair != null && pair.size() == 2:
-			_queue(_out_unreliable, [int(pair[0]), sender, pair[1]], sender)
 
 
-## Puts one triple in every match peer's outbox except the one it came from.
-##
-## **Not sent back to its own author**, which is a free saving: `_emit` already
-## recorded it locally the moment it was made, so the copy was pure traffic.
-func _queue(outbox: Dictionary, triple: Array, skip: int) -> void:
-	for id: int in _match_peers():
-		if id == skip:
-			continue
-		if !outbox.has(id):
-			outbox[id] = []
-		(outbox[id] as Array).append(triple)
 
 
-## Sends each peer everything waiting for it as ONE message per channel.
-##
-## **The relay's traffic was O(N^2) in packets and this is what fixes it.** Every
-## peer sent two messages a tick and the relay answered EACH with a broadcast, so
-## `2 * N^2` packets per tick, every one of them addressed to a different peer.
-## ENet coalesces within a destination's queue, so it could not merge them: that
-## is 288 packets a tick at twelve players, about 5 Mbit/s of relay upload for a
-## match where nothing is happening. Batched it is one message per peer per
-## channel - twelve.
-##
-## Flushed on the RENDER frame rather than the tick, so nothing waits 50 ms for
-## the relay's next simulation step. The server is capped at 120 fps, so a word
-## waits at most about 8 ms and usually far less: every peer sends within a few
-## milliseconds of every other, so in the ordinary case a whole tick's words land
-## in one batch.
-##
-## **A PEER STILL IN THE ROSTER IS NOT STILL ON THE END OF A SOCKET.** An outbox
-## is filled from `_match_peers()`, which is the match ROSTER - and a roster is
-## never pruned, deliberately: slots and lanes are keyed to it, and who has left
-## is the turn stream's answer rather than the transport's (see
-## `_expected_peers`). So somebody who leaves stays in every outbox for the rest
-## of the match, and `rpc_id` to them fails with "Attempt to call RPC with
-## unknown peer ID" - once per flush, on the render frame, which on the capped
-## server is tens of times a second with a full GDScript backtrace each, for as
-## long as the match runs. Found in a real match's journal on 2026-09-06.
-##
-## Asking `multiplayer.get_peers()` here is NOT the mistake `CLAUDE.md` warns
-## about. That warning is against using the transport's list to answer "who is in
-## this match", which decides simulation and must be identical on every machine.
-## This asks "is there a socket to address", which is the transport's own
-## business, is asked only by the relay, and decides nothing about the world -
-## `_speak_for_the_departed` reads it the same way and for the same reason.
-##
-## It is checked HERE rather than in `_queue` on purpose. This is the last moment
-## before the send, so it also covers a peer that drops between being queued for
-## and being flushed to - and `_queue` runs several times per turn against this
-## once per frame, so the same guard there would allocate a peer list far more
-## often than it would save an array append.
-##
-## Nothing is logged when a peer is skipped. The departure is already reported
-## once by `MatchStartService`, and a line here would be the flood this removes.
-func _flush_batches() -> void:
-	var live: PackedInt32Array = multiplayer.get_peers()
-	var sent: bool = false
-
-	for id: Variant in _out_reliable:
-		if int(id) in live:
-			receive_batch.rpc_id(int(id), _out_reliable[id])
-			sent = true
-	for id: Variant in _out_unreliable:
-		if int(id) in live:
-			receive_echo_batch.rpc_id(int(id), _out_unreliable[id])
-			sent = true
-
-	# `sent` is what was ACTUALLY sent rather than what was waiting, so a flush
-	# holding nothing but words for departed peers no longer pushes an empty
-	# packet out of the socket.
-	_out_reliable.clear()
-	_out_unreliable.clear()
-	if sent && _flush_immediately():
-		Net.flush()
 
 
 ## A peer saying it is still running, and which turn it is on.
@@ -1854,42 +1285,6 @@ func submit_order(payload: Dictionary, seq: int) -> void:
 	_pending_orders.append([slot, seq, order])
 
 
-## Closes one turn from whatever has arrived, on the relay's own clock.
-##
-## **The relay never waits here, and that is the whole point of the phase.** A
-## turn is sealed from the orders in hand; anything still in flight lands in a
-## later one, and its author is the only machine that feels the difference.
-##
-## Sorted by (slot, seq), which is a total key and a pure function of the member
-## set - so what a turn contains cannot depend on the order two packets happened
-## to arrive in, even at the relay.
-##
-## **Empty seals are not broadcast in shadow mode.** They carry no orders to
-## check and would double the relay's upload for nothing. The cutover MUST send
-## one every turn - an empty seal is the heartbeat that tells a peer the turn
-## happened and was empty - so that path is deliberately still untested here and
-## is called out in `netcode-rework.md` phase 4.
-func _seal_turn() -> void:
-	if _pending_orders.is_empty():
-		return
-	var pending: Array = _pending_orders
-	_pending_orders = []
-	_pending_count.clear()
-	pending.sort_custom(func(a: Array, b: Array) -> bool:
-		if int(a[0]) != int(b[0]):
-			return int(a[0]) < int(b[0])
-		return int(a[1]) < int(b[1]))
-
-	var orders: Array = []
-	for entry: Array in pending:
-		orders.append(entry[2])
-
-	# **To the match roster, never a bare `rpc()`.** A broadcast goes to every
-	# connected peer, and somebody sitting in the lobby browser is a connected
-	# peer - they would file a seal against a match they are not in. Same rule as
-	# `_queue`, same reason, and D33 is what it cost the first time.
-	for peer: int in _match_peers():
-		receive_seal.rpc_id(peer, _frames, orders)
 
 
 ## **The cutover's clock: one authoritative turn per tick, sealed from whatever
@@ -2017,7 +1412,7 @@ func submit_ready() -> void:
 ## before the next physics frame, and this service is an autoload that runs at
 ## the top of it.
 func _announce_ready() -> void:
-	if _announced_ready || !_sealed_stream() || MatchSession.is_relay():
+	if _announced_ready || MatchSession.is_relay():
 		return
 	_announced_ready = true
 	submit_ready.rpc_id(NetworkService.SERVER_PEER_ID)
@@ -2030,14 +1425,7 @@ func _announce_ready() -> void:
 func receive_seal(turn: int, orders: Array) -> void:
 	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
-	if _sealed_stream():
-		_absorb_seal(turn, orders)
-		return
-	for entry: Variant in orders:
-		var order: Dictionary = entry as Dictionary
-		if order == null:
-			continue
-		_remember_shadow(_seal_seen, int(order.get("slot", 0)), hash(order))
+	_absorb_seal(turn, orders)
 
 
 ## Files one sealed turn, and works out whether this machine can still catch up.
@@ -2110,53 +1498,8 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 		_set_held(true)
 
 
-## Files one order under its author, in the stream it arrived on, and checks the
-## two streams against each other as far as both have got.
-func _remember_shadow(into: Dictionary, slot: int, fingerprint: int) -> void:
-	var list: Array = into.get(slot, [])
-	list.append(fingerprint)
-	into[slot] = list
-	_compare_shadow(slot)
 
 
-## **Compares the two roads one author's orders took, and is the only thing
-## phase 3 measures.**
-##
-## Prefix by prefix, as far as both streams have reached, dropping what has
-## matched so that neither grows over a match. A mismatch means the sealed
-## stream lost, duplicated or reordered somebody's orders, which is exactly what
-## the cutover would then do to the match itself.
-##
-## Fingerprints are `hash()` of the order dictionary, which is safe HERE and
-## would not be on the wire: both streams are hashed in the same process, so
-## only within-process determinism is needed.
-##
-## Told once. A stream that has parted stays parted, and every later order
-## disagrees too - reporting each buries the first, which is the only one with
-## any diagnostic value.
-func _compare_shadow(slot: int) -> void:
-	var sealed: Array = _seal_seen.get(slot, [])
-	var legacy: Array = _legacy_seen.get(slot, [])
-	var shared: int = mini(sealed.size(), legacy.size())
-	var index: int = 0
-	while index < shared:
-		if sealed[index] != legacy[index]:
-			if !_shadow_told:
-				_shadow_told = true
-				Log.err("The sealed order stream disagrees with the turn stream", {
-					"slot": slot,
-					"at": index,
-					"sealed": sealed[index],
-					"played": legacy[index],
-					"sealed_pending": sealed.size(),
-					"played_pending": legacy.size(),
-				})
-			return
-		index += 1
-	if index > 0:
-		_shadow_ok += index
-		_seal_seen[slot] = sealed.slice(index)
-		_legacy_seen[slot] = legacy.slice(index)
 
 
 ## Rewrites the slot on every order in a turn to the one its sender really owns.
@@ -2181,109 +1524,18 @@ func _slot_of_peer(peer_id: int) -> int:
 	return 0
 
 
-## Orders reaching a peer, named by WHOSE they are rather than by who forwarded
-## them. `from_peer` is stamped by the server and cannot be set by the sender:
-## a client only ever talks to the server, and the server names the sender from
-## the connection it arrived on.
-## A batch of turn words, each `[turn, from_peer, payload]`.
-##
-## `_is_live()` as well as the sender check: a machine with no match of its own
-## has nothing to record a turn INTO, and recording one anyway is what let
-## `_incoming` grow without bound on a peer sitting in the lobby browser.
-@rpc("any_peer", "call_remote", "reliable")
-func receive_batch(entries: Array) -> void:
-	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
-		return
-	_absorb(entries)
 
 
-## The same batch on the unreliable channel - the redundancy. Separate rpc rather
-## than a flag, because the CHANNEL is the whole point: a reliable channel is
-## ordered, so a re-send inside it could never overtake the loss it exists to
-## cover.
-@rpc("any_peer", "call_remote", "unreliable")
-func receive_echo_batch(entries: Array) -> void:
-	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
-		return
-	_absorb(entries)
 
 
-## **Refused outright under the sealed stream, and that is a memory fix.** No
-## honest peer sends a turn word any more, but a modified one still can, and
-## `_advance_turn` only erases `_incoming` on the legacy branch - so anything
-## recorded here would sit in the dictionary for the rest of the match and grow
-## with every packet. Shut at both ends: the relay refuses the ingress above,
-## and a peer refuses the delivery here.
-func _absorb(entries: Array) -> void:
-	if _sealed_stream():
-		return
-	for entry: Variant in entries:
-		var triple: Array = entry as Array
-		if triple != null && triple.size() == 3:
-			_record(int(triple[0]), int(triple[1]), triple[2] as Array)
 
 
-## Whether a turn number could plausibly belong to this match.
-##
-## **A client cannot lie about WHO it is - the relay stamps the slot - but until
-## this it could lie about WHEN.** `submit_turn(2_000_000_000, ...)` poisoned
-## `_highest_seen`, so every later server order was booked for a turn no peer
-## would ever reach and a drop simply never applied; and the word was forwarded
-## to every honest peer, each of which made an `_incoming` entry that
-## `_advance_turn` could never reach and never erase. Repeat it and every peer in
-## the match grows without bound.
-##
-## Checked against what this machine knows: the relay against the turns it has
-## heard, a player against its own clock.
-func _plausible_turn(turn: int) -> bool:
-	if turn < 0:
-		return false
-	var ceiling: int = _max_delay_turns() + TURN_SLACK
-	var here: int = _highest_seen if MatchSession.is_relay() else current_turn()
-	return turn <= maxi(here, 0) + ceiling
 
 
-func _max_delay_turns() -> int:
-	var config: NetworkConfig = _config()
-	return 12 if config == null else maxi(1, config.max_delay_turns)
 
 
-func _record(turn: int, peer: int, payload: Array) -> void:
-	if !_plausible_turn(turn):
-		Log.warn("Refused a turn number that cannot be real", {
-			"turn": turn, "peer": peer, "highest_seen": _highest_seen,
-		})
-		return
-	# A turn that has already run is finished with, and `_advance_turn` has
-	# erased it. Without this, the server's echo of a peer's own word - which
-	# now arrives AFTER that peer has run the turn, because it no longer waits
-	# for it - would re-create the entry and leave it there for the rest of the
-	# match. Harmless to the simulation, unbounded in memory.
-	if turn <= _last_run_turn:
-		return
-
-	# **Write-once per (turn, peer), and that is load-bearing rather than tidy.**
-	# The unreliable echo is a duplicate that can arrive BEFORE the reliable
-	# batch, and `_incoming` below deliberately overwrites duplicates - but the
-	# question being measured is when this machine FIRST held a word for this
-	# turn from this peer, so the first stamp has to win. No log call here
-	# either: this fires once per peer per turn.
-	var when: Dictionary = _arrived_at.get(turn, {})
-	if !when.has(peer):
-		when[peer] = Time.get_ticks_msec()
-		_arrived_at[turn] = when
-
-	if !_incoming.has(turn):
-		_incoming[turn] = {}
-	(_incoming[turn] as Dictionary)[peer] = payload
 
 
-func _missing_peers(by_peer: Dictionary) -> PackedInt32Array:
-	var missing: PackedInt32Array = PackedInt32Array()
-	for peer: int in _expected_peers():
-		if !by_peer.has(peer):
-			missing.append(peer)
-	return missing
 
 
 ## Every peer id in THIS MATCH, from the roster rather than from the transport.
@@ -2310,44 +1562,6 @@ func _match_peers() -> PackedInt32Array:
 	return ids
 
 
-## Everyone whose orders a turn is waiting on: every PLAYER IN THIS MATCH who is
-## still connected, plus this machine. Not the relay - see below.
-##
-## **This used to read the transport's peer list, and that was a match-freezing
-## bug.** Anyone who pressed Multiplayer connected to the server, Godot announced
-## them to both players, and both players' expectation sets grew to include a peer
-## who was sitting in the lobby browser and would never send a turn for anything.
-## `_is_complete` then never returned true again and the world was held still for
-## the rest of the match, with the stall panel naming a peer id that was not in
-## the match. It needed three people on one server and no test had ever had that.
-##
-## Including itself looks redundant and is not. `multiplayer.get_peers()` never
-## names the local peer, so without this line a client's completeness test never
-## mentioned the client's own orders, and a turn could run without them. It costs
-## nothing now that `_emit` records locally: the entry is already there before
-## the question is asked. What it buys is that the day something stops recording
-## locally, the match STALLS and says so, instead of diverging in silence.
-func _expected_peers() -> PackedInt32Array:
-	# **The relay is not waited for**, because it has nothing to say: it
-	# simulates no world and issues no orders, so requiring its word every turn
-	# bought nothing and gave every turn a second way to be late.
-	#
-	# **And who has LEFT is the turn stream's answer, not the transport's.** It
-	# used to be `id in multiplayer.get_peers()`, which changes at a different
-	# wall-clock instant on every machine: Godot's peer notification and the
-	# relayed turn words ride different ENet channels with no ordering between
-	# them, so one peer could run a turn without a leaver's last order while
-	# another applied it. Now every peer stops waiting on the same TURN, because
-	# it is told to by an order like any other.
-	var peers: PackedInt32Array = PackedInt32Array()
-	var session: MatchSession = References.match_session
-	var setup: MatchSetup = null if session == null else session.setup()
-	if setup == null:
-		return peers
-	for player: MatchPlayer in setup.players:
-		if player != null && player.network_id != NetworkService.SERVER_PEER_ID:
-			peers.append(player.network_id)
-	return peers
 
 
 # --- agreeing on the result ----------------------------------------------
@@ -2484,8 +1698,7 @@ func _retention_turns() -> int:
 	# which is a divergence detector that has silently switched itself off on
 	# exactly the machine most likely to be diverging.
 	var furthest: int = _max_peer_lag_turns()
-	if _sealed_stream():
-		furthest = maxi(furthest, _max_sealed_turns())
+	furthest = maxi(furthest, _max_sealed_turns())
 	return furthest + _checksum_every() * 2
 
 
@@ -2564,12 +1777,6 @@ func _checksum_every() -> int:
 	return 5 if config == null else maxi(1, config.checksum_every_turns)
 
 
-## **The cutover switch.** Off, a peer waits for every other peer; on, it waits
-## for the relay alone. Read on every tick and on every seal, so it is a
-## property lookup rather than anything cleverer.
-func _sealed_stream() -> bool:
-	var config: NetworkConfig = _config()
-	return false if config == null else config.sealed_stream
 
 
 ## **Runs this machine's engine a little fast while it has a backlog to repay.**
@@ -2642,7 +1849,7 @@ func _authored_rate() -> int:
 
 func _catch_up_enabled() -> bool:
 	var config: NetworkConfig = _config()
-	return _sealed_stream() && (true if config == null else config.catch_up_enabled)
+	return true if config == null else config.catch_up_enabled
 
 
 func _catch_up_max_percent() -> int:

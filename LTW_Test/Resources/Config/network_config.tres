@@ -7,4 +7,3 @@ script = ExtResource("1_network_config")
 server_addresses = PackedStringArray("127.0.0.1", "167.233.153.19")
 jitter_margin_ms = 20
 checksum_every_turns = 10
-sealed_stream = true

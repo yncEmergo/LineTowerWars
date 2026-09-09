@@ -21,19 +21,14 @@ extends Node
 ## an order given a few milliseconds earlier than the player would otherwise have
 ## managed, and nothing about the schedule depends on this machine's clock.
 ##
-## **Only for a lockstep stall, and only when the sealed stream is on.** The two
-## guards are separate and both matter:
-##
-## - the DRAFT also holds the world, and un-muting the command card during a
-##   draft would let a player build while the draft is up. That is a rule change
-##   and this is not the place for one, so the release happens only when
-##   `lockstep` is the single holder
-## - under the OLD gate a stall means every machine is waiting, so there is
-##   nothing to be gained and the paired measurement across the flag stays honest
+## **Only for a lockstep stall, and specifically not for a DRAFT.** The draft
+## also holds the world, and un-muting the command card during one would let a
+## player build while the draft is up - a rule change, and this is not the place
+## for one. So the release happens only when `lockstep` is the SINGLE holder.
 ##
 ## Done from a node rather than in `match_hud.tscn` for exactly that reason: a
-## `process_mode` written into the scene would apply to the draft and to both
-## sides of the flag, which is three behaviours where one was wanted.
+## `process_mode` written into the scene would apply to the DRAFT as well, which
+## is two behaviours where one was wanted.
 
 @export_group("References")
 ## The HUD's own order-taking nodes: the command card, the send bar, the action
@@ -77,9 +72,6 @@ func _process(_delta: float) -> void:
 
 ## Whether a lockstep stall, and nothing else, is holding the world.
 func _should_release() -> bool:
-	var config: NetworkConfig = References.network_config
-	if config == null || !config.sealed_stream:
-		return false
 	if !Lockstep.is_stalled():
 		return false
 
