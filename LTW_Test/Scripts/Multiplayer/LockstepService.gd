@@ -362,6 +362,10 @@ var _seal_wait_frames: int = 0
 ## one only has to make the sort key total.
 var _server_seq: int = 0
 
+## Peer: the engine rate this machine last asked for, so the pacing is logged
+## when it changes rather than on every tick that wants the same number.
+var _paced_at: int = 0
+
 
 func _ready() -> void:
 	# **Immune to the pause it causes itself**, and this is not optional: a stall
@@ -440,6 +444,7 @@ func _physics_process(_delta: float) -> void:
 		# the next one, so a lead of L means a seal has L turns of slack to
 		# arrive in before it is missed.
 		_advance_turn(turn - _sealed_lead_turns())
+		_pace_engine()
 	else:
 		# Closed FIRST, so this machine's word is on the wire before anything
 		# else in the tick can hold it up. Nothing in the simulation depends on
@@ -1211,6 +1216,7 @@ func _reset_if_new_match() -> void:
 	_sealing = false
 	_seal_wait_frames = 0
 	_server_seq = 0
+	_restore_rate()
 	_due_at.clear()
 	_arrived_at.clear()
 	_leads.clear()
@@ -2096,6 +2102,8 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 	# this screen is not still eating memory. The world stays held: there is
 	# nothing left to play, and the hold is what keeps `StallPanel` up.
 	_sealed.clear()
+	# Nothing left to catch up to.
+	_restore_rate()
 	if !_stalling:
 		_stalling = true
 		_stalled_on = _last_run_turn + 1
@@ -2562,6 +2570,89 @@ func _checksum_every() -> int:
 func _sealed_stream() -> bool:
 	var config: NetworkConfig = _config()
 	return false if config == null else config.sealed_stream
+
+
+## **Runs this machine's engine a little fast while it has a backlog to repay.**
+##
+## The whole of catch-up, and it is four lines because of what came before it. A
+## peer that hiccups banks the stall as permanent input delay - it plays one turn
+## per tick for ever after, so the gap never closes. Running 24 ticks a second
+## against the relay's 20 closes it at four turns a second and then stops.
+##
+## **The simulation is untouched.** Every turn is still exactly one step of
+## `MatchSession.tick_seconds()`, which reads the AUTHORED rate rather than the
+## live one - so a peer catching up computes the identical world and merely
+## reaches it sooner. That is the delta refactor's entire purpose, and the bench
+## proves it by running the same match at 20 Hz and 30 Hz and comparing the
+## traces byte for byte.
+##
+## **Nothing in the simulation may branch on any of this** (I4). The only thing
+## written here is an engine property; no gameplay code reads it, and two peers
+## running at different rates is expected rather than a fault.
+##
+## **Not gated on the machine being CPU-healthy**, which is amendment 3: that
+## disables catch-up exactly when it is needed. A peer that cannot sustain the
+## rate falls further behind and ends its own match through `_absorb_seal`'s
+## ceiling, which says so, rather than being quietly wedged.
+##
+## Drains only to the TARGET LEAD, never past it. The lead is this machine's
+## jitter buffer, and a peer that drained it to zero would stall on the next
+## packet that arrived a millisecond late.
+func _pace_engine() -> void:
+	var authored: int = _authored_rate()
+	if authored <= 0:
+		return
+
+	var wanted: int = authored
+	if _catch_up_enabled():
+		var excess: int = _sealed.size() - _sealed_lead_turns()
+		if excess > 0:
+			var percent: int = mini(
+				excess * _catch_up_percent_per_turn(), _catch_up_max_percent()
+			)
+			wanted = authored + int(float(authored) * float(percent) / 100.0)
+
+	# Written only when it moves. Assigning every tick would be a property write
+	# on the hot path for nothing, and it makes the log below say something.
+	if wanted == Engine.physics_ticks_per_second:
+		return
+	if wanted != authored && _paced_at != wanted:
+		SessionLog.note("lockstep.catchup", {
+			"rate": wanted, "authored": authored, "held": _sealed.size(),
+		})
+	_paced_at = wanted
+	Engine.physics_ticks_per_second = wanted
+
+
+## Puts the engine back to the rate the project authored.
+##
+## **Called wherever a match stops mattering**, because this is a GLOBAL engine
+## property and a match that left it raised would hand the next one - or the main
+## menu - a machine running fast for no reason.
+func _restore_rate() -> void:
+	var authored: int = _authored_rate()
+	if authored > 0 && Engine.physics_ticks_per_second != authored:
+		Engine.physics_ticks_per_second = authored
+	_paced_at = 0
+
+
+func _authored_rate() -> int:
+	return int(round(1.0 / maxf(0.0001, MatchSession.tick_seconds())))
+
+
+func _catch_up_enabled() -> bool:
+	var config: NetworkConfig = _config()
+	return _sealed_stream() && (true if config == null else config.catch_up_enabled)
+
+
+func _catch_up_max_percent() -> int:
+	var config: NetworkConfig = _config()
+	return 20 if config == null else maxi(0, config.catch_up_max_percent)
+
+
+func _catch_up_percent_per_turn() -> int:
+	var config: NetworkConfig = _config()
+	return 10 if config == null else maxi(1, config.catch_up_percent_per_turn)
 
 
 func _sealed_lead_turns() -> int:

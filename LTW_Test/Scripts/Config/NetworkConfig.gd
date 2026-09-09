@@ -374,6 +374,45 @@ extends Resource
 ## while holding a repeat-on-hold ability down.
 @export var max_pending_orders: int = 128
 
+## **Whether a peer that has fallen behind runs its engine faster to catch up.**
+##
+## Off, a peer's input delay only ever grows: every hiccup it recovers from is
+## added to its backlog permanently and nothing gives it back, so a twenty minute
+## match with ten hiccups ends seconds behind. Measured on 2026-09-09: one 200 ms
+## stall cost a laptop 200 ms of input delay for the remaining eight hundred
+## turns. See `netcode-rework.md` amendment 10.
+##
+## **This paces the ENGINE, never the simulation.** The world still advances one
+## turn per tick and every turn is still exactly `MatchSession.tick_seconds()`
+## long, so a peer catching up computes the identical world - it simply gets
+## there sooner in wall-clock. That is only true because the delta refactor made
+## a simulation second stop depending on how fast the machine runs, and the
+## bench's `rate=` argument is what proves it.
+##
+## The rate is a LOCAL decision and two peers are explicitly allowed to differ on
+## it, provided nothing in the simulation ever branches on it - not on the
+## backlog, not on the budget, not on `is_stalled()`.
+@export var catch_up_enabled: bool = true
+
+## How much faster than the authored rate a peer may run while draining, as a
+## percentage.
+##
+## **A FEEL decision rather than an implementation one**, and it wants judging on
+## a real match with a real leak on screen rather than on a bench: the world runs
+## visibly fast while this is working, and a tower defence fast-forwarded through
+## a leak the player cannot react to is worse than the delay it is repaying.
+##
+## Twenty percent is four extra turns a second at the authored rate, which
+## repays a typical two hundred millisecond hiccup in about a second - far
+## gentler than the fifty percent `netcode-rework.md` sizes as the ceiling, and
+## the conservative end is the right place to start from.
+@export_range(0, 100, 5) var catch_up_max_percent: int = 20
+
+## How much of that allowance each turn of excess backlog claims. Proportional
+## rather than all-or-nothing, so a peer one turn behind nudges and a peer far
+## behind takes the whole cap - and neither oscillates around the target.
+@export_range(1, 100, 1) var catch_up_percent_per_turn: int = 10
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20

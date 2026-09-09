@@ -1592,6 +1592,51 @@ last run looks exactly like a bug in this one.
 node that is data-driven about which clock it is on double-counts in every future audit by grep. The
 trace must be unaffected by construction — a diff here means one of them was not presentation.
 
+### 13.4b The servo — DONE 2026-09-09
+
+**Catch-up landed as an engine-rate servo, and none of 13.4's three dangerous commits were needed.**
+6b-0 (death only leaving the world at end of frame), 6b-1 (`CreepIndex` keyed on the physics frame,
+so step two answers from step one's positions) and 6b-2 (the bounded loop) all exist because 13.4
+puts TWO STEPS INSIDE ONE FRAME. The servo puts one step in one frame and runs more frames, so every
+one of those hazards is absent — as is `WalkAnimation3D` reading double gait speed. The plan below
+is kept because the dispatch change may still be wanted for the twelve-player budget; it is not
+needed for catch-up.
+
+`LockstepService._pace_engine`, four lines of policy: while the sealed backlog exceeds the target
+lead, raise `Engine.physics_ticks_per_second` by `catch_up_percent_per_turn` per turn of excess,
+capped at `catch_up_max_percent`. Proportional rather than all-or-nothing so it does not oscillate,
+and it drains to the target and never past it — the lead IS the jitter buffer and a peer that
+emptied it would stall on the next slightly-late packet.
+
+**Measured, paired, same commit, one variable flipped.** Two peers and a relay, the second peer
+blocking its main thread for 900 ms ten times:
+
+| | catch-up OFF | catch-up ON |
+| --- | --- | --- |
+| hitching peer's backlog | **98 turns** | **3 turns** |
+| hitching peer's input delay | **4.9 s** | **0.2 s** |
+| hitching peer's turns run | 1138 | **1235** |
+| healthy peer's backlog | 0 | 1 |
+| desyncs | 0 | 0 |
+
+**The positive control is `turns_run`, not the delay.** 1235 turns in a sixty second run is not
+reachable at a fixed 20 Hz however good the netcode is, so the engine demonstrably ran fast; the
+session log carries 23 `lockstep.catchup` entries showing it stepping to 24 Hz on a backlog of 18
+and easing back through 22 as it drained. A run where the delay merely looked better would have
+proved nothing.
+
+**And the trade this makes, which is a FEEL decision and therefore yours.** Draining the backlog
+also drains the cushion that was absorbing the hitches, so the same run's stalls went from 2 to 10
+and its held time from 1.2 s to 3.15 s. The peer swapped **4.9 seconds of constant input delay** for
+**about two extra seconds of micro-stalls spread over a minute**. That is a large net win at these
+numbers — five seconds of lag is unplayable — but the ideal target is probably not the same for a
+machine that hitches ten times a minute as for one that never does, and `sealed_lead_turns` is
+currently one number for everybody. An adaptive target that grows for a machine which keeps stalling
+is the obvious next refinement, and it is a tuning question rather than a correctness one.
+
+Untouched offline: the determinism trace is byte-identical with the servo present, because the whole
+thing is behind `sealed_stream` and paces nothing when there is no backlog.
+
 ### 13.4 Phase 6b — catch-up
 
 Three commits change behaviour on purpose. Each lands alone, with its own recorded baseline and a
