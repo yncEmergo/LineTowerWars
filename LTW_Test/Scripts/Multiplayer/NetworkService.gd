@@ -420,7 +420,9 @@ func _on_connected_to_server() -> void:
 	# ours first is what puts the build number ahead of everything else this
 	# client will ever say. A server that refuses us then does so before it has
 	# been asked for anything.
-	state_protocol_version.rpc_id(SERVER_PEER_ID, _protocol_version(), rpc_signature())
+	state_protocol_version.rpc_id(
+		SERVER_PEER_ID, _protocol_version(), rpc_signature(), wire_config()
+	)
 	connected_to_server.emit()
 
 
@@ -545,7 +547,7 @@ func _refuse(result: Result, action: String) -> Result:
 
 ## Stated by a client the moment it connects. Server side.
 @rpc("any_peer", "reliable")
-func state_protocol_version(version: int, signature: String) -> void:
+func state_protocol_version(version: int, signature: String, wire: String) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
@@ -570,7 +572,26 @@ func state_protocol_version(version: int, signature: String) -> void:
 			"The server is running different code. Deploy your changes, or update the game.")
 		return
 
-	Log.info("Peer is on our build", {"peer": sender, "build": version, "rpc": ours})
+	# **And neither of the two checks above can see a CONFIG difference**, which
+	# is what let a half-deployed sealed stream deadlock a real playtest on
+	# 2026-09-09. The relay had `sealed_stream` on and both clients had it off:
+	# identical code, identical rpc surface, same protocol number - and a
+	# protocol whose MEANING had changed underneath all three. The relay refused
+	# every turn word while the clients ignored every seal, so both players sat
+	# on turn 0 waiting for each other with nothing to say why.
+	#
+	# So anything that changes what the wire MEANS without changing what it
+	# LOOKS LIKE is stated here as well. See wire_config().
+	var wire_ours: String = wire_config()
+	if wire != wire_ours:
+		_refuse_build(sender, expected, ours,
+			"The server and this game disagree about how the match is run (server %s, game %s). "
+			% [wire_ours, wire] + "Update the game, or redeploy the server.")
+		return
+
+	Log.info("Peer is on our build", {
+		"peer": sender, "build": version, "rpc": ours, "wire": wire_ours,
+	})
 
 
 ## Says no, and says which of the two checks said it.
@@ -702,6 +723,24 @@ func _disconnect_peer(id: int) -> void:
 ## What it deliberately does NOT include: private helpers, ordinary methods, or
 ## anything outside those scripts. A client-only UI change must not refuse a
 ## connection - only a change to what crosses the wire may.
+## The CONFIG that changes what the wire means, as a short comparable string.
+##
+## **Separate from `rpc_signature()` on purpose, because it answers a different
+## question and wants a different message.** The signature is computed from the
+## CODE and catches a build that was edited and not deployed. This catches two
+## machines running the SAME code with a setting that changes the protocol
+## between them - which the signature cannot see and which reads, to a player,
+## as the game simply not starting.
+##
+## A string rather than a bool so the next such setting joins it without another
+## change to the handshake's shape.
+func wire_config() -> String:
+	var config: NetworkConfig = References.network_config
+	if config == null:
+		return "?"
+	return "sealed=%d" % (1 if config.sealed_stream else 0)
+
+
 func rpc_signature() -> String:
 	var tree: SceneTree = get_tree()
 	if tree == null:
