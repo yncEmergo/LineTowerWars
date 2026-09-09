@@ -1,0 +1,151 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[godot_ai game_helper] registered mcp capture (debugger active=false, logger=true)
+[Main:315]: [INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[Main:122]: [INFO] Match ready { "players": 2, "local_slot": 0, "seed": 7, "starting_lives": 100, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Rot Golem, "count": 1, "cost": 1000, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Forest Spider, "count": 3, "cost": 50, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Rot Golem, "count": 1, "cost": 1000, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 29 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 31 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 14 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Forest Spider, "count": 3, "cost": 50, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 13 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 29 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 29 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Forest Spider, "count": 3, "cost": 50, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Rot Golem, "count": 1, "cost": 1000, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Acolyte, "count": 3, "cost": 40, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Rot Golem, "count": 1, "cost": 1000, "stock": 6 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Forest Spider, "count": 3, "cost": 50, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Forest Spider, "count": 3, "cost": 50, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 6 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Swordsman, "count": 3, "cost": 70, "stock": 31 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Shade, "count": 3, "cost": 225, "stock": 15 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Corrupted Treant, "count": 3, "cost": 750, "stock": 7 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Priest, "count": 3, "cost": 600, "stock": 31 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Mud Golem, "count": 3, "cost": 400, "stock": 30 }
+[SendBuilding:315]: [INFO] Creeps sent { "type": Fel Orc Grunt, "count": 3, "cost": 100, "stock": 31 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 1, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 1 }
+[CommandService:520]: [INFO] Cheat: gold granted { "slot": 2, "amount": 9999999 }
+[CommandService:550]: [INFO] Cheat: creeps unlocked and stocked { "slot": 2 }

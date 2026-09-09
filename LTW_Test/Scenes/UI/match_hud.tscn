@@ -18,13 +18,13 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="14_minimap"]
 [ext_resource type="PackedScene" uid="uid://cimbya3sr27g3" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/desync_notice.tscn" id="90_desync"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/stall_panel.tscn" id="91_stall"]
-[ext_resource type="Script" path="res://Scripts/UI/StallInput.gd" id="92_stall_input"]
+[ext_resource type="Script" uid="uid://csixmnvuwwi8q" path="res://Scripts/UI/StallInput.gd" id="92_stall_input"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
 content_margin_left = 16.0
@@ -73,7 +73,7 @@ offset_right = -27.0
 offset_bottom = -158.0
 grow_vertical = 0
 
-[node name="ActionBar" parent="." instance=ExtResource("19_action_bar")]
+[node name="ActionBar" parent="." unique_id=714545854 instance=ExtResource("19_action_bar")]
 anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 1.0
@@ -244,9 +244,8 @@ process_mode = 3
 process_mode = 3
 visible = false
 
-[node name="ConfirmPrompt" parent="." instance=ExtResource("80_confirm")]
+[node name="ConfirmPrompt" parent="." unique_id=159550192 instance=ExtResource("80_confirm")]
 process_mode = 3
-visible = false
 
 [node name="DesyncNotice" parent="." unique_id=1093841439 instance=ExtResource("90_desync")]
 process_mode = 3
@@ -255,6 +254,6 @@ process_mode = 3
 process_mode = 3
 visible = false
 
-[node name="StallInput" type="Node" parent="." node_paths=PackedStringArray("_order_ui")]
+[node name="StallInput" type="Node" parent="." unique_id=14586207 node_paths=PackedStringArray("_order_ui")]
 script = ExtResource("92_stall_input")
 _order_ui = [NodePath("../UnitPanel"), NodePath("../SendBar"), NodePath("../ActionBar"), NodePath("../ResearchCenter"), NodePath("../ControlGroupBar"), NodePath("../Minimap")]

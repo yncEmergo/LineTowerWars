@@ -1,0 +1,156 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 23.19.14.08.240820 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 1280084197, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Lobby list received { "lobbies": 0 }
+[INFO] In lobby { "id": lobby-2, "name": ync_laptop's Game, "players": 1, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Peer joined 1142154976
+[INFO] In lobby { "id": lobby-2, "name": ync_laptop's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-09_09-16-24.log }
+[INFO] In lobby { "id": lobby-2, "name": ync_laptop's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-2, "name": ync_laptop's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Match starting { "match": match-2, "slot": 1, "players": 2 }
+[INFO] Match scene loaded { "match": match-2, "path": res://Scenes/Main.tscn }
+[INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 1165.0 }
+[INFO] Match start { "match": match-2, "slot": 1, "players": 2 }
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 2, "local_slot": 1, "seed": 556862664, "starting_lives": 100, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Lockstep reset for a new match { "match": match-2 }
+[INFO] Match paused { "tick": 0, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 0, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 2, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 0, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 2, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 0, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Match paused { "tick": 37, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 37, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 41, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 37, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 41, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 37, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 38, "waited_ms": 283, "ticks_per_turn": 1, "delay_turns": 5 }
+[INFO] Order ran { "turn": 49, "waited_ms": 167, "ticks_per_turn": 1, "delay_turns": 3 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 70, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 70, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 72, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 70, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 72, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 70, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 73, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 73, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 78, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 73, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 78, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 73, "by": &"lockstep", "holders": [  ] }
+[INFO] Ability cancelled
+[INFO] Order ran { "turn": 113, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 117, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 123, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 138, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 140, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 140, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 142, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 140, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 142, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 140, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 153, "waited_ms": 169, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 168, "waited_ms": 152, "ticks_per_turn": 1, "delay_turns": 3 }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Order ran { "turn": 179, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 182, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Order ran { "turn": 197, "waited_ms": 138, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 212, "waited_ms": 136, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Order ran { "turn": 225, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 230, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 233, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 237, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Order ran { "turn": 250, "waited_ms": 139, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 258, "waited_ms": 102, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 271, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[INFO] Match paused { "tick": 401, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 401, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 403, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 401, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 403, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 401, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Tower placed { "cell": (11,40), "tower": &"LesserArcher_11_40", "cost": 10 }
+[INFO] Match paused { "tick": 551, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 551, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 553, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 551, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 553, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 551, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Match paused { "tick": 741, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 741, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 743, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 741, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 743, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 741, "by": &"lockstep", "holders": [  ] }
+[INFO] Match paused { "tick": 744, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 744, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 747, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 744, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 747, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 744, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 790, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 794, "waited_ms": 133, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 798, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 801, "waited_ms": 133, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 828, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 831, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 831, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 833, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 831, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 833, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 831, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[INFO] Order ran { "turn": 843, "waited_ms": 153, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 858, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (12,42), "tower": &"LesserArcher_12_42", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Match paused { "tick": 863, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 863, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 865, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 863, "missing": [1142154976], "have": [ 1280084197 ], "expected": [1280084197, 1142154976], "held": 865, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 863, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 875, "waited_ms": 167, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (14,42), "tower": &"LesserArcher_14_42", "cost": 10 }
+[INFO] Order ran { "turn": 886, "waited_ms": 134, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 890, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[INFO] Order ran { "turn": 1006, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[INFO] Order ran { "turn": 1010, "waited_ms": 140, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[INFO] Order ran { "turn": 1012, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Closing the connection on the way out
