@@ -313,6 +313,10 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		# input delay in turns, and the number the catch-up servo drives back
 		# down - see LockstepService._pace_engine.
 		"sealed_held": Lockstep.sealed_held(),
+		# [recovered, deliberately dropped]. On a clean link both are zero; the
+		# first going up on a real connection is REAL PACKET LOSS being repaired
+		# by the unreliable echo, and is the only place this build reports it.
+		"echo": Lockstep.echo_recovery(),
 		# **What a word actually COST, which nothing above can show.** Every
 		# figure beside it is an ESTIMATE of the wire - a mean round trip, its
 		# smoothed variance, this machine's frame times - and the same problem

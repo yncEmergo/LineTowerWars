@@ -352,6 +352,21 @@ var _server_seq: int = 0
 ## when it changes rather than on every tick that wants the same number.
 var _paced_at: int = 0
 
+## Relay: the last few seals, re-sent unreliably. See `_seal_stream`.
+var _recent_seals: Array = []
+
+## Peer: how many seals the unreliable echo delivered that the reliable channel
+## had not. **The positive control for the echo**: a clean link recovers none, so
+## a run reporting zero has not tested the recovery path at all.
+var _seals_recovered: int = 0
+
+## Peer: test-only, how many arriving seals were deliberately thrown away, and
+## the generator that decides. Its own generator rather than the match RNG, for
+## the reason the bench driver gives at length: drawing from the shared one would
+## change every gameplay roll after it.
+var _seals_dropped: int = 0
+var _dropped_dice: int = 1
+
 
 func _ready() -> void:
 	# **Immune to the pause it causes itself**, and this is not optional: a stall
@@ -750,6 +765,12 @@ func sealed_held() -> int:
 	return _sealed.size()
 
 
+## How many seals the unreliable echo rescued, and how many were deliberately
+## thrown away to make it happen. For the session log and for the harness.
+func echo_recovery() -> Array:
+	return [_seals_recovered, _seals_dropped]
+
+
 ## How far behind the relay this machine is playing, in seconds of real time.
 ##
 ## **The peer works this out entirely by itself, which is why phase 4c needs no
@@ -998,6 +1019,10 @@ func _reset_if_new_match() -> void:
 	_sealing = false
 	_seal_wait_frames = 0
 	_server_seq = 0
+	_recent_seals.clear()
+	_seals_recovered = 0
+	_seals_dropped = 0
+	_dropped_dice = 1
 	_restore_rate()
 	_due_at.clear()
 	_arrived_at.clear()
@@ -1345,6 +1370,26 @@ func _seal_stream() -> void:
 		if peer in live:
 			receive_seal.rpc_id(peer, turn, orders)
 
+	# **The same turns again, UNRELIABLY, and the channel is the entire point.**
+	#
+	# A seal rides the reliable ORDERED channel, so one lost packet stops
+	# everything behind it until ENet retransmits - and re-sending inside the
+	# next reliable message would buy nothing, because that message cannot
+	# overtake the loss either. It has to be a channel where a later message can
+	# arrive despite an earlier one going missing, which is what unreliable
+	# means. The old turn stream carried exactly this and its reasoning is worth
+	# repeating rather than rediscovering.
+	#
+	# Cheap because a seal is almost always EMPTY: a turn number and an empty
+	# array. Carrying the last two costs a few dozen bytes against the couple of
+	# hundred a packet costs to send at all.
+	_recent_seals.append([turn, orders])
+	while _recent_seals.size() > ECHO_TURNS:
+		_recent_seals.remove_at(0)
+	for peer: int in _match_peers():
+		if peer in live:
+			receive_seal_echo.rpc_id(peer, _recent_seals)
+
 
 ## Whether every player is ready to be sent a turn - **blocker B2.**
 ##
@@ -1425,6 +1470,14 @@ func _announce_ready() -> void:
 func receive_seal(turn: int, orders: Array) -> void:
 	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
+	# Test-only fault injection, zero in anything anybody plays. See
+	# NetworkConfig.debug_seal_loss_percent.
+	var loss: int = _debug_seal_loss()
+	if loss > 0:
+		_dropped_dice = (_dropped_dice * 1103515245 + 12345) & 0x7fffffff
+		if _dropped_dice % 100 < loss:
+			_seals_dropped += 1
+			return
 	_absorb_seal(turn, orders)
 
 
@@ -1444,6 +1497,28 @@ func receive_seal(turn: int, orders: Array) -> void:
 ## stops. **Amendment 9 decides how**: through `MatchStart.leave_match()`, the
 ## same road the in-game menu takes, so the relay is told at once and the other
 ## players see a clean departure rather than sitting out the disconnect grace.
+## **The redundancy, on the channel a loss cannot block.** A peer that missed a
+## seal gets it here rather than waiting a round trip for ENet to notice.
+##
+## A duplicate is the normal case and costs one comparison: `_absorb_seal`
+## refuses a turn already played and overwrites an identical payload with itself.
+@rpc("authority", "call_remote", "unreliable")
+func receive_seal_echo(recent: Array) -> void:
+	if !_is_live() || multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	for entry: Variant in recent:
+		var pair: Array = entry as Array
+		if pair == null || pair.size() != 2:
+			continue
+		var turn: int = int(pair[0])
+		if turn <= _last_run_turn || _sealed.has(turn):
+			continue
+		# Only counted when it actually RECOVERED something the reliable channel
+		# had not delivered, which is the positive control for the whole idea.
+		_seals_recovered += 1
+		_absorb_seal(turn, pair[1] as Array)
+
+
 func _absorb_seal(turn: int, orders: Array) -> void:
 	# Nothing more is played on a machine that has given up, and nothing more is
 	# kept either - the relay goes on sealing until this peer actually leaves.
@@ -1850,6 +1925,11 @@ func _authored_rate() -> int:
 func _catch_up_enabled() -> bool:
 	var config: NetworkConfig = _config()
 	return true if config == null else config.catch_up_enabled
+
+
+func _debug_seal_loss() -> int:
+	var config: NetworkConfig = _config()
+	return 0 if config == null else clampi(config.debug_seal_loss_percent, 0, 100)
 
 
 func _catch_up_max_percent() -> int:

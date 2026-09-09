@@ -445,6 +445,25 @@ load-bearing.
 7. **Replace the echo, or say why not.** See the table above. One dropped seal now costs a full
    ENet retransmit of held time on the only channel left, which is exactly the micro-stutter
    Recoil's comment in section 3 warns about, now unmitigated.
+   **DONE 2026-09-09.** `receive_seal_echo` re-sends the last `ECHO_TURNS` seals unreliably beside
+   the reliable broadcast, and the channel is the whole point: a reliable channel is ORDERED, so a
+   re-send inside the next reliable message could never overtake the loss it exists to cover. Cheap
+   because a seal is almost always empty — a turn number and an empty array.
+   **Measured with a deliberate fault injector** (`NetworkConfig.debug_seal_loss_percent`, zero in
+   anything anybody plays), because a clean link loses nothing and a recovery path that never
+   executes is indistinguishable from one that works. Dropping 15% of arriving seals — after ENet
+   delivered them, so nothing else could recover them:
+
+   | | with the echo | echo removed |
+   | --- | --- | --- |
+   | turns run | 1148 | **10** |
+   | world frozen | 0.8 s | **62.2 s** |
+   | gave up | no | **both peers** |
+   | recovered / dropped | **166 / 166** | 0 / 166 |
+
+   The session log's health line now carries `echo` as `[recovered, dropped]`. On a real connection
+   the first number going up **is packet loss being repaired**, and it is the only place this build
+   reports loss at all.
 8. **Gate the seal clock on peers being live** (B2), and put the relay's `(peer, seq)` high-water
    mark and the peer's sealed buffer into `_reset_if_new_match`.
 9. **Say which kill switch wins.** Amendment 1 ends the match locally on buffer overflow;

@@ -396,6 +396,7 @@ func _finish() -> void:
 		# look, and `sealed_held` greater than zero is what proves seals were
 		# actually being played rather than the flag merely being set.
 		"sealed_held": Lockstep.sealed_held(),
+		"echo": Lockstep.echo_recovery(),
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),
 	})

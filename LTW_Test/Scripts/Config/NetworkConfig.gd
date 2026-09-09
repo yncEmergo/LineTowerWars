@@ -394,6 +394,16 @@ extends Resource
 ## behind takes the whole cap - and neither oscillates around the target.
 @export_range(1, 100, 1) var catch_up_percent_per_turn: int = 10
 
+## **DELIBERATELY THROWS AWAY THIS PERCENTAGE OF ARRIVING SEALS. Test only, and
+## zero in anything anybody plays.**
+##
+## The redundant echo below exists to cover a lost seal, and a clean link loses
+## none - so on loopback the recovery path never executes and a run where it
+## "worked" is indistinguishable from one where it was never reached. That is
+## this project's most repeated trap, so the loss is injectable rather than
+## hoped for. See `LockstepService.receive_seal`.
+@export_range(0, 100, 1) var debug_seal_loss_percent: int = 0
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20
