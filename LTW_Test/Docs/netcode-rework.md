@@ -1625,14 +1625,29 @@ session log carries 23 `lockstep.catchup` entries showing it stepping to 24 Hz o
 and easing back through 22 as it drained. A run where the delay merely looked better would have
 proved nothing.
 
-**And the trade this makes, which is a FEEL decision and therefore yours.** Draining the backlog
-also drains the cushion that was absorbing the hitches, so the same run's stalls went from 2 to 10
-and its held time from 1.2 s to 3.15 s. The peer swapped **4.9 seconds of constant input delay** for
-**about two extra seconds of micro-stalls spread over a minute**. That is a large net win at these
-numbers — five seconds of lag is unplayable — but the ideal target is probably not the same for a
-machine that hitches ten times a minute as for one that never does, and `sealed_lead_turns` is
-currently one number for everybody. An adaptive target that grows for a machine which keeps stalling
-is the obvious next refinement, and it is a tuning question rather than a correctness one.
+**The trade it makes, stated more carefully than the first write-up did.** The same run's stalls went
+from 2 to 10 and its held time from 1.2 s to 3.15 s, which was first recorded as the price of a small
+cushion. **The log says otherwise:** every one of those stalls lands within about forty milliseconds
+of an injected hitch, at exactly the six-second cadence the harness was set to, and each is followed
+immediately by a catch-up event with a backlog of seventeen or eighteen. None is spontaneous.
+
+So the stalls are the HITCHES, not the cushion. What the enormous 98-turn backlog was buying with
+catch-up off was not stability, it was concealment: a buffer that large cannot be emptied by
+anything, so the freezes never surfaced — at the price of 4.9 s of permanent input delay.
+
+**A 900 ms freeze every six seconds is a deliberately brutal stress case and not a machine anybody
+plays on.** The real figure is playtest 5: a genuinely old laptop on a real link stalled TWICE in a
+whole match. Sizing the cushion against the harness rather than against that would buy constant lag
+to hide a problem real hardware does not have.
+
+**DECIDED 2026-09-09: the cushion stays at two turns.** The project owner's call, and the evidence
+supports it — input delay is to be held as low as possible at all times, and 100 ms is the ceiling.
+The consequence worth stating is that **a small cushion makes catch-up MORE load-bearing, not less**:
+at 100 ms of buffer a peer will occasionally drain it, and the servo is the only thing that stops
+each of those becoming permanent delay. The two settings are a pair.
+
+An adaptive per-machine cushion remains the obvious refinement for a peer that stalls repeatedly, and
+it is tuning rather than correctness — but it is now a smaller prize than the first write-up implied.
 
 Untouched offline: the determinism trace is byte-identical with the servo present, because the whole
 thing is behind `sealed_stream` and paces nothing when there is no backlog.
