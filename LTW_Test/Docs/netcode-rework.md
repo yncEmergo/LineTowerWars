@@ -1182,6 +1182,31 @@ recalled. Where a source is second-hand it says so.
 
 ## 13. Phase 6 in full — explicit simulation stepping, then catch-up
 
+> **DECIDED 2026-09-09, after the measurement below: do neither of these yet, and when they are
+> wanted, take the servo road rather than this one.**
+>
+> This section is thorough and its audit is worth keeping — but it was written against a lead that
+> grows without bound, and `Findings/2026-09-09-sealed-stream-on-two-machines.md` shows the lead is
+> flat. What it actually costs a slow machine is **one 200 ms hiccup, banked once and never given
+> back**. Three consequences:
+>
+> 1. **Nothing is needed for the 1v1 milestone.** 105 ms on the healthy machine and 300 ms on a
+>    genuinely old laptop is a playable match, and the milestone is a 1v1 prototype. Phase 6 buys
+>    smoothness on hardware nobody has committed to supporting.
+> 2. **When it IS wanted, an engine-rate servo drains a four-turn buffer in about four seconds at
+>    5% over rate, and needs only the DELTA refactor** — every gameplay loop reading a fixed
+>    simulation step instead of `delta`. It does not need the dispatch change this section is built
+>    around, which exists to run several turns inside one frame and is only worth its risk against a
+>    backlog that grows.
+> 3. **The delta refactor is the shared prerequisite of both roads**, so doing it first is never
+>    wasted if the dispatch change is later wanted for the twelve-player budget — which is where it
+>    belongs, beside the spatial hash, rather than in the netcode.
+>
+> **What does NOT change is 13.2.** A missed delta site diverges two peers under a servo exactly as
+> it does under multi-stepping — one machine at 21 Hz and one at 20 advance that loop differently —
+> so the falsifier work, and the sabotage matrix that proves the falsifier can actually see a
+> disabled loop, is required before either road. That is the real prerequisite and it is unchanged.
+
 Written 2026-09-09 from a full audit of every `_physics_process` and `_process` in `Scripts/`, two
 independently drafted designs and an adversarial review of each. **This supersedes the Phase 6 stub
 in section 8**, which named the problem and priced none of it. It is written for an implementer who
