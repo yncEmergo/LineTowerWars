@@ -85,7 +85,7 @@ the shape of the problem rather than from data, because the only honest data com
 machines and there is one here. The next playtest measures it; the health line now carries the
 number needed to say whether the cap is right.
 
-### 1.1 Prove determinism across two machines
+### 1.1 Prove determinism across two machines  — DONE 2026-09-09
 
 **The largest untested assumption in the whole system.** Every test ever run has been two
 clients on ONE machine — same binary, same libm, same CPU. That is the pairing that cannot
@@ -102,6 +102,13 @@ a different path in the same binary; a Godot version mismatch. The audit in
 is that this passes — but "expected to pass" and "tested" are different words and only one of
 them is worth anything before a public playtest.
 
+**It passed.** Two physical machines against the rented server, twice: 128 compared checksum
+turns on the legacy path and 91 on the sealed stream, zero mismatches either time. Stated as a
+comparison COUNT rather than as an absence of errors, because a comparison that never ran would
+also log nothing. See `Findings/2026-09-09-sealed-stream-on-two-machines.md`.
+
+Still untested: more than two machines, and anything longer than a few minutes.
+
 ### 1.2 Instant local feedback on the actions that have it worst
 
 Presentation may answer the player's INTENT immediately; it may never claim the RESULT
@@ -117,19 +124,29 @@ None of them touch simulated state, so none can desync. **This is the cheapest f
 available and it should be done before anything architectural**, because it changes what the
 remaining latency actually feels like and therefore how much the rest is worth.
 
-### 1.3 Redundancy under real packet loss
+### 1.3 Redundancy under real packet loss  — DONE 2026-09-09
 
-Every turn word is echoed unreliably beside the reliable one. It is proven to CARRY the data —
-a whole match was run with the reliable path disabled — but never tested against actual loss,
-because loopback drops nothing. Wants a link conditioner (*clumsy* on Windows) and one run with
-a few percent loss injected.
+The turn word it described is gone; the sealed stream carries the same idea as
+`receive_seal_echo`, which re-sends the last few seals unreliably beside the reliable
+broadcast. The channel is the point: a reliable channel is ORDERED, so a re-send inside the
+next reliable message could never overtake the loss it exists to cover.
+
+**And it no longer wants a link conditioner.** `NetworkConfig.debug_seal_loss_percent` throws
+away arriving seals on purpose — after ENet delivered them, so nothing else can recover them —
+which is a stronger test than a conditioner and needs no tooling. At 15%: with the echo, 1148
+turns and 0.8 s held, 166 of 166 recovered; without it, 10 turns, 62.2 s frozen, both peers
+giving up.
+
+What is still unmeasured is loss on a REAL link, which no injector can stand in for. The
+session log's health line carries `echo` as `[recovered, dropped]` now, so the next playtest on
+somebody else's connection reports it for the first time.
 
 ### 1.4 Small hardening, whenever
 
-- **A relay-enforced floor on how far ahead a peer books.** `delay_turns()` is decided locally,
-  so a modified client could pick the minimum on a bad link and take a reaction-time edge while
-  stalling everybody else — indistinguishable from a bad connection. Nothing to do until
-  somebody has a reason to cheat.
+- ~~A relay-enforced floor on how far ahead a peer books.~~ **Gone with the cutover.** No client
+  names a turn any more, so there is no local booking to game: the relay decides which turn an
+  order lands in, from when it arrives. The peer's own lead is a private playback buffer that
+  costs only its owner.
 - **Majority-vote desync attribution.** With two peers a mismatch says they disagree and never
   which is right. Meaningless below three players.
 
@@ -141,11 +158,13 @@ a few percent loss injected.
 two candidate rules has never been run. Details and the fix in `netcode-rework.md` §8 phase 1.
 Small, and it finishes a phase that is otherwise done.
 
-### 1.6 Take phase 0's measurement  — needs two machines
+### 1.6 Take phase 0's measurement  — DONE 2026-09-09
 
-The instrument is built and has never been read against a real link. `jitter_margin_ms` must be
-put back to 0 for the run, or the margin raised on 2026-09-07 suppresses the very stalls being
-characterised. Phase 5's whole decision rests on the drift half of it.
+Read against a real link across playtests 3 to 5. What it produced: the coupling it was built to
+find (a healthy peer losing 5.8 s to a partner that was merely slower), the asymmetry that
+replaced it, and the input-delay figures on both machines. The drift half is measured but not
+settled — a stable lead and a drift-free pair look the same over a minute, so the servo decision
+in `netcode-rework.md` 13.4b rests on the repayment mechanism rather than on a drift number.
 
 ---
 

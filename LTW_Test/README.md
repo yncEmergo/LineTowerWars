@@ -18,21 +18,32 @@ player who disconnects has their maze erased on the same turn on every machine, 
 carries on without them; a divergence between two games is detected and ends the match for
 both rather than for whichever one noticed.
 
-**It plays by deterministic lockstep.** Every machine simulates the whole world from the same
-seed and the same orders, so there is no state stream at all — the server forwards orders,
-stamps who sent them, and compares world checksums so a disagreement is caught rather than
-papered over. An order is booked a turn or two ahead and run by every peer on that turn, and
-how far ahead is MEASURED from the live connection rather than authored, so the input delay
-tracks the ping instead of being a constant everybody pays — and from the machine's own frame
-times as well as the wire, because a tick that runs long sends its word late and the far end
-cannot tell the two apart. See
-[multiplayer.md](Docs/multiplayer.md) §11.4 for how that works, and
-[Findings/2026-09-04-input-delay.md](Docs/Findings/2026-09-04-input-delay.md) for what it
-measured on the day.
+**It plays by deterministic lockstep, and no player waits for another one.** Every machine
+simulates the whole world from the same seed and the same orders, so there is no state stream
+at all. Clients send orders bare, at the moment they are pressed; the server SEALS one
+authoritative turn per tick from whatever has arrived, stamps who sent each order, and
+broadcasts that turn to everybody. **A peer waits only for the server**, so a machine that
+hitches pays for its own hitch and the player beside it pays nothing — which is the whole
+point, and the thing the old design got wrong. World checksums are compared so a disagreement
+is caught rather than papered over.
+
+A peer that does fall behind **repays** it: it runs its engine a little fast until its backlog
+is gone, rather than carrying the delay for the rest of the match. A lost packet is repaired
+from a redundant unreliable copy instead of freezing the world while the reliable channel
+retransmits. And a player who falls too far behind to recover is told so and returned to the
+menu, rather than watching their own maze vanish with no explanation.
+
+Measured between two physical machines: a peer hitching repeatedly cost the other player 5.8 s
+of frozen world under the old design and 1.15 s under this one, all of it a single pause at
+match start. See [multiplayer.md](Docs/multiplayer.md) for how it works and
+[Findings/2026-09-09-sealed-stream-on-two-machines.md](Docs/Findings/2026-09-09-sealed-stream-on-two-machines.md)
+for the numbers.
 
 **A session can be logged to a file**, from a tick box in the lobby, off unless somebody asks
-for it. It records the connection, the match, every stall and who it was waiting for, the
-input delay as it adapts, and the turn stream itself — which is the replay format, so a
+for it. It records the connection, the match, every stall and what it was waiting for, the
+input delay a player actually felt, how far behind the server this machine is playing, any
+packet loss the redundant copy repaired, and the turn stream itself — which is the replay
+format, so a
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 

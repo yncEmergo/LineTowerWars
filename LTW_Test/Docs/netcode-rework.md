@@ -594,6 +594,27 @@ two commands per client per frame with a kick at sixteen queued.
 
 ## 8. The plan
 
+> **WHERE THIS ACTUALLY ENDED, 2026-09-09.** Everything below is the plan as it was written and
+> then annotated; this is what shipped.
+>
+> The relay seals one authoritative turn per tick and a peer waits only for the relay. There is no
+> flag and no second path: `sealed_stream` was deleted along with the turn word, the local
+> self-record, `_speak_for_the_departed`, the whole `delay_turns` latency chain and the phase 3
+> shadow, and `protocol_version` went to 3 so a build straddling that deletion refuses rather than
+> deadlocks. A peer that falls behind repays it by running its engine up to 20% fast
+> (`_pace_engine`); a lost seal is repaired from an unreliable echo; a peer that cannot recover is
+> told why and leaves through the ordinary road.
+>
+> **Measured between two physical machines**, not on loopback: a repeatedly hitching peer cost the
+> other player 5.8 s of frozen world before and 1.15 s after, all of it one pause at match start,
+> and its own banked delay went from 4.9 s to 0.2 s once catch-up existed. Cross-machine
+> determinism holds over 219 compared checksum turns. See
+> `Findings/2026-09-09-sealed-stream-on-two-machines.md`.
+>
+> **What is NOT done:** phase 2's presentation feedback, phase 4b's relay-side drop (deferred with
+> reasons), and section 13.3's dispatch change - which is no longer about catch-up at all and is
+> now purely a question about the tick budget at higher player counts.
+
 **Rewritten 2026-09-08.** The first draft's phases were right about what to build and wrong about
 how to know it worked: **almost every "falsifies" clause named a test that could not detect the
 failure it described.** Three were run in the one topology where both candidate answers agree —
@@ -810,7 +831,13 @@ Split out because the first draft's phase 3 sealed from today's batched, turn-st
 ingress — so it would have validated the sort key against an arrival pattern phase 4 replaces, and
 left `seq` dedupe, press-time arrival and the order caps untested until they were load-bearing.
 
-### Phase 3b — Shadow the seal and compare in-process.  — CODE DONE 2026-09-08, UNPROVEN
+### Phase 3b — Shadow the seal and compare in-process.  — DONE, PROVEN, then deleted
+
+Proven on 2026-09-09 where it counts: `shadow_ok` reached 57 on BOTH machines of a two-PC match
+over a real link, so the sealed stream produced the same orders in the same sequence as the turn
+stream on hardware rather than on loopback. The comparison itself was deleted with the old path
+once it had done its job - there is only one road now, and checking it against itself would pass
+unconditionally.
 
 The relay broadcasts `receive_seal` alongside `receive_batch`. Peers ignore it for play and
 compare it against their own `commands_for(turn)` **in the same process, with a `Log.err` on any
@@ -864,7 +891,7 @@ docstring says it cannot catch cross-machine float divergence. **Phase 4 is the 
 it hardest to test afterwards** — today a divergence is caught within a few tens of turns because
 peers are turn-locked; after the cutover peers are legitimately seconds apart.
 
-### Phase 4 — The cutover, behind a flag.  — DONE 2026-09-08, flag still OFF
+### Phase 4 — The cutover, behind a flag.  — DONE 2026-09-08. Flag DELETED 2026-09-09
 
 **Measured, paired, alternating: the healthy peer went from 5.10/5.40 s held to 0.85/0.75 s while
 the other machine hitched 900 ms six times, and a hard-wedged peer cost it nothing at all.** All of
@@ -969,7 +996,7 @@ back only with 4b, which is the one road out that the player did not choose.
 carries no determinism risk and shares no code with the gate flip. This would be the first time a
 dropped player is told why.
 
-### Phase 5 — Decide whether the servo is needed.  — MEASURED 2026-09-08, PROVISIONALLY NO
+### Phase 5 — Decide whether the servo is needed.  — SUPERSEDED. The servo shipped 2026-09-09
 
 Threshold stated before the run, as this section demands: *a servo is needed if a healthy peer's
 lead drifts by more than one turn (50 ms) per match minute in steady state.* Measured over 5900
@@ -990,7 +1017,7 @@ measurement can refute the no-servo position instead of being interpreted after 
 
 If drift is negligible, **stop here indefinitely.**
 
-### Phase 6 — Delta refactor, then servo, then catch-up.  — BLOCKED, and on more than time
+### Phase 6 — Delta refactor, then servo, then catch-up.  — DONE 2026-09-09, except the dispatch change
 
 Re-scoped 2026-09-08 after phase 5 came back negative, because two of its three parts turned out to
 rest on something this document had not named.

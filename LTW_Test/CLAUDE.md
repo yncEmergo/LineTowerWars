@@ -461,13 +461,25 @@
     after parking a MatchSetup in MenuNavigation.pending_match
   - DELETE Scripts/Dev and Scenes/Dev when the work is done, and remove the
     autoload line. They are scaffolding, not tests
-  - **the lockstep probe that proved the cutover is GONE, deliberately, and what
-    it did is written down instead.** Every scenario worth re-testing is in
-    Docs/Findings/2026-09-05-lockstep-review-2-response.md with the numbers it
-    produced: a plain 1v1, a peer hard-killed mid-match, a THIRD peer connecting
-    mid-match, and a deliberately planted desync. Rebuild it from that list
-    rather than from scratch, and note that the third-peer case is the one no
-    obvious test topology contains
+  - **Scripts/Dev/LockstepProbe.gd EXISTS and is kept**, which is a change from
+    the rule above and was earned rather than assumed. It was deleted once and
+    then rebuilt three times over the netcode rework, gaining a deliberate hitch,
+    a third-peer "browse" role, a drop counter and an echo counter along the way -
+    each of which caught something. Deleting and rewriting it a fourth time would
+    cost more than it saves
+    - it is NOT in `[autoload]`, so it does nothing at all unless the line is
+      added for a run. Add it, run, remove it, and check `project.godot` is
+      byte-identical afterwards
+    - the scenarios worth re-running, all of which it can now drive: a plain 1v1,
+      a peer hard-killed mid-match, a THIRD peer connecting mid-match (the one no
+      obvious topology contains), a deliberately planted desync, a peer given a
+      900 ms hitch, a relay-side player drop, and injected seal loss. Numbers for
+      each in Docs/Findings/2026-09-09-sealed-stream-on-two-machines.md and
+      2026-09-08-sealed-stream-cutover.md
+    - **the harness reports what was ACTUALLY exercised, and that is the point.**
+      `drops_seen`, `echo`, `sealed_held` and the bench's nodes-disabled column
+      all exist because a run that never reached the code under test looks
+      exactly like one that passed
   - stop and restart the server between runs. A lobby left over from the last one
     looks exactly like a bug in the next
 
