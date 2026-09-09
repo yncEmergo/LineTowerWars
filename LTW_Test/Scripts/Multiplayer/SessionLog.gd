@@ -306,9 +306,6 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		# of it: the connection was clean on both sides and one machine was
 		# simply not finishing its ticks on time.
 		"local_jitter_ms": Lockstep.local_jitter_ms(),
-		# Phase 3's positive control. A run where this stays 0 proves nothing,
-		# however clean it looks. See LockstepService.shadow_verified.
-		"shadow_ok": Lockstep.shadow_verified(),
 		# How far behind the relay this machine is playing. It is the peer's
 		# input delay in turns, and the number the catch-up servo drives back
 		# down - see LockstepService._pace_engine.

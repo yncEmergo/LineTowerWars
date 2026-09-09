@@ -1638,7 +1638,47 @@ last run looks exactly like a bug in this one.
 node that is data-driven about which clock it is on double-counts in every future audit by grep. The
 trace must be unaffected by construction — a diff here means one of them was not presentation.
 
-### 13.4b The servo — DONE 2026-09-09
+### 13.4b The servo — DONE 2026-09-09, and CORRECTED the same day after playtest 6
+
+> **The first version did not work on a real link, and the way it failed is worth more than the
+> fix.** It compared the BUFFERED TURN COUNT against `sealed_lead_turns` and stopped when they
+> matched. Playtest 6: a hitch at turn 1741 took the buffer from 0 to 2, which IS the configured
+> lead, so the servo declared victory - while the player kept 110 ms of input delay for the rest of
+> the match, which is precisely the symptom catch-up exists to remove. It reported success by its
+> own measure and failed by the only one that matters.
+>
+> Two mistakes, and the second is the instructive one. The count is quantised to whole turns, so a
+> debt smaller than 50 ms is unmeasurable. And **the target was never what the peer had been running
+> at** - it was a configured number that the peer happened to land on. The session log had been
+> carrying the honest signal since phase 0 (`arrival_ms`, `arrived - due`, in milliseconds) while
+> the servo read something else entirely.
+>
+> **What it took to fix, in the order the harness forced:** driving on the millisecond median made
+> it repay the debt and then hunt - 188 stalls in a minute against ten - because a median over two
+> hundred arrivals is a ten-second signal and steering on it puts six seconds of phase lag in the
+> loop. A twelve-sample window plus hysteresis took that to 17. Adding the buffer count as a second,
+> INSTANT signal stopped the overshoot a windowed measure structurally cannot see, because a 900 ms
+> debt drains faster than the window. And the last one: **catching up is spending a buffer, so with
+> an empty buffer it is not possible at all** - a peer at three times rate takes three seals a second
+> and receives one, and sprinting past what it holds only reaches the empty buffer sooner. A hard
+> floor of one buffered turn took 17 stalls to 3.
+>
+> **What it settles at, and the trade underneath it.** Slack is essentially buffer x 50 ms, so
+> repaying the last of a debt means running with LESS buffer than the configured lead - which is the
+> jitter protection, so it is paid for in stalls. The measured curve, same run, one variable:
+>
+> | buffer floor | stalls | slack settles at |
+> | --- | --- | --- |
+> | none - spend it all | 17 | -50 ms |
+> | the configured lead | 3 | -130 ms |
+> | **one turn** | **3** | **-95 ms** |
+>
+> -95 ms is about two turns, which IS `sealed_lead_turns`. **So the servo returns a peer to the lead
+> it asked for**, rather than to zero - and a player who wants less asks for less lead, which is the
+> knob for exactly that. The cap also went from 20% to 200%: at 20% a tenth of a second took most of
+> a second to repay, slow enough that the next hiccup arrives first.
+
+### 13.4b The servo — as originally written
 
 **Catch-up landed as an engine-rate servo, and none of 13.4's three dangerous commits were needed.**
 6b-0 (death only leaving the world at end of frame), 6b-1 (`CreepIndex` keyed on the physics frame,

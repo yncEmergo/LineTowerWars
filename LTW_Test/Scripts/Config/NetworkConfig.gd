@@ -383,16 +383,32 @@ extends Resource
 ## visibly fast while this is working, and a tower defence fast-forwarded through
 ## a leak the player cannot react to is worse than the delay it is repaying.
 ##
-## Twenty percent is four extra turns a second at the authored rate, which
-## repays a typical two hundred millisecond hiccup in about a second - far
-## gentler than the fifty percent `netcode-rework.md` sizes as the ceiling, and
-## the conservative end is the right place to start from.
-@export_range(0, 100, 5) var catch_up_max_percent: int = 20
+## **Two hundred is three times speed, and the first value tried - twenty percent
+## - was far too timid.** A debt of a tenth of a second took most of a second to
+## repay, which is slow enough that a second hiccup arrives first and the player
+## never feels it come back. The gaps that occur in practice are one to three
+## tenths of a second, and at 3x those close in well under a tenth: invisible.
+##
+## **What bounds it is CPU, not taste.** The engine really does run this many
+## ticks a second while draining, on a machine that has just proved it was
+## struggling - and `CLAUDE.md` records twelve lanes already running about 2x
+## over the tick budget. A big multiplier on a big debt is how a struggling peer
+## is pushed into never recovering. The cap is what stops that, and it is the
+## reason this is not simply "catch up as fast as possible".
+@export_range(0, 900, 10) var catch_up_max_percent: int = 200
 
-## How much of that allowance each turn of excess backlog claims. Proportional
-## rather than all-or-nothing, so a peer one turn behind nudges and a peer far
-## behind takes the whole cap - and neither oscillates around the target.
-@export_range(1, 100, 1) var catch_up_percent_per_turn: int = 10
+## How much of that allowance each 100 ms of debt claims, so the response is
+## proportional and does not oscillate around the target: at the default a tenth
+## of a second behind asks for double speed and half a second asks for the cap.
+@export_range(1, 900, 10) var catch_up_percent_per_100ms: int = 100
+
+## How much slack to leave rather than drain, in milliseconds.
+##
+## **Not zero.** This is measured ON TOP of `sealed_lead_turns`, which is the
+## real cushion - so a small positive value is the margin that keeps the servo
+## from hunting, not the buffer that absorbs jitter. Forty milliseconds is what
+## a healthy peer was measured running at on a real link before it hitched.
+@export_range(0, 500, 5) var catch_up_target_ms: int = 40
 
 ## **DELIBERATELY THROWS AWAY THIS PERCENTAGE OF ARRIVING SEALS. Test only, and
 ## zero in anything anybody plays.**

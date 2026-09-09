@@ -140,6 +140,28 @@ const MEASURE_EVERY_FRAMES: int = 20
 ## it only fills if orders are sent and never sealed, which is a broken match.
 const MAX_PRESSES_HELD: int = 256
 
+## How many recent arrivals the catch-up servo steers on. About half a second.
+const CONTROL_SAMPLES: int = 12
+
+## How far past the target the debt must reach before catching up STARTS. It
+## stops at the target, so this is hysteresis and not a second threshold.
+const CATCH_UP_DEADBAND_MS: int = 30
+
+## How far BELOW the authored rate a peer may run to give margin back. Small on
+## purpose: this direction adds input delay, so it is a trim rather than a
+## manoeuvre, and it never has a debt to repay in a hurry.
+const CATCH_UP_MAX_SLOW_PERCENT: int = 10
+
+## How many buffered turns catch-up refuses to spend, whatever the debt says.
+##
+## **Not `sealed_lead_turns`, and the difference is the whole trade.** Stopping
+## at the configured lead leaves the debt unpaid - a peer sits at that buffer and
+## the delay it banked stays banked, which is the bug playtest 6 reported.
+## Spending the buffer to nothing repays it and then stalls on the next late
+## packet. One turn in hand is the middle: enough to cover ordinary jitter,
+## little enough that the debt actually comes back down.
+const CATCH_UP_FLOOR_TURNS: int = 1
+
 
 # --- local state, on every machine ----------------------------------------
 ## Orders this machine has issued that have not been sent yet, keyed by the
@@ -351,6 +373,11 @@ var _server_seq: int = 0
 ## Peer: the engine rate this machine last asked for, so the pacing is logged
 ## when it changes rather than on every tick that wants the same number.
 var _paced_at: int = 0
+
+## Peer: the cached median arrival slack and when it was last measured.
+var _catching_up: bool = false
+var _slack_cache: int = 0
+var _slack_measured_at: int = -1000
 
 ## Relay: the last few seals, re-sent unreliably. See `_seal_stream`.
 var _recent_seals: Array = []
@@ -1020,6 +1047,9 @@ func _reset_if_new_match() -> void:
 	_seal_wait_frames = 0
 	_server_seq = 0
 	_recent_seals.clear()
+	_catching_up = false
+	_slack_cache = 0
+	_slack_measured_at = -1000
 	_seals_recovered = 0
 	_seals_dropped = 0
 	_dropped_dice = 1
@@ -1886,21 +1916,92 @@ func _pace_engine() -> void:
 		return
 
 	var wanted: int = authored
+	var behind: int = 0
 	if _catch_up_enabled():
-		var excess: int = _sealed.size() - _sealed_lead_turns()
-		if excess > 0:
+		# **MILLISECONDS BEHIND, not turns buffered, and getting that wrong is
+		# what let a real match keep a debt the servo was built to repay.**
+		#
+		# The first version compared `_sealed.size()` against `sealed_lead_turns`
+		# and stopped the moment the buffer reached it. Two problems, both fatal
+		# and both invisible on loopback: the count is quantised to whole turns,
+		# so a debt smaller than one turn is unmeasurable; and the target was
+		# never what the peer had actually been running at. Playtest 6 is the
+		# case - a hitch at turn 1741 took the buffer from 0 to 2, which IS the
+		# configured lead, so the servo declared victory while the player kept
+		# 110 ms of delay for the remaining twenty minutes.
+		#
+		# `arrived - due` per seal is the honest signal: continuous, in the unit
+		# the player feels, and it is what the session log already reported while
+		# the servo was reading something else.
+		# **A deadband, or the servo hunts.** Catching up is entered only when the
+		# debt is clearly worth repaying and left as soon as the target is
+		# reached, so the rate does not chatter around the threshold - which on a
+		# buffer this small means alternating between draining and starving.
+		# **Two signals, and the fast one is what stops the servo overshooting.**
+		# The millisecond slack is a median over a dozen arrivals - about six
+		# tenths of a second - which is finer than a whole turn and is what
+		# playtest 6 needed. But a 900 ms hitch drains at the cap in about half
+		# a second, which is SHORTER than that window, so on a big debt the
+		# servo would still be at full speed when the debt was already gone.
+		#
+		# The buffered turn count has no window at all: it is what is sitting in
+		# the dictionary right now. Coarse - fifty milliseconds a step - and
+		# instant. Taking the larger of the two means a big debt is answered
+		# immediately and released immediately, while a debt smaller than one
+		# turn is still seen.
+		var buffered: int = maxi(0, _sealed.size() - _sealed_lead_turns()) 			* int(_engine_tick_seconds() * 1000.0) * _ticks_per_turn()
+		var slack: int = maxi(_relay_slack_ms(), buffered + _catch_up_target_ms())
+		if _catching_up:
+			_catching_up = slack > _catch_up_target_ms()
+		else:
+			_catching_up = slack > _catch_up_target_ms() + CATCH_UP_DEADBAND_MS
+		# **Catching up is CONSUMING A BUFFER, and with an empty one it is not
+		# possible at all.** A peer running at three times rate takes three seals
+		# a second while the relay produces one; the only place the other two can
+		# come from is what is already sitting in `_sealed`. Sprint past that and
+		# the peer simply arrives at an empty buffer sooner and stalls there,
+		# which is worse than the debt it was repaying - and the millisecond
+		# median cannot see it happening, because draining is faster than its
+		# own window.
+		#
+		# So the buffer is a hard gate rather than one input among two. This is
+		# the difference between seventeen stalls and one in an otherwise
+		# identical run.
+		if _sealed.size() <= CATCH_UP_FLOOR_TURNS:
+			_catching_up = false
+		behind = (slack - _catch_up_target_ms()) if _catching_up else 0
+		if behind > 0:
 			var percent: int = mini(
-				excess * _catch_up_percent_per_turn(), _catch_up_max_percent()
+				behind * _catch_up_percent_per_100ms() / 100, _catch_up_max_percent()
 			)
 			wanted = authored + int(float(authored) * float(percent) / 100.0)
+		elif slack < _catch_up_target_ms() - CATCH_UP_DEADBAND_MS:
+			# **And it must be able to run SLOW, or fixing the first bug creates
+			# its mirror.** A burst that overshoots leaves this machine playing
+			# TIGHTER than its target, with less margin than it started with -
+			# and a servo that can only speed up can never give that back, so the
+			# stalls it bought stay bought. Measured: a run that recovered its
+			# debt correctly still ended at 9 ms of slack against a 40 ms target
+			# and took seventeen stalls for it, where the healthy peer took one.
+			#
+			# Giving margin back is just running a little slow for a moment, and
+			# it is as safe as the other direction for the same reason: the
+			# simulation step is fixed, so only the wall-clock pacing moves.
+			var short: int = _catch_up_target_ms() - slack
+			var slow: int = mini(
+				short * _catch_up_percent_per_100ms() / 100, CATCH_UP_MAX_SLOW_PERCENT
+			)
+			wanted = authored - int(float(authored) * float(slow) / 100.0)
 
 	# Written only when it moves. Assigning every tick would be a property write
 	# on the hot path for nothing, and it makes the log below say something.
+	wanted = maxi(1, wanted)
 	if wanted == Engine.physics_ticks_per_second:
 		return
 	if wanted != authored && _paced_at != wanted:
 		SessionLog.note("lockstep.catchup", {
-			"rate": wanted, "authored": authored, "held": _sealed.size(),
+			"rate": wanted, "authored": authored,
+			"behind_ms": behind + _catch_up_target_ms(), "held": _sealed.size(),
 		})
 	_paced_at = wanted
 	Engine.physics_ticks_per_second = wanted
@@ -1932,14 +2033,59 @@ func _debug_seal_loss() -> int:
 	return 0 if config == null else clampi(config.debug_seal_loss_percent, 0, 100)
 
 
+## How far behind the seals this machine is playing, in milliseconds, as a median
+## over the arrival window.
+##
+## **The same numbers `arrival_leads()` reports**, which is deliberate: the
+## session log has carried this since phase 0 and it is what diagnosed the servo
+## reading the wrong thing. `arrived - due` is negative when a seal was waiting,
+## so the slack is its negation and a peer playing exactly on arrival reads zero.
+##
+## Cached on the same cadence as the local jitter percentile - sorting a couple
+## of hundred floats four times a second is nothing, and doing it every tick on
+## the hot path would be.
+func _relay_slack_ms() -> int:
+	if _frames - _slack_measured_at < JITTER_REFRESH_FRAMES:
+		return _slack_cache
+	_slack_measured_at = _frames
+
+	var relay: int = NetworkService.SERVER_PEER_ID
+	var seen: int = int(_leads_n.get(relay, 0))
+	if seen < CONTROL_SAMPLES:
+		_slack_cache = 0
+		return 0
+
+	# **The most recent samples only, and this is a CONTROL signal rather than a
+	# diagnostic one.** `arrival_leads()` reports a median over two hundred, which
+	# is ten seconds - fine for a log line and hopeless to steer on. Driving the
+	# engine rate from a ten-second median put six seconds of phase lag in the
+	# loop, so the servo overshot, emptied the buffer, stalled, refilled and did
+	# it again: 188 stalls in a minute where the unpaced build had ten.
+	#
+	# A dozen samples is about half a second - long enough to ignore one late
+	# packet, short enough that the thing being corrected is still true.
+	var ring: PackedFloat32Array = _leads[relay]
+	var window: Array[float] = []
+	for back: int in range(CONTROL_SAMPLES):
+		window.append(ring[(seen - 1 - back) % LEAD_SAMPLES])
+	window.sort()
+	_slack_cache = maxi(0, -int(window[CONTROL_SAMPLES / 2]))
+	return _slack_cache
+
+
+func _catch_up_target_ms() -> int:
+	var config: NetworkConfig = _config()
+	return 40 if config == null else maxi(0, config.catch_up_target_ms)
+
+
 func _catch_up_max_percent() -> int:
 	var config: NetworkConfig = _config()
 	return 20 if config == null else maxi(0, config.catch_up_max_percent)
 
 
-func _catch_up_percent_per_turn() -> int:
+func _catch_up_percent_per_100ms() -> int:
 	var config: NetworkConfig = _config()
-	return 10 if config == null else maxi(1, config.catch_up_percent_per_turn)
+	return 100 if config == null else maxi(1, config.catch_up_percent_per_100ms)
 
 
 func _sealed_lead_turns() -> int:
