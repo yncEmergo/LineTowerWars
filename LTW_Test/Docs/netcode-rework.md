@@ -1182,30 +1182,38 @@ recalled. Where a source is second-hand it says so.
 
 ## 13. Phase 6 in full — explicit simulation stepping, then catch-up
 
-> **DECIDED 2026-09-09, after the measurement below: do neither of these yet, and when they are
-> wanted, take the servo road rather than this one.**
+> **DECIDED 2026-09-09, and CORRECTED the same day. Phase 6 is needed. Take the servo road first.**
 >
-> This section is thorough and its audit is worth keeping — but it was written against a lead that
-> grows without bound, and `Findings/2026-09-09-sealed-stream-on-two-machines.md` shows the lead is
-> flat. What it actually costs a slow machine is **one 200 ms hiccup, banked once and never given
-> back**. Three consequences:
+> The first version of this note said the measurement had half-met 13.7's abandon condition and that
+> nothing was needed for the 1v1 milestone. Both halves of that were wrong, and
+> `Findings/2026-09-09-sealed-stream-on-two-machines.md` carries the correction: the laptop's lead
+> was flat because only one hiccup occurred in the sample, not because anything drains it. **A
+> banked turn is banked for the life of the match**, so the delay accumulates at whatever rate the
+> machine hiccups. Amendment 10 stands.
 >
-> 1. **Nothing is needed for the 1v1 milestone.** 105 ms on the healthy machine and 300 ms on a
->    genuinely old laptop is a playable match, and the milestone is a 1v1 prototype. Phase 6 buys
->    smoothness on hardware nobody has committed to supporting.
-> 2. **When it IS wanted, an engine-rate servo drains a four-turn buffer in about four seconds at
->    5% over rate, and needs only the DELTA refactor** — every gameplay loop reading a fixed
->    simulation step instead of `delta`. It does not need the dispatch change this section is built
->    around, which exists to run several turns inside one frame and is only worth its risk against a
->    backlog that grows.
-> 3. **The delta refactor is the shared prerequisite of both roads**, so doing it first is never
->    wasted if the dispatch change is later wanted for the twelve-player budget — which is where it
->    belongs, beside the spatial hash, rather than in the netcode.
+> **And the milestone argument no longer applies at all**: 1v1 and 4-player FFA matches have now
+> been played end to end, so the work is optimising the netcode rather than reaching playability.
 >
-> **What does NOT change is 13.2.** A missed delta site diverges two peers under a servo exactly as
-> it does under multi-stepping — one machine at 21 Hz and one at 20 advance that loop differently —
-> so the falsifier work, and the sabotage matrix that proves the falsifier can actually see a
-> disabled loop, is required before either road. That is the real prerequisite and it is unchanged.
+> What the measurement DOES settle is the drain rate needed. The debt arrives in ~200 ms lumps, so a
+> peer must recover a handful of turns over seconds rather than tens of turns inside one frame.
+> **Both roads reach that rate**: an engine-rate servo at 5-20% over drains 1-4 turns a second, and
+> explicit multi-stepping at 1.2 turns per tick drains 4. So the choice is not about capability:
+>
+> - **The servo needs only the DELTA refactor** — every gameplay loop reading a fixed simulation
+>   step instead of `delta`. It does not need the dispatch change this section is built around.
+> - **The dispatch change buys a second thing the servo does not**: it is also the fix `CLAUDE.md`
+>   names for the per-unit tick budget, which now matters, because four-player matches are real and
+>   twelve is the target.
+> - **The delta refactor is the shared prerequisite of both**, so it is never wasted.
+>
+> **So: 13.2, then the delta refactor, then choose with real information.** Do not choose now — after
+> the delta refactor the servo is a small increment, and whether the dispatch change earns its risk
+> is a question about the tick budget at higher player counts, which is measurable by then.
+>
+> **What does NOT change either way is 13.2.** A missed delta site diverges two peers under a servo
+> exactly as under multi-stepping — one machine at 21 Hz and one at 20 advance that loop differently
+> — so the falsifier work, and the sabotage matrix proving the falsifier can actually see a disabled
+> loop, comes before either road. That is the real prerequisite and it is unchanged.
 
 Written 2026-09-09 from a full audit of every `_physics_process` and `_process` in `Scripts/`, two
 independently drafted designs and an adversarial review of each. **This supersedes the Phase 6 stub

@@ -6,6 +6,12 @@ reason worth keeping; the fourth is the one the whole netcode rework was built t
 
 Builds `79742d9` (legacy) and `14b931a` (sealed). Both players' session logs captured every time.
 
+**This document was corrected the same day it was written.** The first version concluded from a
+flat backlog that a peer's input delay does not accumulate, and therefore that phase 6's catch-up
+was unnecessary. It does accumulate; the sample simply contained one hiccup. The section marked
+*The correction* says how the wrong answer was reached, because the method looked sound and would
+produce it again.
+
 ## The headline
 
 **A peer that hitches no longer freezes anybody else, and the machine that hitches pays for it
@@ -60,7 +66,11 @@ turn:   0   100  200  300  400  500  600  700  800  900
 held:   0    4    4    4    4    4    4    4    3    4
 ```
 
-It reaches 4 and **stays there for 835 turns**, dipping to 3 once. It does not accumulate.
+It reaches 4 and **stays there for 835 turns**, dipping to 3 once.
+
+**The first version of this document read that flat line as "the lead does not accumulate", and
+that was wrong.** See *The correction*, below: it is flat because no third hiccup happened in that
+minute, not because anything gives the delay back.
 
 And the log says exactly where it came from:
 
@@ -130,6 +140,34 @@ the code comments in advance, described there as "loud rather than silent" becau
 at turn 0 and say so. They did say so — in a session log nobody reads during a playtest. What the
 player saw was a frozen game. A failure is only loud if it is loud where somebody is looking.
 
+## The correction
+
+The first version of this document concluded from the flat line above that the lead does not grow,
+and therefore that phase 6b solves a problem the game does not have. **That is not what the data
+says.**
+
+The laptop stalled exactly twice: once at match start and once at turn 65. The buffer went to 4 at
+turn 65 and never moved again **because no third stall happened in the remaining forty-two
+seconds**. Nothing drained it and nothing was capable of draining it — a peer runs at most one turn
+per tick, so a banked turn is banked for the life of the match.
+
+So the flat line is not the steady state. It is a sample containing one event. **Each hiccup banks
+its own delay permanently**, and a twenty-minute match with ten of them carries two seconds of input
+delay by the end, with the last order of the match answering two seconds after the press.
+
+That is amendment 10 stated exactly as it always was, and the measurement confirms rather than
+refutes it. What the run establishes is the SIZE of one bank — 200 ms for a 200 ms hiccup, one for
+one — not that banking stops.
+
+**How the wrong answer was reached, since the method looked sound:** the abandon condition in
+`netcode-rework.md` 13.7 was written as "the lead never grows", a flat line was observed, and the
+condition was marked met. The condition was the problem — over one minute with one hiccup, a lead
+that grows once per hiccup and a lead that never grows produce *identical* graphs. A test that
+cannot tell two hypotheses apart has not chosen between them, which is this project's own
+peer-list rule reached through a time window instead of a topology. The right condition names a
+RATE: accumulated lead per match minute, measured over a match long enough to contain several
+hiccups.
+
 ## What this does NOT establish
 
 **Both machines are on one home connection.** Their round trips to the relay are real internet
@@ -147,9 +185,14 @@ stall looks like. A long run is what would separate them.
 
 ## What it changes
 
-The phase 6 plan (`netcode-rework.md` section 13) was written before this run and is built around a
-lead that grows without bound. **It does not grow.** Section 13.7 lists that exact outcome as an
-abandon condition, and half of it is now met.
+**Catch-up is confirmed necessary, not ruled out.** One 200 ms hiccup cost 200 ms of permanent
+input delay, and the mechanism that would give it back does not exist. Every further hiccup does the
+same. Phase 6's purpose stands exactly as `netcode-rework.md` section 13 states it.
 
-What is left is smaller and much better defined: **one machine banked 200 ms at a single hiccup and
-has no way to give it back.** The plan's own note at 13.7 carries the reframing.
+What the run DOES narrow is the required drain RATE. The debt arrives in ~200 ms lumps at whatever
+rate a machine hiccups, so a peer needs to recover a handful of turns over seconds — not tens of
+turns in one frame. Both roads reach that: an engine-rate servo at 5-20% over rate drains 1-4 turns
+a second, and explicit multi-stepping at 1.2 turns per tick drains 4. **They are equivalent at the
+rate that is actually needed**, and the servo gets there with the delta refactor alone.
+
+That is the live question the plan's own note at section 13 now carries.

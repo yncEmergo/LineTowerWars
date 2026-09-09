@@ -3,7 +3,12 @@
 - The goal is to make a standalone version of the Warcraft III custom Map "Line Tower Wars"
 - It's a PvP tower defence game with 2-12 players where players have to send creeps and defend against creeps from other players
 - Game name: to be decided.
-- The first major milestone and for now the only one is a prototype where 1v1 gameplay can be tested. No need for 3+ player FFA gameplay yet-
+- The 1v1 prototype milestone is MET as of 2026-09-09: 1v1 and up to 4-player FFA
+  matches have been played end to end over the network. The work now is OPTIMISING
+  the netcode rather than reaching playability, so a change is judged against what
+  it costs a real match rather than against whether a match is possible at all
+- Player counts above four are still unproven, and the per-unit simulation cost is
+  what limits them. See Known weaknesses
 
 # Hard rules
 - you're here to implement the game not design it

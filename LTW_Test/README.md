@@ -8,8 +8,9 @@ Built with **Godot 4.7**, targeting PC (keyboard & mouse).
 
 ## Status
 
-Pre-alpha. The current and only milestone is a **1v1 prototype**. Free-for-all with 3+
-players is out of scope until that works.
+Pre-alpha. The **1v1 prototype milestone is met** - 1v1 and up to 4-player free-for-all
+matches have been played end to end over the network, on two physical machines against a
+rented server. The work now is making the netcode good rather than making it work.
 
 **It is networked and playable.** A dedicated server hosts lobbies and relays the match; two
 clients join, build, send creeps at each other, steal lives and finish with a placement. A
