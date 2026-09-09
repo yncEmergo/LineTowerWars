@@ -13,20 +13,28 @@
 # overwritten by the next run and leaves that unit the only one disagreeing.
 # See PLACEHOLDER_ART.md section 0.
 #
-# STYLE: "faceted arcane machinery". Every tower is a low segment-count solid -
-# six and eight sided cylinders, boxes, prisms, low-ring spheres - standing on
-# the shared stone foundation patch, lit by one plating shader and accented by
-# one energy shader.
+# STYLE: "timber, stone and iron". Every tower is a low segment-count solid -
+# four, six and eight sided cylinders, boxes, prisms, low-ring spheres -
+# standing on the shared foundation patch, and built out of THREE surfaces
+# rather than one: tower_timber, tower_masonry and tower_iron, with a small
+# matte tower_paint accent and the lit tower_energy one.
+#
+# THE ROSTER USED TO BE FACETED ARCANE MACHINERY IN METAL, and both halves of
+# that changed at once. The user asked for the Basic towers to read as ordinary
+# tower-defence towers - the watchtowers of Warcraft III and Age of Empires -
+# and asked for the metal rings to come off. Those two turn out to be one
+# change, because the rings WERE the tier ladder. See THE TIER LADDER below.
 #
 # Three questions the silhouette has to answer from a top down camera, and the
 # axis each one is answered on:
 #
-#   WHICH LINE     colour and stance. Archer is tall and thin in steel blue,
-#                  Cutter is squat and wide in rust, Sentry floats in violet.
+#   WHICH LINE     stance and construction, plus one small painted accent.
+#                  Archer is a tall square watchtower, Cutter is a squat iron
+#                  machine, Sentry is a round tower holding something lit.
 #   WHICH BRANCH   one decisive shape at the 150g split, and it never changes
-#                  again up the branch: a long barrel, a tilted mortar, a
-#                  spinning blade disc, an overhead hammer, an orbiting core,
-#                  a rack of tubes aimed at the sky.
+#                  again up the branch: a bolt-thrower in an open gallery, a
+#                  fat mortar barrel, a spinning saw, a dropping weight, an
+#                  orb on a crown, a rack of tubes aimed at the sky.
 #   WHICH TIER     six cumulative rules, below. This is the part a 3D artist
 #                  should keep when the primitives are replaced.
 #
@@ -34,19 +42,41 @@
 # 1,000 / 5,000 / 25,000), not on the position in a branch. A Lesser Watch
 # Tower is the third rung of six overall, and reads as one:
 #
-#   1. MASS     the whole tower scales up a little each tier
-#   2. TRIM     the metal ramps iron -> pale iron -> bronze -> silver -> gold
-#               -> white gold. This is the primary tier tell and it works at
-#               any distance, in any light, on any shape
-#   3. ENERGY   the accent brightens and its pulse quickens, driven by one
-#               `tier` uniform on tower_energy.gdshader
-#   4. COLLAR   from 150g up, a trim ring under the head
-#   5. CROWN    from 5,000g up, fins around the shoulder
-#   6. HALO     at 25,000g, a trim ring floating above the tower, turning
+#   1. MASS      the whole tower scales up a little each tier
+#   2. MATERIAL  a tower is TIMBER and turns to STONE as it is bought up: the
+#                masonry climbs the tower from its footing and the timber is
+#                pushed up into the gallery and the roof. The Cutter line
+#                answers this differently, in iron - see BASIC_SURFACES
+#   3. TINT      each surface darkens and enriches up the ladder, which is the
+#                trick the source game uses and it works at any distance, in
+#                any light, on any shape. THE PRIMARY TIER TELL
+#   4. PARAPET   from 150g up, a projecting gallery; from 1,000g the corbels
+#                that carry it
+#   5. CROWN     from 5,000g up, the top of the tower changes shape
+#   6. PENNANT   at 25,000g, painted cloth on a mast, and it moves
 #
 # Rules 1-3 are continuous and rules 4-6 are steps, on purpose: the continuous
 # ones keep every tier distinguishable from its neighbour, and the stepped ones
 # make the expensive ones distinguishable across a whole map.
+#
+# WHAT THE METAL LADDER COST, and why it is worth knowing before somebody puts
+# it back. The roster used to ramp one trim metal over six rungs - iron, pale
+# iron, bronze, silver, gold, white gold - and hang it on the model as a base
+# ring, a collar, bolts, crown fins and a turning halo. It had exactly the two
+# faults the ELEMENTAL roster's own metal ladder had, found there first and
+# written up in THE PATH LADDER below:
+#
+#   - the metal was the LOUDEST thing on every tower, so it sat on top of the
+#     answer to "what is this" with the answer to "how expensive is this". A
+#     ladder is the secondary question and must not win
+#   - two neighbouring rungs of a six step metal ramp are nearly the same
+#     colour, so the thing being shouted was also the thing hardest to read
+#
+# The elemental fix was to put the ladder into the tower's OWN material, and
+# that is what rules 2 and 3 above now are. It could not have been done for the
+# Basic roster while that roster's material was one grey plate; it is available
+# now because a tower made of timber and stone has two materials, a boundary
+# between them that can move, and a tint that can ramp.
 
 import colorsys
 import math
@@ -55,15 +85,155 @@ import math
 # scales on.
 PRICE_TIERS = [10, 30, 150, 1000, 5000, 25000]
 
-# Rule 2. Iron to white gold.
-TRIM_RAMP = [
-    (0.37, 0.40, 0.44),
-    (0.52, 0.55, 0.59),
-    (0.66, 0.45, 0.18),
-    (0.76, 0.80, 0.86),
-    (0.90, 0.74, 0.33),
-    (1.00, 0.94, 0.72),
+# --- rule 2: the three surfaces a Basic tower is built out of ---------------
+#
+# ONE timber, ONE masonry and ONE iron for the WHOLE Basic roster, rather than
+# a palette per line. That is a deliberate reversal: the roster used to be told
+# apart by material - pale stone Archer, dark timber Cutter, bone Sentry - and
+# the material axis has been handed over to the TIER instead, because a tower
+# that visibly turns from wood into stone as it is bought up says more, more
+# often, to more players than three greys ever did.
+#
+# WHAT PAYS FOR IT is that the lines now answer on SHAPE, which they always
+# partly did, plus one small painted accent each - see LINES. That was the
+# user's call and it is the right one for this roster: a square watchtower, a
+# squat iron saw and a round tower with a lit orb are not confusable at any
+# distance a player actually plays at, where three shades of grey were.
+#
+# Each surface is authored as a MID, a DARK and a LIGHT, which is what the
+# three shaders take: the mid is the average face, the dark is what mortar,
+# seams, shaded sides and the damp foot fall towards, and the light is the top
+# of the scatter. The shaders scatter every block and every plank between the
+# dark and the light, which is where nearly all of the life in them comes from
+# and is why a flat mid colour is not enough on its own.
+BASIC_SURFACES = {
+    # Sawn softwood. Pale and raw at the cheap end of the ladder, oiled and
+    # near-black at the top - though by the top there is very little of it
+    # left, because the stone has climbed over almost all of it.
+    "timber": {
+        "mid": (0.56, 0.42, 0.27),
+        "dark": (0.29, 0.21, 0.13),
+        "light": (0.72, 0.57, 0.37),
+        "rim": (1.00, 0.92, 0.78),
+    },
+    # Quarried block. Rough pale limestone at 150g, dark dressed granite by
+    # 25,000g. Kept close to neutral on purpose: it is the biggest surface on
+    # the expensive half of the roster, and a large warm or cool field would
+    # be competing with the ten elements for exactly the signal they own.
+    "masonry": {
+        "mid": (0.60, 0.59, 0.55),
+        "dark": (0.33, 0.32, 0.30),
+        "light": (0.76, 0.75, 0.70),
+        "rim": (0.94, 0.94, 0.90),
+    },
+}
+
+# The metal a tower's WORKING PART is made of, one rung per PRICE tier: the
+# blade a Cutter turns, the tubes an anti-air rack fires, the weight a Stomper
+# drops, the barrel a Cannon shoots down, and the machinery each of them is
+# bolted to.
+#
+# THE ONE PLACE THE TIER LADDER IS ALLOWED A COLOUR, and it is the user's own
+# idea - copper through to steel. What makes it safe next to ten elements is
+# that every rung reads as a METAL rather than as a colour: nobody looks at
+# copper and thinks "fire", because the thing it says is what the object is
+# made of. Compare the paint, which is safe for the opposite reason - it is
+# matte where an element is lit.
+#
+# It is authored as six palettes rather than as a gain on one, because a metal
+# ramp is not a value ramp: copper is not dark bronze and steel is not pale
+# copper. Each rung is its own material and the HUE moves, which is exactly
+# what a value ramp may never do.
+#
+# Read down the mid column and the ladder is legible as a sentence: raw iron,
+# cast iron, copper, bronze, steel, polished steel. A player who has never
+# thought about it still knows the last one is worth more than the first.
+METAL_RAMP = [
+    # 10g - raw dark castings, barely finished
+    {"mid": (0.30, 0.31, 0.34), "dark": (0.14, 0.15, 0.17),
+     "light": (0.46, 0.47, 0.51)},
+    # 30g - cast iron
+    {"mid": (0.39, 0.40, 0.43), "dark": (0.18, 0.19, 0.21),
+     "light": (0.56, 0.57, 0.61)},
+    # 150g - copper
+    {"mid": (0.62, 0.36, 0.21), "dark": (0.30, 0.17, 0.10),
+     "light": (0.84, 0.56, 0.35)},
+    # 1,000g - bronze
+    {"mid": (0.70, 0.56, 0.27), "dark": (0.34, 0.26, 0.12),
+     "light": (0.90, 0.78, 0.47)},
+    # 5,000g - steel
+    {"mid": (0.52, 0.55, 0.61), "dark": (0.24, 0.26, 0.30),
+     "light": (0.75, 0.79, 0.85)},
+    # 25,000g - polished steel
+    {"mid": (0.71, 0.75, 0.81), "dark": (0.37, 0.40, 0.45),
+     "light": (0.92, 0.95, 1.00)},
 ]
+
+# Metal's rim light, which is the same at every rung: what says "metal" is the
+# TIGHTNESS of the edge highlight rather than its colour.
+METAL_RIM = (0.92, 0.96, 1.00)
+
+# The three tones every surface is written at, as a gain on its VALUE.
+#
+# `body`, `deep` and `pale` mean here exactly what they mean in modelkit: the
+# bulk, the part carrying weight, and the part catching light. What is new is
+# that they are DERIVED rather than authored - one surface, three depths of it
+# - so retuning the timber moves its plinth and its gallery together and they
+# cannot drift apart the way three hand-picked colours would.
+TONE_GAIN = {"base": 1.0, "deep": 0.74, "pale": 1.12}
+
+# --- rule 3: the tint ramp, one rung per price tier -------------------------
+#
+# (value gain, saturation gain), applied through _with_headroom so a colour
+# that has already spent its darkness keeps it. See that function - a flat
+# multiply is wrong at BOTH ends of a palette and it cost a rebake to find out
+# on the elemental roster.
+#
+# THE THREE RAMPS DELIBERATELY DO NOT ALL POINT THE SAME WAY. Timber and stone
+# DARKEN and enrich, which is the source game's own trick and reads instantly.
+# Iron BRIGHTENS, because rough cast iron polishing up into bright steel is
+# what a machine getting better actually looks like, and because a roster where
+# every material does the same thing on the same beat is a roster with one idea
+# in it. The user's brief said as much: it does not have to be darker in every
+# case.
+# TIMBER STOPS DARKENING at the top, and that is deliberate rather than lazy.
+# It follows the stone down for the cheap half of the ladder, where the timber
+# IS the tower - but the stone below keeps going and the timber does not, so by
+# 25,000g a pale gallery sits on near-dark masonry. That contrast is the whole
+# reason an Ultimate's woodwork is still visible at all, and without it the two
+# materials converge exactly where the roster most needs them apart.
+TIMBER_RAMP = [
+    (1.18, 0.70),
+    (1.00, 1.00),
+    (0.97, 1.06),
+    (0.94, 1.10),
+    (0.93, 1.12),
+    (0.93, 1.14),
+]
+
+# THE LOUDEST RUNG OF THE WHOLE LADDER, and it was three times too quiet on the
+# first pass: pale limestone to dark warm grey, roughly a 60% drop in value
+# across the four tiers that use it. That first version spanned about 15% and
+# it was the direct cause of a Lesser, a normal and a Greater tower of the same
+# branch being indistinguishable - reported on four branches independently.
+#
+# It stops at a dark warm grey rather than at black, which was a deliberate
+# choice: an Ultimate has to still read as MASONRY, and its timber gallery, its
+# paint and its lit accent all have to keep their contrast against it. A
+# silhouette is not a tier tell, it is the absence of one.
+MASONRY_RAMP = [
+    (1.16, 0.80),
+    (1.08, 0.90),
+    (1.00, 1.00),
+    (0.80, 1.06),
+    (0.64, 1.12),
+    (0.50, 1.16),
+]
+
+# What goes into tower_iron.gdshader's `polish`. It raises the sheen, tightens
+# the brushing and takes the casting pits away, so the metal is visibly better
+# WORKED as it climbs as well as being a different metal - see METAL_RAMP.
+IRON_POLISH = [0.08, 0.20, 0.36, 0.54, 0.74, 0.94]
 
 # Line identity.
 #
@@ -74,62 +244,101 @@ TRIM_RAMP = [
 # happens to land on the same green as a tower line is a decision somebody
 # should have to make on purpose.
 #
-# THE BASIC ROSTER IS DELIBERATELY COLOURLESS: stone grey through to light
-# timber brown, with metal trim and a small warm accent. It has to be, because
-# the ten ELEMENTS arriving later each own a hue - fire, ice, void, holy - and
-# they can only read as elements if the towers a player has been looking at
+# THE BASIC ROSTER IS DELIBERATELY ALMOST COLOURLESS: timber brown through
+# stone grey and iron, with ONE small painted accent and one small lit one. It
+# has to be, because the ten ELEMENTS each own a hue - fire, ice, void, holy -
+# and they can only read as elements if the towers a player has been looking at
 # since the first minute of the match are not competing for the same signal.
 #
-# So a Basic line is told apart by SHAPE and by MATERIAL, never by colour:
-#   Archer   pale quarried stone, steel fittings   - square, tall and thin
-#   Cutter   dark timber and iron                  - round, squat and wide
-#   Sentry   pale sandstone, bone-coloured         - open frames, floating
+# So a Basic line is told apart by SHAPE first, and by its accent second:
+#   Archer   square, tall and thin        - a watchtower, indigo paint
+#   Cutter   hexagonal, squat and wide    - an iron machine, oxide red paint
+#   Sentry   round, open, holding a light - verdigris paint
 #
-# THREE TONES PER LINE, not one. A tower built out of a single material reads
-# as one lump from a top down camera however good its silhouette is - the
-# facets have nothing to catch against each other. So every line carries a
-# base, a DEEP tone for the parts that sit low or carry weight, and a PALE one
-# for the parts that stick out or catch the light. They are the same material
-# at three depths rather than three materials, which is what keeps a tower
-# looking like one object while still having parts.
+# WHY THE PAINT IS SAFE NEXT TO TEN ELEMENTS, which is the question to ask of
+# any colour added to this roster. It is not the hue: the ten elements between
+# them cover very nearly the whole wheel and a fourth blue was always going to
+# land near one of them. It is that AN ELEMENT IS LIT AND PAINT IS NOT. Every
+# elemental accent goes through tower_energy.gdshader, which emits, pulses and
+# surges; paint goes through tower_paint.gdshader, which is matte, sits in the
+# same light as the stone beside it, and never moves. A deep indigo pennant and
+# an Ice tower's accent can share a hue and never be confused.
 #
-# Each tone is (plate, dark): the body colour, and the shade the plating shader
-# streaks it with and drops its undersides towards.
+# The three are also chosen against EACH OTHER - a dark blue, a dark red and a
+# dark blue-green, well apart in hue and all at much the same low value, so no
+# one line reads as the expensive one.
+#
+# Each entry is:
+#   sides   the base shape's side count. Part of the line's identity and never
+#           a default: a roster where every tower is a round drum on a round
+#           plinth reads as one tower at nine sizes
+#   paint   (colour, shade) for the matte accent
+#   glow    the small lit accent, and `dim` the colour it falls to between
+#           pulses. UNCHANGED from the roster this replaces - these three were
+#           already chosen against the ten elements and there was no reason to
+#           move them
 LINES = {
     "archer": {
-        "tones": {
-            "base": ((0.58, 0.59, 0.57), (0.34, 0.35, 0.34)),
-            "deep": ((0.43, 0.45, 0.48), (0.25, 0.27, 0.30)),
-            "pale": ((0.71, 0.70, 0.65), (0.46, 0.45, 0.41)),
-        },
+        # A watchtower is a square tower, and this is the only line tall
+        # enough for the corners to read from above.
+        "sides": 4,
+        "paint": ((0.27, 0.33, 0.54), (0.13, 0.16, 0.29)),
         "glow": (0.92, 0.96, 1.00),
         "dim": (0.30, 0.33, 0.36),
-        "rim": (1.00, 1.00, 0.98),
     },
     "cutter": {
-        "tones": {
-            "base": ((0.56, 0.49, 0.40), (0.33, 0.29, 0.23)),
-            "deep": ((0.37, 0.33, 0.30), (0.21, 0.19, 0.17)),
-            "pale": ((0.67, 0.58, 0.44), (0.43, 0.37, 0.28)),
-        },
+        # Chunky machinery, still round enough to spin on.
+        "sides": 6,
+        "paint": ((0.52, 0.26, 0.16), (0.27, 0.13, 0.08)),
         "glow": (1.00, 0.80, 0.48),
         "dim": (0.34, 0.24, 0.14),
-        "rim": (1.00, 0.94, 0.84),
     },
     "sentry": {
-        "tones": {
-            "base": ((0.64, 0.61, 0.54), (0.39, 0.37, 0.32)),
-            "deep": ((0.47, 0.46, 0.44), (0.28, 0.27, 0.26)),
-            "pale": ((0.75, 0.72, 0.63), (0.49, 0.47, 0.41)),
-        },
+        # Open frames and a lit orb, which want no corners.
+        "sides": 8,
+        "paint": ((0.19, 0.42, 0.39), (0.09, 0.21, 0.20)),
         "glow": (1.00, 0.94, 0.74),
         "dim": (0.36, 0.33, 0.25),
-        "rim": (1.00, 0.99, 0.92),
+        # THE ONE LINE WHOSE LIT ACCENT RAMPS, because on this line the accent
+        # is the biggest object on the model - the orb IS the tower - so it is
+        # the strongest tell available and the cheapest to read. Deep amber
+        # through to a cold white, which is a heat scale rather than a hue
+        # wheel: a player reads it as the thing getting HOTTER, and a scale is
+        # far easier to order at a glance than six unrelated colours.
+        #
+        # THE COLD END IS THE RISK and it was taken deliberately. Ice and
+        # Lightning both own a pale blue-white, and unlike the matte paint this
+        # one GLOWS, which is the property that was keeping Basic accents off
+        # elemental ground. It stops short of their saturation and stays inside
+        # a white rather than reaching for a blue; if a Defender and an Ice
+        # tower ever read as the same thing, this is the table to pull back.
+        "glow_ramp": [
+            (1.00, 0.68, 0.30),
+            (1.00, 0.80, 0.44),
+            (1.00, 0.90, 0.66),
+            (1.00, 0.97, 0.90),
+            (0.90, 0.95, 1.00),
+            (0.80, 0.90, 1.00),
+        ],
     },
 }
 
 # The tone names, in the order the materials are written.
 TONES = ("base", "deep", "pale")
+
+# Rule 3 for the PAINT, which ramps like the surfaces do - and which starts at
+# NOTHING. A 10g tower carries no paint at all, exactly as it used to carry no
+# metal at all, so the first upgrade a player ever buys is still the one they
+# can see from across the map. From 30g up it goes from weathered and thin to
+# deep and freshly laid.
+PAINT_RAMP = [
+    None,
+    (0.74, 0.58),
+    (0.87, 0.74),
+    (1.00, 0.90),
+    (1.10, 1.02),
+    (1.19, 1.12),
+]
 
 
 # Rule 1a. Multiplies every authored WIDTH and DEPTH.
@@ -138,7 +347,7 @@ TONES = ("base", "deep", "pale")
 # maze reads as one continuous wall, so even the biggest stays well inside its
 # own cell.
 def mass(ti):
-    return round(0.82 * pow(1.0756, ti), 4)
+    return round(0.9716 * pow(1.05, ti), 4)
 
 
 # Rule 1b. Multiplies every authored HEIGHT, and is deliberately a SEPARATE
@@ -149,10 +358,34 @@ def mass(ti):
 # footprint with something on it rather than a tall object. The first pass got
 # this wrong in both directions at once - the towers were too tall AND their
 # tiers were too close together - so this ramp is both lower and steeper than
-# the width one: the tallest is about half what it was, and an Ultimate is now
-# a little over 1.7x its Lesser rather than 1.4x.
+# the width one.
+#
+# CAPPED AT UNDER 10% A RUNG, which is the user's number and is what brought
+# the RATE down from the 11.4% it was authored at. An Ultimate still stands a
+# little over 1.6x its Lesser, because six rungs of anything compound; what the
+# cap buys is that no SINGLE upgrade is a step change in size, which would
+# compete with the material and the tint for the same job.
+#
+# THE FLOOR WENT UP even as the rate came down, and the two are separate
+# decisions. The old roster was arcane machinery - squat drums, where the
+# advice "a top down tower wants to be a footprint with something on it" is
+# exactly right. This one is WATCHTOWERS, and a watchtower that is wider than
+# it is tall is a bunker: the first pass at these shapes came out as a field of
+# pancakes with the gallery, the parapet and the whole timber-to-stone boundary
+# squashed into a few pixels of height. Verticality is not decoration here, it
+# is where four of the six ladder rungs are drawn.
 def height_scale(ti):
-    return round(0.42 * pow(1.1144, ti), 4)
+    scale = 0.666 * pow(1.05, ti)
+    # THE TOP RUNG GETS A FIFTH MORE THAN THE RAMP GIVES IT, in height only.
+    # An Ultimate is the one tower a player builds knowing it is the last thing
+    # they will ever build on that square, and with the size ladder deliberately
+    # this quiet it needs one thing that is unambiguously bigger. Height rather
+    # than width because the footprint is a rule - every tower owns one cell -
+    # and because height is what the parapet, the crown and the pennant are all
+    # drawn in.
+    if ti == len(PRICE_TIERS) - 1:
+        scale *= 1.05
+    return round(scale, 4)
 
 
 # Rule 3. What goes into the energy material's `tier` uniform.
@@ -160,30 +393,36 @@ def energy_tier(ti):
     return round(ti / (len(PRICE_TIERS) - 1.0), 3)
 
 
-# Rules 4-7, the STEPPED half of the ladder.
+# Rules 4-6, the STEPPED half of the ladder.
 #
 # Every rung adds a piece the rung below it does not have, so a tier is
 # readable by counting details and not only by reading a colour:
 #
-#   10g      bare. No metal on it at all
-#   30g      + the base trim ring, which is its first metal
-#   150g     + a collar under the head
-#   1,000g   + bolts around the shoulder
-#   5,000g   + crown fins
-#   25,000g  + a turning halo
+#   10g      bare. No paint, no stone, no gallery
+#   30g      + paint, its first colour
+#   150g     + a projecting parapet or gallery, and the stone it stands on
+#   1,000g   + the corbels that carry the parapet
+#   5,000g   + a crown: the top of the tower changes shape
+#   25,000g  + a pennant, and it moves
 #
-# The 10g rung having NO trim ring is what makes the first upgrade a player
-# ever buys the most visible one in the game, which is worth more than the
-# consistency of every tower carrying the same ring.
-def has_base_trim(ti):
+# The 10g rung having NO paint is what makes the first upgrade a player ever
+# buys the most visible one in the game. It is exactly the job the missing trim
+# ring used to do and it is kept for exactly that reason.
+#
+# EVERY ONE OF THESE IS BUILT OUT OF THE TOWER'S OWN MATERIALS - a stone
+# corbel, a timber gallery, a painted board - rather than out of a separate
+# accent material. That is the whole difference from the ladder this replaces,
+# where each rung was another piece of metal and the metal ended up being the
+# only thing anybody saw.
+def has_paint(ti):
     return ti >= 1
 
 
-def has_collar(ti):
+def has_parapet(ti):
     return ti >= 2
 
 
-def has_bolts(ti):
+def has_corbels(ti):
     return ti >= 3
 
 
@@ -191,14 +430,94 @@ def has_crown(ti):
     return ti >= 4
 
 
-def has_halo(ti):
+def has_pennant(ti):
     return ti >= 5
 
 
-# How many repeated features a branch shows at each price tier: blades on a
-# Carver, shards around a Defender, tubes on a Turret, buttresses on a Cannon.
-# The 10g and 30g stubs never reach these branches, so the first two entries
-# only matter to the lines that do use them.
+# Rule 2. How far up a tower the masonry has climbed, as a share of its height.
+#
+# THE BOUNDARY IS THE TIER TELL, and it is the one this roster gained that no
+# roster in the game had before: a player watching a tower they just paid for
+# sees the stone rise and the timber retreat into the gallery. It is readable
+# at a glance, at any distance, and it needs no colour - which on a roster that
+# has given its colour away to the elements is worth a great deal.
+#
+# The 10g and 30g towers are pure timber, so the 150g branch split is also the
+# moment stone arrives. That doubles up two signals on one purchase and it is
+# deliberate: the split is the biggest decision a player makes on a tower and
+# should look like it.
+STONE_LINE = [0.0, 0.0, 0.35, 0.60, 0.78, 0.88]
+
+
+def basic_surface(surface, tone, ti):
+    """One of the three Basic surfaces, at one tone, on one rung of its ramp.
+
+    Answers the three colours the timber, masonry and iron shaders each take -
+    the mid face, the dark it falls to, and the light it scatters up to - with
+    the TONE and the TIER both already folded in. Everything the Basic roster
+    is made of comes out of this one function, which is what stops a plinth and
+    a gallery drifting apart the way six hand-picked colours would.
+    """
+    if surface == "iron":
+        # Its own palette per rung rather than a gain on one - see METAL_RAMP.
+        # Saturation is left alone: a metal's hue IS the rung.
+        return dict((key, _tinted(METAL_RAMP[ti][key], TONE_GAIN[tone], 1.0))
+                    for key in ("mid", "dark", "light"))
+
+    palette = BASIC_SURFACES[surface]
+    ramp = {"timber": TIMBER_RAMP, "masonry": MASONRY_RAMP}[surface]
+    value_gain, sat_gain = ramp[ti]
+    value_gain *= TONE_GAIN[tone]
+    out = {}
+    for key in ("mid", "dark", "light"):
+        gain = value_gain
+        # DARKENING A PALETTE COMPRESSES ITS OWN SCATTER, which is the trap the
+        # much steeper stone ramp walked straight into: pulling the mid, the
+        # dark AND the light down by the same 60% left an Ultimate's blocks all
+        # within a few percent of each other, so the coursing - the thing that
+        # makes it read as masonry at all - simply vanished at the top of the
+        # ladder.
+        #
+        # So the LIGHT tone moves roughly half as far, in log terms, whenever
+        # the ramp is pulling downwards. The palette still gets dark; it just
+        # keeps the spread between its blocks while it does.
+        if key == "light" and gain < 1.0:
+            gain = pow(gain, 0.55)
+        out[key] = _tinted(palette[key], gain, sat_gain)
+    return out
+
+
+def basic_paint(line, ti):
+    """A line's matte accent at one tier, or None where the tier has none.
+
+    None is the 10g rung and is the whole of rule 4's floor - see PAINT_RAMP.
+    A caller that gets None must draw no painted part at all rather than draw
+    one in some default colour, or the cheapest tower in the game quietly gains
+    the tell that is supposed to arrive with its first upgrade.
+    """
+    gains = PAINT_RAMP[ti]
+    if gains is None:
+        return None
+    colour, shade = LINES[line]["paint"]
+    return (_tinted(colour, gains[0], gains[1]),
+            _tinted(shade, gains[0], gains[1]))
+
+
+def basic_polish(ti):
+    """What goes into tower_iron.gdshader's `polish`. The Cutter line's tier."""
+    return IRON_POLISH[ti]
+
+
+def stone_share(ti):
+    """How much of a tower's height is masonry rather than timber. See
+    STONE_LINE, which is the table this reads and the reasoning for it."""
+    return STONE_LINE[ti]
+
+
+# How many repeated features a branch shows at each price tier: teeth on a
+# Carver's saw, tubes on a Turret's rack, buttresses on a Cannon, corner caps
+# on a Watch Tower. The 10g and 30g stubs never reach these branches, so the
+# first two entries only matter to the lines that do use them.
 #
 # It is a LIST rather than a formula so the curve can be shaped by hand: going
 # 5 -> 6 has to feel like a step up where 2 -> 3 already did, and evenly spaced
@@ -269,11 +588,11 @@ ELEMENT_PRICE_TIERS = [200, 800, 4000, 10000, 30000]
 #
 #   1. STONE   the element's own material darkens and dulls at Lesser, stands
 #              as authored at Greater, and brightens and saturates at
-#              Ultimate. This is the direct replacement for TRIM_RAMP and it
-#              does the same job - one continuous value ramp that reads at any
-#              distance, on any shape, in any light - with the difference that
-#              it is the ELEMENT'S OWN colour rather than a second palette
-#              laid over the top of it
+#              Ultimate. This is the direct replacement for the metal ramp
+#              and it does the same job - one continuous value ramp that
+#              reads at any distance, on any shape, in any light - with the
+#              difference that it is the ELEMENT'S OWN colour rather than a
+#              second palette laid over the top of it
 #   2. MASS    steeper than it was, because it is carrying more now
 #   3. SHAPE   every path authors THREE silhouettes rather than one silhouette
 #              with parts added. That is the real work and it lives in
@@ -296,8 +615,8 @@ ELEMENT_PRICE_TIERS = [200, 800, 4000, 10000, 30000]
 # ramp: the 200g ring is near-black blued iron and reads as a shadow at the
 # foot of the tower, the 800g ring is polished brass and reads as a bright band
 # around it. A player who has just spent 800 gold should be able to see what it
-# bought from across the map, and one step of TRIM_RAMP - pale iron to bronze -
-# never delivered that.
+# bought from across the map, and one step of a six rung metal ramp - pale
+# iron to bronze - never delivered that.
 ELEMENT_RING_RAMP = [
     (0.19, 0.2, 0.23),
     (0.96, 0.71, 0.24),
@@ -384,9 +703,20 @@ def element_path_tone(rgb, ti):
     gains = PATH_TONE_RAMP.get(ti)
     if gains is None:
         return rgb
+    return _tinted(rgb, gains[0], gains[1])
+
+
+def _tinted(rgb, value_gain, sat_gain):
+    """One colour moved by a value and a saturation gain, keeping its HUE.
+
+    The one place either tier ladder actually changes a colour - the Basic
+    roster's timber, masonry and iron ramps and the elemental roster's path
+    tone ramp all come through here. HUE IS NEVER TOUCHED, or a material would
+    stop being that material halfway up its own line.
+    """
     hue, sat, val = colorsys.rgb_to_hsv(*rgb)
-    shifted = colorsys.hsv_to_rgb(hue, _with_headroom(sat, gains[1]),
-                                  _with_headroom(val, gains[0]))
+    shifted = colorsys.hsv_to_rgb(hue, _with_headroom(sat, sat_gain),
+                                  _with_headroom(val, value_gain))
     return tuple(round(channel, 4) for channel in shifted)
 
 
@@ -760,13 +1090,25 @@ ELEMENTAL_CORE = {
 # in-world owner tell is ever wanted it has to be a SEPARATE device - a ring on
 # the ground, a banner - and not the hide.
 
-# Rule 2, and the creep equivalent of TRIM_RAMP: what every hard part is made
-# of - claws, horns, shoulder plates, weapons, the spines down a back.
+# Rule 2, and the creep's own tier metal: what every hard part is made of -
+# claws, horns, shoulder plates, weapons, the spines down a back.
 #
-# Bone through blackened steel, so it gets DARKER and harder as it climbs where
-# the tower ramp gets brighter. That is on purpose and it is what stops a
-# creep's carapace being read as a tower's tier metal: the two ladders run in
-# opposite directions and can never be confused halfway up.
+# Bone through blackened steel, so it gets DARKER and harder as it climbs.
+#
+# THAT USED TO BE THE THING KEEPING IT APART FROM THE TOWERS and it is not any
+# more, which is worth knowing rather than rediscovering. The Basic tower ladder
+# was a metal ramp running the other way - iron up to white gold - so the two
+# could not be confused halfway up whatever else they shared. That ramp is gone:
+# a Basic tower's timber and stone now DARKEN as they climb, the same direction
+# this goes.
+#
+# What separates them now is not the direction but everything else, and it is a
+# sturdier answer than the old one. A creep's hard parts are a small accent on
+# an organic hide, drawn with creep_hide rather than with any of the three tower
+# surfaces, on a unit that stands on no foundation patch and is the only thing
+# in the game allowed a lit eye. A tower's tier is the whole body of the tower.
+# Nobody was ever really reading these two against each other; the old note read
+# as though somebody might.
 #
 # (albedo, metallic, roughness). Chalky bone has no metal in it at all; the top
 # rung is polished and nearly black.

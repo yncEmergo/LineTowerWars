@@ -15,12 +15,21 @@ extends Node
 ##   on demand   a unit. Spins up while it has a target and coasts back down to
 ##               idle_turns_per_second when it does not
 ##
-## The on-demand mode SPINS DOWN rather than stopping, which is the whole point
-## of it: a blade that snaps to a halt the instant its creep dies reads as a
-## bug, where one that coasts reads as a machine. It also never interrupts
-## itself between attacks - it is looking at whether a target exists, not at
-## whether one is being hit right now, so a blade chewing through a pack stays
-## at full speed the whole way through.
+## The on-demand mode never interrupts itself between attacks - it is looking at
+## whether a target exists, not at whether one is being hit right now, so a
+## blade chewing through a pack stays at full speed the whole way through.
+##
+## HOW FAST IT CHANGES between the two rates is `spin_change_rate`, and it is
+## the one setting here with an argument on both sides. Easing was the original
+## answer, on the reasoning that a blade snapping to a halt the instant its
+## creep dies reads as a bug where one that coasts reads as a machine. The Basic
+## tower roster now sets the rate high enough to be effectively instant, because
+## what a player actually read from the ease was a machine that is slow to
+## start - on the branch whose whole identity is the fastest attack in the game.
+##
+## Both remain available and neither is wrong; it is a per-user tuning value
+## rather than a rule. A halo or an orbit, which has no unit and simply turns
+## forever, never reaches this code at all.
 
 @export_group("References")
 ## What to turn. Its own parent in every prefab so far, wired explicitly rather
@@ -37,6 +46,18 @@ extends Node
 ## stop; a small value idles instead, which suits something that is always
 ## powered and merely not working.
 @export var idle_turns_per_second: float = 0.0
+## The LEAST time a spin runs for once it has started, in seconds, however
+## briefly there was something to kill.
+##
+## The fastest towers in the game attack three times a second and often kill in
+## one hit, so without a floor a saw meeting a weak creep TWITCHES: a few
+## degrees of turn, a stop, a few more. What a player reads from that is a
+## machine that is broken rather than one that is quick. Most of a second means
+## the blade always completes a recognisable run, and a tower chewing through a
+## pack simply never reaches the end of it.
+##
+## Ignored without a unit - something that turns forever has nothing to floor.
+@export var minimum_run_seconds: float = 0.0
 ## How quickly it changes between the two, in turns per second per second.
 ## Lower takes longer to wind up and longer to coast down.
 @export var spin_change_rate: float = 2.5
@@ -45,6 +66,9 @@ extends Node
 
 ## Current speed, eased towards whichever of the two above applies.
 var _speed: float = 0.0
+## Seconds of guaranteed running still owed. Refilled while there is a target
+## and counted down once there is not.
+var _run_left: float = 0.0
 
 
 func _ready() -> void:
@@ -65,6 +89,11 @@ func _process(delta: float) -> void:
 	if _spinner == null:
 		return
 
+	if _working():
+		_run_left = minimum_run_seconds
+	else:
+		_run_left = maxf(0.0, _run_left - delta)
+
 	_speed = move_toward(_speed, _wanted_speed(), spin_change_rate * delta)
 	if is_zero_approx(_speed):
 		return
@@ -72,14 +101,23 @@ func _process(delta: float) -> void:
 
 
 ## What this should be turning at right now.
+func _wanted_speed() -> float:
+	if _unit == null:
+		return turns_per_second
+	if _working() || _run_left > 0.0:
+		return turns_per_second
+	return idle_turns_per_second
+
+
+## Whether there is something to kill RIGHT NOW, before the minimum run time
+## has had its say.
 ##
 ## A unit that cannot attack at all - one still going up, or mid-upgrade -
 ## counts as having nothing to kill, so a tower under construction winds down
 ## rather than spinning while it is still being assembled.
-func _wanted_speed() -> float:
+func _working() -> bool:
 	if _unit == null:
-		return turns_per_second
+		return false
 	if !_unit.can_attack() || _unit.attack_component == null:
-		return idle_turns_per_second
-	return turns_per_second if _unit.attack_component.has_target() \
-		else idle_turns_per_second
+		return false
+	return _unit.attack_component.has_target()

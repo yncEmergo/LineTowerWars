@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_carver_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.606
+health_bar_height = 0.712
 select_radius = 0.5
-select_height = 0.147
+select_height = 0.194
 
 [node name="Visual" parent="." instance=ExtResource("4_carver_model")]
 
@@ -41,6 +41,7 @@ _turret_head = NodePath("../Visual/Turret")
 script = ExtResource("6_SpinAnimation3D")
 _spinner = NodePath("../Visual/Turret/Spinner")
 _unit = NodePath("..")
-turns_per_second = 2.4
+turns_per_second = 2.8
 idle_turns_per_second = 0
-spin_change_rate = 2.5
+minimum_run_seconds = 0.85
+spin_change_rate = 60.0

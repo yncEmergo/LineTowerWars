@@ -1,52 +1,50 @@
 [gd_scene format=3]
 
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate.tres" id="1_archer_plate"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_deep.tres" id="2_archer_plate_deep"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_pale.tres" id="3_archer_plate_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t0.tres" id="4_trim_t0"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_archer_t0.tres" id="5_energy_archer_t0"]
-[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
-[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_archer_t0.tres" id="1_energy_archer_t0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="2_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="3_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t0_deep.tres" id="4_timber_t0_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t0.tres" id="5_timber_t0"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.1886
-bottom_radius = 0.2132
-height = 0.0504
+top_radius = 0.2526
+bottom_radius = 0.2332
+height = 0.0866
 radial_segments = 4
 rings = 0
-material = ExtResource("2_archer_plate_deep")
+material = ExtResource("4_timber_t0_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_2"]
-top_radius = 0.1148
-bottom_radius = 0.1558
-height = 0.0924
+top_radius = 0.102
+bottom_radius = 0.136
+height = 0.2664
 radial_segments = 4
 rings = 0
-material = ExtResource("2_archer_plate_deep")
+material = ExtResource("4_timber_t0_deep")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.246, 0.021, 0.0492)
-material = ExtResource("1_archer_plate")
+size = Vector3(0.2915, 0.0333, 0.0583)
+material = ExtResource("5_timber_t0")
 
 [node name="LesserArcherModel" type="Node3D"]
-script = ExtResource("6_UnitModel")
+script = ExtResource("2_UnitModel")
 
-[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+[node name="Base" parent="." instance=ExtResource("3_tower_foundation")]
 
-[node name="Plinth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0252, 0)
+[node name="Footing" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 0, 0.0433, 0)
 mesh = SubResource("CylinderMesh_1")
 
-[node name="Stump" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0966, 0)
+[node name="Post" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 0, 0.2198, 0)
 mesh = SubResource("CylinderMesh_2")
 
 [node name="Turret" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1512, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3663, 0)
 
 [node name="Stock" type="MeshInstance3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0328)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0291)
 mesh = SubResource("BoxMesh_3")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1476)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1846)

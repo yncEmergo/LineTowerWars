@@ -43,7 +43,7 @@ costs the continuity it was buying*. That is a real cost and worth arguing
 about. It is not a prohibition, and changing one is ordinary work rather than a
 violation.
 
-Two of them have already moved, which is the proof that they can:
+Three of them have already moved, which is the proof that they can:
 
 - "AIR is translucent" was written when the only flyer in the game was a ghost.
   The first solid flyer retired it — being made of vapour belongs to the
@@ -52,6 +52,17 @@ Two of them have already moved, which is the proof that they can:
 - "A creep's only lit parts are its eyes" gained a named exception when a
   burning Boss arrived, because a creature made of fire that gives off no light
   is reading as the wrong monster.
+- **"A Basic tower's tier is its trim metal" is gone entirely**, and it is the
+  biggest of the three because it was that roster's whole identity. The user
+  asked for two things — that the Basic towers read as ordinary
+  tower-defence towers, and that the metal rings come off — which turned
+  out to be one thing, because the rings WERE the ladder. See section 13.
+
+**Note what the third one was NOT.** It was not a rule that stopped fitting a
+new member of its category, which is what the first two were. It fitted every
+tower it was ever applied to and was still the wrong rule, and the only thing
+that surfaced it was somebody looking at the game and saying they did not like
+it. No amount of internal consistency was going to catch that.
 
 **What IS worth holding to is where a change goes.** Change it in `style.py`
 and re-generate, so the whole roster moves together — a hand edit to one
@@ -89,9 +100,9 @@ reads.
 
 | Question | Axis | Towers use |
 | --- | --- | --- |
-| What FAMILY is it? | shape and material | square stone / hex timber / round bone |
-| What KIND within it? | one decisive silhouette | barrel, mortar, blades, hammer, orbit, rack |
-| How STRONG is it? | a stepped ladder | six rungs of metal, size, glow, added parts |
+| What FAMILY is it? | shape, plus one painted accent | square watchtower / hex iron machine / round orb tower |
+| What KIND within it? | one decisive silhouette | ballista, mortar, saw, dropping weight, orb, rack |
+| How STRONG is it? | a stepped ladder | timber turning to stone, tint, size, added parts |
 
 For a creep roster the same three exist and need naming before the first model
 is built. **The tier 1 creeps answered them like this** — the full rules are
@@ -218,12 +229,17 @@ shadowed hide, lit hide, claws, eyes.
 Towers step on the six PRICE tiers. Every rung adds a piece the rung below does
 not have, so a tier can be read by counting details:
 
-    10g      bare. No metal on it at all
-    30g      + the base trim ring, its first metal
-    150g     + a collar under the head
-    1,000g   + bolts around the shoulder
-    5,000g   + crown fins
-    25,000g  + a slowly turning halo
+    10g      bare. No paint, no stone, no gallery
+    30g      + paint, its first colour
+    150g     + a projecting parapet, and the stone it stands on
+    1,000g   + the corbels that carry the parapet
+    5,000g   + a crown: the top of the tower changes shape
+    25,000g  + a pennant, and it moves
+
+Alongside that, continuously: the tower grows, its MASONRY CLIMBS from the
+footing while the timber retreats into the gallery, and its surfaces darken and
+enrich. The material boundary is the loudest of those three and is the one this
+roster gained when the metal came off — see section 13.
 
 Three rules worth carrying to any roster:
 
@@ -252,9 +268,15 @@ Three rules worth carrying to any roster:
 
 **The first upgrade a player ever buys should be the one they can see from
 across the map.** The 10g towers are roughly half the height of their 30g
-upgrade, carry no metal at all, are built from the raw `deep` tone, and are
+upgrade, carry no PAINT at all, are built from the raw `deep` tone, and are
 missing the part that names the line. That gap is deliberate and cost several
 iterations to get big enough.
+
+It used to be the missing trim RING that drew that gap, and when the metal came
+off this rung had to be handed to something else or the cheapest tower in the
+game would quietly have gained the tell its first upgrade is supposed to buy.
+Worth noticing about any ladder rung: the RUNG is the rule, the thing drawing it
+is not.
 
 ---
 
@@ -689,3 +711,294 @@ with that and the fix for all three was to split it.
   material the way it does any tower mesh. The first cut wrote a `preview_tint`
   uniform into its own shader to imitate that, which worked and was a parallel
   path to keep in step. Reach for the existing scene first.
+
+---
+
+## 13. Rebuilding a roster that was already finished
+
+The Basic towers, second pass. The first one is in git and was *faceted arcane
+machinery*: nine grey plated silhouettes wearing a six rung ramp of trim metal.
+It obeyed every rule in this document. It was still wrong, and the only thing
+that surfaced that was the user looking at the game and saying so.
+
+**The two requests were one request.** "Make the Basic towers look like
+ordinary tower-defence towers" and "take the metal rings off" arrived as
+separate notes in the same message, and they cannot be done separately: the
+rings WERE the tier ladder — a base ring at 30g, a collar at 150g, bolts,
+crown fins, a turning halo, on an iron-to-white-gold ramp. Deleting them
+without a replacement leaves a roster with no answer to "how dangerous is
+this".
+
+So the first job of a visual rework is to find out **which rule the thing being
+deleted was actually carrying**. It is rarely the one it looks like.
+
+### What replaced it, and why that was available now
+
+The ladder moved into the tower's own MATERIAL — which is the fix the elemental
+roster had already made, for the same two reasons, and is written up in
+`style.py` under THE PATH LADDER. What is new is that the Basic roster could
+not have done it before:
+
+- an elemental tower has a HUE to ramp, and the Basic roster gave its colour
+  away to the elements on purpose (section 3)
+- but a tower made of TIMBER AND STONE has two materials, a **boundary between
+  them that can move**, and a tint that can ramp — so the Basic roster got a
+  ladder rung the elemental one does not have and could not have
+
+**The material boundary turned out to be the best signal in either roster.** A
+shaft is authored as two stacked cylinders, masonry below and timber above, and
+the join climbs the tower on every upgrade. It is readable at any distance, in
+any light, needs no colour, and — unlike every other rung — it is a thing the
+player watches HAPPEN to a tower they just paid for.
+
+### What this pass cost, in order of how long it took to see
+
+Each of these looked fine in the generator and wrong on screen. The lesson in
+all of them is the same and is section 9's: **run it, at the match camera's own
+pitch, before believing any of it.**
+
+- **A ladder rung is a rule, not the part that draws it.** The 10g tower having
+  no trim ring is what made the first upgrade a player ever buys the most
+  visible one in the game. Delete the rings and that rung silently becomes "the
+  10g tower looks like every other tower". It had to be handed to the paint.
+- **Three shaders pulling the same way saturate to white.** The iron got a
+  polish lift, a sheen band AND a hard rim, each defensible alone. Together,
+  every barrel and every saw blade on the roster came out as a featureless pale
+  blob. This is the accent-saturates-to-white trap from section 3 reached
+  through a HIGHLIGHT rather than through an emission, which is why it was not
+  recognised for what it was.
+- **A ceiling tuned for small accents blows up a big one.** The Basic energy
+  material's brightness was chosen when every lit part on the roster was a
+  sight, a vent or a spark on grey stone. The reworked Sentry line carries an
+  ORB that is the biggest object on the model, and at the old ceiling an
+  Ultimate Defender was a white ball. Same trap as the elemental roster's, in
+  the opposite direction: there a small-accent ceiling met big accents, here a
+  roster that only had small accents grew a big one.
+- **THINGS THAT SIT ON TOP OF A TOWER ARE LIDS.** The camera looks down, so
+  anything spanning the top of a model hides everything under it. It cost three
+  separate parts in one pass: the Stomper's frame head (a full disc above the
+  weight — it made the whole mechanism invisible and became two crossed
+  beams), the Carver's blade guard (a hood a little wider than the saw, hiding
+  the one thing the branch exists to show), and the Watch Tower's roof, which
+  was designed out before it was ever built for exactly this reason and became
+  four corner caps around an open middle.
+- **A part sized as a share of its tower gets it wrong at both ends.** Merlons
+  authored at a fraction of the radius gave the widest towers the chunkiest
+  battlements, so a Cannon read as a ring of boulders.
+- **Verticality is not decoration when the ladder is drawn in it.** The height
+  ramp had been deliberately lowered on the old roster, correctly — that one
+  was squat drums, and "a top down tower wants to be a footprint with something
+  on it" is right for those. This one is watchtowers, and four of its six rungs
+  are drawn ABOVE the shaft. At the inherited height the first pass came out as
+  a field of pancakes with the gallery, the parapet and the whole material
+  boundary squashed into a few pixels.
+
+### The second pass, and the four things it cost
+
+The roster above was reviewed and came back with one instruction that reframed
+the whole ladder: **every upgrade has to change one thing you can see, and if
+it is unique to a branch it has to be big.** Four branches had their top three
+tiers reported as indistinguishable. What that pass taught:
+
+- **A LADDER MUST NOT BE MADE OF ONE KIND OF THING.** The first ladder was
+  material, tint and added parts - all of them quiet, all of them the same
+  kind of quiet. It now runs material, tint, METAL and parts, and the metal is
+  what actually fixed it: copper, bronze, steel and polished steel are four
+  different objects where four rungs of one grey are one object.
+- **COUNTING IS NOT A TELL.** The anti-air branch ramped 3, 4, 5, 6 tubes and
+  its top three tiers still read as the same tower. Nobody counts at match
+  distance. The same budget spent on the tubes' COLOUR separated them
+  instantly. Prefer a difference the eye takes in whole.
+- **A TINT LADDER THAT DARKENS COMPRESSES ITS OWN CONTRAST**, twice over. The
+  steeper stone ramp pulled mid, dark and light down together, so an
+  Ultimate's blocks landed within a few percent of each other and the coursing
+  - the thing that makes it read as masonry at all - vanished exactly at the
+  top of the ladder. The light tone now moves about half as far, and the block
+  scatter RISES with the tier where it used to fall.
+- **AND IT COMPOUNDS WITH EVERYTHING ELSE POINTING THE SAME WAY.** The damp at
+  the foot of a tower is also a mix towards the dark tone, so on an already
+  dark palette it took the base to flat black. Any effect that darkens has to
+  be eased off as the palette it sits on darkens.
+
+### The lid, for the third and fourth time
+
+Section 10 already records that things sitting on top of a tower are lids,
+because the camera looks down. It happened twice more in one pass, and both
+times on the part the branch exists to show:
+
+- the Defender's 5,000g step was authored as a closed LANTERN HOUSE - wide
+  piers and a cap over the top - and it did not enclose the orb, it DELETED
+  it. The tower came out as a solid black drum with the one thing that whole
+  branch is about nowhere on screen. It became a splayed crown with the orb
+  raised clear instead.
+- the Carver's blade guard was a hood a little wider than the saw, which is
+  what the real machine wears, and it hid the saw completely.
+
+**The rule is stronger than "be careful with roofs".** If a part spans the top
+of a model, from the match camera that part IS the model. Author the thing that
+matters as the highest thing, or leave a hole for it.
+
+### A pattern shader must ride the model
+
+The three surface shaders projected their pattern in WORLD space, for two real
+benefits - courses ran continuously across a tower's separate meshes, and
+neighbouring towers got different phases for free without a per-instance
+uniform, which `gl_compatibility` does not have.
+
+It is wrong, and the way it is wrong is invisible in every screenshot. A
+world-projected pattern is nailed to the GROUND: anything that moves slides
+through it. The spinning saw was the reported case - a disc turning behind a
+stationary grain, like something seen through a dirty window - but it was
+equally wrong on every aiming turret, every recoiling barrel and the Stomper's
+falling weight.
+
+Project in the mesh's own space. What is given up costs almost nothing: the two
+halves of a shaft are different materials anyway, so there was never a course to
+carry across the join.
+
+**And test it with a POSITIVE CONTROL, because a still frame cannot show it.**
+One mesh, drawn four times at four rotations: local space means every copy is
+the same picture turned, world space means each copy shows a different slice of
+one pattern. That is a single screenshot and it answers the question outright,
+where staring at a moving saw does not.
+
+### The third pass: three more, and the lid a third time
+
+- **A SHAPE STEP MAY NOT LIE ABOUT THE MECHANISM.** The Cannon's 5,000g step
+  was a second barrel and it was the best-looking answer on that branch. It
+  still had to go: the tower fires one projectile, so two muzzles tell a player
+  something untrue about a thing they just spent five thousand gold on. The
+  replacement is a heavy carriage - cheek plates and a muzzle brake, both
+  unmistakably parts of ONE gun.
+  - the same rule caught the anti-air rack, where the recoil kicked all six
+    tubes for a tower that launches a single missile. One tube moves now, and
+    the missile leaves that tube.
+  - the general form: **decoration may be free, but anything that reads as a
+    MECHANISM is making a claim.** Check the claim against what the unit
+    actually does.
+- **AND A THIRD LID, in a new costume.** The replacement for those two barrels
+  was first an armoured casemate - a drum around the breech - and from the
+  match camera the drum was simply bigger than the barrel, so the gun became
+  the smallest thing on a gun tower. A part that FRAMES a weapon is safe where
+  a part that ENCLOSES it never is. That is now three separate features lost to
+  the same mistake in one project (a lantern house, a blade guard, a casemate),
+  so treat "does this span the top?" as a checklist item, not as judgement.
+- **A ROTATED PRIMITIVE NEEDS TO SAY WHICH RAMP ITS LENGTH TAKES.** `cyl` and
+  `capsule` have carried an `along` for this since the creep roster; `prism` did
+  not, and the first saw teeth built out of prisms were quietly the wrong length
+  at every tier and wrong by a DIFFERENT amount at each, because the width and
+  height ramps are different curves. Nothing errors. If a helper can be rotated,
+  it needs the parameter.
+
+### A trajectory is authored in world units, and that is the sanity check
+
+The projectile arc was a FLAT height applied to every shot whatever the range,
+so a mortar threw the same bow at a creep one cell away as at one at the edge of
+its reach. It is now a share of the distance actually flown, capped at full
+range with a small floor.
+
+The value itself was the louder half of the fault: the Cannon was authored at
+3.4, in a world where **a player cell is 1.0 and no tower on the roster stands
+as tall as one**. Every shell it fired arced clean over its own parapet. When
+authoring anything spatial here, check it against the cell rather than against
+the number that came before it - a scale mistake reads as a physics bug and
+gets looked for in the wrong file.
+
+### Two things that were checked and worth copying
+
+- **A rule stated by omission should be stated by the thing it is about.** The
+  icon baker excluded towers entirely, with a comment explaining that tower
+  icons are named by DISPLAY NAME while the scan is keyed by PREFAB, and that
+  baking them once wrote two hundred files under names nothing reads. The Basic
+  towers needed re-baking, so that became a CHECK — bake a unit only where its
+  key and its display-name slug agree — which lets the thirty Basic towers
+  through, keeps the eighty elemental ones out, and says which it skipped and
+  why. Same protection, applied by the thing it is actually about.
+- **Grep for what you deleted, including in prose.** Removing the metal ramp
+  left four comments elsewhere explaining OTHER rosters by analogy to it, and
+  one of them — the creep carapace ramp — carried a claim that was now false:
+  that the creep and tower ladders run in opposite directions and so can never
+  be confused. The tower ladder had just been turned round to run the same way.
+  Nothing errors, and the justification for a real decision quietly becomes
+  untrue.
+
+
+---
+
+---
+
+## 14. Motion: the patterns, and what each one is for
+
+Placeholder art is mostly shapes, and everything above is about shapes. Motion
+turned out to carry as much of the readability as the silhouette does, and it
+has its own rules. They were learned one at a time; this is them gathered up.
+
+### The five kinds of motion this project has
+
+| Component | What it is for | Driven by |
+| --- | --- | --- |
+| `SpinAnimation3D` | something that TURNS while it works: a saw, a governor, an orbit | a target existing, or nothing at all |
+| `RecoilAnimation3D` | a single weapon kicking as its shot leaves | `attacked` |
+| `BarrelCycleAnimation3D` | a RACK firing its barrels in turn | `attack_started` then `attacked` |
+| `SlamAnimation3D` | something raised and brought down on the beat | `attack_started`, across the windup |
+| `BobAnimation3D`, `SwayAnimation3D` | idle life: a floating orb, a pennant | nothing - they never stop |
+
+### The rules
+
+- **MOTION IS THE LOUDEST SIGNAL A TOP DOWN CAMERA HAS.** That is why idle
+  motion is reserved for the top of a ladder and why an attack animation is
+  worth more than any amount of surface detail. It is also why a motion that is
+  WRONG is so much more damaging than a shape that is wrong: the eye goes to it
+  first.
+- **AN ANIMATION IS A CLAIM.** Decoration is free, but anything that reads as a
+  mechanism is telling the player how the tower works. Six tubes recoiling for
+  one missile, or two muzzles on a tower that fires one shell, are both the
+  model contradicting the simulation. Check the claim.
+- **A MOTION NEEDS A MINIMUM DURATION.** Anything driven by "is there a target"
+  will be asked to run for a single frame sooner or later, because the fastest
+  towers kill in one hit. Without a floor the part twitches, and a twitch reads
+  as broken rather than as fast. See `SpinAnimation3D.minimum_run_seconds`.
+- **DRIVE IT OFF THE ATTACK'S OWN SIGNALS, never off a duration of your own.**
+  `attack_started` carries the real windup, so a swing retimed in balance stays
+  landing on the beat with no animation change. A component that counted its
+  own seconds would drift the moment anything was tuned.
+- **WHICH SIGNAL IS NOT INTERCHANGEABLE, and this one is genuinely subtle.**
+  `AttackComponent` reads the muzzle inside its own `_fire` and only emits
+  `attacked` afterwards. So anything that has to be in place BEFORE the
+  projectile spawns - picking a barrel, moving the muzzle - must happen on
+  `attack_started`, which precedes the shot even at zero windup. A component
+  that advanced on `attacked` would fire every shot from the barrel that fired
+  LAST time: right for the recoil, one step out for the projectile, and
+  invisible in a code review.
+  - the KICK still belongs on `attacked`, because a recoil is the consequence
+    of a shot leaving.
+- **A MOVING PART MUST OPT OUT OF PHYSICS INTERPOLATION.** Everything here
+  animates on the render frame, and Godot's interpolator assumes a transform
+  only changes on a tick, so an interpolated node moved in `_process` jitters -
+  visibly on some machines and not others.
+- **A CANCELLED ATTACK HAS TO PUT THINGS BACK.** Exactly one of `attacked` or
+  `attack_cancelled` follows every `attack_started`, which is what lets a
+  component hold state across a windup at all. A rack that advanced its barrel
+  and was then cancelled must give that turn back, or the cycle drifts out of
+  step with what the player is watching.
+- **AND A PATTERN SHADER MUST RIDE WHAT IT IS PAINTED ON.** The motion rules
+  above are useless if the surface slides through its own texture while it
+  moves - see the world-space section earlier, which is the same bug class
+  reached from the material side.
+
+### How to test motion, when a screenshot cannot
+
+A still frame cannot show a spin, a cycle or a kick, and CLAUDE.md's rule about
+positive controls bites hardest here. Two things that worked:
+
+- **For a shader or a transform, draw the same thing several times at several
+  states in ONE frame.** Four copies of a mesh at four rotations answers "does
+  the pattern ride the model" outright, where staring at a moving saw does not.
+- **For wiring, instantiate the prefab and DO NOT ADD IT TO THE TREE.** `_ready`
+  never runs, so no unit, no match session and no registry are needed, and the
+  exported values are still resolved. That is how the barrel arrays were proved
+  to deserialise - a typed `Array[Node3D]` written as `node_paths` plus a list
+  of NodePaths comes back EMPTY if it fails, the component logs once, and every
+  shot then leaves from wherever the muzzle happened to be authored, which
+  looks almost right. A clean boot proves nothing about it, because a tower
+  prefab is only instantiated when somebody builds one.

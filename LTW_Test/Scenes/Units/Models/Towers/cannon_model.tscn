@@ -1,168 +1,228 @@
 [gd_scene format=3]
 
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate.tres" id="1_archer_plate"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_deep.tres" id="2_archer_plate_deep"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/archer_plate_pale.tres" id="3_archer_plate_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t3.tres" id="4_trim_t3"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_archer_t3.tres" id="5_energy_archer_t3"]
-[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
-[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_archer_t3.tres" id="1_energy_archer_t3"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="2_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="3_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/masonry_t3_deep.tres" id="4_masonry_t3_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/masonry_t3.tres" id="5_masonry_t3"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t3_pale.tres" id="6_timber_t3_pale"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t3.tres" id="7_timber_t3"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/paint_archer_t3.tres" id="8_paint_archer_t3"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/iron_t3_deep.tres" id="9_iron_t3_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/iron_t3.tres" id="10_iron_t3"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/iron_t3_pale.tres" id="11_iron_t3_pale"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.3061
-bottom_radius = 0.3265
-height = 0.0814
+top_radius = 0.3599
+bottom_radius = 0.3374
+height = 0.1002
 radial_segments = 8
 rings = 0
-material = ExtResource("2_archer_plate_deep")
+material = ExtResource("4_masonry_t3_deep")
 
-[sub_resource type="TorusMesh" id="TorusMesh_2"]
-inner_radius = 0.2908
-outer_radius = 0.3418
-rings = 14
-ring_segments = 5
-material = ExtResource("4_trim_t3")
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 0.2551
-bottom_radius = 0.3061
-height = 0.1744
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.2756
+bottom_radius = 0.3262
+height = 0.3392
 radial_segments = 8
 rings = 0
-material = ExtResource("1_archer_plate")
+material = ExtResource("5_masonry_t3")
 
-[sub_resource type="TorusMesh" id="TorusMesh_4"]
-inner_radius = 0.1939
-outer_radius = 0.25
-rings = 12
-ring_segments = 5
-material = ExtResource("4_trim_t3")
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.0619, 0.2467, 0.1012)
+material = ExtResource("4_masonry_t3_deep")
 
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.0561, 0.1395, 0.102)
-material = ExtResource("2_archer_plate_deep")
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.0619, 0.0655, 0.1237)
+material = ExtResource("4_masonry_t3_deep")
 
-[sub_resource type="SphereMesh" id="SphereMesh_6"]
-radius = 0.0327
-height = 0.0298
-radial_segments = 5
-rings = 2
-material = ExtResource("4_trim_t3")
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.3509
+bottom_radius = 0.3334
+height = 0.0308
+radial_segments = 4
+rings = 0
+material = ExtResource("6_timber_t3_pale")
 
-[sub_resource type="BoxMesh" id="BoxMesh_7"]
-size = Vector3(0.3061, 0.0581, 0.1633)
-material = ExtResource("2_archer_plate_deep")
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.076, 0.0463, 0.0497)
+material = ExtResource("7_timber_t3")
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_8"]
-top_radius = 0.102
-bottom_radius = 0.1275
-height = 0.3061
+[sub_resource type="CylinderMesh" id="CylinderMesh_7"]
+top_radius = 0.3239
+bottom_radius = 0.3239
+height = 0.0308
 radial_segments = 8
 rings = 0
-material = ExtResource("3_archer_plate_pale")
+material = ExtResource("8_paint_archer_t3")
 
-[sub_resource type="TorusMesh" id="TorusMesh_9"]
-inner_radius = 0.0898
-outer_radius = 0.1275
-rings = 10
-ring_segments = 5
-material = ExtResource("4_trim_t3")
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.3374, 0.0771, 0.18)
+material = ExtResource("9_iron_t3_deep")
 
-[sub_resource type="BoxMesh" id="BoxMesh_10"]
-size = Vector3(0.1327, 0.0262, 0.051)
-material = ExtResource("5_energy_archer_t3")
+[sub_resource type="CylinderMesh" id="CylinderMesh_9"]
+top_radius = 0.0872
+bottom_radius = 0.0933
+height = 0.1912
+radial_segments = 8
+rings = 0
+material = ExtResource("9_iron_t3_deep")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_10"]
+top_radius = 0.0627
+bottom_radius = 0.0765
+height = 0.5399
+radial_segments = 8
+rings = 0
+material = ExtResource("10_iron_t3")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_11"]
+top_radius = 0.0826
+bottom_radius = 0.0673
+height = 0.0787
+radial_segments = 8
+rings = 0
+material = ExtResource("11_iron_t3_pale")
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.3374, 0.0771, 0.0337)
+material = ExtResource("8_paint_archer_t3")
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(0.1125, 0.0308, 0.0506)
+material = ExtResource("1_energy_archer_t3")
 
 [node name="CannonModel" type="Node3D"]
-script = ExtResource("6_UnitModel")
+script = ExtResource("2_UnitModel")
 
-[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+[node name="Base" parent="." instance=ExtResource("3_tower_foundation")]
 
-[node name="Plinth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0407, 0)
+[node name="Footing" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0501, 0)
 mesh = SubResource("CylinderMesh_1")
 
-[node name="BaseTrim" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0814, 0)
-cast_shadow = 0
-mesh = SubResource("TorusMesh_2")
-
-[node name="Drum" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1686, 0)
-mesh = SubResource("CylinderMesh_3")
-
-[node name="Collar" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2558, 0)
-cast_shadow = 0
-mesh = SubResource("TorusMesh_4")
+[node name="DrumStone" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2698, 0)
+mesh = SubResource("CylinderMesh_2")
 
 [node name="Rib1" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.157, 0.2755)
-mesh = SubResource("BoxMesh_5")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2236, 0.3037)
+mesh = SubResource("BoxMesh_3")
 
 [node name="Rib2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.2755, 0.157, 0)
-mesh = SubResource("BoxMesh_5")
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.3037, 0.2236, 0)
+mesh = SubResource("BoxMesh_3")
 
 [node name="Rib3" type="MeshInstance3D" parent="."]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, -0, -0, -1, 0, 0.157, -0.2755)
-mesh = SubResource("BoxMesh_5")
+transform = Transform3D(-1, 0, 0, 0, 1, 0, -0, -0, -1, 0, 0.2236, -0.3037)
+mesh = SubResource("BoxMesh_3")
 
 [node name="Rib4" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0, -0, -1, 0, 1, 0, 1, 0, -0, -0.2755, 0.157, -0)
-mesh = SubResource("BoxMesh_5")
+transform = Transform3D(-0, -0, -1, 0, 1, 0, 1, 0, -0, -0.3037, 0.2236, -0)
+mesh = SubResource("BoxMesh_3")
 
-[node name="Bolt1" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2209, 0.3163)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4009, 0.3149)
+mesh = SubResource("BoxMesh_4")
 
-[node name="Bolt2" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2739, 0.2209, 0.1582)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 0.2227, 0.4009, 0.2227)
+mesh = SubResource("BoxMesh_4")
 
-[node name="Bolt3" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2739, 0.2209, -0.1582)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.3149, 0.4009, 0)
+mesh = SubResource("BoxMesh_4")
 
-[node name="Bolt4" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2209, -0.3163)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel4" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.7071, 0, 0.7071, 0, 1, 0, -0.7071, -0, -0.7071, 0.2227, 0.4009, -0.2227)
+mesh = SubResource("BoxMesh_4")
 
-[node name="Bolt5" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2739, 0.2209, -0.1582)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel5" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, -0, -0, -1, 0, 0.4009, -0.3149)
+mesh = SubResource("BoxMesh_4")
 
-[node name="Bolt6" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2739, 0.2209, 0.1582)
-cast_shadow = 0
-mesh = SubResource("SphereMesh_6")
+[node name="Corbel6" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.7071, -0, -0.7071, 0, 1, 0, 0.7071, 0, -0.7071, -0.2227, 0.4009, -0.2227)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Corbel7" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0, -0, -1, 0, 1, 0, 1, 0, -0, -0.3149, 0.4009, -0)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Corbel8" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, -0.7071, 0, 1, 0, 0.7071, 0, 0.7071, -0.2227, 0.4009, 0.2227)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Gallery" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4549, 0)
+mesh = SubResource("CylinderMesh_5")
+
+[node name="Merlon1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4934, 0.3041)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 0.215, 0.4934, 0.215)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.3041, 0.4934, 0)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon4" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.7071, 0, 0.7071, 0, 1, 0, -0.7071, -0, -0.7071, 0.215, 0.4934, -0.215)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon5" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, -0, -0, -1, 0, 0.4934, -0.3041)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon6" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.7071, -0, -0.7071, 0, 1, 0, 0.7071, 0, -0.7071, -0.215, 0.4934, -0.215)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon7" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0, -0, -1, 0, 1, 0, 1, 0, -0, -0.3041, 0.4934, -0)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Merlon8" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7071, 0, -0.7071, 0, 1, 0, 0.7071, 0, 0.7071, -0.215, 0.4934, 0.215)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Band" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3701, 0)
+mesh = SubResource("CylinderMesh_7")
 
 [node name="Turret" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2674, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5089, 0)
 
 [node name="Yoke" type="MeshInstance3D" parent="Turret"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("BoxMesh_7")
+mesh = SubResource("BoxMesh_8")
 
 [node name="Barrel" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 0.5735, 0.8192, 0, -0.8192, 0.5735, 0, 0.1279, -0.0918)
+transform = Transform3D(1, 0, 0, 0, 0.9131, 0.4078, 0, -0.4078, 0.9131, 0, 0.1157, -0.0675)
 
-[node name="Tube" type="MeshInstance3D" parent="Turret/Barrel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("CylinderMesh_8")
+[node name="Breech" type="MeshInstance3D" parent="Turret/Barrel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1012)
+mesh = SubResource("CylinderMesh_9")
+
+[node name="Chase" type="MeshInstance3D" parent="Turret/Barrel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.2362)
+mesh = SubResource("CylinderMesh_10")
 
 [node name="Mouth" type="MeshInstance3D" parent="Turret/Barrel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1735)
-mesh = SubResource("TorusMesh_9")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5399)
+mesh = SubResource("CylinderMesh_11")
+
+[node name="Shield" type="MeshInstance3D" parent="Turret"]
+transform = Transform3D(1, 0, 0, 0, 0.9394, -0.3429, 0, 0.3429, 0.9394, 0, 0.0154, 0.1912)
+mesh = SubResource("BoxMesh_12")
 
 [node name="Vent" type="MeshInstance3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.032, 0.102)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0655, 0.1125)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_10")
+mesh = SubResource("BoxMesh_13")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2441, -0.2347)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2776, -0.6298)

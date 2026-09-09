@@ -106,6 +106,17 @@ def build(rows, camera, folder="Towers", facing=FACING, step=(STEP_X, STEP_Z),
         "fov = %s" % camera[3],
         "near = 0.05",
     ])
+    # Saves the frame and quits, but only when the run named a file to save
+    # it to - so opening one of these in the editor by hand is unaffected.
+    #
+    # The script is in Scripts/TOOLS rather than Scripts/Dev, which is the
+    # folder that gets deleted: these scenes are throwaway and the thing
+    # that photographs them is not. It is the same call icon_gen_3d gets,
+    # for the same reason - it has to RUN INSIDE GODOT, because baking an
+    # image means rendering one, and it is wanted again every time a roster
+    # or the style changes.
+    s.node("Capture", "Node", ".",
+           script=s.ext("Script", "res://Scripts/Tools/ShowcaseCapture.gd"))
     return s
 
 
@@ -200,8 +211,27 @@ def generate():
     every = []
     for line in ("archer", "cutter", "sentry"):
         every.extend(LINES[line])
-    text = build(every, (6.6, 8.0, -0.66, 50)).render("[gd_scene format=3]")
+    text = build(every, (7.6, 8.4, -0.72, 62)).render("[gd_scene format=3]")
     io.open("Scenes/Dev/tower_showcase.tscn", "w",
             encoding="utf-8", newline=lf).write(text)
+
+    # THE ONE THAT ACTUALLY ANSWERS THE QUESTION, and the creep roster learned
+    # this first: a roster laid out side on shows whether a silhouette is doing
+    # any work, and only the MATCH CAMERA'S OWN PITCH shows whether a player
+    # can tell these apart from where they will really be sitting.
+    #
+    # -70 degrees, read off Resources/Config/camera_config.tres rather than
+    # guessed, so retuning the camera moves the review with it.
+    pitch = -70.0 * 3.14159265 / 180.0
+    rows = [LINES[line][0] + [None] for line in ("archer", "cutter", "sentry")]
+    grid = []
+    for line in ("archer", "cutter", "sentry"):
+        grid.append(LINES[line][0])
+        grid.append(LINES[line][1])
+        grid.append(LINES[line][2])
+    text = build(grid, (9.0, 3.4, pitch, 52), "Towers", 3.1416,
+                 (1.15, 1.25)).render("[gd_scene format=3]")
+    io.open("Scenes/Dev/tower_topdown.tscn", "w",
+            encoding="utf-8", newline=lf).write(text)
     print("wrote %d showcase scenes"
-          % (4 + generate_elements() + generate_creeps()))
+          % (5 + generate_elements() + generate_creeps()))

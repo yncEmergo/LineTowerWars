@@ -21,6 +21,7 @@ S_ATTACK_COMPONENT = "res://Scripts/Combat/AttackComponent.gd"
 S_RECOIL = "res://Scripts/Components/RecoilAnimation3D.gd"
 S_SLAM = "res://Scripts/Components/SlamAnimation3D.gd"
 S_SPIN = "res://Scripts/Components/SpinAnimation3D.gd"
+S_BARREL_CYCLE = "res://Scripts/Components/BarrelCycleAnimation3D.gd"
 S_SELF_SPLASH = "res://Scripts/Combat/SelfSplashEffect.gd"
 
 A_ATTACK = "res://Resources/Abilities/attack_ability.tres"
@@ -256,14 +257,14 @@ def gen_prefab(row, heights):
                '_muzzle = NodePath("../Visual/Turret/Muzzle")',
                '_turret_head = NodePath("../Visual/Turret")',
            ])
-    _add_animations(s, branch)
+    _add_animations(s, branch, ts.PRICE_TIERS.index(row[5]))
     write(prefab_path(key), s.render("[gd_scene format=3]"))
 
 
 ## Attack animations live in the PREFAB rather than in the model, because they
 ## need the unit and a model does not have one - the same model scene is used
 ## by the build ghost, which must not recoil at anything.
-def _add_animations(s, branch):
+def _add_animations(s, branch, ti):
     for index, entry in enumerate(td.ANIMATION.get(branch, [])):
         kind = entry[0]
         node = 'NodePath("../Visual/%s")' % entry[1]
@@ -274,13 +275,46 @@ def _add_animations(s, branch):
                    props=['_unit = NodePath("..")',
                           "_recoiling = %s" % node,
                           "distance = %s" % num(entry[2])])
-        elif kind == "slam":
+        elif kind == "drop":
+            # Motion 1 is SlamAnimation3D.Motion.DROP: the weight is lifted
+            # straight up and let go, rather than swung over on a hinge. The
+            # lift is authored unscaled and takes the tier's HEIGHT ramp here,
+            # so a bigger machine lifts further.
             s.node("Slam", "Node", ".",
                    node_paths=["_unit", "_swing"],
                    script=s.ext("Script", S_SLAM),
                    props=['_unit = NodePath("..")',
                           "_swing = %s" % node,
-                          'shockwave_scene_path = "%s"' % entry[2]])
+                          "motion = 1",
+                          "raise_distance = %s" % num(
+                              round(entry[2] * ts.height_scale(ti), 4)),
+                          "follow_through_distance = %s" % num(
+                              round(entry[2] * ts.height_scale(ti) * 0.16, 4)),
+                          # Most of the windup spent going up, so the fall is
+                          # the fast half. A dropped weight should look
+                          # dropped.
+                          "raise_share = 0.72",
+                          'shockwave_scene_path = "%s"' % entry[3]])
+        elif kind == "cycle":
+            # A rack that fires its barrels IN TURN. The arrays are written
+            # from FEATURE_COUNT rather than from the model being read back,
+            # because the model was built from the same number - the two
+            # cannot disagree without the roster itself disagreeing.
+            count = ts.FEATURE_COUNT[ti]
+            barrels = ", ".join(
+                'NodePath("../Visual/Turret/Tube%d")' % (n + 1)
+                for n in range(count))
+            tips = ", ".join(
+                'NodePath("../Visual/Turret/Tube%d/Tip")' % (n + 1)
+                for n in range(count))
+            s.node("BarrelCycle", "Node", ".",
+                   node_paths=["_unit", "_muzzle", "_barrels", "_tips"],
+                   script=s.ext("Script", S_BARREL_CYCLE),
+                   props=['_unit = NodePath("..")',
+                          '_muzzle = NodePath("../Visual/Turret/Muzzle")',
+                          "_barrels = [%s]" % barrels,
+                          "_tips = [%s]" % tips,
+                          "distance = %s" % num(entry[1])])
         elif kind == "spin":
             s.node("BladeSpin", "Node", ".",
                    node_paths=["_spinner", "_unit"],
@@ -289,7 +323,16 @@ def _add_animations(s, branch):
                           '_unit = NodePath("..")',
                           "turns_per_second = %s" % num(entry[2]),
                           "idle_turns_per_second = %s" % num(entry[3]),
-                          "spin_change_rate = 2.5"])
+                          "minimum_run_seconds = %s" % num(entry[4]),
+                          # EFFECTIVELY INSTANT, which is the point. The
+                          # component eases between its two rates and the
+                          # roster used to ease over about half a second
+                          # either side of a fight; a saw that is either
+                          # running or stopped is the clearer signal and is
+                          # what was asked for. Left as a rate rather than
+                          # given a "snap" flag, so the easing is still
+                          # available to anything that wants it.
+                          "spin_change_rate = 60.0"])
 
 
 # --- abilities -------------------------------------------------------------

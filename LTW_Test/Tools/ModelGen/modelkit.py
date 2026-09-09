@@ -47,6 +47,7 @@ from tscn import Scene, c, t3, num
 
 SPIN_SCRIPT = "res://Scripts/Components/SpinAnimation3D.gd"
 BOB_SCRIPT = "res://Scripts/Components/BobAnimation3D.gd"
+SWAY_SCRIPT = "res://Scripts/Components/SwayAnimation3D.gd"
 
 # The five material roles, in the order their ext_resources are written.
 ROLES = ("body", "deep", "pale", "trim", "glow")
@@ -71,9 +72,24 @@ class Model:
         # carrying a load-time dependency on the tier metal it is forbidden to
         # draw. Reaching for a role that was not handed over fails loudly on
         # the ext_resource id being None rather than quietly drawing nothing.
+        #
+        # A roster may also name materials BEYOND the five, and they are set
+        # here exactly as a role is. The Basic towers are why: that roster is
+        # built out of three whole materials rather than one - timber, masonry
+        # and iron - each with its own three tones, so `body`/`deep`/`pale`
+        # cannot name them and five slots cannot hold them. The five stay the
+        # SHARED vocabulary that a creep and an elemental tower still speak;
+        # they are not a ceiling.
+        #
+        # ROLES first and then the rest in the order the caller wrote them, so
+        # the ext_resource ids a model is written with are deterministic and a
+        # regenerated file is byte identical to the one it replaces.
         for role in ROLES:
             setattr(self, role, self.scene.ext("Material", materials[role])
                     if role in materials else None)
+        for name in materials:
+            if name not in ROLES:
+                setattr(self, name, self.scene.ext("Material", materials[name]))
         self._n = 0
         self.scene.node(root_name, "Node3D", ".",
                         script=self.scene.ext("Script", script_path))
@@ -133,11 +149,25 @@ class Model:
             "rings = %d" % rings,
         ], material)
 
-    def prism(self, material, x, y, z):
-        """A wedge. Fins, shards, spikes, claws."""
+    def prism(self, material, x, y, z, along="y"):
+        """A wedge. Fins, shards, spikes, claws, saw teeth.
+
+        A PrismMesh points its apex down +Y, so anything that wants a wedge
+        lying FLAT - a saw tooth pointing outwards, a blade on a disc - rotates
+        it onto its side, and its authored `y` then measures a horizontal
+        length. `along` says which axis that length ends up on, exactly as it
+        does on cyl() and capsule(): leave it at "y" for a fin standing up, pass
+        "z" for a tooth laid over.
+
+        Get it wrong and nothing errors - the tooth is quietly the wrong length,
+        and wrong by a different amount at every tier, because the width and
+        height ramps are not the same curve.
+        """
         return self._mesh("PrismMesh", [
             "size = Vector3(%s, %s, %s)" % (
-                num(x * self.s), num(y * self.h), num(z * self.s)),
+                num(x * self.s),
+                num(y * (self.h if along == "y" else self.s)),
+                num(z * self.s)),
         ], material)
 
     def capsule(self, material, radius, height, segments=6, rings=2, along="y"):
@@ -181,16 +211,21 @@ class Model:
         self.scene.node(name, "Node3D", parent, props=[
             "transform = %s" % t3(x * self.s, y * self.h, z * self.s, rx, ry, rz)])
 
-    def ring_of(self, count, radius, place):
+    def ring_of(self, count, radius, place, phase=0.0):
         """Calls place(index, x, z, angle) once per item, evenly around a ring.
 
         The repeated-feature helper: blades on a grinder, buttresses on a
         cannon, shards around a core, legs under a creep. Kept here because
         getting the trigonometry subtly wrong in nine separate builders is
         exactly how a roster ends up looking hand-made in the bad way.
+
+        `phase` turns the WHOLE ring, position and orientation together, which
+        is what a model wants when its body is not axis aligned - a tower stood
+        at 45 degrees needs its battlements at 45 degrees too, and rotating
+        each merlon in place would leave them sitting on their own corners.
         """
         for index in range(count):
-            angle = index * math.tau / count
+            angle = index * math.tau / count + phase
             place(index, math.sin(angle) * radius, math.cos(angle) * radius, angle)
 
     def sparks(self, name, parent, colour, count=14, radius=0.024,
@@ -324,6 +359,25 @@ class Model:
                         script=self.scene.ext("Script", SPIN_SCRIPT),
                         props=['_spinner = NodePath("..")',
                                "turns_per_second = %s" % num(turns_per_second),
+                               "axis = %s" % axis])
+
+    def swayer(self, name, parent, degrees, cycles_per_second, phase=0.0,
+               axis="Vector3(0, 0, 1)"):
+        """Rocks its parent back and forth about an axis.
+
+        The third motion helper, and the one a piece of CLOTH wants: a pennant
+        does not turn like a halo or rise like a floating core, it leans. It is
+        what an Ultimate Basic tower has instead of the metal ring the roster
+        used to give it, and it is the only moving part on that roster that is
+        not a tower's own attack.
+        """
+        self.scene.node(name, "Node", parent,
+                        node_paths=["_swaying"],
+                        script=self.scene.ext("Script", SWAY_SCRIPT),
+                        props=['_swaying = NodePath("..")',
+                               "degrees = %s" % num(degrees),
+                               "cycles_per_second = %s" % num(cycles_per_second),
+                               "phase = %s" % num(phase),
                                "axis = %s" % axis])
 
     def bobber(self, name, parent, height, cycles_per_second, phase=0.0):

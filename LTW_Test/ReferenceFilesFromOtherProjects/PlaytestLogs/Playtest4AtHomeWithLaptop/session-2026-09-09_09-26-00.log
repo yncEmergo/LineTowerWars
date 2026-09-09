@@ -1,0 +1,7 @@
+[    0.000] session.begin  { "utc": "2026-09-09T07:26:00", "platform": "Windows", "engine": "4.7.2-stable (official)", "debug_build": false, "build": "prototype · 2026-09-08 21:17 UTC · 79742d9" }
+[    0.000] config  { "protocol": 2, "lockstep": true, "ticks_per_turn": 1, "adaptive_delay": true, "delay_range": [1, 12], "jitter_margin_ms": 20, "address": "167.233.153.19", "port": 7777 }
+[   16.606] net.peer_joined  835948418
+[   30.222] match.starting  { "match": "match-1", "players": 2, "seed": 3590291195, "local_slot": 2 }
+[   31.156] match.warmed  { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 575.0 }
+[   32.432] lockstep.stalled  { "turn": 0, "missing": [835948418], "stalls_so_far": 1 }
+[   56.882] net.peer_left  835948418

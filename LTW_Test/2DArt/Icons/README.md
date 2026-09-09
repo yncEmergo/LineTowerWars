@@ -32,3 +32,21 @@ Re-running the tool overwrites every file here, so do not edit one by hand
 and expect it to survive. One image per unit type, named after its display
 name, framed on the unit's own bounding box so every tier comes out the same
 size on a card whatever its real height.
+
+## The towers are baked too, and the rule that lets them be
+
+`IconGen3D` used to skip the tower folder entirely. The reason was real: an
+icon is looked up by a unit's DISPLAY NAME and written by its KEY, and for the
+ELEMENTAL roster those disagree — `apprentice.png` against a key of
+`arcane_apprentice` — so baking that folder by key once wrote two hundred files
+under names nothing reads.
+
+It is now a CHECK rather than an omission: a unit is baked only where its key
+and its display-name slug are the same string. The thirty Basic towers pass
+(`lesser_watch_tower` is "Lesser Watch Tower"), the eighty elemental ones do
+not, and the run prints each one it skipped and what its icon is really called.
+
+    godot --path . res://Scenes/Tools/icon_gen_3d.tscn -- towers
+
+The Elemental Core passes the same test and is baked with them, which is
+correct — it is a tower with no element yet, and its key really is its name.

@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://Resources/UnitStats/Towers/greater_turret_stats.tres" id="3_greater_turret_stats"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Models/Towers/greater_turret_model.tscn" id="4_greater_turret_model"]
 [ext_resource type="Material" path="res://Resources/Materials/Towers/selection_ring.tres" id="5_selection_ring"]
-[ext_resource type="Script" path="res://Scripts/Components/RecoilAnimation3D.gd" id="6_RecoilAnimation3D"]
+[ext_resource type="Script" path="res://Scripts/Components/BarrelCycleAnimation3D.gd" id="6_BarrelCycleAnimation3D"]
 
 [sub_resource type="TorusMesh" id="SelectionRing"]
 inner_radius = 0.40
@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_greater_turret_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.915
+health_bar_height = 1.081
 select_radius = 0.5
-select_height = 0.286
+select_height = 0.36
 
 [node name="Visual" parent="." instance=ExtResource("4_greater_turret_model")]
 
@@ -37,8 +37,10 @@ _unit = NodePath("..")
 _muzzle = NodePath("../Visual/Turret/Muzzle")
 _turret_head = NodePath("../Visual/Turret")
 
-[node name="Recoil1" type="Node" parent="." node_paths=PackedStringArray("_unit", "_recoiling")]
-script = ExtResource("6_RecoilAnimation3D")
+[node name="BarrelCycle" type="Node" parent="." node_paths=PackedStringArray("_unit", "_muzzle", "_barrels", "_tips")]
+script = ExtResource("6_BarrelCycleAnimation3D")
 _unit = NodePath("..")
-_recoiling = NodePath("../Visual/Turret/Rack")
+_muzzle = NodePath("../Visual/Turret/Muzzle")
+_barrels = [NodePath("../Visual/Turret/Tube1"), NodePath("../Visual/Turret/Tube2"), NodePath("../Visual/Turret/Tube3"), NodePath("../Visual/Turret/Tube4"), NodePath("../Visual/Turret/Tube5")]
+_tips = [NodePath("../Visual/Turret/Tube1/Tip"), NodePath("../Visual/Turret/Tube2/Tip"), NodePath("../Visual/Turret/Tube3/Tip"), NodePath("../Visual/Turret/Tube4/Tip"), NodePath("../Visual/Turret/Tube5/Tip")]
 distance = 0.05

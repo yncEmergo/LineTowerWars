@@ -1,0 +1,333 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 411112058, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Peer joined 499082578
+[INFO] Lobby list received { "lobbies": 0 }
+[INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 1, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-09_13-02-08.log }
+[INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Match starting { "match": match-2, "slot": 1, "players": 2 }
+[INFO] Match scene loaded { "match": match-2, "path": res://Scenes/Main.tscn }
+[INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 596.0 }
+[INFO] Match start { "match": match-2, "slot": 1, "players": 2 }
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 2, "local_slot": 1, "seed": 277573726, "starting_lives": 100, "settings": unranked, All Creeps, Pick Tech, None, random lanes, CHEATS ON }
+[INFO] Lockstep reset for a new match { "match": match-2 }
+[INFO] Match paused { "tick": 0, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[INFO] Match resumed { "tick": 0, "by": &"lockstep", "holders": [  ] }
+[INFO] Order ran { "turn": 4, "waited_ms": 112, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 7, "waited_ms": 92, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 12, "waited_ms": 137, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 15, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 34, "waited_ms": 129, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 37, "waited_ms": 91, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 41, "waited_ms": 108, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 44, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 48, "waited_ms": 113, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 51, "waited_ms": 92, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 54, "waited_ms": 75, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 58, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 61, "waited_ms": 108, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Order ran { "turn": 72, "waited_ms": 95, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 82, "waited_ms": 98, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Order ran { "turn": 94, "waited_ms": 123, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Control group assigned { "group": 1, "units": 1 }
+[INFO] Control group assigned { "group": 1, "units": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Control group assigned { "group": 2, "units": 1 }
+[INFO] Control group assigned { "group": 2, "units": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Control group assigned { "group": 3, "units": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Control group assigned { "group": 4, "units": 1 }
+[INFO] Control group assigned { "group": 4, "units": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 169, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 183, "waited_ms": 77, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 187, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 190, "waited_ms": 102, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Order ran { "turn": 206, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 211, "waited_ms": 97, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 214, "waited_ms": 88, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Order ran { "turn": 224, "waited_ms": 94, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 235, "waited_ms": 80, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 244, "waited_ms": 102, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 254, "waited_ms": 119, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[INFO] Order ran { "turn": 261, "waited_ms": 86, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 265, "waited_ms": 99, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Tower placed { "cell": (14,8), "tower": &"LesserArcher_14_8", "cost": 10 }
+[WARN] Tower cannot be placed there { "cell": (13,8) }
+WARNING: Tower cannot be placed there { "cell": (13,8) }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Tower placed { "cell": (12,8), "tower": &"LesserArcher_12_8", "cost": 10 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Tower placed { "cell": (10,8), "tower": &"LesserArcher_10_8", "cost": 10 }
+[INFO] Tower placed { "cell": (8,8), "tower": &"LesserArcher_8_8", "cost": 10 }
+[INFO] Tower placed { "cell": (6,8), "tower": &"LesserArcher_6_8", "cost": 10 }
+[INFO] Tower placed { "cell": (4,8), "tower": &"LesserArcher_4_8", "cost": 10 }
+[INFO] Tower placed { "cell": (2,8), "tower": &"LesserArcher_2_8", "cost": 10 }
+[INFO] Order ran { "turn": 517, "waited_ms": 107, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 524, "waited_ms": 107, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 527, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 532, "waited_ms": 98, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 554, "waited_ms": 78, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 572, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 576, "waited_ms": 79, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 584, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 591, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (0,12), "tower": &"LesserArcher_0_12", "cost": 10 }
+[INFO] Tower placed { "cell": (2,12), "tower": &"LesserArcher_2_12", "cost": 10 }
+[INFO] Tower placed { "cell": (4,12), "tower": &"LesserArcher_4_12", "cost": 10 }
+[WARN] Not enough gold on arrival, order dropped { "cost": 10 }
+WARNING: Not enough gold on arrival, order dropped { "cost": 10 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Not enough gold on arrival, order dropped { "cost": 10 }
+WARNING: Not enough gold on arrival, order dropped { "cost": 10 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Not enough gold on arrival, order dropped { "cost": 10 }
+WARNING: Not enough gold on arrival, order dropped { "cost": 10 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 913, "waited_ms": 120, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 916, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 920, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 924, "waited_ms": 125, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 927, "waited_ms": 88, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Ability cancelled
+[INFO] Order ran { "turn": 971, "waited_ms": 125, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1144, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1147, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1151, "waited_ms": 120, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 1198, "waited_ms": 90, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1201, "waited_ms": 87, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1204, "waited_ms": 77, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1217, "waited_ms": 139, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (0,8), "tower": &"LesserArcher_0_8", "cost": 10 }
+[INFO] Tower placed { "cell": (2,8), "tower": &"LesserArcher_2_8", "cost": 10 }
+[INFO] Order ran { "turn": 1225, "waited_ms": 112, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1232, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (4,8), "tower": &"LesserArcher_4_8", "cost": 10 }
+[INFO] Order ran { "turn": 1244, "waited_ms": 135, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (6,11), "tower": &"LesserArcher_6_11", "cost": 10 }
+[INFO] Tower placed { "cell": (4,11), "tower": &"LesserArcher_4_11", "cost": 10 }
+[INFO] Order ran { "turn": 1251, "waited_ms": 94, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1260, "waited_ms": 109, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (2,11), "tower": &"LesserArcher_2_11", "cost": 10 }
+[INFO] Order ran { "turn": 1266, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1269, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 3 }
+[INFO] Order ran { "turn": 1318, "waited_ms": 100, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 3 }
+[INFO] Order ran { "turn": 1326, "waited_ms": 93, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 1335, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Building sold { "building": &"LesserArcher_6_11", "refund": 6 }
+[INFO] Building sold { "building": &"LesserArcher_4_11", "refund": 6 }
+[INFO] Building sold { "building": &"LesserArcher_2_11", "refund": 6 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 21 }
+[INFO] Order ran { "turn": 1385, "waited_ms": 78, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Building sold { "building": &"LesserArcher_0_8", "refund": 6 }
+[INFO] Building sold { "building": &"LesserArcher_2_8", "refund": 6 }
+[INFO] Building sold { "building": &"LesserArcher_4_8", "refund": 6 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 20 }
+[INFO] Order ran { "turn": 1389, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 19 }
+[INFO] Order ran { "turn": 1392, "waited_ms": 115, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[INFO] Order ran { "turn": 1401, "waited_ms": 95, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[INFO] Order ran { "turn": 1405, "waited_ms": 114, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 21 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 20 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 19 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 18 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 17 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 1470, "waited_ms": 104, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1478, "waited_ms": 74, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1492, "waited_ms": 79, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1496, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1503, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1513, "waited_ms": 86, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1527, "waited_ms": 112, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1530, "waited_ms": 94, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1533, "waited_ms": 97, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[INFO] Order ran { "turn": 1542, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1550, "waited_ms": 130, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (12,42), "tower": &"LesserArcher_12_42", "cost": 10 }
+[INFO] Order ran { "turn": 1555, "waited_ms": 118, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (14,42), "tower": &"LesserArcher_14_42", "cost": 10 }
+[INFO] Order ran { "turn": 1560, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1564, "waited_ms": 108, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1579, "waited_ms": 130, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1583, "waited_ms": 125, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Attack }
+[INFO] Order ran { "turn": 1588, "waited_ms": 115, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1615, "waited_ms": 78, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1619, "waited_ms": 113, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1622, "waited_ms": 101, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (6,31), "tower": &"LesserArcher_6_31", "cost": 10 }
+[INFO] Order ran { "turn": 1631, "waited_ms": 107, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1636, "waited_ms": 88, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (8,33), "tower": &"LesserArcher_8_33", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 1644, "waited_ms": 95, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1648, "waited_ms": 108, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (10,35), "tower": &"LesserArcher_10_35", "cost": 10 }
+[INFO] Order ran { "turn": 1654, "waited_ms": 98, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1658, "waited_ms": 77, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1663, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1667, "waited_ms": 112, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1670, "waited_ms": 96, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Attack }
+[INFO] Order ran { "turn": 1676, "waited_ms": 74, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1698, "waited_ms": 78, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1702, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1706, "waited_ms": 116, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1709, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1713, "waited_ms": 79, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Attack }
+[INFO] Order ran { "turn": 1719, "waited_ms": 113, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1733, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1736, "waited_ms": 82, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1740, "waited_ms": 717, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Match paused { "tick": 1741, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 1741, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1741, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 1741, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 1767, "waited_ms": 457, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1770, "waited_ms": 426, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1783, "waited_ms": 292, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1794, "waited_ms": 242, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1808, "waited_ms": 229, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1823, "waited_ms": 203, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1836, "waited_ms": 226, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1850, "waited_ms": 190, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 1899, "waited_ms": 200, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1911, "waited_ms": 229, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1924, "waited_ms": 192, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1936, "waited_ms": 191, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1950, "waited_ms": 225, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1964, "waited_ms": 232, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1974, "waited_ms": 229, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1997, "waited_ms": 192, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 2006, "waited_ms": 187, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (6,12), "tower": &"LesserArcher_6_12", "cost": 10 }
+[INFO] Tower placed { "cell": (8,12), "tower": &"LesserArcher_8_12", "cost": 10 }
+[INFO] Tower placed { "cell": (10,12), "tower": &"LesserArcher_10_12", "cost": 10 }
+[INFO] Order ran { "turn": 2030, "waited_ms": 221, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (12,12), "tower": &"LesserArcher_12_12", "cost": 10 }
+[INFO] Order ran { "turn": 2046, "waited_ms": 182, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 2061, "waited_ms": 220, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 2072, "waited_ms": 217, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (14,15), "tower": &"LesserArcher_14_15", "cost": 10 }
+[INFO] Tower placed { "cell": (12,15), "tower": &"LesserArcher_12_15", "cost": 10 }
+[INFO] Tower placed { "cell": (10,15), "tower": &"LesserArcher_10_15", "cost": 10 }
+[INFO] Order ran { "turn": 2091, "waited_ms": 192, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 2104, "waited_ms": 222, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (8,15), "tower": &"LesserArcher_8_15", "cost": 10 }
+[INFO] Tower placed { "cell": (6,15), "tower": &"LesserArcher_6_15", "cost": 10 }
+[INFO] Tower placed { "cell": (4,15), "tower": &"LesserArcher_4_15", "cost": 10 }
+[INFO] Tower placed { "cell": (2,15), "tower": &"LesserArcher_2_15", "cost": 10 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Blueprint shown { "slot": 1, "towers": 35 }
+[INFO] Match paused { "tick": 2476, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 2476, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 2476, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 2476, "by": &"lockstep", "holders": [  ] }
+[INFO] Tower placed { "cell": (14,42), "tower": &"LesserArcher_14_42", "cost": 10 }
+[INFO] Tower placed { "cell": (12,42), "tower": &"LesserArcher_12_42", "cost": 10 }
+[INFO] Tower placed { "cell": (13,39), "tower": &"LesserArcher_13_39", "cost": 10 }
+[INFO] Tower placed { "cell": (12,37), "tower": &"LesserArcher_12_37", "cost": 10 }
+[INFO] Tower placed { "cell": (13,34), "tower": &"LesserArcher_13_34", "cost": 10 }
+[INFO] Tower placed { "cell": (14,32), "tower": &"LesserArcher_14_32", "cost": 10 }
+[INFO] Tower placed { "cell": (11,32), "tower": &"LesserArcher_11_32", "cost": 10 }
+[INFO] Tower placed { "cell": (13,29), "tower": &"LesserArcher_13_29", "cost": 10 }
+[INFO] Tower placed { "cell": (12,27), "tower": &"LesserArcher_12_27", "cost": 10 }
+[INFO] Tower placed { "cell": (10,27), "tower": &"LesserArcher_10_27", "cost": 10 }
+[INFO] Tower placed { "cell": (8,27), "tower": &"LesserArcher_8_27", "cost": 10 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[INFO] Tower placed { "cell": (6,29), "tower": &"LesserArcher_6_29", "cost": 10 }
+[WARN] Not enough gold on arrival, order dropped { "cost": 10 }
+WARNING: Not enough gold on arrival, order dropped { "cost": 10 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 3124, "waited_ms": 215, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 3134, "waited_ms": 175, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Closing the connection on the way out

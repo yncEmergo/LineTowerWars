@@ -2,12 +2,23 @@
 
 Three families, and between them they are the whole palette:
 
-    <line>_plate       one per LINE and TONE - base, deep and pale. The
-    <line>_plate_deep  body colour and the rim light. Three depths of the same
-    <line>_plate_pale  material, so a tower has parts instead of being a lump
-    trim_t<n>          one per PRICE TIER. The iron -> white gold ramp, and the
-                       primary thing a player reads a BASIC tower's tier off
-    energy_<line>_t<n> one per line and tier. The lit accent
+    timber_t<n>        the Basic roster's three surfaces, one file per PRICE
+    masonry_t<n>       TIER and TONE. A Basic tower is timber and turns to
+    iron_t<n>          stone as it is bought up, and the Cutter line is iron
+                       throughout - so the tier is read off the MATERIAL, and
+                       these are indexed by tier rather than by line
+    paint_<line>_t<n>  the matte accent, one per LINE and tier, and the only
+                       colour the Basic roster carries. None at 10g
+    energy_<line>_t<n> one per line and tier. The small lit accent
+
+THERE IS NO `trim_t<n>` AND NO `<line>_plate` ANY MORE, and both are worth
+knowing about because they were the roster's whole identity until they were
+not. The metal ramp WAS the Basic tier ladder - a ring, a collar, bolts, fins
+and a halo in iron through white gold - and it came off for the two reasons the
+elemental roster's own metal came off, which are written out in style.py under
+THE TIER LADDER. The one plate material per line went with it, because a tower
+that turns from wood into stone needs its material to belong to the TIER rather
+than to the line.
 
 The elemental roster has three of its own, and the split is the point: an
 element's tier is read off its OWN MATERIAL rather than off a metal, because
@@ -27,10 +38,10 @@ per-instance shader uniforms do not exist under gl_compatibility - see
 tower_energy.gdshader. That is also why there is one energy material per
 combination rather than one per line.
 
-Trim is a plain StandardMaterial3D on purpose. What makes an Ultimate read as
-one is the COLOUR of its metal, so a 3D artist replacing these primitives
-should be able to swap six materials for six real metals without touching a
-line of shader code.
+The elemental ring metals are plain StandardMaterial3Ds on purpose. What
+makes one of those two rungs read is the COLOUR of the metal, so a 3D artist
+replacing these primitives should be able to swap them for two real metals
+without touching a line of shader code.
 
 The creeps' own three families sit at the bottom of the file and write into
 Resources/Materials/Creeps instead. Same five roles, different folder, so
@@ -49,6 +60,13 @@ from tscn import c, num
 OUT = "Resources/Materials/Towers"
 PLATING = "res://Resources/Shaders/tower_plating.gdshader"
 ENERGY = "res://Resources/Shaders/tower_energy.gdshader"
+# The Basic roster's three surfaces and its accent. The elemental roster still
+# goes through PLATING, which is why that one is still here: the two rosters
+# were separated when the Basic one stopped being made of plate.
+TIMBER = "res://Resources/Shaders/tower_timber.gdshader"
+MASONRY = "res://Resources/Shaders/tower_masonry.gdshader"
+IRON = "res://Resources/Shaders/tower_iron.gdshader"
+PAINT = "res://Resources/Shaders/tower_paint.gdshader"
 
 
 def write(path, text):
@@ -77,46 +95,180 @@ def standard_material(params):
     return "\n".join(lines) + "\n"
 
 
-def _plate(line, palette, tone):
-    plate, dark = palette["tones"][tone]
-    suffix = "" if tone == "base" else "_" + tone
-    write("%s/%s_plate%s.tres" % (OUT, line, suffix), shader_material(PLATING, [
-        ("plate_color", c(plate)),
-        ("plate_dark_color", c(dark)),
-        ("panel_frequency", num(7.0)),
-        ("panel_width", num(0.06)),
-        ("panel_strength", num(0.35)),
-        ("ambient_wrap", num(0.4)),
-        ("rim_color", c(palette["rim"])),
-        ("rim_strength", num(0.6)),
-        ("rim_power", num(2.6)),
-        ("roughness_value", num(0.62)),
-        ("metallic_value", num(0.15)),
-    ]))
+def _timber(tone, ti):
+    """One tone of the Basic roster's timber, on one rung of its tier ramp.
+
+    Boards get FINER as the ladder climbs - narrower planks, tighter grain -
+    which is the quiet half of the tier tell that the tint is the loud half of.
+    Rough wide palisade boards at 10g, sawn and fitted joinery by the top.
+    """
+    tones = ts.basic_surface("timber", tone, ti)
+    write("%s/timber_t%d%s.tres" % (OUT, ti, _suffix(tone)),
+          shader_material(TIMBER, [
+              ("timber_color", c(tones["mid"])),
+              ("timber_dark_color", c(tones["dark"])),
+              ("timber_light_color", c(tones["light"])),
+              ("plank_width", num(round(0.105 - 0.008 * ti, 4))),
+              ("seam_width", num(round(0.085 - 0.005 * ti, 4))),
+              ("seam_strength", num(0.9)),
+              ("plank_variation", num(round(0.56 - 0.03 * ti, 4))),
+              ("grain_frequency", num(round(28.0 + 3.5 * ti, 4))),
+              ("grain_strength", num(round(0.34 - 0.02 * ti, 4))),
+              ("grain_wander", num(round(0.42 - 0.04 * ti, 4))),
+              ("damp_height", num(0.26)),
+              ("damp_strength", num(0.38)),
+              ("ambient_wrap", num(0.4)),
+              ("rim_color", c(ts.BASIC_SURFACES["timber"]["rim"])),
+              ("rim_strength", num(0.55)),
+              ("rim_power", num(2.6)),
+              ("roughness_value", num(0.8)),
+              ("metallic_value", num(0.0)),
+          ]))
 
 
-def _trim(index, colour):
-    # Only the top two tiers emit at all, so gold reads as hot rather than
-    # merely pale when a whole maze of mixed tiers is on screen at once.
-    top = index >= 4
-    write("%s/trim_t%d.tres" % (OUT, index), standard_material([
-        ("albedo_color", c(colour)),
-        ("metallic", num(0.9)),
-        ("metallic_specular", num(0.75)),
-        ("roughness", num(0.45 - 0.06 * index)),
-        ("emission_enabled", "true" if top else "false"),
-        ("emission", c(colour)),
-        ("emission_energy_multiplier", num(0.25 if index == 4 else 0.55)),
+def _masonry(tone, ti):
+    """One tone of the Basic roster's stone, on one rung of its tier ramp.
+
+    The blocks get BIGGER and the joints get TIGHTER up the ladder - rubble
+    coursing at 150g through to dressed ashlar at 25,000g - which is the same
+    trick the timber plays and for the same reason: a tint alone is one signal,
+    and two neighbouring rungs of any tint ramp are the hardest pair to tell
+    apart. A block size is readable where a five percent value step is not.
+    """
+    tones = ts.basic_surface("masonry", tone, ti)
+    write("%s/masonry_t%d%s.tres" % (OUT, ti, _suffix(tone)),
+          shader_material(MASONRY, [
+              ("stone_color", c(tones["mid"])),
+              ("stone_dark_color", c(tones["dark"])),
+              ("stone_light_color", c(tones["light"])),
+              ("course_height", num(round(0.085 + 0.011 * ti, 4))),
+              ("block_length", num(round(0.15 + 0.022 * ti, 4))),
+              ("joint_width", num(round(0.075 - 0.007 * ti, 4))),
+              ("joint_strength", num(0.7)),
+              # RISING with the tier, where it used to fall. The tint
+              # ramp now takes an Ultimate's stone down by about 60%,
+              # and a darker palette needs a WIDER scatter to show the
+              # same coursing - the eye reads contrast, not absolute
+              # values. Falling variation on a falling palette made the
+              # blocks vanish twice over.
+              ("block_variation", num(round(0.52 + 0.06 * ti, 4))),
+              ("block_grain", num(round(0.22 + 0.02 * ti, 4))),
+              ("damp_height", num(0.34)),
+              # EASED OFF AS THE STONE DARKENS. This is a mix TOWARDS the
+              # dark tone, so it compounds with the tint ramp - at a fixed
+              # 0.42 the foot of an Ultimate went to flat black, which is
+              # exactly the thing the ramp stops short of on purpose.
+              ("damp_strength", num(round(0.42 - 0.05 * ti, 4))),
+              ("ambient_wrap", num(0.4)),
+              ("rim_color", c(ts.BASIC_SURFACES["masonry"]["rim"])),
+              ("rim_strength", num(0.55)),
+              ("rim_power", num(2.6)),
+              ("roughness_value", num(0.86)),
+              ("metallic_value", num(0.0)),
+          ]))
+
+
+def _iron(tone, ti):
+    """One tone of the Basic roster's metal, on one rung of its tier ramp.
+
+    `polish` is the Cutter line's whole tier tell and does most of the work
+    here: it lifts the sheen, tightens the brushing and takes the casting pits
+    away, so a Lesser Cutter is rough dark castings and an Ultimate Carver is
+    bright worked steel. See tower_iron.gdshader for why none of that is
+    allowed to be actual METALLIC.
+    """
+    tones = ts.basic_surface("iron", tone, ti)
+    polish = ts.basic_polish(ti)
+    write("%s/iron_t%d%s.tres" % (OUT, ti, _suffix(tone)),
+          shader_material(IRON, [
+              ("iron_color", c(tones["mid"])),
+              ("iron_dark_color", c(tones["dark"])),
+              ("iron_light_color", c(tones["light"])),
+              ("polish", num(polish)),
+              ("streak_frequency", num(round(70.0 + 26.0 * polish, 4))),
+              ("streak_strength", num(0.28)),
+              ("pitting", num(0.35)),
+              # WELL DOWN from where this started. The band is additive
+              # on top of an already pale tone, and at 0.42 every barrel
+              # and blade on the roster came out as a white blob with no
+              # shape left in it - the same saturate-to-white failure the
+              # elemental accents hit, reached through a highlight rather
+              # than through an emission.
+              ("sheen_strength", num(round(0.16 + 0.14 * polish, 4))),
+              ("sheen_width", num(round(2.2 - 0.9 * polish, 4))),
+              ("ambient_wrap", num(0.34)),
+              ("rim_color", c(ts.METAL_RIM)),
+              ("rim_strength", num(0.45)),
+              ("rim_power", num(4.2)),
+              ("roughness_value", num(0.42)),
+              # Well below 1 whatever the finish, or gl_compatibility renders
+              # it black - see tower_iron.gdshader and the creep carapace,
+              # which paid for this lesson first.
+              ("metallic_value", num(0.35)),
+          ]))
+
+
+def _paint(line, ti):
+    """One line's matte accent at one tier. Nothing at all at 10g.
+
+    NO EMISSION, EVER. That is the single rule keeping this off the elements'
+    territory: an elemental accent is lit, a painted board is not, and two
+    colours can then share a hue without ever being confused. See
+    tower_paint.gdshader.
+    """
+    tones = ts.basic_paint(line, ti)
+    if tones is None:
+        return False
+    write("%s/paint_%s_t%d.tres" % (OUT, line, ti), shader_material(PAINT, [
+        ("paint_color", c(tones[0])),
+        ("paint_dark_color", c(tones[1])),
+        ("weave_frequency", num(150.0)),
+        ("weave_strength", num(0.18)),
+        # Freshly painted at the top of the ladder, scrubbed and faded at the
+        # bottom of it. The one place the paint's own age says the tier.
+        ("wear_strength", num(round(0.46 - 0.06 * ti, 4))),
+        ("ambient_wrap", num(0.45)),
+        ("rim_strength", num(0.45)),
+        ("rim_power", num(2.4)),
+        ("roughness_value", num(0.92)),
     ]))
+    return True
+
+
+def _suffix(tone):
+    return "" if tone == "base" else "_" + tone
 
 
 def _energy(line, palette, index):
+    """One line's lit accent at one tier.
+
+    A line may carry a `glow_ramp` - six colours, one per price tier - instead
+    of a single `glow`, and then the accent's HUE is part of the tier ladder
+    rather than only its brightness. Exactly one line does: the Sentry, whose
+    orb is the biggest object on the model and so the strongest tell it has.
+    See style.LINES.
+    """
+    ramp = palette.get("glow_ramp")
+    glow = palette["glow"] if ramp is None else ramp[index]
     write("%s/energy_%s_t%d.tres" % (OUT, line, index), shader_material(ENERGY, [
-        ("glow_color", c(palette["glow"])),
+        ("glow_color", c(glow)),
         ("dim_color", c(palette["dim"])),
         ("tier", num(ts.energy_tier(index))),
-        ("min_brightness", num(0.55)),
-        ("max_brightness", num(2.3)),
+        ("min_brightness", num(0.5)),
+        # 1.45, DOWN FROM 2.3, and the reason is the Sentry line's
+        # rework rather than anything wrong with the number before. The
+        # old ceiling was chosen when every Basic accent was a small warm
+        # detail on grey stone - a sight, a vent, a spark - where it read
+        # as hot and was exactly right. The Sentry line now carries an ORB
+        # that is the biggest single object on the model, and at 2.3 an
+        # Ultimate Defender was a featureless white ball with no shape and
+        # no hue in it, from the one camera angle the game is played at.
+        #
+        # It is the same trap the elemental roster paid for - see
+        # PLACEHOLDER_ART.md - reached from the other direction: there a
+        # ceiling tuned for small accents blew up big ones, and here a
+        # roster that had only small accents grew a big one.
+        ("max_brightness", num(1.45)),
         ("min_pulse_speed", num(0.55)),
         ("max_pulse_speed", num(2.6)),
         ("pulse_depth", num(0.35)),
@@ -136,9 +288,8 @@ def _element_ring(index, colour):
 
     The brass rung EMITS, faintly, and the iron one does not. That is what
     makes the 800g ring read as a bright band in the shadow a maze casts over
-    itself rather than merely as a paler grey - the same trick the top of
-    TRIM_RAMP uses, spent on the one step in this roster that has to carry a
-    whole upgrade on its own.
+    itself rather than merely as a paler grey, spent on the one step in this
+    roster that has to carry a whole upgrade on its own.
     """
     top = index >= 1
     write("%s/element_ring_t%d.tres" % (OUT, index), standard_material([
@@ -164,9 +315,10 @@ def _stone(element, palette, tone, ti=None):
     `ti` names a PATH TIER, and then the authored colour is moved onto that
     tier's rung of PATH_TONE_RAMP before it is written. Those three files are
     what the elemental roster reads its tier off now that its towers carry no
-    metal - one value ramp on the element's own material, doing the job
-    TRIM_RAMP does for the Basic one. The base pair passes None and takes the
-    palette exactly as authored.
+    metal - one value ramp on the element's own material. The Basic roster
+    has since been rebuilt around exactly the same idea, in timber, stone and
+    iron rather than in one hue; see style.py, THE TIER LADDER. The base pair
+    passes None and takes the palette exactly as authored.
     """
     plate, dark = palette["tones"][tone]
     if ti is not None:
@@ -455,20 +607,34 @@ def _creeps():
     return count
 
 
-def generate():
+def _basic():
+    """The Basic roster's materials.
+
+    THREE SURFACES SHARED BY EVERY LINE and one accent per line, which is the
+    reversal this roster went through: it used to be one plate material per
+    LINE and one metal per TIER, and it is now one set of surfaces per TIER
+    that all three lines draw from. The tier moved from the metal onto the
+    material itself, so the files are indexed by tier rather than by line.
+    See style.py, THE TIER LADDER.
+    """
     count = 0
-    for line, palette in ts.LINES.items():
+    for ti in range(len(ts.PRICE_TIERS)):
         for tone in ts.TONES:
-            _plate(line, palette, tone)
+            _timber(tone, ti)
+            _masonry(tone, ti)
+            _iron(tone, ti)
+            count += 3
+    for line, palette in ts.LINES.items():
+        for ti in range(len(ts.PRICE_TIERS)):
+            if _paint(line, ti):
+                count += 1
+            _energy(line, palette, ti)
             count += 1
-        for index in range(len(ts.PRICE_TIERS)):
-            _energy(line, palette, index)
-            count += 1
+    return count
 
-    for index, colour in enumerate(ts.TRIM_RAMP):
-        _trim(index, colour)
-        count += 1
 
+def generate():
+    count = _basic()
     count += _elements()
     count += _creeps()
     print("wrote %d unit materials" % count)

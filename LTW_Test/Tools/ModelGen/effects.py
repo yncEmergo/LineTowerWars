@@ -207,15 +207,21 @@ def burst(name, ring_colour, core_colour, ring_radius, duration, end_scale):
 
 
 def shockwave():
-    """The Crusher's blast, drawn on the ground it covers.
+    """The Stomper's blast, drawn on the ground it covers.
 
     Authored at RADIUS 1 and scaled by the tower to its own blast radius, so
     the ring a player learns to read is always exactly the ground that took
-    damage - an Ultimate Crusher's is wider than a Lesser's without either
+    damage - an Ultimate Stomper's is wider than a Lesser's without either
     being authored twice. See SlamAnimation3D._scale_to_blast.
 
     Flat and on the floor, because the camera looks down: a dome would hide
     the creeps it is telling you about.
+
+    THE DUST is the one part of it that is not measured. The ring is the rule
+    made visible and must stay exactly the ground that took damage; the dust
+    thrown up off it is what makes a dropped weight read as heavy rather than
+    as a decal switching on, and it is deliberately kept low and short so it
+    never hides a creep standing in the blast it is announcing.
     """
     s = Scene()
     ring_m = unshaded(s, "M_ring", (1.00, 0.72, 0.34), 0.9)
@@ -251,6 +257,39 @@ def shockwave():
     for index, (x, z) in enumerate(((0.62, 0.24), (-0.5, 0.44), (0.1, -0.66),
                                     (-0.34, -0.44))):
         put(s, "Dust%d" % (index + 1), dust, x=x, y=0.12, z=z)
+
+    # The cloud the weight punches out of the ground. Started by
+    # VisualEffect3D.play(), like every other emitter in the game - authored
+    # emitting, it would throw its whole load at the effects root's origin
+    # before the ring was ever put in place.
+    #
+    # Thrown OUTWARDS along the ground rather than up: gravity is barely
+    # positive and the emission box is flat and nearly as wide as the ring, so
+    # what a player sees is the blast spreading rather than a chimney of smoke
+    # standing where the tower is.
+    puff = mesh(s, "SphereMesh", "Puff", [
+        "radius = 0.13", "height = 0.22",
+        "radial_segments = 6", "rings = 3"], dust_m)
+    s.node("Dust", "CPUParticles3D", ".", props=[
+        "transform = %s" % t3(y=0.06),
+        "emitting = false",
+        "one_shot = true",
+        "explosiveness = 1.0",
+        "amount = 18",
+        "lifetime = 0.75",
+        'mesh = SubResource("%s")' % puff,
+        "emission_shape = 3",
+        "emission_box_extents = Vector3(0.6, 0.02, 0.6)",
+        "direction = Vector3(0, 0.35, 0)",
+        "spread = 85.0",
+        "initial_velocity_min = 0.5",
+        "initial_velocity_max = 1.3",
+        "gravity = Vector3(0, 0.15, 0)",
+        "damping_min = 1.4",
+        "damping_max = 3.0",
+        "scale_amount_min = 0.6",
+        "scale_amount_max = 1.5",
+    ])
     return s
 
 

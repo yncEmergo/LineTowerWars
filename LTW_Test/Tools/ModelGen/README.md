@@ -42,7 +42,7 @@ Needs Python 3 and nothing else — no Godot, no packages.
 ## Why it exists
 
 Thirty towers is past the number a person keeps consistent by hand. The tier
-ladder only reads if every tower obeys the same six rules; a branch only reads
+ladder only reads if every tower obeys the same rules; a branch only reads
 as a family if its four tiers really are one shape at four sizes. Both stop
 being true the first time somebody nudges one file. So the rules live in
 `style.py`, the numbers live in `roster.py`, and everything else is output.
@@ -65,9 +65,10 @@ generator.
 | --- | --- | --- |
 | `tscn.py` | writes Godot's `.tscn` / `.tres` text formats | never |
 | `modelkit.py` | primitives, placement, motion, the five material roles | rarely |
-| `style.py` | **the visual language** — both palettes, both tier ladders | the look changes |
+| `style.py` | **the visual language** — every palette, every tier ladder | the look changes |
 | `roster.py` | the Basic tower table, straight from `unit_data.md` §3 | balance changes |
 | `tower_models.py` | the nine Basic branch silhouettes | shapes change |
+| `materials.py` | writes the four Basic shaders' materials | tuning |
 | `tower_content.py` | Basic stats, prefabs, build and upgrade abilities | rules change |
 | `element_roster.py` | the elemental table, straight from `unit_data.md` §4 | balance changes |
 | `element_abilities.py` | each tower's named ability and its numbers | balance changes |

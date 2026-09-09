@@ -1,0 +1,21 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/tower_iron.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/iron_color = Color(0.518, 0.4144, 0.1998, 1)
+shader_parameter/iron_dark_color = Color(0.2739, 0.2094, 0.0967, 1)
+shader_parameter/iron_light_color = Color(0.666, 0.5772, 0.3478, 1)
+shader_parameter/polish = 0.54
+shader_parameter/streak_frequency = 84.04
+shader_parameter/streak_strength = 0.28
+shader_parameter/pitting = 0.35
+shader_parameter/sheen_strength = 0.2356
+shader_parameter/sheen_width = 1.714
+shader_parameter/ambient_wrap = 0.34
+shader_parameter/rim_color = Color(0.92, 0.96, 1, 1)
+shader_parameter/rim_strength = 0.45
+shader_parameter/rim_power = 4.2
+shader_parameter/roughness_value = 0.42
+shader_parameter/metallic_value = 0.35

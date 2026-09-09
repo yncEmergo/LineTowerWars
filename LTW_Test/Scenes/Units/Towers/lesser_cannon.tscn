@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_lesser_cannon_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.718
+health_bar_height = 0.978
 select_radius = 0.5
-select_height = 0.197
+select_height = 0.314
 
 [node name="Visual" parent="." instance=ExtResource("4_lesser_cannon_model")]
 

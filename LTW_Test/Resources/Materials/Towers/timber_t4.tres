@@ -1,0 +1,24 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/tower_timber.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/timber_color = Color(0.5208, 0.375, 0.2187, 1)
+shader_parameter/timber_dark_color = Color(0.277, 0.1916, 0.1061, 1)
+shader_parameter/timber_light_color = Color(0.6918, 0.5304, 0.3152, 1)
+shader_parameter/plank_width = 0.073
+shader_parameter/seam_width = 0.065
+shader_parameter/seam_strength = 0.9
+shader_parameter/plank_variation = 0.44
+shader_parameter/grain_frequency = 42
+shader_parameter/grain_strength = 0.26
+shader_parameter/grain_wander = 0.26
+shader_parameter/damp_height = 0.26
+shader_parameter/damp_strength = 0.38
+shader_parameter/ambient_wrap = 0.4
+shader_parameter/rim_color = Color(1, 0.92, 0.78, 1)
+shader_parameter/rim_strength = 0.55
+shader_parameter/rim_power = 2.6
+shader_parameter/roughness_value = 0.8
+shader_parameter/metallic_value = 0

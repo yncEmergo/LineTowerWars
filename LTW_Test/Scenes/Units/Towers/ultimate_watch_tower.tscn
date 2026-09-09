@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_ultimate_watch_tower_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 1.081
+health_bar_height = 1.217
 select_radius = 0.5
-select_height = 0.36
+select_height = 0.422
 
 [node name="Visual" parent="." instance=ExtResource("4_ultimate_watch_tower_model")]
 
@@ -40,5 +40,5 @@ _turret_head = NodePath("../Visual/Turret")
 [node name="Recoil1" type="Node" parent="." node_paths=PackedStringArray("_unit", "_recoiling")]
 script = ExtResource("6_RecoilAnimation3D")
 _unit = NodePath("..")
-_recoiling = NodePath("../Visual/Turret/Barrel")
+_recoiling = NodePath("../Visual/Turret/Stock")
 distance = 0.075

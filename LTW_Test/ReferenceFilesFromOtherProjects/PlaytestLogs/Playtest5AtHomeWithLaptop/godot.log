@@ -1,0 +1,88 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 827061821, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Lobby list received { "lobbies": 0 }
+[INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 1, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Session logging on { "path": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-09_09-35-56.log }
+[INFO] Peer joined 355109623
+[INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 2, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Match starting { "match": match-1, "slot": 1, "players": 2 }
+[INFO] Match scene loaded { "match": match-1, "path": res://Scenes/Main.tscn }
+[INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 583.0 }
+[INFO] Match start { "match": match-1, "slot": 1, "players": 2 }
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 2, "local_slot": 1, "seed": 3880357211, "starting_lives": 100, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Lockstep reset for a new match { "match": match-1 }
+[INFO] Match paused { "tick": 0, "by": &"lockstep", "holders": [ &"lockstep" ] }
+[WARN] Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Match resumed { "tick": 0, "by": &"lockstep", "holders": [  ] }
+[INFO] Selection changed { "count": 1 }
+[INFO] Order ran { "turn": 14, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 20, "waited_ms": 128, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 27, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 31, "waited_ms": 78, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 35, "waited_ms": 99, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 39, "waited_ms": 113, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 43, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Order ran { "turn": 64, "waited_ms": 108, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 73, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Order ran { "turn": 84, "waited_ms": 85, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Order ran { "turn": 99, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[INFO] Order ran { "turn": 107, "waited_ms": 87, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 111, "waited_ms": 121, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Order ran { "turn": 123, "waited_ms": 81, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 138, "waited_ms": 160, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 145, "waited_ms": 89, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Order ran { "turn": 156, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Order ran { "turn": 162, "waited_ms": 83, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 166, "waited_ms": 105, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 169, "waited_ms": 79, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (5,34), "tower": &"LesserArcher_5_34", "cost": 10 }
+[INFO] Tower placed { "cell": (3,32), "tower": &"LesserArcher_3_32", "cost": 10 }
+[INFO] Tower placed { "cell": (1,30), "tower": &"LesserArcher_1_30", "cost": 10 }
+[INFO] Tower placed { "cell": (7,36), "tower": &"LesserArcher_7_36", "cost": 10 }
+[INFO] Tower placed { "cell": (9,38), "tower": &"LesserArcher_9_38", "cost": 10 }
+[INFO] Tower placed { "cell": (10,40), "tower": &"LesserArcher_10_40", "cost": 10 }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Peer left 355109623
+[INFO] In lobby { "id": lobby-1, "name": Milo's Game, "players": 1, "host": true }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Order ran { "turn": 1025, "waited_ms": 120, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1029, "waited_ms": 109, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1033, "waited_ms": 124, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 1036, "waited_ms": 91, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Player left, erasing their world { "slot": 2, "tick": 1065 }
+[INFO] Player erased from the field { "player": 2, "units": 13 }
+[INFO] Closing the connection on the way out

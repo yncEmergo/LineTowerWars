@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/tower_paint.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/paint_color = Color(0.296, 0.3346, 0.4698, 1)
+shader_parameter/paint_dark_color = Color(0.1574, 0.1777, 0.2659, 1)
+shader_parameter/weave_frequency = 150
+shader_parameter/weave_strength = 0.18
+shader_parameter/wear_strength = 0.34
+shader_parameter/ambient_wrap = 0.45
+shader_parameter/rim_strength = 0.45
+shader_parameter/rim_power = 2.4
+shader_parameter/roughness_value = 0.92

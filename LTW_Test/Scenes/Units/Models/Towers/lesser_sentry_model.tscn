@@ -1,56 +1,66 @@
 [gd_scene format=3]
 
-[ext_resource type="Material" path="res://Resources/Materials/Towers/sentry_plate.tres" id="1_sentry_plate"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/sentry_plate_deep.tres" id="2_sentry_plate_deep"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/sentry_plate_pale.tres" id="3_sentry_plate_pale"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/trim_t0.tres" id="4_trim_t0"]
-[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_sentry_t0.tres" id="5_energy_sentry_t0"]
-[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="6_UnitModel"]
-[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="7_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/energy_sentry_t0.tres" id="1_energy_sentry_t0"]
+[ext_resource type="Script" path="res://Scripts/Units/UnitModel.gd" id="2_UnitModel"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Models/tower_foundation.tscn" id="3_tower_foundation"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t0_deep.tres" id="4_timber_t0_deep"]
+[ext_resource type="Material" path="res://Resources/Materials/Towers/timber_t0.tres" id="5_timber_t0"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.1804
-bottom_radius = 0.205
-height = 0.0504
+top_radius = 0.2235
+bottom_radius = 0.204
+height = 0.0799
 radial_segments = 8
 rings = 0
-material = ExtResource("2_sentry_plate_deep")
+material = ExtResource("4_timber_t0_deep")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_2"]
-top_radius = 0.123
-bottom_radius = 0.164
-height = 0.0588
+top_radius = 0.0972
+bottom_radius = 0.1312
+height = 0.2131
 radial_segments = 8
 rings = 0
-material = ExtResource("2_sentry_plate_deep")
+material = ExtResource("4_timber_t0_deep")
 
-[sub_resource type="SphereMesh" id="SphereMesh_3"]
-radius = 0.0861
-height = 0.084
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.1312
+bottom_radius = 0.1117
+height = 0.03
+radial_segments = 8
+rings = 0
+material = ExtResource("5_timber_t0")
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+radius = 0.0826
+height = 0.1132
 radial_segments = 5
 rings = 2
-material = ExtResource("5_energy_sentry_t0")
+material = ExtResource("1_energy_sentry_t0")
 
 [node name="LesserSentryModel" type="Node3D"]
-script = ExtResource("6_UnitModel")
+script = ExtResource("2_UnitModel")
 
-[node name="Base" parent="." instance=ExtResource("7_tower_foundation")]
+[node name="Base" parent="." instance=ExtResource("3_tower_foundation")]
 
-[node name="Plinth" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0252, 0)
+[node name="Footing" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("CylinderMesh_1")
 
-[node name="Cradle" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0798, 0)
+[node name="Shaft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1865, 0)
 mesh = SubResource("CylinderMesh_2")
 
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3064, 0)
+mesh = SubResource("CylinderMesh_3")
+
 [node name="Turret" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1428, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3663, 0)
 
 [node name="Core" type="MeshInstance3D" parent="Turret"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 cast_shadow = 0
-mesh = SubResource("SphereMesh_3")
+mesh = SubResource("SphereMesh_4")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1066)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1166)

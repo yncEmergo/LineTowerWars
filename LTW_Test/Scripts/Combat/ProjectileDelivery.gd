@@ -15,9 +15,20 @@ extends AttackDelivery
 @export_file("*.tscn") var projectile_scene_path: String = ""
 ## World units per second.
 @export var speed: float = 18.0
-## How high the flight bows upwards at its midpoint. 0 is a flat shot, which is
-## what a rifle wants and a mortar does not.
+## How high the flight bows upwards at its midpoint AT FULL RANGE. 0 is a flat
+## shot, which is what a rifle wants and a mortar does not.
+##
+## In world units, where a player cell is 1.0 and a tower stands well under it -
+## so anything much past 1.0 is a shot arcing clean over the tower that fired
+## it, which is almost never what is wanted.
 @export var arc_height: float = 0.0
+## The range at which `arc_height` is reached. A shorter shot bows in
+## proportion, down to Projectile.ARC_FLOOR; a longer one is capped here.
+##
+## Exists because the arc used to be a FLAT height whatever the distance, and
+## the result was a mortar throwing its full lob at a creep one cell away. See
+## Projectile._arc_peak_for.
+@export var arc_full_distance: float = 4.0
 ## Where the shot is SPAWNED, as an offset from the point it will land rather
 ## than from the muzzle it was fired out of.
 ##

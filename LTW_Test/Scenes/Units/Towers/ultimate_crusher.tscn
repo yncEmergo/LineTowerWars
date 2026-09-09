@@ -19,9 +19,9 @@ script = ExtResource("1_Building")
 _visual_root = NodePath("Visual")
 stats = ExtResource("3_ultimate_crusher_stats")
 _selection_ring = NodePath("SelectionRing")
-health_bar_height = 0.987
+health_bar_height = 1.181
 select_radius = 0.5
-select_height = 0.318
+select_height = 0.405
 
 [node name="Visual" parent="." instance=ExtResource("4_ultimate_crusher_model")]
 
@@ -41,4 +41,8 @@ _turret_head = NodePath("../Visual/Turret")
 script = ExtResource("6_SlamAnimation3D")
 _unit = NodePath("..")
 _swing = NodePath("../Visual/Turret/Swing")
+motion = 1
+raise_distance = 0.2677
+follow_through_distance = 0.0428
+raise_share = 0.72
 shockwave_scene_path = "res://Scenes/Effects/shockwave.tscn"

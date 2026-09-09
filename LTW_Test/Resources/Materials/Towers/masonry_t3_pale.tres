@@ -1,0 +1,23 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Resources/Shaders/tower_masonry.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/stone_color = Color(0.5376, 0.5281, 0.4901, 1)
+shader_parameter/stone_dark_color = Color(0.3051, 0.2953, 0.2757, 1)
+shader_parameter/stone_light_color = Color(0.7155, 0.7055, 0.6556, 1)
+shader_parameter/course_height = 0.118
+shader_parameter/block_length = 0.216
+shader_parameter/joint_width = 0.054
+shader_parameter/joint_strength = 0.7
+shader_parameter/block_variation = 0.7
+shader_parameter/block_grain = 0.28
+shader_parameter/damp_height = 0.34
+shader_parameter/damp_strength = 0.27
+shader_parameter/ambient_wrap = 0.4
+shader_parameter/rim_color = Color(0.94, 0.94, 0.9, 1)
+shader_parameter/rim_strength = 0.55
+shader_parameter/rim_power = 2.6
+shader_parameter/roughness_value = 0.86
+shader_parameter/metallic_value = 0

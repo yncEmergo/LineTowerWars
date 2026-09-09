@@ -45,16 +45,43 @@ TIER_BODY = {
 # Speeds are HALF what they started at: the first pass read as hitscan, and a
 # projectile whose travel time cannot be seen may as well be an instant attack.
 # A tuning value, not a copied one - the source records no projectile data.
+# THE THREE ARCS SAY WHAT KIND OF SHOT IT IS, and they are deliberately as far
+# apart as the three branches that use them:
+#
+#   an ARROW lobs a little. A bolt thrower at the far end of its range does
+#   not fire flat, and a small arc is what separates it from the magic bolt
+#   without making it look thrown
+#   a SHELL is round. The Cannon is the one tower whose shot should visibly go
+#   UP before it comes down, so a player can see where it will land while it
+#   is still in the air
+#   a MAGIC BOLT is DEAD FLAT and is the only thing in the roster that is. It
+#   is not a physical object, so it obeys nothing, and a level line is the
+#   cheapest way to say so
+#
+# THE NUMBERS ARE IN WORLD UNITS, where a player cell is 1.0 and no tower on
+# the roster stands as tall as one. That is the scale to sanity check against,
+# and it is what the first pass got wrong: the Cannon was authored at 3.4,
+# roughly four times the height of the tower firing it, and every shot it took
+# arced clean over its own parapet. A mortar wants to bow about as high as the
+# tower is tall, not several towers.
+#
+# The value is the peak AT FULL RANGE now rather than a flat height on every
+# shot - see Projectile._arc_peak_for, which is where the close-range version
+# of that same fault was fixed.
+#
+# `arc_height` is purely a visual curve laid over the path (CLAUDE.md), so none
+# of this reaches the simulation - a shot lands when it lands whatever shape it
+# took getting there.
 DELIVERY = {
-    "archer":   ("projectile", "res://Scenes/Effects/arrow.tscn", 16.0, 0.0),
-    "watch":    ("projectile", "res://Scenes/Effects/arrow.tscn", 16.0, 0.0),
-    "cannon":   ("projectile", "res://Scenes/Effects/mortar_shell.tscn", 6.0, 2.4),
+    "archer":   ("projectile", "res://Scenes/Effects/arrow.tscn", 16.0, 0.30),
+    "watch":    ("projectile", "res://Scenes/Effects/arrow.tscn", 16.0, 0.38),
+    "cannon":   ("projectile", "res://Scenes/Effects/mortar_shell.tscn", 6.0, 1.0),
     "cutter":   ("instant", "", 0.0, 0.0),
     "carver":   ("instant", "", 0.0, 0.0),
     "crusher":  ("instant", "", 0.0, 0.0),
     "sentry":   ("projectile", "res://Scenes/Effects/magic_bolt.tscn", 10.0, 0.0),
     "defender": ("projectile", "res://Scenes/Effects/magic_bolt.tscn", 10.0, 0.0),
-    "turret":   ("projectile", "res://Scenes/Effects/missile.tscn", 13.0, 0.35),
+    "turret":   ("projectile", "res://Scenes/Effects/missile.tscn", 13.0, 0.30),
 }
 
 # Seconds between an attack committing and its damage landing, per branch.
@@ -77,20 +104,38 @@ SELF_SPLASH_BRANCHES = ("crusher",)
 # of the unit wiring already lives. Decoration that needs no unit - a halo, an
 # orbit, a floating core - stays in the model.
 #
-#   recoil  (node, distance)          kicks back when the shot leaves
-#   slam    (node, shockwave)         rises and falls across the windup
-#   spin    (node, running, idle)     turns only while there is something to
-#                                     kill, and coasts down when there is not
+#   recoil  (node, distance)              kicks back when the shot leaves
+#   drop    (node, lift, shockwave)       lifts and falls across the windup
+#   spin    (node, running, idle, floor)  turns while there is something to
+#                                         kill, for at least `floor` seconds
+#   cycle   (count, distance)             fires a rack of barrels IN TURN
+#
+# THE SAWS TURN AT A FIXED RATE, which is a change and was asked for: they used
+# to spin up and coast down over about half a second either side of a fight,
+# and what a player actually reads from that is a machine that is slow to
+# start. A blade that is either turning or not is the clearer signal, and it is
+# also what the source game does. See tower_content._add_animations, which is
+# where the rate that does it lives.
+#
+# The lift on the DROP is in AUTHORED units and is scaled by the tier's height
+# ramp where it is written, so an Ultimate's weight travels further than a
+# Lesser's without either being authored twice.
+#
+# THE SPIN FLOOR is most of a second, and it is there because these two towers
+# attack three times a second and often kill in one hit. Without it a saw that
+# meets a weak creep turns a few degrees, stops, and turns a few more - which
+# reads as a machine that is broken rather than one that is quick.
 ANIMATION = {
     "archer":   [("recoil", "Turret/Stock", 0.045)],
-    "watch":    [("recoil", "Turret/Barrel", 0.075)],
+    "watch":    [("recoil", "Turret/Stock", 0.075)],
     "cannon":   [("recoil", "Turret/Barrel", 0.06)],
-    "cutter":   [("spin", "Turret/Spinner", 1.1, 0.0)],
-    "carver":   [("spin", "Turret/Spinner", 2.4, 0.0)],
-    "crusher":  [("slam", "Turret/Swing", "res://Scenes/Effects/shockwave.tscn")],
+    "cutter":   [("spin", "Turret/Spinner", 1.6, 0.0, 0.85)],
+    "carver":   [("spin", "Turret/Spinner", 2.8, 0.0, 0.85)],
+    "crusher":  [("drop", "Turret/Swing", 0.30,
+                  "res://Scenes/Effects/shockwave.tscn")],
     "sentry":   [],
     "defender": [],
-    "turret":   [("recoil", "Turret/Rack", 0.05)],
+    "turret":   [("cycle", 0.05)],
 }
 
 IMPACT = {

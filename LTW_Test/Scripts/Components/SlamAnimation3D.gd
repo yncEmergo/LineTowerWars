@@ -21,6 +21,25 @@ extends Node
 ## blast is centred on itself and looks the same whatever it swung at, so
 ## routing it through an impact visual - which lands on the target - would draw
 ## it in the wrong place.
+##
+## TWO MOTIONS, one timing. A thing that is raised and brought down can be
+## raised in two ways - swung over on a hinge, or lifted straight up - and
+## everything else about them is identical: the same windup to fill, the same
+## slow-up-fast-down curve, the same follow-through, the same shockwave, the
+## same cancel. So they are one component with a `motion` rather than two that
+## would drift apart. The Crusher branch is a PILEDRIVER and uses DROP; the
+## builder's hammer swings.
+
+## How the raised part gets back down.
+enum Motion {
+	## Hinged. Rotates about its own X, so a head on the end of an arm comes
+	## over in a arc. What a hammer on a shaft does.
+	SWING,
+	## Lifted. Travels straight up its own Y and falls back. What a weight in
+	## a frame does, and the one a round tower can use without growing an arm
+	## that would hang over the cell next door.
+	DROP,
+}
 
 @export_group("References")
 ## The unit that attacks. Its own parent's unit in every prefab so far, wired
@@ -30,10 +49,20 @@ extends Node
 @export var _swing: Node3D
 
 @export_group("Settings")
-## How far back the swing rises before it comes down, in degrees.
+## Whether the raised part is hinged over or lifted straight up. See Motion.
+@export var motion: Motion = Motion.SWING
+## How far back the swing rises before it comes down, in degrees. SWING only.
 @export var raise_degrees: float = 52.0
-## How far past rest it follows through on impact, in degrees.
+## How far past rest it follows through on impact, in degrees. SWING only.
 @export var follow_through_degrees: float = 14.0
+## How far the weight is lifted before it falls, in world units. DROP only.
+##
+## World units rather than a share of anything, so the generator scales it by
+## the tier's own height ramp and an Ultimate's weight travels further than a
+## Lesser one's - the same lift, on a bigger machine.
+@export var raise_distance: float = 0.34
+## How far past rest it drives on impact, in world units. DROP only.
+@export var follow_through_distance: float = 0.05
 ## Share of the windup spent rising. The rest is the drop, so below 0.5 makes
 ## the fall the fast half - which is what a heavy thing falling looks like.
 @export_range(0.05, 0.95, 0.05) var raise_share: float = 0.62
@@ -64,6 +93,9 @@ var _windup: float = 0.0
 var _elapsed: float = 0.0
 ## Counts down while easing back to rest after a hit.
 var _recover_left: float = 0.0
+## Where the raised part was authored, which a DROP is measured from. A SWING
+## is measured from an angle of zero and does not use it.
+var _rest_y: float = 0.0
 
 var _shockwave: PackedScene = null
 var _shockwave_loaded: bool = false
@@ -81,6 +113,11 @@ func _ready() -> void:
 	# Animated on the RENDER frame, so it must opt out of physics interpolation
 	# the way SpinAnimation3D does, or it jitters.
 	_swing.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+
+	# Captured BEFORE anything has had a chance to move it, so a drop always
+	# returns to where the model authored the weight rather than to wherever
+	# the last blow happened to leave it.
+	_rest_y = _swing.position.y
 
 	# The component registers itself on the unit in ITS _ready, which may not
 	# have run yet, so this waits for the unit rather than reaching for it now.
@@ -146,31 +183,47 @@ func _advance(delta: float) -> void:
 
 	if _windup > 0.0:
 		_elapsed = minf(_elapsed + delta, _windup)
-		_apply(_swing_angle(_elapsed / _windup))
+		_apply(_raised(_elapsed / _windup))
 		return
 
 	if _recover_left > 0.0:
 		_recover_left = maxf(0.0, _recover_left - delta)
 		var left: float = _recover_left / maxf(0.0001, recover_seconds)
 		# Starts at the follow-through and unwinds to rest.
-		_apply(deg_to_rad(-follow_through_degrees) * left)
+		_apply(-_overshoot() * left)
 
 
-## Where the swing sits at a point through the windup, 0 to 1. Rises on a
-## smoothed curve and drops on an accelerating one, so the weight reads.
-func _swing_angle(progress: float) -> float:
+## How far the part is raised at a point through the windup, 0 to 1, as a SHARE
+## of its full travel: 1 is fully raised, 0 is rest, and negative is driven past
+## rest on impact.
+##
+## Unitless on purpose. It is the whole of the timing and the weight of the
+## thing, and keeping it free of degrees and metres is what lets one curve serve
+## both a hinge and a lift rather than being written out twice and drifting.
+##
+## Rises on a smoothed curve and falls on an accelerating one, so the weight
+## reads.
+func _raised(progress: float) -> float:
 	if progress <= raise_share:
-		var up: float = progress / maxf(0.0001, raise_share)
-		return deg_to_rad(raise_degrees) * smoothstep(0.0, 1.0, up)
+		return smoothstep(0.0, 1.0, progress / maxf(0.0001, raise_share))
 
 	var down: float = (progress - raise_share) / maxf(0.0001, 1.0 - raise_share)
 	# Squared, so most of the fall happens in the last moments of it.
-	var fallen: float = down * down
-	return lerpf(deg_to_rad(raise_degrees), deg_to_rad(-follow_through_degrees), fallen)
+	return lerpf(1.0, -_overshoot(), down * down)
 
 
-func _apply(angle: float) -> void:
-	_swing.rotation.x = angle
+## How far past rest the blow drives, as a share of the full travel.
+func _overshoot() -> float:
+	if motion == Motion.DROP:
+		return follow_through_distance / maxf(0.0001, raise_distance)
+	return follow_through_degrees / maxf(0.0001, raise_degrees)
+
+
+func _apply(raised: float) -> void:
+	if motion == Motion.DROP:
+		_swing.position.y = _rest_y + raise_distance * raised
+		return
+	_swing.rotation.x = deg_to_rad(raise_degrees) * raised
 
 
 ## The ring, parented to the shared effects root rather than to the tower, so

@@ -36,7 +36,7 @@ enum Tint {
 ## for the same reason UnitStats.card_abilities() is: a new kind of motion has
 ## to say it is one, or it silently keeps playing through a construction.
 const ANIMATION_SCRIPTS: Array[StringName] = [
-	&"SpinAnimation3D", &"BobAnimation3D",
+	&"SpinAnimation3D", &"BobAnimation3D", &"SwayAnimation3D",
 ]
 
 const PREVIEW_VALID_COLOR: Color = Color(0.30, 0.90, 0.40, 0.45)

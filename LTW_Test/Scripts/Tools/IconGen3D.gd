@@ -42,17 +42,23 @@ extends Node
 ##
 ## Each entry is [stats folder, prefab folder, camera elevation in radians].
 ##
-## NO TOWERS, and that is a rule rather than an omission. The tower icons in
-## 2DArt/Icons are named after a tower's DISPLAY NAME - `apprentice.png`, not
-## `arcane_apprentice.png` - while every folder here is keyed by prefab. Adding
-## the towers with a key lookup bakes a second, parallel set of two hundred
-## files under names nothing references, which is exactly what it did once. If
-## the towers ever need re-baking, the naming has to be settled first.
+## THE BASIC TOWERS ARE IN and the ELEMENTAL ones are not, and neither of those
+## is stated here as a list - see _bakeable_name, which is what decides.
 ##
-## THE DISCS ARE IN, and they sidestep that trap rather than solving it: every
-## disc is named so that its key and its display name slug are the same string
-## - `fire_disc` is "Fire Disc" - so there is only one name either way round
-## and nothing parallel can be written. That was worth authoring for.
+## The trap this used to be guarded against by leaving towers out entirely: the
+## icons in 2DArt/Icons are named after a unit's DISPLAY NAME, while every
+## folder here is keyed by PREFAB, and for the elemental roster those two
+## disagree - `apprentice.png` against a key of `arcane_apprentice`. Baking the
+## Towers folder by key wrote a second, parallel set of two hundred files under
+## names nothing references, which is exactly what it did once.
+##
+## The DISCS sidestepped it by being named so that a key and a display name slug
+## are the same string - `fire_disc` is "Fire Disc" - and the Basic towers turn
+## out to have always been the same: `lesser_watch_tower` is "Lesser Watch
+## Tower". So the fix is to make that agreement the RULE rather than a property
+## three rosters happen to have. A unit whose two names disagree is skipped and
+## SAID SO, which is the same protection the old omission bought, applied by the
+## thing it is actually about instead of by a folder being left out.
 ##
 ## Their ELEVATION is their own, and it is the reason this is a three-column
 ## table. A disc is a flat quad painted on the ground: seen from the creeps'
@@ -65,6 +71,10 @@ extends Node
 const ROSTERS: Dictionary = {
 	"creeps": ["res://Resources/UnitStats/Creeps", "res://Scenes/Units/Creeps", 0.50],
 	"discs": ["res://Resources/UnitStats/Discs", "res://Scenes/Units/Discs", 1.47],
+	# The Basic towers only; the elemental ones share this folder and are
+	# filtered out by _bakeable_name. Their elevation is the creeps' - a tower
+	# stands up, so the three quarter view that suits a creature suits it too.
+	"towers": ["res://Resources/UnitStats/Towers", "res://Scenes/Units/Towers", 0.50],
 }
 
 const OUT: String = "res://2DArt/Icons"
@@ -135,10 +145,44 @@ func _scan(roster: String) -> PackedStringArray:
 	var keys: PackedStringArray = PackedStringArray()
 	var folder: String = (ROSTERS[roster] as Array)[0]
 	for name: String in DirAccess.get_files_at(folder):
-		if name.ends_with("_stats.tres"):
-			keys.append(name.trim_suffix("_stats.tres"))
+		if !name.ends_with("_stats.tres"):
+			continue
+		var key: String = name.trim_suffix("_stats.tres")
+		if _bakeable_name(folder, key):
+			keys.append(key)
 	keys.sort()
 	return keys
+
+
+## Whether this unit's icon may be written under its KEY.
+##
+## An icon is looked up by DISPLAY NAME and written here by KEY, so the two have
+## to be the same string or the file lands somewhere nothing reads. Rather than
+## trusting that - which held for two rosters and broke on the third - it is
+## checked, and a unit whose names disagree is skipped with a message.
+##
+## That is the whole of what keeps the eighty elemental towers out of a folder
+## they share with the thirty Basic ones. See the note on ROSTERS.
+func _bakeable_name(folder: String, key: String) -> bool:
+	# No type hint, and that is not an oversight: passing a SCRIPT class name to
+	# the loader returns null in an exported build. See CLAUDE.md.
+	var stats: UnitStats = ResourceLoader.load(
+		"%s/%s_stats.tres" % [folder, key], "") as UnitStats
+	if stats == null:
+		push_error("IconGen3D could not read stats for %s" % key)
+		return false
+
+	var slug: String = ""
+	for character: String in stats.display_name.to_lower():
+		if character == " " || character == "_":
+			slug += "_"
+		elif character.is_valid_identifier() || character.is_valid_int():
+			slug += character
+	if slug == key:
+		return true
+
+	print("skipped %s: its icon is named %s.png, not %s.png" % [key, slug, key])
+	return false
 
 
 ## One unit. Reports whether an image was written, so a missing prefab is a

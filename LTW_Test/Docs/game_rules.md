@@ -120,12 +120,47 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       to each of them, so what a player sees is exactly the set of creeps that
       took damage. That is the whole value of it: a chain with no line drawn is
       damage appearing on a creep nothing pointed at
+- **A shot's ARC says what kind of weapon threw it**, and it is drawn rather
+  than simulated: travel is tracked flat and the height is laid on top, so an
+  arc can never change when or where a shot lands
+  - a magic bolt is DEAD FLAT and is the only thing in the roster that is. It
+    is not a physical object, so it obeys nothing
+  - an arrow lobs a little, and a siege shell is the one shot that visibly goes
+    UP before it comes down, so a player can read where it will land while it
+    is still in the air
+  - **the arc is a share of the shot's RANGE, not a fixed height.** A weapon
+    that throws the same bow at a creep one cell away as at one at the edge of
+    its reach looks wrong at close quarters, which is the range most shots are
+    taken at. It scales with the distance actually flown and is capped at full
+    range, with a small floor so a point blank shot still keeps the character
+    of the weapon
+  - the numbers are in world units, where a player cell is 1.0 and no tower
+    stands as tall as one. That is the scale to sanity check a new arc against:
+    the first pass had a mortar bowing about four times the height of the tower
+    firing it
 - **A tower may throw particles off ITSELF when it attacks**, at any tier
   - it is not idle motion and is not covered by the Ultimate-only rule below: it
     happens when something happens, which is the one kind of movement that is
     always worth a top-down camera's attention
   - the emitter is part of the MODEL and sits quiet until a component with a
     unit behind it fires it, so the build ghost carries one harmlessly
+- **AN ATTACK ANIMATION IS A CLAIM ABOUT THE ATTACK, and it has to be true.**
+  Decoration is free; anything that reads as a MECHANISM is telling the player
+  how the tower works, and a player who counts what they see and gets a
+  different number has been lied to
+  - a tower that fires ONE projectile moves ONE weapon. The anti-air rack
+    carries three to six tubes and recoiled as a single unit, so every one of
+    them kicked for a single missile - which reads as a salvo. One tube moves
+    per shot, and it is the tube the missile leaves
+  - **a rack fires its barrels IN TURN**: the first shot leaves the first
+    barrel, the next the second, and after the last it comes round again. It
+    costs nothing over kicking the same barrel every time and it is the
+    difference between a machine and a prop
+  - the same rule refused a second cannon barrel as a tier step, even though it
+    looked better than what replaced it. See the note on shape steps above
+  - what a MUZZLE is, is wherever the shot actually leaves. A tower with
+    several barrels moves its one muzzle node onto whichever is firing rather
+    than spawning every shot from the middle of the rack
 - **A tower on a clock says so in two places at once**: a bar over its head in
   the world, and a row on its panel where the stat lines usually are
   - it covers selling, upgrading and reverting to an Elemental Core. All three
@@ -176,64 +211,142 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     the tower that threw it. A ring that is decorative rather than measured
     teaches a player a radius that is not real, which is worse than drawing
     nothing
-- A tower's own moving parts say whether it is WORKING. A grinder's blade turns
-  while it has something to kill and coasts back down when it does not, rather
-  than stopping dead - and it never stops between the blows of one fight, so a
-  blade chewing through a pack stays at speed the whole way through
+- A tower's own moving parts say whether it is WORKING. A saw turns while it
+  has something to kill and stops when it does not, and it never stops between
+  the blows of one fight, so a blade chewing through a pack stays at speed the
+  whole way through
+  - it is either TURNING OR STOPPED, at a fixed rate, rather than spinning up
+    and coasting down. The wind-up reads as a machine that is slow to start,
+    which is the wrong thing to say about a tower whose whole identity is the
+    fastest attack in the game - and it is not what the source game does
+  - the coast is still available to anything that wants it, as a rate rather
+    than a flag. See SpinAnimation3D.spin_change_rate
+  - **but a motion has a MINIMUM DURATION once it has started.** The fastest
+    towers attack three times a second and often kill in one hit, so a saw that
+    ran only while a target existed would twitch - a few degrees, a stop, a few
+    more - and a machine that twitches reads as broken rather than as quick.
+    The floor is most of a second, long enough that the turn is always
+    recognisable, and a tower with work to do simply never reaches the end of
+    it
 - The tower roster has a visual language, and what makes it worth writing down
   is that it survives the primitives being replaced by real art - it is what a
   3D artist should be handed along with the models. It is a convention rather
   than a rule, see the note at the top of this section
   - a tower answers three questions from a top down camera, each on its own
     axis, so none of them can be confused with another
-  - WHICH LINE is shape and material. Archer is tall and thin in quarried
-    stone, Cutter is squat and wide in timber and iron, Sentry is an open frame
-    holding something that floats
+  - WHICH LINE is SHAPE first, and one small painted accent second. Archer is a
+    tall square watchtower, Cutter is a squat iron machine, Sentry is a round
+    tower holding a lit orb
+    - it used to be shape and MATERIAL - pale stone, dark timber, bone - and
+      that axis has been handed to the TIER instead, because a tower which
+      visibly turns from wood into stone as it is bought up says more, more
+      often, to more players than three shades of grey did
   - BASE SHAPE is part of that and is never a default. A roster where every
     tower is a round drum on a round plinth reads as one tower at nine sizes,
     so a line picks a number of sides and keeps it: Archer is SQUARE, because a
     watchtower is a square tower and it is the only line tall enough for the
     corners to read from above; Cutter is hexagonal, chunky but still round
-    enough to spin on; Sentry is round, wanting no corners around a floating
-    core. The anti-air branch breaks from its own line and goes square, because
-    a launch pad is not the ring it grew out of
-  - NOTHING IS ONE COLOUR. Each line carries its material at three depths - a
-    base, a DEEP tone for what sits low or carries weight, and a PALE one for
-    what sticks out or catches light. Three depths of one material rather than
-    three materials, so a tower has parts without stopping looking like one
-    object. A tower built entirely out of its base tone is a lump from above
-    however good its silhouette is, because its facets have nothing to catch
-    against each other
-  - WHICH BRANCH is one decisive silhouette at the 150g split, and it never
-    changes again up that branch: a long barrel, a tilted mortar, a spinning
-    blade disc, an overhead hammer, an orbiting core, a rack aimed at the sky.
-    The anti-air branch points at NOTHING on the ground, which is how a player
-    reads what it can and cannot shoot before buying one
-  - WHICH TIER is six cumulative rules on the PRICE tier, not on the position
-    in a branch, so the third rung of six reads as the third rung wherever it
-    sits: the tower grows a little, its trim metal ramps iron - pale iron -
-    bronze - silver - gold - white gold, its lit accent brightens and pulses
-    faster, a trim collar appears from 150g, fins from 5,000g, and a slowly
-    turning ring floats above an Ultimate
+    enough to spin a saw on; Sentry is round, wanting no corners around a lit
+    orb. The anti-air branch breaks from its own line and goes square, because
+    a launch pad is not the tower it grew out of
+  - NOTHING IS ONE COLOUR. Every surface is carried at three depths - a base, a
+    DEEP tone for what sits low or carries weight, and a PALE one for what
+    sticks out or catches light. Three depths of one material rather than three
+    materials, so a tower has parts without stopping looking like one object. A
+    tower built entirely out of its base tone is a lump from above however good
+    its silhouette is, because its facets have nothing to catch against each
+    other
+  - WHICH BRANCH is one decisive silhouette at the 150g split: a bolt thrower
+    in an open gallery, a fat mortar barrel, a spinning saw, a dropping weight,
+    an orb on a crown, a rack aimed at the sky. The anti-air branch points at
+    NOTHING on the ground, which is how a player reads what it can and cannot
+    shoot before buying one
+    - **a branch keeps its IDENTITY, not its OUTLINE.** The rule used to be
+      that the silhouette never changes again above the split, and it was
+      wrong for the expensive half of the roster: four separate branches came
+      back with their top three tiers reported as the same tower. A saw is
+      always a saw and a cannon is always a cannon; how many blades and how
+      many barrels is the TIER'S to spend
+  - **EVERY UPGRADE MUST CHANGE ONE THING A PLAYER CAN SEE**, and if the shared
+    devices below are not enough for a branch then that branch spends a shape
+    step of its own. It has to be BIG - longer teeth, another storey, a roof
+    over the gallery - because a small one does not survive being glanced at
+    from the top of a lane. A pennant is a flourish, not a step
+    - **and a shape step may not LIE about what the tower does.** The Cannon
+      was given a second barrel and it had to come back out: that tower fires
+      one projectile, so two muzzles tell a player something untrue about the
+      thing they just paid for. The same rule is why the anti-air rack recoils
+      on ONE tube and launches from that tube, out of the three to six it
+      carries - a salvo animation on a tower that fires a single missile is the
+      same lie in motion
+    - the ones each branch spends are laid out as a table in
+      Tools/ModelGen/tower_models.py, which is where they can be read against
+      each other
+  - WHICH TIER is read on the PRICE tier, not on the position in a branch, so
+    the third rung of six reads as the third rung wherever it sits. Four
+    devices carry it and they are deliberately not all the same kind of thing:
+    - MATERIAL. Masonry climbs the tower from its footing while the timber
+      retreats into the gallery, and the boundary between them is authored
+      geometry that moves on every upgrade. The strongest of the four, because
+      it is a thing the player watches HAPPEN to a tower they just paid for
+    - TINT. The stone darkens hard from pale limestone to a dark warm grey.
+      It stops short of black on purpose: an Ultimate must still read as
+      masonry, and its timber, paint and lit accent all need contrast against
+      it. A silhouette is not a tier tell, it is the absence of one
+    - METAL. The working part - blade, barrel, tubes, weight - goes raw iron,
+      cast iron, copper, bronze, steel, polished steel. This is the ONE place
+      the tier ladder is allowed a colour, and it is safe next to the ten
+      elements because every rung reads as a material rather than as a hue
+    - PARTS. A projecting parapet at 150g, the corbels carrying it at 1,000g,
+      a shape step at 5,000g, and a painted pennant on an Ultimate
+  - SIZE IS DELIBERATELY QUIET, about five percent a rung. It is a backing
+    signal rather than a carrying one - a tower and its upgrade are close
+    enough in size that nobody reads the difference, and the two ENDS of a
+    branch are clearly apart. An Ultimate takes a little extra height on top of
+    that, because it is the last thing that will ever stand on that square
   - motion is reserved for the top of the ladder. It is the loudest thing a top
     down camera can show, so nothing below an Ultimate gets a moving part that
     is not its own attack
   - the rules above are enforced by a generator rather than by hand, so a tower
     cannot quietly stop obeying them. See Tools/ModelGen
+- **A tower is TIMBER and turns to STONE as it is bought up.** The boundary
+  between the two is authored geometry - a shaft is masonry below and timber
+  above - and it climbs on every upgrade, so a player watching a tower they
+  have just paid for sees the stone rise
+  - the Cutter line is the exception above the split: from 150g up it is a
+    machine on a masonry pedestal with no timber on it, because a spinning saw
+    is machinery. Its two cheap towers keep the timber frame the other lines
+    have, so it gains the same "stone arrives at 150g" step they do, and its
+    tier is read off the BLADE - the metal ramp, and the blade's own shape
+  - **there used to be a six rung METAL LADDER here instead** - a trim ring, a
+    collar, bolts, crown fins and a turning halo, ramping iron to white gold -
+    and it came off for the two reasons the elemental roster's own metal came
+    off, below. The metal was the loudest thing on every tower, so it sat on
+    top of the answer to "what is this" with the answer to "how expensive is
+    this"; and two neighbouring rungs of a six step metal ramp are nearly the
+    same colour, so the thing being shouted was also the thing hardest to read
 - **A 10g tower and its 30g upgrade are barely the same object.** The cheap one
-  is roughly half the height, has no trim metal on it at all, is built out of
-  the raw deep tone, and is missing whatever part gives the line its name - the
-  crossbow, the hub, the floating core. All of that arrives with the upgrade
+  is roughly half the height, has no paint on it at all, is built out of the
+  raw deep tone, and is missing whatever part gives the line its name - the
+  crossbow, the saw's mount, the crown around the orb. All of that arrives with
+  the upgrade
   - it is the first upgrade any player ever buys, so it should be the one they
     can see from across the map. That is worth more than the two tiers looking
     like relatives
-- **BASIC towers carry no colour of their own**: stone grey through light
-  timber brown, metal trim, and a small warm accent
+- **BASIC towers carry almost no colour of their own**: timber brown through
+  stone grey and iron, one small painted accent, and one small lit one
   - the ten ELEMENTS each own a hue, and they can only read as elements if the
     towers a player has been looking at since the first minute are not
     competing for the same signal
   - so this is a constraint on the Basic roster specifically, and the thing
     elemental towers spend
+  - the ACCENT is the deliberate, tiny exception: a painted board, a shield
+    plate, a pennant, one muted colour per line. What keeps it off the
+    elements' territory is not its hue - the ten of them cover very nearly the
+    whole wheel - but that AN ELEMENT IS LIT AND PAINT IS NOT. An elemental
+    accent emits, pulses and surges; paint is matte, sits in the same light as
+    the stone beside it, and never moves, so the two can share a hue and never
+    be confused
 - **The ELEMENTAL roster answers the same three questions differently**, and it
   is a rule in the same way the Basic one is
   - WHICH ELEMENT is COLOUR first and a base shape second. An element is
