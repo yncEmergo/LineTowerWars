@@ -61,6 +61,38 @@ var _replay_by_tick: Dictionary = {}
 var _sent_this_run: int = 0
 var _rejected: int = 0
 
+## Class names whose every instance has its physics processing switched off, from
+## `skip=Creep,Projectile`. **This is the falsifier's own falsifier.**
+##
+## A trace is only evidence about a refactor if it would MOVE when a gameplay
+## loop stops running. At one fixed tick rate a loop left on `_physics_process`
+## and a loop moved onto an explicit stepper both run once per tick, so a
+## byte-identical trace is equally consistent with a correct refactor, a refactor
+## that missed ten loops, and no refactor at all. The only way to know which is
+## to break each loop on purpose and watch the trace go red.
+##
+## Any loop whose omission leaves the trace unchanged is a HOLE IN THE HASH, not
+## a loop that does not matter. See `netcode-rework.md` 13.2.
+var _skip: Dictionary = {}
+var _skipped_nodes: int = 0
+
+## Every private field `_deep_hash` reaches through `get()`, and whether it has
+## ever resolved on a real instance.
+##
+## **Reading a private field by name is how this hash covers accumulators that no
+## public accessor exposes, and it fails SILENTLY if one is ever renamed** - a
+## missing property answers `null`, hashes identically on every run, and the
+## trace stays green while covering nothing. That is precisely the failure this
+## whole section exists to remove, so the coverage is asserted rather than
+## assumed: anything still false at the end is reported as UNCOVERED.
+##
+## Accessors were the alternative and were rejected: `Building`, `Creep` and
+## `StatusEffects` are all already over gdlint's public-method ceiling, and a
+## harness should not push shipping classes further over it to see itself work.
+var _probed: Dictionary = {}
+var _declared: Dictionary = {}
+var _seen_class: Dictionary = {}
+
 ## Seeded from the match seed so the driver is reproducible, but kept SEPARATE
 ## from the simulation's own stream - see _send_from.
 var _driver_rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -106,6 +138,10 @@ func _apply_argument(key: String, value: String) -> void:
 			_compare = value
 		"perturb":
 			_perturb = int(value)
+		"skip":
+			# **The sabotage matrix.** See _apply_skips.
+			for name: String in value.split(",", false):
+				_skip[name.strip_edges()] = true
 		_:
 			push_warning("DeterminismBench ignored an argument: " + key)
 
@@ -180,6 +216,7 @@ func _physics_process(_delta: float) -> void:
 ## second run generates the identical stream without needing the trace - which
 ## is what lets `record` twice be a valid test on its own.
 func _drive_tick() -> void:
+	_apply_skips()
 	if !_replay_by_tick.is_empty():
 		_replay_tick()
 		return
@@ -195,12 +232,73 @@ func _drive_tick() -> void:
 			_cheat(Command.PlayerAction.CHEAT_UNLOCK_CREEPS, area.player_id)
 		return
 
+	# **One tower each, because without it half the simulation never exists.**
+	# The driver used to send creeps and nothing else, so no `Building` was ever
+	# constructed, nothing ever fired, and no projectile was ever spawned - and a
+	# sabotage run naming either of those disabled zero nodes and came back
+	# green, which reads exactly like a hash that covers them. See 13.2.
+	# **Early, because a tower takes about thirteen seconds to finish building**
+	# and only shoots after that. Ordered late in a short run it is still
+	# scaffolding when the trace ends, and the projectile road is never
+	# exercised - which is exactly how `skip=Projectile` came back NOT TESTED.
+	if _tick == 8 || _tick == 20:
+		for area: PlayerArea in _areas:
+			_build_from(area)
+		return
+
 	# Every player holds the send key, which is the heaviest ordinary load the
 	# game produces and the one the stutter was reported in.
 	if _tick < 6 || _tick % 4 != 0:
 		return
 	for area: PlayerArea in _areas:
 		_send_from(area)
+
+
+## Orders one tower built, from whichever unit in this area owns a
+## `BuildTowerAbility`.
+##
+## Found by ABILITY rather than by class, so it does not care whether the
+## builder is a `Builder`, and it travels the same `Commands` road every other
+## order does - the ability's own rules refuse an illegal cell, which is the
+## point: a driver that bypassed them would be testing a world the game cannot
+## reach.
+func _build_from(area: PlayerArea) -> void:
+	var session: MatchSession = References.match_session
+	if session == null:
+		return
+	for id: Variant in session.unit_ids():
+		var unit: Unit = session.unit_for(int(id))
+		if unit == null || unit.owner_player_id != area.player_id || unit.stats == null:
+			continue
+		# **One level down, because a builder's card carries the build MENU and
+		# the towers hang off it.** Looking only at the top level found nothing
+		# and reported it as nothing to build, which is the same shape as the
+		# send driver refusing submenus - see `_send_from`.
+		var offered: Array = []
+		for entry: Variant in unit.stats.abilities:
+			var ability: UnitAbility = entry as UnitAbility
+			if ability == null:
+				continue
+			if ability is BuildTowerAbility:
+				offered.append(ability)
+			else:
+				offered.append_array(ability.submenu_abilities())
+
+		for entry: Variant in offered:
+			var build: BuildTowerAbility = entry as BuildTowerAbility
+			if build == null:
+				continue
+			var row: int = area.build_zone_first_row()
+			var column: int = _driver_rng.randi_range(2, 8)
+			var where: Vector3 = area.internal_cell_center(Vector2i(column, row))
+			var command: Command = Command.create(
+				build.ability_id, [unit], AbilityTarget.at_position(where), false
+			)
+			command.tick = _tick
+			command.player_slot = area.player_id
+			Commands.call("_queue", command)
+			_sent_this_run += 1
+			return
 
 
 func _cheat(action: Command.PlayerAction, slot: int) -> void:
@@ -337,6 +435,89 @@ static func _from_json_safe(data: Dictionary) -> Dictionary:
 ## caught by the second. **`WorldChecksum` was deliberately not widened**: it is
 ## shipping code with a shipping cost, and whether it should carry more is a
 ## design question rather than something a test harness gets to decide.
+## Switches off the physics processing of every node of a named class, every
+## tick, so that a class spawned later is caught too.
+##
+## `set_physics_process(false)` rather than freeing anything: the world keeps its
+## shape, the unit registry keeps its entries, and the only thing that changes is
+## that one loop stops advancing. That is exactly the mistake a refactor makes.
+func _apply_skips() -> void:
+	if _skip.is_empty():
+		return
+	var session: MatchSession = References.match_session
+	if session != null:
+		for id: Variant in session.unit_ids():
+			var unit: Unit = session.unit_for(int(id))
+			if unit != null:
+				_skip_node(unit)
+				if unit.attack_component != null:
+					_skip_node(unit.attack_component)
+	for root: Node3D in [References.projectiles_root, References.effects_root]:
+		if root != null:
+			for child: Node in root.get_children():
+				_skip_node(child)
+
+
+func _skip_node(node: Node) -> void:
+	if node == null || !_matches_skip(node):
+		return
+	if node.is_physics_processing():
+		node.set_physics_process(false)
+		_skipped_nodes += 1
+
+
+## **The whole inheritance chain, not just the leaf class.** `Building` declares
+## the loop and `SendBuilding` inherits it, so a matrix entry naming the class
+## that OWNS the loop has to reach the subclasses that run it - otherwise
+## `skip=Building` leaves every send building ticking and the entry reads green
+## for a reason that has nothing to do with the hash.
+func _matches_skip(node: Node) -> bool:
+	if _skip.has(node.get_class()):
+		return true
+	var script: Script = node.get_script() as Script
+	while script != null:
+		if _skip.has(script.get_global_name()):
+			return true
+		script = script.get_base_script()
+	return false
+
+
+static func _script_name(node: Node) -> String:
+	var script: Script = node.get_script() as Script
+	return "" if script == null else String(script.get_global_name())
+
+
+## Reads a private field by name and records that it resolved.
+## **Three outcomes, not two, and conflating the last two cries wolf.** A property
+## that does not exist and a property that is legitimately null both answer
+## `null` to `get()`, so the property list is asked once per class to tell them
+## apart:
+##
+##   MISSING  - renamed or deleted. The hash covers nothing and looks green.
+##              This is the failure the whole probe exists to catch.
+##   NEVER SET - the field exists and was null on every instance the run saw.
+##              A gap in the DRIVER, not in the hash: something was never made to
+##              happen. `Creep._status` is lazily built and stays null until a
+##              creep is actually chilled or stunned.
+##   resolved - covered.
+func _probe(node: Object, owner_name: String, field: String) -> Variant:
+	var key: String = "%s.%s" % [owner_name, field]
+	_seen_class[owner_name] = int(_seen_class.get(owner_name, 0)) + 1
+	if !_declared.has(key):
+		var found: bool = false
+		for entry: Dictionary in node.get_property_list():
+			if String(entry.get("name", "")) == field:
+				found = true
+				break
+		_declared[key] = found
+	var value: Variant = node.get(field)
+	if value != null:
+		_probed[key] = true
+	elif !_probed.has(key):
+		_probed[key] = false
+	return value
+
+
 func _sample() -> void:
 	var session: MatchSession = References.match_session
 	_samples.append({
@@ -364,6 +545,7 @@ func _deep_hash(session: MatchSession) -> int:
 				unit.max_health(),
 				_point(unit.global_position),
 			])
+			parts.append(_unit_extras(unit))
 
 	var manager: PlayerManager = References.player_manager
 	if manager != null:
@@ -374,7 +556,130 @@ func _deep_hash(session: MatchSession) -> int:
 				continue
 			parts.append("s%d:%d/%d/%d" % [slot, state.gold, state.income, state.lives])
 
+	parts.append(_effects_hash())
+	parts.append(_area_extras())
 	return "|".join(parts).hash()
+
+
+## The per-unit accumulators nothing else hashes.
+##
+## `WorldChecksum` was deliberately NOT widened for these - its docstring says
+## why: it is shipping code with a shipping cost, and what it covers is a design
+## question rather than something a harness decides. This is the harness, so it
+## pays what it likes.
+func _unit_extras(unit: Unit) -> String:
+	var bits: PackedStringArray = PackedStringArray()
+
+	var attack: AttackComponent = unit.attack_component
+	if attack != null:
+		# **Building.checksum_state records only the active ability's cooldown**,
+		# so a missed attack step shows up later and indirectly, as creep health
+		# drifting - which names the wrong tick and the wrong system.
+		bits.append("atk:%d/%d/%d" % [
+			_q(_probe(attack, "AttackComponent", "_cooldown")),
+			_q(_probe(attack, "AttackComponent", "_windup_left")),
+			int(_probe(attack, "AttackComponent", "_scan_wait")),
+		])
+
+	if unit is Creep:
+		# `_stall_elapsed` crossing its threshold RE-PLANS A PATH, which makes it
+		# the highest-consequence unhashed float in the file.
+		bits.append("crp:%d/%d" % [
+			_q(_probe(unit, "Creep", "_stall_elapsed")),
+			_q(_probe(unit, "Creep", "_march_elapsed")),
+		])
+		var status: Object = _probe(unit, "Creep", "_status")
+		if status != null:
+			bits.append("st:%d/%d/%d/%d" % [
+				_q(_probe(status, "StatusEffects", "_stun_left")),
+				_q(_probe(status, "StatusEffects", "_paralyze_left")),
+				_q(_probe(status, "StatusEffects", "_armor_eroded")),
+				_q(_probe(status, "StatusEffects", "_armor_delta")),
+			])
+
+	if unit is Building:
+		bits.append("bld:%d/%d" % [
+			_q(_probe(unit, "Building", "_upgrade_elapsed")),
+			_q(_probe(unit, "Building", "_sell_elapsed")),
+		])
+
+	if unit is SendBuilding:
+		# **SendBuilding overrides checksum_state at all**, so every CreepStock
+		# reserve timer is unhashed today. A missed send step stops sends
+		# mid-match and no trace says so.
+		# `stock_entries()` answers [unit_type_id, count] pairs for the snapshot -
+		# the COUNT, which is already hashed, and not the regeneration clock that
+		# moves it. The clocks are the CreepStock objects themselves.
+		#
+		# **Walked in unit_type_id order rather than Dictionary order**, which is
+		# not something two machines may be trusted to agree on - the same rule
+		# `commands_for` sorts by peer for.
+		var stocks: Variant = _probe(unit, "SendBuilding", "_stocks")
+		if stocks != null:
+			var by_id: Array = []
+			for key: Variant in (stocks as Dictionary):
+				var stats: CreepStats = key as CreepStats
+				if stats != null:
+					by_id.append([stats.unit_type_id, (stocks as Dictionary)[key]])
+			by_id.sort_custom(func(a: Array, b: Array) -> bool:
+				return int(a[0]) < int(b[0]))
+			for pair: Array in by_id:
+				var stock: Object = pair[1] as Object
+				if stock == null:
+					continue
+				bits.append("stk%d:%d/%s" % [
+					int(pair[0]),
+					_q(_probe(stock, "CreepStock", "_elapsed")),
+					str(_probe(stock, "CreepStock", "_unlocked")),
+				])
+
+	return ",".join(bits)
+
+
+## Projectiles, piercing projectiles, beast charges and ground hazards.
+##
+## **Four damage-dealing loops that sit outside the falsifier entirely.** All
+## four extend `VisualEffect3D`, none is a registered `Unit`, so
+## `session.unit_ids()` has never seen one - and all four deal damage on a
+## delta-driven schedule.
+func _effects_hash() -> String:
+	# BOTH roots: projectiles, pierces and burning ground go to
+	# `projectiles_root`, while `AttackDelivery` puts its own effects on
+	# `effects_root`. Hashing one of the two would leave the other invisible.
+	var bits: PackedStringArray = PackedStringArray()
+	for root: Node3D in [References.projectiles_root, References.effects_root]:
+		if root == null:
+			continue
+		for child: Node in root.get_children():
+			var node: Node3D = child as Node3D
+			if node == null:
+				continue
+			bits.append("%s@%s" % [_script_name(node), _point(node.global_position)])
+	return "fx:%d:%s" % [bits.size(), ",".join(bits)]
+
+
+## Rubble, which decides whether a rebuild is legal, is not replicated by design,
+## and is in no checksum anywhere.
+func _area_extras() -> String:
+	var bits: PackedStringArray = PackedStringArray()
+	for area: PlayerArea in _areas:
+		var rubble: Variant = _probe(area, "PlayerArea", "_rubble")
+		if rubble == null:
+			continue
+		var cells: Array = (rubble as Dictionary).keys()
+		cells.sort()
+		var each: PackedStringArray = PackedStringArray()
+		for cell: Variant in cells:
+			each.append("%s:%d" % [cell, _q((rubble as Dictionary)[cell])])
+		bits.append("rb%d:%s" % [area.player_id, ",".join(each)])
+	return "|".join(bits)
+
+
+## A float, quantised the way every other float in this file is: two machines
+## that agree to a thousandth agree, and hashing raw bit patterns would call
+## that a desync.
+static func _q(value: Variant) -> int:
+	return 0 if value == null else roundi(float(value) * WorldChecksum.SCALE)
 
 
 static func _point(position: Vector3) -> String:
@@ -431,6 +736,39 @@ func _finish() -> void:
 	print("DET commands sent=%d applied=%d rejected=%d samples=%d" % [
 		_sent_this_run, _recorded.size(), _rejected, _samples.size(),
 	])
+
+	# **The positive control for the hash itself.** A field that never resolved
+	# hashed as zero on every sample and covered nothing, which looks exactly
+	# like a field that was simply always zero.
+	var missing: PackedStringArray = PackedStringArray()
+	var never_set: PackedStringArray = PackedStringArray()
+	for key: Variant in _probed:
+		if bool(_probed[key]):
+			continue
+		if bool(_declared.get(key, false)):
+			never_set.append(str(key))
+		else:
+			missing.append(str(key))
+	missing.sort()
+	never_set.sort()
+	var seen: PackedStringArray = PackedStringArray()
+	var names: Array = _seen_class.keys()
+	names.sort()
+	for name: Variant in names:
+		seen.append("%s=%d" % [name, int(_seen_class[name])])
+	print("DET probed %s" % " ".join(seen))
+	if missing.is_empty() && never_set.is_empty():
+		print("DET coverage OK, every probed field resolved")
+	if !missing.is_empty():
+		print("DET MISSING FIELDS (renamed? the hash covers nothing here) %s"
+			% " ".join(missing))
+	if !never_set.is_empty():
+		print("DET never set (the driver never made it happen) %s"
+			% " ".join(never_set))
+	if !_skip.is_empty():
+		print("DET skipped=%s nodes_disabled=%d" % [
+			" ".join(PackedStringArray(_skip.keys())), _skipped_nodes,
+		])
 	_quit()
 
 

@@ -1318,12 +1318,57 @@ first to prove the harness itself is stable, then copied out of `user://` before
 Redirect the whole run to a file and grep the file; `| head` closes the pipe before a bench prints
 its summary, and the summary is the answer.
 
-**Then run the sabotage matrix, and watch it fail.** One bench run per gameplay loop with a new
+**Then run the sabotage matrix, and watch it fail.** One bench run per gameplay loop with a
 `skip=<ClassName>` argument that calls `set_physics_process(false)` on every instance of that class.
 Any loop whose omission leaves the trace byte-identical is a hole in the falsifier, not a loop that
 does not matter — widen the hash until it goes red. **Until every one of them has been watched to
-fail, a green 6a run means nothing**, and this is the one hour that decides whether the rest of the
-phase is evidence or decoration.
+fail, a green 6a run means nothing.**
+
+#### DONE 2026-09-09. The matrix is green-free.
+
+`seed=7 ticks=700`, every entry compared byte-for-byte against the baseline:
+
+| sabotage | verdict | nodes disabled |
+| --- | --- | --- |
+| `Creep` | red | 203 |
+| `MobileUnit` | red | 205 |
+| `Building` | red | 2 |
+| `SendBuilding` | red | 8 |
+| `Builder` | red | 2 |
+| `AttackComponent` | red | 22 |
+| `Projectile` | red | 5 |
+
+Two runs of the unsabotaged bench are byte-identical, so the harness is stable, and `perturb=200`
+still moves the trace, so it can still fail. **Prerequisite 1 is also met** — playtests 3 and 5
+compared 128 and 91 checksum turns between two physical machines with zero mismatches; see
+`Findings/2026-09-09-sealed-stream-on-two-machines.md`.
+
+Three things this cost that are worth keeping:
+
+**A GREEN ROW MEANS NOTHING WITHOUT THE NODES-DISABLED COLUMN.** The first matrix reported `Building`
+and `Projectile` as identical traces, which reads as two holes in the hash. Both had disabled ZERO
+nodes: the driver only ever sent creeps, so no tower was ever built and nothing ever fired. A
+sabotage run that sabotaged nothing is not a test, and without that column it is indistinguishable
+from one that proved the hash blind. The matrix prints `NOT TESTED` for it now.
+
+**A TOWER TAKES ABOUT THIRTEEN SECONDS TO BUILD.** Ordered at tick 60 of a 400-tick run it is still
+scaffolding when the trace ends, so `skip=Projectile` stayed NOT TESTED even after the driver
+learned to build. It builds at tick 8 now and the matrix runs 700 ticks.
+
+**THE BUILDER'S CARD CARRIES THE BUILD MENU, NOT THE TOWERS.** Looking for a `BuildTowerAbility` at
+the top level of `stats.abilities` found nothing and reported it as nothing to build — the same
+submenu shape `_send_from` already documents. The driver descends one level through
+`submenu_abilities()`.
+
+The hash reads private fields by name through `get()` rather than through new accessors, because
+`Building`, `Creep` and `StatusEffects` are all already over gdlint's public-method ceiling and a
+harness should not push shipping classes further over it to watch itself work. **That fails silently
+if a field is renamed** — a missing property answers null, hashes the same every run, and the trace
+stays green while covering nothing — so the bench asserts its own coverage and separates three
+outcomes: MISSING (renamed, the real failure), never set (the field exists and the DRIVER never made
+it happen), and resolved. `Creep._status` currently reports *never set*: it is built lazily and no
+creep in the run is ever chilled or stunned, so the `StatusEffects` timers are hashed but unproven.
+**That is the one loop still without a red row**, and it wants a driver that lands a slowing attack.
 
 ### 13.3 Phase 6a — explicit stepping, commit by commit
 
