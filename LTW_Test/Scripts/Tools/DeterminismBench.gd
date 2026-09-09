@@ -138,6 +138,15 @@ func _apply_argument(key: String, value: String) -> void:
 			_compare = value
 		"perturb":
 			_perturb = int(value)
+		"rate":
+			# **The two-rate falsifier, and the only test that can see the delta
+			# refactor at all.** At one fixed rate a loop reading the engine
+			# delta and a loop reading the simulation step get the same number,
+			# so no trace can tell them apart. Run the same match at 20 Hz and at
+			# 30 Hz: after the refactor the traces must be IDENTICAL, because a
+			# simulation second stopped depending on how fast the machine runs.
+			# Before it they differ on the first moving creep.
+			Engine.physics_ticks_per_second = maxi(1, int(value))
 		"skip":
 			# **The sabotage matrix.** See _apply_skips.
 			for name: String in value.split(",", false):

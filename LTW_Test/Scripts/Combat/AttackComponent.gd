@@ -365,7 +365,11 @@ func _is_valid_target(target: Unit, attack: AttackStats) -> bool:
 		return target is Building
 	return TargetFinder.can_be_hit_by(target as Creep, attack)
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	if Engine.is_editor_hint():
 		return
 	var attack: AttackStats = _attack

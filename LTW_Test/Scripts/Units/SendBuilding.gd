@@ -220,7 +220,11 @@ func _create_stocks() -> void:
 ## Simulation, so it runs on the fixed tick rather than the render frame.
 ## See multiplayer.md: every machine must advance this the same way, and a
 ## render frame is whatever the player's GPU felt like doing.
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	# 3.4: a client runs no simulation of its own. What it draws is what the
 	# server sent, so anything that would advance the world here has to stand
 	# aside. See MatchSession.is_authority().

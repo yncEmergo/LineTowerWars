@@ -1141,7 +1141,11 @@ func _refresh_aura(delta: float) -> void:
 ## nothing here can make two machines sweep on different ticks. One phase per
 ## TICK of the interval, which is as fine a spread as a fixed tick can carry.
 func _aura_phase(interval: float) -> float:
-	var phases: int = maxi(1, int(round(interval * float(Engine.physics_ticks_per_second))))
+	# The AUTHORED rate, not the live one: this decides how many ticks a timed
+	# passive is spread over, so a peer running fast to catch up must divide the
+	# interval into the same number of phases as everybody else. See
+	# MatchSession._sim_ticks_per_second.
+	var phases: int = maxi(1, int(round(interval / MatchSession.tick_seconds())))
 	return interval * float(unit_id % phases) / float(phases)
 
 
@@ -1244,7 +1248,11 @@ func _damage_block() -> int:
 ## Deliberately does not call super(). MobileUnit walks towards an ordered
 ## target, and a creep is driven by the area's route instead, so the two would
 ## be fighting over the same position.
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	# 3.4: a client runs no simulation of its own. What it draws is what the
 	# server sent, so anything that would advance the world here has to stand
 	# aside. See MatchSession.is_authority().

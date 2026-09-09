@@ -69,7 +69,11 @@ func launch(delivery: ProjectileDelivery, hit: AttackHit, from: Vector3, target:
 	_face_travel(_goal - global_position)
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	if _landed || _delivery == null || _hit == null:
 		return
 

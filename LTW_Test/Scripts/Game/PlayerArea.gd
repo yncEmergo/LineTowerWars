@@ -345,7 +345,11 @@ func footprint_world_center(cell: Vector2i, footprint: Vector2i) -> Vector3:
 ## ever MARKED on the authority - a client is told a tower is gone but never
 ## why - so a client's grid simply has none, and its build ghost can read green
 ## over a cell the server will refuse for a few seconds. See multiplayer.md.
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	if _rubble.is_empty():
 		return
 

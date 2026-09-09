@@ -1385,6 +1385,47 @@ tuned toward one uncovered loop uncovered another**, and the second failure was 
 the matrix reports nodes-disabled. Both changes were reverted; the class-level verification was
 kept. Landing a chill wants a driver that can complete an upgrade, which is its own piece of work.
 
+### 13.2b The delta refactor — DONE 2026-09-09
+
+**The shared prerequisite of both roads, and it turned out to be eleven loops rather than the
+twenty-nine `delta` mentions suggest.** Each gameplay `_physics_process` takes the engine delta as a
+parameter and passes it down, so rebinding it once at each entry point leaves every downstream use
+untouched:
+
+```gdscript
+func _physics_process(_engine_delta: float) -> void:
+	var delta: float = MatchSession.tick_seconds()
+```
+
+`Builder`, `Building`, `Creep`, `MobileUnit`, `SendBuilding`, `AttackComponent`, `BeastCharge`,
+`GroundHazard`, `PiercingProjectile`, `Projectile`, `PlayerArea`.
+
+**And the load-bearing half is one line in `MatchSession`.** `tick_seconds()` read
+`Engine.physics_ticks_per_second`, which is the LIVE rate — so under a servo the simulation's second
+would change on the peer being paced, its creeps would move further per turn than everybody else's,
+and the worlds would part with no error anywhere. It now reads the AUTHORED project setting, which a
+runtime assignment to `Engine.physics_ticks_per_second` does not write back to. `Creep`'s timed-passive
+phase count was the only other simulation read of the live rate; `LockstepService._engine_tick_seconds`
+keeps it deliberately, and its docstring says why.
+
+**The falsifier this needed did not exist and is the point of the exercise.** At one fixed rate a
+loop reading the engine delta and a loop reading the simulation step get the same number, so no
+trace can tell them apart — the same structural blindness 13.2 describes for stepping. The bench
+takes `rate=` now and runs the same match at two engine rates:
+
+| check | result |
+| --- | --- |
+| `rate=20` vs `rate=30`, after the refactor | **byte-identical** |
+| the same, with `tick_seconds()` sabotaged back to the live rate | **diverges** |
+| `rate=20` against the pre-refactor baseline | **byte-identical — the refactor is a no-op** |
+| the sabotage matrix, re-run afterwards | still red on every loop |
+
+The middle row is what makes the first one mean anything.
+
+**What this does NOT do.** Nothing is paced yet: `Engine.physics_ticks_per_second` is only moved by
+the bench. What it buys is that moving it is now SAFE, which is what both the servo and explicit
+multi-stepping were waiting for.
+
 ### 13.3 Phase 6a — explicit stepping, commit by commit
 
 The shape. One new file, `Scripts/Game/Simulation.gd` (`class_name Simulation extends Node`), added

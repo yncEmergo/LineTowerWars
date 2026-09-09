@@ -512,7 +512,32 @@ func sudden_death_remaining() -> float:
 ## and the two stop being the same number as soon as anything paces the engine.
 ## `LockstepService._engine_tick_seconds` is that reading, and it says why.
 static func tick_seconds() -> float:
-	return 1.0 / float(Engine.physics_ticks_per_second)
+	return 1.0 / _sim_ticks_per_second()
+
+
+## The AUTHORED simulation rate, read from the project setting and cached.
+##
+## **Deliberately not `Engine.physics_ticks_per_second`, and that is the whole
+## delta refactor in one line.** The two are the same number today, and they stop
+## being the same the moment anything paces the engine - a catch-up servo runs a
+## peer that has fallen behind at 21 or 24 Hz so it can consume more game time
+## than real time. Reading the live value there would change the LENGTH OF A
+## SIMULATION SECOND on that peer alone, so its creeps would move further per
+## turn than everybody else's and the worlds would part with no error anywhere.
+##
+## The project setting is what the authored rate IS, and assigning
+## `Engine.physics_ticks_per_second` at runtime does not write back to it - so
+## this stays fixed however the engine is paced. Cached because it is read on
+## every gameplay loop of every unit, every tick.
+static var _sim_rate: float = 0.0
+
+
+static func _sim_ticks_per_second() -> float:
+	if _sim_rate <= 0.0:
+		_sim_rate = maxf(1.0, float(ProjectSettings.get_setting(
+			"physics/common/physics_ticks_per_second", 20
+		)))
+	return _sim_rate
 
 
 ## Every ability a command can name, by id. Built by Main from the same content

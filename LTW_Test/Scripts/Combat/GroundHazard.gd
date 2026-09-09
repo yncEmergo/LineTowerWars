@@ -103,7 +103,11 @@ func light(burning_area: PlayerArea, radius_cells: float, damage_per_tick: int,
 ## The clock and the damage, on the simulation tick because both are gameplay:
 ## how long the ground burns decides how much it deals, and a render frame is
 ## whatever the player's GPU felt like doing.
-func _physics_process(delta: float) -> void:
+func _physics_process(_engine_delta: float) -> void:
+	# **The SIMULATION's second, never the engine's.** The parameter is the real
+	# time this frame took, which is exactly what must not reach gameplay once a
+	# servo can pace the engine - see MatchSession._sim_ticks_per_second.
+	var delta: float = MatchSession.tick_seconds()
 	if Engine.is_editor_hint() || !_lit:
 		return
 
