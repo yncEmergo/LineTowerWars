@@ -92,13 +92,12 @@ func create_states(setup: MatchSetup, config: GameConfig) -> void:
 		_states[player.slot] = state
 
 	_income_interval = settings.income_interval
-	# Through unlock_clock, for the reason everything else timed from the start
-	# of PLAY goes through it: the opening phase is added in ONE place. So the
-	# first payment lands one whole interval after play begins rather than
-	# after the match does - the same opening every creep's start delay is
-	# moved back by, and the reason a player spends it on their starting gold
-	# alone. See GameConfig.start_delay_seconds.
-	_next_income_at = config.unlock_clock(_income_interval)
+	# The first payment lands the moment PLAY begins - through unlock_clock, like
+	# every other timing measured from the end of the opening phase - rather than
+	# one interval after it, and the schedule runs on from there. The opening
+	# itself pays nothing, and neither does the match's first frame when there
+	# is no opening to wait out. See GameConfig.start_delay_seconds.
+	_next_income_at = maxf(config.unlock_clock(0.0), _income_interval)
 	_over = false
 
 
@@ -155,10 +154,10 @@ func next_maze_after(defender_id: int, sender_id: int) -> int:
 ## Walks the ring from `from` and returns the next living player who is not
 ## `excluded`.
 ##
-## Falls back to `from` when the ring holds nobody else - a 1v1 whose other
-## player is out. That means sending into your own lane, which is odd but
-## harmless, and it cannot last: with the win condition deliberately NOT BUILT
-## (game_rules.md) a match with one player left simply carries on.
+## Falls back to `from` when the ring holds nobody else. In a match that means
+## everybody else is out, so it is over and nothing is sent any more; in a one
+## player run it means sending into your own lane, which is how the prototype
+## is still tested alone.
 func _next_living(from: int, excluded: int) -> int:
 	var count: int = _player_count()
 	for step in range(1, count + 1):
@@ -218,22 +217,44 @@ func erase_player(player_id: int) -> void:
 	if !MatchSession.is_authority():
 		return
 
+	var removed: int = _remove_units(
+		func(unit: Unit) -> bool: return unit.owner_player_id == player_id
+	)
+	Log.info("Player erased from the field", {"player": player_id, "units": removed})
+
+
+## Takes every creep off the field the moment the match is decided, whoever
+## sent it and whichever lane it is walking (game_rules.md - win condition).
+##
+## Without it the survivor's creeps go on walking a lane nobody defends any
+## more until they leak out of it, and nothing they do there can matter. Removed
+## exactly as erase_player removes a leaver's units and for the same reasons: no
+## death passive fires and no bounty is paid, because a match ending is not a
+## kill.
+func _clear_creeps() -> void:
+	var removed: int = _remove_units(func(unit: Unit) -> bool: return unit is Creep)
+	Log.info("Match over, creeps cleared", {"creeps": removed})
+
+
+## Frees every registered unit `matches` answers true for, and says how many.
+##
+## Out of the registry at once: queue_free is deferred, and the next tick would
+## otherwise still find one and treat it as alive. Walked in the registry's own
+## ascending order, so every machine frees the same units in the same order.
+func _remove_units(matches: Callable) -> int:
 	var session: MatchSession = References.match_session
 	if session == null:
-		return
+		return 0
 
 	var removed: int = 0
 	for id in session.unit_ids():
 		var unit: Unit = session.unit_for(int(id))
-		if unit == null || unit.owner_player_id != player_id:
+		if unit == null || !matches.call(unit):
 			continue
-		# Out of the registry at once: queue_free is deferred, and the next
-		# tick would otherwise still find it and treat it as alive.
 		session.unregister_unit(int(id))
 		unit.queue_free()
 		removed += 1
-
-	Log.info("Player erased from the field", {"player": player_id, "units": removed})
+	return removed
 
 
 func state_for(player_id: int) -> PlayerState:
@@ -367,6 +388,8 @@ func _settle_standings() -> void:
 	if _over || !is_match_over():
 		return
 	_over = true
+	# Before match_ended, so anything listening already sees the final world.
+	_clear_creeps()
 	for slot in _sorted_slots():
 		var state: PlayerState = _states[slot]
 		if state.placement == 0:

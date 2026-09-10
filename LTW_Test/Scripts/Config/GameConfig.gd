@@ -307,11 +307,12 @@ extends Resource
 ## and every TIMING authored against it is moved back by this instead - so the
 ## source's 0:00 Sheep opens at 0:20 here and its 0:30 Skeleton at 0:50.
 ##
-## What moves is everything timed off the start of the match: every creep's
-## own start delay, the first income payment, and Sudden Death. What does NOT
-## move is anything a player does with what they already have - building,
-## selling and technology are open from the first frame, because they are what
-## the opening is FOR. 0 removes the phase.
+## What moves is everything timed off the start of play: every creep's own
+## start delay, the first income payment - which lands the moment play begins,
+## not one interval after it - and Sudden Death. What does NOT move is anything
+## a player does with what they already have - building, selling and technology
+## are open from the first frame, because they are what the opening is FOR. 0
+## removes the phase.
 ##
 ## Authored here as ONE number rather than added into each creep's
 ## unlock_seconds, so unit_data.md 6.2 goes on holding the source game's own

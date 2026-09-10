@@ -2528,10 +2528,13 @@ is another entry in its file rather than a rule anywhere.
       the length of the phase instead. So the source's 0:00 Sheep opens at 0:20
       here and its 0:30 Skeleton at 0:50, and `unit_data.md` section 6 goes on
       quoting the source's own times rather than the prototype's
-    - EVERYTHING timed off the start of the match moves with it: every creep's
+    - EVERYTHING timed off the start of play moves with it: every creep's
       start delay, the first income payment, and Sudden Death. Nothing a player
       does with what they already have does - building, selling and technology
       are open from the first frame, because they are what the phase is FOR
+    - the opening pays NO income. The first payment lands the moment play
+      begins, not one interval after it, and the schedule runs on from there.
+      BUILT
   - it also removes the need for a separate rule disabling sending at the start:
     at the first second only the Sheep is unlocked, so there is nothing else to
     send
@@ -2738,8 +2741,8 @@ BUILT.
   - When there is no such player - a single area, or a 1v1 whose other player is
     out - there is nowhere to advance to and the creep leaves instead of looping
     in one lane forever
-- A player with no lives left is eliminated. Nothing acts on that yet beyond the
-  ring skipping them, because the win condition below is deliberately not built
+- A player with no lives left is eliminated, and the ring skips them from then
+  on. What else that costs them is under Win condition
 - Starting lives depend on the player count: fewer players means more lives each
   - The prototype derives them from a formula so any player count works, kept in
     `Resources/Config/game_config.tres`
@@ -2806,6 +2809,9 @@ end screen yet - players leave through the in-game menu.
     of five takes 5th and the survivor takes 1st
 - Once one player is left the match is over: the income timer stops where it is
   and nobody can send any more
+  - Every creep still on the field leaves it at that moment, the survivor's own
+    included, removed exactly as an eliminated player's are - so nothing is left
+    walking a lane nobody defends any more
 - Simultaneous elimination does not exist
 - If two life steals would resolve on the same frame, the one that triggers first wins
   - Resolution is by execution order and is deterministic. Eliminations are

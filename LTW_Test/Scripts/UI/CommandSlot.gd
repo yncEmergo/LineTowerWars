@@ -75,6 +75,9 @@ var _hotkey: String = ""
 ## button until the cursor leaves the square and comes back. The node is the
 ## viewport's and is freed when it hides, so every read of it is guarded.
 var _tooltip: AbilityTooltip = null
+## Mouse buttons whose press this square swallowed, so their release is
+## swallowed with them. See _input().
+var _swallowed_buttons: int = 0
 
 
 func _ready() -> void:
@@ -156,6 +159,36 @@ func _process(_delta: float) -> void:
 	if ability == null:
 		return
 	_refresh_state()
+
+
+## A click on a passive does NOTHING, and that has to be arranged here rather
+## than in _on_pressed. The Viewport closes any open tooltip on every mouse
+## press it routes to a Control, unconditionally and after the Control has seen
+## it, so a passive that merely ignored the press still lost the tooltip it
+## exists to show. _input runs before the GUI pass, so taking the press here is
+## the one place it never reaches that code.
+##
+## The release goes with it, but only for a button whose press went too. A
+## lone release would fall through to the world, and a box select started on
+## the map and let go over the card must still end.
+func _input(event: InputEvent) -> void:
+	var button: InputEventMouseButton = event as InputEventMouseButton
+	if button == null:
+		return
+
+	var bit: int = 1 << (button.button_index - 1)
+	if !button.pressed:
+		if (_swallowed_buttons & bit) != 0:
+			_swallowed_buttons &= ~bit
+			get_viewport().set_input_as_handled()
+		return
+
+	if ability == null || ability.targeting != UnitAbility.Targeting.PASSIVE:
+		return
+	if !is_visible_in_tree() || get_viewport().gui_get_hovered_control() != self:
+		return
+	_swallowed_buttons |= bit
+	get_viewport().set_input_as_handled()
 
 
 func _refresh_state() -> void:
