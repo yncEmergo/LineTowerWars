@@ -461,9 +461,18 @@ func hold(reason: StringName, held: bool) -> void:
 		_pause_frame = Engine.get_physics_frames()
 	else:
 		_start_frame += Engine.get_physics_frames() - _pause_frame
-	Log.info("Match " + ("paused" if wanted else "resumed"), {
-		"tick": tick(), "by": reason, "holders": holders(),
-	})
+	# **A lockstep stall is not a player action, and under the sealed stream it is
+	# frequent** - every stall starts and ends here, and a peer on a jittery link
+	# can take dozens a minute. `Log.info` runs `get_stack()` and `print_rich()`,
+	# measured at ~10 ms a call on Windows (see CLAUDE.md), and the RESUME call
+	# lands on the very frame the world starts moving again. The stall is already
+	# reported by LockstepService and the session log, so it goes to debug here;
+	# every other holder - the draft - stays at info.
+	var detail: Dictionary = {"tick": tick(), "by": reason, "holders": holders()}
+	if reason == &"lockstep":
+		Log.debug("Match " + ("paused" if wanted else "resumed"), detail)
+	else:
+		Log.info("Match " + ("paused" if wanted else "resumed"), detail)
 
 
 ## Whether the match has reached Sudden Death.

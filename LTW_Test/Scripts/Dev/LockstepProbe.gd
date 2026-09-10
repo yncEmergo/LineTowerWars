@@ -56,6 +56,8 @@ var _corrupted: bool = false
 var _wedged: bool = false
 var _hitches: int = 0
 var _drops: int = 0
+var _spoofs: int = 0
+var _driven_after_giveup: int = 0
 
 
 func _ready() -> void:
@@ -138,7 +140,7 @@ func _on_lobby_list(lobbies: Array[LobbyInfo]) -> void:
 	#
 	# The sealed seal is a NEW broadcast, so it meets that trap again. Nothing
 	# else in any obvious test setup contains this case.
-	if _role == "browse":
+	if _role == "browse" || _role == "spoof":
 		return
 	if Lobby.is_in_lobby() || _joining:
 		return
@@ -232,7 +234,18 @@ func _process(delta: float) -> void:
 
 	# The browser never enters a match on purpose. It just sits there being
 	# connected, which is the whole experiment.
-	if _role == "browse":
+	if _role == "browse" || _role == "spoof":
+		# **`spoof` is a HOSTILE browser**: connected, in no match, forging a turn
+		# checksum every frame across the whole checksum range. It is the test for
+		# the 2026-09-10 audit's critical finding - a relay that took a checksum
+		# from anybody connected let a lobby browser end any match with one packet.
+		# A sweep rather than one turn, so a forgery lands on a turn that really is
+		# compared whenever this happens to connect.
+		if _role == "spoof" && Net.is_online():
+			Lockstep.report_turn_checksum.rpc_id(
+				NetworkService.SERVER_PEER_ID, (_spoofs * 10) % 4000, 12345
+			)
+			_spoofs += 1
 		if _elapsed >= _play_seconds():
 			_finish()
 		return
@@ -254,7 +267,10 @@ func _process(delta: float) -> void:
 	# relay's liveness clock through `submit_order`, so the peer that has
 	# visibly stopped playing would never be given up on - which is a fair
 	# description of the machine but a useless simulation of one that has died.
-	if !_wedged:
+	# `--drive-while-wedged` keeps pressing through a wedge, which is how the
+	# 2026-09-10 give-up fix is exercised: a peer that has given up must not be
+	# able to put another order on the wire however hard its player presses.
+	if !_wedged || "--drive-while-wedged" in OS.get_cmdline_user_args():
 		_drive()
 	_maybe_corrupt()
 	_maybe_wedge()
@@ -348,6 +364,8 @@ func _drive() -> void:
 	if _elapsed < every * float(_sent):
 		return
 	_sent += 1
+	if Lockstep.has_given_up():
+		_driven_after_giveup += 1
 
 	if _sent <= 2:
 		Commands.submit_player_action(Command.PlayerAction.CHEAT_GOLD)
@@ -389,6 +407,8 @@ func _finish() -> void:
 		"desyncs": _desyncs,
 		"hitches": _hitches,
 		"drops_seen": _drops,
+		"spoofs_sent": _spoofs,
+		"driven_after_giveup": _driven_after_giveup,
 		"gave_up": Lockstep.has_given_up(),
 		"lag_s": snappedf(Lockstep.sealed_lag_seconds(), 0.1),
 		# **The positive control for the whole phase.** A run where `sealed` is

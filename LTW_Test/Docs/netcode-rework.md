@@ -611,6 +611,12 @@ two commands per client per frame with a kick at sixteen queued.
 > determinism holds over 219 compared checksum turns. See
 > `Findings/2026-09-09-sealed-stream-on-two-machines.md`.
 >
+> **Audited adversarially on 2026-09-10**, every finding refuted twice before it counted. It found
+> a critical hole - a lobby browser could end any match with one forged checksum - an engine rate
+> left overclocked by every match that ended mid-catch-up, and a servo whose slow-down branch could
+> never execute. Fourteen fixes, each proven by a run where one could prove it. See
+> `Findings/2026-09-10-netcode-audit.md`.
+>
 > **What is NOT done:** phase 2's presentation feedback, phase 4b's relay-side drop (deferred with
 > reasons), and section 13.3's dispatch change - which is no longer about catch-up at all and is
 > now purely a question about the tick budget at higher player counts.

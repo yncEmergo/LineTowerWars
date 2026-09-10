@@ -743,7 +743,14 @@ func wire_config() -> String:
 	# left that changes the WIRE without changing the code is the turn-to-tick
 	# ratio: the relay seals one turn per tick and every peer derives its turns
 	# from ticks, so two builds that disagree here desync rather than refuse.
-	return "tpt=%d" % maxi(1, config.ticks_per_turn)
+	#
+	# **And whether this build plays by lockstep at all**, which the first version
+	# of this left out: `lockstep_enabled` switches the whole protocol between the
+	# sealed stream and full-world replication, so two builds that disagree about
+	# it would connect and then fail in whatever way the mismatch happened to
+	# produce. Found by the 2026-09-10 audit.
+	var lockstep: int = 1 if config.lockstep_enabled else 0
+	return "tpt=%d;ls=%d" % [maxi(1, config.ticks_per_turn), lockstep]
 
 
 func rpc_signature() -> String:

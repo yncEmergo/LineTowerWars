@@ -272,7 +272,19 @@ func report_ready(match_id: String) -> void:
 func report_checksum(match_id: String, checksum: int) -> void:
 	if !multiplayer.is_server() || _setup == null || match_id != _setup.match_id:
 		return
-	_reported_checksums[multiplayer.get_remote_sender_id()] = checksum
+	# **A match id is not a secret - it is "match-1" - so it cannot stand in for
+	# membership.** Refused unless the sender is a player in this match, for the
+	# reason LockstepService.report_turn_checksum gives: anybody connected could
+	# otherwise report a checksum for a match they are not in and end it.
+	var sender: int = multiplayer.get_remote_sender_id()
+	var playing: bool = false
+	for player: MatchPlayer in _setup.players:
+		if player != null && player.network_id == sender:
+			playing = true
+			break
+	if !playing:
+		return
+	_reported_checksums[sender] = checksum
 	_compare_checksums()
 
 
@@ -712,7 +724,17 @@ func announce_desync(tick: int, reported: int, reference: int) -> void:
 	Log.err("Match diverged, telling every player", {
 		"tick": tick, "reported": reported, "reference": reference,
 	})
-	receive_desync.rpc(tick, reported, reference)
+	# **To the players in this match, never a bare `rpc()`.** A broadcast reaches
+	# every CONNECTED peer, including somebody sitting in the lobby browser, who
+	# would record a desync for a match they are not in - D33's shape, reached
+	# from the one message that ends a match. And only to peers still on the end
+	# of a socket, or `rpc_id` fails on the departed with a backtrace each.
+	if _setup == null:
+		return
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for player: MatchPlayer in _setup.players:
+		if player != null && player.network_id != 0 && player.network_id in live:
+			receive_desync.rpc_id(player.network_id, tick, reported, reference)
 
 
 ## Says a machine's world stopped matching the rest of the match, and says it to

@@ -72,7 +72,13 @@ func _process(_delta: float) -> void:
 
 ## Whether a lockstep stall, and nothing else, is holding the world.
 func _should_release() -> bool:
-	if !Lockstep.is_stalled():
+	# **Never for a machine that has GIVEN UP**, which is stalled and held by
+	# lockstep alone - exactly the shape this otherwise releases. Releasing it
+	# let a player reading "the match carried on without you" keep sending
+	# orders into that match from a world frozen at the turn they gave up on.
+	# `Lockstep.schedule` refuses those too; this keeps the card visibly dead
+	# rather than silently swallowing presses.
+	if Lockstep.has_given_up() || !Lockstep.is_stalled():
 		return false
 
 	var session: MatchSession = References.match_session

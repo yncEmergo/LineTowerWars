@@ -166,6 +166,22 @@ replaced it, and the input-delay figures on both machines. The drift half is mea
 settled — a stable lead and a drift-free pair look the same over a minute, so the servo decision
 in `netcode-rework.md` 13.4b rests on the repayment mechanism rather than on a drift number.
 
+### 1.7 Loose ends from the 2026-09-10 audit
+
+Everything the audit confirmed is fixed; these are what it could not reach, in the order worth
+doing them. `Findings/2026-09-10-netcode-audit.md` has the reasoning for each.
+
+- **Test the editor against an exported build in one match.** `WorldChecksum` hashes
+  `stats.resource_path`, and if an exported pack reports a different path than a run from source,
+  every mixed test is a false desync. Export-against-export is proven clean.
+- **Retire the dead delay knobs** - `adaptive_delay`, `fixed_delay_turns`, `min_delay_turns`,
+  `max_delay_turns`, `jitter_margin_ms` - together with `SessionLog`'s reads of them and the `.tres`
+  line, in ONE commit. Removing the exports alone is a runtime error that no parse check catches.
+- **Give the seal its own ENet channel.** Every `@rpc` rides channel 0, so a seal can queue behind a
+  lobby-list broadcast. Unmeasured, and a protocol change: bump `protocol_version` with it.
+- **Measure real packet loss.** The echo is proven against injected loss after delivery; the
+  health line's `echo` field is the first report of the real thing, on somebody else's connection.
+
 ---
 
 ## 2. Mid term
