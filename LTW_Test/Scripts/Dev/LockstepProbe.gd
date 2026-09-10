@@ -221,6 +221,8 @@ func _process(delta: float) -> void:
 		MenuNavigation.to_lobby_browser(self)
 		return
 
+	_apply_faults()
+
 	if !_dialled:
 		if References.network_config == null:
 			return
@@ -244,6 +246,12 @@ func _process(delta: float) -> void:
 		if _role == "spoof" && Net.is_online():
 			Lockstep.report_turn_checksum.rpc_id(
 				NetworkService.SERVER_PEER_ID, (_spoofs * 10) % 4000, 12345
+			)
+			# And a forged repair request, which must be refused the same way:
+			# answered, it would make the relay send a match's orders to a peer
+			# that is in no match at all.
+			Lockstep.request_seals.rpc_id(
+				NetworkService.SERVER_PEER_ID, PackedInt32Array([_spoofs % 400])
 			)
 			_spoofs += 1
 		if _elapsed >= _play_seconds():
@@ -278,6 +286,31 @@ func _process(delta: float) -> void:
 
 	if _elapsed >= _play_seconds():
 		_finish()
+
+
+## The test-only fault injectors, from the command line, on THIS process only:
+##   --seal-loss <percent>   reliable seals thrown away on arrival
+##   --echo-loss <percent>   echoes thrown away on arrival
+##   --no-repair             seal repair switched off, for the paired run
+##
+## Applied every frame rather than once, because the config is a resource held by
+## whichever scene is loaded, and the match scene is not the one the probe starts
+## in. `--seal-loss 100 --echo-loss 20` is playtest 7's lost player on demand.
+func _apply_faults() -> void:
+	var config: NetworkConfig = References.network_config
+	if config == null:
+		return
+	config.debug_seal_loss_percent = _int_argument("--seal-loss", 0)
+	config.debug_echo_loss_percent = _int_argument("--echo-loss", 0)
+	config.seal_repair_enabled = !("--no-repair" in OS.get_cmdline_user_args())
+
+
+func _int_argument(flag: String, fallback: int) -> int:
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	for index: int in range(args.size()):
+		if args[index] == flag && index + 1 < args.size():
+			return int(args[index + 1])
+	return fallback
 
 
 ## DELIBERATELY blocks this machine's whole main thread for most of a second, on
@@ -417,6 +450,10 @@ func _finish() -> void:
 		# actually being played rather than the flag merely being set.
 		"sealed_held": Lockstep.sealed_held(),
 		"echo": Lockstep.echo_recovery(),
+		"echoes_dropped": Lockstep._echoes_dropped,
+		# **The positive control for repair**: [asked, repaired]. A run that set out
+		# to test repair and reports zero here never reached it.
+		"repair": Lockstep.repair_counts(),
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),
 	})

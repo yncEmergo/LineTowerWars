@@ -1,0 +1,90 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 560.94 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce GTX 1060 6GB
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Main found no pending match, standing in a single player setup
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 1, "local_slot": 1, "seed": 1412530104, "starting_lives": 200, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Cutter }
+[INFO] Tower placed { "cell": (0,32), "tower": &"LesserCutter_0_32", "cost": 10 }
+[INFO] Ability cancelled
+[INFO] Ability armed, waiting for target { "ability": Lesser Cutter }
+[INFO] Tower placed { "cell": (2,33), "tower": &"LesserCutter_2_33", "cost": 10 }
+[INFO] Tower placed { "cell": (4,34), "tower": &"LesserCutter_4_34", "cost": 10 }
+[INFO] Tower placed { "cell": (6,35), "tower": &"LesserCutter_6_35", "cost": 10 }
+[INFO] Tower placed { "cell": (8,36), "tower": &"LesserCutter_8_36", "cost": 10 }
+[INFO] Tower placed { "cell": (10,37), "tower": &"LesserCutter_10_37", "cost": 10 }
+[INFO] Tower placed { "cell": (12,38), "tower": &"LesserCutter_12_38", "cost": 10 }
+[INFO] Tower placed { "cell": (14,41), "tower": &"LesserCutter_14_41", "cost": 10 }
+[INFO] Tower placed { "cell": (12,41), "tower": &"LesserCutter_12_41", "cost": 10 }
+[INFO] Tower placed { "cell": (10,41), "tower": &"LesserCutter_10_41", "cost": 10 }
+[INFO] Tower placed { "cell": (8,40), "tower": &"LesserCutter_8_40", "cost": 10 }
+[INFO] Tower placed { "cell": (6,39), "tower": &"LesserCutter_6_39", "cost": 10 }
+[INFO] Tower placed { "cell": (4,38), "tower": &"LesserCutter_4_38", "cost": 10 }
+[INFO] Tower placed { "cell": (2,37), "tower": &"LesserCutter_2_37", "cost": 10 }
+[INFO] Ability cancelled
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (0,40), "tower": &"LesserArcher_0_40", "cost": 10 }
+[INFO] Tower placed { "cell": (2,41), "tower": &"LesserArcher_2_41", "cost": 10 }
+[INFO] Tower placed { "cell": (4,42), "tower": &"LesserArcher_4_42", "cost": 10 }
+[INFO] Tower placed { "cell": (6,43), "tower": &"LesserArcher_6_43", "cost": 10 }
+[WARN] Not enough gold on arrival, order dropped { "cost": 10 }
+WARNING: Not enough gold on arrival, order dropped { "cost": 10 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Ability cancelled
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 23 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 22 }
+[INFO] Selection changed { "count": 3 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 23 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 22 }
+[INFO] Technology researched { "player": 1, "tech": Void Technology: Basic, "cost": 0 }
+[INFO] Technology researched { "player": 1, "tech": Void Technology (1): Harbinger, "cost": 0 }
+[INFO] Technology researched { "player": 1, "tech": Void Technology (2): Leviathan, "cost": 0 }
+[WARN] Command rejected { "command": slot 1, player action 1, tech 27, tick 2361, "why": already researched }
+WARNING: Command rejected { "command": slot 1, player action 1, tech 27, tick 2361, "why": already researched }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Upgrade started { "building": &"LesserCutter_10_37", "into": Cutter, "cost": 30 }
+[INFO] Morph finished { "tower": &"Cutter_10_37", "value": 40 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Acolyte, "count": 3, "cost": 40, "stock": 21 }
+[INFO] Creeps sent { "type": Acolyte, "count": 3, "cost": 40, "stock": 21 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 27 }
+[INFO] Creeps sent { "type": Skeleton Warrior, "count": 3, "cost": 25, "stock": 26 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Ability armed, waiting for target { "ability": Elemental Core }
+[INFO] Tower placed { "cell": (8,44), "tower": &"ElementalCore_8_44", "cost": 200 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Upgrade started { "building": &"ElementalCore_8_44", "into": Voidling, "cost": 0 }
+[INFO] Morph finished { "tower": &"Voidling_8_44", "value": 200 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Vile Temptress, "count": 3, "cost": 150, "stock": 16 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Selection changed { "count": 1 }
+[INFO] Morph finished { "tower": &"Voidling_6_43", "value": 10 }
+[INFO] Void spread { "tower": &"Voidling_8_44", "converted": &"LesserArcher_6_43" }

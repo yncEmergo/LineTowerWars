@@ -1400,3 +1400,9 @@ func _repeat_interval(config: ControlsConfig) -> float:
 	var held: float = maxf(0.0, _held_elapsed - config.hold_repeat_delay)
 	var progress: float = clampf(held / ramp, 0.0, 1.0)
 	return lerpf(config.hold_repeat_start_interval, config.hold_repeat_min_interval, progress)
+
+
+## The portrait in the corner, for `ShaderWarmup`, which draws every unit in it
+## once so a first selection compiles nothing. Null when the panel has none.
+func portrait() -> UnitPortrait:
+	return _portrait

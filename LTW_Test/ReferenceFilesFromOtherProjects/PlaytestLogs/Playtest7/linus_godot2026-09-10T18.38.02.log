@@ -1,0 +1,724 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.86 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 3060 Ti
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 394207513, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Peer joined 597893188
+[INFO] Peer joined 1720695448
+[INFO] Peer joined 7030663
+[INFO] Peer joined 350406106
+[INFO] Peer joined 1617730059
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Permotion's Game, "players": 5, "host": false }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Permotion's Game, "players": 5, "host": false }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] In lobby { "id": lobby-3, "name": Permotion's Game, "players": 5, "host": false }
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Match starting { "match": match-3, "slot": 4, "players": 5 }
+WARNING: 'res://Resources/Abilities/Towers/build_lesser_archer_ability.tres': In external resource #1, invalid UID: 'uid://bwtvfxgnwgbwy' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_archer_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_archer_to_archer_ability.tres': In external resource #1, invalid UID: 'uid://cui6ywt4nk5v' - using text path instead: 'res://Resources/UnitStats/Towers/archer_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_archer_to_lesser_watch_tower_ability.tres': In external resource #1, invalid UID: 'uid://ckt17irfagshn' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_watch_tower_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_watch_tower_to_watch_tower_ability.tres': In external resource #1, invalid UID: 'uid://cbqhqfqwvf8p4' - using text path instead: 'res://Resources/UnitStats/Towers/watch_tower_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_watch_tower_to_greater_watch_tower_ability.tres': In external resource #1, invalid UID: 'uid://wnpto3jsui43' - using text path instead: 'res://Resources/UnitStats/Towers/greater_watch_tower_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_watch_tower_to_ultimate_watch_tower_ability.tres': In external resource #1, invalid UID: 'uid://bm1wi6jfauy40' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_watch_tower_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_archer_to_lesser_cannon_ability.tres': In external resource #1, invalid UID: 'uid://b8i2f220ufubn' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_cannon_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_cannon_to_cannon_ability.tres': In external resource #1, invalid UID: 'uid://dho7oni1ys7er' - using text path instead: 'res://Resources/UnitStats/Towers/cannon_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_cannon_to_greater_cannon_ability.tres': In external resource #1, invalid UID: 'uid://do6v2c7ewcfj6' - using text path instead: 'res://Resources/UnitStats/Towers/greater_cannon_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_cannon_to_ultimate_cannon_ability.tres': In external resource #1, invalid UID: 'uid://6krwvteki1gw' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_cannon_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/build_lesser_cutter_ability.tres': In external resource #1, invalid UID: 'uid://nw1jhm64ja86' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_cutter_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_cutter_to_cutter_ability.tres': In external resource #1, invalid UID: 'uid://crtvddax0m6js' - using text path instead: 'res://Resources/UnitStats/Towers/cutter_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_cutter_to_lesser_carver_ability.tres': In external resource #1, invalid UID: 'uid://bfr66l5sra43p' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_carver_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_carver_to_carver_ability.tres': In external resource #1, invalid UID: 'uid://c7qxnfmp2tpbs' - using text path instead: 'res://Resources/UnitStats/Towers/carver_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_carver_to_greater_carver_ability.tres': In external resource #1, invalid UID: 'uid://d2muc72sdtiua' - using text path instead: 'res://Resources/UnitStats/Towers/greater_carver_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_carver_to_ultimate_carver_ability.tres': In external resource #1, invalid UID: 'uid://njp57a573ai1' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_carver_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_cutter_to_lesser_crusher_ability.tres': In external resource #1, invalid UID: 'uid://cun7u61ri5lya' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_crusher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_crusher_to_crusher_ability.tres': In external resource #1, invalid UID: 'uid://ctea3vg4ulupa' - using text path instead: 'res://Resources/UnitStats/Towers/crusher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_crusher_to_greater_crusher_ability.tres': In external resource #1, invalid UID: 'uid://closppc84ftb' - using text path instead: 'res://Resources/UnitStats/Towers/greater_crusher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_crusher_to_ultimate_crusher_ability.tres': In external resource #1, invalid UID: 'uid://bcebkysla4nn4' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_crusher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres': In external resource #1, invalid UID: 'uid://ckjggtxby7jni' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_sentry_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_sentry_to_sentry_ability.tres': In external resource #1, invalid UID: 'uid://ijcwr8fhaaer' - using text path instead: 'res://Resources/UnitStats/Towers/sentry_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_sentry_to_lesser_defender_ability.tres': In external resource #1, invalid UID: 'uid://bef6mj8d43ner' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_defender_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_defender_to_defender_ability.tres': In external resource #1, invalid UID: 'uid://dv6fc1qgm43wn' - using text path instead: 'res://Resources/UnitStats/Towers/defender_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_defender_to_greater_defender_ability.tres': In external resource #1, invalid UID: 'uid://dx0vtva8x02jk' - using text path instead: 'res://Resources/UnitStats/Towers/greater_defender_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_defender_to_ultimate_defender_ability.tres': In external resource #1, invalid UID: 'uid://c8oo0uaw5pxfs' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_defender_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_sentry_to_lesser_turret_ability.tres': In external resource #1, invalid UID: 'uid://td828lqptto3' - using text path instead: 'res://Resources/UnitStats/Towers/lesser_turret_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lesser_turret_to_turret_ability.tres': In external resource #1, invalid UID: 'uid://belmoxoqq6vsk' - using text path instead: 'res://Resources/UnitStats/Towers/turret_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_turret_to_greater_turret_ability.tres': In external resource #1, invalid UID: 'uid://bw40svq2brmwt' - using text path instead: 'res://Resources/UnitStats/Towers/greater_turret_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_greater_turret_to_ultimate_turret_ability.tres': In external resource #1, invalid UID: 'uid://cxinr2wwfp286' - using text path instead: 'res://Resources/UnitStats/Towers/ultimate_turret_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/build_elemental_core_ability.tres': In external resource #1, invalid UID: 'uid://dv0iwqeuwm4lr' - using text path instead: 'res://Resources/UnitStats/Towers/elemental_core_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_fire_fire_pit_ability.tres': In external resource #1, invalid UID: 'uid://ba6jchbwwuy6' - using text path instead: 'res://Resources/UnitStats/Towers/fire_fire_pit_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_fire_fire_pit_to_fire_magma_well_ability.tres': In external resource #1, invalid UID: 'uid://dy4687gms6ywc' - using text path instead: 'res://Resources/UnitStats/Towers/fire_magma_well_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_fire_magma_well_to_fire_lesser_moonbeam_ability.tres': In external resource #1, invalid UID: 'uid://4841mhiwcqcj' - using text path instead: 'res://Resources/UnitStats/Towers/fire_lesser_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_fire_lesser_moonbeam_to_fire_greater_moonbeam_ability.tres': In external resource #1, invalid UID: 'uid://do70c8jecs2i3' - using text path instead: 'res://Resources/UnitStats/Towers/fire_greater_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_fire_greater_moonbeam_to_fire_ultimate_moonbeam_ability.tres': In external resource #1, invalid UID: 'uid://dqopj4obc8gb2' - using text path instead: 'res://Resources/UnitStats/Towers/fire_ultimate_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_ice_obelisk_ability.tres': In external resource #1, invalid UID: 'uid://bpchrdbkq8bmt' - using text path instead: 'res://Resources/UnitStats/Towers/ice_obelisk_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_obelisk_to_ice_runic_monolith_ability.tres': In external resource #1, invalid UID: 'uid://bfefp8p5cvkgi' - using text path instead: 'res://Resources/UnitStats/Towers/ice_runic_monolith_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_runic_monolith_to_ice_lesser_lich_ability.tres': In external resource #1, invalid UID: 'uid://cmy26wckf4dx1' - using text path instead: 'res://Resources/UnitStats/Towers/ice_lesser_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_lesser_lich_to_ice_greater_lich_ability.tres': In external resource #1, invalid UID: 'uid://3h664jchw3cw' - using text path instead: 'res://Resources/UnitStats/Towers/ice_greater_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_greater_lich_to_ice_ultimate_lich_ability.tres': In external resource #1, invalid UID: 'uid://dp7h1iavdglf4' - using text path instead: 'res://Resources/UnitStats/Towers/ice_ultimate_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_runic_monolith_to_ice_lesser_crystal_ability.tres': In external resource #1, invalid UID: 'uid://ccla7ed0pee7j' - using text path instead: 'res://Resources/UnitStats/Towers/ice_lesser_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_lesser_crystal_to_ice_greater_crystal_ability.tres': In external resource #1, invalid UID: 'uid://msstlq7m0e4b' - using text path instead: 'res://Resources/UnitStats/Towers/ice_greater_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_ice_greater_crystal_to_ice_ultimate_crystal_ability.tres': In external resource #1, invalid UID: 'uid://ftp7ypby3lft' - using text path instead: 'res://Resources/UnitStats/Towers/ice_ultimate_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_lightning_shock_particle_ability.tres': In external resource #1, invalid UID: 'uid://c4j3ohbt11vcc' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_shock_particle_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_shock_particle_to_lightning_power_generator_ability.tres': In external resource #1, invalid UID: 'uid://c1ighm07djmo6' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_power_generator_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_annihilation_glyph_ability.tres': In external resource #1, invalid UID: 'uid://dkhuiop3gruiw' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_lesser_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_lesser_annihilation_glyph_to_lightning_greater_annihilation_glyph_ability.tres': In external resource #1, invalid UID: 'uid://bdtqduucbmuku' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_greater_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_greater_annihilation_glyph_to_lightning_ultimate_annihilation_glyph_ability.tres': In external resource #1, invalid UID: 'uid://bqf4fn8sgwro6' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_ultimate_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_power_generator_to_lightning_lesser_orb_keeper_ability.tres': In external resource #1, invalid UID: 'uid://dtni7pkbnbpf1' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_lesser_orb_keeper_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_lesser_orb_keeper_to_lightning_greater_orb_keeper_ability.tres': In external resource #1, invalid UID: 'uid://b5p4rlbdp1itp' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_greater_orb_keeper_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_lightning_greater_orb_keeper_to_lightning_ultimate_orb_keeper_ability.tres': In external resource #1, invalid UID: 'uid://dhd11ks1pymfy' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_ultimate_orb_keeper_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_holy_light_flies_ability.tres': In external resource #1, invalid UID: 'uid://clbtxh0ya7xcl' - using text path instead: 'res://Resources/UnitStats/Towers/holy_light_flies_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_light_flies_to_holy_holy_lantern_ability.tres': In external resource #1, invalid UID: 'uid://dwk1wro5duq3m' - using text path instead: 'res://Resources/UnitStats/Towers/holy_holy_lantern_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_holy_lantern_to_holy_lesser_divineshroom_ability.tres': In external resource #1, invalid UID: 'uid://o2vb6l1xmpvp' - using text path instead: 'res://Resources/UnitStats/Towers/holy_lesser_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_lesser_divineshroom_to_holy_greater_divineshroom_ability.tres': In external resource #1, invalid UID: 'uid://ni1w8147514p' - using text path instead: 'res://Resources/UnitStats/Towers/holy_greater_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_greater_divineshroom_to_holy_ultimate_divineshroom_ability.tres': In external resource #1, invalid UID: 'uid://dhtuydtgt55o4' - using text path instead: 'res://Resources/UnitStats/Towers/holy_ultimate_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_holy_lantern_to_holy_lesser_titan_vault_ability.tres': In external resource #1, invalid UID: 'uid://s32xh6jku7sx' - using text path instead: 'res://Resources/UnitStats/Towers/holy_lesser_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_lesser_titan_vault_to_holy_greater_titan_vault_ability.tres': In external resource #1, invalid UID: 'uid://2ofwp3ysb2q4' - using text path instead: 'res://Resources/UnitStats/Towers/holy_greater_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_holy_greater_titan_vault_to_holy_ultimate_titan_vault_ability.tres': In external resource #1, invalid UID: 'uid://u335xtm18q73' - using text path instead: 'res://Resources/UnitStats/Towers/holy_ultimate_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_void_voidling_ability.tres': In external resource #1, invalid UID: 'uid://dtjnhdj4ixcnn' - using text path instead: 'res://Resources/UnitStats/Towers/void_voidling_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_voidling_to_void_voidalisk_ability.tres': In external resource #1, invalid UID: 'uid://bvg32u2icm832' - using text path instead: 'res://Resources/UnitStats/Towers/void_voidalisk_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_voidalisk_to_void_lesser_harbinger_ability.tres': In external resource #1, invalid UID: 'uid://csfsiio4lgka2' - using text path instead: 'res://Resources/UnitStats/Towers/void_lesser_harbinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_lesser_harbinger_to_void_greater_harbinger_ability.tres': In external resource #1, invalid UID: 'uid://28gygtw1jkms' - using text path instead: 'res://Resources/UnitStats/Towers/void_greater_harbinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_greater_harbinger_to_void_ultimate_harbinger_ability.tres': In external resource #1, invalid UID: 'uid://bstlofbp21nt5' - using text path instead: 'res://Resources/UnitStats/Towers/void_ultimate_harbinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_voidalisk_to_void_lesser_leviathan_ability.tres': In external resource #1, invalid UID: 'uid://drp37uvwblywc' - using text path instead: 'res://Resources/UnitStats/Towers/void_lesser_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_lesser_leviathan_to_void_greater_leviathan_ability.tres': In external resource #1, invalid UID: 'uid://iaw5cgjitade' - using text path instead: 'res://Resources/UnitStats/Towers/void_greater_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_void_greater_leviathan_to_void_ultimate_leviathan_ability.tres': In external resource #1, invalid UID: 'uid://dyge48s66x67r' - using text path instead: 'res://Resources/UnitStats/Towers/void_ultimate_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_unholy_plague_well_ability.tres': In external resource #1, invalid UID: 'uid://dyetvtg5xod7e' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_plague_well_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_unholy_plague_well_to_unholy_defiled_fountain_ability.tres': In external resource #1, invalid UID: 'uid://dvk0fm4y8vmk2' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_defiled_fountain_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_unholy_defiled_fountain_to_unholy_lesser_alchemist_ability.tres': In external resource #1, invalid UID: 'uid://cfmoq5i21rvx6' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_lesser_alchemist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_unholy_lesser_alchemist_to_unholy_greater_alchemist_ability.tres': In external resource #1, invalid UID: 'uid://ji8vkyt2dr30' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_greater_alchemist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_unholy_greater_alchemist_to_unholy_ultimate_alchemist_ability.tres': In external resource #1, invalid UID: 'uid://b6xib2msflfh8' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_ultimate_alchemist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_water_splasher_ability.tres': In external resource #1, invalid UID: 'uid://dhl47lck8u6s' - using text path instead: 'res://Resources/UnitStats/Towers/water_splasher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_splasher_to_water_tidecaller_ability.tres': In external resource #1, invalid UID: 'uid://c3bjybnxmbtv7' - using text path instead: 'res://Resources/UnitStats/Towers/water_tidecaller_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_tidecaller_to_water_lesser_hurricane_elemental_ability.tres': In external resource #1, invalid UID: 'uid://q32qmnvcxplv' - using text path instead: 'res://Resources/UnitStats/Towers/water_lesser_hurricane_elemental_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_lesser_hurricane_elemental_to_water_greater_hurricane_elemental_ability.tres': In external resource #1, invalid UID: 'uid://cef8q5o2epau5' - using text path instead: 'res://Resources/UnitStats/Towers/water_greater_hurricane_elemental_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_greater_hurricane_elemental_to_water_ultimate_hurricane_elemental_ability.tres': In external resource #1, invalid UID: 'uid://bkt7c3lnj0c3p' - using text path instead: 'res://Resources/UnitStats/Towers/water_ultimate_hurricane_elemental_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_tidecaller_to_water_lesser_sludge_monstrosity_ability.tres': In external resource #1, invalid UID: 'uid://dmlxtwblmk2lh' - using text path instead: 'res://Resources/UnitStats/Towers/water_lesser_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_lesser_sludge_monstrosity_to_water_greater_sludge_monstrosity_ability.tres': In external resource #1, invalid UID: 'uid://dk8xid4kp1uq3' - using text path instead: 'res://Resources/UnitStats/Towers/water_greater_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_water_greater_sludge_monstrosity_to_water_ultimate_sludge_monstrosity_ability.tres': In external resource #1, invalid UID: 'uid://c780ah3pdk73e' - using text path instead: 'res://Resources/UnitStats/Towers/water_ultimate_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_earth_rockfall_ability.tres': In external resource #1, invalid UID: 'uid://d1xdmhxfgfhnt' - using text path instead: 'res://Resources/UnitStats/Towers/earth_rockfall_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_rockfall_to_earth_avalanche_ability.tres': In external resource #1, invalid UID: 'uid://bc3ygq4w610ru' - using text path instead: 'res://Resources/UnitStats/Towers/earth_avalanche_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_ancient_warden_ability.tres': In external resource #1, invalid UID: 'uid://bxqjttmrxk6pw' - using text path instead: 'res://Resources/UnitStats/Towers/earth_lesser_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_lesser_ancient_warden_to_earth_greater_ancient_warden_ability.tres': In external resource #1, invalid UID: 'uid://jqo325xgepmj' - using text path instead: 'res://Resources/UnitStats/Towers/earth_greater_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_greater_ancient_warden_to_earth_ultimate_ancient_warden_ability.tres': In external resource #1, invalid UID: 'uid://k8ea3h58t453' - using text path instead: 'res://Resources/UnitStats/Towers/earth_ultimate_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_avalanche_to_earth_lesser_scorpion_ability.tres': In external resource #1, invalid UID: 'uid://b7x1dtx748vv5' - using text path instead: 'res://Resources/UnitStats/Towers/earth_lesser_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_lesser_scorpion_to_earth_greater_scorpion_ability.tres': In external resource #1, invalid UID: 'uid://civpe8mcnd6sx' - using text path instead: 'res://Resources/UnitStats/Towers/earth_greater_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_earth_greater_scorpion_to_earth_ultimate_scorpion_ability.tres': In external resource #1, invalid UID: 'uid://cgfw013kvlrlm' - using text path instead: 'res://Resources/UnitStats/Towers/earth_ultimate_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_arcane_apprentice_ability.tres': In external resource #1, invalid UID: 'uid://c24kvyui23pll' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_apprentice_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_apprentice_to_arcane_sorcerer_ability.tres': In external resource #1, invalid UID: 'uid://f8ef2p44wcj5' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_sorcerer_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_sorcerer_to_arcane_lesser_spellslinger_ability.tres': In external resource #1, invalid UID: 'uid://cey81sqhm43ur' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_lesser_spellslinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_lesser_spellslinger_to_arcane_greater_spellslinger_ability.tres': In external resource #1, invalid UID: 'uid://di4ewf47v362s' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_greater_spellslinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_greater_spellslinger_to_arcane_ultimate_spellslinger_ability.tres': In external resource #1, invalid UID: 'uid://ciu4g4yos0q4c' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_ultimate_spellslinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_sorcerer_to_arcane_lesser_arcane_orb_ability.tres': In external resource #1, invalid UID: 'uid://c1xuayn3b125j' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_lesser_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_lesser_arcane_orb_to_arcane_greater_arcane_orb_ability.tres': In external resource #1, invalid UID: 'uid://cvqrnjngping8' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_greater_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_arcane_greater_arcane_orb_to_arcane_ultimate_arcane_orb_ability.tres': In external resource #1, invalid UID: 'uid://dbinavxgrnso1' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_ultimate_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_elemental_core_to_primal_quarry_ability.tres': In external resource #1, invalid UID: 'uid://cru4e3i16v7e7' - using text path instead: 'res://Resources/UnitStats/Towers/primal_quarry_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_quarry_to_primal_coreway_ability.tres': In external resource #1, invalid UID: 'uid://76sx0fi3chg4' - using text path instead: 'res://Resources/UnitStats/Towers/primal_coreway_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_coreway_to_primal_lesser_primalist_ability.tres': In external resource #1, invalid UID: 'uid://bigdfyxwo1l4n' - using text path instead: 'res://Resources/UnitStats/Towers/primal_lesser_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_lesser_primalist_to_primal_greater_primalist_ability.tres': In external resource #1, invalid UID: 'uid://ggblsq0nmgy3' - using text path instead: 'res://Resources/UnitStats/Towers/primal_greater_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_greater_primalist_to_primal_ultimate_primalist_ability.tres': In external resource #1, invalid UID: 'uid://b0k5apmpk0xi6' - using text path instead: 'res://Resources/UnitStats/Towers/primal_ultimate_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_coreway_to_primal_lesser_beastmaster_ability.tres': In external resource #1, invalid UID: 'uid://dlb1fdv1paheh' - using text path instead: 'res://Resources/UnitStats/Towers/primal_lesser_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_lesser_beastmaster_to_primal_greater_beastmaster_ability.tres': In external resource #1, invalid UID: 'uid://tataocgbs2ak' - using text path instead: 'res://Resources/UnitStats/Towers/primal_greater_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Resources/Abilities/Towers/upgrade_primal_greater_beastmaster_to_primal_ultimate_beastmaster_ability.tres': In external resource #1, invalid UID: 'uid://dnrvpgnm26nuy' - using text path instead: 'res://Resources/UnitStats/Towers/primal_ultimate_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+[INFO] Match scene loaded { "match": match-3, "path": res://Scenes/Main.tscn }
+WARNING: 'res://Scenes/Units/Towers/arcane_lesser_spellslinger.tscn': In external resource #1, invalid UID: 'uid://cey81sqhm43ur' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_lesser_spellslinger_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/arcane_greater_spellslinger.tscn': In external resource #1, invalid UID: 'uid://di4ewf47v362s' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_greater_spellslinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/arcane_greater_arcane_orb.tscn': In external resource #1, invalid UID: 'uid://cvqrnjngping8' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_greater_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/arcane_lesser_arcane_orb.tscn': In external resource #1, invalid UID: 'uid://c1xuayn3b125j' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_lesser_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/arcane_sorcerer.tscn': In external resource #1, invalid UID: 'uid://f8ef2p44wcj5' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_sorcerer_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/arcane_apprentice.tscn': In external resource #1, invalid UID: 'uid://c24kvyui23pll' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_apprentice_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/arcane_ultimate_arcane_orb.tscn': In external resource #1, invalid UID: 'uid://dbinavxgrnso1' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_ultimate_arcane_orb_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/arcane_ultimate_spellslinger.tscn': In external resource #1, invalid UID: 'uid://ciu4g4yos0q4c' - using text path instead: 'res://Resources/UnitStats/Towers/arcane_ultimate_spellslinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_ultimate_ancient_warden.tscn': In external resource #1, invalid UID: 'uid://k8ea3h58t453' - using text path instead: 'res://Resources/UnitStats/Towers/earth_ultimate_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_greater_ancient_warden.tscn': In external resource #1, invalid UID: 'uid://jqo325xgepmj' - using text path instead: 'res://Resources/UnitStats/Towers/earth_greater_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_lesser_ancient_warden.tscn': In external resource #1, invalid UID: 'uid://bxqjttmrxk6pw' - using text path instead: 'res://Resources/UnitStats/Towers/earth_lesser_ancient_warden_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_ultimate_scorpion.tscn': In external resource #1, invalid UID: 'uid://cgfw013kvlrlm' - using text path instead: 'res://Resources/UnitStats/Towers/earth_ultimate_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_greater_scorpion.tscn': In external resource #1, invalid UID: 'uid://civpe8mcnd6sx' - using text path instead: 'res://Resources/UnitStats/Towers/earth_greater_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_lesser_scorpion.tscn': In external resource #1, invalid UID: 'uid://b7x1dtx748vv5' - using text path instead: 'res://Resources/UnitStats/Towers/earth_lesser_scorpion_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_avalanche.tscn': In external resource #1, invalid UID: 'uid://bc3ygq4w610ru' - using text path instead: 'res://Resources/UnitStats/Towers/earth_avalanche_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/earth_rockfall.tscn': In external resource #1, invalid UID: 'uid://d1xdmhxfgfhnt' - using text path instead: 'res://Resources/UnitStats/Towers/earth_rockfall_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/fire_lesser_moonbeam.tscn': In external resource #1, invalid UID: 'uid://4841mhiwcqcj' - using text path instead: 'res://Resources/UnitStats/Towers/fire_lesser_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/fire_fire_pit.tscn': In external resource #1, invalid UID: 'uid://ba6jchbwwuy6' - using text path instead: 'res://Resources/UnitStats/Towers/fire_fire_pit_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/fire_magma_well.tscn': In external resource #1, invalid UID: 'uid://dy4687gms6ywc' - using text path instead: 'res://Resources/UnitStats/Towers/fire_magma_well_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_lesser_crystal.tscn': In external resource #1, invalid UID: 'uid://ccla7ed0pee7j' - using text path instead: 'res://Resources/UnitStats/Towers/ice_lesser_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_lesser_lich.tscn': In external resource #1, invalid UID: 'uid://cmy26wckf4dx1' - using text path instead: 'res://Resources/UnitStats/Towers/ice_lesser_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_runic_monolith.tscn': In external resource #1, invalid UID: 'uid://bfefp8p5cvkgi' - using text path instead: 'res://Resources/UnitStats/Towers/ice_runic_monolith_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_obelisk.tscn': In external resource #1, invalid UID: 'uid://bpchrdbkq8bmt' - using text path instead: 'res://Resources/UnitStats/Towers/ice_obelisk_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_lesser_annihilation_glyph.tscn': In external resource #1, invalid UID: 'uid://dkhuiop3gruiw' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_lesser_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_lesser_orb_keeper.tscn': In external resource #1, invalid UID: 'uid://dtni7pkbnbpf1' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_lesser_orb_keeper_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_power_generator.tscn': In external resource #1, invalid UID: 'uid://c1ighm07djmo6' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_power_generator_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_shock_particle.tscn': In external resource #1, invalid UID: 'uid://c4j3ohbt11vcc' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_shock_particle_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_lesser_divineshroom.tscn': In external resource #1, invalid UID: 'uid://o2vb6l1xmpvp' - using text path instead: 'res://Resources/UnitStats/Towers/holy_lesser_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_lesser_titan_vault.tscn': In external resource #1, invalid UID: 'uid://s32xh6jku7sx' - using text path instead: 'res://Resources/UnitStats/Towers/holy_lesser_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_holy_lantern.tscn': In external resource #1, invalid UID: 'uid://dwk1wro5duq3m' - using text path instead: 'res://Resources/UnitStats/Towers/holy_holy_lantern_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_light_flies.tscn': In external resource #1, invalid UID: 'uid://clbtxh0ya7xcl' - using text path instead: 'res://Resources/UnitStats/Towers/holy_light_flies_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_lesser_harbinger.tscn': In external resource #1, invalid UID: 'uid://csfsiio4lgka2' - using text path instead: 'res://Resources/UnitStats/Towers/void_lesser_harbinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_lesser_leviathan.tscn': In external resource #1, invalid UID: 'uid://drp37uvwblywc' - using text path instead: 'res://Resources/UnitStats/Towers/void_lesser_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_voidling.tscn': In external resource #1, invalid UID: 'uid://dtjnhdj4ixcnn' - using text path instead: 'res://Resources/UnitStats/Towers/void_voidling_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/void_voidalisk.tscn': In external resource #1, invalid UID: 'uid://bvg32u2icm832' - using text path instead: 'res://Resources/UnitStats/Towers/void_voidalisk_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/unholy_lesser_alchemist.tscn': In external resource #1, invalid UID: 'uid://cfmoq5i21rvx6' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_lesser_alchemist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/unholy_defiled_fountain.tscn': In external resource #1, invalid UID: 'uid://dvk0fm4y8vmk2' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_defiled_fountain_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/unholy_plague_well.tscn': In external resource #1, invalid UID: 'uid://dyetvtg5xod7e' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_plague_well_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_lesser_hurricane_elemental.tscn': In external resource #1, invalid UID: 'uid://q32qmnvcxplv' - using text path instead: 'res://Resources/UnitStats/Towers/water_lesser_hurricane_elemental_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_lesser_sludge_monstrosity.tscn': In external resource #1, invalid UID: 'uid://dmlxtwblmk2lh' - using text path instead: 'res://Resources/UnitStats/Towers/water_lesser_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_tidecaller.tscn': In external resource #1, invalid UID: 'uid://c3bjybnxmbtv7' - using text path instead: 'res://Resources/UnitStats/Towers/water_tidecaller_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_splasher.tscn': In external resource #1, invalid UID: 'uid://dhl47lck8u6s' - using text path instead: 'res://Resources/UnitStats/Towers/water_splasher_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_lesser_primalist.tscn': In external resource #1, invalid UID: 'uid://bigdfyxwo1l4n' - using text path instead: 'res://Resources/UnitStats/Towers/primal_lesser_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_lesser_beastmaster.tscn': In external resource #1, invalid UID: 'uid://dlb1fdv1paheh' - using text path instead: 'res://Resources/UnitStats/Towers/primal_lesser_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_coreway.tscn': In external resource #1, invalid UID: 'uid://76sx0fi3chg4' - using text path instead: 'res://Resources/UnitStats/Towers/primal_coreway_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_quarry.tscn': In external resource #1, invalid UID: 'uid://cru4e3i16v7e7' - using text path instead: 'res://Resources/UnitStats/Towers/primal_quarry_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/elemental_core.tscn': In external resource #1, invalid UID: 'uid://dv0iwqeuwm4lr' - using text path instead: 'res://Resources/UnitStats/Towers/elemental_core_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/fire_greater_moonbeam.tscn': In external resource #1, invalid UID: 'uid://do70c8jecs2i3' - using text path instead: 'res://Resources/UnitStats/Towers/fire_greater_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/fire_ultimate_moonbeam.tscn': In external resource #1, invalid UID: 'uid://dqopj4obc8gb2' - using text path instead: 'res://Resources/UnitStats/Towers/fire_ultimate_moonbeam_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_ultimate_divineshroom.tscn': In external resource #1, invalid UID: 'uid://dhtuydtgt55o4' - using text path instead: 'res://Resources/UnitStats/Towers/holy_ultimate_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_greater_divineshroom.tscn': In external resource #1, invalid UID: 'uid://ni1w8147514p' - using text path instead: 'res://Resources/UnitStats/Towers/holy_greater_divineshroom_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_ultimate_titan_vault.tscn': In external resource #1, invalid UID: 'uid://u335xtm18q73' - using text path instead: 'res://Resources/UnitStats/Towers/holy_ultimate_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/holy_greater_titan_vault.tscn': In external resource #1, invalid UID: 'uid://2ofwp3ysb2q4' - using text path instead: 'res://Resources/UnitStats/Towers/holy_greater_titan_vault_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_ultimate_crystal.tscn': In external resource #1, invalid UID: 'uid://ftp7ypby3lft' - using text path instead: 'res://Resources/UnitStats/Towers/ice_ultimate_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_greater_crystal.tscn': In external resource #1, invalid UID: 'uid://msstlq7m0e4b' - using text path instead: 'res://Resources/UnitStats/Towers/ice_greater_crystal_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_ultimate_lich.tscn': In external resource #1, invalid UID: 'uid://dp7h1iavdglf4' - using text path instead: 'res://Resources/UnitStats/Towers/ice_ultimate_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/ice_greater_lich.tscn': In external resource #1, invalid UID: 'uid://3h664jchw3cw' - using text path instead: 'res://Resources/UnitStats/Towers/ice_greater_lich_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_ultimate_annihilation_glyph.tscn': In external resource #1, invalid UID: 'uid://bqf4fn8sgwro6' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_ultimate_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_greater_annihilation_glyph.tscn': In external resource #1, invalid UID: 'uid://bdtqduucbmuku' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_greater_annihilation_glyph_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/lightning_ultimate_orb_keeper.tscn': In external resource #1, invalid UID: 'uid://dhd11ks1pymfy' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_ultimate_orb_keeper_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/lightning_greater_orb_keeper.tscn': In external resource #1, invalid UID: 'uid://b5p4rlbdp1itp' - using text path instead: 'res://Resources/UnitStats/Towers/lightning_greater_orb_keeper_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_ultimate_primalist.tscn': In external resource #1, invalid UID: 'uid://b0k5apmpk0xi6' - using text path instead: 'res://Resources/UnitStats/Towers/primal_ultimate_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_greater_primalist.tscn': In external resource #1, invalid UID: 'uid://ggblsq0nmgy3' - using text path instead: 'res://Resources/UnitStats/Towers/primal_greater_primalist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_ultimate_beastmaster.tscn': In external resource #1, invalid UID: 'uid://dnrvpgnm26nuy' - using text path instead: 'res://Resources/UnitStats/Towers/primal_ultimate_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/primal_greater_beastmaster.tscn': In external resource #1, invalid UID: 'uid://tataocgbs2ak' - using text path instead: 'res://Resources/UnitStats/Towers/primal_greater_beastmaster_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/unholy_ultimate_alchemist.tscn': In external resource #1, invalid UID: 'uid://b6xib2msflfh8' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_ultimate_alchemist_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/unholy_greater_alchemist.tscn': In external resource #1, invalid UID: 'uid://ji8vkyt2dr30' - using text path instead: 'res://Resources/UnitStats/Towers/unholy_greater_alchemist_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_ultimate_harbinger.tscn': In external resource #1, invalid UID: 'uid://bstlofbp21nt5' - using text path instead: 'res://Resources/UnitStats/Towers/void_ultimate_harbinger_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/void_greater_harbinger.tscn': In external resource #1, invalid UID: 'uid://28gygtw1jkms' - using text path instead: 'res://Resources/UnitStats/Towers/void_greater_harbinger_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_ultimate_leviathan.tscn': In external resource #1, invalid UID: 'uid://dyge48s66x67r' - using text path instead: 'res://Resources/UnitStats/Towers/void_ultimate_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/void_greater_leviathan.tscn': In external resource #1, invalid UID: 'uid://iaw5cgjitade' - using text path instead: 'res://Resources/UnitStats/Towers/void_greater_leviathan_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_ultimate_hurricane_elemental.tscn': In external resource #1, invalid UID: 'uid://bkt7c3lnj0c3p' - using text path instead: 'res://Resources/UnitStats/Towers/water_ultimate_hurricane_elemental_stats.tres'.
+WARNING: 'res://Scenes/Units/Towers/water_greater_hurricane_elemental.tscn': In external resource #1, invalid UID: 'uid://cef8q5o2epau5' - using text path instead: 'res://Resources/UnitStats/Towers/water_greater_hurricane_elemental_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_ultimate_sludge_monstrosity.tscn': In external resource #1, invalid UID: 'uid://c780ah3pdk73e' - using text path instead: 'res://Resources/UnitStats/Towers/water_ultimate_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+WARNING: 'res://Scenes/Units/Towers/water_greater_sludge_monstrosity.tscn': In external resource #1, invalid UID: 'uid://dk8xid4kp1uq3' - using text path instead: 'res://Resources/UnitStats/Towers/water_greater_sludge_monstrosity_stats.tres'.
+   at: open (core/io/resource_format_binary.cpp:1028)
+[INFO] Content warmed { "stats": 212, "scenes": 380, "other": 7, "held": 599, "ms": 1066.0 }
+[INFO] Match start { "match": match-3, "slot": 4, "players": 5 }
+[INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[INFO] Match ready { "players": 5, "local_slot": 4, "seed": 3741673221, "starting_lives": 40, "settings": ranked, All Creeps, Pick Tech, None, random lanes }
+[INFO] Lockstep reset for a new match { "match": match-3 }
+[WARN] Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 0, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 1, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 1, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 7, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 7, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 13, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 13, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 19, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 19, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 25, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 25, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 30, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 30, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 36, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 36, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 42, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 42, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 48, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 48, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 54, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 54, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Tower placed { "cell": (2,28), "tower": &"LesserArcher_2_28", "cost": 10 }
+[INFO] Tower placed { "cell": (4,28), "tower": &"LesserArcher_4_28", "cost": 10 }
+[INFO] Tower placed { "cell": (8,28), "tower": &"LesserArcher_8_28", "cost": 10 }
+[INFO] Tower placed { "cell": (12,37), "tower": &"LesserArcher_12_37", "cost": 10 }
+[INFO] Tower placed { "cell": (10,35), "tower": &"LesserArcher_10_35", "cost": 10 }
+[INFO] Tower placed { "cell": (8,33), "tower": &"LesserArcher_8_33", "cost": 10 }
+[INFO] Tower placed { "cell": (12,28), "tower": &"LesserArcher_12_28", "cost": 10 }
+[INFO] Tower placed { "cell": (6,31), "tower": &"LesserArcher_6_31", "cost": 10 }
+[INFO] Tower placed { "cell": (12,28), "tower": &"LesserArcher_12_28", "cost": 10 }
+[INFO] Tower placed { "cell": (10,28), "tower": &"LesserArcher_10_28", "cost": 10 }
+[INFO] Selection changed { "count": 0 }
+[INFO] Tower placed { "cell": (8,28), "tower": &"LesserArcher_8_28", "cost": 10 }
+[WARN] Waiting on a turn { "turn": 341, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 341, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 347, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 347, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 354, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 354, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 384, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 384, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 390, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 390, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Blueprint shown { "slot": 1, "towers": 35 }
+[WARN] Waiting on a turn { "turn": 397, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 397, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 404, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 404, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 410, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 410, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 416, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 416, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 423, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 423, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[WARN] Waiting on a turn { "turn": 428, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 428, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 435, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 435, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 441, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 441, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Tower placed { "cell": (6,28), "tower": &"LesserArcher_6_28", "cost": 10 }
+[WARN] Waiting on a turn { "turn": 447, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 447, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 447, "waited_ms": 384, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 459, "waited_ms": 168, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (2,27), "tower": &"LesserArcher_2_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (4,29), "tower": &"LesserArcher_4_29", "cost": 10 }
+[INFO] Order ran { "turn": 470, "waited_ms": 154, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 482, "waited_ms": 151, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (6,29), "tower": &"LesserArcher_6_29", "cost": 10 }
+[INFO] Ultimate researched { "player": 1, "count": 4, "cost": 0 }
+[INFO] Order ran { "turn": 495, "waited_ms": 168, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (10,28), "tower": &"LesserArcher_10_28", "cost": 10 }
+[INFO] Tower placed { "cell": (8,27), "tower": &"LesserArcher_8_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 511, "waited_ms": 151, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Tower placed { "cell": (0,27), "tower": &"LesserArcher_0_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Order ran { "turn": 539, "waited_ms": 151, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Tower placed { "cell": (10,27), "tower": &"LesserArcher_10_27", "cost": 10 }
+[INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 12 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 12 }
+[INFO] Ability armed, waiting for target { "ability": Move }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 11 }
+[INFO] Ability cancelled
+[INFO] Selection changed { "count": 1 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Order ran { "turn": 706, "waited_ms": 152, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Order ran { "turn": 710, "waited_ms": 193, "ticks_per_turn": 1, "delay_turns": 2 }
+[INFO] Order ran { "turn": 713, "waited_ms": 117, "ticks_per_turn": 1, "delay_turns": 2 }
+[WARN] Waiting on a turn { "turn": 733, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 733, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 738, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 738, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 0.7 }
+WARNING: Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 0.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 0 }
+[WARN] Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 1.4 }
+WARNING: Waiting on a turn { "turn": 743, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 1.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 791, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 791, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 797, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+WARNING: Waiting on a turn { "turn": 797, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 0.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 0.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 7, "seconds": 0.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 19, "seconds": 0.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 19, "seconds": 0.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 31, "seconds": 1.4 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 31, "seconds": 1.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 45, "seconds": 2.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 45, "seconds": 2.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 59, "seconds": 2.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 59, "seconds": 2.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 72, "seconds": 3.4 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 72, "seconds": 3.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 85, "seconds": 4.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 85, "seconds": 4.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 99, "seconds": 4.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 99, "seconds": 4.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 112, "seconds": 5.3 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 112, "seconds": 5.3 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 126, "seconds": 6.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 126, "seconds": 6.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 139, "seconds": 6.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 139, "seconds": 6.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 152, "seconds": 7.3 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 152, "seconds": 7.3 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 166, "seconds": 8.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 166, "seconds": 8.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 179, "seconds": 8.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 179, "seconds": 8.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 0 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 192, "seconds": 9.3 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 192, "seconds": 9.3 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 206, "seconds": 10.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 206, "seconds": 10.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 219, "seconds": 10.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 219, "seconds": 10.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 232, "seconds": 11.3 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 232, "seconds": 11.3 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 246, "seconds": 12.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 246, "seconds": 12.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 259, "seconds": 12.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 259, "seconds": 12.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 272, "seconds": 13.4 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 272, "seconds": 13.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 286, "seconds": 14.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 286, "seconds": 14.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 299, "seconds": 14.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 299, "seconds": 14.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 312, "seconds": 15.4 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 312, "seconds": 15.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[INFO] Selection changed { "count": 0 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 323, "seconds": 16.0 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 323, "seconds": 16.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 335, "seconds": 16.7 }
+WARNING: Waiting on a turn { "turn": 799, "missing": [1], "have": [  ], "expected": [1], "held": 335, "seconds": 16.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 13 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 16 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 15 }
+[INFO] Creeps sent { "type": Sheep, "count": 3, "cost": 10, "stock": 14 }
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 310, "seconds": 0.0 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 310, "seconds": 0.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 312, "seconds": 0.7 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 312, "seconds": 0.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 314, "seconds": 1.4 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 314, "seconds": 1.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 314, "seconds": 2.0 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 314, "seconds": 2.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 323, "seconds": 2.7 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 323, "seconds": 2.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 335, "seconds": 3.4 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 335, "seconds": 3.4 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 352, "seconds": 4.0 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 352, "seconds": 4.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 365, "seconds": 4.7 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 365, "seconds": 4.7 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 379, "seconds": 5.3 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 379, "seconds": 5.3 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Selection changed { "count": 1 }
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 392, "seconds": 6.0 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 392, "seconds": 6.0 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[ERR] Hopelessly behind the sealed stream, leaving the match { "held": 401, "ceiling": 400, "playing": 834, "sealed": 1295 }
+ERROR: Hopelessly behind the sealed stream, leaving the match { "held": 401, "ceiling": 400, "playing": 834, "sealed": 1295 }
+   at: push_error (core/variant/variant_utility.cpp:1023)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 20.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 20.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 22.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 22.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 24.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 24.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 26.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 26.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 28.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 28.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 30.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 30.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 32.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 32.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 34.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 34.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 36.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 36.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 38.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 38.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 40.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 40.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 42.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 42.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 44.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 44.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 46.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 46.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 48.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 48.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 50.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 50.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[WARN] Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 52.1 }
+WARNING: Waiting on a turn { "turn": 835, "missing": [1], "have": [  ], "expected": [1], "held": 0, "seconds": 52.1 }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Peer left 1
+[WARN] The server closed the connection
+WARNING: The server closed the connection
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+[INFO] Offline, forgetting the match match-3

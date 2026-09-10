@@ -339,6 +339,22 @@ func _ensure_mesh() -> MultiMeshInstance3D:
 	return _mesh
 
 
+## A stand-in for the plan, built from the very mesh and material a plan draws
+## with and attached to nothing, for `ShaderWarmup`. The real one holds no
+## instances until a plan is shown, and a MultiMesh with none draws nothing - so
+## this has one of its own.
+func warmup_proxy() -> MultiMeshInstance3D:
+	var multi: MultiMesh = MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = _ensure_mesh().multimesh.mesh
+	multi.instance_count = 1
+	multi.set_instance_transform(0, Transform3D.IDENTITY)
+	var proxy: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	proxy.multimesh = multi
+	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return proxy
+
+
 ## Flat, unshaded and transparent: a plan is a mark ON the ground rather than a
 ## thing standing on it, so it takes no light and casts nothing.
 ##

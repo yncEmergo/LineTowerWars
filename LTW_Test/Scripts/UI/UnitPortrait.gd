@@ -90,6 +90,32 @@ func clear() -> void:
 	show_unit(null)
 
 
+## Draws every one of these at once, for `ShaderWarmup`.
+##
+## **This portrait is a world of its own, with lights of its own**, so a kind of
+## unit it draws for the first time compiles shaders the match world already has
+## - on the frame a player selects it. Copied exactly as `show_unit` copies a
+## selection, so what compiles here is what a selection would have compiled.
+## `end_warm` puts back whatever was selected.
+func warm(sources: Array[Node3D]) -> void:
+	if _stage == null || _camera == null:
+		return
+	for child in _stage.get_children():
+		child.free()
+	var bounds: AABB = AABB()
+	for source: Node3D in sources:
+		bounds = VisualUtil.copy_meshes(source, _stage, VisualUtil.portrait_skips(source))
+	visible = true
+	_frame(bounds)
+
+
+## Ends a `warm`, showing whatever was selected before it - or nothing.
+func end_warm() -> void:
+	var was: Unit = _showing
+	_showing = null
+	show_unit(was if is_instance_valid(was) else null)
+
+
 ## Puts the camera far enough back, at a fixed angle, for the unit's longest
 ## axis to fill `fill` of the frame.
 ##

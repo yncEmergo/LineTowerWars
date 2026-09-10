@@ -1,0 +1,23 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.86 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 3060 Ti
+
+[INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[INFO] Connecting { "address": 167.233.153.19, "port": 7777, "candidate": 1, "of": 1 }
+[INFO] Connected to the server { "peer_id": 1131134966, "address": 167.233.153.19 }
+[INFO] The server is on the line
+[INFO] Peer joined 597893188
+[INFO] Peer joined 1720695448
+[INFO] Peer joined 7030663
+[INFO] Peer joined 350406106
+[INFO] Peer joined 1617730059
+[INFO] Lobby list received { "lobbies": 2 }
+[INFO] In lobby { "id": lobby-4, "name": Milo's Game, "players": 2, "host": false }
+[INFO] Lobby list received { "lobbies": 2 }
+[INFO] Session logging on { "path": C:/Users/Linus/AppData/Roaming/Godot/app_userdata/LTW_Test/logs/session-2026-09-10_18-38-10.log }
+[INFO] Out of the lobby The host left the lobby.
+[INFO] Lobby list received { "lobbies": 1 }
+[INFO] Peer left 1720695448
+[INFO] Peer left 1
+[WARN] The server closed the connection
+WARNING: The server closed the connection
+   at: push_warning (core/variant/variant_utility.cpp:1033)

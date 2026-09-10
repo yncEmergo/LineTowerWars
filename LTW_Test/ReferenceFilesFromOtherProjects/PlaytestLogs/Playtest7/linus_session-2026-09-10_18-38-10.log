@@ -1,0 +1,5 @@
+[    0.000] session.begin  { "utc": "2026-09-10T16:38:10", "platform": "Windows", "engine": "4.7.2-stable (official)", "debug_build": false, "build": "prototype · 2026-09-10 15:40 UTC · b900267" }
+[    0.000] config  { "protocol": 3, "lockstep": true, "ticks_per_turn": 1, "adaptive_delay": true, "delay_range": [1, 12], "jitter_margin_ms": 20, "address": "167.233.153.19", "port": 7777 }
+[  162.592] net.peer_left  1720695448
+[  330.722] net.peer_left  1
+[  330.722] net.server_lost  the connection to the server ended

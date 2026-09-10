@@ -301,6 +301,19 @@
     scale - there is no per-instance visibility. `BlueprintOverlay` is the
     worked example, where the headless half of that cost alone was 8x
 
+- **A MATERIAL BUILT IN CODE IS INVISIBLE TO THE SHADER WARM-UP.** The
+  Compatibility renderer compiles a shader on its first draw, on the game
+  thread - measured at up to a second a frame - and `ShaderWarmup` draws
+  everything a `.tres` or `.tscn` names before the match so that never happens
+  mid-match. A material made with `StandardMaterial3D.new()` or
+  `ShaderMaterial.new()` - a marker, a ghost, a bar - does not exist until its
+  class builds it, so nothing can draw it early
+  - anything that builds a drawable in code gets an instance in
+    `ShaderWarmup._draw_acted`, built by its own class rather than copied, and
+    `ShaderProbe` is how to prove it compiles nothing mid-match
+  - a loaded material is not a compiled one: `ContentWarmer` loading everything
+    did nothing for this. See Findings/2026-09-10-playtest-7.md
+
 - A NEW SCRIPT IN AN EXISTING FOLDER is not imported by a `godot --path` run. A
   new FOLDER is scanned; a new file dropped into a folder Godot already knows is
   not. Its class_name never reaches the global class cache, so every script
@@ -480,6 +493,17 @@
       `drops_seen`, `echo`, `sealed_held` and the bench's nodes-disabled column
       all exist because a run that never reached the code under test looks
       exactly like one that passed
+  - **Scripts/Dev/ShaderProbe.gd EXISTS and is kept too**, for the one cost
+    nothing else here can see: a shader compiled on its FIRST DRAW. The GL
+    renderer writes every variant it compiles to
+    `user://shader_cache/SceneShaderGLES3` as one file, so a file appearing IS a
+    compile happening. The probe draws everything the way play does and counts
+    the files each thing writes, with `ShaderWarmup` skipped or not
+    - **move the real cache aside first and put it back after.** A dev machine
+      has compiled everything long ago, which is precisely the cost a player's
+      first match pays and a developer never sees
+    - loaded through `override.cfg` like `LockstepProbe`, and it has to run
+      WINDOWED: headless has no renderer and compiles nothing
   - stop and restart the server between runs. A lobby left over from the last one
     looks exactly like a bug in the next
 
@@ -726,6 +750,11 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   match agreed to, and whether the world is moving. Splitting the unit
   registry out is the obvious cut if it is ever worth making; the other three
   belong together
+- LockstepService.gd is over gdlint's public-method ceiling, and for a reason no
+  refactor inside it can remove: every @rpc is a public method, an @rpc has to
+  live on an autoload, and a new autoload cannot be added while the editor is
+  open. Seal repair added two. The honest cut, when it is worth making, is a
+  second autoload for the relay's endpoints - added with the editor closed
 - OrderOverlay rebuilds a unit's markers WHOLE on every change to its chain,
   so shift-queueing five towers instantiates the ghost models five times over
   in one frame - each rebuild frees the last, but queue_free is deferred, so

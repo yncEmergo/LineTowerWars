@@ -179,8 +179,28 @@ doing them. `Findings/2026-09-10-netcode-audit.md` has the reasoning for each.
   line, in ONE commit. Removing the exports alone is a runtime error that no parse check catches.
 - **Give the seal its own ENet channel.** Every `@rpc` rides channel 0, so a seal can queue behind a
   lobby-list broadcast. Unmeasured, and a protocol change: bump `protocol_version` with it.
-- **Measure real packet loss.** The echo is proven against injected loss after delivery; the
-  health line's `echo` field is the first report of the real thing, on somebody else's connection.
+- ~~**Measure real packet loss.**~~ **Measured in playtest 7**: four of five players lost no seal
+  all session, and one player's link lost enough for the echo to recover 64 in twelve minutes -
+  and twice stopped delivering the reliable channel altogether, which the echo cannot cover. That
+  is what seal repair is for. See `Findings/2026-09-10-playtest-7.md`.
+
+### 1.8 From playtest 7
+
+- **Read what the new diagnostics say on a link like Linus's.** The relay now logs every player's
+  link as ENet sees it every thirty seconds, and the health line carries `link` and `repair`.
+  Together they say whether ENet's reliable channel stalls on resend backoff or on datagrams too
+  big for the path - two causes with different fixes, and nothing so far can tell them apart.
+- **Decide how long a flaky player may vanish before losing the match.** ENet's own timeout, the
+  relay's `silent_timeout_seconds` and the give-up ceiling decide it together. Under the sealed
+  stream nobody waits for a missing player, so longer costs the others nothing but a lane that
+  stays standing - which makes it a question about the rules rather than the netcode.
+- **A grace period at match start**, if the user still wants one once the warm-up has been played
+  with. It is a rule - it moves when the match's clocks start - and the freezes it was meant to
+  soften were a first-draw cost that no grace period would have prevented.
+- **Measure `ShaderWarmup` on a machine that has compiled nothing**: `match.shaders_warmed` in the
+  session log. Only measured on an RTX 4080 so far.
+- **The stale uids in exported content**: about two hundred "invalid UID" warnings per client boot.
+  The source files carry none, so it is the export's uid cache disagreeing with itself.
 
 ---
 

@@ -167,6 +167,27 @@ static func held_count() -> int:
 	return _held.size()
 
 
+## Every scene being held, for `ShaderWarmup`: this class gets them into memory,
+## and a scene in memory has not had a single one of its shaders compiled.
+static func held_scenes() -> Array[PackedScene]:
+	var scenes: Array[PackedScene] = []
+	for held: Resource in _held:
+		var scene: PackedScene = held as PackedScene
+		if scene != null:
+			scenes.append(scene)
+	return scenes
+
+
+## Every unit's stats being held, for the portrait half of `ShaderWarmup`.
+static func held_unit_stats() -> Array[UnitStats]:
+	var every: Array[UnitStats] = []
+	for held: Resource in _held:
+		var stats: UnitStats = held as UnitStats
+		if stats != null:
+			every.append(stats)
+	return every
+
+
 ## Starts the walk over every `.tres` in each folder. The folders are
 ## `ContentConfig`'s; passed in rather than read off `References` so this is
 ## equally usable from the load screen, from a test and from a tool.

@@ -274,6 +274,34 @@ func round_trip_variance_ms(of_peer: int) -> int:
 	return int(link.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME_VARIANCE))
 
 
+## ENet's own view of one link, for the logs: its round trip, how much of what
+## this machine SENT on it had to be sent again, and how hard ENet is throttling
+## it. Empty when there is no such link.
+##
+## **The loss is ENet's figure, and it is one direction only.** It counts this
+## machine's reliable packets that needed resending, so on the RELAY it is the
+## road to that peer - the one every seal travels - and on a client it is the road
+## its own orders take up. Neither is a measurement of the other direction.
+##
+## The throttle is ENet's congestion answer, 1.0 when it is sending freely. It
+## falls when resends pile up, and at its floor ENet holds reliable data back and
+## throws unreliable packets away on the SENDING side - which is a loss no wire
+## caused and no packet capture at the far end would show.
+func link_quality(of_peer: int) -> Dictionary:
+	var link: ENetPacketPeer = _link_to(of_peer)
+	if link == null:
+		return {}
+	var loss: float = link.get_statistic(ENetPacketPeer.PEER_PACKET_LOSS) \
+		/ float(ENetPacketPeer.PACKET_LOSS_SCALE)
+	var throttle: float = link.get_statistic(ENetPacketPeer.PEER_PACKET_THROTTLE) \
+		/ float(ENetPacketPeer.PACKET_THROTTLE_SCALE)
+	return {
+		"rtt_ms": int(link.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME)),
+		"loss_pct": snappedf(loss * 100.0, 0.1),
+		"throttle": snappedf(throttle, 0.01),
+	}
+
+
 ## Everyone connected to us, server side. Empty on a client.
 func peer_ids() -> PackedInt32Array:
 	if _status != Status.HOSTING:

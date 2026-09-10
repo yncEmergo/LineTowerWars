@@ -112,6 +112,14 @@ func _collect_surfaces(node: Node) -> void:
 ## with something this cannot dim - a ShaderMaterial, or nothing at all. Both
 ## are left exactly as they are rather than replaced with a guess.
 func _own_material(drawable: GeometryInstance3D) -> StandardMaterial3D:
+	return dimmable_copy(drawable)
+
+
+## The see-through copy of what a drawable draws with, exactly as an effect makes
+## it on its way in, or null when there is nothing here this can dim. Static so
+## `ShaderWarmup` can draw the same copy before any effect has ever played: alpha
+## transparency is a shader of its own, compiled the first time it is drawn.
+static func dimmable_copy(drawable: GeometryInstance3D) -> StandardMaterial3D:
 	var source: Material = drawable.material_override
 	if source == null:
 		var mesh: Mesh = drawable.get("mesh") as Mesh

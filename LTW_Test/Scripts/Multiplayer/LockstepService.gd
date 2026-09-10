@@ -125,6 +125,40 @@ const DRIFT_EVERY_FRAMES: int = 100
 ## empty, so each one echoed costs a turn number and an empty array.
 const ECHO_TURNS: int = 2
 
+## The most turns one repair request may name and one reply may carry. See
+## `request_seals`.
+##
+## Enough that a stall on a lost turn is answered in ONE round trip however many
+## later turns arrived around it, and few enough that one request can never ask
+## the relay for more than a packet.
+const REPAIR_MAX_TURNS: int = 32
+
+## How many bytes one repair reply may carry before it stops adding turns. The
+## first turn named always goes, whatever it weighs, because it is the one the
+## peer is stalled on.
+##
+## **Under one packet ON PURPOSE.** The failure repair exists for is a reliable
+## channel that has stopped delivering while small unreliable packets still
+## arrive - and a payload large enough to be split into fragments is exactly the
+## kind of packet a link like that loses, since an unreliable packet is lost
+## whole if any one of its fragments is.
+const REPAIR_BYTE_BUDGET: int = 1000
+
+## The least time the relay leaves between two repairs to the same peer, in
+## milliseconds. A flood guard: an honest peer asks at most every
+## `seal_repair_every_ms`, and one that asks faster is either broken or trying to
+## use the relay as an amplifier.
+const REPAIR_MIN_GAP_MS: int = 40
+
+## How many turns the relay keeps for repair BEYOND the give-up window. A peer
+## further behind than `max_sealed_turns` has stopped playing, so that is as far
+## back as anybody can need; the slack covers a peer right at the edge.
+const SEAL_HISTORY_SLACK_TURNS: int = 40
+
+## How many drift reports go by between two link reports on the relay. The drift
+## report is every five seconds, so this is every half minute.
+const LINK_REPORT_EVERY: int = 6
+
 ## How many un-answered presses a peer holds while waiting to hear its own
 ## orders come back. A flood guard on a diagnostic queue, not a gameplay limit:
 ## it only fills if orders are sent and never sealed, which is a broken match.
@@ -164,6 +198,11 @@ var _stalling: bool = false
 var _stalled_on: int = NO_TURN
 ## Physics frames spent in the current stall, for the repeating report.
 var _stall_frames: int = 0
+## When the current stall began, in wall-clock milliseconds, so the report says
+## how long it has REALLY lasted. A frame count cannot: the catch-up servo changes
+## the engine rate, and a stall that began at 60 Hz and was reported at 20 read as
+## three times its length - playtest 7's "100 seconds" was one minute.
+var _stall_started_msec: int = 0
 ## Time spent stalled across the whole match. The number that decides
 ## whether a stall count means anything: six stalls of one tick is invisible, six
 ## of a second each is a broken match, and a count alone cannot tell them apart.
@@ -346,6 +385,37 @@ var _slack_measured_at: int = -1000
 ## Relay: the last few seals, re-sent unreliably. See `_seal_stream`.
 var _recent_seals: Array = []
 
+## Relay: every seal a peer could still be missing, by turn, for repair. Bounded to
+## the give-up window, so a match thousands of turns long holds a few hundred.
+## See `request_seals`.
+var _seal_history: Dictionary = {}
+## Relay: when each peer was last sent a repair, in wall-clock milliseconds.
+var _repair_served_at: Dictionary = {}
+## Relay: repairs answered and the seals they carried, for the link report.
+var _repairs_served: int = 0
+var _repair_seals_sent: int = 0
+## Relay: drift reports so far, which is what paces the link report.
+var _drift_reports: int = 0
+
+## Peer: the highest turn ever filed in `_sealed`. A turn above the one being
+## waited on having ARRIVED is the proof that the one being waited on was lost,
+## and this answers that without scanning the dictionary.
+var _highest_sealed: int = NO_TURN
+## Peer: the turn this machine is waiting on, since when, and when it last asked
+## the relay for it again - all wall clock, and all diagnostic in the sense I4
+## means: nothing in the simulation may read them.
+var _missing_turn: int = NO_TURN
+var _missing_since: int = 0
+var _repair_asked_at: int = 0
+## Peer: repairs asked for, and seals they delivered that nothing else had.
+## **The positive control for repair**, on the same terms `_seals_recovered` is
+## for the echo: a clean link asks for nothing, so a run reporting zero has not
+## tested the repair path at all.
+var _repair_requests: int = 0
+var _seals_repaired: int = 0
+## Peer: test-only, how many echoes were deliberately thrown away.
+var _echoes_dropped: int = 0
+
 ## Peer: how many seals the unreliable echo delivered that the reliable channel
 ## had not. **The positive control for the echo**: a clean link recovers none, so
 ## a run reporting zero has not tested the recovery path at all.
@@ -419,6 +489,16 @@ func _physics_process(_delta: float) -> void:
 	# schedule said it should. Measured at 126-134 ms on loopback where the
 	# arithmetic says 50-100.
 	_beat()
+	# **Not a turn is played, and the relay is not told this machine is ready,
+	# until its renderer is warm.** `ShaderWarmup` holds the world still while it
+	# draws everything once; a turn run underneath it would advance a world that
+	# is about to spend seconds compiling, which is the very freeze it moves out of
+	# the match. The relay starts the clock when the last peer is ready, so this
+	# waits inside the wait everybody is already in - and if it outlasts the
+	# relay's patience, this machine starts behind and catches up on its own. The
+	# heartbeat above keeps going, so a long warm-up is never mistaken for silence.
+	if !ShaderWarmup.is_done():
+		return
 	_announce_ready()
 
 	var turn: int = current_turn()
@@ -433,6 +513,7 @@ func _physics_process(_delta: float) -> void:
 	# the next one, so a lead of L means a seal has L turns of slack to
 	# arrive in before it is missed.
 	_advance_turn(turn - _sealed_lead_turns())
+	_repair_missing_seals()
 	_pace_engine()
 
 	# Held only by a stall. Everything else the world stops for - the draft
@@ -482,6 +563,7 @@ func _advance_turn(clock_turn: int) -> void:
 			_stalling = true
 			_stalled_on = turn
 			_stall_frames = 0
+			_stall_started_msec = Time.get_ticks_msec()
 			turn_stalled.emit(turn, _missing_for(turn))
 			_set_held(true)
 
@@ -498,7 +580,9 @@ func _advance_turn(clock_turn: int) -> void:
 				"have": [],
 				"expected": PackedInt32Array([NetworkService.SERVER_PEER_ID]),
 				"held": _sealed.size(),
-				"seconds": snappedf(float(_stall_frames) * _engine_tick_seconds(), 0.1),
+				"seconds": snappedf(
+					float(Time.get_ticks_msec() - _stall_started_msec) / 1000.0, 0.1
+				),
 			})
 		return
 
@@ -765,6 +849,12 @@ func echo_recovery() -> Array:
 	return [_seals_recovered, _seals_dropped]
 
 
+## How many repairs this machine asked the relay for, and how many seals they
+## delivered that nothing else had. For the session log and for the harness.
+func repair_counts() -> Array:
+	return [_repair_requests, _seals_repaired]
+
+
 ## How far behind the relay this machine is playing, in seconds of real time.
 ##
 ## **The peer works this out entirely by itself, which is why phase 4c needs no
@@ -901,6 +991,30 @@ func _report_drift() -> void:
 		"seal_max_ms": int(_overrun_ms(1.0)),
 	})
 
+	# **What ENet itself thinks of each player's link, into the journal every
+	# half minute - at `info`, because this one is meant to be read.** Playtest 7
+	# lost a player twice to a reliable channel that stopped delivering while
+	# unreliable packets kept arriving, and the relay recorded nothing about it:
+	# the peers' own session logs were the only witness, and one of them never
+	# made it off the machine. `loss_pct` here is the relay's resends TO that peer,
+	# which is the direction every seal travels. Every thirty seconds per peer is a
+	# few lines a minute, nowhere near a per-tick path.
+	_drift_reports += 1
+	if !_sealing || _drift_reports % LINK_REPORT_EVERY != 0:
+		return
+	var links: Dictionary = {}
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for peer: int in _match_peers():
+		if peer in live && !_departed.has(peer):
+			var quality: Dictionary = Net.link_quality(peer)
+			quality["behind"] = behind.get(peer, 0)
+			links[peer] = quality
+	Log.info("Relay links", {
+		"relay_turn": mine,
+		"links": links,
+		"repairs_served": [_repairs_served, _repair_seals_sent],
+	})
+
 
 ## Seconds per ENGINE physics tick, for wall-clock arithmetic only.
 ##
@@ -1015,6 +1129,18 @@ func _reset_if_new_match() -> void:
 	_seal_wait_frames = 0
 	_server_seq = 0
 	_recent_seals.clear()
+	_seal_history.clear()
+	_repair_served_at.clear()
+	_repairs_served = 0
+	_repair_seals_sent = 0
+	_drift_reports = 0
+	_highest_sealed = NO_TURN
+	_missing_turn = NO_TURN
+	_missing_since = 0
+	_repair_asked_at = 0
+	_repair_requests = 0
+	_seals_repaired = 0
+	_echoes_dropped = 0
 	_catching_up = false
 	_slack_cache = 0
 	_slack_measured_at = -1000
@@ -1047,6 +1173,7 @@ func _reset_if_new_match() -> void:
 	_last_run_turn = NO_TURN
 	_stalled_on = NO_TURN
 	_stall_frames = 0
+	_stall_started_msec = 0
 	_stalled_total = 0.0
 	_frames = 0
 
@@ -1322,6 +1449,11 @@ func _seal_stream() -> void:
 	_seal_next += 1
 	_highest_seen = turn
 
+	# Kept for repair: a peer that lost this turn can ask for it again for as long
+	# as it could still be playing towards it. See `request_seals`.
+	_seal_history[turn] = orders
+	_seal_history.erase(turn - _seal_history_turns())
+
 	# **To the match roster, never a bare `rpc()`.** A broadcast reaches every
 	# CONNECTED peer, and somebody sitting in the lobby browser is a connected
 	# peer. Same rule as `_queue`, same reason, and D33 is what it cost.
@@ -1451,12 +1583,9 @@ func receive_seal(turn: int, orders: Array) -> void:
 		return
 	# Test-only fault injection, zero in anything anybody plays. See
 	# NetworkConfig.debug_seal_loss_percent.
-	var loss: int = _debug_seal_loss()
-	if loss > 0:
-		_dropped_dice = (_dropped_dice * 1103515245 + 12345) & 0x7fffffff
-		if _dropped_dice % 100 < loss:
-			_seals_dropped += 1
-			return
+	if _roll_debug_loss(_debug_seal_loss()):
+		_seals_dropped += 1
+		return
 	_absorb_seal(turn, orders)
 
 
@@ -1492,17 +1621,164 @@ func receive_seal_echo(recent: Array) -> void:
 		return
 	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
 		return
-	for entry: Variant in recent:
-		var pair: Array = entry as Array
-		if pair == null || pair.size() != 2:
+	# Test-only, and zero in anything anybody plays: the echo's own fault
+	# injection. With it a HOLE can be made on demand - a turn lost from the
+	# reliable channel AND from both echoes that carried it - which is the case
+	# repair exists for and a clean link never produces. See NetworkConfig.
+	if _roll_debug_loss(_debug_echo_loss()):
+		_echoes_dropped += 1
+		return
+	# Only counted when it actually RECOVERED something the reliable channel had
+	# not delivered, which is the positive control for the whole idea.
+	_seals_recovered += _absorb_missing(recent)
+
+
+## Files whichever of these `[turn, orders]` pairs this machine does not already
+## have, and answers how many that was. Shared by the echo and by repair, which
+## carry the same thing for different reasons.
+func _absorb_missing(entries: Array) -> int:
+	var filled: int = 0
+	for entry: Variant in entries:
+		if !(entry is Array):
+			continue
+		var pair: Array = entry
+		if pair.size() != 2 || !(pair[1] is Array):
 			continue
 		var turn: int = int(pair[0])
 		if turn <= _last_run_turn || _sealed.has(turn):
 			continue
-		# Only counted when it actually RECOVERED something the reliable channel
-		# had not delivered, which is the positive control for the whole idea.
-		_seals_recovered += 1
-		_absorb_seal(turn, pair[1] as Array)
+		filled += 1
+		_absorb_seal(turn, pair[1])
+	return filled
+
+
+# --- repair ---------------------------------------------------------------
+
+## **Asks the relay again for a seal that has not come, over the channel a stuck
+## one cannot block.** The fix for playtest 7's lost player.
+##
+## ## What it repairs
+##
+## A seal rides the reliable ordered channel, and the echo re-sends the last two
+## unreliably so a single lost packet costs nothing. What the echo cannot cover
+## is a reliable channel that STOPS: one packet ENet keeps failing to deliver,
+## with everything reliable behind it held back, while small unreliable packets
+## sail through. Playtest 7 did exactly that to one player, twice - `held`
+## climbing to the give-up ceiling at the full seal rate, which is the echo
+## arriving, while the one turn it had missed never came, because by then no echo
+## still carried it. The link was alive and the match ended for them anyway.
+##
+## So a peer that is missing the turn it needs next asks for it by number, and
+## the relay answers from `_seal_history`, both unreliably. The reliable copy
+## still arrives whenever ENet gets it through, and is refused as played.
+##
+## ## When it asks
+##
+## A HOLE - a later turn has arrived and this one has not - is proof of a loss:
+## reliable delivery is in order, and the echo that carried a later turn carried
+## this one too. That is asked about after `seal_repair_after_ms`. With nothing
+## later in hand the seal may merely be late, so that waits the longer
+## `seal_repair_wait_ms`. Either way it repeats every `seal_repair_every_ms` until
+## the turn is here. Nothing is asked before the first seal has arrived: the relay
+## is not sealing yet, so there is nothing to be missing.
+##
+## Wall clock throughout, and none of it reaches the simulation: which turn is
+## played, and what is in it, is still decided by the seal alone (I4).
+func _repair_missing_seals() -> void:
+	if _gave_up || _highest_sealed == NO_TURN || !_repair_enabled():
+		return
+	var need: int = _last_run_turn + 1
+	if _sealed.has(need):
+		_missing_turn = NO_TURN
+		return
+
+	var now: int = Time.get_ticks_msec()
+	if need != _missing_turn:
+		_missing_turn = need
+		_missing_since = now
+		return
+
+	var hole: bool = _highest_sealed > need
+	var patience: int = _repair_after_ms() if hole else _repair_wait_ms()
+	# `_missing_since` was stamped on an earlier tick, so even a zero patience
+	# waits one tick: the arrivals that frame's poll brought are always filed first.
+	if now - _missing_since < patience || now - _repair_asked_at < _repair_every_ms():
+		return
+	_repair_asked_at = now
+
+	# Every turn from the one needed up to the last one in hand that is not here -
+	# or, with nothing in hand, the stretch the relay may have sealed since.
+	var last: int = _highest_sealed if hole else need + REPAIR_MAX_TURNS - 1
+	var turns: PackedInt32Array = PackedInt32Array()
+	for turn: int in range(need, last + 1):
+		if turns.size() >= REPAIR_MAX_TURNS:
+			break
+		if !_sealed.has(turn):
+			turns.append(turn)
+
+	_repair_requests += 1
+	request_seals.rpc_id(NetworkService.SERVER_PEER_ID, turns)
+	if _flush_immediately():
+		Net.flush()
+
+
+## A peer naming the seals it is missing. Relay only, answered unreliably from
+## `_seal_history`. See `_repair_missing_seals` for why this exists.
+##
+## **Refused to anybody who is not a player in this match**, like every other
+## `any_peer` ingress here - the 2026-09-10 audit's critical finding was the one
+## that did not ask. Rate-limited per peer and capped in turns and in bytes, so
+## one request can never draw more than a packet and a peer cannot draw them
+## faster than an honest one asks.
+@rpc("any_peer", "call_remote", "unreliable")
+func request_seals(turns: PackedInt32Array) -> void:
+	if !multiplayer.is_server() || !_sealing:
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	if _slot_of_peer(sender) == 0 || _departed.has(sender):
+		return
+	# A peer asking for turns is a peer whose game loop is running, which is the
+	# one thing the silence check wants to know.
+	_last_heard[sender] = _frames
+
+	var now: int = Time.get_ticks_msec()
+	if _repair_served_at.has(sender) \
+			&& now - int(_repair_served_at[sender]) < REPAIR_MIN_GAP_MS:
+		return
+	_repair_served_at[sender] = now
+
+	var reply: Array = []
+	var bytes: int = 0
+	for index: int in range(mini(turns.size(), REPAIR_MAX_TURNS)):
+		var turn: int = turns[index]
+		if !_seal_history.has(turn):
+			continue
+		var entry: Array = [turn, _seal_history[turn]]
+		var size: int = var_to_bytes(entry).size()
+		if !reply.is_empty() && bytes + size > REPAIR_BYTE_BUDGET:
+			break
+		reply.append(entry)
+		bytes += size
+	if reply.is_empty():
+		return
+
+	_repairs_served += 1
+	_repair_seals_sent += reply.size()
+	receive_seal_repair.rpc_id(sender, reply)
+	if _flush_immediately():
+		Net.flush()
+
+
+## The relay's answer to `request_seals`. Unreliable like the question: a lost
+## answer is simply asked for again, and a reliable one would queue behind the
+## very packet it is repairing.
+@rpc("authority", "call_remote", "unreliable")
+func receive_seal_repair(entries: Array) -> void:
+	if _gave_up || !_is_live():
+		return
+	if multiplayer.get_remote_sender_id() != NetworkService.SERVER_PEER_ID:
+		return
+	_seals_repaired += _absorb_missing(entries)
 
 
 func _absorb_seal(turn: int, orders: Array) -> void:
@@ -1516,6 +1792,7 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 	if turn <= _last_run_turn:
 		return
 	_sealed[turn] = orders
+	_highest_sealed = maxi(_highest_sealed, turn)
 
 	# The relay's lateness, filed under its own peer id, so `arrival_leads()`
 	# reports it exactly as it reported every other peer's before the cutover -
@@ -1556,6 +1833,8 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 	if !_stalling:
 		_stalling = true
 		_stalled_on = _last_run_turn + 1
+		_stall_frames = 0
+		_stall_started_msec = Time.get_ticks_msec()
 		_set_held(true)
 
 
@@ -1982,6 +2261,46 @@ func _catch_up_enabled() -> bool:
 func _debug_seal_loss() -> int:
 	var config: NetworkConfig = _config()
 	return 0 if config == null else clampi(config.debug_seal_loss_percent, 0, 100)
+
+
+func _debug_echo_loss() -> int:
+	var config: NetworkConfig = _config()
+	return 0 if config == null else clampi(config.debug_echo_loss_percent, 0, 100)
+
+
+## One throw of the fault injectors' die: true to throw the packet away. Its own
+## generator rather than the match RNG, for the reason `_dropped_dice` gives.
+func _roll_debug_loss(percent: int) -> bool:
+	if percent <= 0:
+		return false
+	_dropped_dice = (_dropped_dice * 1103515245 + 12345) & 0x7fffffff
+	return _dropped_dice % 100 < percent
+
+
+func _repair_enabled() -> bool:
+	var config: NetworkConfig = _config()
+	return true if config == null else config.seal_repair_enabled
+
+
+func _repair_after_ms() -> int:
+	var config: NetworkConfig = _config()
+	return 60 if config == null else maxi(0, config.seal_repair_after_ms)
+
+
+func _repair_wait_ms() -> int:
+	var config: NetworkConfig = _config()
+	return 250 if config == null else maxi(0, config.seal_repair_wait_ms)
+
+
+func _repair_every_ms() -> int:
+	var config: NetworkConfig = _config()
+	return 100 if config == null else maxi(1, config.seal_repair_every_ms)
+
+
+## How many sealed turns the relay keeps for repair: as far back as a peer that
+## has not given up could still need, plus the slack.
+func _seal_history_turns() -> int:
+	return _max_sealed_turns() + SEAL_HISTORY_SLACK_TURNS
 
 
 ## How far behind the seals this machine is playing, in milliseconds, as a median

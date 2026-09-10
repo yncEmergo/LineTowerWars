@@ -314,6 +314,15 @@ static func _on_turn_ready(turn: int, commands: Array) -> void:
 		# first going up on a real connection is REAL PACKET LOSS being repaired
 		# by the unreliable echo, and is the only place this build reports it.
 		"echo": Lockstep.echo_recovery(),
+		# [asked, repaired]: seals this machine asked the relay for again because
+		# they had not come, and how many of those arrived that nothing else had
+		# delivered. Zero on a healthy link; climbing when the reliable channel is
+		# the thing that is late. See LockstepService._repair_missing_seals.
+		"repair": Lockstep.repair_counts(),
+		# ENet's own figures for the link to the relay: round trip, the share of
+		# this machine's reliable sends it had to resend, and its throttle. See
+		# NetworkService.link_quality for what those can and cannot say.
+		"link": Net.link_quality(NetworkService.SERVER_PEER_ID),
 		# **What a word actually COST, which nothing above can show.** Every
 		# figure beside it is an ESTIMATE of the wire - a mean round trip, its
 		# smoothed variance, this machine's frame times - and the same problem

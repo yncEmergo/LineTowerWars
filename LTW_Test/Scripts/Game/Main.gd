@@ -132,6 +132,13 @@ func _ready() -> void:
 	# network, so a single player run pays for none of it.
 	MatchStart.report_world_checksum(WorldChecksum.of(setup, _areas, session))
 
+	# Last, with the whole world standing: draws everything this match can ever
+	# show once, behind a black screen, so no shader is compiled in the middle of
+	# it. Holds the world still while it runs, and under lockstep this machine
+	# only says it is ready once it has finished. See ShaderWarmup.
+	if !_dedicated_server:
+		ShaderWarmup.start(self)
+
 
 ## The setup handed over by the lobby, or a single player stand-in when this
 ## scene was opened directly. Taken rather than read: the handoff is cleared as

@@ -160,11 +160,20 @@ func _apply_mode() -> void:
 func _build_preview_material() -> void:
 	if _preview_material != null:
 		return
-	_preview_material = StandardMaterial3D.new()
-	_preview_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_preview_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_preview_material = make_preview_material()
+
+
+## The flat see-through material a model takes as a ghost, fresh. Static so
+## `ShaderWarmup` can draw exactly what a ghost draws with before anybody places
+## anything - it is a shader of its own, and the first placement of a match is
+## the worst moment there is to compile one.
+static func make_preview_material() -> StandardMaterial3D:
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	# Above the ground and the build grid, both of which are transparent too.
-	_preview_material.render_priority = 2
+	material.render_priority = 2
+	return material
 
 
 func _apply_preview_color() -> void:

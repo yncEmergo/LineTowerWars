@@ -410,6 +410,45 @@ extends Resource
 ## a healthy peer was measured running at on a real link before it hitched.
 @export_range(0, 500, 5) var catch_up_target_ms: int = 40
 
+## **Whether a peer asks the relay again for a seal that has not arrived.**
+##
+## The repair for a reliable channel that has stopped delivering while the link
+## itself is alive, which is how playtest 7 lost a player twice: small unreliable
+## packets kept arriving at the full seal rate and one reliable one never did.
+## The echo cannot cover that - it only carries the last two turns - so without
+## this a peer holding every turn but one waits for ENet, however long that takes.
+## See `LockstepService._repair_missing_seals`.
+##
+## Off only so the two can be compared in paired runs (`CLAUDE.md`). A clean link
+## asks for nothing, so having it on costs nothing where it is not needed.
+@export var seal_repair_enabled: bool = true
+
+## How long a HOLE must last before a peer asks for it, in milliseconds - a later
+## seal is here and this one is not, which is proof it was lost.
+##
+## **Short, because waiting buys nothing.** A seal and its echo leave in the same
+## flush and usually the same datagram, and the NEXT echo carries it again - so a
+## hole means two datagrams in a row went missing, and the reliable copy was in
+## the first. ENet will not resend that for a full round trip plus four times its
+## variance, so there is no copy "just behind" worth waiting for. What is left is
+## a moment for two unreliable echoes arriving out of order, which is all this
+## covers. Measured against the injected fault at 60 ms first: 24 holes cost
+## 3.4 s held, most of it this wait.
+@export_range(0, 1000, 10) var seal_repair_after_ms: int = 20
+
+## How late a seal must be, with nothing later arrived either, before a peer asks
+## for it anyway, in milliseconds.
+##
+## Longer than the hole case, because this is not proof of anything - the relay may
+## simply be a little late - and each ask costs a packet both ways. It is here for
+## the loss the hole test cannot see: the reliable copy AND every echo since, which
+## is a burst rather than a single drop.
+@export_range(0, 5000, 10) var seal_repair_wait_ms: int = 250
+
+## How often a peer repeats a request that has not been answered, in milliseconds.
+## The answer rides the unreliable channel too, and can be lost like anything else.
+@export_range(20, 2000, 10) var seal_repair_every_ms: int = 100
+
 ## **DELIBERATELY THROWS AWAY THIS PERCENTAGE OF ARRIVING SEALS. Test only, and
 ## zero in anything anybody plays.**
 ##
@@ -419,6 +458,15 @@ extends Resource
 ## this project's most repeated trap, so the loss is injectable rather than
 ## hoped for. See `LockstepService.receive_seal`.
 @export_range(0, 100, 1) var debug_seal_loss_percent: int = 0
+
+## **DELIBERATELY THROWS AWAY THIS PERCENTAGE OF ARRIVING ECHOES. Test only, and
+## zero in anything anybody plays.**
+##
+## With `debug_seal_loss_percent` at 100 this is playtest 7's lost player on
+## demand: no reliable seal ever lands, the echo delivers most turns, and every so
+## often a turn is lost from both echoes that carried it - a hole only repair can
+## fill. See `LockstepService.receive_seal_echo`.
+@export_range(0, 100, 1) var debug_echo_loss_percent: int = 0
 
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
@@ -569,6 +617,10 @@ func validate() -> bool:
 
 	if max_pending_orders < 1:
 		Log.err("NetworkConfig max_pending_orders must be at least one", max_pending_orders)
+		complete = false
+
+	if seal_repair_every_ms < 1:
+		Log.err("NetworkConfig seal_repair_every_ms must be positive", seal_repair_every_ms)
 		complete = false
 	if checksum_every_turns < 1:
 		Log.err("NetworkConfig checksum_every_turns must be at least one",
