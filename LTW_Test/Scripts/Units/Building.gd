@@ -778,6 +778,9 @@ func _complete_sell() -> void:
 		if state != null:
 			state.gain(refund)
 
+	if References.match_stats != null:
+		References.match_stats.record_tower_sold(owner_player_id)
+
 	Log.info("Building sold", {"building": name, "refund": refund})
 	queue_free()
 
@@ -1285,6 +1288,10 @@ func _die() -> void:
 	if cell.x >= 0 && is_instance_valid(area):
 		area.mark_rubble(cell, footprint())
 		_show_rubble()
+	# A tower that was DESTROYED, which is only ever an attacker creep's work -
+	# a sale goes through _complete_sell and is counted there instead.
+	if References.match_stats != null:
+		References.match_stats.record_tower_lost(owner_player_id)
 	super()
 
 

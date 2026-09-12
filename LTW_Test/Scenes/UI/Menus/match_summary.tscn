@@ -1,0 +1,192 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/MatchSummaryScreen.gd" id="1_summary"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="3_menu_config"]
+[ext_resource type="Theme" path="res://Resources/UI/menu_theme.tres" id="4_menu_theme"]
+[ext_resource type="Resource" path="res://Resources/Config/controls_config.tres" id="5_controls_config"]
+[ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="6_audio_config"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/match_summary_row.tscn" id="7_summary_row"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/summary_highlight_row.tscn" id="8_highlight_row"]
+
+[node name="MatchSummary" type="Control" node_paths=PackedStringArray("_title_label", "_subtitle_label", "_row_list", "_highlight_list", "_menu_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_menu_theme")
+script = ExtResource("1_summary")
+_title_label = NodePath("Margin/Column/TitleLabel")
+_subtitle_label = NodePath("Margin/Column/SubtitleLabel")
+_row_list = NodePath("Margin/Column/Table/RowList")
+_highlight_list = NodePath("Margin/Column/Highlights/HighlightList")
+_menu_button = NodePath("Margin/Column/Footer/MenuButton")
+_row_scene = ExtResource("7_summary_row")
+_highlight_scene = ExtResource("8_highlight_row")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_controls_config = ExtResource("5_controls_config")
+_menu_config = ExtResource("3_menu_config")
+_audio_config = ExtResource("6_audio_config")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.062, 0.082, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 36
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 40
+text = "MATCH SUMMARY"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.63, 0.7, 1)
+theme_override_font_sizes/font_size = 16
+text = ""
+
+[node name="Table" type="VBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column/Table"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Col0" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(46, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = ""
+horizontal_alignment = 1
+
+[node name="Col1" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Player"
+
+[node name="Col2" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Ultimate"
+
+[node name="Col3" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Sent"
+horizontal_alignment = 1
+
+[node name="Col4" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Killed"
+horizontal_alignment = 1
+
+[node name="Col5" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Stolen"
+horizontal_alignment = 1
+
+[node name="Col6" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Lost"
+horizontal_alignment = 1
+
+[node name="Col7" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Towers"
+horizontal_alignment = 1
+
+[node name="Col8" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Income"
+horizontal_alignment = 1
+
+[node name="Col9" type="Label" parent="Margin/Column/Table/Header"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "Spent"
+horizontal_alignment = 1
+
+[node name="HeaderRule" type="ColorRect" parent="Margin/Column/Table"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.24, 0.26, 0.32, 1)
+
+[node name="RowList" type="VBoxContainer" parent="Margin/Column/Table"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Highlights" type="VBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HighlightsTitle" type="Label" parent="Margin/Column/Highlights"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "Best of the match"
+
+[node name="HighlightList" type="VBoxContainer" parent="Margin/Column/Highlights"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+alignment = 2
+
+[node name="MenuButton" type="Button" parent="Margin/Column/Footer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "Back to Main Menu"

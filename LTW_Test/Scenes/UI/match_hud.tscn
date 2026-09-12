@@ -19,6 +19,8 @@
 [ext_resource type="PackedScene" uid="uid://cimbya3sr27g3" path="res://Scenes/UI/research_center.tscn" id="15_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/send_bar.tscn" id="16_send_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/match_end_panel.tscn" id="17_match_end"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tech_reveal_panel.tscn" id="17_reveal"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
@@ -243,6 +245,14 @@ process_mode = 3
 [node name="DraftPanel" parent="." unique_id=126930803 instance=ExtResource("17_draft")]
 process_mode = 3
 visible = false
+
+[node name="TechRevealPanel" parent="." instance=ExtResource("17_reveal")]
+process_mode = 3
+visible = false
+
+[node name="MatchEndPanel" parent="." node_paths=PackedStringArray("_corner_panel") instance=ExtResource("17_match_end")]
+process_mode = 3
+_corner_panel = NodePath("../PlayerStatsPanel")
 
 [node name="ConfirmPrompt" parent="." unique_id=159550192 instance=ExtResource("80_confirm")]
 process_mode = 3

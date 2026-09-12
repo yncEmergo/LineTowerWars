@@ -252,6 +252,9 @@ func research(player_id: int, tech: TechDefinition) -> String:
 	state.tech.push_purchase(TechPurchase.create(
 		PackedInt32Array([tech.tech_id]), cost, _undo_deadline()
 	))
+	if References.match_stats != null:
+		References.match_stats.record_research(player_id, 1, cost)
+
 	Log.info("Technology researched", {
 		"player": player_id, "tech": tech.display_name, "cost": cost,
 	})
@@ -279,6 +282,11 @@ func undo(player_id: int) -> String:
 		state.tech.revoke(tech_id)
 	state.gain(record.gold_paid)
 	state.tech.expire_history(tick)
+
+	if References.match_stats != null:
+		References.match_stats.record_research_undone(
+			player_id, record.tech_ids.size(), record.gold_paid
+		)
 
 	Log.info("Technology undone", {
 		"player": player_id, "count": record.tech_ids.size(), "refund": record.gold_paid,
@@ -486,6 +494,9 @@ func _buy_batch(player_id: int, state: PlayerState, batch: Array) -> String:
 		ids.append(tech.tech_id)
 
 	state.tech.push_purchase(TechPurchase.create(ids, cost, _undo_deadline()))
+	if References.match_stats != null:
+		References.match_stats.record_research(player_id, ids.size(), cost)
+
 	Log.info("Ultimate researched", {
 		"player": player_id, "count": ids.size(), "cost": cost,
 	})

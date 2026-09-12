@@ -316,6 +316,12 @@ func send_creeps(creep_stats: CreepStats) -> void:
 	if state != null:
 		state.add_income(_income_for(creep_stats, state))
 
+	# Counted here rather than at the button, so a press the rules refused
+	# above is not in the record. Nothing reads it back into the world; see
+	# MatchStats.
+	if References.match_stats != null:
+		References.match_stats.record_send(owner_player_id, creep_stats)
+
 	Log.info("Creeps sent", {
 		"type": creep_stats.display_name,
 		"count": creep_stats.pack_creep_count(),

@@ -40,6 +40,14 @@ extends Node
 ## same reason TechManager is: the server runs it and a client is told about
 ## it in the snapshot.
 @export var _starting_tech: StartingTech
+## What HAPPENED in this match, counted for the end screen: gold, sends, kills,
+## leaks and where everybody finished. Wired by both match scenes - a dedicated
+## server counts a match nobody there will read, which costs a handful of
+## integers and keeps the two scenes the same shape.
+##
+## PRESENTATION-ADJACENT rather than simulation: nothing in it is checksummed
+## and nothing reads it back into the world. See MatchStats.
+@export var _match_stats: MatchStats
 ## Parent for short lived world effects: move markers, and later hit effects
 ## and floating damage numbers.
 ##
@@ -167,6 +175,12 @@ static var starting_tech: StartingTech:
 		if instance == null:
 			return null
 		return instance._starting_tech
+
+static var match_stats: MatchStats:
+	get:
+		if instance == null:
+			return null
+		return instance._match_stats
 
 static var effects_root: Node3D:
 	get:

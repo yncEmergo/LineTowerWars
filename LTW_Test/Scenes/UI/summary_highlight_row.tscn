@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/SummaryHighlightRow.gd" id="1_highlight_row"]
+
+[node name="SummaryHighlightRow" type="HBoxContainer" node_paths=PackedStringArray("_title_label", "_name_label", "_value_label")]
+theme_override_constants/separation = 10
+script = ExtResource("1_highlight_row")
+_title_label = NodePath("TitleLabel")
+_name_label = NodePath("NameLabel")
+_value_label = NodePath("ValueLabel")
+
+[node name="TitleLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.63, 0.7, 1)
+theme_override_font_sizes/font_size = 15
+text = "Most of something"
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Player"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="ValueLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "0"

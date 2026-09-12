@@ -18,6 +18,10 @@ static var pending_lobby: LobbyInfo = null
 ## once by take_pending_match() so a later direct run of Main.tscn cannot
 ## silently inherit the players of whatever lobby ran last.
 static var pending_match: MatchSetup = null
+## The record of the match just finished, handed to the summary screen across
+## the scene change. Consumed once, for the same reason pending_match is: a
+## later visit must not show the numbers of a match two games ago.
+static var pending_summary: MatchSummary = null
 ## One line for the screen we are about to land on to explain why we are there:
 ## "The host left the lobby", and in 1.8 every other way a connection can end.
 ## Consumed once, for the same reason as pending_match.
@@ -63,6 +67,25 @@ static func to_match_loading(from: Node) -> void:
 static func to_server_scene(from: Node, path: String, setup: MatchSetup = null) -> void:
 	pending_match = setup
 	_change_scene(from, path)
+
+
+## The results screen, carrying the record the match scene took on its way out.
+##
+## The record is an ARGUMENT rather than something this screen fetches, because
+## by the time it opens the match scene is gone and there is nothing left to
+## fetch it from. See MatchStats.take_summary.
+static func to_match_summary(from: Node, summary: MatchSummary) -> void:
+	pending_summary = summary
+	var config: MenuConfig = _config()
+	if config != null:
+		_change_scene(from, config.match_summary_scene_path)
+
+
+## The pending summary, cleared as it is handed over.
+static func take_pending_summary() -> MatchSummary:
+	var summary: MatchSummary = pending_summary
+	pending_summary = null
+	return summary
 
 
 ## setup is null for a plain single player run, which makes the game scene

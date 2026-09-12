@@ -141,9 +141,9 @@ const TECH_HEADER: int = 3
 ## most one creep per player can be reading at a time.
 const EFFECT_STRIDE: int = StatusEntry.RECORD_SIZE
 
-## The draft block is described by StartingTech.draft_record rather than by a
-## stride here, because it is the only part of a snapshot this service neither
-## builds nor reads a field of: it asks the object that owns the draft for a
+## The opening block is described by StartingTech.opening_record rather than by
+## a stride here, because it is the only part of a snapshot this service neither
+## builds nor reads a field of: it asks the object that owns the opening for a
 ## record and hands the same record back on the other side.
 ##
 ## Fields before one unit's queued orders: its id, and how many follow.
@@ -381,7 +381,7 @@ func _build_snapshot() -> Dictionary:
 	return {
 		"t": session.tick(), "u": units, "p": players, "s": stocks,
 		"r": techs, "e": _build_effects(), "o": orders,
-		"d": _draft_record(),
+		"d": _opening_record(),
 	}
 
 
@@ -559,20 +559,20 @@ func _append_techs(into: PackedInt32Array, state: PlayerState, slot: int) -> voi
 ## them - the key costs one empty array a tick for the two seconds it is not.
 ##
 ## On the wire at all because a client rolls NOTHING (3.4). It could derive the
-## same three Ultimates from the seed, and that is exactly the second
-## simulation the rules forbid: it would agree until it did not, and the
-## symptom would be three buttons the server refuses two of.
-func _draft_record() -> PackedInt32Array:
+## same Ultimates from the seed, and that is exactly the second simulation the
+## rules forbid: it would agree until it did not, and the symptom would be three
+## buttons the server refuses two of.
+func _opening_record() -> PackedInt32Array:
 	var draft: StartingTech = References.starting_tech
 	if draft == null:
 		return PackedInt32Array()
-	return draft.draft_record()
+	return draft.opening_record()
 
 
-func _apply_draft(record: PackedInt32Array) -> void:
+func _apply_opening(record: PackedInt32Array) -> void:
 	var draft: StartingTech = References.starting_tech
 	if draft != null:
-		draft.set_replicated_draft(record)
+		draft.set_replicated_opening(record)
 
 
 func _append_stocks(into: PackedInt32Array, manager: PlayerManager, slot: int) -> void:
@@ -618,7 +618,7 @@ func _apply_incoming() -> void:
 	# Before the units, deliberately: this is the one field that can say the
 	# world is being held still, and a client that applied a world first and
 	# learned it was paused afterwards would run a tick it should not have.
-	_apply_draft(payload.get("d", PackedInt32Array()) as PackedInt32Array)
+	_apply_opening(payload.get("d", PackedInt32Array()) as PackedInt32Array)
 	_apply_units(payload.get("u", PackedFloat32Array()) as PackedFloat32Array)
 	_apply_players(payload.get("p", PackedInt32Array()) as PackedInt32Array)
 	_apply_stocks(payload.get("s", PackedInt32Array()) as PackedInt32Array)

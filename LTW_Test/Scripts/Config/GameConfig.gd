@@ -293,6 +293,25 @@ extends Resource
 ## because a tower bought under a technology must not be left standing by one
 ## that is given back.
 @export var technology_undo_seconds: float = 5.0
+## How long a DRAFT waits for a player before choosing for them, in seconds.
+##
+## The world is held still for the whole of it, so this is not only a courtesy
+## to the player who is thinking - it is how long everybody ELSE stares at a
+## frozen match. A deadline is what stops one person who walked away from the
+## keyboard ending the match for the rest of the room. 0 removes it, and with
+## it the only thing that ever unsticks such a match.
+##
+## Measured in SIMULATION seconds and converted to ticks, so a match held by a
+## network stall does not spend the draft clock while it waits. See StartingTech.
+@export var draft_seconds: float = 30.0
+## How long the RANDOM technology mode spends showing what it rolled, in
+## seconds. The world is held still for it.
+##
+## Presentation time that everybody pays, which is why it is short: what it buys
+## is a moment the whole room watches at once instead of a tower quietly
+## appearing on a card. 0 removes the reel entirely and hands the Ultimate out
+## on the first frame, which is what the mode used to do.
+@export var tech_reveal_seconds: float = 5.0
 
 @export_group("Rules")
 ## Ceiling on a player's living sent creeps, as the sum of their population

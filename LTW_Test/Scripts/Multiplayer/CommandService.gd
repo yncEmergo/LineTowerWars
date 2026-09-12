@@ -292,7 +292,7 @@ func _validate_and_apply(command: Command) -> void:
 	# Nothing may be ordered of a UNIT while the world is held still for the
 	# draft. A legitimate client cannot press anything - its whole HUD is
 	# paused - so this only ever answers one that was modified.
-	if _is_drafting():
+	if _is_opening():
 		_reject(command, "the match is paused")
 		return
 
@@ -440,8 +440,8 @@ func _apply_player_order(command: Command) -> void:
 	# A match held still for the DRAFT accepts exactly one order: the choice it
 	# is being held for. Every other screen is frozen on a legitimate client,
 	# so this is what a modified one is refused with.
-	if _is_drafting() && command.player_action != Command.PlayerAction.PICK_DRAFT_TECH:
-		_reject(command, "the draft is not finished")
+	if _is_opening() && command.player_action != Command.PlayerAction.PICK_DRAFT_TECH:
+		_reject(command, "the opening is not finished")
 		return
 
 	match command.player_action:
@@ -496,12 +496,16 @@ func _apply_draft_pick(command: Command) -> void:
 		_reject(command, reason)
 
 
-## Whether the match is being held still for a draft. Asked before anything
-## else a command could ask for, since a paused world must not be moved by an
-## order that was pressed on a screen that should have been frozen.
-func _is_drafting() -> bool:
+## Whether the match is being held still for its OPENING - a draft waiting on
+## a choice, or a random Ultimate being rolled. Asked before anything else a
+## command could ask for, since a paused world must not be moved by an order
+## that was pressed on a screen that should have been frozen.
+##
+## Deliberately the whole hold rather than the draft alone: a reveal freezes
+## exactly as hard and accepts nothing at all, since there is nothing to press.
+func _is_opening() -> bool:
 	var draft: StartingTech = References.starting_tech
-	return draft != null && draft.is_drafting()
+	return draft != null && draft.is_holding()
 
 
 ## A developer cheat, applied by the authority exactly as every other player

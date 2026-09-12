@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/UI/DraftPanel.gd" id="1_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_option.tscn" id="2_option"]
 
-[node name="DraftPanel" type="Control" node_paths=PackedStringArray("_panel", "_option_row", "_status_label")]
+[node name="DraftPanel" type="Control" node_paths=PackedStringArray("_option_row", "_status_label", "_timer_label")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,29 +12,21 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_draft")
-_panel = NodePath("Panel")
-_option_row = NodePath("Panel/Column/OptionRow")
-_status_label = NodePath("Panel/Column/StatusLabel")
+_option_row = NodePath("Column/OptionRow")
+_status_label = NodePath("Column/StatusLabel")
+_timer_label = NodePath("Column/TimerLabel")
 _option_scene = ExtResource("2_option")
 
-[node name="Panel" type="Control" parent="."]
+[node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.02, 0.024, 0.035, 0.88)
 
-[node name="Dim" type="ColorRect" parent="Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.02, 0.024, 0.035, 0.86)
-
-[node name="Column" type="VBoxContainer" parent="Panel"]
+[node name="Column" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -44,26 +36,34 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 16
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="Panel/Column"]
+[node name="TitleLabel" type="Label" parent="Column"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 34
 text = "CHOOSE YOUR ULTIMATE"
 horizontal_alignment = 1
 
-[node name="OptionRow" type="HBoxContainer" parent="Panel/Column"]
+[node name="TimerLabel" type="Label" parent="Column"]
 layout_mode = 2
-theme_override_constants/separation = 18
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.93, 0.74, 0.24, 1)
+theme_override_font_sizes/font_size = 26
+text = "30"
+horizontal_alignment = 1
+
+[node name="OptionRow" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+theme_override_constants/separation = 22
 alignment = 1
 
-[node name="StatusLabel" type="Label" parent="Panel/Column"]
+[node name="StatusLabel" type="Label" parent="Column"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.6, 0.63, 0.7, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 16
 text = "Choose the Ultimate you will open on."
 horizontal_alignment = 1

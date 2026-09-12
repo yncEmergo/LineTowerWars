@@ -1,0 +1,107 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/MatchSummaryRow.gd" id="1_summary_row"]
+
+[node name="MatchSummaryRow" type="HBoxContainer" node_paths=PackedStringArray("_placement_label", "_name_label", "_ultimate_label", "_sent_label", "_killed_label", "_stolen_label", "_lost_label", "_towers_label", "_income_label", "_spent_label")]
+theme_override_constants/separation = 8
+script = ExtResource("1_summary_row")
+_placement_label = NodePath("PlacementLabel")
+_name_label = NodePath("NameLabel")
+_ultimate_label = NodePath("UltimateLabel")
+_sent_label = NodePath("SentLabel")
+_killed_label = NodePath("KilledLabel")
+_stolen_label = NodePath("StolenLabel")
+_lost_label = NodePath("LostLabel")
+_towers_label = NodePath("TowersLabel")
+_income_label = NodePath("IncomeLabel")
+_spent_label = NodePath("SpentLabel")
+
+[node name="PlacementLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(46, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "1st"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+text = "Player"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="UltimateLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "-"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="SentLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="KilledLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="StolenLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="LostLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="TowersLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0 / 0 / 0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="IncomeLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1
+
+[node name="SpentLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "0"
+clip_text = true
+text_overrun_behavior = 3
+horizontal_alignment = 1

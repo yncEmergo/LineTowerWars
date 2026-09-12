@@ -1985,6 +1985,11 @@ func _pay_bounty() -> void:
 	if state != null:
 		state.gain(_creep_stats.bounty)
 
+	# The defender's kill, on the same terms the bounty is paid on: whoever owns
+	# the maze, never whoever fired. See MatchStats.
+	if References.match_stats != null:
+		References.match_stats.record_kill(area.player_id, _creep_stats.bounty)
+
 
 ## A leak. Two things happen, in this order, and neither is optional.
 ##
@@ -2027,6 +2032,8 @@ func _reach_end() -> void:
 	# ReplicationService.leak_reported.
 	if stolen > 0:
 		Replication.report_leak(owner_player_id, area.player_id, stolen)
+		if References.match_stats != null:
+			References.match_stats.record_leak(owner_player_id, area.player_id, stolen)
 
 	if destination == null:
 		queue_free()

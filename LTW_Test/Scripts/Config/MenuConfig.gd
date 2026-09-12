@@ -23,6 +23,9 @@ extends Resource
 ## Shown between pressing Start and the match beginning: the threaded load of
 ## the game scene, and who is still loading it.
 @export_file("*.tscn") var match_loading_scene_path: String = ""
+## Shown after a match is over, from the Continue button on the result
+## board: what happened over the whole game rather than only who won.
+@export_file("*.tscn") var match_summary_scene_path: String = ""
 
 @export_group("Branding")
 ## Working title. The game has no name yet, so every screen reads it from here
@@ -109,6 +112,7 @@ func validate() -> bool:
 	complete = _validate_path(lobby_room_scene_path, "lobby_room_scene_path") && complete
 	complete = _validate_path(game_scene_path, "game_scene_path") && complete
 	complete = _validate_path(match_loading_scene_path, "match_loading_scene_path") && complete
+	complete = _validate_path(match_summary_scene_path, "match_summary_scene_path") && complete
 	return complete
 
 

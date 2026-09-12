@@ -1,0 +1,154 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/MatchEndPanel.gd" id="1_match_end"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/player_stat_row.tscn" id="2_stat_row"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/stat_player.png" id="3_stat_player"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/stat_life.png" id="4_stat_life"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/stat_income.png" id="5_stat_income"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/stat_value.png" id="6_stat_value"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/stat_placement.png" id="7_stat_placement"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_board"]
+content_margin_left = 26.0
+content_margin_top = 20.0
+content_margin_right = 26.0
+content_margin_bottom = 20.0
+bg_color = Color(0.08, 0.09, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.38, 0.24, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="MatchEndPanel" type="Control" node_paths=PackedStringArray("_panel", "_title_label", "_subtitle_label", "_row_list", "_continue_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_match_end")
+_panel = NodePath("Panel")
+_title_label = NodePath("Panel/Board/Column/TitleLabel")
+_subtitle_label = NodePath("Panel/Board/Column/SubtitleLabel")
+_row_list = NodePath("Panel/Board/Column/RowList")
+_continue_button = NodePath("Panel/Board/Column/ContinueButton")
+_row_scene = ExtResource("2_stat_row")
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.024, 0.035, 0.72)
+
+[node name="Board" type="PanelContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_board")
+
+[node name="Column" type="VBoxContainer" parent="Panel/Board"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Panel/Board/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 38
+text = "MATCH OVER"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Panel/Board/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.6, 0.63, 0.7, 1)
+theme_override_font_sizes/font_size = 16
+text = ""
+horizontal_alignment = 1
+
+[node name="HeaderSpacer" type="Control" parent="Panel/Board/Column"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Header" type="HBoxContainer" parent="Panel/Board/Column"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NameIcon" type="TextureRect" parent="Panel/Board/Column/Header"]
+custom_minimum_size = Vector2(110, 18)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Player"
+texture = ExtResource("3_stat_player")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="LifeIcon" type="TextureRect" parent="Panel/Board/Column/Header"]
+custom_minimum_size = Vector2(32, 18)
+layout_mode = 2
+tooltip_text = "Life"
+texture = ExtResource("4_stat_life")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IncomeIcon" type="TextureRect" parent="Panel/Board/Column/Header"]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Income"
+texture = ExtResource("5_stat_income")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ValueIcon" type="TextureRect" parent="Panel/Board/Column/Header"]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Value"
+texture = ExtResource("6_stat_value")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlacementIcon" type="TextureRect" parent="Panel/Board/Column/Header"]
+custom_minimum_size = Vector2(42, 18)
+layout_mode = 2
+tooltip_text = "Placement"
+texture = ExtResource("7_stat_placement")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RowList" type="VBoxContainer" parent="Panel/Board/Column"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ButtonSpacer" type="Control" parent="Panel/Board/Column"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ContinueButton" type="Button" parent="Panel/Board/Column"]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+text = "Continue"

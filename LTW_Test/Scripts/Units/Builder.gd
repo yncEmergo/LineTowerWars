@@ -162,6 +162,9 @@ func _start_pending_build() -> void:
 	if References.tech_manager != null:
 		References.tech_manager.notify_construction_started(owner_player_id)
 
+	if References.match_stats != null:
+		References.match_stats.record_tower_built(owner_player_id, cost)
+
 	# The builder is free the instant the tower starts, it does not construct,
 	# but it turns to face what it just started.
 	_is_moving = false
