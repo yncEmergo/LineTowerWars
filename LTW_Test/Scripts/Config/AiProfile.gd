@@ -133,7 +133,29 @@ extends Resource
 @export var send_seconds: float = 12.0
 ## Highest creep tier it will ever buy from. 1 keeps an easy AI on the opening
 ## roster for the whole match.
+##
+## **It does NOT apply to the SUDDEN DEATH sender**, and that exemption is not a
+## nicety - without it the cap silently stops the AI sending anything at all for
+## the last part of every match. At Sudden Death the whole of tier 4 opens and
+## tiers 1 to 3 stop being sendable for good (game_rules.md), so an AI capped at
+## tier 2 has an empty card from that moment. Measured as three matches in a row
+## ending 100-100 at the clock with nobody having leaked.
 @export var max_send_tier: int = 4
+## How much the AI cares about INCOME PER GOLD when it chooses what to send,
+## 0 to 1.
+##
+## Every creep has an implicit ratio of cost to income granted and the ratio gets
+## worse as creeps get stronger (game_rules.md, Economy). At 0 the AI buys the
+## most expensive thing it can afford, which is what a beginner does and is how
+## you pay a premium for creeps the other maze kills anyway. At 1 it buys the
+## most efficient thing on the card, which earns beautifully and threatens
+## nobody - three matches of that ended with neither side losing a life.
+##
+## In between it keeps every creep whose ratio is at least this share of the best
+## on offer, and buys the BIGGEST of those: efficient enough to compound, big
+## enough to be worth defending against, and it scales on its own as the AI gets
+## richer.
+@export_range(0.0, 1.0, 0.05) var send_efficiency: float = 0.6
 ## Whether it spends on UPGRADES at all. An AI that never upgrades is a wall of
 ## 10g towers, which is what an easy one should be.
 @export var upgrades_towers: bool = true
@@ -145,6 +167,44 @@ extends Resource
 ## is several tiers behind by the time anything reaches its maze - which is
 ## exactly what makes an easy one easy.
 @export var takes_opening_ultimate: bool = true
+## WHICH Ultimate, by the `tech_id` of the path technology that leads to it, or
+## 0 to roll one at random.
+##
+## An AUTHORED id rather than a name or a position, because that is what a
+## command names a technology with and what never moves (CLAUDE.md). The Ultimate
+## a profile opens on is most of its character: it decides which elemental towers
+## its maze can ever hold.
+##
+## Rolling is the honest answer for an easy opponent and a bad one for a hard
+## one - a random Ultimate is a random plan, and half of them will not answer
+## what the player is sending.
+@export var ultimate_tech_id: int = 0
+## Share of the maze that aims at that Ultimate's tower rather than at a Basic
+## one, 0 to 1.
+##
+## **Basic towers do not win matches** (game_rules.md), so an AI whose maze is
+## all 10g towers is an AI that loses late however long its maze is. This is the
+## crudest possible answer to that and it is deliberately crude: it says how
+## MUCH of the maze goes elemental and says nothing about WHERE, which is the
+## thing a real opponent would decide. See Docs/singleplayer.md.
+##
+## Spread evenly through the plan rather than clustered, so the elemental towers
+## are not all at one end of a lane.
+@export_range(0.0, 1.0, 0.05) var elemental_share: float = 0.0
+## How many cells of the maze go up in BASIC towers before any of it aims at
+## that Ultimate.
+##
+## **This number is the whole of whether a hard AI ever gets there**, and it took
+## two runs to find. An elemental cell resolves down to a 200g Elemental Core,
+## and the build rule stops at the entry it cannot afford rather than stepping
+## past it - so an AI whose maze turns elemental early saves for one Core at
+## twenty gold a payout, never reaches a maze worth sending from, never grows its
+## income, and is still saving for the same Core ten minutes later. Measured:
+## eight towers in five minutes and not one creep sent.
+##
+## Long enough that the cheap wall is up and the income is moving, which is also
+## the order a person builds in.
+@export var elemental_after_towers: int = 40
 
 ## Reports everything authored wrong on this one profile, at boot, the way every
 ## other content file in the project is checked.
@@ -187,6 +247,29 @@ func maze_layout() -> TowerLayout:
 	if maze_layout_path.is_empty() || !ResourceLoader.exists(maze_layout_path):
 		return null
 	return ResourceLoader.load(maze_layout_path, "") as TowerLayout
+
+
+## The Ultimate TOWER this profile is building towards, or null for one that
+## aims at none.
+##
+## Resolved through the match's own technology registry rather than by loading a
+## path here, because what a profile names is a technology and the tower is the
+## technology's business - and because the registry is what would refuse an id
+## this build does not contain.
+func ultimate_tower(registry: TechRegistry) -> BuildingStats:
+	if ultimate_tech_id == 0 || registry == null:
+		return null
+
+	var path: TechDefinition = registry.tech_for(ultimate_tech_id)
+	if path == null || !path.is_path():
+		Log.err("AI profile names a technology that leads to no Ultimate", {
+			"profile": display_name,
+			"tech": ultimate_tech_id,
+		})
+		return null
+	if path.ultimate_stats_path.is_empty()             || !ResourceLoader.exists(path.ultimate_stats_path):
+		return null
+	return ResourceLoader.load(path.ultimate_stats_path, "") as BuildingStats
 
 
 ## The tower this profile opens with, or null to take whatever the builder

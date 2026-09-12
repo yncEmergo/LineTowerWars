@@ -73,5 +73,6 @@ pressing. The READING does not.
 
 Not here. The control scripts live in [`../Tools/`](../Tools/) and are typed from the project
 root: `.\Tools\run_server.ps1`, `.\Tools\stop_server.ps1`, `.\Tools\run_bench.ps1`.
-`server.md` documents the first two, and `Findings/` the third. Exporting the game is not a script
+`server.md` documents the first two, `Findings/` the third, and `singleplayer.md` the fourth -
+`run_ai_bench.ps1`, which plays computer opponents against each other and prints the result. Exporting the game is not a script
 in there at all — it is one `godot --export-release` line, written out in `building.md`.

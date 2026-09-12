@@ -42,9 +42,22 @@ const CHAIN_BUILDS: bool = true
 var _slot: int = 0
 var _profile: AiProfile = null
 var _plan: AiMazePlan = null
-## How far into the plan it has got. Entries the area refused are stepped over
-## rather than retried for ever - see _consider_maze.
-var _plan_index: int = 0
+## Plan entries this builder can never place at all - a target nothing on its
+## card leads to. Struck off so a content fault does not cost a pass every beat.
+##
+## **Nothing is struck off for having been ORDERED**, and that is the fix to the
+## worst bug this AI had: an order is not a tower. A build is paid for when the
+## builder REACHES the spot, so a chain longer than the gold in hand has its tail
+## dropped there - by design, and exactly as it is for a player. An AI that
+## crossed a cell off when it ordered one therefore lost every cell it could not
+## afford on arrival, silently, for the rest of the match.
+##
+## It scaled with builds_per_pass, which is why the profile that chained THREE
+## orders a beat finished a thirty minute match with twelve towers while the one
+## that ordered a single tower finished with twenty-seven. What is standing is
+## the only honest record, so the plan asks the AREA instead - see
+## _order_cheapest_affordable, which skips a cell something is already on.
+var _done: Dictionary = {}
 ## Simulation seconds banked toward the next pass, and toward the next send.
 var _think_clock: float = 0.0
 var _send_clock: float = 0.0
@@ -140,10 +153,23 @@ func _physics_process(_engine_delta: float) -> void:
 func _think() -> void:
 	if _consider_opening():
 		return
-	if _consider_send():
-		return
-	if _consider_maze():
-		return
+	# **Every rule gets its turn, rather than the pass stopping at the first that
+	# spent.** Stopping was the first design and it looked right: one decision a
+	# beat, priority order, no rule ever starving another. What it actually did
+	# was starve UPGRADES for a whole match.
+	#
+	# The reason is that building is limited by the BUILDER'S WALK rather than by
+	# gold - it crosses the lane between towers, exactly as a player's does - so
+	# an AI on a million gold still orders one or two towers a beat and the maze
+	# rule was answering yes to every pass for twenty-five minutes. Measured: two
+	# difficulties that should have been a tier apart both ended a full match with
+	# eighty-odd Basic towers, a million in the bank and nothing upgraded.
+	#
+	# The floors are what keep this honest: each rule refuses to spend below its
+	# own, so they work from different parts of the purse rather than racing for
+	# the whole of it. See AiProfile.
+	_consider_send()
+	_consider_maze()
 	_consider_upgrade()
 
 
@@ -157,7 +183,20 @@ func _consider_opening() -> bool:
 		return false
 
 	var manager: TechManager = References.tech_manager
-	if manager == null || !manager.can_roll_random_ultimate(_slot):
+	if manager == null:
+		_opening_taken = true
+		return false
+
+	# A NAMED Ultimate where the profile has one, because which one it opens on
+	# is most of a hard opponent's character - a rolled one is a rolled plan, and
+	# half of them will not answer what the player is sending.
+	var wanted: TechDefinition = _wanted_ultimate()
+	if wanted != null:
+		_opening_taken = true
+		AiHand.order_ultimate(_slot, wanted.tech_id)
+		return true
+
+	if !manager.can_roll_random_ultimate(_slot):
 		# Not YET is the usual answer here, not never: the technology registry
 		# is built before this runs, but a match with no free research at all
 		# never offers one. Latched either way, so it is asked once.
@@ -167,6 +206,25 @@ func _consider_opening() -> bool:
 	_opening_taken = true
 	AiHand.order_random_ultimate(_slot)
 	return true
+
+
+## The Ultimate this profile means to open on, or null for one that rolls.
+##
+## Refused rather than forced if the rules would not allow it, so an AI whose
+## profile names something this match cannot give it falls through to the roll
+## instead of pressing a dead button every beat.
+func _wanted_ultimate() -> TechDefinition:
+	var manager: TechManager = References.tech_manager
+	var session: MatchSession = References.match_session
+	if manager == null || session == null || _profile.ultimate_tech_id == 0:
+		return null
+
+	var path: TechDefinition = session.techs().tech_for(_profile.ultimate_tech_id)
+	if path == null:
+		return null
+	if manager.refusal_for_ultimate(_slot, path) != TechManager.ALLOWED:
+		return null
+	return path
 
 
 ## RULE 2. The maze: the next tower in the plan.
@@ -184,30 +242,57 @@ func _consider_maze() -> bool:
 
 	var ordered: int = 0
 	while ordered < maxi(1, _profile.builds_per_pass):
-		var entry: AiMazePlan.Entry = _plan.entry_at(_plan_index)
+		if !_order_cheapest_affordable(builder, state, ordered > 0):
+			break
+		ordered += 1
+	return ordered > 0
+
+
+## Puts up the FIRST ENTRY IN THE PLAN THIS PLAYER CAN AFFORD, which is not
+## always the next one.
+##
+## **Skipping past what it cannot pay for and coming back is the difference
+## between a maze and a wall with a hole in it.** The first design walked the
+## plan with a single cursor and stopped at the entry it could not afford, which
+## is fine while every tower costs ten gold and fatal the moment one does not: an
+## AI whose plan turns elemental part way along saves for a 200g Elemental Core
+## while thirty cheap cells behind it stay empty, and the creeps walk through the
+## gap. Measured twice, in opposite directions - once with the send rule draining
+## the gold it was saving, and once with sending switched off so hard it earned
+## nothing to save.
+##
+## So the plan is a SET of cells rather than a queue, and the order it is walked
+## in is only a preference. Front to back still, because a lane is lost at the
+## top - it simply no longer blocks.
+func _order_cheapest_affordable(builder: Builder, state: PlayerState,
+		chained: bool) -> bool:
+	for index in range(_plan.size()):
+		if _done.has(index):
+			continue
+		var entry: AiMazePlan.Entry = _plan.entry_at(index)
 		if entry == null:
-			return ordered > 0
+			continue
 
 		var stats: BuildingStats = _placeable_for(entry, builder)
 		if stats == null:
 			# Nothing on this builder's card can ever become what the plan wants
-			# here. Stepped over rather than retried: the plan is content and a
-			# content fault must not stall the whole maze behind it.
+			# here. Struck off rather than retried: the plan is content, and a
+			# content fault must not cost the maze a cell every pass for ever.
 			Log.warn("AI cannot place a tower its maze asks for, skipping it", {
 				"slot": _slot, "target": entry.target_type_id,
 			})
-			_plan_index += 1
+			_done[index] = true
 			continue
 
 		# Floor two of three: new towers are bought with what is above it, so a
-		# send is never spent out from under. See AiProfile.
+		# send is never spent out from under. A cell that cannot be paid for is
+		# left for later rather than waited on. See AiProfile.
 		if state.gold - stats.gold_cost < _floor(_profile.build_floor_gold):
-			return ordered > 0
-		if !_order_entry(builder, entry, stats, ordered > 0):
-			return ordered > 0
-		_plan_index += 1
-		ordered += 1
-	return ordered > 0
+			continue
+		if !_order_entry(builder, entry, stats, chained):
+			continue
+		return true
+	return false
 
 
 ## One plan entry ordered, or false when the area will not take it.
@@ -225,14 +310,20 @@ func _order_entry(builder: Builder, entry: AiMazePlan.Entry, stats: BuildingStat
 
 	var footprint: Vector2i = area.cells_to_internal(stats.footprint_cells)
 	if !area.can_place(entry.cell, footprint, stats.blocks_movement):
-		# Usually because something is already standing there, which after a
-		# restored blueprint or a tower the plan placed earlier is normal rather
-		# than wrong. Stepped over on the caller's next turn round the loop.
-		_plan_index += 1
-		return true
+		# Something is standing there - usually a tower this plan put up - or the
+		# cell is under rubble. Not ordered, not struck off: rubble clears, and a
+		# tower that is destroyed leaves a cell the plan wants again.
+		return false
 
 	var ability: BuildTowerAbility = AiHand.build_ability(builder, stats)
 	if ability == null:
+		return false
+	# **Asked before the order goes out, and the plan does NOT move on if it is
+	# refused.** An Elemental Core on the beat before its technology lands is the
+	# case: the order road refuses it silently, exactly as it refuses a player's,
+	# and an AI that advanced anyway would lose that cell out of its maze for the
+	# rest of the match.
+	if !ability.can_execute(builder):
 		return false
 
 	AiHand.order_build(
@@ -270,6 +361,35 @@ func _placeable_for(entry: AiMazePlan.Entry, builder: Builder) -> BuildingStats:
 	# none, a tower from content this build does not have. The maze is built
 	# with what there is rather than stalled.
 	return offered[0]
+
+
+## What the CHEAPEST cell the maze still wants costs, plus the floor the build
+## rule keeps behind it - so the send rule can leave exactly that much alone.
+##
+## The cheapest rather than the next, because the plan is walked for what can be
+## afforded rather than in order: what the build rule will actually buy on its
+## next pass is the cheapest thing left, and saving for something dearer would
+## hold back gold nothing is waiting on.
+##
+## Zero once the plan is finished, which is when there is nothing left to save
+## for and every coin should be going into sends and upgrades.
+func _saving_for() -> int:
+	var builder: Builder = _builder()
+	if builder == null || _plan == null:
+		return 0
+
+	var cheapest: int = -1
+	for index in range(_plan.size()):
+		if _done.has(index):
+			continue
+		var stats: BuildingStats = _placeable_for(_plan.entry_at(index), builder)
+		if stats == null:
+			continue
+		if cheapest < 0 || stats.gold_cost < cheapest:
+			cheapest = stats.gold_cost
+	if cheapest < 0:
+		return 0
+	return cheapest + _floor(_profile.build_floor_gold)
 
 
 ## One of the profile's floors, or nothing at all while there is no maze worth
@@ -382,12 +502,17 @@ func _towers_front_to_back() -> Array[Building]:
 ## rule that fires the moment it can afford anything would spend every coin on
 ## the cheapest creep in the game for the whole match.
 ##
-## What it buys is the MOST EXPENSIVE creep it can afford and still keep its
-## defence reserve, which is the closest one line gets to the real rule -
-## income compounds, so the biggest send you can pay for is nearly always the
-## right one (game_rules.md, Economy). What it does NOT do yet is choose a creep
-## for what the other player has built, which is where a harder AI has to go
-## next; see Docs/singleplayer.md.
+## **What it buys is the creep with the best INCOME FOR THE GOLD, not the most
+## expensive one it can afford**, and that swap is worth a tier of difficulty on
+## its own. Every creep has an implicit ratio of cost to income granted and the
+## ratio gets WORSE as creeps get stronger (game_rules.md, Economy) - so an AI
+## that always bought the biggest thing on the card was paying a premium for
+## creeps the other player's maze killed anyway, while an AI buying cheap
+## efficient ones out-earned it. Measured: the difficulty that bought big lost
+## to the one below it, twice.
+##
+## What it does NOT do is choose a creep for what the other player has BUILT,
+## which is where a harder AI has to go next; see Docs/singleplayer.md.
 func _consider_send() -> bool:
 	var state: PlayerState = _state()
 	if state == null || _send_clock < maxf(1.0, _profile.send_seconds):
@@ -402,34 +527,77 @@ func _consider_send() -> bool:
 	# an income tick into a send rather than into a wasted fifteen seconds. Only a
 	# send that actually went out starts the next beat.
 	# Floor one of three, and the lowest: income compounds and a tower does not.
-	var spendable: int = state.gold - _floor(_profile.send_floor_gold)
+	#
+	# **Except that it may never be lower than what the MAZE is saving for**, and
+	# that exception is the whole of a bug worth knowing about. The next entry in
+	# the plan can cost far more than this floor - a 200g Elemental Core against a
+	# floor of ninety - and the send rule runs first, so it drained the purse below
+	# what the build rule needed on every single pass and the maze stopped dead at
+	# that cell for the rest of the match. It is not specific to Cores: any plan
+	# entry dearer than the send floor starves behind it.
+	#
+	# Measured as a difficulty stalling twenty-nine towers into a forty-two tower
+	# plan and losing to the one below it, which built its whole maze.
+	var spendable: int = state.gold - maxi(
+		_floor(_profile.send_floor_gold), _saving_for()
+	)
 	if spendable <= 0:
 		return false
 
-	var best: SendCreepAbility = null
-	var best_sender: SendBuilding = null
-	var best_cost: int = 0
+	var offers: Array = _affordable_sends(spendable)
+	if offers.is_empty():
+		return false
+
+	var chosen: Array = _pick_send(offers)
+	AiHand.order_send(_slot, chosen[0] as SendBuilding, chosen[1] as SendCreepAbility)
+	_send_clock = 0.0
+	return true
+
+
+## Every send this player could press right now, as [sender, ability, cost,
+## income-per-gold] rows.
+##
+## `can_execute` is the SAME question the button greys itself on - the stock, the
+## start delay, the population cap and the gold - so asking it is what keeps the
+## AI from submitting orders that bounce.
+func _affordable_sends(spendable: int) -> Array:
+	var offers: Array = []
 	for sender in _senders():
-		if sender.send_tier > _profile.max_send_tier:
+		# **The cap does not apply to the SUDDEN DEATH sender**, or it silently
+		# stops the AI sending anything at all once tiers 1 to 3 are retired. See
+		# AiProfile.max_send_tier.
+		if !sender.is_sudden_death_tier && sender.send_tier > _profile.max_send_tier:
 			continue
 		for send in AiHand.sends_on(sender):
 			var cost: int = send.creep_stats.gold_cost
-			if cost > spendable || cost <= best_cost:
+			if cost <= 0 || cost > spendable || !send.can_execute(sender):
 				continue
-			# can_execute is the SAME question the button greys itself on: the
-			# stock, the start delay, the population cap and the gold. Asking it
-			# is what keeps the AI from submitting orders that bounce.
-			if !send.can_execute(sender):
-				continue
-			best = send
-			best_sender = sender
-			best_cost = cost
+			offers.append([
+				sender, send, cost,
+				float(send.creep_stats.income_gain) / float(cost),
+			])
+	return offers
 
-	if best == null:
-		return false
-	AiHand.order_send(_slot, best_sender, best)
-	_send_clock = 0.0
-	return true
+
+## Which of them to buy: the BIGGEST among those that are efficient enough.
+##
+## See AiProfile.send_efficiency for why it is neither the biggest nor the most
+## efficient outright - both were measured and both were wrong in opposite
+## directions.
+func _pick_send(offers: Array) -> Array:
+	var best_value: float = 0.0
+	for offer: Array in offers:
+		best_value = maxf(best_value, float(offer[3]))
+
+	var floor_value: float = best_value * clampf(_profile.send_efficiency, 0.0, 1.0)
+	var chosen: Array = offers[0]
+	var chosen_cost: int = -1
+	for offer: Array in offers:
+		if float(offer[3]) < floor_value || int(offer[2]) <= chosen_cost:
+			continue
+		chosen = offer
+		chosen_cost = int(offer[2])
+	return [chosen[0], chosen[1]]
 
 
 # --- lookups --------------------------------------------------------------

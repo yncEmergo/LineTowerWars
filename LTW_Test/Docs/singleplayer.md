@@ -148,8 +148,41 @@ The send beat is deliberately **not reset on a beat it could not afford**. Once 
 due the AI sends the moment it can pay, which turns an income tick into a send rather than
 into a wasted fifteen seconds.
 
-Measured after that change: a Normal opponent took its income from 20 to 63 in three minutes
-of match time, built a maze of 28 towers, sent 27 creeps and won.
+**Two more things had to change before the floors did what they say**, and both are written
+up with their measurements in
+[Findings/2026-09-12-tuning-the-opponent-ai.md](Findings/2026-09-12-tuning-the-opponent-ai.md):
+every rule now gets its turn each pass rather than the pass stopping at the first that spent
+(building is limited by the builder's WALK, so the maze rule was answering yes for
+twenty-five minutes and upgrades never fired), and the send rule may never take gold the maze
+is saving for its next tower.
+
+## 6a. What difficulty is NOT made of, measured
+
+Three things that look like difficulty levers and are not:
+
+**A LONGER MAZE.** The build rate is the binding constraint - about fifty towers in a full
+match - and a plan bigger than that is a corridor with the last rows missing. Every single
+matchup was won by the side whose maze was COMPLETE, five times in a row, including a 42-cell
+zigzag beating a 155-cell endgame blueprint. Every profile's plan is now sized under what it
+can finish.
+
+**A SHORTER SEND BEAT.** A longer beat saves up and buys a bigger creep, so the profile that
+sent most often earned least. `send_seconds` is now the same for every profile, because it
+turned out to be a stronger lever than any of the deliberate ones.
+
+**BUYING EFFICIENTLY.** The AI sends on a beat, so what it maximises is income per SEND rather
+than per gold - and an AI buying the most gold-efficient creep on a clock earns less and
+threatens nobody. Three matches of it ended with neither side losing a life.
+
+What difficulty IS made of, today: how much of the maze gets finished, whether it upgrades and
+how deeply, whether it takes an Ultimate at all, and the two honest handicaps at the easy end.
+
+**Read those three with suspicion.** All of them were measured before the worst bug in this
+AI was found - it crossed a cell off its plan when it ORDERED one, and a build is paid for
+when the builder ARRIVES, so every tower it could not afford on arrival was lost from the maze
+silently. Every match behind those conclusions was between two AIs with holes neither had put
+there. The ladder is monotonic on two seeds now; the conclusions have not been re-measured.
+See the findings, section 8.
 
 ## 7. Difficulty: where it comes from
 
@@ -188,10 +221,19 @@ rewrite - which is the point of the shape.
   early so everything behind it hits harder, Sludge spread so its slow covers every point.
   This wants a plan that names a ROLE per cell rather than a tower type, and a rule that reads
   what is walking
-- **It never uses elemental towers or discs.** The Elemental Core is on its build menu and the
-  upgrade walk would reach the whole roster, but nothing tells it which element to research or
-  which path to take. This is the single biggest gap: `game_rules.md` is clear that Basic
-  towers do not win matches, and a hard AI that never sells them is a hard AI that loses late
+- **It CAN use elemental towers and currently must not.** A profile names an Ultimate by
+  `tech_id` and a share of its maze aims at that tower; the AI takes the technology, builds
+  Elemental Cores and morphs them up the right branch. It then loses: a 200g Core is twenty
+  Basic towers, so it stops sending, never grows its income, and ends a thirty minute match
+  with ten towers. `elemental_share` therefore ships at ZERO.
+  **This is the single biggest gap and the most valuable thing to do next**, and what has to
+  come first is the economy below - an AI that sends when it can afford something worth
+  sending rather than on a clock. `game_rules.md` is clear that Basic towers do not win
+  matches
+- **It sends on a CLOCK rather than when it can afford something.** That one decision is
+  behind most of what is wrong above: it makes the beat a stronger difficulty lever than the
+  deliberate ones, makes buying efficiently a losing move, and caps the income that would pay
+  for elemental towers
 - **It never sells.** A real endgame maze has sold most of its Basic towers to pay for
   elemental ones
 - **It does not place discs in the holes of its maze**, which is where the expanded blueprint
@@ -217,7 +259,19 @@ rewrite - which is the point of the shape.
 above it, which is fine for a setting chosen on a screen and thrown away with the match, and
 is exactly why it must never be written into a save or onto the wire as an identity.
 
-## 10. Testing it
+## 10. The bench
+
+`.\Tools\run_ai_bench.ps1 -A Hard -B Normal -Minutes 30 -Seed 11` plays two profiles against
+each other headless, faster than real time, and prints a line per player. It is KEPT TOOLING
+rather than scaffolding, on the same terms as PerfBench: the question "is this difficulty
+actually harder than that one" is asked again every time a profile is retuned or the roster
+changes what a tower is worth, and there is no other way to ask it.
+
+Pass the same seed to compare two tunings. Pass different ones before believing either.
+
+Everything in section 6 and 6a was found with it, and none of it was visible in a log.
+
+## 11. Testing a change
 
 `Scripts/Dev/OpeningProbe.gd` is scaffolding and is meant to be deleted, but the shape is
 worth repeating: a scene that parks a `MatchSetup` in `MenuNavigation.pending_match`, instances

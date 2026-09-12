@@ -212,3 +212,15 @@ static func order_send(slot: int, sender: SendBuilding, ability: SendCreepAbilit
 ## to this one line.
 static func order_random_ultimate(slot: int) -> void:
 	Commands.submit_player_action_for(slot, Command.PlayerAction.RANDOM_ULTIMATE)
+
+
+## Spends it on ONE NAMED Ultimate: the same press the Show Ultimates row of the
+## Research Center makes, named by the PATH technology that leads to the tower.
+##
+## The rules are TechManager's and refuse it exactly as they refuse a player's -
+## it is only offered while the free allowance still covers the whole set, which
+## at the start of a match it does.
+static func order_ultimate(slot: int, tech_id: int) -> void:
+	Commands.submit_player_action_for(
+		slot, Command.PlayerAction.CHOOSE_ULTIMATE, tech_id
+	)

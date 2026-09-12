@@ -1,8 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://Scripts/Dev/OpeningProbe.gd" id="1_probe"]
-[ext_resource type="PackedScene" path="res://Scenes/Main.tscn" id="2_main"]
-
-[node name="OpeningProbe" type="Node"]
-script = ExtResource("1_probe")
-_game_scene = ExtResource("2_main")

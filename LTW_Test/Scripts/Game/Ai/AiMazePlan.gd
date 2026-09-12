@@ -77,7 +77,55 @@ static func for_profile(profile: AiProfile, area: PlayerArea) -> AiMazePlan:
 	else:
 		plan._generate_zigzag(profile, area)
 	plan._sort_front_to_back()
+	plan._aim_at_ultimate(profile)
 	return plan
+
+
+## Points a share of the plan at the profile's Ultimate rather than at a Basic
+## tower.
+##
+## **Basic towers do not win matches** (game_rules.md), so a maze made only of
+## them is a maze that loses late however long it is. What a cell TARGETS is
+## what the brain upgrades it towards, and a target up an elemental branch
+## resolves back down to the Elemental Core when it is built - so one field here
+## is the whole of "this AI ends up with elemental towers".
+##
+## Spread EVENLY through the plan rather than taken off the front, because the
+## plan is in build order: taking the first third would put every elemental
+## tower at the top of the lane and leave the rest of it Basic for ever. Every
+## Nth cell instead, so the maze improves all over as it grows.
+##
+## It is deliberately crude. It says how MUCH of the maze goes elemental and
+## nothing at all about WHERE, which is the thing a real opponent decides - a
+## Warden at the front, Sludge spread so its slow covers everything. That wants
+## a plan that names a ROLE per cell, which is the next thing to build here.
+func _aim_at_ultimate(profile: AiProfile) -> void:
+	if profile.elemental_share <= 0.0 || _entries.is_empty():
+		return
+
+	var session: MatchSession = References.match_session
+	if session == null:
+		return
+	var tower: BuildingStats = profile.ultimate_tower(session.techs())
+	if tower == null:
+		return
+
+	# One in every `stride`, so a share of 0.25 aims every fourth cell.
+	var stride: int = maxi(1, int(round(1.0 / clampf(profile.elemental_share, 0.05, 1.0))))
+	# **NOT from the first cell, and this is the difference between an AI that
+	# gets there and one that deadlocks.** See AiProfile.elemental_after_towers,
+	# which is where the measurement is written down.
+	var opening: int = maxi(0, profile.elemental_after_towers)
+	var aimed: int = 0
+	for index in range(_entries.size()):
+		if index < opening || (index - opening) % stride != 0:
+			continue
+		_entries[index].target_type_id = tower.unit_type_id
+		aimed += 1
+
+	Log.info("AI maze aims at an Ultimate", {
+		"tower": tower.display_name, "cells": aimed, "of": _entries.size(),
+	})
 
 
 ## A saved maze, read straight off the file. Nothing is checked here: every cell

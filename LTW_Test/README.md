@@ -387,6 +387,19 @@ built with cheats on gets a rejection line rather than gold. Turn the second fla
 deliberately, on the server, when a headless two-client run needs the same shortcuts a single
 player run gets — and turn it off again. `multiplayer.md` has the reasoning.
 
+**An AI match**, for the question of whether one difficulty is really harder than another:
+
+```powershell
+.\Tools\run_ai_bench.ps1 -A Hard -B Normal -Minutes 30 -Seed 11
+```
+
+It plays a real match with every seat taken by a computer opponent, headless and far faster
+than real time - thirty minutes of play in about a hundred seconds - and prints a line per
+player. A profile is a dozen numbers and what they add up to is a match rather than a sum, so
+this is the only honest way to ask. Six things wrong with the first AI were found with it and
+none of them was visible in a log; see
+[Findings/2026-09-12-tuning-the-opponent-ai.md](Docs/Findings/2026-09-12-tuning-the-opponent-ai.md).
+
 **A load test**, for the question of what a full match costs to run:
 
 ```powershell
