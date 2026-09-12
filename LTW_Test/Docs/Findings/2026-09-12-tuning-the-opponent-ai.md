@@ -100,23 +100,27 @@ it orders at once - rather than length. And the plan stopped being a QUEUE: it i
 a set of cells, walked for the cheapest one that can be afforded, so a single
 expensive entry can no longer block every cheap cell behind it.
 
-## 7. Elemental towers are a net loss at this AI's economy
+## 7. Elemental towers looked like a net loss, and were not
 
 Aiming a share of the maze at an Ultimate works - the AI takes the technology,
-builds Elemental Cores and morphs them up the right branch - and it LOSES.
+builds Elemental Cores and morphs them up the right branch - and measured as a
+clear LOSS: an AI buying 200g Cores stopped sending, never grew its income, and
+ended a thirty minute match with ten towers and no income at all.
 
-A 200g Core is twenty Basic towers. An AI buying them stops sending, so its
-income never grows, so it never affords more, and it ends a thirty minute match
-with ten towers and no income at all. Two different starvation bugs were fixed
-along the way (the send rule draining the gold the maze was saving, and then the
-maze saving so hard it never sent) and it still lost.
+**That reading was wrong, and finding 8 is why.** Re-tested after it was fixed,
+with nothing else changed, elemental towers are worth a tier: Insane's margin
+over Hard went from 122-78 to 188-12.
 
-**So `elemental_share` ships at zero.** The mechanism is built and is one number
-away; what has to come first is an economy strong enough to pay for it, which
-means an AI that sends properly rather than on a clock. This is the single most
-valuable thing to do next - `game_rules.md` is clear that Basic towers do not win
-matches, and a hard opponent that never leaves them is a hard opponent that
-loses late to anybody who does.
+They are still not free. The share has to be small and has to start after the
+cheap wall is up, because a 200g Core is twenty Basic towers - Hard at a quarter
+of its maze went from beating Normal to drawing with it, and only settled down at
+0.15 starting past the twenty-second cell. But they are ON, and they are what
+separates the top of the ladder from the middle.
+
+**The lesson is not about elemental towers.** It is that a conclusion measured
+over a broken simulation is worth nothing, however many runs went into it - and
+that the cheapest way to find that out is to re-run the matrix after every fix
+rather than to reason about which conclusions survived.
 
 ## 8. An ORDER IS NOT A TOWER - and this one invalidates some of the above
 
@@ -143,29 +147,30 @@ Hard beats Normal 127-73, Insane beats Hard 122-78, Insane beats Easy 200-0.
 
 ### What that means for findings 5 and 6
 
-**They were measured with this bug present and should be re-tested.** Every one of
-those matches was between two AIs with holes in their mazes that neither of them
-had put there, so:
+**They were measured with this bug present and have NOT all been re-tested.**
+Every one of those matches was between two AIs with holes in their mazes that
+neither of them had put there. Finding 7 was re-run and reversed completely;
+5 and 6 were not, so:
 
 - "a plan bigger than the AI can finish is a hole" is still true as a statement
-  about build rate, but the build rate it was measured against was wrong - the
-  plans may safely be much longer than the current profiles use
-- "income per gold is the wrong metric" may have been an artifact: an AI whose
-  maze is full of holes leaks whatever it is sent, so nothing it bought could
+  about build rate, but the rate it was measured against was wrong - the plans
+  may safely be longer than the current profiles use
+- "income per gold is the wrong metric" may be an artifact: an AI whose maze is
+  losing cells for free leaks whatever it is sent, so nothing it bought could
   have looked good
-- the same goes for elemental towers in finding 7. A 200g Core is still twenty
-  Basic towers, but it was competing against a maze that was losing cells for
-  free
 
-So the sensible next step is not a new feature - it is to run the matrix again,
-one variable at a time, now that the thing being measured is the thing that was
-meant to be measured. That is what the bench is for.
+Re-run those two one variable at a time before building anything new. That is
+what the bench is for, and finding 7 is what it is worth.
 
 ## Where it ended up
 
-A monotonic ladder on two seeds, decisive against Easy, with every profile on a
-maze it completes, no elemental towers, and a send rule on a fixed clock.
+Easy and Insane are clearly apart from the rest and decisive - Normal beats Easy
+200-0, Insane beats Hard by better than ten to one. **Normal and Hard are close**:
+across three seeds Hard won two, none of them decisively, and neither eliminated
+the other inside thirty minutes. That is "slightly better" rather than a tier, and
+it is the honest state to hand over.
 
 Re-run it with `.\Tools\run_ai_bench.ps1 -A Hard -B Normal -Minutes 30 -Seed 11`.
-Pass the same seed to compare two tunings; pass different ones before believing
-either. **And re-read section 8 before trusting anything in 5, 6 or 7.**
+un_ai_bench.ps1 -A Hard -B Normal -Minutes 30 -Seed 11`.
+Pass the same seed to compare two tunings; pass several before believing either.
+**And re-read section 8 before trusting anything in 5 or 6.**

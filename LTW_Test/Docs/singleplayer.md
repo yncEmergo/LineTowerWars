@@ -221,15 +221,15 @@ rewrite - which is the point of the shape.
   early so everything behind it hits harder, Sludge spread so its slow covers every point.
   This wants a plan that names a ROLE per cell rather than a tower type, and a rule that reads
   what is walking
-- **It CAN use elemental towers and currently must not.** A profile names an Ultimate by
-  `tech_id` and a share of its maze aims at that tower; the AI takes the technology, builds
-  Elemental Cores and morphs them up the right branch. It then loses: a 200g Core is twenty
-  Basic towers, so it stops sending, never grows its income, and ends a thirty minute match
-  with ten towers. `elemental_share` therefore ships at ZERO.
-  **This is the single biggest gap and the most valuable thing to do next**, and what has to
-  come first is the economy below - an AI that sends when it can afford something worth
-  sending rather than on a clock. `game_rules.md` is clear that Basic towers do not win
-  matches
+- **It uses elemental towers CRUDELY.** A profile names an Ultimate by `tech_id` and a share
+  of its maze aims at that tower; the AI takes the technology, builds Elemental Cores and
+  morphs them up the right branch. It is worth a tier - Insane's margin over Hard went from
+  122-78 to 188-12 when it was switched on. What it does not do is decide WHICH tower goes
+  WHERE, which is the thing a real opponent decides: a Warden at the front against Mountain
+  Giants, Divine Shroom and Hurricane spread against flyers, Orb Keeper at the start for
+  percentage damage, armour reduction early so everything behind it hits harder, Sludge spread
+  so its slow covers every point. That wants a plan naming a ROLE per cell rather than a share
+  of them, and it is the biggest remaining gap
 - **It sends on a CLOCK rather than when it can afford something.** That one decision is
   behind most of what is wrong above: it makes the beat a stronger difficulty lever than the
   deliberate ones, makes buying efficiently a losing move, and caps the income that would pay
