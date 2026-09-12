@@ -115,6 +115,22 @@ func _ready() -> void:
 	else:
 		Log.err("Main found no StartingTech on References, the technology mode does nothing")
 
+	# After the areas, the builders and the opening, because a brain measures its
+	# maze against the grid and gives its first order to a builder. A match with no
+	# AI seat in it makes no brains and pays nothing.
+	if References.ai_director != null:
+		References.ai_director.begin(setup)
+	elif setup.has_ai():
+		Log.err("This match has AI seats and no AiDirector, they will never play")
+
+	# Last of the three, because the first lesson hands the player gold and puts a
+	# plan on the ground - both of which want a world that is finished. Does
+	# nothing at all unless the match says it is a TUTORIAL.
+	if References.tutorial_director != null:
+		References.tutorial_director.begin(setup)
+	elif setup.mode == MatchSetup.Mode.TUTORIAL:
+		Log.err("This is a tutorial match with no TutorialDirector, it teaches nothing")
+
 	var local_builder: Builder = _find_builder(builders, setup.local_slot)
 	if local_builder != null && References.rts_camera != null:
 		References.rts_camera.center_on(local_builder.global_position)
@@ -125,6 +141,7 @@ func _ready() -> void:
 		"seed": setup.rng_seed,
 		"starting_lives": setup.settings.lives_for(setup.player_count(), config),
 		"settings": setup.settings.describe(),
+		"ai_slots": setup.ai_slots(),
 	})
 
 	# 2.5: every machine built this world from the same setup, and this is how

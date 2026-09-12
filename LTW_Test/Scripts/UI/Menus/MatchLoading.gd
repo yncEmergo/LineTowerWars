@@ -27,8 +27,20 @@ extends Control
 ## warming afterwards would race the match start against the loading it exists to
 ## get out of the way.
 ##
-## It owns no state of its own. Who is in the match and who has loaded both
-## come off the `MatchStart` autoload, which outlives this scene and the next.
+## **It also loads an OFFLINE match** - single player, and the tutorial - and
+## that is the one branch in it. There is no handshake and nobody else to wait
+## for, so the roster arrives parked on `MenuNavigation` instead of on the
+## `MatchStart` autoload, and the screen goes straight into the world once it is
+## warm rather than reporting itself ready and waiting.
+##
+## Sharing the screen rather than skipping it is deliberate: WARMING is the
+## slower half of what happens here and it matters just as much alone. A single
+## player match that skipped it would pay for the first of everything the first
+## time it appeared, in the middle of play - which is the exact freeze
+## Findings/2026-09-06-playtest-1-freezes.md is about.
+##
+## Who is in the match and who has loaded otherwise come off the `MatchStart`
+## autoload, which outlives this scene and the next.
 
 @export_group("References")
 @export var _title_label: Label
@@ -54,6 +66,9 @@ extends Control
 @export var _slot_scene: PackedScene
 
 var _setup: MatchSetup = null
+## Whether this is an offline match, which is the one thing that changes what
+## happens when the warm-up finishes. See _report_loaded.
+var _offline: bool = false
 ## Non-null only while warming, which is also what tells _process which of its
 ## two jobs it is doing.
 var _warmer: ContentWarmer = null
@@ -70,7 +85,13 @@ var _config: MenuConfig:
 
 func _ready() -> void:
 	set_process(false)
-	_setup = MatchStart.setup()
+	# The offline roster is taken FIRST and put straight back, because the game
+	# scene is what really consumes it: this screen only needs to know it is
+	# there. See MenuNavigation.take_pending_match.
+	_setup = MenuNavigation.pending_match
+	_offline = _setup != null
+	if !_offline:
+		_setup = MatchStart.setup()
 	if _setup == null:
 		# Reachable by running this scene on its own from the editor. There is
 		# nothing to load and nothing to wait for, so it says so and leaves.
@@ -78,14 +99,15 @@ func _ready() -> void:
 		MenuNavigation.to_lobby_browser(self)
 		return
 
-	MatchStart.readiness_changed.connect(_on_readiness_changed)
-	MatchStart.match_cancelled.connect(_on_match_cancelled)
-	Net.disconnected_from_server.connect(_on_server_disconnected)
+	if !_offline:
+		MatchStart.readiness_changed.connect(_on_readiness_changed)
+		MatchStart.match_cancelled.connect(_on_match_cancelled)
+		Net.disconnected_from_server.connect(_on_server_disconnected)
 
 	if _title_label != null:
 		_title_label.text = "Loading Match"
 	if _subtitle_label != null:
-		_subtitle_label.text = "Free for all  -  %d players" % _setup.player_count()
+		_subtitle_label.text = _describe_match()
 
 	_build_rows()
 	_set_progress(0.0)
@@ -200,12 +222,50 @@ func _advance_warming() -> void:
 
 
 ## The one place this screen says it is ready, whatever happened on the way.
+##
+## OFFLINE there is nobody to say it to: the roster is final, the scene is
+## loaded, the content is warm, and the only thing left is to build the world.
+## So it goes, rather than reporting and waiting for a handshake that has no
+## other end.
 func _report_loaded(warm_report: Dictionary) -> void:
 	_set_progress(1.0)
 	SessionLog.note("match.warmed", warm_report)
+	if _offline:
+		_set_status("Ready.")
+		_begin_offline_match()
+		return
+
 	MatchStart.report_loaded()
 	_set_status("Ready. Waiting for the other players...")
 	_build_rows()
+
+
+## Into the world, with the roster this screen was handed.
+##
+## Deferred by one frame so the "Ready" above is actually drawn: everything on
+## this screen happens inside `_process`, and changing scene from inside it
+## would swap the scene before the frame it belongs to is presented.
+func _begin_offline_match() -> void:
+	_start_offline.call_deferred()
+
+
+func _start_offline() -> void:
+	MenuNavigation.to_game(self, _setup)
+
+
+## What this match is, for the line under the title. Says who is in it rather
+## than only how many, because in a single player match that is the interesting
+## half - three opponents at three difficulties is a different game from three
+## at one.
+func _describe_match() -> String:
+	var people: int = 0
+	for player in _setup.players:
+		if player != null && !player.is_ai():
+			people += 1
+	var ai: int = _setup.player_count() - people
+	if ai <= 0:
+		return "Free for all  -  %d players" % _setup.player_count()
+	return "Free for all  -  %d players, %d of them AI" % [_setup.player_count(), ai]
 
 
 # --- the other players ----------------------------------------------------
@@ -223,7 +283,9 @@ func _build_rows() -> void:
 		_slot_list.remove_child(child)
 		child.queue_free()
 
-	var ready_ids: PackedInt32Array = MatchStart.ready_ids()
+	var ready_ids: PackedInt32Array = PackedInt32Array()
+	if !_offline:
+		ready_ids = MatchStart.ready_ids()
 	for player in _setup.players:
 		if player == null:
 			continue
@@ -238,10 +300,20 @@ func _build_rows() -> void:
 func _fill_row(slot: LobbySlot, player: MatchPlayer, is_loaded: bool) -> void:
 	# Two client windows on one machine look identical, so say which is which.
 	var label: String = player.display_name
-	var is_local: bool = player.network_id == Net.peer_id()
+	var is_local: bool = _is_local_row(player)
 	if is_local:
 		label += "  (you)"
-	slot.show_status(player.slot, label, "Ready" if is_loaded else "Loading...", is_local)
+	# Nothing OFFLINE is waiting on anybody: there is one machine, and it is this
+	# one. A row that said "Loading..." next to a computer opponent would be
+	# describing a handshake that does not exist.
+	var state: String = "Ready" if (_offline || is_loaded) else "Loading..."
+	slot.show_status(player.slot, label, state, is_local)
+
+
+func _is_local_row(player: MatchPlayer) -> bool:
+	if _offline:
+		return player.slot == _setup.local_slot
+	return player.network_id == Net.peer_id()
 
 
 # --- the ways this screen ends other than by starting ---------------------

@@ -63,6 +63,9 @@ extends PanelContainer
 var _settings: MatchSettings = MatchSettings.new()
 var _player_count: int = 1
 var _editable: bool = false
+## Whether this panel is driving a match on THIS machine rather than a lobby.
+## The one branch between the two; see show_local.
+var _local: bool = false
 ## True while the controls are being filled in from the server's answer, so
 ## writing a value into a SpinBox does not read back as the host typing it.
 var _applying: bool = false
@@ -90,12 +93,41 @@ func _ready() -> void:
 func show_lobby(lobby: LobbyInfo, is_host: bool) -> void:
 	if lobby == null:
 		return
+	_local = false
 	_settings = lobby.settings
 	_player_count = maxi(1, lobby.player_count())
 	# Locked for everybody once the countdown starts: the rules become final at
 	# the same moment the roster does, and the server refuses a change from
 	# then on. See LobbyService.request_settings.
 	_editable = is_host && !lobby.is_starting && !lobby.is_in_progress
+	_redraw()
+
+
+## The same panel, for a match with no lobby behind it: single player.
+##
+## The player is always the host of their own game, so every control is live and
+## the ranked lock is the only thing that can grey one - which is right, and is
+## the one place a skirmish is deliberately the same as a ranked lobby: a match
+## played on the defaults is comparable with any other, whoever it was against.
+##
+## The settings are held BY REFERENCE here rather than copied, because there is
+## no round trip to bring an answer back: the caller hands the block it is going
+## to start the match with, and edits land on it. What keeps that honest is
+## sanitise(), which is run on every edit exactly as the server runs it.
+func show_local(settings: MatchSettings, player_count: int) -> void:
+	if settings == null:
+		return
+	_local = true
+	_settings = settings
+	_player_count = maxi(1, player_count)
+	_editable = true
+	_redraw()
+
+
+## Redraws the reading that moves on its own - the automatic life total follows
+## the player count - without touching anything the caller has set.
+func set_player_count(player_count: int) -> void:
+	_player_count = maxi(1, player_count)
 	_redraw()
 
 
@@ -178,7 +210,23 @@ func _draw_editability() -> void:
 func _send() -> void:
 	if _applying || !_editable:
 		return
+	if _local:
+		_apply_local(_gather())
+		return
 	Lobby.set_settings(_gather())
+
+
+## An edit in a LOCAL match: clamped here, drawn back, and announced.
+##
+## sanitise() is the SERVER's own call, run on the same block for the same
+## reason - a value out of range is refused rather than quietly played with -
+## so what a player reads back after typing something silly is identical to
+## what a lobby would have shown them.
+func _apply_local(wanted: MatchSettings) -> void:
+	wanted.sanitise(_config, _limits)
+	_settings = wanted
+	_redraw()
+	settings_changed.emit(_settings)
 
 
 ## The settings the controls currently describe, as a copy. A copy because the
@@ -221,6 +269,9 @@ func _on_lives_changed(value: float) -> void:
 		return
 	var settings: MatchSettings = _gather()
 	settings.lives_per_player = int(value)
+	if _local:
+		_apply_local(settings)
+		return
 	Lobby.set_settings(settings)
 
 
@@ -235,6 +286,9 @@ func _on_defaults_pressed() -> void:
 	settings.is_ranked = _settings.is_ranked
 	settings.cheats_enabled = _settings.cheats_enabled
 	settings.tech_mode = _settings.tech_mode
+	if _local:
+		_apply_local(settings)
+		return
 	Lobby.set_settings(settings)
 
 

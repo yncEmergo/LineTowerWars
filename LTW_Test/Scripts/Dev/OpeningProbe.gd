@@ -41,6 +41,15 @@ func _ready() -> void:
 			setup.settings.tech_mode = MatchSettings.TechMode.RANDOM
 		"draft":
 			setup.settings.tech_mode = MatchSettings.TechMode.DRAFT
+		"skirmish":
+			setup.mode = MatchSetup.Mode.SKIRMISH
+			setup.settings.tech_mode = MatchSettings.TechMode.PICK
+			var difficulty: int = int(_argument("--difficulty", "1"))
+			setup.players[1].ai_difficulty = difficulty
+			setup.players[1].display_name = "AI %d" % difficulty
+		"tutorial":
+			var ai: AiConfig = load("res://Resources/Config/ai_config.tres") as AiConfig
+			setup = TutorialSetup.create(config, ai)
 		_:
 			setup.settings.tech_mode = MatchSettings.TechMode.PICK
 
@@ -67,6 +76,10 @@ func _physics_process(_delta: float) -> void:
 
 	if _mode == "end":
 		_drive_end()
+	if _mode == "skirmish" && _frames % 100 == 0:
+		_report_ai()
+	if _mode == "tutorial" && _frames % 40 == 0:
+		_report_tutorial()
 	if _frames > int(_argument("--frames", "400")):
 		_report()
 		get_tree().quit()
@@ -135,3 +148,43 @@ func _argument(flag: String, fallback: String) -> String:
 		if args[index] == flag:
 			return args[index + 1]
 	return fallback
+
+
+## What the computer opponents have actually managed, which is the only thing
+## that says whether the brain is running at all. A silent AI and a broken one
+## look identical from outside.
+func _report_ai() -> void:
+	var manager: PlayerManager = References.player_manager
+	var stats: MatchStats = References.match_stats
+	var director: AiDirector = References.ai_director
+	if manager == null || stats == null:
+		return
+	for slot in [1, 2]:
+		var state: PlayerState = manager.state_for(slot)
+		var line: MatchStatLine = stats.line_for(slot)
+		if state == null || line == null:
+			continue
+		print("PROBE ai t=%d slot=%d gold=%d income=%d lives=%d towers=%d up=%d sent=%d brains=%d" % [
+			_frames, slot, state.gold, state.income, state.lives,
+			line.towers_built, line.towers_upgraded, line.sends,
+			0 if director == null else director.count(),
+		])
+
+
+func _report_tutorial() -> void:
+	var director: TutorialDirector = References.tutorial_director
+	if director == null:
+		print("PROBE tutorial NO DIRECTOR")
+		return
+	var step: TutorialStep = director.current_step()
+	print("PROBE tutorial t=%d running=%s lesson=%d/%d title=%s skippable=%s" % [
+		_frames, director.is_running(), director.lesson_number(),
+		director.lesson_count(), "-" if step == null else step.title,
+		director.may_skip(),
+	])
+	# Drives itself past every lesson it can, so one run walks the whole script:
+	# a read lesson is acknowledged and anything else is skipped once it offers.
+	if step is TutorialReadStep:
+		director.acknowledge()
+	elif director.may_skip():
+		director.skip()

@@ -99,6 +99,28 @@ func show_slot(slot: int) -> void:
 		Log.warn("There is no blueprint in that slot to show", {"slot": slot})
 		return
 
+	_show(slot, plan)
+	Log.info("Blueprint shown", {"slot": slot, "towers": plan.entry_count()})
+
+
+## The same drawing, for a plan that is not in one of the player's slots.
+##
+## The TUTORIAL is the caller, and it needs this rather than a slot for a reason
+## worth stating: a slot is the PLAYER's, and a player who has saved their own
+## maze into slot one would be shown that maze by a lesson meaning to show them
+## the one it is teaching. A lesson names its own file instead.
+##
+## Slot 0 while it is up, so the builder's own card draws none of its squares as
+## lit - which is right: nothing the player chose is on screen.
+func show_layout(plan: TowerLayout) -> void:
+	if plan == null || plan.entry_count() <= 0:
+		return
+	_show(0, plan)
+	Log.info("Blueprint shown from a file", {"towers": plan.entry_count()})
+
+
+## Puts a plan on the ground, whichever road it arrived by.
+func _show(slot: int, plan: TowerLayout) -> void:
 	_slot = slot
 	_plan = plan
 	_squares.clear()
@@ -107,12 +129,14 @@ func show_slot(slot: int) -> void:
 	# Laid out and hidden in the same call, so the plan is on the ground -
 	# already minus whatever is standing - in the frame the button was pressed.
 	_refresh()
-	Log.info("Blueprint shown", {"slot": slot, "towers": plan.entry_count()})
 
 
 ## Takes the plan away. Safe to call with nothing up.
 func hide_blueprint() -> void:
-	if _slot == 0:
+	# **The PLAN rather than the slot decides whether anything is up**, because a
+	# plan shown from a file has no slot - see show_layout. Testing the slot left
+	# the tutorial unable to take its own blueprint off the ground.
+	if _plan == null:
 		return
 	Log.info("Blueprint hidden", {"slot": _slot})
 	_slot = 0
@@ -138,7 +162,7 @@ func toggle_slot(slot: int) -> void:
 
 
 func is_showing() -> bool:
-	return _slot != 0
+	return _plan != null
 
 
 ## Which slot is up, or 0 for none. What a card square reads to light itself.
@@ -170,15 +194,22 @@ func _refresh() -> void:
 	if _plan == null || area == null:
 		return
 
-	# A slot saved over while it is on screen is a different plan behind the
-	# same number, so its squares have to be laid out again from scratch.
-	var current: TowerLayout = BlueprintLibrary.layout(_slot)
-	if current != _plan:
-		_plan = current
-		_squares.clear()
-		if _plan == null:
-			hide_blueprint()
-			return
+	# A SLOT saved over while it is on screen is a different plan behind the same
+	# number, so its squares have to be laid out again from scratch.
+	#
+	# **Only a slot**, and the guard is load-bearing: a plan shown from a FILE has
+	# no slot (see show_layout), so asking the library for slot 0 hands back null
+	# and the plan was wiped on the first beat after it appeared - the tutorial's
+	# blueprint drew for a quarter of a second and vanished, silently, because
+	# hide_blueprint then found nothing left to report.
+	if _slot != 0:
+		var current: TowerLayout = BlueprintLibrary.layout(_slot)
+		if current != _plan:
+			_plan = current
+			_squares.clear()
+			if _plan == null:
+				hide_blueprint()
+				return
 
 	if _squares.is_empty():
 		_lay_out(area)

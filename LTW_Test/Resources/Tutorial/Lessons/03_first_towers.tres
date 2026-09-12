@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialBuildStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialBuildStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Build three towers"
+body = "Open Build on the builder's card and place a tower on each of the three blue squares at the top of your lane.\n\nThe blue squares are a BLUEPRINT: a saved plan drawn on the ground. They are a note to yourself and nothing more - they order nothing, and each one disappears as soon as something is built on it."
+objective = "Build a tower on each of the three marked cells."
+pauses_world = false
+skip_after_seconds = 60.0
+grant_gold = 60
+grant_income = 0
+blueprint_path = "res://Resources/Tutorial/tutorial_maze_first.tres"
+unlocks_creeps = false
+highlight_key = &"unit_panel"
+spotlight = 0
+towers = 3

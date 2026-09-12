@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="TutorialScript" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialScript.gd" id="1_script"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialStep.gd" id="2_step"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_welcome.tres" id="3_01_welcome"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_builder.tres" id="4_02_builder"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_first_towers.tres" id="5_03_first_towers"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_maze_idea.tres" id="6_04_maze_idea"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_build_maze.tres" id="7_05_build_maze"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_upgrades.tres" id="8_06_upgrades"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_creeps.tres" id="9_07_creeps"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_ring.tres" id="10_08_ring"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_sending.tres" id="11_09_sending"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_income.tres" id="12_10_income"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_defend.tres" id="13_11_defend"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_technology.tres" id="14_12_technology"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_elementals.tres" id="15_13_elementals"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_discs.tres" id="16_14_discs"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_done.tres" id="17_15_done"]
+
+[resource]
+script = ExtResource("1_script")
+steps = Array[ExtResource("2_step")]([ExtResource("3_01_welcome"), ExtResource("4_02_builder"), ExtResource("5_03_first_towers"), ExtResource("6_04_maze_idea"), ExtResource("7_05_build_maze"), ExtResource("8_06_upgrades"), ExtResource("9_07_creeps"), ExtResource("10_08_ring"), ExtResource("11_09_sending"), ExtResource("12_10_income"), ExtResource("13_11_defend"), ExtResource("14_12_technology"), ExtResource("15_13_elementals"), ExtResource("16_14_discs"), ExtResource("17_15_done")])

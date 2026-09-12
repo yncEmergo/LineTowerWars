@@ -3,9 +3,14 @@ extends Control
 
 ## The screen the game boots into.
 ##
-## Three ways out: straight into the prototype test scene, into the lobby
-## browser, or out of the game entirely. Nothing here knows anything about
-## networking - "Multiplayer" is a scene change like any other.
+## The ways out are the game modes and nothing else: the tutorial, a match
+## against computer opponents, a match against people, and the way out of the
+## game entirely. Nothing here knows anything about networking or about AI -
+## every one of them is a scene change like any other.
+##
+## The test scene is still reachable and is still not a game mode: it opens the
+## match scene with no setup in front of it, which stands a single player one in
+## from GameConfig. It is how the prototype is iterated on and it says so.
 ##
 ## The title comes off MenuConfig rather than being typed into the scene, because
 ## the game has no name yet and there will be more than one screen showing it.
@@ -15,7 +20,11 @@ extends Control
 @export_group("References")
 @export var _title_label: Label
 @export var _version_label: Label
+## Opens the match scene with no setup at all, which stands in a one player
+## match from GameConfig. A development shortcut rather than a mode.
 @export var _play_button: Button
+@export var _tutorial_button: Button
+@export var _singleplayer_button: Button
 @export var _multiplayer_button: Button
 @export var _options_button: Button
 @export var _quit_button: Button
@@ -43,7 +52,12 @@ func _ready() -> void:
 
 	_connect_buttons()
 
-	if _play_button != null:
+	# The first thing a new player should press, and the first thing a returning
+	# one skips past. Focus starts here rather than on the development shortcut
+	# above it.
+	if _tutorial_button != null:
+		_tutorial_button.grab_focus()
+	elif _play_button != null:
 		_play_button.grab_focus()
 
 
@@ -71,6 +85,10 @@ func _build_label() -> String:
 func _connect_buttons() -> void:
 	if _play_button != null:
 		_play_button.pressed.connect(_on_play_pressed)
+	if _tutorial_button != null:
+		_tutorial_button.pressed.connect(_on_tutorial_pressed)
+	if _singleplayer_button != null:
+		_singleplayer_button.pressed.connect(_on_singleplayer_pressed)
 	if _multiplayer_button != null:
 		_multiplayer_button.pressed.connect(_on_multiplayer_pressed)
 	if _quit_button != null:
@@ -99,6 +117,23 @@ func _on_options_closed() -> void:
 
 func _on_play_pressed() -> void:
 	MenuNavigation.to_game(self)
+
+
+## Straight into the teaching match. It has one shape and one roster, so there
+## is nothing to set up first - see TutorialSetup.
+##
+## Down the SAME road a single player match takes: through the loading screen,
+## which warms every unit, model and sound the match can spawn before the world
+## is built. A tutorial that skipped that would freeze the first time it put a
+## creep in front of somebody being taught what a creep is.
+func _on_tutorial_pressed() -> void:
+	MenuNavigation.to_match_loading(
+		self, TutorialSetup.create(References.game_config, References.ai_config)
+	)
+
+
+func _on_singleplayer_pressed() -> void:
+	MenuNavigation.to_skirmish_setup(self)
 
 
 func _on_multiplayer_pressed() -> void:

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "What a maze is for"
+body = "A tower only earns its gold while something is inside its range. A straight run down an empty lane gives every tower one short look at each creep.\n\nSo you do not build a wall - you build a MAZE. Towers lengthen the path, the creep spends longer walking past the same towers, and the same gold kills far more. That is the whole game.\n\nOne rule you cannot break: a creep must always have a way through. The game refuses any tower that would seal your lane completely."
+objective = ""
+pauses_world = true
+skip_after_seconds = 8.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

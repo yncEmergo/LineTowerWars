@@ -34,6 +34,13 @@ static func to_main_menu(from: Node) -> void:
 		_change_scene(from, config.main_menu_scene_path)
 
 
+## Setting a single player match up: how many computer opponents and how hard.
+static func to_skirmish_setup(from: Node) -> void:
+	var config: MenuConfig = _config()
+	if config != null:
+		_change_scene(from, config.skirmish_setup_scene_path)
+
+
 static func to_lobby_browser(from: Node) -> void:
 	pending_lobby = null
 	var config: MenuConfig = _config()
@@ -49,9 +56,16 @@ static func to_lobby_room(from: Node, lobby: LobbyInfo) -> void:
 
 
 ## The screen shown between the start handshake and the match: the threaded
-## load of the game scene, and who is still loading it. It reads what it needs
-## off the `MatchStart` autoload, so there is nothing to hand over.
-static func to_match_loading(from: Node) -> void:
+## load of the game scene, and who is still loading it.
+##
+## A NETWORKED match hands nothing over: the roster is on the `MatchStart`
+## autoload, which outlives the scene change, and the screen reads it from
+## there. An OFFLINE one - single player, the tutorial - has no handshake and no
+## autoload holding anything, so it parks its setup here the way the game scene
+## is handed one, and the loading screen takes that road instead. See
+## MatchLoading.
+static func to_match_loading(from: Node, setup: MatchSetup = null) -> void:
+	pending_match = setup
 	var config: MenuConfig = _config()
 	if config != null:
 		_change_scene(from, config.match_loading_scene_path)

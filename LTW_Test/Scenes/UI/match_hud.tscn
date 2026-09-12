@@ -21,6 +21,9 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_end_panel.tscn" id="17_match_end"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tech_reveal_panel.tscn" id="17_reveal"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_spotlight.tscn" id="20_spotlight"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_pointer.tscn" id="21_pointer"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_panel.tscn" id="22_tutorial"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
@@ -53,6 +56,10 @@ border_color = Color(0.29, 0.31, 0.38, 1)
 corner_radius_bottom_left = 4
 
 [node name="MatchHUD" type="CanvasLayer" unique_id=1200918478]
+
+[node name="TutorialSpotlight" parent="." instance=ExtResource("20_spotlight")]
+process_mode = 3
+visible = false
 
 [node name="SelectionBox" type="Control" parent="." unique_id=478782438]
 layout_mode = 3
@@ -253,6 +260,16 @@ visible = false
 [node name="MatchEndPanel" parent="." node_paths=PackedStringArray("_corner_panel") instance=ExtResource("17_match_end")]
 process_mode = 3
 _corner_panel = NodePath("../PlayerStatsPanel")
+
+[node name="TutorialPointer" parent="." node_paths=PackedStringArray("_controls") instance=ExtResource("21_pointer")]
+process_mode = 3
+visible = false
+_keys = PackedStringArray("unit_panel", "send_bar", "action_bar", "status_bar", "player_stats", "control_groups", "minimap", "research_center")
+_controls = [NodePath("../UnitPanel"), NodePath("../SendBar"), NodePath("../ActionBar"), NodePath("../MatchStatusBar"), NodePath("../PlayerStatsPanel"), NodePath("../ControlGroupBar"), NodePath("../Minimap"), NodePath("../ResearchCenter")]
+
+[node name="TutorialPanel" parent="." instance=ExtResource("22_tutorial")]
+process_mode = 3
+visible = false
 
 [node name="ConfirmPrompt" parent="." unique_id=159550192 instance=ExtResource("80_confirm")]
 process_mode = 3

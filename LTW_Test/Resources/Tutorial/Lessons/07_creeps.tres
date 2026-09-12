@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Creeps"
+body = "Creeps come in three kinds and they are not the same problem.\n\nGROUND creeps walk your maze - these are the ones a maze is built for.\nAIR creeps fly straight over it, so the shape of your maze does nothing to them and only towers that can hit air matter.\nATTACKERS ignore the end of the lane entirely and go after your towers. They are the only creeps their owner can command directly.\n\nThere are four tiers of them, unlocking on the match clock. Tier 4 is the endgame: at a fixed point the whole tier opens at once, everything below it stops being sendable, and matches are decided there."
+objective = ""
+pauses_world = true
+skip_after_seconds = 10.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

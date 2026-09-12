@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Hard"
+description = "Builds a maze somebody actually played, takes an Ultimate at the start and keeps its income moving."
+decision_seconds = 0.5
+distraction_chance = 0.0
+builds_per_pass = 2
+maze_layout_path = "res://Resources/Blueprints/blueprint_2.tres"
+zigzag_rows = 14
+zigzag_corridor_cells = 1
+base_tower_path = ""
+send_floor_gold = 10
+build_floor_gold = 60
+upgrade_floor_gold = 140
+min_towers_before_sending = 10
+send_seconds = 10.0
+max_send_tier = 3
+upgrades_towers = true
+takes_opening_ultimate = true

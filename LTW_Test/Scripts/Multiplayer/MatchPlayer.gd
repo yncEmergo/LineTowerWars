@@ -16,6 +16,9 @@ extends Resource
 ## color_index meaning "nothing has been chosen". Readers fall back to the slot
 ## for it, which is what a single player run and a bare test scene both get.
 const NO_COLOR: int = -1
+## ai_difficulty meaning "this is a person", which is what nearly every row in
+## nearly every match is.
+const HUMAN: int = -1
 
 
 ## Position in the match, 1..player_count. Chooses which area is theirs.
@@ -36,14 +39,35 @@ const NO_COLOR: int = -1
 ## Unique within a lobby: the server assigns a free one on join and refuses a
 ## taken one, exactly as it refuses a full lobby. See multiplayer.md 8.1.
 @export var color_index: int = NO_COLOR
+## Which AI profile plays this slot, by its index in AiConfig, or HUMAN for a
+## person.
+##
+## ONE field rather than a bool and a level, because they are never separately
+## true: a slot is a person or it is a profile, and a profile IS the difficulty.
+## It rides here beside the slot and the colour because it is per-match identity
+## in exactly the same way - the lane shuffle moves the slot and leaves this
+## alone - and because a single player match is built by the same code a lobby
+## builds one with.
+##
+## A networked match never sets it today. Nothing refuses one either: the field
+## is serialisable like everything else here, so a lobby that one day offers an
+## AI seat costs no wire format change.
+@export var ai_difficulty: int = HUMAN
+
+
+## Whether a profile plays this slot rather than a person.
+func is_ai() -> bool:
+	return ai_difficulty != HUMAN
+
 
 static func create(player_slot: int, name_text: String, peer_id: int = 0,
-		color: int = NO_COLOR) -> MatchPlayer:
+		color: int = NO_COLOR, difficulty: int = HUMAN) -> MatchPlayer:
 	var player: MatchPlayer = MatchPlayer.new()
 	player.slot = player_slot
 	player.display_name = name_text
 	player.network_id = peer_id
 	player.color_index = color
+	player.ai_difficulty = difficulty
 	return player
 
 
@@ -53,6 +77,7 @@ static func from_dict(data: Dictionary) -> MatchPlayer:
 	player.display_name = str(data.get("display_name", "Player"))
 	player.network_id = int(data.get("network_id", 0))
 	player.color_index = int(data.get("color_index", NO_COLOR))
+	player.ai_difficulty = int(data.get("ai", HUMAN))
 	return player
 
 
@@ -62,4 +87,5 @@ func to_dict() -> Dictionary:
 		"display_name": display_name,
 		"network_id": network_id,
 		"color_index": color_index,
+		"ai": ai_difficulty,
 	}

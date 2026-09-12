@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialResearchStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialResearchStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Technology"
+body = "Basic towers do not win matches. The real roster is ELEMENTAL, and it is gated behind technology.\n\nOpen the Research Center. There are ten elements, each selling three technologies: one that unlocks the element and one for each of its two tower paths. Every ULTIMATE tower needs four of them - its own element's pair, plus a pair from one other element.\n\nYour first four technologies are free, which is exactly one Ultimate. Which one you take is the biggest decision you make all match."
+objective = "Research a technology in the Research Center."
+pauses_world = false
+skip_after_seconds = 90.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &"action_bar"
+spotlight = 0
+technologies = 1

@@ -129,6 +129,15 @@ func record_tower_sold(player_id: int) -> void:
 		line.towers_sold += 1
 
 
+## One rung of an upgrade that finished. Rungs rather than towers, because that
+## is the number that says how far a maze has actually climbed - a player who
+## took one tower to the top has spent as much as one who raised three a tier.
+func record_tower_upgraded(player_id: int) -> void:
+	var line: MatchStatLine = _line(player_id)
+	if line != null:
+		line.towers_upgraded += 1
+
+
 ## A tower an attacker creep brought down.
 func record_tower_lost(player_id: int) -> void:
 	var line: MatchStatLine = _line(player_id)
@@ -195,6 +204,15 @@ func _physics_process(_delta: float) -> void:
 
 
 # --- the summary ----------------------------------------------------------
+
+## One player's totals AS THEY STAND, still moving.
+##
+## The tutorial reads this to answer "how many towers since this lesson opened",
+## which is a subtraction against a mark it took itself. Nothing else should:
+## what the end screen wants is the settled record, and that is summary().
+func line_for(player_id: int) -> MatchStatLine:
+	return _line(player_id)
+
 
 ## The finished record, taken the moment the match was decided. Null until it
 ## has been.

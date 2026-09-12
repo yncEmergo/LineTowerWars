@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialSendStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialSendStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Sending creeps"
+body = "The row of squares above the command card is the senders - one per creep tier. Press one and that tier's creeps appear on the card.\n\nSend something at your opponent."
+objective = "Send one pack of creeps."
+pauses_world = false
+skip_after_seconds = 45.0
+grant_gold = 200
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = true
+highlight_key = &"send_bar"
+spotlight = 0
+sends = 1

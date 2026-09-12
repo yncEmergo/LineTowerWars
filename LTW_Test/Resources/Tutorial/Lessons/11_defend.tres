@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialKillStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialKillStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Your maze at work"
+body = "Creeps are on their way into your lane now. Watch them walk the maze you built, and watch your towers get a long look at every one of them.\n\nEach kill pays a bounty into your gold."
+objective = "Kill creeps in your own lane."
+pauses_world = false
+skip_after_seconds = 60.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 4
+kills = 3

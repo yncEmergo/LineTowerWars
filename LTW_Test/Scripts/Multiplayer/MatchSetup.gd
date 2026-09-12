@@ -14,6 +14,23 @@ extends Resource
 ##
 ## Flat and serialisable throughout, for the same reason as MatchPlayer.
 
+## What KIND of match this is, which is the one thing about it that changes
+## who is driving rather than what the rules are.
+##
+## Deliberately not a MatchSettings row: the settings are what the players
+## AGREED TO and a host may change any of them, where this decides which code
+## opens at all - whether an AI director is created, and whether a tutorial is
+## stepping the player through it. A lobby never offers it.
+enum Mode {
+	## A match between people, from the lobby. The only one a network ever sees.
+	MULTIPLAYER,
+	## One person against AI profiles, offline. See AiDirector.
+	SKIRMISH,
+	## The scripted teaching match, offline. See TutorialDirector.
+	TUTORIAL,
+}
+
+@export var mode: Mode = Mode.MULTIPLAYER
 @export var match_id: String = ""
 @export var players: Array[MatchPlayer] = []
 ## Which slot this client controls. Meaningless on a dedicated server, which
@@ -53,6 +70,7 @@ static func from_config(config: GameConfig) -> MatchSetup:
 
 static func from_dict(data: Dictionary) -> MatchSetup:
 	var setup: MatchSetup = MatchSetup.new()
+	setup.mode = int(data.get("mode", Mode.MULTIPLAYER)) as Mode
 	setup.match_id = str(data.get("match_id", ""))
 	setup.local_slot = int(data.get("local_slot", 0))
 	setup.rng_seed = int(data.get("rng_seed", 0))
@@ -71,6 +89,7 @@ func to_dict() -> Dictionary:
 		if player != null:
 			player_dicts.append(player.to_dict())
 	return {
+		"mode": mode,
 		"match_id": match_id,
 		"local_slot": local_slot,
 		"rng_seed": rng_seed,
@@ -98,6 +117,22 @@ func local_player() -> MatchPlayer:
 ## which simulates every lane and commands none of them.
 func has_local_player() -> bool:
 	return local_player() != null
+
+
+## Every slot an AI profile plays, ascending. Empty in every networked match.
+func ai_slots() -> PackedInt32Array:
+	var slots: PackedInt32Array = PackedInt32Array()
+	for player in players:
+		if player != null && player.is_ai():
+			slots.append(player.slot)
+	slots.sort()
+	return slots
+
+
+## Whether anything but a person is playing this match, which is what decides
+## whether an AI director is created at all.
+func has_ai() -> bool:
+	return !ai_slots().is_empty()
 
 
 ## Reports every way the setup is unusable, all at once rather than one crash

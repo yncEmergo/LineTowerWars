@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialBuildStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialBuildStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "The simplest maze"
+body = "Fill in the rest of the plan. Each row spans the lane but leaves one gap, and the gap swaps sides on every row - so a creep walks left, drops down, walks right, and keeps doing it all the way to the bottom.\n\nIt is the first maze anybody learns and it is a good one. Everything fancier is a variation on making the walk longer."
+objective = "Build the rest of the marked cells."
+pauses_world = false
+skip_after_seconds = 120.0
+grant_gold = 400
+grant_income = 0
+blueprint_path = "res://Resources/Tutorial/tutorial_maze_full.tres"
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0
+towers = 12

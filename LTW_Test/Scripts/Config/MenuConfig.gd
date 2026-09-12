@@ -26,6 +26,13 @@ extends Resource
 ## Shown after a match is over, from the Continue button on the result
 ## board: what happened over the whole game rather than only who won.
 @export_file("*.tscn") var match_summary_scene_path: String = ""
+## Where the Single Player button leads: how many computer opponents, how hard,
+## and the same rules a lobby host chooses.
+@export_file("*.tscn") var skirmish_setup_scene_path: String = ""
+## Where the Tutorial button leads. The tutorial needs no setup screen - it has
+## one shape and teaches it - so this is the MATCH rather than a menu, reached
+## the same way a skirmish reaches one: through the loading screen.
+@export_file("*.tscn") var tutorial_scene_path: String = ""
 
 @export_group("Branding")
 ## Working title. The game has no name yet, so every screen reads it from here
@@ -113,6 +120,7 @@ func validate() -> bool:
 	complete = _validate_path(game_scene_path, "game_scene_path") && complete
 	complete = _validate_path(match_loading_scene_path, "match_loading_scene_path") && complete
 	complete = _validate_path(match_summary_scene_path, "match_summary_scene_path") && complete
+	complete = _validate_path(skirmish_setup_scene_path, "skirmish_setup_scene_path") && complete
 	return complete
 
 

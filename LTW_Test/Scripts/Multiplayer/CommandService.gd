@@ -73,6 +73,29 @@ func _ready() -> void:
 ## `ability.execute()` calls that used to sit in CommandController.
 func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
 		queued: bool = false) -> void:
+	var session: MatchSession = _session
+	if session == null:
+		Log.err("Commands.submit with no MatchSession, the order goes nowhere")
+		return
+	submit_for(session.local_slot(), ability, units, target, queued)
+
+
+## The same road, for an order given by a slot this machine is not PLAYING.
+##
+## The one caller is an AI opponent, which is a player at this machine that
+## nobody is sitting at. It exists so the AI can take exactly the road a person
+## takes - the same ability, the same world, the same refusals - rather than
+## reaching into the simulation and moving things itself, which is what would
+## make its gold and its build times a promise instead of a fact.
+##
+## **It is deliberately NOT a way round ownership.** Online, the server
+## overwrites `player_slot` from the peer id on arrival, so a slot written here
+## is thrown away exactly as a modified client's would be; a networked AI would
+## have to live on the machine that owns its slot. Offline, which is where every
+## AI plays today, there is nobody to ask and this machine is the authority for
+## all of them.
+func submit_for(slot: int, ability: UnitAbility, units: Array, target: AbilityTarget,
+		queued: bool = false) -> void:
 	if ability == null || units.is_empty():
 		return
 
@@ -83,7 +106,7 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
 
 	var command: Command = Command.create(ability.ability_id, units, target, queued)
 	command.tick = session.tick()
-	command.player_slot = session.local_slot()
+	command.player_slot = slot
 
 	if command.unit_ids.is_empty():
 		# Every unit named was already gone, or never registered.
@@ -129,6 +152,20 @@ func submit(ability: UnitAbility, units: Array, target: AbilityTarget,
 ## Command.layout.
 func submit_player_action(action: Command.PlayerAction, tech_id: int = 0,
 		maze: TowerLayout = null) -> void:
+	var session: MatchSession = _session
+	if session == null:
+		Log.err("Commands.submit_player_action with no MatchSession, the order goes nowhere")
+		return
+	submit_player_action_for(session.local_slot(), action, tech_id, maze)
+
+
+## A player order given by a slot this machine is not playing - an AI opponent
+## researching. Everything submit_for says applies here word for word, and it
+## matters MORE on this road: a player order names no unit, so the slot is the
+## whole of who is asking. An AI research press that went out as the local
+## player's would spend the HUMAN's technologies.
+func submit_player_action_for(slot: int, action: Command.PlayerAction,
+		tech_id: int = 0, maze: TowerLayout = null) -> void:
 	if action == Command.PlayerAction.NONE:
 		return
 
@@ -139,7 +176,7 @@ func submit_player_action(action: Command.PlayerAction, tech_id: int = 0,
 
 	var command: Command = Command.create_player_action(action, tech_id, maze)
 	command.tick = session.tick()
-	command.player_slot = session.local_slot()
+	command.player_slot = slot
 
 	# Same three machines, same branch as submit(): offline is its own
 	# authority, a server queues for the tick, a client asks and waits.

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Easy"
+description = "Builds the simplest maze there is and rarely upgrades it. What a player learning the game should be beating."
+decision_seconds = 1.6
+distraction_chance = 0.35
+builds_per_pass = 1
+maze_layout_path = ""
+zigzag_rows = 6
+zigzag_corridor_cells = 2
+base_tower_path = ""
+send_floor_gold = 60
+build_floor_gold = 40
+upgrade_floor_gold = 300
+min_towers_before_sending = 4
+send_seconds = 25.0
+max_send_tier = 1
+upgrades_towers = false
+takes_opening_ultimate = false

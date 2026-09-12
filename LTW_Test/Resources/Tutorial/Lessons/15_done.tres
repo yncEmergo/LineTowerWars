@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "That is the game"
+body = "Build a maze that makes the walk long. Upgrade it rather than rebuilding it. Send early, because income compounds. Research towards one Ultimate and get there. Fill the holes with discs.\n\nEverything else is detail, and you will learn it faster by playing. Try a single player match against an Easy opponent next."
+objective = ""
+pauses_world = true
+skip_after_seconds = 3.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Why you send"
+body = "That send did two things. It put creeps in somebody else's lane, and it raised your INCOME permanently.\n\nIncome is paid to everybody on the same clock, and it is the single most important number in the game. Gold from killing creeps - the bounty - is paid once. Income is paid for the rest of the match, so a send made in the first minute is still paying in the twentieth.\n\nThat is the whole economy: every coin you hold is a choice between a tower that helps you now and a send that compounds. Players who only build lose slowly to players who send."
+objective = ""
+pauses_world = true
+skip_after_seconds = 10.0
+grant_gold = 0
+grant_income = 20
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

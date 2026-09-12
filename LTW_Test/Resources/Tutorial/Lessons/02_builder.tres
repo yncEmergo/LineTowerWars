@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Your builder"
+body = "The one unit you control is the builder. It places every tower in the game and it cannot be killed.\n\nSelect it and its command card appears at the bottom of the screen. Building is a physical thing: the builder has to walk to the spot before the tower goes up, and it is free again the moment it starts."
+objective = ""
+pauses_world = true
+skip_after_seconds = 8.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &"unit_panel"
+spotlight = 0

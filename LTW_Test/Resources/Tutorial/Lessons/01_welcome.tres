@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Your lane"
+body = "This is your lane. Creeps enter at the top and walk to the bottom, and every one that reaches it takes a life from you and gives it to whoever sent it.\n\nNothing in this game spawns by itself. Every creep you ever see was bought by another player and aimed at you."
+objective = ""
+pauses_world = true
+skip_after_seconds = 5.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 1

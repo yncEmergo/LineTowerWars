@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Menus/SkirmishSlot.gd" id="1_slot"]
+[ext_resource type="Theme" path="res://Resources/UI/lobby_compact_theme.tres" id="2_compact"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_swatch"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.05, 0.055, 0.07, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.32, 0.4, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.105, 0.115, 0.15, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.3, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="SkirmishSlot" type="PanelContainer" node_paths=PackedStringArray("_index_label", "_name_label", "_color_swatch", "_difficulty_option", "_role_label")]
+theme = ExtResource("2_compact")
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+script = ExtResource("1_slot")
+_index_label = NodePath("Row/IndexLabel")
+_name_label = NodePath("Row/NameLabel")
+_color_swatch = NodePath("Row/SwatchFrame/Swatch")
+_difficulty_option = NodePath("Row/DifficultyOption")
+_role_label = NodePath("Row/RoleLabel")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="IndexLabel" type="Label" parent="Row"]
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+text = "1"
+horizontal_alignment = 1
+
+[node name="SwatchFrame" type="PanelContainer" parent="Row"]
+custom_minimum_size = Vector2(24, 20)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_swatch")
+
+[node name="Swatch" type="ColorRect" parent="Row/SwatchFrame"]
+layout_mode = 2
+color = Color(0.16, 0.17, 0.22, 1)
+
+[node name="NameLabel" type="Label" parent="Row"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="RoleLabel" type="Label" parent="Row"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
+text = "You"
+horizontal_alignment = 1
+
+[node name="DifficultyOption" type="OptionButton" parent="Row"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2

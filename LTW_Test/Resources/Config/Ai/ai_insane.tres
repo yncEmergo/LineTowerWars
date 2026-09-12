@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Insane"
+description = "The endgame maze from the first tower, upgrading every rung it can pay for and sending as hard as it can hold."
+decision_seconds = 0.35
+distraction_chance = 0.0
+builds_per_pass = 3
+maze_layout_path = "res://Resources/Blueprints/blueprint_4.tres"
+zigzag_rows = 15
+zigzag_corridor_cells = 1
+base_tower_path = ""
+send_floor_gold = 0
+build_floor_gold = 80
+upgrade_floor_gold = 160
+min_towers_before_sending = 12
+send_seconds = 7.0
+max_send_tier = 4
+upgrades_towers = true
+takes_opening_ultimate = true

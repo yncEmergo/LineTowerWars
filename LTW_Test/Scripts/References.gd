@@ -48,6 +48,14 @@ extends Node
 ## PRESENTATION-ADJACENT rather than simulation: nothing in it is checksummed
 ## and nothing reads it back into the world. See MatchStats.
 @export var _match_stats: MatchStats
+## The computer opponents in this match, or a node that makes none. Wired by
+## both match scenes, because a SKIRMISH is a match like any other and the
+## server scene has to stay the same shape as the client one.
+@export var _ai_director: AiDirector
+## The lesson script, when this match is the tutorial. Wired by the client match
+## scene only: a dedicated server never teaches anybody anything, and a skirmish
+## reaches the same node and is told there is nothing to run.
+@export var _tutorial_director: TutorialDirector
 ## Parent for short lived world effects: move markers, and later hit effects
 ## and floating damage numbers.
 ##
@@ -113,6 +121,9 @@ extends Node
 ## the same terms as the config above: a dedicated server leaves it null, and
 ## AudioHub falls silent rather than refusing to run.
 @export var _audio_config: AudioConfig
+## Every AI difficulty this build contains. Wired by the match scenes and by the
+## single player setup screen, which is the one place a player picks one.
+@export var _ai_config: AiConfig
 
 static var instance: References
 
@@ -175,6 +186,18 @@ static var starting_tech: StartingTech:
 		if instance == null:
 			return null
 		return instance._starting_tech
+
+static var tutorial_director: TutorialDirector:
+	get:
+		if instance == null:
+			return null
+		return instance._tutorial_director
+
+static var ai_director: AiDirector:
+	get:
+		if instance == null:
+			return null
+		return instance._ai_director
 
 static var match_stats: MatchStats:
 	get:
@@ -283,6 +306,12 @@ static var audio_config: AudioConfig:
 		if instance == null:
 			return null
 		return instance._audio_config
+
+static var ai_config: AiConfig:
+	get:
+		if instance == null:
+			return null
+		return instance._ai_config
 
 ## Claimed on entering the tree rather than in _init, so the static handle
 ## only ever points at a node that is actually live. _init would also fire

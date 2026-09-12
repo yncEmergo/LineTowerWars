@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Sparring Partner"
+description = "The tutorial's opponent. Builds a short maze for creeps to walk through, never sends anything back, and never finishes anybody off."
+player_name_pattern = "%s"
+selectable = false
+decision_seconds = 2.0
+distraction_chance = 0.0
+builds_per_pass = 1
+maze_layout_path = ""
+zigzag_rows = 4
+zigzag_corridor_cells = 2
+base_tower_path = ""
+send_floor_gold = 999999
+build_floor_gold = 999999
+upgrade_floor_gold = 999999
+min_towers_before_sending = 999
+send_seconds = 600.0
+max_send_tier = 0
+upgrades_towers = false
+takes_opening_ultimate = false

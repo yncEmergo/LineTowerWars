@@ -60,6 +60,8 @@ extends Resource
 @export var creeps_killed: int = 0
 @export var towers_built: int = 0
 @export var towers_sold: int = 0
+## Rungs climbed, not towers: one tower taken three tiers up counts three.
+@export var towers_upgraded: int = 0
 ## Towers an attacker creep brought down.
 @export var towers_lost: int = 0
 

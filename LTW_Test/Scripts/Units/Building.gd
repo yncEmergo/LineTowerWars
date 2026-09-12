@@ -1131,6 +1131,10 @@ func _advance_upgrade(delta: float) -> void:
 func _complete_upgrade() -> void:
 	var target: BuildingStats = _upgrade_target
 	var returning: bool = _returning
+	# Counted as a rung CLIMBED, so a return to a bare Core is not one. See
+	# MatchStats.record_tower_upgraded.
+	if !returning && References.match_stats != null:
+		References.match_stats.record_tower_upgraded(owner_player_id)
 	_upgrading = false
 	_returning = false
 	_upgrade_elapsed = 0.0

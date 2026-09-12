@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TutorialUpgradeStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialUpgradeStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Upgrading a tower"
+body = "Select one of your towers. Its card carries an UPGRADE button for each branch it can take.\n\nUpgrading is how you get anywhere: the builder only ever places the cheapest tower of a line, and every tier above it is reached by pressing the tower you already own. A tower that upgrades keeps its cell, so a maze never has to be rebuilt to get stronger."
+objective = "Upgrade any one of your towers."
+pauses_world = false
+skip_after_seconds = 60.0
+grant_gold = 200
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 3
+upgrades = 1

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AiConfig" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiConfig.gd" id="1_ai_config"]
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="2_ai_profile"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_easy.tres" id="3_ai_easy"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_normal.tres" id="4_ai_normal"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_hard.tres" id="5_ai_hard"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_insane.tres" id="6_ai_insane"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_tutorial.tres" id="7_ai_tutorial"]
+
+[resource]
+script = ExtResource("1_ai_config")
+profiles = Array[ExtResource("2_ai_profile")]([ExtResource("3_ai_easy"), ExtResource("4_ai_normal"), ExtResource("5_ai_hard"), ExtResource("6_ai_insane"), ExtResource("7_ai_tutorial")])

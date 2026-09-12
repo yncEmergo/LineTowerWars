@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Technology discs"
+body = "The last thing the builder can place is a DISC, and a disc is not a tower.\n\nCreeps walk straight over one. It claims its square against anything else being built there and blocks nothing at all - so a disc goes in the HOLES a maze already has rather than making new ones.\n\nWhat it does is help the towers around it: attack speed, reach, armour, mana, a chill added to what they already do. The shape of your maze and what is standing in it are two decisions, and discs are the second one."
+objective = ""
+pauses_world = true
+skip_after_seconds = 10.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

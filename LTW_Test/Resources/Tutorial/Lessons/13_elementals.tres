@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Elemental towers"
+body = "With an element researched, the builder can place an ELEMENTAL CORE. A Core is not a tower yet: it morphs, free, into whichever element you own, and from there up that element's two paths.\n\nElemental towers are where the game's real answers live - the ones that shred armour, that slow whole packs, that hit air, that deal damage as a share of a creep's health. By the endgame a good maze has sold most of its Basic towers to pay for them."
+objective = ""
+pauses_world = true
+skip_after_seconds = 10.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 0

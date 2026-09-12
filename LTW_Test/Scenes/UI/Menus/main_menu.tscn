@@ -8,8 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://bjiahd1ki3jn8" path="res://Scenes/UI/Menus/options_menu.tscn" id="5_options_menu"]
 [ext_resource type="Resource" uid="uid://dntbwmi5dakuc" path="res://Resources/Config/controls_config.tres" id="6_controls_config"]
 [ext_resource type="Resource" path="res://Resources/Config/audio_config.tres" id="900_audio_config"]
+[ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="7_game_config"]
+[ext_resource type="Resource" path="res://Resources/Config/ai_config.tres" id="8_ai_config"]
 
-[node name="MainMenu" type="Control" unique_id=824899437 node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_multiplayer_button", "_options_button", "_quit_button", "_options_menu")]
+[node name="MainMenu" type="Control" unique_id=824899437 node_paths=PackedStringArray("_title_label", "_version_label", "_play_button", "_tutorial_button", "_singleplayer_button", "_multiplayer_button", "_options_button", "_quit_button", "_options_menu")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,6 +23,8 @@ script = ExtResource("1_main_menu")
 _title_label = NodePath("Layout/TitleLabel")
 _version_label = NodePath("VersionLabel")
 _play_button = NodePath("Layout/Buttons/PlayButton")
+_tutorial_button = NodePath("Layout/Buttons/TutorialButton")
+_singleplayer_button = NodePath("Layout/Buttons/SingleplayerButton")
 _multiplayer_button = NodePath("Layout/Buttons/MultiplayerButton")
 _options_button = NodePath("Layout/Buttons/OptionsButton")
 _quit_button = NodePath("Layout/Buttons/QuitButton")
@@ -32,6 +36,8 @@ _controls_config = ExtResource("6_controls_config")
 _menu_config = ExtResource("3_menu_config")
 _build_info = ExtResource("4_build_info")
 _audio_config = ExtResource("900_audio_config")
+_game_config = ExtResource("7_game_config")
+_ai_config = ExtResource("8_ai_config")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1433203273]
 layout_mode = 1
@@ -78,13 +84,21 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="Layout/Buttons" unique_id=619301661]
+[node name="TutorialButton" type="Button" parent="Layout/Buttons"]
 layout_mode = 2
-text = "Singleplayer Test Scene"
+text = "Tutorial"
+
+[node name="SingleplayerButton" type="Button" parent="Layout/Buttons"]
+layout_mode = 2
+text = "Single Player"
 
 [node name="MultiplayerButton" type="Button" parent="Layout/Buttons" unique_id=1621390831]
 layout_mode = 2
 text = "Multiplayer"
+
+[node name="PlayButton" type="Button" parent="Layout/Buttons" unique_id=619301661]
+layout_mode = 2
+text = "Test Scene"
 
 [node name="OptionsButton" type="Button" parent="Layout/Buttons" unique_id=1148233934]
 layout_mode = 2

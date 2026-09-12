@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TutorialReadStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReadStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Who you are fighting"
+body = "Everyone plays their own lane, and the lanes are a RING: you send creeps to the player on your right and you defend against the player on your left.\n\nYou are never fighting the same person in both directions. If somebody is drowning you, the answer is not always to kill them - it is to survive them while the player on your right drowns instead.\n\nLives are STOLEN, not lost. A creep that reaches the end of your lane takes one of your lives and hands it to its owner, and then walks on into the next lane to try it again."
+objective = ""
+pauses_world = true
+skip_after_seconds = 10.0
+grant_gold = 0
+grant_income = 0
+blueprint_path = ""
+unlocks_creeps = false
+highlight_key = &""
+spotlight = 2

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TowerLayout" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/TowerLayout.gd" id="1_tower_layout"]
+
+; The first three towers, side by side across the top of the lane.
+[resource]
+script = ExtResource("1_tower_layout")
+unit_type_ids = PackedInt32Array(26, 26, 26)
+cells = Array[Vector2i]([Vector2i(0, 6), Vector2i(2, 6), Vector2i(4, 6)])
+grid_size = Vector2i(16, 68)
