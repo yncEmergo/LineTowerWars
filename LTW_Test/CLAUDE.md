@@ -301,6 +301,32 @@
     scale - there is no per-instance visibility. `BlueprintOverlay` is the
     worked example, where the headless half of that cost alone was 8x
 
+- **A CONTROL'S SIZE IS IN DESIGN PIXELS, AND A SCREENSHOT IS NOT.** The project
+  stretches canvas items from a base viewport far smaller than the window
+  (`window/stretch/mode="canvas_items"`, and `window/size/mode=3` opens
+  maximised), so a panel authored 536 wide draws about 1190 physical pixels on a
+  2560 screen - more than twice the number, and nearly half the width
+  - which means a size READ OFF A SCREENSHOT is wrong by that factor, in the
+    direction that makes a box too big. The tutorial panel was sized that way
+    and covered the lane it was pointing at, then the command card it was
+    telling the player to press
+  - the honest reading is the ratio: divide by the BASE viewport width, not by
+    the window's. Or size it against something already in the scene
+  - and it is why a layout has to be LOOKED AT rather than reasoned about. A
+    headless run cannot draw one: `--headless` installs the dummy driver, so a
+    screenshot from one is blank. Run windowed and save
+    `get_viewport().get_texture().get_image()` after ~30 frames, which is how
+    long a Control tree takes to settle
+
+- **A NEW SCENE IS NOT CHECKED BY BOOTING THE GAME.** Booting `Main.tscn`
+  exercises the scenes `Main.tscn` reaches and nothing else, so a menu screen
+  with a parse error in a script it alone uses boots clean and fails the first
+  time somebody presses the button. A missing `signal` declaration shipped that
+  way and was only caught by opening the screen
+  - `godot --headless --quit-after 20 res://<scene>.tscn` on each new scene is
+    the whole check, and it catches "Identifier not declared", a failed compile
+    and an unresolved `ext_resource` in one line per scene
+
 - **A MATERIAL BUILT IN CODE IS INVISIBLE TO THE SHADER WARM-UP.** The
   Compatibility renderer compiles a shader on its first draw, on the game
   thread - measured at up to a second a frame - and `ShaderWarmup` draws

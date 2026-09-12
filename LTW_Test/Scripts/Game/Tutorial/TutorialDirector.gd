@@ -77,8 +77,27 @@ func begin(setup: MatchSetup) -> void:
 
 	_running = true
 	set_physics_process(true)
+	_fund_opponents(setup)
 	Log.info("Tutorial started", {"lessons": script_resource.count()})
 	_open(0)
+
+
+## Hands every player but this one their opening gold.
+##
+## A tutorial match starts everybody on nothing, so that a lesson can hand the
+## PLAYER exactly what it is about to talk about. The sparring partner needs the
+## same courtesy for the opposite reason: with no gold it builds no maze, and a
+## player sending creeps into an empty lane learns nothing from it.
+func _fund_opponents(setup: MatchSetup) -> void:
+	var manager: PlayerManager = References.player_manager
+	if manager == null || script_resource.opponent_gold <= 0:
+		return
+	for player in setup.players:
+		if player == null || player.slot == setup.local_slot:
+			continue
+		var state: PlayerState = manager.state_for(player.slot)
+		if state != null:
+			state.gain(script_resource.opponent_gold)
 
 
 ## Whether a tutorial is being played at all, for the panel that draws it.
@@ -257,6 +276,7 @@ func _apply_grants(step: TutorialStep) -> void:
 			_unlock_creeps(state)
 
 	_draw_blueprint(step.blueprint())
+	_spawn_wave(step)
 
 
 ## Opens the whole send card for the player: every creep's start delay counts as
@@ -298,6 +318,37 @@ func _draw_blueprint(plan: TowerLayout) -> void:
 		overlay.hide_blueprint()
 		return
 	overlay.show_layout(plan)
+	_look_at_plan(plan)
+
+
+## Puts the camera where the plan is.
+##
+## **A lesson that says "the three blue squares at the top of your lane" is
+## useless if the camera is looking at the middle of it**, which is where the
+## builder starts and therefore where every tutorial opens. The first version
+## drew the squares perfectly and off the top of the screen.
+##
+## Automatic rather than a field on the step, because a lesson that puts a plan
+## on the ground always means "look here" - there is no case where it does not.
+##
+## PRESENTATION, and local from end to end: the camera is this machine's view of
+## the world and moving it changes nothing in it.
+func _look_at_plan(plan: TowerLayout) -> void:
+	var camera: RTSCamera = References.rts_camera
+	var manager: PlayerManager = References.player_manager
+	if camera == null || manager == null || plan.entry_count() <= 0:
+		return
+	var area: PlayerArea = manager.area_for(manager.local_player_id())
+	if area == null:
+		return
+
+	# The middle of the plan, in world space. Averaged over the cells rather than
+	# taken from the first one, so a lesson whose plan is a whole maze frames the
+	# maze instead of its top left corner.
+	var middle: Vector3 = Vector3.ZERO
+	for index in range(plan.entry_count()):
+		middle += area.internal_cell_center(plan.cells[index])
+	camera.center_on(middle / float(plan.entry_count()))
 
 
 # --- lookups --------------------------------------------------------------
@@ -337,3 +388,58 @@ func _snapshot_line() -> MatchStatLine:
 	if line == null:
 		return MatchStatLine.new()
 	return line.duplicate() as MatchStatLine
+
+
+## Puts a lesson's wave into the player's own lane.
+##
+## **The one thing the tutorial does TO the player**, and it exists because in a
+## two lane match nothing else can: a creep that leaks walks on to the next lane
+## in ring order SKIPPING ITS OWN SENDER, which in a 1v1 resolves back to the
+## lane it just leaked. So nothing the player sends ever comes back at them, the
+## sparring partner deliberately never sends, and without this the lesson about
+## watching a maze work could only ever be skipped.
+##
+## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
+## resolve exactly as they would in a real match - the area already decides who
+## the bounty goes to and the creep's owner decides who steals the life.
+##
+## The same three calls SendBuilding._spawn_one makes, and deliberately not a
+## SEND: a send is a player order with a price, a reserve and a start delay, and
+## none of those is a thing the tutorial is asking for. This is the board being
+## set up, the way the opening gold above is.
+func _spawn_wave(step: TutorialStep) -> void:
+	var stats: CreepStats = step.spawn_creep()
+	if stats == null || step.spawn_creep_count <= 0:
+		return
+
+	var manager: PlayerManager = References.player_manager
+	var session: MatchSession = _session
+	if manager == null || session == null:
+		return
+
+	var into: PlayerArea = manager.area_for(manager.local_player_id())
+	var sender: int = manager.attacker_of(manager.local_player_id())
+	if into == null:
+		return
+
+	var scene: PackedScene = stats.scene()
+	if scene == null:
+		Log.err("A tutorial lesson names a creep with no loadable prefab", stats.display_name)
+		return
+
+	for index in range(step.spawn_creep_count):
+		var creep: Creep = scene.instantiate() as Creep
+		if creep == null:
+			Log.err("Tutorial creep prefab root is not a Creep", stats.display_name)
+			return
+		into.creeps_root().add_child(creep)
+		creep.spawn(sender, into, into.random_spawn_point(
+			stats.body_radius, MatchSession.match_rng()
+		))
+
+	Log.info("Tutorial wave", {
+		"creep": stats.display_name,
+		"count": step.spawn_creep_count,
+		"into": into.player_id,
+		"from": sender,
+	})

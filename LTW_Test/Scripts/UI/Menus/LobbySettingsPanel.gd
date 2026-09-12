@@ -33,6 +33,17 @@ extends PanelContainer
 ## for the OptionButton dropdowns. It also has to define EVERY button state:
 ## a state it leaves out falls through to menu_theme's roomy one, so a
 ## half-defined set makes a button change height when the mouse touches it.
+##
+## **It also drives a LOCAL match**, which is the single player setup screen and
+## nothing else. The controls, the limits, the ranked lock and the clamps are
+## the same rules a lobby plays by - a skirmish is a match like any other - so
+## the panel stays one panel and only the far end of an edit changes: a lobby
+## sends the block to the server and draws what comes back, and a local match
+## sanitises it here. See show_local.
+
+## The rules changed, in a LOCAL match. Never emitted for a lobby, where the
+## server's answer is what everybody redraws from.
+signal settings_changed(settings: MatchSettings)
 
 @export_group("References")
 @export var _lives_spin: SpinBox

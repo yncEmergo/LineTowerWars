@@ -12,6 +12,18 @@ extends Resource
 ## TutorialDirector. Re-ordering the tutorial, cutting a lesson or writing a new
 ## one is editing this file and nothing else.
 
+@export_group("Opponent")
+## Gold the sparring partner is handed when the tutorial starts.
+##
+## It needs some: a tutorial match starts everybody on NOTHING so a lesson can
+## hand the player exactly what it is about to talk about, and an opponent with
+## no gold builds no maze - which leaves the player sending creeps into an empty
+## lane and learning nothing from it.
+##
+## One lump rather than income, because the partner is a demonstration rather
+## than a match: enough for the short maze its profile plans and no more.
+@export var opponent_gold: int = 400
+
 @export_group("Lessons")
 ## In teaching order. **A TYPED ARRAY IN A .TRES IS ALL OR NOTHING**: one entry
 ## that fails to load empties the whole list silently, and the editor writes

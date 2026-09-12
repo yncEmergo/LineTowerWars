@@ -82,6 +82,23 @@ extends Resource
 ## slot one would be shown that maze by a lesson meaning to show them the shape
 ## it is teaching. See BlueprintOverlay.show_layout.
 @export_file("*.tres") var blueprint_path: String = ""
+## A creep to put into the PLAYER's own lane when this step opens, as a res://
+## path to its CreepStats, or empty for a lesson that spawns nothing.
+##
+## **The tutorial has to be able to attack the player, and in a two lane match
+## it otherwise cannot.** A creep that leaks walks on to the next lane in ring
+## order skipping its own sender, and in a 1v1 that resolves back to the lane it
+## just leaked - so nothing the player sends ever comes back at them, and the
+## sparring partner deliberately never sends. Without this the "watch your maze
+## work" lesson could only ever be skipped, which is a softlock wearing a
+## timer.
+##
+## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
+## all resolve exactly as they would in a real match.
+@export_file("*.tres") var spawn_creep_path: String = ""
+## How many of them.
+@export var spawn_creep_count: int = 0
+
 ## Whether this step opens the whole send card, waiving every creep's start
 ## delay for the player.
 ##
@@ -154,7 +171,21 @@ func validate() -> bool:
 			"path": blueprint_path,
 		})
 		complete = false
+	if !spawn_creep_path.is_empty() && !ResourceLoader.exists(spawn_creep_path):
+		Log.err("Tutorial step names a creep that does not resolve", {
+			"step": title,
+			"path": spawn_creep_path,
+		})
+		complete = false
 	return complete
+
+
+## The creep this lesson puts in the player's lane, or null for one that puts
+## none. Loaded on first ask, on the same terms the blueprint is.
+func spawn_creep() -> CreepStats:
+	if spawn_creep_path.is_empty() || !ResourceLoader.exists(spawn_creep_path):
+		return null
+	return ResourceLoader.load(spawn_creep_path, "") as CreepStats
 
 
 ## The plan this lesson puts on the ground, or null for one that puts none.

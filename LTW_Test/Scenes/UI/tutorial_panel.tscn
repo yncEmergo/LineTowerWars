@@ -18,7 +18,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_panel", "_progress_label", "_title_label", "_body_label", "_objective_label", "_continue_button", "_skip_button")]
+[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_progress_label", "_title_label", "_body_label", "_objective_label", "_continue_button", "_skip_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,7 +27,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_tutorial_panel")
-_panel = NodePath("Board")
 _progress_label = NodePath("Board/Column/Header/ProgressLabel")
 _title_label = NodePath("Board/Column/Header/TitleLabel")
 _body_label = NodePath("Board/Column/BodyLabel")
@@ -37,17 +36,11 @@ _skip_button = NodePath("Board/Column/Footer/SkipButton")
 
 [node name="Board" type="PanelContainer" parent="."]
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -380.0
-offset_top = -250.0
-offset_right = 380.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 0
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 72.0
+offset_right = 424.0
+offset_bottom = 72.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_board")
 
 [node name="Column" type="VBoxContainer" parent="Board"]
@@ -63,7 +56,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 21
 text = "Lesson"
 
 [node name="ProgressLabel" type="Label" parent="Board/Column/Header"]
@@ -75,12 +68,10 @@ text = ""
 vertical_alignment = 1
 
 [node name="BodyLabel" type="Label" parent="Board/Column"]
-custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
-size_flags_vertical = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 text = ""
 autowrap_mode = 3
 
@@ -88,7 +79,7 @@ autowrap_mode = 3
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.55, 0.85, 0.6, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 15
 text = ""
 autowrap_mode = 3
 

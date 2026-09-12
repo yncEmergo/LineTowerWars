@@ -249,10 +249,46 @@ them and the other ten are black ground, which the camera and the minimap both s
 **The content is complete.** Every tower, every creep, every disc and every technology of the
 source game is in, at its own numbers. What is left is not roster work.
 
+**A match now ENDS.** Last player standing has decided matches for a long time and nothing
+listened: now a result board opens over the world in finishing order — the same table the
+corner draws all game, in the middle of the screen with the corner one hidden — and Continue
+leads to a summary screen of what the whole match was made of. Gold earned and spent, creeps
+sent and killed, lives stolen and lost, towers built, sold and destroyed, peak income, and the
+Ultimate each player finished on. None of it is replicated: under lockstep every peer counts
+the same numbers from the same simulation without a byte being sent.
+
+**Both technology openings hold the world now.** The DRAFT was built and invisible — the HUD
+authored its panel hidden and the script only ever showed a child of it — and now draws three
+Research Center Ultimate squares at the size of a decision, with a deadline that chooses for
+anybody who walks away from the keyboard. RANDOM gained a reveal: a reel of Ultimates slowing
+to a stop on what was rolled. Both countdowns are measured in simulation ticks and advanced by
+the TURN STREAM rather than by a wall clock, because a peer that resumed five turns before its
+neighbour would simulate five turns the neighbour did not.
+
+**There is a SINGLE PLAYER mode and an AI to play it against.** However many computer
+opponents, each at its own difficulty, on the same settings panel a lobby host edits. The AI
+is a list of rules run on a beat — take an Ultimate, send, build the maze, upgrade — and it
+cannot cheat, structurally: every order it gives goes down the road a player's click takes,
+into the same ability, refused by the same world. What it BUILDS is a file: a difficulty names
+a `TowerLayout`, which is the same resource a player's blueprint is, so teaching an opponent a
+new maze is saving one from your own builder. A difficulty that names none gets a generated
+left-right zigzag, which is the simplest maze the game has and the one the tutorial teaches.
+See [singleplayer.md](Docs/singleplayer.md).
+
+**And there is a TUTORIAL**, which is a real match with a script on top rather than a
+diorama: the same world, economy, towers and send ring, with lessons handing over exactly what
+they are about to talk about. Fifteen of them, from what a lane is to why income beats bounty.
+A lesson is a resource, is finished by the world reaching a state it asks about every tick —
+so nothing in the builder or the sender knows a tutorial exists — and can always be skipped,
+because a step that waits on a world state can always be given a world it cannot reach. It
+points at a named HUD button with the rest of the screen dimmed, and can dim the lane around
+one creep and follow it while it walks. See [tutorial.md](Docs/tutorial.md).
+
 What is deliberately not built yet, in rough order of size: **bandwidth optimisation** (the
 server sends the whole world every tick, which is fine for a 1v1 on a LAN and nowhere near
-twelve players), **client-side prediction**, **anything past a 1v1**, an **end screen**, and
-**sound** — there is no `Audio/` folder yet and not one audio file in the project.
+twelve players), **client-side prediction**, **anything past a 1v1** on the network side, an
+AI that **counters what is in its lane** or uses the elemental roster at all, and **sound** in
+the world — there is a mixer and buttons make a noise, but nothing a tower or a creep does.
 
 Two small rules of the source game are also uncopied, and both are written down where they
 belong rather than here: Sudden Death making creeps tankier by the minute
@@ -283,14 +319,21 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | [content.md](Docs/content.md) | **The PROCEDURE**: how a tower, creep, disc or ability is added or changed — which files it is made of, which of them ModelGen generates and must not be hand-edited, how an id is picked, and what refuses bad content at boot. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
 | [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D29) behind it. The long one. |
+| [singleplayer.md](Docs/singleplayer.md) | **The opponent AI**: how the brain is shaped and why, why it cannot cheat, where difficulty comes from, and what it does not do yet. |
+| [tutorial.md](Docs/tutorial.md) | **The teaching match**: how a lesson is made and how to change what it teaches without reading code. |
 | [server.md](Docs/server.md) | How to start, stop and aim the dedicated server. Controls only. |
 | [Docs/](Docs/) | The index for all of the above — which file answers what, and where a new document goes. |
 | [Docs/Findings/](Docs/Findings/) | Investigations: something measured, chased down or ruled out, written up and dated. |
 
 ## Running it
 
-**Single player**, for iterating on gameplay: open `Scenes/Main.tscn` and press F6. It
-stands in a one-player match and needs no server.
+**The test scene**, for iterating on gameplay: open `Scenes/Main.tscn` and press F6. It
+stands in a one-player match, needs no server, and is not a game mode — it is the shortest
+road to a world with a builder in it.
+
+**Single player and the tutorial** are game modes and are reached from the main menu. Both are
+offline and both go through the loading screen, so they warm their content exactly as a
+networked match does.
 
 **A networked match** needs a server and two clients:
 

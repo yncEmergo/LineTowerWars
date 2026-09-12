@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Dev/ShotProbe.gd" id="1_shot"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Menus/main_menu.tscn" id="2_menu"]
+
+[node name="ShotProbe" type="Node"]
+script = ExtResource("1_shot")
+_fallback_scene = ExtResource("2_menu")

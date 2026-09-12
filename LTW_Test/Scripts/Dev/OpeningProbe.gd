@@ -80,6 +80,15 @@ func _physics_process(_delta: float) -> void:
 		_report_ai()
 	if _mode == "tutorial" && _frames % 40 == 0:
 		_report_tutorial()
+	# A picture of whatever is on screen at a given frame, for a layout that can
+	# only be judged by looking at it. Windowed runs only - headless has no
+	# renderer and writes a blank.
+	var shot_at: int = int(_argument("--shot-at", "0"))
+	if shot_at > 0 && _frames == shot_at:
+		var image: Image = get_viewport().get_texture().get_image()
+		var path: String = _argument("--shot", "user://probe.png")
+		print("SHOT %s error=%d" % [path, image.save_png(path)])
+
 	if _frames > int(_argument("--frames", "400")):
 		_report()
 		get_tree().quit()

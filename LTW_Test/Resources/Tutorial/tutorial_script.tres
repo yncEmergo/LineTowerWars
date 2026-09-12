@@ -20,4 +20,5 @@
 
 [resource]
 script = ExtResource("1_script")
+opponent_gold = 400
 steps = Array[ExtResource("2_step")]([ExtResource("3_01_welcome"), ExtResource("4_02_builder"), ExtResource("5_03_first_towers"), ExtResource("6_04_maze_idea"), ExtResource("7_05_build_maze"), ExtResource("8_06_upgrades"), ExtResource("9_07_creeps"), ExtResource("10_08_ring"), ExtResource("11_09_sending"), ExtResource("12_10_income"), ExtResource("13_11_defend"), ExtResource("14_12_technology"), ExtResource("15_13_elementals"), ExtResource("16_14_discs"), ExtResource("17_15_done")])

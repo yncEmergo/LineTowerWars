@@ -22,6 +22,19 @@ described here is implemented and working. Values marked TBD are not decided yet
 - The core of the game is the balance between investing in offence (sending) and defence (towers)
 - No team modes. Always free for all
 
+# Game modes
+- **MULTIPLAYER**, from the lobby: people against people, over a server. The only mode a
+  network ever sees
+- **SINGLE PLAYER**: one person against computer opponents, offline, on the same rules a
+  lobby host chooses. A skirmish is a match like any other - the AI owns a lane, a builder, a
+  purse and a place in the send ring, and plays by every rule below. It is never RANKED,
+  because ranked means two results are comparable and a result against a computer opponent is
+  not comparable with anything. See `singleplayer.md`
+- **TUTORIAL**: a real match with a script on top, teaching the rules in this file one at a
+  time. Same world, same economy, same opponent machinery. See `tutorial.md`
+- The mode decides who is DRIVING and never what the rules are. Everything the players agreed
+  to is Match settings, below, and a mode may not change one
+
 # Send topology
 - Players are arranged in a fixed ring
 - Every player sends creeps to their right neighbor and receives from their left neighbor
@@ -2795,8 +2808,7 @@ BUILT.
     records both and says which is which
 
 # Win condition
-BUILT, in the smallest form: the match decides itself and then stops. There is no
-end screen yet - players leave through the in-game menu.
+BUILT, and it now ENDS rather than only stopping.
 
 - Last player standing
 - A player at 0 lives is eliminated: EVERYTHING of theirs leaves the field and
@@ -2812,6 +2824,18 @@ end screen yet - players leave through the in-game menu.
   - Every creep still on the field leaves it at that moment, the survivor's own
     included, removed exactly as an eliminated player's are - so nothing is left
     walking a lane nobody defends any more
+- **THE MATCH IS OVER ON SCREEN, not only in the standings.** BUILT. A result board opens
+  over the world naming the winner and listing every player in finishing order, and the
+  corner table is hidden while it is up - the placements are the point at that moment and
+  two copies of them on one screen is one too many
+  - it draws the SAME row the corner table draws all game, so nothing new has to be learned
+    to read it. What it adds is the ORDER: the corner keeps slot order all match so it does
+    not reshuffle itself as players die, and here the order IS the result
+  - one button off it, into a SUMMARY of the whole match: what everybody earned, spent, sent,
+    killed, stole, lost and built, and which Ultimate they finished on. Which of those
+    numbers are worth showing is an open question and the screen is a first pass
+  - none of it is replicated. Every peer already simulates the whole world under lockstep, so
+    every peer arrives at the same numbers on its own
 - Simultaneous elimination does not exist
 - If two life steals would resolve on the same frame, the one that triggers first wins
   - Resolution is by execution order and is deterministic. Eliminations are

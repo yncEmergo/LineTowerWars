@@ -12,6 +12,8 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | [game_rules.md](game_rules.md) | **The RULES.** How the game works — economy, mazing, sending, damage resolution, lives, win condition, and the visual language the rosters are built to. Says which rules are BUILT and which are only written down. Carries no numbers; points at `unit_data.md` instead. |
 | [unit_data.md](unit_data.md) | **The NUMBERS.** Every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements. |
 | [content.md](content.md) | **The PROCEDURE.** How a tower, creep, disc or ability is actually added or changed: which files it is made of, which of them are generated, how an id is picked, and what refuses bad content at boot. Carries no rules and no numbers. |
+| [singleplayer.md](singleplayer.md) | **The opponent AI.** What single player is, how the brain is shaped and why, why it cannot cheat, where difficulty actually comes from, and what it does not do yet. Carries no numbers - those are authored on the profiles. |
+| [tutorial.md](tutorial.md) | **The teaching match.** How a lesson is made, what holds the world and what unsticks it, the three ways it says *where*, and how to change what it teaches without reading code. Carries no lesson wording. |
 | [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it, and the costs deliberately not paid yet. |
 | [netcode-rework.md](netcode-rework.md) | **The next big netcode job, in full.** Why one lagging player currently freezes everybody, what shipping games do instead, exactly which lines are wrong, the design, and a phase-by-phase plan. Written to be executed by somebody with no prior context. Delete it when the phases have landed and `multiplayer.md` carries what they built. |
 | [multiplayer-todo.md](multiplayer-todo.md) | **What the networked build still needs**, in the order it is worth doing - and the long view on getting input latency below the raw ping between players on different continents. A plan, not a record. |
@@ -30,6 +32,9 @@ Ask what kind of thing it is, in this order:
 2. **A number the design decides or copies from LTW 12.4a** → into `unit_data.md`. Not a new file.
 3. **Something about the networked build** → into `multiplayer.md` if it is BUILT, into
    `multiplayer-todo.md` if it is not.
+   **Something about how the computer opponent plays** → into `singleplayer.md`.
+   **Something about how a lesson works** → into `tutorial.md`. Neither takes the WORDING of a
+   lesson or the VALUE of an AI knob: those live in the `.tres` files they are authored in.
 4. **A control the server gained or lost** → into `server.md`, and keep it current.
    **A step in exporting or handing out a build** → into `building.md`, on the same terms.
 5. **A convention, or a trap the engine set that cost a debugging session** → into `../CLAUDE.md`.

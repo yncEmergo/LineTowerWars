@@ -9,17 +9,22 @@ extends Control
 ## leaked on while they read a paragraph - and the only two things that answer a
 ## click are this and the menu that lets them leave.
 ##
-## It sits at the BOTTOM of the screen rather than in the middle, unlike the
-## draft and the result board, and that is the one deliberate difference: those
-## two are decisions that stop everything, and a lesson has to be readable while
-## the player is looking at the thing it is talking about. A box over the middle
-## of the lane would be a tutorial that covers what it is teaching.
+## **It sits down the LEFT EDGE**, unlike the draft and the result board, which
+## fill the middle. Those two are decisions that stop everything; a lesson has
+## to be readable while the player is doing the thing it is talking about, so it
+## may not cover the lane and it absolutely may not cover the COMMAND CARD -
+## which the first version did, while telling the player to press a button on
+## it. The left edge is the one part of this HUD with nothing in it but the
+## minimap.
+##
+## It is pinned to the TOP of that edge and grows DOWNWARDS, rather than sitting
+## centred: a long lesson then runs towards empty screen instead of into the
+## send bar - which lesson nine points an arrow at.
 ##
 ## It owns nothing. Which lesson is open and whether it is finished are
 ## TutorialDirector's; the two buttons report a press and nothing else.
 
 @export_group("References")
-@export var _panel: Control
 ## "3 of 14", so a player knows how much of this is left.
 @export var _progress_label: Label
 @export var _title_label: Label
