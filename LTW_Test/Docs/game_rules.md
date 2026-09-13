@@ -2299,6 +2299,15 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     pulls a creep off the longer way it was already committed to
   - Creeps cut corners diagonally but never squeeze between two towers that only
     touch at a corner, matching the rule that they need a whole free internal cell
+  - A creep walks its route as STRAIGHT LINES from one corner to the next, not
+    cell by cell. The route decides which way round the maze it goes; within
+    that, each creep takes the shortest line from where it actually stands. So
+    creeps spawning across the width of a lane fan in towards the first gap
+    rather than all running along the same edge first and stacking up early
+    - a line keeps a small clearance from every tower, set in GameConfig
+    - a tower built across the line a creep is walking is the commit rule
+      above: nothing changes until the creep reaches the tower's face. A tower
+      built merely beside the line changes nothing at all
   - Only ATTACKER creeps push each other apart. A pack of them crowds at a
     choke point rather than stacking into one body, and no two of them may ever
     stand inside each other at all - see the attacker rules below

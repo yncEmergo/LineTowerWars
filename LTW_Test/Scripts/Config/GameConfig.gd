@@ -44,6 +44,16 @@ extends Resource
 ## Creeps appear within this many cells of the very top of the spawn zone, at a
 ## random x across the full width. See game_rules.md.
 @export var creep_spawn_margin_cells: float = 1.5
+## How far a creep's straight line from one corner of its route to the next has
+## to stay from every tower and every edge, in INTERNAL cells.
+##
+## Creeps walk straight lines between the corners of their route rather than
+## cell by cell, and this is how tightly those lines may hug a tower. Larger
+## keeps a creep further off the walls and puts the corners of its route
+## slightly wider; smaller cuts corners closer and makes the walk a little
+## shorter. Held between 0.05 and 0.49 - see PlayerArea.MAX_PATH_CLEARANCE for
+## why neither end can be reached.
+@export_range(0.05, 0.49) var creep_path_clearance_cells: float = 0.4
 ## Ceiling on the crowding push an ordinary creep takes from the ones around
 ## it, as a share of its own speed. Below 1 so a push can never cancel forward
 ## movement: an uncapped sum over a dense clump shoved creeps a cell a frame

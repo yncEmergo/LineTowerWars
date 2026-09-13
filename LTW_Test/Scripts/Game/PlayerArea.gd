@@ -53,7 +53,19 @@ const CELL_WALKABLE: int = 2
 ## creeps start re-planning away from the spawn strip; see route_to_exit.
 const ROUTE_CACHE_LIMIT: int = 512
 
+## Bounds GameConfig.creep_path_clearance_cells is held inside, in internal
+## cells. Above zero, or a straight line could slip through the point where two
+## towers touch at a corner. Below a half, or a creep could not walk along a
+## wall at all, since the centre of the cell beside it is only a half away.
+const MIN_PATH_CLEARANCE: float = 0.05
+const MAX_PATH_CLEARANCE: float = 0.49
+
 var player_id: int = 1
+## Goes up by one every time the movement grid changes. Lets a creep notice
+## that a building has gone up somewhere without every creep being told about
+## every building: one it walks past costs it an integer compare. See
+## Creep._reached_obstruction. Written only by _set_footprint.
+var grid_version: int = 0
 
 ## One byte per internal cell, one of the CELL_ values above. Indexed
 ## iz * internal_width() + ix, so row major from the creep spawn downwards.
@@ -77,6 +89,10 @@ var _blocking: PackedByteArray = PackedByteArray()
 ## only ever reads its route and advances an index into it; nothing mutates
 ## _path. Anything that changes that has to duplicate here instead.
 var _route_cache: Dictionary = {}
+## The corners of those same routes, keyed the same way and emptied with them.
+## See FlowField.aims_along. Shared with every creep holding one, like the
+## routes, and safe for the same reason.
+var _aim_cache: Dictionary = {}
 ## Every creep walking this area, kept in step with the creeps root rather than
 ## asked for it. See creeps().
 var _creeps: Array[Creep] = []
@@ -452,6 +468,8 @@ func _set_footprint(cell: Vector2i, footprint: Vector2i, value: int) -> void:
 	# Done HERE rather than in occupy/release because this is the one place
 	# _blocking is written, so no caller can forget.
 	_route_cache.clear()
+	_aim_cache.clear()
+	grid_version += 1
 
 
 func _fits_build_zone(cell: Vector2i, footprint: Vector2i) -> bool:
@@ -563,9 +581,45 @@ func internal_cell_center(cell: Vector2i) -> Vector3:
 ## Creeps take the route once and keep it, so this is asked for a full path
 ## rather than a next step. See Creep for why they commit to it.
 func route_to_exit(world_pos: Vector3) -> Array[Vector2i]:
-	if !_flow.is_built():
+	var cell: Vector2i = world_to_internal_cell(world_pos)
+	if !_ensure_route(cell):
 		var empty: Array[Vector2i] = []
 		return empty
+	var route: Array[Vector2i] = _route_cache[cell]
+	return route
+
+
+## The corners of route_to_exit from the same point: for each cell of that
+## route, the index of the furthest cell a creep may walk straight at instead.
+## Empty exactly when the route is.
+func route_aims_to_exit(world_pos: Vector3) -> PackedInt32Array:
+	var cell: Vector2i = world_to_internal_cell(world_pos)
+	if !_ensure_route(cell):
+		return PackedInt32Array()
+	var aims: PackedInt32Array = _aim_cache[cell]
+	return aims
+
+
+## Whether a creep standing at a world point can walk in one straight line to
+## the centre of an internal cell, keeping its clearance from every wall.
+##
+## Asked from where the creep REALLY stands, which is what makes a corner worked
+## out from cell centres safe to use: a creep that spawned in the far corner of
+## its cell, or was pushed off its line, tests its own line before trusting it.
+func can_walk_straight(from: Vector3, to_cell: Vector2i) -> bool:
+	if !_grid_cache_ready:
+		_refresh_grid_cache()
+	var local: Vector3 = _grid_from_world * from
+	var start: Vector2 = Vector2(local.x / _internal_cell, local.z / _internal_cell)
+	var goal: Vector2 = Vector2(float(to_cell.x) + 0.5, float(to_cell.y) + 0.5)
+	return _flow.is_line_clear(start, goal, _blocking, _path_clearance())
+
+
+## Works out and caches the route and its corners from one cell. False when
+## there is no field to read yet.
+func _ensure_route(cell: Vector2i) -> bool:
+	if !_flow.is_built():
+		return false
 
 	# CACHED, because the answer depends only on the starting cell and the
 	# blocking grid, and the grid changes only when a building goes up or comes
@@ -577,18 +631,22 @@ func route_to_exit(world_pos: Vector3) -> Array[Vector2i]:
 	# 2026-09-03 finding counted zero replans in a loaded lane, so the keys are
 	# the spawn strip rather than the whole grid. ROUTE_CACHE_LIMIT is the guard
 	# for the case that stops being true.
-	var cell: Vector2i = world_to_internal_cell(world_pos)
 	if _route_cache.has(cell):
-		var hit: Array[Vector2i] = _route_cache[cell]
-		return hit
+		return true
 
 	var route: Array[Vector2i] = _flow.path_from(cell, _blocking)
 	# Cleared rather than evicted one at a time: the next few creeps pay full
 	# price and it refills, which is cheaper than keeping an order on it.
 	if _route_cache.size() >= ROUTE_CACHE_LIMIT:
 		_route_cache.clear()
+		_aim_cache.clear()
 	_route_cache[cell] = route
-	return route
+	_aim_cache[cell] = _flow.aims_along(cell, route, _blocking, _path_clearance())
+	return true
+
+
+func _path_clearance() -> float:
+	return clampf(_config.creep_path_clearance_cells, MIN_PATH_CLEARANCE, MAX_PATH_CLEARANCE)
 
 
 ## The whole route from one world point to another, as internal cells in

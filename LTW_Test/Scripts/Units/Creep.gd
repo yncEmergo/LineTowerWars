@@ -45,6 +45,10 @@ const TRAIL_SPACING: float = 0.25
 ## and re-reads the route from where it actually stands.
 const STALL_SECONDS: float = 1.5
 
+## Longest straight distance one step of a route can cover, in internal cells:
+## a diagonal. See _cells_to_aim.
+const LONGEST_ROUTE_STEP: float = 1.4142135623730951
+
 ## Step count reported by a creep that has no route at all, large enough that it
 ## always sorts behind every creep that does. See steps_to_exit().
 const NO_ROUTE_STEPS: int = 1 << 24
@@ -81,8 +85,24 @@ var _crowd_settled_point: Vector3 = Vector3.ZERO
 
 ## Route the creep committed to, as internal cells in walking order.
 var _path: Array[Vector2i] = []
-## Which cell of that route the creep is currently walking towards.
+## Which cell of that route the creep is currently walking towards. Usually a
+## CORNER of the route rather than the next cell along, since a creep walks
+## straight at the furthest cell it can reach in a line - see _aim_from.
 var _path_index: int = 0
+## For every cell of _path, the corner a creep that has got that far may walk
+## straight at instead. Shared with the area's cache, never written.
+var _path_aims: PackedInt32Array = PackedInt32Array()
+## Cells between the creep and the corner it is walking at, less the one step
+## the old cell-by-cell count already included. Kept up to date as it walks, so
+## steps_to_exit stays a plain sum however often towers rank it.
+var _aim_steps: int = 0
+## The area's grid_version the straight line to that corner was last checked
+## against, and whether that check found a building across it.
+var _aim_grid_version: int = 0
+var _aim_obstructed: bool = false
+## The area's grid_version when _path was taken, which is the grid its corners
+## were worked out against.
+var _route_grid_version: int = 0
 ## Route to a COMMANDED point, and which cell of it the creep is walking
 ## towards. Kept apart from _path above rather than sharing it, because the two
 ## answer different questions and would overwrite each other: _path is the way
@@ -518,7 +538,7 @@ func steps_to_exit() -> int:
 		return _rows_to_exit()
 	if _path.is_empty() || _path_index >= _path.size():
 		return NO_ROUTE_STEPS
-	return _path.size() - _path_index
+	return _path.size() - _path_index + _aim_steps
 
 
 ## Internal rows between this creep and the end zone, never below zero.
@@ -1344,9 +1364,79 @@ func _walk_route(delta: float) -> void:
 		to_step = _step_offset()
 
 	var direction: Vector3 = to_step.normalized()
+	if _reached_obstruction(direction):
+		_replan()
+		if !_has_step():
+			return
+		to_step = _step_offset()
+		direction = to_step.normalized()
+
 	_step(direction, delta)
 	_face_direction(direction, delta)
-	_watch_for_stall(to_step.length(), delta)
+	var distance: float = to_step.length()
+	_watch_for_stall(distance, delta)
+	_aim_steps = _cells_to_aim(distance)
+
+
+## Points the creep at the furthest corner of its route it can walk to in a
+## straight line, starting from the cell at `index`.
+##
+## The corner was worked out from cell centres, so the line is tested again from
+## where the creep really stands. When that fails - it spawned in the far corner
+## of its cell, or a tower has gone up across the line since - it walks to the
+## next cell of the route instead, exactly as every creep used to, and looks
+## for a corner again once it gets there.
+##
+## `from_corner` skips that test for the one case that cannot fail it: a creep
+## that has just arrived at the very corner the next line was worked out from,
+## on a grid nothing has been built on since. That is nearly every corner of
+## every walk, and the test is a scan of every cell the line crosses.
+func _aim_from(index: int, from_corner: bool = false) -> void:
+	_path_index = index
+	_aim_obstructed = false
+	_aim_grid_version = area.grid_version
+	if index >= 0 && index < _path_aims.size():
+		var corner: int = _path_aims[index]
+		var trusted: bool = from_corner && _aim_grid_version == _route_grid_version
+		if corner > index \
+				&& (trusted || area.can_walk_straight(global_position, _path[corner])):
+			_path_index = corner
+	_aim_steps = _cells_to_aim(_step_offset().length()) if _path_index < _path.size() else 0
+
+
+## Whether a tower has gone up across the line the creep is walking AND the
+## creep has now arrived at its face.
+##
+## Both halves are the commit rule in game_rules.md, restated for a straight
+## line instead of a cell: a tower dropped across the line changes nothing until
+## the creep gets to it, and then it re-routes standing at the tower. A tower
+## put up merely BESIDE the line fails the clearance test without ever being in
+## the way, so the creep walks on past it as it would have anyway.
+##
+## Only a creep whose line was found blocked pays for the look ahead. Every
+## other creep pays one integer compare, and one line test per building placed.
+func _reached_obstruction(direction: Vector3) -> bool:
+	if area.grid_version != _aim_grid_version:
+		_aim_grid_version = area.grid_version
+		_aim_obstructed = !area.can_walk_straight(global_position, _path[_path_index])
+	if !_aim_obstructed:
+		return false
+	var ahead: Vector3 = global_position + direction * area.internal_cell_size() * 0.5
+	return !area.is_point_free(ahead)
+
+
+## Cells between the creep and the corner it is walking at, from how far away
+## that corner is, less the step steps_to_exit already includes.
+##
+## Only towers ranking creeps read it, and they only need it to go DOWN as a
+## creep walks, including across a corner where it switches to the next line.
+## The route is eight-connected, so a corner a straight distance away is never
+## fewer than that distance over the square root of two steps off - which is
+## what makes the count safe to switch lines on. Worked out from the distance
+## the walk already has, rather than from the creep's cell, because it is paid
+## by every walking creep every tick.
+func _cells_to_aim(distance: float) -> int:
+	return maxi(0, int(distance / (area.internal_cell_size() * LONGEST_ROUTE_STEP)) - 1)
 
 
 ## Straight down the lane, reading none of the occupancy grid: what a FLYER
@@ -1582,9 +1672,11 @@ func _arrive() -> void:
 ## Whether the committed route still has a step the creep can take.
 ##
 ## The blocked test is what makes committing work: the route is followed as it
-## was planned, and only the cell the creep is walking into right now is
-## checked. So a tower dropped anywhere else along the route changes nothing
-## until the creep gets there, and then it re-routes standing at its face.
+## was planned, and only the corner the creep is walking at right now is
+## checked here. So a tower dropped anywhere else along the route changes
+## nothing until the creep gets there, and then it re-routes standing at its
+## face. A tower across the straight line TO that corner is the same rule, and
+## is _reached_obstruction's half of it.
 func _has_step() -> bool:
 	if _path_index < 0 || _path_index >= _path.size():
 		return false
@@ -1621,7 +1713,11 @@ func _step_reach(delta: float) -> float:
 
 
 func _advance_step() -> void:
-	_path_index += 1
+	# Arrived at a corner when the cell just reached is one the route's own
+	# lines start from, rather than a cell walked to because a line was blocked.
+	var at_corner: bool = _path_index >= 0 && _path_index < _path_aims.size() \
+		&& _path_aims[_path_index] == _path_index
+	_aim_from(_path_index + 1, at_corner)
 	_reset_stall()
 	if !_has_step():
 		_replan()
@@ -1912,7 +2008,9 @@ func _replan() -> void:
 		return
 
 	_path = area.route_to_exit(global_position)
-	_path_index = 0
+	_path_aims = area.route_aims_to_exit(global_position)
+	_route_grid_version = area.grid_version
+	_aim_from(0)
 	_reset_stall()
 
 	if _path.is_empty() && !area.has_route_from(global_position):

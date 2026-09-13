@@ -18,6 +18,9 @@ extends RefCounted
 ## was built would produce visible stair-steps. Diagonal steps are only offered
 ## when both neighbouring orthogonal cells are free, so a creep still never
 ## squeezes through a corner it could not fit through.
+##
+## And a creep does not walk that route cell by cell either: aims_along turns
+## it into straight lines between the corners it actually has to go round.
 
 ## Distance value for a cell no route reaches, including blocked cells.
 const UNREACHABLE: int = -1
@@ -181,6 +184,114 @@ func path_from(cell: Vector2i, occupied: PackedByteArray) -> Array[Vector2i]:
 		current = next
 
 	return path
+
+
+## Where the straight lines of a route go: for every cell of a path_from route,
+## the index of the corner a creep walking towards that cell may head for
+## instead, in one straight line.
+##
+## The cell route is what the field says and stays the authority on WHICH way
+## round the maze a creep goes. Walked cell by cell it is a staircase, and every
+## creep on it is funnelled onto the same few cells long before it has to be:
+## two creeps spawning a lane apart would run along the top edge together and
+## only then turn down. Walking corner to corner instead is the shortest line
+## through the same corridor, from wherever each creep actually started.
+##
+## Greedy from the start cell: the furthest cell still in plain sight becomes a
+## corner, and the search starts again from there. Found by galloping and then
+## halving rather than by testing every cell in turn, so a long open stretch
+## costs a handful of line tests rather than one per cell. Every corner handed
+## out is one whose line was actually tested clear, whatever the search skipped.
+##
+## Worked out against cell CENTRES. A creep standing elsewhere in its cell tests
+## its own line again before it trusts one - see PlayerArea.can_walk_straight.
+func aims_along(start: Vector2i, path: Array[Vector2i], occupied: PackedByteArray,
+		clearance: float) -> PackedInt32Array:
+	var aims: PackedInt32Array = PackedInt32Array()
+	var size: int = path.size()
+	aims.resize(size)
+
+	var anchor: Vector2 = _center_of(start)
+	var first: int = 0
+	while first < size:
+		# The next cell along is always a legal step from the anchor, so the
+		# search only ever has to decide how much further than that to go.
+		var good: int = first
+		var bad: int = size
+		var stride: int = 1
+		while good + stride < size:
+			var probe: int = good + stride
+			if !is_line_clear(anchor, _center_of(path[probe]), occupied, clearance):
+				bad = probe
+				break
+			good = probe
+			stride *= 2
+		if bad == size && good < size - 1:
+			if is_line_clear(anchor, _center_of(path[size - 1]), occupied, clearance):
+				good = size - 1
+			else:
+				bad = size - 1
+		while bad - good > 1:
+			var middle: int = (good + bad) >> 1
+			if is_line_clear(anchor, _center_of(path[middle]), occupied, clearance):
+				good = middle
+			else:
+				bad = middle
+
+		for index in range(first, good + 1):
+			aims[index] = good
+		anchor = _center_of(path[good])
+		first = good + 1
+
+	return aims
+
+
+## Whether a straight walk between two points, in internal cell units, stays at
+## least `clearance` cells away from every blocked cell and every edge.
+##
+## Tested one row at a time: the stretch of line that can reach a row is worked
+## out, widened by the clearance, and every cell it covers must be free. The
+## clearance is applied as a square around the line rather than a circle, which
+## is conservative only at a tower's corners.
+##
+## The clearance must be above zero. At zero a line could run exactly through
+## the point where two towers touch at a corner, which is a wall.
+func is_line_clear(from: Vector2, to: Vector2, occupied: PackedByteArray,
+		clearance: float) -> bool:
+	var from_x: float = from.x
+	var from_y: float = from.y
+	var dx: float = to.x - from_x
+	var dy: float = to.y - from_y
+	var min_y: float = minf(from_y, to.y)
+	var max_y: float = maxf(from_y, to.y)
+
+	var first_row: int = int(floor(min_y - clearance))
+	var last_row: int = int(ceil(max_y + clearance)) - 1
+	for row in range(first_row, last_row + 1):
+		var low: float = maxf(min_y, float(row) - clearance)
+		var high: float = minf(max_y, float(row + 1) + clearance)
+		if low > high:
+			continue
+
+		var x_low: float = minf(from_x, to.x)
+		var x_high: float = maxf(from_x, to.x)
+		if dy != 0.0:
+			var x_at_low: float = from_x + (low - from_y) * dx / dy
+			var x_at_high: float = from_x + (high - from_y) * dx / dy
+			x_low = minf(x_at_low, x_at_high)
+			x_high = maxf(x_at_low, x_at_high)
+
+		var first_column: int = int(floor(x_low - clearance))
+		var last_column: int = int(ceil(x_high + clearance)) - 1
+		for column in range(first_column, last_column + 1):
+			if !_cell_free(Vector2i(column, row), occupied):
+				return false
+
+	return true
+
+
+func _center_of(cell: Vector2i) -> Vector2:
+	return Vector2(float(cell.x) + 0.5, float(cell.y) + 0.5)
 
 
 ## Whether a diagonal step is physically possible, i.e. both cells it cuts
