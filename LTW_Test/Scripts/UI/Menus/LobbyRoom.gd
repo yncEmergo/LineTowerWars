@@ -33,7 +33,8 @@ extends Control
 @export var _leave_button: Button
 ## Turns the session log on for this run. See SessionLog.
 @export var _log_check: CheckBox
-## Records the match this machine is about to play. See MatchRecorder.
+## Keeps the match this machine is about to play, rather than letting the next
+## one replace it as the last match. See MatchRecorder.
 @export var _record_check: CheckBox
 
 @export_group("Settings")
@@ -312,9 +313,9 @@ func _setup_record_check() -> void:
 func _on_record_toggled(on: bool) -> void:
 	MatchRecorder.set_armed(on)
 	if on:
-		_set_status("Matches will be recorded to " + MatchRecorder.folder_path())
+		_set_status("This match will be kept in " + MatchRecorder.folder_path())
 	else:
-		_set_status("Match recording off.")
+		_set_status("This match will only be the last match, until the next one.")
 
 
 func _stand_in_lobby() -> LobbyInfo:

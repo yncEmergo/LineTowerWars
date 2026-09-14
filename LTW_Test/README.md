@@ -47,8 +47,11 @@ format, so a
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 
-**A match can be recorded to a file**, from a "Record match" tick box in the lobby room and
-on the single player setup screen - per machine and per match, off unless asked for. The file holds every
+**Every match is recorded to a file**, the way Warcraft III keeps its last replay: the match
+just played is always `last_match.jsonl`, and the next match to finish replaces it. A "Keep
+replay" tick box in the lobby room and on the single player setup screen keeps a copy under
+its own name as well - per machine and per match, off by default. Nothing is recorded on the
+server. The file holds every
 order every player gave and what came of it, every tower built, upgraded, sold or destroyed
 with its cell and its tick, every send, and regular snapshots of each player's economy and
 whole maze, under a header naming the seed, the roster and every id it uses. It is written for

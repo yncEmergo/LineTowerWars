@@ -35,7 +35,8 @@ extends Control
 @export var _start_button: Button
 @export var _back_button: Button
 @export var _hint_label: Label
-## Records the match about to be played. See MatchRecorder.
+## Keeps the match about to be played, rather than letting the next one replace
+## it as the last match. See MatchRecorder.
 @export var _record_check: CheckBox
 
 @export_group("Settings")

@@ -8,28 +8,40 @@ extends Node
 ## is TRAINING the computer opponent on how people actually build and send. The
 ## file is shaped for both, so neither will need a format change when it arrives.
 ##
-## ## Where it is switched on
+## ## Every match is recorded, and only the last one is kept
 ##
-## Per MACHINE, in the lobby room and on the single player setup screen - the same
-## shape as the session log, and for the same reason: a file nobody asked for is
-## a file quietly growing on a stranger's disk. It is NOT a match setting. Every
-## peer runs the same simulation, so every peer that records a match writes the
-## same match; whoever wants the data ticks the box, and nobody else is affected.
+## **The Warcraft III shape, and the user's call.** Every match this machine plays
+## is written to `last_match.jsonl`, and the next match to finish replaces it - so
+## the match somebody has just played is always there to be picked up, and the
+## folder never grows on its own.
 ##
-## **One tick covers ONE match.** The choice is a static, so it outlives the menu
-## it was made in and reaches the match that follows - and begin() switches it
-## back off as it starts recording, so the next match is not recorded unless the
-## box is ticked again. The user's call: a recording is asked for per match.
+## "Finish" means the recording CLOSED: the match was decided, the player left
+## it, or the game was quit. Until then the match writes to a working file of its
+## own, so a match that crashes, or one still running in a second copy of the
+## game on the same machine, cannot destroy the last one that did finish.
 ##
-## A tutorial is never recorded, whatever the box says. A relay records nothing
-## either: it builds no world, so Main returns before ever reaching begin().
+## **Keeping one is a tick box**, per MACHINE and per MATCH, in the lobby room and
+## on the single player setup screen. A ticked match is also copied to a file
+## named for when it started, which nothing overwrites. It is NOT a match setting:
+## every peer runs the same simulation, so whoever wants a copy ticks the box and
+## nobody else is affected. The tick is a static, so it outlives the menu it was
+## made in, and begin() spends it - the next match is not kept unless the box is
+## ticked again.
+##
+## A tutorial is never recorded. Nothing is recorded on a server either: a relay
+## builds no world, so Main returns before ever reaching begin(), and the server
+## match scene has no recorder at all.
 ##
 ## ## What it costs
 ##
-## Nothing when off - every call site is a null check and a bool. When on, every
-## line is a player action or a snapshot, never a per-unit or per-tick event, and
-## the file is only FLUSHED on a snapshot and at the end: a crash loses at most
-## one snapshot interval of events.
+## **It runs in every match, so this matters.** Every line is a player action or
+## a snapshot, never a per-tick event, and leaks are summed per tick. The one
+## lump is the snapshot, which serialises every maze at once: measured on
+## 2026-09-14 on the Windows dev PC at about half a millisecond, at worst just over
+## one, in a three player endgame of thirty-five towers a maze - once every
+## snapshot interval, and growing with how many towers stand in the world. The
+## file is only FLUSHED on a snapshot and at the end, so a crash loses at most one
+## interval of events.
 ##
 ## **It is not simulation.** It reads the world and never writes to it - no RNG,
 ## no unit ids, nothing checksummed - so a machine recording plays exactly the
@@ -37,7 +49,8 @@ extends Node
 ##
 ## ## The file
 ##
-## `user://recordings/match-<local time>-<mode>-slot<n>.jsonl`. JSON Lines: one
+## `user://recordings/last_match.jsonl`, and a kept match beside it as
+## `match-<local time>-<mode>-slot<n>.jsonl`. JSON Lines: one
 ## object per line, so a reader can stream it and a crashed match is still a
 ## readable file up to its last flush. Every line has `k`, what KIND of line it
 ## is, and every line but the header has `t`, the MATCH TICK it happened on
@@ -109,6 +122,8 @@ const FORMAT_VERSION: int = 1
 ## Where recordings go. user:// rather than res://, which is read-only in an
 ## export. On Windows that is %APPDATA%\Godot\app_userdata\<project>\recordings.
 const DIRECTORY: String = "user://recordings"
+## The last match to finish. Replaced by the next one.
+const LAST_MATCH_FILE: String = "last_match.jsonl"
 
 ## How each BuildingEvent is spelled in the file, in enum order. Spelled out so
 ## renaming an enum value never renames a line a reader already looks for.
@@ -126,11 +141,14 @@ const PHASE_KEYS: Array[String] = [
 ## header names the columns once.
 const MAZE_COLUMNS: Array[String] = ["unit", "type", "x", "y", "phase", "into", "hp"]
 
-## The player's choice, for the process. See the note on where it is switched on.
+## The player's choice, for the process. See the note on keeping one.
 static var _armed: bool = false
 
 var _file: FileAccess = null
+## The working file this match writes to until it closes.
 var _path: String = ""
+## Where a KEPT match is copied when it closes, or "" when the box was not ticked.
+var _keep_path: String = ""
 var _snapshot_every: int = 0
 var _next_snapshot: int = 0
 ## Lockstep's current turn, or -1 off lockstep. Taken from turn_ready, which
@@ -160,7 +178,8 @@ func _ready() -> void:
 	set_physics_process(false)
 
 
-## Whether the next match this machine plays will be recorded.
+## Whether the next match this machine plays will be KEPT, beyond being the last
+## match until another one finishes.
 static func is_armed() -> bool:
 	return _armed
 
@@ -175,17 +194,18 @@ static func folder_path() -> String:
 	return ProjectSettings.globalize_path(DIRECTORY)
 
 
-## Starts recording this match, if this machine asked for it. Called by Main once
-## the areas, the builders and the registries exist, and BEFORE the opening
-## technology is dealt, so a grant made at tick 0 is already in the file.
+## Starts recording this match. Called by Main once the areas, the builders and
+## the registries exist, and BEFORE the opening technology is dealt, so a grant
+## made at tick 0 is already in the file.
 func begin(setup: MatchSetup, areas: Array[PlayerArea]) -> void:
-	if !_armed || setup == null || _file != null:
+	if setup == null || _file != null:
 		return
 	# Spent by the match it was ticked for, whatever happens below.
+	var keep: bool = _armed
 	_armed = false
 	if setup.mode == MatchSetup.Mode.TUTORIAL || !MatchSession.is_authority():
 		return
-	if !_open_file(setup):
+	if !_open_file(setup, keep):
 		return
 
 	var config: RecordingConfig = References.recording_config
@@ -200,7 +220,7 @@ func begin(setup: MatchSetup, areas: Array[PlayerArea]) -> void:
 	_write(_header(setup, areas))
 	_listen(true)
 	set_physics_process(true)
-	Log.info("Recording this match", {"path": ProjectSettings.globalize_path(_path)})
+	Log.info("Recording this match", {"keep": keep})
 
 
 func is_recording() -> bool:
@@ -426,14 +446,22 @@ func _on_match_ended(winner_slot: int) -> void:
 
 # --- writing --------------------------------------------------------------
 
-func _open_file(setup: MatchSetup) -> bool:
+## Opens this match's WORKING file, named for this process so two copies of the
+## game on one machine - which is how the networked build is tested - cannot
+## write into each other's. It becomes the last match when it closes.
+func _open_file(setup: MatchSetup, keep: bool) -> bool:
 	DirAccess.make_dir_recursive_absolute(DIRECTORY)
-	# Local time so the files sort the way the player remembers playing them.
-	# The header carries UTC for lining two machines' files up.
-	var stamp: String = Time.get_datetime_string_from_system(false, false)
-	stamp = stamp.replace(":", "-").replace("T", "_")
-	var mode: String = str(MatchSetup.Mode.keys()[setup.mode]).to_lower()
-	_path = "%s/match-%s-%s-slot%d.jsonl" % [DIRECTORY, stamp, mode, setup.local_slot]
+	_path = "%s/recording-%d.partial.jsonl" % [DIRECTORY, OS.get_process_id()]
+	_keep_path = ""
+	if keep:
+		# Local time so kept files sort the way the player remembers playing them.
+		# The header carries UTC for lining two machines' files up.
+		var stamp: String = Time.get_datetime_string_from_system(false, false)
+		stamp = stamp.replace(":", "-").replace("T", "_")
+		var mode: String = str(MatchSetup.Mode.keys()[setup.mode]).to_lower()
+		_keep_path = "%s/match-%s-%s-slot%d.jsonl" % [
+			DIRECTORY, stamp, mode, setup.local_slot,
+		]
 
 	_file = FileAccess.open(_path, FileAccess.WRITE)
 	if _file == null:
@@ -469,8 +497,31 @@ func _finish(reason: String, winner_slot: int) -> void:
 	set_physics_process(false)
 	_file.close()
 	_file = null
-	Log.info("Match recording closed", {
-		"path": ProjectSettings.globalize_path(_path), "reason": reason,
+	_publish(reason)
+
+
+## The closed working file becomes the last match - and a kept one is copied out
+## first, so the copy never depends on the replace going right.
+##
+## Removed and then renamed rather than renamed over, because whether a rename
+## replaces an existing file is up to the platform.
+func _publish(reason: String) -> void:
+	if !_keep_path.is_empty():
+		var copied: Error = DirAccess.copy_absolute(_path, _keep_path)
+		if copied != OK:
+			Log.warn("Kept match could not be copied", {"to": _keep_path, "error": copied})
+
+	var last: String = DIRECTORY.path_join(LAST_MATCH_FILE)
+	if FileAccess.file_exists(last):
+		DirAccess.remove_absolute(last)
+	var renamed: Error = DirAccess.rename_absolute(_path, last)
+	if renamed != OK:
+		Log.warn("Last match could not be replaced", {"from": _path, "error": renamed})
+		return
+	Log.info("Match recording saved", {
+		"last_match": ProjectSettings.globalize_path(last),
+		"kept": "" if _keep_path.is_empty() else ProjectSettings.globalize_path(_keep_path),
+		"reason": reason,
 	})
 
 

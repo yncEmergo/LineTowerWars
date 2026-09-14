@@ -72,12 +72,12 @@ func _ready() -> void:
 	for player in setup.players:
 		print("  slot %d  %s" % [player.slot, player.display_name])
 
-	# `record=1` writes the match to user://recordings like a player's own match
-	# - which makes the bench a source of AI-against-AI matches as well as a
-	# referee. The same per-process switch the lobby box sets; see MatchRecorder.
+	# Every match is recorded as the last match, this one included. `record=1`
+	# KEEPS it too, like a player's ticked box - which makes the bench a source of
+	# AI-against-AI matches as well as a referee. See MatchRecorder.
 	if int(_number("record", 0.0)) != 0:
 		MatchRecorder.set_armed(true)
-		print("  recording to %s" % MatchRecorder.folder_path())
+		print("  keeping the recording in %s" % MatchRecorder.folder_path())
 
 	MenuNavigation.pending_match = setup
 	var scene: PackedScene = load(MATCH_SCENE) as PackedScene

@@ -131,8 +131,8 @@ alignment = 2
 
 [node name="RecordCheck" type="CheckBox" parent="Margin/Column/Footer"]
 layout_mode = 2
-tooltip_text = "Writes every order and every maze of this match to a file in the game's user folder, under recordings."
-text = "Record match"
+tooltip_text = "Every match is saved as last_match.jsonl in the game's user folder, under recordings, and replaced by the next one. Tick this to keep this match as well."
+text = "Keep replay"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 custom_minimum_size = Vector2(180, 40)

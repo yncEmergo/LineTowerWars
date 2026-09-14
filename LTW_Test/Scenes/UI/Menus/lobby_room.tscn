@@ -159,8 +159,8 @@ text = "Log this session"
 
 [node name="RecordCheck" type="CheckBox" parent="Margin/Column/Footer"]
 layout_mode = 2
-tooltip_text = "Writes every order and every maze of the match you are about to play to a file in the game's user folder, under recordings. Only this machine records."
-text = "Record match"
+tooltip_text = "Every match is saved as last_match.jsonl in the game's user folder, under recordings, and replaced by the next one. Tick this to keep this match as well."
+text = "Keep replay"
 
 [node name="FooterSpacer" type="Control" parent="Margin/Column/Footer" unique_id=684004997]
 layout_mode = 2
