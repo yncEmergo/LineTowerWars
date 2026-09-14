@@ -47,6 +47,15 @@ format, so a
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 
+**A match can be recorded to a file**, from a "Record match" tick box in the lobby room and
+on the single player setup screen - per machine and per match, off unless asked for. The file holds every
+order every player gave and what came of it, every tower built, upgraded, sold or destroyed
+with its cell and its tick, every send, and regular snapshots of each player's economy and
+whole maze, under a header naming the seed, the roster and every id it uses. It is written for
+two readers that do not exist yet - a replay, and training the computer opponent - and it
+lands in `%APPDATA%\Godot\app_userdata\LTW_Test\recordings\`. `MatchRecorder.gd` documents the
+format.
+
 **The match does not stop the first time something is spawned.** Everything a match can put
 in the world — every unit, model, disc, projectile, impact and sound — is loaded on the load
 screen rather than the first time it appears. That matters more under lockstep than it would

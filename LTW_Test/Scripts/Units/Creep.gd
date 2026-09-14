@@ -2132,6 +2132,8 @@ func _reach_end() -> void:
 		Replication.report_leak(owner_player_id, area.player_id, stolen)
 		if References.match_stats != null:
 			References.match_stats.record_leak(owner_player_id, area.player_id, stolen)
+		if References.match_recorder != null:
+			References.match_recorder.record_leak(owner_player_id, area.player_id, stolen)
 
 	if destination == null:
 		queue_free()

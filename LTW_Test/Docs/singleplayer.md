@@ -242,6 +242,11 @@ rewrite - which is the point of the shape.
   ordinary building
 - **It does not command attacker creeps**, which are the only creeps their owner can steer
 - **It does not react to being attacked at all** - no emergency tower, no panic upgrade
+- **It does not learn from anybody.** Matches can be RECORDED - by a player from the lobby
+  or the setup screen, and by the bench with `-Record` - into files that say what every
+  player built where, what they upgraded it into and when, and what they sent. See
+  `MatchRecorder`. Nothing reads them yet; they are the raw material for an AI that plays
+  the way people do rather than the way a profile was typed
 - **It plays offline only.** `AiPlayer` already guards on `MatchSession.is_authority()` and
   rolls on the shared match RNG, so the arithmetic is deterministic; what is missing is a
   decision about WHERE an AI lives in a lockstep match. One peer running it and sending the
@@ -268,6 +273,9 @@ actually harder than that one" is asked again every time a profile is retuned or
 changes what a tower is worth, and there is no other way to ask it.
 
 Pass the same seed to compare two tunings. Pass different ones before believing either.
+
+Add `-Record` to also write the match to `user://recordings`, in the same format a player's
+recorded match uses - see `MatchRecorder`.
 
 Everything in section 6 and 6a was found with it, and none of it was visible in a log.
 

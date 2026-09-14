@@ -35,6 +35,8 @@ extends Control
 @export var _start_button: Button
 @export var _back_button: Button
 @export var _hint_label: Label
+## Records the match about to be played. See MatchRecorder.
+@export var _record_check: CheckBox
 
 @export_group("Settings")
 @export var _slot_scene: PackedScene
@@ -104,6 +106,11 @@ func _connect_controls() -> void:
 		_back_button.pressed.connect(_on_back_pressed)
 	if _settings_panel != null:
 		_settings_panel.settings_changed.connect(_on_settings_changed)
+	if _record_check != null:
+		# Reflects the choice rather than forcing it. It is off again after every
+		# match, because starting one spends the tick. See LobbyRoom.
+		_record_check.button_pressed = MatchRecorder.is_armed()
+		_record_check.toggled.connect(_on_record_toggled)
 
 
 func _fill_all_option() -> void:
@@ -256,6 +263,10 @@ func _on_start_pressed() -> void:
 		"settings": setup.settings.describe(),
 	})
 	MenuNavigation.to_match_loading(self, setup)
+
+
+func _on_record_toggled(on: bool) -> void:
+	MatchRecorder.set_armed(on)
 
 
 func _on_back_pressed() -> void:

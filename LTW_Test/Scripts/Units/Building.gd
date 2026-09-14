@@ -728,6 +728,10 @@ func cancel_construction() -> void:
 		if state != null:
 			state.gain(invested_gold)
 
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.CANCELLED, self, invested_gold
+		)
 	Log.info("Construction cancelled", {"building": name, "refund": invested_gold})
 	queue_free()
 
@@ -751,6 +755,8 @@ func sell() -> void:
 	_selling = true
 	_sell_elapsed = 0.0
 	_refresh_job_bar()
+	if References.match_recorder != null:
+		References.match_recorder.record_building(MatchRecorder.BuildingEvent.SELL_STARTED, self)
 	sell_started.emit()
 	# Swaps the card down to just cancel while the sale runs.
 	abilities_changed.emit()
@@ -763,6 +769,10 @@ func cancel_sell() -> void:
 	_selling = false
 	_sell_elapsed = 0.0
 	_refresh_job_bar()
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.SELL_CANCELLED, self
+		)
 	Log.info("Sale cancelled", {"building": name})
 	sell_cancelled.emit()
 	abilities_changed.emit()
@@ -780,6 +790,8 @@ func _complete_sell() -> void:
 
 	if References.match_stats != null:
 		References.match_stats.record_tower_sold(owner_player_id)
+	if References.match_recorder != null:
+		References.match_recorder.record_building(MatchRecorder.BuildingEvent.SOLD, self, refund)
 
 	Log.info("Building sold", {"building": name, "refund": refund})
 	queue_free()
@@ -900,6 +912,10 @@ func upgrade_to(target_stats: BuildingStats) -> void:
 	_apply_animation_state()
 	_refresh_job_bar()
 
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.UPGRADE_STARTED, self, cost
+		)
 	Log.info("Upgrade started", {
 		"building": name, "into": target_stats.display_name, "cost": cost,
 	})
@@ -934,6 +950,10 @@ func return_to_core(core_stats: BuildingStats) -> void:
 	_apply_animation_state()
 	_refresh_job_bar()
 
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.RETURN_STARTED, self
+		)
 	Log.info("Return to Core started", {"building": name, "value": invested_gold})
 	upgrade_started.emit()
 	# Swaps the card down to just cancel while the return runs.
@@ -960,6 +980,12 @@ func cancel_upgrade() -> void:
 	var state: PlayerState = _owner_state()
 	if state != null:
 		state.gain(refund)
+
+	# Before the target is cleared, so the line still says what it was becoming.
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.MORPH_CANCELLED, self, refund
+		)
 
 	_upgrading = false
 	_returning = false
@@ -1131,6 +1157,10 @@ func _advance_upgrade(delta: float) -> void:
 func _complete_upgrade() -> void:
 	var target: BuildingStats = _upgrade_target
 	var returning: bool = _returning
+	# A Void conversion arrives here without ever having started a morph, which
+	# is the one way to tell it apart. Read for the recording only.
+	var converted: bool = !_upgrading
+	var from_type: int = UnitTypeRegistry.NO_TYPE if stats == null else stats.unit_type_id
 	# Counted as a rung CLIMBED, so a return to a bare Core is not one. See
 	# MatchStats.record_tower_upgraded.
 	if !returning && References.match_stats != null:
@@ -1195,6 +1225,8 @@ func _complete_upgrade() -> void:
 	# Sorcerer. A passive whose new tier does not use a key simply never reads
 	# it, which costs nothing.
 	upgraded.inherit_ability_state(kept_state, kept_mana, kept_active)
+	if References.match_recorder != null:
+		References.match_recorder.record_morphed(upgraded, from_type, returning, converted)
 	Log.info("Morph finished", {"tower": upgraded.name, "value": kept_gold})
 
 
@@ -1296,6 +1328,8 @@ func _die() -> void:
 	# a sale goes through _complete_sell and is counted there instead.
 	if References.match_stats != null:
 		References.match_stats.record_tower_lost(owner_player_id)
+	if References.match_recorder != null:
+		References.match_recorder.record_building(MatchRecorder.BuildingEvent.DESTROYED, self)
 	super()
 
 
@@ -1598,6 +1632,8 @@ func _finish_construction() -> void:
 	_apply_visual_height(1.0)
 	_apply_animation_state()
 	_set_health(float(max_health() - _construction_damage))
+	if References.match_recorder != null:
+		References.match_recorder.record_building(MatchRecorder.BuildingEvent.FINISHED, self)
 	construction_finished.emit()
 	# Swaps the cancel button for the finished building's real card.
 	abilities_changed.emit()

@@ -108,6 +108,12 @@ func _ready() -> void:
 	var probe: Builder = null if builders.is_empty() else builders[0]
 	_validate_content(probe)
 
+	# After the registries, whose tables go into the recording's header, and
+	# BEFORE the opening technology, so a grant made on tick 0 is in the file.
+	# Does nothing unless this machine ticked Record in the lobby.
+	if References.match_recorder != null:
+		References.match_recorder.begin(setup, _areas)
+
 	# After the registries, necessarily: the opening names technologies, and
 	# _validate_content is where the technology registry is built.
 	if References.starting_tech != null:

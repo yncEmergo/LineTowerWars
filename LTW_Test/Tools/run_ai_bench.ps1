@@ -8,6 +8,7 @@
 #   .\Tools\run_ai_bench.ps1 -A Hard -B Easy          one against the other
 #   .\Tools\run_ai_bench.ps1 -Players 4 -Minutes 25   a free for all, to the endgame
 #   .\Tools\run_ai_bench.ps1 -Seed 7                  the same match again
+#   .\Tools\run_ai_bench.ps1 -Record                  also write it to user://recordings
 #
 # Headless and faster than real time: the engine rate is raised for the run and
 # put back afterwards, and nothing in the simulation reads it - see
@@ -20,6 +21,7 @@ param(
 	[double]$Minutes = 25,
 	[int]$Seed = 0,
 	[int]$Speed = 240,
+	[switch]$Record,
 	[string]$Godot = ""
 )
 
@@ -37,7 +39,8 @@ if ($Seed -le 0) { $Seed = Get-Random -Minimum 1 -Maximum 2147483647 }
 $benchArgs = @(
 	"--path", $projectRoot, "--headless",
 	"res://Scenes/Tools/ai_bench.tscn", "--",
-	"a=$A", "b=$B", "players=$Players", "minutes=$Minutes", "seed=$Seed", "speed=$Speed"
+	"a=$A", "b=$B", "players=$Players", "minutes=$Minutes", "seed=$Seed", "speed=$Speed",
+	"record=$(if ($Record) { 1 } else { 0 })"
 )
 
 # Start-Process rather than the call operator, because the editor binary is a

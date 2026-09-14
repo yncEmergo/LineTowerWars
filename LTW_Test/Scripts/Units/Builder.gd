@@ -164,6 +164,10 @@ func _start_pending_build() -> void:
 
 	if References.match_stats != null:
 		References.match_stats.record_tower_built(owner_player_id, cost)
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.STARTED, building, cost
+		)
 
 	# The builder is free the instant the tower starts, it does not construct,
 	# but it turns to face what it just started.

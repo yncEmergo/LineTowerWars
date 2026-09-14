@@ -13,7 +13,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/skirmish_slot.tscn" id="11_slot"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Menus/lobby_settings_panel.tscn" id="12_settings"]
 
-[node name="SkirmishSetup" type="Control" node_paths=PackedStringArray("_title_label", "_slot_list", "_opponents_spin", "_all_option", "_settings_panel", "_start_button", "_back_button", "_hint_label")]
+[node name="SkirmishSetup" type="Control" node_paths=PackedStringArray("_title_label", "_slot_list", "_opponents_spin", "_all_option", "_settings_panel", "_start_button", "_back_button", "_hint_label", "_record_check")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,6 +30,7 @@ _settings_panel = NodePath("Margin/Column/Body/SettingsPanel")
 _start_button = NodePath("Margin/Column/Footer/StartButton")
 _back_button = NodePath("Margin/Column/Footer/BackButton")
 _hint_label = NodePath("Margin/Column/Body/Roster/HintLabel")
+_record_check = NodePath("Margin/Column/Footer/RecordCheck")
 _slot_scene = ExtResource("11_slot")
 
 [node name="References" type="Node" parent="."]
@@ -127,6 +128,11 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 2
+
+[node name="RecordCheck" type="CheckBox" parent="Margin/Column/Footer"]
+layout_mode = 2
+tooltip_text = "Writes every order and every maze of this match to a file in the game's user folder, under recordings."
+text = "Record match"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 custom_minimum_size = Vector2(180, 40)

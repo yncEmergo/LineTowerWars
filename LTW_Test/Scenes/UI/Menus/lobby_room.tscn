@@ -14,7 +14,7 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
-[node name="LobbyRoom" type="Control" unique_id=1913598129 node_paths=PackedStringArray("_title_label", "_subtitle_label", "_slot_list", "_settings_panel", "_status_label", "_start_button", "_leave_button", "_log_check")]
+[node name="LobbyRoom" type="Control" unique_id=1913598129 node_paths=PackedStringArray("_title_label", "_subtitle_label", "_slot_list", "_settings_panel", "_status_label", "_start_button", "_leave_button", "_log_check", "_record_check")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,6 +31,7 @@ _status_label = NodePath("Margin/Column/StatusLabel")
 _start_button = NodePath("Margin/Column/Footer/StartButton")
 _leave_button = NodePath("Margin/Column/Footer/LeaveButton")
 _log_check = NodePath("Margin/Column/Footer/LogCheck")
+_record_check = NodePath("Margin/Column/Footer/RecordCheck")
 _slot_scene = ExtResource("5_slot")
 
 [node name="References" type="Node" parent="." unique_id=926708942]
@@ -155,6 +156,11 @@ text = "Leave Lobby"
 layout_mode = 2
 tooltip_text = "Writes this session's networking to a file in the game's user folder, for sending back after a test. Off unless you are asked for it."
 text = "Log this session"
+
+[node name="RecordCheck" type="CheckBox" parent="Margin/Column/Footer"]
+layout_mode = 2
+tooltip_text = "Writes every order and every maze of the match you are about to play to a file in the game's user folder, under recordings. Only this machine records."
+text = "Record match"
 
 [node name="FooterSpacer" type="Control" parent="Margin/Column/Footer" unique_id=684004997]
 layout_mode = 2

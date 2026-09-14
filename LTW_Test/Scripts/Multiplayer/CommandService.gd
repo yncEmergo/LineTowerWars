@@ -115,7 +115,9 @@ func submit_for(slot: int, ability: UnitAbility, units: Array, target: AbilityTa
 	# Offline is not a special case so much as the absence of one: with no peer
 	# there is nobody to ask, so this machine is its own authority.
 	if !Net.is_online():
+		_record_begin(command)
 		_apply(command, ability, units)
+		_record_end()
 		return
 
 	if ability.ability_id == AbilityRegistry.NO_ABILITY:
@@ -181,7 +183,9 @@ func submit_player_action_for(slot: int, action: Command.PlayerAction,
 	# Same three machines, same branch as submit(): offline is its own
 	# authority, a server queues for the tick, a client asks and waits.
 	if !Net.is_online():
+		_record_begin(command)
 		_apply_player_order(command)
+		_record_end()
 		return
 
 	# Same reasoning as submit(): under lockstep this waits for its turn like
@@ -221,7 +225,9 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 	command.player_slot = slot
 
 	if !Net.is_online():
+		_record_begin(command)
 		_apply_player_order(command)
+		_record_end()
 		return
 
 	if MatchSession.is_lockstep():
@@ -294,7 +300,9 @@ func apply_turn(payloads: Array) -> void:
 	for entry: Variant in payloads:
 		var command: Command = Command.from_dict(entry as Dictionary)
 		if command != null:
+			_record_begin(command)
 			_validate_and_apply(command)
+			_record_end()
 
 
 ## The top of a simulation tick, before anything in the match scene moves.
@@ -311,7 +319,9 @@ func _physics_process(_delta: float) -> void:
 	var batch: Array[Command] = _pending
 	_pending = []
 	for command in batch:
+		_record_begin(command)
 		_validate_and_apply(command)
+		_record_end()
 
 
 func _validate_and_apply(command: Command) -> void:
@@ -745,6 +755,26 @@ func _cheat_target(command: Command) -> PlayerState:
 	if state == null:
 		_reject(command, "slot %d has no player state" % command.player_slot)
 	return state
+
+
+## Tells the match recorder an order is about to be applied, when this match is
+## being recorded. Paired with _record_end around EVERY application rather than
+## once inside _validate_and_apply, because an offline order skips that function
+## and goes straight to _apply - and a road the recorder does not stand on is a
+## road whose orders are missing from the file.
+##
+## What came of the order is not passed in: the recorder hears it from
+## command_applied and command_rejected, which is where it is already said.
+func _record_begin(command: Command) -> void:
+	var recorder: MatchRecorder = References.match_recorder
+	if recorder != null && recorder.is_recording():
+		recorder.begin_order(command)
+
+
+func _record_end() -> void:
+	var recorder: MatchRecorder = References.match_recorder
+	if recorder != null && recorder.is_recording():
+		recorder.end_order()
 
 
 func _reject(command: Command, reason: String) -> void:

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RecordingConfig" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/RecordingConfig.gd" id="1_recording_config"]
+
+[resource]
+script = ExtResource("1_recording_config")
+snapshot_interval_seconds = 10.0

@@ -5,6 +5,7 @@ extends Node
 ##
 ##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- a=hard b=normal
 ##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- players=4 minutes=25
+##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- record=1
 ##
 ## **The question it answers is "is this difficulty actually harder than that
 ## one", and there is no other way to ask it.** A profile is a dozen numbers -
@@ -70,6 +71,13 @@ func _ready() -> void:
 	])
 	for player in setup.players:
 		print("  slot %d  %s" % [player.slot, player.display_name])
+
+	# `record=1` writes the match to user://recordings like a player's own match
+	# - which makes the bench a source of AI-against-AI matches as well as a
+	# referee. The same per-process switch the lobby box sets; see MatchRecorder.
+	if int(_number("record", 0.0)) != 0:
+		MatchRecorder.set_armed(true)
+		print("  recording to %s" % MatchRecorder.folder_path())
 
 	MenuNavigation.pending_match = setup
 	var scene: PackedScene = load(MATCH_SCENE) as PackedScene

@@ -233,6 +233,10 @@ func _place_one(area: PlayerArea, session: MatchSession, type_id: int,
 	# one road to owning a given tower and so one figure it can have sunk into
 	# it, which keeps the sell refund honest on a tower nobody paid for.
 	building.place(area.player_id, area, cell, stats.total_gold_cost, true)
+	if References.match_recorder != null:
+		References.match_recorder.record_building(
+			MatchRecorder.BuildingEvent.LAYOUT_PLACED, building
+		)
 	return true
 
 
