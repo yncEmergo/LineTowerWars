@@ -1,9 +1,8 @@
-[gd_resource type="Resource" script_class="HotkeyAction" format=3]
+[gd_resource type="Resource" script_class="HotkeyAction" format=3 uid="uid://bak2e78mg5p3r"]
 
-[ext_resource type="Script" path="res://Scripts/Config/HotkeyAction.gd" id="1_HotkeyAction"]
+[ext_resource type="Script" uid="uid://6nqbhhrsiikk" path="res://Scripts/Config/HotkeyAction.gd" id="1_HotkeyAction"]
 
 [resource]
 script = ExtResource("1_HotkeyAction")
 action_id = "sell"
 display_name = "Sell"
-default_key = "T"

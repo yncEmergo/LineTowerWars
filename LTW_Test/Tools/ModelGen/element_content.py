@@ -63,12 +63,17 @@ S_SPARKS = "res://Scripts/Components/SparkAnimation3D.gd"
 
 A_ATTACK = "res://Resources/Abilities/attack_ability.tres"
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
+# Sell for a card that spends Sell's usual square on a morph - the Core here,
+# the inactive disc in disc_content. The same order and the same rebindable
+# action, on the last square instead. See CORE_MORPH_SLOTS.
+A_SELL_MORPH_CARD = "res://Resources/Abilities/sell_from_morph_card_ability.tres"
 A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
 A_CANCEL_UPGRADE = "res://Resources/Abilities/cancel_upgrade_ability.tres"
 A_PRIORITIZE = "res://Resources/Abilities/prioritize_ability.tres"
 # Reading tool rather than an order: it draws what the tower reaches and
-# never leaves the machine. On EVERY tower, the Core included.
+# never leaves the machine. On every tower EXCEPT the Core, which has no square
+# to spare for it and is not a tower anybody keeps long enough to need it.
 A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 A_ARMOR_CHOICE = "res://Resources/Abilities/Towers/alchemist_armor_choice_ability.tres"
 A_RETURN_TO_CORE = ("res://Resources/Abilities/Towers/return_to_elemental_core_ability.tres")
@@ -96,19 +101,18 @@ BRANCH_SLOTS = (0, 1)
 #
 # The Core carries all ten morphs directly rather than behind a submenu, so
 # these ten squares plus Sell are eleven of the twelve and there is no room for
-# anything else - which is why the Core alone drops Attack and Prioritize off
-# its card. Both still work; see _card.
+# anything else - which is why the Core alone drops Attack, Prioritize and Show
+# Ranges off its card. Attack and Prioritize still work; see _card.
 #
 # Authored HERE rather than derived from ELEMENT_ORDER, because the order the
 # roster tables are walked in and the order a player reaches for the elements
-# in are two different questions and neither should move the other. The one
-# square left over is held for the range readout every tower is to get.
+# in are two different questions and neither should move the other.
 #
-# The gap in the run is Sell's square, which it takes ahead of the grid because
-# it answers to a key of its own - see UnitAbility.slot_override. Nothing has
-# to be authored around that: an ability names the square whose key it wants
-# and is only ever moved if something is actually standing on it, and here
-# nothing is. The square left over is the last one.
+# The morphs WIN the squares Sell would otherwise take. Sell is keyed by the
+# square it sits on on every other card, so a morph on that square would leave
+# two buttons answering to one key; the Core's Sell is its own resource on the
+# last square instead (A_SELL_MORPH_CARD), and still follows a key the player binds
+# to Sell. The gap in the run is not reserved for anything.
 CORE_MORPH_SLOTS = {
     "ice": 0, "lightning": 1, "holy": 2, "unholy": 3,
     "fire": 4, "water": 5, "earth": 6, "arcane": 7,
@@ -128,11 +132,11 @@ PASSIVE_SLOT = 6
 
 # Where a tower's SECOND named ability sits, on the one tower that has two.
 #
-# Directly beside the first rather than anywhere free, so the pair reads as one
-# block: a player who has learned where to find what an elemental tower does
-# finds its other half without hunting for it. Nothing else in the roster
-# claims this square.
-SECOND_PASSIVE_SLOT = 5
+# The square the other named abilities that are not the passive take - the
+# armour button and the Beastmaster's link - so every tower's second thing is
+# found in one place. Not the square beside the first passive, which is Sell's
+# on every card. No tower carries two of the three.
+SECOND_PASSIVE_SLOT = 3
 
 # Where the armour-type button sits, on the ONE tower that carries it. Its own
 # square rather than a shared one: nothing else in the roster is an active
@@ -160,11 +164,7 @@ STAMPEDE_TARGET_SLOT = ARMOR_CHOICE_SLOT
 # key that takes a tower back down to a Core is the same key at every tier and
 # in every element.
 #
-# It does not usually GET this one. Sell claims the same square ahead of the
-# grid - it answers to a key of its own and has to be somewhere fixed - so
-# Return to Core is pushed one along, onto the next free square, which is free
-# on every card in the roster. Authored as the square it wants rather than as
-# the square it lands on, because the day Sell moves this should follow it back.
+# Nothing else on a tower's card asks for it, so it gets it.
 RETURN_SLOT = 8
 
 # What a tower has to be WORTH before it carries Return to Core, counting
@@ -608,8 +608,8 @@ def _card(s, row):
     should read what it DOES before what it costs to replace.
 
     THE ELEMENTAL CORE IS THE EXCEPTION and is the reason this is a branch: it
-    carries all ten morphs directly, which with Sell and Show Ranges fills the
-    card exactly. So it is the one tower whose Attack and Prioritize come OFF
+    carries all ten morphs directly, which with Sell all but fills the card. So
+    it is the one tower whose Attack, Prioritize and Show Ranges come OFF
     the card - neither is lost, a right click still orders an attack and the
     Core still shoots on its own, and a 200g tower that exists to be morphed is
     not one anybody aims by hand.
@@ -628,8 +628,7 @@ def _card(s, row):
         for source, target in er.upgrade_pairs():
             if source == "elemental_core":
                 card.append(s.ext("Resource", upgrade_ability_path(source, target)))
-        card.append(s.ext("Resource", A_SELL))
-        card.append(s.ext("Resource", A_SHOW_RANGES))
+        card.append(s.ext("Resource", A_SELL_MORPH_CARD))
         return card
 
     for source, target in er.upgrade_pairs():
