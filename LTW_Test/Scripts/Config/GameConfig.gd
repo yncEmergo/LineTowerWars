@@ -327,6 +327,20 @@ extends Resource
 ## Ceiling on a player's living sent creeps, as the sum of their population
 ## costs. Displayed today; nothing enforces it yet.
 @export var population_cap: int = 100
+## Seconds the world is held completely still at the very start of a match,
+## before anything at all can happen.
+##
+## THE GRACE PERIOD, the user's call on 2026-09-15 after playtest 7 opened laggy
+## for everybody. Nothing moves, no order is accepted and no clock runs - the
+## match clock is given back what the hold took, so it costs nobody a start
+## delay. What it buys is every machine reaching the first real turn together:
+## the seal clock has settled, the peer that loaded last is no longer catching
+## up, and the players are looking at their lane rather than at a loading screen.
+##
+## It comes BEFORE the technology opening, so a draft's own deadline starts only
+## once this is over, and a tutorial skips it. Measured in SIMULATION seconds and
+## counted by the turn stream, like the draft. See StartingTech. 0 removes it.
+@export var start_grace_seconds: float = 5.0
 ## Seconds of preparation before the match's timings start counting.
 ##
 ## THE OPENING. The source game starts its clock at -0:20 and the first Sheep

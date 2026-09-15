@@ -86,6 +86,8 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D38 | **The turn stream is measured, not only estimated.** | 2026-09-08 | Every figure in the health line was an ESTIMATE of the wire - a mean round trip, its smoothed variance, this machine's frame times - and the same problem was diagnosed wrongly twice from them. `LockstepService` now stamps when each turn became DUE and when each peer's word FIRST arrived, and reports `arrival_ms` per peer (p50/p90/p99/max, positive meaning late) plus `stalled_s` - a DURATION, because a stall count cannot tell six invisible hitches from six visible freezes. The relay reports each peer's turns-behind and its own achieved seal interval. **Not yet read against a real link**; that needs two machines and `jitter_margin_ms` put back to 0 for the run. |
 | D39 | **The match clock is the turn stream under lockstep, not this machine's physics frames.** | 2026-09-08 | `tick()` is hashed into every checksum through `elapsed_seconds()`, and it agreed between peers only BY CONSTRUCTION - every peer holds for the same turns today. The netcode rework stops that being true, so the derivation had to become an identity before anything else was safe. Off lockstep - single player, the replication path, both benches - there is no turn stream at all, so the physics-frame clock stays. See `netcode-rework.md` phase 1. |
 | D40 | **The relay SEALS one authoritative turn per tick, and a peer waits only for the relay.** | 2026-09-09 | Clients send orders bare at press time with no turn number; the relay stamps the slot, sorts by `(slot, seq)` and broadcasts one turn per tick to everybody including the authors. **No other player ever appears in a peer's wait condition**, so a machine that hitches pays for its own hitch alone. Measured between two physical machines: a peer hitching repeatedly cost the other 5.8 s of frozen world before and 1.15 s after. A peer that falls behind repays it by running its engine fast until the debt is gone; a lost seal is repaired from an unreliable echo, and one the echo no longer carries is asked for again by number (2026-09-10, after playtest 7 lost a player to a reliable channel that stopped); a peer that cannot recover is told why. There is no flag - `protocol_version` 3 refuses a build that straddles the deletion. See `netcode-rework.md` §5 and 13.4b. |
+| D41 | **A player may vanish for the relay's silence timeout before losing the match, and nothing closes their link sooner.** | 2026-09-15 | User's call after playtest 7. The allowance is `silent_timeout_seconds`, and ENet's own timeout is stretched past it for the match (`MatchStart._stretch_link_timeouts`), because its default closes a quiet link first and a closed link is final (D13). Under the sealed stream nobody waits for the missing player, so the allowance costs the others only a lane that stays standing. |
+| D42 | **A match opens with a GRACE PERIOD: the world held still for a few seconds before anything can happen.** | 2026-09-15 | User's call after playtest 7's laggy openings. The first phase of `StartingTech`'s opening, counted in simulation ticks by the turn stream so every peer releases on the same turn, and ahead of any technology draft or reveal. A tutorial skips it. The length is `GameConfig.start_grace_seconds`; the rule is in `game_rules.md`. |
 | D32 | ~~**The input delay is MEASURED from the live connection**, never authored.~~ **SUPERSEDED by D40 on 2026-09-09.** No client names a turn any more, so there is no per-peer booking to measure: the relay decides which turn an order lands in from when it arrives, and `delay_turns` / `_wire_budget_ms` / `announce_one_way` are deleted. What a peer chooses locally now is its PLAYBACK buffer, which costs only its owner. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Also the only way to use more than one CPU core — see §11.3. |
 | D15 | **Load timeout 60 s**, then start without whoever is missing, provided `min_players` are ready. No area spawns for them. | 2026-08-21 | See §11.2. |
@@ -105,14 +107,6 @@ is described as built in §2.
 - **Whether one server process should host more than one match.** It hosts one, refuses a
   second with a sentence, and frees itself when that one empties - D19 doing its job until
   D16 splits them. Nothing is blocked on it.
-- **How long a flaky player may vanish before losing the match.** ENet's own timeout, the
-  relay's `silent_timeout_seconds` and the give-up ceiling decide it together. Under the sealed
-  stream nobody waits for a missing player, so a longer allowance costs the others only a lane
-  that stays standing - which makes it a rules question rather than a netcode one.
-- **A grace period at match start.** Asked for after playtest 7 as a cure for a laggy opening.
-  Those freezes turned out to be first-draw shader compiles, which `ShaderWarmup` removes and no
-  grace period would have prevented; a grace period moves when the match's clocks start, which
-  is a rule. See `Findings/2026-09-10-playtest-7.md`.
 
 ---
 
@@ -1423,6 +1417,11 @@ The elegance of this is that it invents nothing. It reuses three rules that
 So the leaver's remaining lives are not thrown away, they are handed to whoever was
 attacking them. No special elimination path, no separate "player left" state to reconcile
 with the win condition. The one genuinely new behaviour is erasing the maze.
+
+**How long a player may vanish first is D41**: a player whose connection drops out is not
+dropped until the relay has heard nothing from them for `silent_timeout_seconds`, and for the
+length of a match ENet's own timeout is stretched past that, so the transport can never close
+the link before the rule has decided. A player back inside the allowance simply catches up.
 
 **Everyone still playing is told.** The drop is written to the same on-screen stack the leak
 log uses (`LeakLog`), off `MatchStart.player_dropped` — which under lockstep every peer emits

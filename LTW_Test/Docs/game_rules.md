@@ -35,6 +35,21 @@ described here is implemented and working. Values marked TBD are not decided yet
 - The mode decides who is DRIVING and never what the rules are. Everything the players agreed
   to is Match settings, below, and a mode may not change one
 
+# The start of a match
+- **A GRACE PERIOD comes first.** For its first few seconds a match is held
+  completely still: nothing moves, no order is accepted, no clock runs, and a
+  countdown says how long is left. It exists so that every player's machine
+  arrives at the first moment of play together, rather than some starting while
+  others are still settling. BUILT
+  - it costs nobody a start delay: the match clock is given back what the hold
+    took, so every creep unlock and income payment is timed from its end
+  - it comes BEFORE the technology opening, so a draft's own clock only starts
+    once the grace period has run out
+  - a TUTORIAL skips it - the lesson decides for itself when the world moves
+  - its length is `start_grace_seconds` on the game config
+- Then the opening phase (under Sending creeps) and the technology opening (under
+  Match settings) run as they always have
+
 # Send topology
 - Players are arranged in a fixed ring
 - Every player sends creeps to their right neighbor and receives from their left neighbor

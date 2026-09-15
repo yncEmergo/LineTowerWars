@@ -62,6 +62,14 @@ signal desync_detected(tick: int, detail: String)
 ## lockstep needs starts using the same path.
 const DESYNC_START_TICK: int = -1
 
+## How far past the relay's silence timeout ENet may keep a quiet link open during
+## a match, in seconds. See _stretch_link_timeouts.
+const LINK_TIMEOUT_MARGIN_SECONDS: float = 3.0
+## ENet's own resend multiplier and absolute ceiling, left at its defaults: it is
+## only the MINIMUM that closes a quiet link early.
+const LINK_TIMEOUT_LIMIT: int = 32
+const LINK_TIMEOUT_MAXIMUM_MS: int = 30000
+
 ## The match being started, then the match being played. Null when this process
 ## is in no match at all, which is what makes every entry point below safe to
 ## call from a single player run.
@@ -320,6 +328,7 @@ func receive_match_start(payload: Dictionary) -> void:
 		"slot": _setup.local_slot,
 		"players": _setup.player_count(),
 	})
+	_stretch_link_timeouts(PackedInt32Array([NetworkService.SERVER_PEER_ID]))
 	MenuNavigation.to_game(self, _setup)
 
 
@@ -421,6 +430,7 @@ func _start_match(final_setup: MatchSetup) -> void:
 		if !started.has(peer_id):
 			receive_match_cancelled.rpc_id(peer_id, "You did not finish loading in time.")
 	_expected = started
+	_stretch_link_timeouts(started)
 
 	# The server builds the same world from the same setup, headless (2.3). Its
 	# own copy plays no slot, which is what local_slot 0 means.
@@ -647,6 +657,44 @@ func _read_server_settings() -> void:
 		_server_entry_path = boot.server_scene_path
 	if _server_match_path.is_empty():
 		Log.err("MatchStart has no server match scene path, the server cannot load a match")
+
+
+## Gives every link in the match long enough to outlast the relay's silence
+## timeout, so it is THAT which decides when a vanished player loses the match.
+##
+## **ENet's own default closes a link that has stopped acknowledging after about
+## five seconds**, which is shorter than a player is allowed to vanish for - and a
+## closed link is final (D13). Left alone, a player whose connection dropped out
+## for seven seconds lost the match to the transport while every rule about how
+## long they may vanish still said they had time. So for a match the minimum goes
+## past the allowance: the relay drops a player who stays silent that long, and
+## ENet only closes a link that has been dead for longer still.
+##
+## Both ends, because both can close it: the server for each player it starts,
+## a client for its one link to the server. Called while References still answers
+## for the scene that holds the network config - the server's entry scene, a
+## client's loading screen.
+func _stretch_link_timeouts(peer_ids: PackedInt32Array) -> void:
+	var enet: ENetMultiplayerPeer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if enet == null:
+		return
+	var network: NetworkConfig = References.network_config
+	if network == null:
+		Log.warn("MatchStart found no NetworkConfig, links keep ENet's own timeout")
+		return
+	var allowance: float = maxf(0.0, network.silent_timeout_seconds)
+	var minimum_ms: int = int((allowance + LINK_TIMEOUT_MARGIN_SECONDS) * 1000.0)
+	var maximum_ms: int = maxi(LINK_TIMEOUT_MAXIMUM_MS, minimum_ms)
+	var stretched: PackedInt32Array = PackedInt32Array()
+	for peer_id: int in peer_ids:
+		var link: ENetPacketPeer = enet.get_peer(peer_id)
+		if link == null:
+			continue
+		link.set_timeout(LINK_TIMEOUT_LIMIT, minimum_ms, maximum_ms)
+		stretched.append(peer_id)
+	Log.info("Match links outlast the silence allowance", {
+		"peers": stretched, "timeout_ms": minimum_ms,
+	})
 
 
 ## 2.5: the same world, built twice from the same setup, must hash the same.

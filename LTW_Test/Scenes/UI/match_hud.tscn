@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_end_panel.tscn" id="17_match_end"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tech_reveal_panel.tscn" id="17_reveal"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/grace_panel.tscn" id="17_grace"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_spotlight.tscn" id="20_spotlight"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_pointer.tscn" id="21_pointer"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_panel.tscn" id="22_tutorial"]
@@ -254,6 +255,10 @@ process_mode = 3
 visible = false
 
 [node name="TechRevealPanel" parent="." instance=ExtResource("17_reveal")]
+process_mode = 3
+visible = false
+
+[node name="GracePanel" parent="." instance=ExtResource("17_grace")]
 process_mode = 3
 visible = false
 
