@@ -506,7 +506,20 @@ in flight - but a REPEATED one is, and it names the ability and the unit so it c
 ```
 
 A player who left through the in-match menu skips the hold and reads `"why": left the match`
-instead. Either way the match carries on and their lives drain away through ordinary leaks -
+instead.
+
+**When a match ends, one line says what it cost the server:**
+
+```
+[server] ... Relay match summary { "match": match-1, "players": 2, "seconds": ..., "turns": ...,
+                                   "largest_seal_bytes": ..., "oversized_seals": ...,
+                                   "cpu_pct_of_core": ..., "rss_mb": ..., "sent_bytes": ... }
+```
+
+This is the line for "how much of the server does a match use". Traffic covers the whole
+process, lobby included, and the CPU and memory fields read `-1` anywhere but Linux.
+`oversized_seals` counts turns too big to fit in one packet, and each one also gets its own
+`A seal is too large for one packet` warning naming the turn. See `RelayMatchStats`. Either way the match carries on and their lives drain away through ordinary leaks -
 that is the rule (D14), not a bug.
 
 **While a match is running there is no status line and no log view** — the window, if you ran

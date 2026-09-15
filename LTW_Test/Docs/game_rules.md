@@ -1179,10 +1179,13 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - Saving over a slot that already holds a plan asks first, in a box that
     blocks the rest of the game until it is answered. Saving into an empty one
     does not ask
+  - The save card also carries a RESTORE DEFAULTS command, which erases every
+    blueprint the player saved and puts every slot back the way a fresh install
+    has it. It always asks first, in the same blocking box
 - Some blueprints SHIP WITH THE GAME, so a new player opens with a set of
   worked mazes rather than nine empty squares
   - They are ordinary blueprints in every other way, and saving over one
-    replaces it on that machine
+    replaces it on that machine until the defaults are restored
 
 # Mazing
 - Players place towers to lengthen the creep path

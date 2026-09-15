@@ -302,6 +302,26 @@ func link_quality(of_peer: int) -> Dictionary:
 	}
 
 
+## Everything this process's ENet host has sent and received since the last time
+## this was asked, in bytes and packets. Empty when there is no host.
+##
+## **Asking RESETS the counters** - ENet's `pop_statistic` is a read-and-clear -
+## so the first call of a measurement is the baseline and its answer is thrown
+## away. Across every connection at once, not per peer: ENet keeps no per-peer
+## byte count. With one match per process (D19) that is the match's traffic plus
+## whatever the lobby said alongside it.
+func pop_traffic() -> Dictionary:
+	if _peer == null || _peer.host == null:
+		return {}
+	var host: ENetConnection = _peer.host
+	return {
+		"sent_bytes": int(host.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA)),
+		"sent_packets": int(host.pop_statistic(ENetConnection.HOST_TOTAL_SENT_PACKETS)),
+		"received_bytes": int(host.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA)),
+		"received_packets": int(host.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_PACKETS)),
+	}
+
+
 ## Everyone connected to us, server side. Empty on a client.
 func peer_ids() -> PackedInt32Array:
 	if _status != Status.HOSTING:

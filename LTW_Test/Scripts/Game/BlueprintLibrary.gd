@@ -138,6 +138,46 @@ static func store(slot: int, plan: TowerLayout) -> bool:
 	return true
 
 
+## How many slots hold a plan THIS PLAYER saved, as opposed to an empty slot or
+## a shipped default. What a reset would erase, so it is what the reset's
+## warning counts and what decides whether there is anything to reset at all.
+##
+## Asks the filesystem rather than the cache, because it is only asked on a
+## press and never polled by a card.
+static func user_saved_count() -> int:
+	var count: int = 0
+	for slot: int in range(1, SLOT_COUNT + 1):
+		if FileAccess.file_exists(user_path(slot)):
+			count += 1
+	return count
+
+
+## Puts every slot back the way a fresh install has it: the shipped defaults
+## where there are some, and empty everywhere else.
+##
+## Which is nothing but deleting the player's own files, because a user file is
+## all that ever shadows a default - see the note at the top. Nothing is copied
+## out of res://, so a default changed in a later build is the one that comes
+## back. Returns how many files went; the caller is what asks the player first.
+static func restore_defaults() -> int:
+	var removed: int = 0
+	for slot: int in range(1, SLOT_COUNT + 1):
+		var path: String = user_path(slot)
+		if !FileAccess.file_exists(path):
+			continue
+		var error: Error = DirAccess.remove_absolute(path)
+		if error != OK:
+			Log.err("Could not delete a saved blueprint",
+				{"slot": slot, "error": error_string(error)})
+			continue
+		removed += 1
+
+	# Dropped whole, so every slot goes back to disk and finds its default.
+	_cache.clear()
+	Log.info("Blueprints restored to defaults", {"deleted": removed})
+	return removed
+
+
 ## Where a slot's user file goes. Public so a save can be told apart from a
 ## default without this file having to answer every question about one.
 static func user_path(slot: int) -> String:

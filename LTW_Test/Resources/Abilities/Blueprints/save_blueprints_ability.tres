@@ -12,19 +12,11 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_7.tres" id="17_save_blueprint_7"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_8.tres" id="18_save_blueprint_8"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_9.tres" id="19_save_blueprint_9"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_1.tres" id="11_save_blueprint_1"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_2.tres" id="12_save_blueprint_2"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_3.tres" id="13_save_blueprint_3"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_4.tres" id="14_save_blueprint_4"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_5.tres" id="15_save_blueprint_5"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_6.tres" id="16_save_blueprint_6"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_7.tres" id="17_save_blueprint_7"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_8.tres" id="18_save_blueprint_8"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprint_9.tres" id="19_save_blueprint_9"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/restore_blueprints_ability.tres" id="20_restore_blueprints"]
 
 [resource]
 script = ExtResource("1_save_blueprint_menu")
-slots = Array[ExtResource("2_UnitAbility")]([ExtResource("11_save_blueprint_1"), ExtResource("12_save_blueprint_2"), ExtResource("13_save_blueprint_3"), ExtResource("14_save_blueprint_4"), ExtResource("15_save_blueprint_5"), ExtResource("16_save_blueprint_6"), ExtResource("17_save_blueprint_7"), ExtResource("18_save_blueprint_8"), ExtResource("19_save_blueprint_9")])
+slots = Array[ExtResource("2_UnitAbility")]([ExtResource("11_save_blueprint_1"), ExtResource("12_save_blueprint_2"), ExtResource("13_save_blueprint_3"), ExtResource("14_save_blueprint_4"), ExtResource("15_save_blueprint_5"), ExtResource("16_save_blueprint_6"), ExtResource("17_save_blueprint_7"), ExtResource("18_save_blueprint_8"), ExtResource("19_save_blueprint_9"), ExtResource("20_restore_blueprints")])
 ability_id = 464
 display_name = "Save Blueprint"
 description = "Store the maze you have built as one of your nine plans, so you can lay it out again from memory next match."

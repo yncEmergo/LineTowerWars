@@ -113,10 +113,12 @@ extends Node
 ## nothing after it ever reads it again.
 @export var _boot_config: BootConfig
 ## What this build is and when it was made. Wired by the menu scenes, which are
-## where it is shown; a match never asks.
+## where it is shown, and by the boot scene, where the session log that names it
+## is opened.
 @export var _build_info: BuildInfo
 ## Where the server listens and where a client dials. Wired by every scene
-## that can touch the network: the lobby screens and the server.
+## that can touch the network: the lobby screens and the server - and the boot
+## scene, which reads the session log settings off it.
 @export var _network_config: NetworkConfig
 ## How the local player's view is drawn. PRESENTATION ONLY, so a dedicated
 ## server leaves it null and everything that reads it falls back to a sane

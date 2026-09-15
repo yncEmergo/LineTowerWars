@@ -75,7 +75,25 @@ func _dispatch() -> void:
 		# after it, and the server branch never asks because it has no output
 		# device and nothing a player wrote in a file may quieten it.
 		UserSettings.apply_volumes()
+		_start_logging()
 		_open("client", _client_scene_path())
+
+
+## What a client's logs record from here on. A client only: the server's log is
+## the journal, which stamps every line itself.
+##
+## **Timestamps on the Godot log**, in milliseconds since the process began. It
+## had none, so in playtest 8 the only lines that could be lined up with the
+## session log beside it were the few that happened to carry a turn number. The
+## session log's header writes the same clock's reading when it opens, which is
+## what joins the two files.
+##
+## Stamped here rather than in project.godot so the editor, which keeps its own
+## copy of the project settings, cannot quietly write it back out.
+func _start_logging() -> void:
+	Log.show_timestamps()
+	Log.use_timestamp_type(Log.TimestampTypes.TICKS_MSEC)
+	SessionLog.start_by_default()
 
 
 ## The server's entry scene, named by BootConfig.

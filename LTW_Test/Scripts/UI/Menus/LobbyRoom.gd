@@ -271,9 +271,10 @@ func _set_status(text_value: String) -> void:
 
 ## The session log switch.
 ##
-## **Off unless the player asks for it**, which it is by default because the
-## logger starts closed and nothing else opens it. A tester who was not asked to
-## reproduce anything does not need a file quietly growing on their disk.
+## **On unless the player turns it off**, because `Boot` opens it for every
+## windowed client when `NetworkConfig.session_log_on_by_default` says so. An
+## opt-in log is the one that is missing when it is needed (playtest 8), and the
+## folder is pruned, so it does not grow for ever.
 ##
 ## The box REFLECTS the current state rather than forcing it - an earlier version
 ## reset it to off here, which quietly switched off a log the player had already
