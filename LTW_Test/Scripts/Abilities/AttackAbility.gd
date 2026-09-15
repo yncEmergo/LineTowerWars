@@ -128,28 +128,30 @@ func shows_attack_range() -> bool:
 ## Walks onto a named target until it is in reach, then stands and fights.
 ## Nothing else is worth stopping for: the player named this one.
 ##
-## **Once it has ARRIVED it only closes again while it could actually SWING.**
-## A unit that has reached this target plants itself where it stands and stays
-## there for the whole windup and the cooldown behind it, setting off after the
-## creep again only when the next attack is ready. Trailing one through a
-## cooldown it cannot use is following something for no reason it could act on,
-## and it takes the hit-and-run out of the player's hands - which is where it
-## belongs.
+## **Ready to swing, it closes at once.** Approaching for the first time, or
+## with the next attack ready, the unit runs at the target however near it is,
+## so the swing starts the tick it arrives.
 ##
-## Approaching for the FIRST time is not gated, and that is the distinction
-## has_reached_order draws - CLOSE ONCE, THEN HOLD. The unit has to be in reach
-## anyway, so arriving early costs nothing and an order that left it standing
-## about for a whole attack period would read as an order that never registered.
-## Once it has arrived it stops setting off again until it could swing, and
-## re-issuing the order on that same creep does not hand the walk back.
+## **On cooldown, it follows with SLACK.** Having arrived, it stands where it
+## is while the target stays inside its reach plus the chase margin, and sets
+## off only once the target drifts past that - walking until it is back in
+## reach rather than until it is back inside the margin. Following every cell a
+## walking creep moved read as a stutter-step: a step, a stop, a step. See
+## AttackStats.chase_margin.
+##
+## A committed windup is never walked out of: the swing is what is happening,
+## and it lands on the creep it was aimed at wherever that has got to.
 func _chase(unit: Unit, attack: AttackComponent, ordered: Unit) -> void:
-	if attack.is_in_reach(ordered):
+	if attack.is_in_reach(ordered) || attack.is_winding_up():
 		_hold(unit)
 		return
-	if attack.has_reached_order() && !attack.is_ready_to_attack():
-		_hold(unit)
+	if !attack.has_reached_order() || attack.is_ready_to_attack():
+		unit.move_to(ordered.global_position)
 		return
-	unit.move_to(ordered.global_position)
+	# On cooldown and already been there. A unit still walking finishes the
+	# approach into reach; one standing only sets off once the slack runs out.
+	if unit.is_moving() || !attack.is_in_reach(ordered, true):
+		unit.move_to(ordered.global_position)
 
 
 ## Plants the unit where it stands so it can fight. Called rather than simply

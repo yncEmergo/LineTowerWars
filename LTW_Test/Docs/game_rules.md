@@ -1339,23 +1339,19 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     option VISIBLE, which a key nobody mentioned is not
   - it backs out of ONE thing per press: the order being aimed first, then the
     menu it was aimed from
-- **CLOSE ONCE, THEN HOLD.** A unit sent at a target walks straight at it, and
-  from the moment it is in reach it stays put - through the windup and the whole
-  cooldown behind it - setting off after the creep again only when the next
-  attack is ready
-  - the approach is never gated on the cooldown. The unit has to be in reach
-    anyway, arriving early costs nothing anybody would want back, and an order
-    that left it standing for a whole attack period would read as an order that
-    never registered
-  - what IS refused is TRAILING: once it has arrived, following a creep through
-    a cooldown it can do nothing with buys nothing and quietly takes the kiting
-    out of the player's hands. Hit and run is the PLAYER's to order, which is
-    what makes it a skill
-  - re-issuing the order on the creep it is ALREADY standing at does not hand
-    the walk back. Otherwise the rule would be undone by clicking twice, and
-    the fastest player would be the one who spams the button
-  - a DIFFERENT creep is a different quarry and gets its own approach, at once,
-    however long the cooldown has left
+- **A UNIT THAT WALKS FOLLOWS ITS TARGET WITH SLACK.** Sent at a target, it
+  walks straight at it and stands to fight from the moment it is in reach
+  - with its attack READY it closes at once, however near the target is, and
+    swings the moment it arrives. The first approach is never gated either: an
+    order that left it standing for a whole attack period would read as one
+    that never registered
+  - it never walks out of a WINDUP. The swing is committed and lands on the
+    creep it was aimed at
+  - ON COOLDOWN, having arrived, it stands still while the target stays within
+    its reach plus a CHASE MARGIN, and sets off only once the target is past
+    that - then walks until the target is back in REACH, not merely back inside
+    the margin. Following every step a walking creep takes read as a
+    stutter-step. The margin is the attack's own setting
   - it changes nothing for a tower, which never moves, or for an attacker creep
     marching on a tower that cannot run away. The builder is the unit it is
     actually about
@@ -1367,14 +1363,20 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     with a 0.1s windup still attacks once a second: what changes is where in
     that second the damage lands, not how often it lands. A windup that added
     to the cooldown would make every animation a silent balance change
+  - **the cooldown is charged when the blow LANDS, never when the swing
+    starts,** and it is the period less the windup. So an attack that never
+    went through costs nothing and the next swing may start at once: one
+    dropped mid-windup, or one whose creep died with nothing left to catch
   - a tower COMMITS when the windup starts. It has picked what it is hitting
     and cannot be retargeted mid-swing, or the animation would play at one
     creep and land on another
   - a creep that dies during the windup does not waste the swing: it lands
     where that creep stood, so a splash still catches the crowd around it. The
-    same rule a projectile already follows when its target dies mid flight
+    same rule a projectile already follows when its target dies mid flight.
+    With no splash or other effect to land it hits nothing, and charges no
+    cooldown
   - a tower that stops being able to attack mid-swing - one that starts
-    upgrading - drops the swing. The cooldown is not handed back
+    upgrading - drops the swing, which charges no cooldown
   - **a unit that WALKS drops its swing the moment a new order arrives**, and
     that is the one place the commitment above gives way. Told to move, to
     build or to fight something else mid-windup, it abandons the blow at once
@@ -1385,8 +1387,12 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       saying the fight is over
     - it is only for what walks. Nothing a player can order a tower to do is a
       reason to take a swing back, and a tower is never in the player's way
-    - the cooldown is not handed back here either, so spamming orders at a
-      unit is not a way to make it attack faster
+    - no cooldown is charged, and spamming orders still cannot make it attack
+      faster: damage only ever lands at the end of a whole windup, and the
+      cooldown behind it always runs
+    - re-ordering the creep it is ALREADY swinging at keeps the swing. That
+      order says what it is doing anyway, and dropping the blow on every click
+      would mean a player clicking repeatedly never lands one
     - SHIFT-queueing does not cancel anything: a queued order is what to do
       NEXT, and the swing in the air is still what is happening now
   - a windup is authored only where there is an animation to fill it. A delay

@@ -10,26 +10,61 @@ albedo_color = Color(0.3, 0.55, 0.85, 1)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
 material = SubResource("StandardMaterial3D_body")
-radius = 0.3
-height = 1.1
+radius = 0.19
+height = 0.8
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nose"]
 albedo_color = Color(0.545, 0.708, 0.903, 1)
 
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+material = SubResource("StandardMaterial3D_nose")
+radius = 0.15
+height = 0.3
+
 [sub_resource type="BoxMesh" id="BoxMesh_nose"]
 material = SubResource("StandardMaterial3D_nose")
-size = Vector3(0.12, 0.12, 0.28)
+size = Vector3(0.08, 0.08, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hat"]
+albedo_color = Color(0.95, 0.75, 0.2, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hat"]
+material = SubResource("StandardMaterial3D_hat")
+top_radius = 0.11
+bottom_radius = 0.19
+height = 0.1
 
 [sub_resource type="BoxMesh" id="BoxMesh_arm"]
 material = SubResource("StandardMaterial3D_nose")
-size = Vector3(0.1, 0.44, 0.1)
+size = Vector3(0.08, 0.3, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hand"]
+albedo_color = Color(0.93, 0.76, 0.6, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_hand"]
+material = SubResource("StandardMaterial3D_hand")
+radius = 0.07
+height = 0.14
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_handle"]
+albedo_color = Color(0.5, 0.33, 0.18, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_handle"]
+material = SubResource("StandardMaterial3D_handle")
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.4
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hammer"]
 albedo_color = Color(0.42, 0.44, 0.5, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_hammer"]
+[sub_resource type="BoxMesh" id="BoxMesh_pick_bar"]
 material = SubResource("StandardMaterial3D_hammer")
-size = Vector3(0.22, 0.16, 0.18)
+size = Vector3(0.06, 0.07, 0.24)
+
+[sub_resource type="PrismMesh" id="PrismMesh_pick_tip"]
+material = SubResource("StandardMaterial3D_hammer")
+size = Vector3(0.06, 0.12, 0.07)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
 shading_mode = 0
@@ -51,23 +86,60 @@ select_height = 1.0
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 1, 0)
 
 [node name="Body" type="MeshInstance3D" parent="Visuals" unique_id=778793880]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
 mesh = SubResource("CapsuleMesh_body")
 
+[node name="Head" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0)
+mesh = SubResource("SphereMesh_head")
+
 [node name="Nose" type="MeshInstance3D" parent="Visuals" unique_id=1172371141]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.715, -0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, -0.16)
 mesh = SubResource("BoxMesh_nose")
 
-[node name="ArmPivot" type="Node3D" parent="Visuals" unique_id=2047428268]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.8, 0)
+[node name="Hat" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.06, 0)
+mesh = SubResource("CylinderMesh_hat")
 
-[node name="Arm" type="MeshInstance3D" parent="Visuals/ArmPivot" unique_id=870741885]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
+[node name="OffArm" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.52, 0)
 mesh = SubResource("BoxMesh_arm")
 
-[node name="Hammer" type="MeshInstance3D" parent="Visuals/ArmPivot" unique_id=1025726016]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.48, -0.04)
-mesh = SubResource("BoxMesh_hammer")
+[node name="OffHand" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.36, 0)
+mesh = SubResource("SphereMesh_hand")
+
+[node name="Shoulder" type="Node3D" parent="Visuals"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.25, 0.68, 0)
+
+[node name="ArmPivot" type="Node3D" parent="Visuals/Shoulder" unique_id=2047428268]
+
+[node name="Grip" type="Node3D" parent="Visuals/Shoulder/ArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.642788, 0.766044, 0, -0.766044, 0.642788, 0, 0, 0)
+
+[node name="Arm" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip" unique_id=870741885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+mesh = SubResource("BoxMesh_arm")
+
+[node name="Hand" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.32, 0)
+mesh = SubResource("SphereMesh_hand")
+
+[node name="Handle" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.46, 0)
+mesh = SubResource("CylinderMesh_handle")
+
+[node name="PickHead" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64, 0)
+mesh = SubResource("BoxMesh_pick_bar")
+
+[node name="TipFront" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip/PickHead"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.18)
+mesh = SubResource("PrismMesh_pick_tip")
+
+[node name="TipBack" type="MeshInstance3D" parent="Visuals/Shoulder/ArmPivot/Grip/PickHead"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, -0.18)
+mesh = SubResource("PrismMesh_pick_tip")
 
 [node name="SelectionRing" type="MeshInstance3D" parent="Visuals" unique_id=569806800]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
@@ -75,18 +147,19 @@ visible = false
 cast_shadow = 0
 mesh = SubResource("TorusMesh_ring")
 
-[node name="AttackComponent" type="Node" parent="." unique_id=1494336297 node_paths=PackedStringArray("_unit", "_muzzle")]
+[node name="AttackComponent" type="Node" parent="." unique_id=1494336297 node_paths=PackedStringArray("_unit", "_muzzle", "_turret_head")]
 script = ExtResource("3_attack")
 _unit = NodePath("..")
-_muzzle = NodePath("../Visuals/ArmPivot/Hammer")
-turn_towards_target = false
+_muzzle = NodePath("../Visuals/Shoulder/ArmPivot/Grip/PickHead")
+_turret_head = NodePath("..")
+turret_turn_speed = 60.0
 
 [node name="SlamAnimation" type="Node" parent="." unique_id=1497277948 node_paths=PackedStringArray("_unit", "_swing")]
 script = ExtResource("4_slam")
 _unit = NodePath("..")
-_swing = NodePath("../Visuals/ArmPivot")
-raise_degrees = 62.0
-follow_through_degrees = 18.0
+_swing = NodePath("../Visuals/Shoulder/ArmPivot")
+raise_degrees = 155.0
+follow_through_degrees = 30.0
 raise_share = 0.6
-recover_seconds = 0.3
+recover_seconds = 0.35
 on_physics_tick = true
