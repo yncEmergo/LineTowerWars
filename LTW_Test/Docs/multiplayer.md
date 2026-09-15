@@ -105,6 +105,14 @@ is described as built in §2.
 - **Whether one server process should host more than one match.** It hosts one, refuses a
   second with a sentence, and frees itself when that one empties - D19 doing its job until
   D16 splits them. Nothing is blocked on it.
+- **How long a flaky player may vanish before losing the match.** ENet's own timeout, the
+  relay's `silent_timeout_seconds` and the give-up ceiling decide it together. Under the sealed
+  stream nobody waits for a missing player, so a longer allowance costs the others only a lane
+  that stays standing - which makes it a rules question rather than a netcode one.
+- **A grace period at match start.** Asked for after playtest 7 as a cure for a laggy opening.
+  Those freezes turned out to be first-draw shader compiles, which `ShaderWarmup` removes and no
+  grace period would have prevented; a grace period moves when the match's clocks start, which
+  is a rule. See `Findings/2026-09-10-playtest-7.md`.
 
 ---
 
@@ -1075,6 +1083,12 @@ the distance one tick covers.** Arrival thresholds, separation limits, aura radi
 ranges were all tuned when a tick was 1/60 s. `MobileUnit` was already safe because it
 clamps its step to the remaining distance; `Creep` was not.
 
+**Whether the current rate is the right one** is open, and not worth asking yet. The tick is a
+floor under input latency - an order can only take effect on a tick boundary - so the rate
+costs latency whatever the network does. But raising it multiplies the per-unit cost (§13) and
+brings back everything above, so it is worth revisiting only after the per-unit work, and only
+if the felt latency still bothers anybody.
+
 ### 5.7 Where the server runs, and how code reaches it (D30)
 
 The dedicated server runs on a rented Linux machine. D4 said that "runs on your machine" and
@@ -1618,7 +1632,42 @@ sound are true the moment the player asks; occupying the cell is not.
 
 Still available within that line, and not built: a grey footprint dropped at the clicked cell
 the instant a build order is submitted and removed when the real building arrives, greying a
-tower on sell, and pre-decrementing the DISPLAYED send stock.
+tower on sell, and pre-decrementing the DISPLAYED send stock. **These are the cheapest felt
+improvement available** - none can desync, and they change what the remaining latency feels
+like, which decides how much any other latency work is worth.
+
+#### Getting below ping: the long view
+
+Recorded because it was asked for - players on different continents in one match, with input
+latency below the ping between them - and because the answer is both more encouraging and more
+expensive than it first looks. **Nothing here is planned.**
+
+It needs rollback: apply your own input with no delay, predict everyone else's, and rewind and
+re-simulate when a remote input arrives that differs. That is prediction, which D17 excludes
+under lockstep, so it would be a change of model rather than a feature.
+
+- **What it buys is your own clicks.** Nobody's input reaches you faster than the route between
+  you allows. For this game that split is unusually favourable: players never duel in real time,
+  what crosses between lanes is creeps that walk for seconds, and a quarter second on somebody
+  else's action changes almost nothing. A quarter second on your own is the whole complaint.
+- **What it costs is re-simulation.** Hiding a ping needs a window of that many ticks, and a
+  misprediction re-runs the whole window inside one tick, so each tick has to cost a small
+  fraction of its budget. Against the client tick costs in
+  `Findings/2026-09-05-lockstep-hardening.md`, a 1v1 is one good optimisation pass away and
+  twelve lanes nowhere near - and that pass is the per-unit work in §13, needed anyway.
+- **Two things make this game cheaper than the general case.** Inputs are rare, so predicting
+  "no input" is right on almost every tick and a rollback is a spike on the few ticks somebody
+  acted. And causality is lane-scoped - a placement or a send reaches one lane - so a rollback
+  could re-simulate that lane alone. Speculative, unbuilt, and the first thing to check.
+- **What is most likely to sink it is the snapshot**: an exact copy of the world every tick and a
+  restore on every miss, in GDScript. Unestimated, and the number to estimate before anything
+  else. No RTS has published rollback numbers at this scale, either way.
+
+**The order, if it is ever taken up:** the instant feedback above; then moving the relay between
+the players, a hosting decision rather than code that may be worth more than any netcode; then
+the per-unit cost; and only then rollback, with a measured snapshot cost in hand. The input delay
+once looked architectural and turned out to be a scheduling constant and an off-by-one -
+decompose a latency before building anything to remove it.
 
 ### 11.5 Where the dev server runs (D18, superseded by D30)
 
@@ -1683,18 +1732,45 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 | --- | --- | --- |
 | **Replication phase B** | Spawn-and-extrapolate, interest management, quantisation - all of §5.4. | **Deleted by the cutover rather than deferred.** Lockstep sends orders, not units, so there is no world stream to optimise. It comes back only if `lockstep_enabled` ever goes back to false for good. |
 | **Client-side prediction** | Guessing the outcome before the turn runs. | **Excluded, not deferred** (D17, §11.4). Under lockstep prediction means simulating ahead of the turn, which is the one thing the model forbids. Instant local FEEDBACK is a different thing, is allowed, and has more room in it - see the last paragraph of §11.4. |
-| **The per-unit simulation cost** | A loaded twelve-lane world costs about twice the tick budget on a gaming PC. A 1v1 costs less than half of it. | MEASURED 2026-09-05, so this is now a sizing problem rather than an unknown - see §4.1. Blocks twelve players; blocks nothing about the 1v1 milestone. |
-| **Delay smoothing** | The input delay is recomputed from live round-trip figures with no damping, so it can move between turns. | Tried and REVERTED on 2026-09-04: an asymmetric slew measured four times worse than none, because the only test available is three Godot processes sharing one desktop's cores and damping an artefact makes the artefact permanent. Wants a real connection to judge it against. `Findings/2026-09-04-input-delay.md`. |
-| **Cross-machine determinism** | Never tested. Every run to date has been two clients on ONE machine, sharing a binary and a libm - the pairing that cannot fail. | **The largest untested assumption in the system**, and it needs a second physical machine. The discipline is in place (`Findings/2026-09-05-lockstep-review-2.md` audited it and found it clean) and the checksums would catch a divergence; what is unknown is whether one happens. |
-| ~~Redundancy under real packet loss~~ | **DONE 2026-09-09.** `receive_seal_echo` re-sends the last few seals unreliably beside the reliable broadcast, and it is tested against real loss rather than assumed: `debug_seal_loss_percent` throws arriving seals away AFTER ENet delivered them, so nothing else can recover them. At 15%, with the echo 1148 turns and 166 of 166 recovered; without it, 10 turns and both peers giving up. | Loss on a REAL link is still unmeasured; the health line reports it now. |
-| **A ranked verdict after a desync** | The match ends for both players and neither is blamed. There is no way to work out afterwards which of them was right. | Deliberate (2026-09-05). The turn stream is now recorded into the session log, so the input needed to replay a match offline exists; nothing consumes it yet. |
+| **The per-unit simulation cost** | A loaded twelve-lane world costs about twice the tick budget on a gaming PC. A 1v1 costs less than half of it. | MEASURED 2026-09-05, so this is now a sizing problem rather than an unknown - see §4.1. Blocks twelve players; blocks nothing about the 1v1 milestone. The order that matters: stop dispatching `_physics_process` per node first (the order-of-magnitude change), the spatial hash second, a compiled language only if both are not enough - and the spatial hash is the change that breaks creep iteration order, which `TargetFinder`'s `unit_id` tie-break already guards. |
+| ~~Delay smoothing~~ | **Retired with D40.** No per-peer input delay is computed any more, so there is nothing to smooth. | |
+| ~~Cross-machine determinism~~ | **DONE 2026-09-09.** Two physical machines against the rented server, on both netcode paths, with every compared checksum turn agreeing. `Findings/2026-09-09-sealed-stream-on-two-machines.md`. | Still untested: more than two machines, and matches longer than a few minutes. |
+| ~~Redundancy under real packet loss~~ | **DONE 2026-09-09.** `receive_seal_echo` re-sends the last few seals unreliably beside the reliable broadcast, and it is tested against real loss rather than assumed: `debug_seal_loss_percent` throws arriving seals away AFTER ENet delivered them, so nothing else can recover them. At 15%, with the echo 1148 turns and 166 of 166 recovered; without it, 10 turns and both peers giving up. | Measured on real links since; one player's reliable channel stopping altogether is what seal repair covers. `Findings/2026-09-10-playtest-7.md`. |
+| **A ranked verdict after a desync** | The match ends for both players and neither is blamed. There is no way to work out afterwards which of them was right. | Deliberate (2026-09-05). Every match is recorded by `MatchRecorder`, so the input a replay needs exists; nothing replays one yet (see Small open work). |
 | **Majority-vote desync attribution** | With two peers a mismatch says they disagree and never which is right. At twelve, a vote could eject the odd one out instead of cancelling. | Meaningless at two players, and twelve is blocked on the per-unit cost anyway. |
 | ~~A floor on how far ahead a peer books~~ | **Gone with D40.** No client names a turn, so there is nothing to game: a peer's lead is a private playback buffer that costs only its owner, and stalling it stalls nobody else. | Retired rather than done. |
-| ~~Redundancy under real packet loss~~ | **DONE 2026-09-09** - see the row above. Measured against injected loss rather than argued from construction. | |
-| **Desync attribution** | With the server a relay there is no third world, so a mismatch says two peers disagree and never which is right. | Decided 2026-09-05: a ranked match is CANCELLED on a desync rather than resolved. Working out who was right means replaying the turn log offline - the log already flows through the relay and nothing keeps it yet. |
+| **Desync attribution** | With the server a relay there is no third world, so a mismatch says two peers disagree and never which is right. | Decided 2026-09-05: a ranked match is CANCELLED on a desync rather than resolved. Working out who was right means replaying the match offline - `MatchRecorder` keeps it now, and nothing replays it yet. |
 | **Projectile replication** | Projectiles are re-simulated locally as presentation; only the server applies their damage. | Cheap and correct as it stands. |
 | **Target acquisition on the client** | `AttackComponent` asks `is_authority()` nowhere, so every client runs the full target search for every tower in every lane, exactly as the server does. Only the damage is gated, in `Unit.take_damage` - a client's answer decides where its barrels point and where it spawns a shot, and nothing else. | It falls inside the presentation exception the row above uses, and for the same reason: a client has to know what a tower is shooting to draw it shooting. What is DIFFERENT is the price. Flying a projectile is a few vectors; acquiring a target is a scan of the whole lane, per tower, and it is the largest cost in a loaded tick on either machine. So the client pays a server's simulation bill to draw barrels, most of them in lanes nobody is looking at. The fix is not a gate on its own - a gated client would draw nothing - but the server naming what each tower fired at, which is the same spawn-event shape phase B wants and should land with it. |
 | **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |
 | **An end screen** | The match decides itself and stops; players leave through the in-game menu. | Deliberately the smallest thing that works. |
 | **Player colours on the units themselves** | A colour reaches the minimap and the player table. Nothing in the 3D world is tinted by it, so two players' towers look identical in a lane. | The colour is chosen, replicated and read through one call (§8.1), so this is a materials question rather than a networking one - and it collides with the tower visual language, which spends colour on the ELEMENTS. `game_rules.md` under Presentation is where that has to be settled first. |
 | **More than one match per process** | One process hosts one match, refuses a second with a sentence, and frees itself when that one empties - D19 doing its job until D16 splits them. | Splitting is an address change, so it is safe to defer. |
+
+### Small open work
+
+None of it blocks anything. The document named in each has the reasoning.
+
+- **Retire the dead delay knobs** - `adaptive_delay`, `fixed_delay_turns`, `min_delay_turns`,
+  `max_delay_turns`, `jitter_margin_ms` - together with `SessionLog`'s reads of them and their
+  `.tres` line, in ONE commit. Removing the exports alone is a runtime error no parse check
+  catches. `Findings/2026-09-10-netcode-audit.md`.
+- **Play the editor against an exported build in one match.** `WorldChecksum` hashes
+  `stats.resource_path`, and if a pack reports a different path than a run from source, every
+  mixed test is a false desync. Export against export is proven clean.
+- **Give the seal its own ENet channel.** Every `@rpc` rides the same one, so a seal can queue
+  behind a lobby broadcast. Unmeasured, and a protocol change.
+- **Read the link diagnostics on a flaky connection.** The relay's `Relay links` line and the
+  health line's `link` and `repair` fields say whether a stopped reliable channel is resend
+  backoff or datagrams too large for the path. `Findings/2026-09-10-playtest-7.md`.
+- **Measure `ShaderWarmup` on a machine that has compiled nothing**, ideally an AMD one:
+  `match.shaders_warmed` in the session log. `Findings/2026-09-15-playtest-8.md`.
+- **The invalid-UID warnings in an exported build**, on every client boot. The source files carry
+  no uid, so it is the export's own cache disagreeing with itself.
+- **Confirm phase 1's draft gap is closed.** `c50e95e` verified draft matches headless through
+  `OpeningProbe`; what `netcode-rework.md` §8 asked for was a draft run with the clock check
+  watching.
+- **A replay reader.** `MatchRecorder` writes every match and `DeterminismBench` already has a
+  `replay=` half; joined, a desync report from a tester becomes a deterministic repro.
+- **Reconnect.** D13 says no, but the sealed stream makes it feasible for the first time: the
+  relay holds the sealed turns a returning peer would need.

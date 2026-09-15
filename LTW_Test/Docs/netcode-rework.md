@@ -786,7 +786,7 @@ absolute values**, and decide the increment's placement deliberately.
   `_ticks_per_turn()`, or pin the knob and refuse anything else at boot.
 - Re-record the `DeterminismBench` baseline in the same commit — `WorldChecksum` hashes the clock.
 
-### Phase 2 — Presentation feedback (`multiplayer-todo.md` §1.2).
+### Phase 2 — Presentation feedback (`multiplayer.md` §11.4, Feedback and prediction).
 
 Build ghost at the clicked cell, send stock decrementing on click, tower greying on sell.
 
@@ -891,7 +891,7 @@ compared** — a silent pass here is indistinguishable from a comparison that ne
 
 ### Prerequisite before phase 4 — cross-machine determinism.
 
-`multiplayer-todo.md` §1.1: a real match between the two dev PCs, session logging on, turn streams
+**Done 2026-09-09** (`Findings/2026-09-09-sealed-stream-on-two-machines.md`). It was: a real match between the two dev PCs, session logging on, turn streams
 compared. It is called the largest untested assumption in the system, and `DeterminismBench`'s own
 docstring says it cannot catch cross-machine float divergence. **Phase 4 is the change that makes
 it hardest to test afterwards** — today a divergence is caught within a few tens of turns because
@@ -1082,14 +1082,14 @@ network and client resources to play together"*, and it is a far larger change. 
 
 **Turning on a fair latency floor.** Build the knob, leave it off.
 
-**Raising the tick rate.** Gated on the per-unit simulation work in `multiplayer-todo.md` §2.1.
+**Raising the tick rate.** Gated on the per-unit simulation work in `multiplayer.md` §13.
 
 **Deleting the replication path.** Keep it behind `NetworkConfig.lockstep_enabled`. It is the only
 honest way to compare the two under load.
 
 **Reconnect.** This design makes it genuinely feasible for the first time — the relay holds sealed
-turns and can replay them, and a returning peer needs nothing else. Worth noting in
-`multiplayer-todo.md`. **Do not build it during the cutover.**
+turns and can replay them, and a returning peer needs nothing else. Recorded in `multiplayer.md` §13.
+**Do not build it during the cutover.**
 
 ---
 

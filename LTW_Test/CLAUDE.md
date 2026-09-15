@@ -10,6 +10,17 @@
 - Player counts above four are still unproven, and the per-unit simulation cost is
   what limits them. See Known weaknesses
 
+# Before starting any task
+- **Only this file is loaded automatically.** Nothing in `Docs/` is read unless
+  you open it, and most of what binds a particular task lives there - the game's
+  rules, the procedure for adding content, how the netcode is built, what an
+  earlier investigation already measured or ruled out
+- so before planning or changing anything, open `Docs/README.md`, the index of
+  which document answers what, and read the ones covering the area the task
+  touches. A task that crosses two areas reads both
+- and before investigating a bug or a cost, search `Docs/Findings/` for the
+  subject. It may already have been measured, or already been ruled out
+
 # Hard rules
 - you're here to implement the game not design it
 - do NOT alter the rules unless on your own without asking
@@ -685,10 +696,10 @@ art at all so far - so this is the placement rule, not a description of the tree
   must never be hand-edited, how to pick the next id, and what refuses bad
   content at boot. Read it before authoring content; it carries no rules and no
   numbers, only the steps.
-- multiplayer.md is what the networked build is and where each part of it lives.
-  multiplayer-todo.md is what it still NEEDS, including the long view on getting input
-  latency below the ping between players on different continents. Keep the two apart:
-  built goes in the first, planned in the second.
+- multiplayer.md is what the networked build is and where each part of it lives -
+  and, in a short list at its end, what is still open. There is no separate plan
+  document any more: open work that will not fit in a few lines is a Finding or a
+  plan of its own, deleted when it lands.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
 - NEVER write a COUNT or a live value into a .md file. No "26 abilities", no
