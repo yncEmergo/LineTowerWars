@@ -11,3 +11,4 @@ description = "Walk to the selected point."
 targeting = 2
 slot = 0
 icon = ExtResource("2_ability_move")
+spreads_group = true

@@ -11,3 +11,4 @@ description = "Send this unit to fight. On a target it closes in and kills it; o
 targeting = 6
 slot = 4
 icon = ExtResource("2_ability_attack")
+spreads_group = true

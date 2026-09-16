@@ -2382,6 +2382,23 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
       instead of for the exit, and it is only planned again when that spot
       moves to another cell. An attack order re-aims its walk every tick and
       must not cost a search every tick
+  - **a walk onto a TOWER is aimed at the ring of ground within reach of it,
+    never at the tower itself**, and it takes whichever of that ring is nearest
+    BY ROUTE rather than by straight line. BUILT.
+    - there is no standing on a tower, so a route asked for one has to be
+      given some other cell instead - and the cell that is nearest as the crow
+      flies is routinely on the far side of it. In a maze the far side is round
+      the outside of a wall, so an attacker standing in front of a tower would
+      set off on a long walk to reach its back. Asking for the whole ring at
+      once makes the near face win on its own, because the near face is one
+      step away and the far one is forty
+    - the walk finishes a little inside that reach rather than exactly at its
+      edge, so a creep shoved off its spot by the pack beside it does not fall
+      straight back out of reach
+    - an attacker that can reach NO part of that ring - every cell it could
+      swing from sealed off from where it stands - keeps the order and stands
+      still rather than pressing into the wall, and tries again when a tower is
+      built or sold. It never silently gives up and walks somewhere else
   - **an attacker keeps a ring of ground to itself and no other attacker may
     enter it**, which is the one place in the game where two units are held
     apart rather than merely nudged. The room it claims is a share of its own
@@ -2395,10 +2412,30 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
       underneath a flyer is not something either of them can feel
     - the share is a number rather than a rule in code, and zero switches the
       whole thing off and leaves the soft push every other creep has
-  - a pack ordered onto ONE POINT piles up around it rather than stacking on
-    it. Whoever gets there first holds the point and the rest stop where they
-    are blocked, so the pack settles outwards a ring at a time instead of
-    circling forever looking for a way in
+  - **a pack ordered onto a point is given a SPOT EACH rather than all being
+    sent to the one point.** BUILT. They are laid out in a block around it,
+    facing the way they are travelling, so every creep has somewhere of its own
+    to arrive at and nobody is waiting on anybody
+    - whoever was at the front of the group gets a spot at the front of the
+      block, so the pack keeps the shape it had and no creep walks through
+      another to reach its place
+    - it is a LAYOUT and never a marching order. They leave the instant the
+      order lands, each at its own speed by its own route; nothing forms up
+      first, nothing waits for a straggler, and nothing walks backwards to hold
+      the shape
+    - the spots are spaced by exactly the room the creeps already claim - see
+      the personal space rule above - so a pack that has arrived is standing
+      still because nobody is inside anybody, rather than because something
+      stopped pushing
+    - where the ground will not take the whole block the block SQUEEZES to the
+      width that is free, a spot that still lands in a wall moves to the
+      nearest ground that is not, and anything left over falls back on the old
+      rule below
+  - a pack that could not be given spots - one creep, or ground too broken to
+    lay a block on - piles up around the point rather than stacking on it.
+    Whoever gets there first holds the point and the rest stop where they are
+    blocked, so the pack settles outwards a ring at a time instead of circling
+    forever looking for a way in
     - that giving-up is for a point on the GROUND only. An attack order names a
       tower, and there is a whole ring of ground within reach of one, so a
       creep sent onto a tower keeps going and is shoved round the outside until

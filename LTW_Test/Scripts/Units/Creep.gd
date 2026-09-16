@@ -116,6 +116,18 @@ var _order_index: int = 0
 ## already routed to reads the route in hand instead of sweeping the grid
 ## again. See _plan_order_route.
 var _order_goal: Vector2i = OFF_GRID
+## How close to _target_position the route in hand was allowed to finish. Zero
+## for a plain walk, and the creep's own reach pulled in a little for a CHASE -
+## see _order_within. Kept rather than re-derived so the question "am I stuck"
+## is asked against the same radius the route was planned with.
+var _order_within_value: float = 0.0
+## Whether that plan found nowhere to go at all, and the grid it was decided
+## against. Only ever true for a chase: every cell within reach of what the
+## order named is sealed off from where the creep stands. It then stands still
+## and keeps the order, asking again when a build or a sell could have opened a
+## way through - never in between, which is what keeps it free.
+var _order_unreachable: bool = false
+var _order_grid_version: int = 0
 ## Route already covered, newest last, for being set back along it.
 var _trail: Array[Vector3] = []
 
@@ -1527,6 +1539,15 @@ func _march(delta: float) -> void:
 ## Arriving and giving up to the crowd are both measured against that point
 ## too: a creep three cells out has not arrived however near its next waypoint.
 func _walk_to_order(delta: float) -> void:
+	# Sealed off from everything it could fight from. Standing still and keeping
+	# the order rather than pressing into the wall or beelining through it, and
+	# asking again only on a grid the maze could have opened - never in between,
+	# so this costs one integer compare a tick and no search at all.
+	if _order_unreachable:
+		if area != null && area.grid_version != _order_grid_version:
+			_replan_order()
+		return
+
 	# Only the cell being walked INTO is re-tested, which is what committing to
 	# a route means - a tower dropped further along changes nothing until the
 	# creep gets to it. Same rule _has_step applies to the walk to the exit.
@@ -1596,9 +1617,50 @@ func _advance_order_step() -> void:
 ## did before there was any pathfinding here at all.
 func _plan_order_route(goal: Vector2i) -> void:
 	_order_goal = goal
-	_order_path = area.route_between(global_position, _target_position)
+	_order_within_value = _order_within()
+	_order_path = area.route_between(global_position, _target_position, _order_within_value)
 	_order_index = 0
+	_order_grid_version = area.grid_version
+
+	# **An empty route is "arrived", not "impossible", and telling the two apart
+	# is the whole reason this is asked of the AREA rather than of the array.**
+	# A chase seeds every cell within reach of its quarry, and the creep is
+	# usually standing on one of them already - which comes back as no route at
+	# all, exactly like a sealed maze does. Reading that as impossible would
+	# strand a creep every time it drifted across the reach boundary.
+	_order_unreachable = _order_path.is_empty() && _order_within_value > 0.0 \
+		&& !area.is_within_reach_cell(global_position, _target_position, _order_within_value)
 	_reset_stall()
+
+
+## How close this walk has to finish, in world units.
+##
+## A MOVE order finishes ON its point, which is zero and is what every walk did
+## before there was an answer to this question. An ATTACK order finishes within
+## REACH of what it named, because there is no standing on a tower - and asking
+## the router for the tower's own cell is what used to send a creep round the
+## outside of a wall to the far face. See PlayerArea.route_between.
+##
+## Pulled inside the reach by a share of it, so a creep shoved off its cell by
+## the pack does not fall straight back out of reach and pay for another sweep.
+##
+## **Non-zero only when this walk really is that chase.** The cell test is what
+## makes that safe by construction rather than by coincidence: today the only
+## caller that moves a creep holding an attack order is the chase itself, and
+## without this a future plain move_to on such a creep would silently stop a
+## whole attack range short of where it was sent.
+func _order_within() -> float:
+	if attack_component == null || area == null:
+		return 0.0
+	var ordered: Unit = attack_component.ordered_target()
+	if ordered == null:
+		return 0.0
+	if area.world_to_internal_cell(ordered.global_position) != _order_goal:
+		return 0.0
+
+	var config: GameConfig = References.game_config
+	var ratio: float = 1.0 if config == null else config.attacker_order_reach_ratio
+	return attack_component.order_reach() * clampf(ratio, 0.0, 1.0)
 
 
 ## Re-takes that route from where the creep now stands, for a tower dropped
@@ -1613,6 +1675,8 @@ func _clear_order_route() -> void:
 	_order_path = []
 	_order_index = 0
 	_order_goal = OFF_GRID
+	_order_within_value = 0.0
+	_order_unreachable = false
 
 
 ## Turns a creep that is standing and fighting to face what it is hitting.
@@ -1655,10 +1719,15 @@ func _refresh_march_target(delta: float) -> void:
 ## own reach. Zero for a creep with no attack at all, which would be an
 ## attacker whose stats forgot one - it then walks to the tower and stands
 ## there, rather than orbiting it forever.
+##
+## Asked of the attack COMPONENT rather than read off the stats, so this is the
+## same number the shot is tested against. Read off the stats it was the raw
+## attack_range with no attack_range_bonus in it, so an attacker lent reach by a
+## disc marched to a distance nothing else in the game agreed with.
 func _attack_reach() -> float:
-	if _creep_stats == null || _creep_stats.attack == null:
+	if attack_component == null:
 		return 0.0
-	return _creep_stats.attack.attack_range
+	return attack_component.order_reach()
 
 
 ## Keeps a flyer at its cruising height when a commanded move ends, rather than
@@ -1837,7 +1906,7 @@ func _separation() -> Vector3:
 		return Vector3.ZERO
 
 	var push: Vector3 = Vector3.ZERO
-	var own_space: float = _crowd_radius()
+	var own_space: float = crowd_radius()
 
 	# The area's own list rather than get_parent().get_children(): it is the
 	# same creeps - this creep is parented under that area's creeps root - and
@@ -1851,7 +1920,7 @@ func _separation() -> Vector3:
 		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
 			continue
 
-		var personal_space: float = own_space + other._crowd_radius()
+		var personal_space: float = own_space + other.crowd_radius()
 		var offset: Vector3 = global_position - other.global_position
 		offset.y = 0.0
 		var distance: float = offset.length()
@@ -1874,7 +1943,15 @@ func _separation() -> Vector3:
 ## waiting on a revive: that is a rule about what may be CLICKED, and a body
 ## that shrank to nothing while it was down would let the rest of the pack
 ## close over the spot it is about to stand up in.
-func _crowd_radius() -> float:
+##
+## **Public because a FORMATION has to space its slots by exactly this number
+## and not by a second copy of it.** _hold_apart stops correcting a pair once
+## they are the sum of their two apart, so a block laid out at that distance
+## computes a zero correction and holds still - the jiggling stops because
+## there is nothing left to correct rather than because anything was switched
+## off. A formation that derived its own spacing would be one edit away from
+## disagreeing with the rule it is trying to satisfy. See Formation.
+func crowd_radius() -> float:
 	if !is_attacker():
 		return body_radius()
 	var config: GameConfig = References.game_config
@@ -1904,7 +1981,7 @@ func _hold_apart() -> void:
 	if area == null || !is_attacker():
 		return
 
-	var own_space: float = _crowd_radius()
+	var own_space: float = crowd_radius()
 	if own_space <= 0.0:
 		return
 
@@ -1917,7 +1994,7 @@ func _hold_apart() -> void:
 		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
 			continue
 
-		var space: float = own_space + other._crowd_radius()
+		var space: float = own_space + other.crowd_radius()
 		var offset: Vector3 = global_position - other.global_position
 		offset.y = 0.0
 		var distance: float = offset.length()
@@ -1969,7 +2046,7 @@ func _is_crowd_blocked(distance: float) -> bool:
 	if distance > config.attacker_crowd_arrive_cells * config.cell_size:
 		return false
 
-	var own_space: float = _crowd_radius()
+	var own_space: float = crowd_radius()
 	for other: Creep in area.creeps():
 		if other == self || other.is_down() || !other.is_attacker() || other.is_moving():
 			continue
@@ -1981,7 +2058,7 @@ func _is_crowd_blocked(distance: float) -> bool:
 		# answer false for two creeps pressed right up against each other.
 		var gap: Vector3 = global_position - other.global_position
 		gap.y = 0.0
-		if gap.length() > (own_space + other._crowd_radius()) * CROWD_CONTACT_SLACK:
+		if gap.length() > (own_space + other.crowd_radius()) * CROWD_CONTACT_SLACK:
 			continue
 
 		var theirs: Vector3 = _target_position - other.global_position

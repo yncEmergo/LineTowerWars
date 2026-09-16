@@ -92,6 +92,20 @@ extends Resource
 ## in that the rule above will never give them. With it they stop where they
 ## are blocked, which is how a pack piles up in any other RTS.
 @export var attacker_crowd_arrive_cells: float = 1.5
+## How far inside its own reach a commanded ATTACKER plans to end up, as a
+## share of that reach.
+##
+## A chase is routed to the SET of cells it could swing from rather than to the
+## tower itself, and this is how far in from the edge of that set the route is
+## allowed to finish. Pulled in a little so a creep shoved off its cell by the
+## pack beside it does not fall straight back out of reach and pay for another
+## sweep of the grid.
+##
+## A share rather than a length, so it cannot go negative on a short-reach creep
+## and needs no second number per unit. 1.0 aims at the very edge of reach; the
+## nearer zero, the more the pack walks into the tower's face before stopping.
+@export_range(0.1, 1.0) var attacker_order_reach_ratio: float = 0.8
+
 ## Radius of EVERY creep aura, in player cells. One value for the whole game
 ## rather than a per creep one, so an aura is the same size whichever creep
 ## brings it and a player only ever has to learn the shape once. Auras also do
@@ -140,6 +154,40 @@ extends Resource
 ## TowerPassive.extra_target_range.
 @export var multishot_reach_cells: float = 3.0
 
+@export_group("Formation")
+## Whether a group order lays its units out at all. Off is exactly the old
+## behaviour - every unit of a selection aimed at the one clicked point - and it
+## is here so the two can be measured against each other on ONE commit with one
+## variable flipped in place, which is the only honest way to compare them.
+@export var formation_enabled: bool = true
+## Spacing between neighbouring units in a formation, as a share of the room the
+## two of them already claim.
+##
+## **Derived from the personal space rather than authored beside it, and that is
+## what makes a parked group hold still.** Creep._hold_apart stops correcting a
+## pair once they are their combined personal space apart, so slots at or above
+## that distance mean a formation at rest computes a zero correction and never
+## moves. Below it the pack goes back to shoving itself about forever, which is
+## the thing being fixed - so this is clamped in code to a floor that accounts
+## for each unit stopping within its own arrive_threshold of its slot.
+@export_range(1.0, 3.0) var formation_spacing_ratio: float = 1.15
+## Roughly how many times wider than deep a formation block is. Above one it is
+## a line abreast, which is what a group walking into open ground should look
+## like; at one it is square.
+@export_range(0.5, 4.0) var formation_aspect: float = 1.6
+## How far a slot that landed inside a wall may be moved to find free ground, in
+## internal cells. Nothing free inside that range and the unit is given the raw
+## ordered point instead, which is exactly what it would have got with no
+## formation at all - so the fallback is never worse than the old behaviour.
+@export_range(0, 12) var formation_slot_search_cells: int = 4
+## How short the travel vector may get before a formation keeps the heading the
+## group already has instead of recomputing one.
+##
+## A click just outside a spread-out group gives a very short vector whose
+## DIRECTION flips between two near-identical clicks, which snaps the whole
+## block ninety degrees for no reason the player can see. Measured in player
+## cells against the distance from the group's centre to the click.
+@export_range(0.0, 8.0) var formation_min_travel_cells: float = 1.5
 @export_group("Buildings")
 ## Seconds a building takes to go up, and the same figure an UPGRADE takes.
 ##

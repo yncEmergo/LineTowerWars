@@ -334,6 +334,24 @@ func has_reached_order() -> bool:
 
 ## The unit a standing order names, or null once it has died, been sold or
 ## stopped being a legal target. Read by the attack task waiting on it.
+## How far this unit can act from, buffs included - the same number is_in_reach
+## tests against, handed out so a WALK can be planned to end exactly where the
+## swing becomes possible.
+##
+## It exists because there were two answers to that question and they disagreed:
+## Creep._attack_reach read the raw attack_range off the stats while everything
+## that actually fires went through _reach, which adds attack_range_bonus. So an
+## attacker standing in a disc that lends it reach marched to the wrong distance
+## - not far enough to be a bug anyone would report, and far enough that a route
+## planned against one number and ended against the other would disagree about
+## whether the creep had arrived.
+func order_reach() -> float:
+	var attack: AttackStats = _attack
+	if attack == null:
+		return 0.0
+	return _reach(attack)
+
+
 func ordered_target() -> Unit:
 	if _ordered_target == null || !is_instance_valid(_ordered_target):
 		return null

@@ -663,14 +663,109 @@ func _path_clearance() -> float:
 ## order aimed at a tower routes to its face rather than to nowhere. It is the
 ## same rule CommandController._reachable_point_in applies to a ground click,
 ## asked here as well because an attack order never passes through that.
-func route_between(from: Vector3, to: Vector3) -> Array[Vector2i]:
+##
+## **`within` is how close to `to` the route may finish, in world units, and it
+## is what an ATTACK order asks for**: not "walk onto that tower", which is a
+## cell nothing can stand in, but "get within reach of it". Every free cell
+## inside that radius is seeded into ONE sweep, so the field hands the walker
+## whichever of them is nearest BY ROUTE rather than by straight line - and the
+## two are not the same question anywhere there is a wall.
+##
+## The single-cell path below is what that replaced and why it had to be
+## replaced: nearest_free_point answers with the first free cell of an expanding
+## ring scan, which never sees the walker. For a tower it is worse than blind,
+## it is biased - a building's internal footprint is even on both axes, so its
+## centre lands on a cell boundary and world_to_internal_cell's floor puts the
+## scan origin on the footprint's max corner, whose first ring holds the east
+## and south faces and no cell of the north or west face at all. An attacker
+## walking down-lane was therefore sent to the far side of the tower as a rule
+## rather than as bad luck, and when that tower was part of a wall it walked
+## round the wall to get there. See Findings/2026-09-16-attacker-pathing-and-
+## group-movement.md.
+##
+## Zero is the plain ground walk and is byte for byte what this did before the
+## argument existed.
+func route_between(from: Vector3, to: Vector3, within: float = 0.0) -> Array[Vector2i]:
+	var width: int = internal_width()
+	var depth: int = internal_depth()
+
+	if within > 0.0:
+		var ring: Array[Vector2i] = _reach_cells(to, within)
+		# An empty ring is a target walled in by its own neighbours. Falling
+		# through to the single-cell rule is never worse than what it did
+		# before, and is the only case that still reaches nearest_free_point.
+		if !ring.is_empty():
+			_order_flow.build_to_any(_blocking, width, depth, ring)
+			return _order_flow.path_from(world_to_internal_cell(from), _blocking)
+
 	var goal: Vector3 = clamp_point(to)
 	if !is_point_free(goal):
 		goal = nearest_free_point(goal)
 
-	_order_flow.build_to(_blocking, internal_width(), internal_depth(),
-		world_to_internal_cell(goal))
+	_order_flow.build_to(_blocking, width, depth, world_to_internal_cell(goal))
 	return _order_flow.path_from(world_to_internal_cell(from), _blocking)
+
+
+## Whether a walker standing at `from` could already act on something `within`
+## of `to` - i.e. whether its own cell is one of the cells route_between would
+## have seeded.
+##
+## **This is what tells an empty route apart from an impossible one.**
+## path_from returns nothing both when the walker cannot get there and when it
+## is already standing on a seed, and the second is the common case, because
+## seeds are cell centres while the reach test that ends a chase measures the
+## walker's real position. Reading an empty array as "impossible" would clear
+## orders at the reach boundary, which is worse than the bug this fixes.
+func is_within_reach_cell(from: Vector3, to: Vector3, within: float) -> bool:
+	if within <= 0.0:
+		return false
+	var cell: Vector2i = world_to_internal_cell(from)
+	if cell.x < 0 || cell.y < 0 || cell.x >= internal_width() || cell.y >= internal_depth():
+		return false
+	return _is_reach_cell(cell, to, within)
+
+
+## Every free internal cell whose CENTRE is within `within` of a world point.
+##
+## Measured centre to centre, because that is what TargetFinder.is_in_range
+## measures and therefore what ends the chase - so a cell that passes here is a
+## cell the swing lands from, and there is no second notion of reach to keep in
+## step with this one.
+##
+## The box is spanned symmetrically from the point's own cell and widened by one
+## on every side, which covers the half-cell the floor above may have shifted it
+## by. Every candidate is then tested against the real radius, so the box being
+## generous costs a few compares and changes no answer.
+func _reach_cells(to: Vector3, within: float) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var size: float = internal_cell_size()
+	if size <= 0.0:
+		return cells
+
+	var origin: Vector2i = world_to_internal_cell(to)
+	var radius: int = int(ceil(within / size)) + 1
+	var width: int = internal_width()
+	var depth: int = internal_depth()
+
+	for dz in range(-radius, radius + 1):
+		for dx in range(-radius, radius + 1):
+			var cell: Vector2i = Vector2i(origin.x + dx, origin.y + dz)
+			if cell.x < 0 || cell.y < 0 || cell.x >= width || cell.y >= depth:
+				continue
+			if _blocking[cell.y * width + cell.x] != 0:
+				continue
+			if _is_reach_cell(cell, to, within):
+				cells.append(cell)
+
+	return cells
+
+
+## Whether this cell's centre is close enough to act on a point at `to`. Flat,
+## like every other distance in this game, and squared so nothing takes a root.
+func _is_reach_cell(cell: Vector2i, to: Vector3, within: float) -> bool:
+	var offset: Vector3 = internal_cell_center(cell) - to
+	offset.y = 0.0
+	return offset.length_squared() <= within * within
 
 
 ## Whether something standing here has reached the end zone.

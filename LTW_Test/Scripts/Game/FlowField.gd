@@ -25,6 +25,23 @@ extends RefCounted
 ## Distance value for a cell no route reaches, including blocked cells.
 const UNREACHABLE: int = -1
 
+## The four steps the SWEEP takes, and the eight a walker reads.
+##
+## Constants rather than literals because both used to be built inside the
+## loops that read them: the four-element one was allocated once per DEQUEUED
+## CELL - so once per free cell of the area, on every sweep, and a sweep runs on
+## every tower placed or sold in every lane - and _steps() returned a fresh
+## eight-element array on every next_cell call, which is once per step of every
+## route ever walked. The order of both is preserved exactly, so every route
+## that came out of them before comes out of them now.
+const SWEEP_STEPS: Array[Vector2i] = [
+	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+]
+const WALK_STEPS: Array[Vector2i] = [
+	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
+]
+
 var _width: int = 0
 var _depth: int = 0
 ## Steps from each cell to the nearest exit cell, row major like the occupancy
@@ -59,10 +76,45 @@ func build(occupied: PackedByteArray, width: int, depth: int, exit_first_row: in
 ## back on walking straight at the point. PlayerArea.route_between resolves a
 ## blocked one before it ever gets here.
 func build_to(occupied: PackedByteArray, width: int, depth: int, goal: Vector2i) -> void:
-	var goals: Array[Vector2i] = []
-	if _in_bounds_of(goal, width, depth) && occupied[goal.y * width + goal.x] == 0:
-		goals.append(goal)
-	_sweep(occupied, width, depth, goals)
+	build_to_any(occupied, width, depth, [goal])
+
+
+## The same sweep towards a SET of cells rather than one, which is what an
+## ATTACK order asks for.
+##
+## **An attack order's destination was never a point.** It is every cell the
+## target can be hit from, and which of those is nearest is a question only the
+## search can answer. Handing the search one cell picked in advance is choosing
+## before the information exists - and the cell that looks nearest by straight
+## line is routinely the far face of a tower, which in a maze is round the
+## outside of a wall. Straight-line distance is not walking distance, and a
+## maze is built out of U-shapes on purpose.
+##
+## Seeded together, every cell of the ring starts at zero and the field hands
+## the walker whichever is nearest BY ROUTE: the cell on its own side of the
+## wall is one step away and wins, the one three metres off through the maze is
+## forty steps away and does not. The near face falls out of the search for
+## free and is correct by construction rather than by a rule that could be
+## tuned wrong.
+##
+## **The seed order provably cannot matter.** Every seed enters at distance
+## zero, and a breadth-first sweep from a zero-distance set gives every cell the
+## same minimum whatever order the seeds were queued in; next_cell and path_from
+## then read only the distance field and a fixed step order. So this is safe
+## under lockstep by construction rather than by the caller happening to build
+## its list in a fixed order.
+##
+## Goals off the grid or inside a wall are DROPPED rather than refused, so a
+## ring half buried in a maze still sweeps to the half that is not. An empty set
+## leaves the field unreachable everywhere, which is the same answer build_to
+## always gave for a blocked goal.
+func build_to_any(occupied: PackedByteArray, width: int, depth: int,
+		goals: Array[Vector2i]) -> void:
+	var kept: Array[Vector2i] = []
+	for cell: Vector2i in goals:
+		if _in_bounds_of(cell, width, depth) && occupied[cell.y * width + cell.x] == 0:
+			kept.append(cell)
+	_sweep(occupied, width, depth, kept)
 
 
 ## The breadth-first sweep itself, outwards from every goal cell at once. Both
@@ -92,7 +144,7 @@ func _sweep(occupied: PackedByteArray, width: int, depth: int,
 		head += 1
 		var next_distance: int = _distance[cell.y * width + cell.x] + 1
 
-		for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		for step: Vector2i in SWEEP_STEPS:
 			var next: Vector2i = cell + step
 			if next.x < 0 || next.y < 0 || next.x >= width || next.y >= depth:
 				continue
@@ -141,7 +193,7 @@ func next_cell(cell: Vector2i, occupied: PackedByteArray) -> Vector2i:
 	var best: Vector2i = cell
 	var best_score: int = 0
 
-	for step in _steps():
+	for step: Vector2i in WALK_STEPS:
 		var candidate: Vector2i = cell + step
 		var neighbour: int = distance_at(candidate)
 		if neighbour == UNREACHABLE || neighbour >= here:
@@ -317,9 +369,3 @@ func _in_bounds(cell: Vector2i) -> bool:
 func _in_bounds_of(cell: Vector2i, width: int, depth: int) -> bool:
 	return cell.x >= 0 && cell.y >= 0 && cell.x < width && cell.y < depth
 
-
-func _steps() -> Array:
-	return [
-		Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
-		Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
-	]

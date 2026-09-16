@@ -432,20 +432,53 @@ func _reaches(entries: Array, wanted: UnitAbility, seen: Dictionary) -> bool:
 ## UnitAbility.is_queueable.
 func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 	var acted: bool = false
-	for unit in units:
+	var slots: Array[Vector3] = _slots_for(command, ability, units)
+	for index in range(units.size()):
+		var unit: Unit = units[index] as Unit
 		if !is_instance_valid(unit):
 			continue
-		if _run_on(unit, ability, command):
+		if _run_on(unit, ability, command, slots[index]):
 			acted = true
 
 	if acted:
 		command_applied.emit(command)
 
 
+## Where each named unit is actually being sent.
+##
+## **This is the one place the whole group is visible at once**, and it is
+## reached identically by all three roads - the offline path through
+## submit_for, the lockstep path through apply_turn on EVERY peer, and the
+## replication server - which is exactly what a layout needs: every machine
+## derives the same slots from the same command, so nothing has to be sent and
+## nothing new has to be checksummed. See Formation.
+##
+## An order that names a UNIT is left alone. A pack sent onto one tower is not
+## after a patch of ground at all, it is after somewhere within reach of that
+## tower, and there is a whole ring of those - which is the router's question
+## and is answered in PlayerArea.route_between.
+func _slots_for(command: Command, ability: UnitAbility, units: Array) -> Array[Vector3]:
+	if ability == null || !ability.spreads_group || !command.has_target_position \
+			|| command.target_unit_id != MatchSession.NO_UNIT:
+		var plain: Array[Vector3] = []
+		plain.resize(units.size())
+		plain.fill(command.target_position)
+		return plain
+	return Formation.slots_for(units, command.target_position)
+
+
 ## One unit's share of an order. Answers whether it was taken, so a command
 ## that every named unit refused emits nothing.
-func _run_on(unit: Unit, ability: UnitAbility, command: Command) -> bool:
+##
+## `slot` is where THIS unit is being sent, which is the ordered point itself
+## unless a formation spread the group out. Written into the target rather than
+## carried beside it, so a queued order holds the real destination, the order
+## overlay draws each unit's own waypoint, and a replication client gets it
+## without a wire field.
+func _run_on(unit: Unit, ability: UnitAbility, command: Command, slot: Vector3) -> bool:
 	var target: AbilityTarget = command.to_target(_session)
+	if target.has_position:
+		target.position = slot
 
 	if !ability.is_queueable():
 		if !ability.can_execute(unit):
