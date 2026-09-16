@@ -676,6 +676,20 @@ art at all so far - so this is the placement rule, not a description of the tree
       holding a space arrives split in two. Both of this project's hold one -
       the project path ("LTW Standalone") and the preset name ("Windows
       Desktop") - so the fix for the first trap walks straight into the second
+    - and **`-NoNewWindow` HANDS THE CHILD THIS CONSOLE**, so what it prints
+      goes to the terminal and never enters the CALLER'S pipeline. A script
+      that runs another one this way and reads its output -
+      `$out = & .\Tools\run_ai_bench.ps1 ... 2>&1 | Out-String` - captures an
+      EMPTY STRING while the run prints its results perfectly on screen
+      - it cost a whole twelve-match AI matrix, most of an hour: every match
+        finished and printed its result line, and the runner reported that not
+        one of them had. The two failures are indistinguishable from the
+        caller, which is the same shape as the positive-control rule above -
+        "no output" and "output I cannot see" read identically
+      - a caller that has to READ the output passes
+        `-RedirectStandardOutput <file>` and reads the FILE.
+        `Tools/run_ai_bench.ps1 -LogFile` and `run_ai_matrix.ps1` are the
+        worked example
     - the Bash tool waits correctly, which is what makes this specific to the
       `.ps1` scripts and invisible when the same command is run by hand
     - `Tools/build_client.ps1` is the worked example, and it also checks the

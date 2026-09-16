@@ -9,6 +9,7 @@
 #   .\Tools\run_ai_bench.ps1 -Players 4 -Minutes 25   a free for all, to the endgame
 #   .\Tools\run_ai_bench.ps1 -Seed 7                  the same match again
 #   .\Tools\run_ai_bench.ps1 -Record                  also write it to user://recordings
+#   .\Tools\run_ai_bench.ps1 -LogFile out.txt         write the run to a file to read back
 #
 # Headless and faster than real time: the engine rate is raised for the run and
 # put back afterwards, and nothing in the simulation reads it - see
@@ -22,6 +23,7 @@ param(
 	[int]$Seed = 0,
 	[int]$Speed = 240,
 	[switch]$Record,
+	[string]$LogFile = "",
 	[string]$Godot = ""
 )
 
@@ -54,7 +56,20 @@ $quoted = @()
 foreach ($argument in $benchArgs) {
     if ($argument -match '\s') { $quoted += ('"' + $argument + '"') } else { $quoted += $argument }
 }
-$run = Start-Process -FilePath $exe -ArgumentList $quoted -NoNewWindow -Wait -PassThru
+
+# **And -NoNewWindow HANDS THE CHILD THIS CONSOLE**, which is the third face of
+# the same trap: the bench's output goes straight to the terminal and never
+# enters the caller's pipeline, so `$x = & run_ai_bench.ps1` captures NOTHING
+# however carefully it pipes. It read as every match failing to finish while
+# twelve of them were plainly printing results. So a caller that wants to READ
+# the output asks for -LogFile and reads the file.
+if ([string]::IsNullOrWhiteSpace($LogFile)) {
+	$run = Start-Process -FilePath $exe -ArgumentList $quoted -NoNewWindow -Wait -PassThru
+} else {
+	$errFile = "$LogFile.err"
+	$run = Start-Process -FilePath $exe -ArgumentList $quoted -NoNewWindow -Wait -PassThru `
+		-RedirectStandardOutput $LogFile -RedirectStandardError $errFile
+}
 if ($run.ExitCode -ne 0) {
 	Write-Host "The bench exited with $($run.ExitCode)." -ForegroundColor Yellow
 	exit $run.ExitCode

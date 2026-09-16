@@ -848,10 +848,17 @@ What it built, so a later phase does not look for it:
   back, a plan it does not finish is a shorter maze rather than a hole.
 - **The bench prints a machine-readable `AI BENCH PAIR` line**, and `Tools/run_ai_matrix.ps1`
   plays every pair both ways round over N seeds, then prints a win matrix, a ladder check and a
-  transitivity verdict.
+  transitivity verdict. It reads each match off a LOG FILE (`run_ai_bench.ps1 -LogFile`) rather
+  than off the pipeline, which is not a detail - see the baseline finding and `CLAUDE.md`.
+- **A bench match has to run past 25:20 to be decided by the game's own tie-breaker**, which is
+  `sudden_death_seconds` plus the start delay. Below that, two profiles that both hold their
+  lane simply draw, and the matrix reports `undecided at the clock` rather than a ladder.
 - **Two exploiter profiles**, unselectable, for the bench to test against: `All-in` (every coin
   into sending, never defends) and `Turtle` (builds all match, never sends).
-- **The baseline matrix** is in `Findings/2026-09-16-ai-phase-0-baseline.md`.
+- **The baseline matrix** is in `Findings/2026-09-16-ai-phase-0-baseline.md`. Two of its
+  results bind the phases below: **Hard and Normal are the same difficulty** on the bench,
+  and **an AI's economy cannot be measured after 25:20**, because Sudden Death's income
+  floor raises everybody to a million and erases whatever lead either of them built.
 
 **Not built, and deliberately:** a flyer-only and an attacker-spam exploiter. Today's brain
 chooses a send by price and efficiency and cannot be told to prefer a creep TYPE, so those two

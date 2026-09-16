@@ -23,12 +23,27 @@ param(
 	[int]$FirstSeed = 101,
 	[double]$Minutes = 25,
 	[int]$Speed = 240,
+	# Re-read a FINISHED run's match logs and print the tables again, playing
+	# nothing. The same -Names, -Seeds and -FirstSeed have to be given, because
+	# the loop below is what says which pairing each match_N.txt was.
+	[string]$FromLogs = "",
 	[string]$Godot = ""
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $bench = Join-Path $PSScriptRoot "run_ai_bench.ps1"
+
+# One folder per run, so a match that went wrong can still be read afterwards.
+$replay = -not [string]::IsNullOrWhiteSpace($FromLogs)
+if ($replay) {
+	$logDir = $FromLogs
+	Write-Host "Re-reading a finished run: $logDir"
+} else {
+	$logDir = Join-Path $env:TEMP ("ai_matrix_" + (Get-Date -Format "yyyyMMdd_HHmmss"))
+	New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+	Write-Host "Match logs: $logDir"
+}
 
 # Every unordered pair, played both ways round on every seed.
 $results = @()
@@ -43,17 +58,46 @@ foreach ($seedStep in 0..($Seeds - 1)) {
 				$total++
 				Write-Host ("[{0}] {1} vs {2}  seed {3}" -f $total, $a, $b, $seed)
 
-				$output = & $bench -A $a -B $b -Seed $seed -Minutes $Minutes `
-					-Speed $Speed -Godot $Godot 2>&1 | Out-String
-				$line = ($output -split "`n" | Where-Object { $_ -match "AI BENCH PAIR" })
+				# READ THE MATCH OFF A FILE, never off the pipeline. The bench
+				# runs Godot through Start-Process -NoNewWindow, which hands the
+				# child THIS console - so its output goes to the terminal and
+				# `$x = & $bench` captures an empty string however it is piped.
+				# That cost a full twelve-match run: every match finished and
+				# printed its line, and this script reported that none had.
+				$log = Join-Path $logDir ("match_{0}.txt" -f $total)
+				if (-not $replay) {
+					& $bench -A $a -B $b -Seed $seed -Minutes $Minutes `
+						-Speed $Speed -Godot $Godot -LogFile $log
+				}
+				$line = ""
+				if (Test-Path $log) {
+					$found = Select-String -Path $log -Pattern "AI BENCH PAIR" -SimpleMatch
+					if ($found) { $line = $found[-1].Line }
+				}
 				if (-not $line) {
-					Write-Warning "no result line: that match did not finish"
+					Write-Warning "no result line: that match did not finish ($log)"
+					# **The first match is the positive control for the harness
+					# itself.** If THAT one cannot be read, nothing downstream
+					# can be either, and eleven more matches is most of an hour
+					# spent proving it again.
+					if ($total -eq 1) {
+						Write-Host "The first match produced no readable result. Stopping."
+						exit 1
+					}
 					continue
 				}
 
 				$fields = @{}
 				foreach ($pair in ([regex]::Matches($line, '(\w+)=([^\s]+)'))) {
 					$fields[$pair.Groups[1].Value] = $pair.Groups[2].Value
+				}
+				# **The log has to BE the match this iteration means.** A replay
+				# reads match_N.txt by position, so a different -Names or -Seeds
+				# would silently file every result under the wrong pair.
+				if ($fields["a"] -ne $a -or $fields["b"] -ne $b) {
+					Write-Warning ("{0} holds {1} vs {2}, not {3} vs {4} - skipped" -f `
+						$log, $fields["a"], $fields["b"], $a, $b)
+					continue
 				}
 				$results += [pscustomobject]@{
 					A = $a; B = $b; Seed = $seed
@@ -76,32 +120,55 @@ if ($results.Count -eq 0) {
 	exit 1
 }
 
-# --- the matrix. wins[x][y] is how many times x beat y, from either seat.
+# --- two tables, because a decisive win and a lives margin are not the same
+# claim. wins[x][y] counts the matches x DECIDED against y, meaning a player was
+# actually eliminated. edge[x][y] adds the draws broken by who was closer to
+# death at the clock - which is the only thing that separates two profiles that
+# both hold their lane for the whole match, and a 194-6 draw is not a tie.
 $wins = @{}
+$edge = @{}
 foreach ($name in $Names) {
 	$wins[$name] = @{}
-	foreach ($other in $Names) { $wins[$name][$other] = 0 }
+	$edge[$name] = @{}
+	foreach ($other in $Names) { $wins[$name][$other] = 0; $edge[$name][$other] = 0 }
 }
 $draws = 0
+$deadEven = 0
 foreach ($row in $results) {
 	switch ($row.Winner) {
-		"a" { $wins[$row.A][$row.B]++ }
-		"b" { $wins[$row.B][$row.A]++ }
-		default { $draws++ }
+		"a" { $wins[$row.A][$row.B]++; $edge[$row.A][$row.B]++ }
+		"b" { $wins[$row.B][$row.A]++; $edge[$row.B][$row.A]++ }
+		default {
+			$draws++
+			if ($row.LivesA -gt $row.LivesB) { $edge[$row.A][$row.B]++ }
+			elseif ($row.LivesB -gt $row.LivesA) { $edge[$row.B][$row.A]++ }
+			else { $deadEven++ }
+		}
+	}
+}
+
+# -f binds tighter than -join, so the header row has to be built first or the
+# whole line prints as System.Object[].
+function Write-WinMatrix($table, $caption) {
+	Write-Host ""
+	Write-Host $caption
+	$header = ($Names | ForEach-Object { "{0,10}" -f $_ }) -join ""
+	Write-Host ("  {0,-10}{1}" -f "beat >", $header)
+	foreach ($name in $Names) {
+		$cells = foreach ($other in $Names) {
+			if ($name -eq $other) { "{0,10}" -f "-" } else { "{0,10}" -f $table[$name][$other] }
+		}
+		Write-Host ("  {0,-10}{1}" -f $name, ($cells -join ""))
 	}
 }
 
 Write-Host ""
 Write-Host ("AI MATRIX  {0} matches, {1} seeds, seats swapped, {2} minutes each" -f `
 	$results.Count, $Seeds, $Minutes)
-Write-Host ("  {0,-10}{1}" -f "beat >", ($Names | ForEach-Object { "{0,10}" -f $_ }) -join "")
-foreach ($name in $Names) {
-	$cells = foreach ($other in $Names) {
-		if ($name -eq $other) { "{0,10}" -f "-" } else { "{0,10}" -f $wins[$name][$other] }
-	}
-	Write-Host ("  {0,-10}{1}" -f $name, ($cells -join ""))
-}
+Write-WinMatrix $wins "  DECIDED: somebody was eliminated"
 Write-Host ("  undecided at the clock: {0}" -f $draws)
+Write-WinMatrix $edge "  AND ON LIVES: every draw broken by who was closer to death"
+Write-Host ("  dead even: {0}" -f $deadEven)
 
 # --- the ladder, in the order the names were given: does each beat the one below?
 Write-Host ""
@@ -112,20 +179,27 @@ for ($i = 1; $i -lt $Names.Count; $i++) {
 	$lower = $Names[$i - 1]
 	$for = $wins[$upper][$lower]
 	$against = $wins[$lower][$upper]
-	$verdict = if ($for -gt $against) { "holds" } else { "BROKEN"; }
-	if ($for -le $against) { $ladderHolds = $false }
-	Write-Host ("    {0,-8} over {1,-8} {2}-{3}  {4}" -f $upper, $lower, $for, $against, $verdict)
+	$forLives = $edge[$upper][$lower]
+	$againstLives = $edge[$lower][$upper]
+	$verdict = "BROKEN"
+	if ($for -gt $against) { $verdict = "holds" }
+	elseif ($forLives -gt $againstLives) { $verdict = "holds on lives only" }
+	if ($verdict -eq "BROKEN") { $ladderHolds = $false }
+	Write-Host ("    {0,-8} over {1,-8} decided {2}-{3}, on lives {4}-{5}  {6}" -f `
+		$upper, $lower, $for, $against, $forLives, $againstLives, $verdict)
 }
 
-# --- transitivity: any x beating y, y beating z, and z beating x at all.
+# --- transitivity: any x beating y, y beating z, and z beating x at all. On the
+# lives table, because with two even profiles the decided one is all zeroes and
+# a ladder of zeroes cannot contain a cycle to find.
 $cycles = @()
 foreach ($x in $Names) {
 	foreach ($y in $Names) {
 		foreach ($z in $Names) {
 			if ($x -eq $y -or $y -eq $z -or $x -eq $z) { continue }
-			if ($wins[$x][$y] -gt $wins[$y][$x] -and
-				$wins[$y][$z] -gt $wins[$z][$y] -and
-				$wins[$z][$x] -gt $wins[$x][$z]) {
+			if ($edge[$x][$y] -gt $edge[$y][$x] -and
+				$edge[$y][$z] -gt $edge[$z][$y] -and
+				$edge[$z][$x] -gt $edge[$x][$z]) {
 				$cycles += ("{0} > {1} > {2} > {0}" -f $x, $y, $z)
 			}
 		}
