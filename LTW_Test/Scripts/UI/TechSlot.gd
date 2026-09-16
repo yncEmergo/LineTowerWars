@@ -22,13 +22,10 @@ extends Button
 ## what that means, and nothing here spends anything.
 signal tech_activated(tech: TechDefinition)
 
-## Greyed tint for a technology that cannot be bought right now - the element
-## it needs is not owned, or there is not enough gold.
-const UNAVAILABLE_MODULATE: Color = Color(0.55, 0.55, 0.55, 1.0)
-## Lit tint for one already researched. Above 1 on purpose, the same way a
-## command card marks a toggle that is switched on: it brightens the square
-## rather than recolouring it, so it still reads once icons replace the text.
-const RESEARCHED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
+## What the three states LOOK like is ResearchStyle's, not this square's. It is
+## shared with UltimateButton, which has the same three and must not drift from
+## them, and it is where the reason they are no longer a `modulate` is written
+## down.
 
 @export_group("References")
 ## Hotkey in the top left corner, WC3 style. "Q", or "S+Q" on the rows that
@@ -47,13 +44,21 @@ const RESEARCHED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
 ## call out the four technologies one Ultimate needs. A border and no fill, so
 ## it frames the icon rather than hiding it.
 @export var _highlight: Control
+## The tick in the bottom right corner, shown only on a technology already
+## researched. The one part of the answer that is the SAME on all ten element
+## hues, which is the whole reason it is there - and it sits INSIDE the square,
+## so the Ultimate highlight above keeps the border to itself and a square can
+## say both things at once.
+@export var _badge: Control
 ## The element's own hue, filling the square behind everything else. Also a
 ## placeholder standing in for the icon, and the reason the labels can be as
 ## short as they are: a row reads as one element before a letter is read.
 ##
-## Under the labels rather than a stylebox on the button, so the greyed and lit
-## tints keep working - modulate reaches a child and would not reach a theme
-## override.
+## It is no longer the hue alone: how bright it is drawn is the STATE, and the
+## two are worked out together in ResearchStyle. A ColorRect rather than a
+## stylebox on the button because a stylebox is a shared resource - every
+## square instanced from this scene holds the same one, so painting a state
+## into it would paint it into all thirty.
 @export var _background: ColorRect
 ## Rich hover tooltip, built fresh per hover. The command card's own scene,
 ## because a technology has exactly the blocks it draws: a title, a price, some
@@ -70,6 +75,13 @@ var _hotkey: String = ""
 ## Whether an Ultimate button is currently pointing at this square. Presentation
 ## only - it changes nothing about what the square can be pressed for.
 var _highlighted: bool = false
+## The element hue this square was filled with. Kept because the background is
+## now worked out from the hue AND the state together, and the state moves.
+var _element: Color = Color.TRANSPARENT
+## The state currently drawn, so a square on screen is not repainted twenty
+## times a second to say what it already said.
+var _state: ResearchStyle.State = ResearchStyle.State.BLOCKED
+var _state_drawn: bool = false
 
 var _manager: TechManager:
 	get:
@@ -102,8 +114,8 @@ func set_tech(new_tech: TechDefinition, player_id: int, hotkey: String) -> void:
 	var picture: Texture2D = tech.tech_icon()
 	_apply_icon(picture)
 	_apply_label(_name_label, "" if picture != null else tech.grid_label())
-	if _background != null:
-		_background.color = tech.element_color()
+	_element = tech.element_color()
+	_state_drawn = false
 	_refresh_state()
 
 
@@ -115,11 +127,14 @@ func clear() -> void:
 	_hotkey = ""
 	disabled = true
 	tooltip_text = ""
-	modulate = Color.WHITE
+	_element = Color.TRANSPARENT
+	_state_drawn = false
 	set_highlighted(false)
 	_apply_icon(null)
 	if _background != null:
 		_background.color = Color.TRANSPARENT
+	if _badge != null:
+		_badge.visible = false
 	_apply_label(_hotkey_label, "")
 	_apply_label(_name_label, "")
 
@@ -159,14 +174,43 @@ func _refresh_state() -> void:
 	if manager == null:
 		return
 
-	# Greyed rather than disabled, because a disabled Control is exactly the
-	# case where the player most wants the tooltip explaining why.
+	# Dimmed rather than disabled, because a square the rules refuse is exactly
+	# the one whose tooltip the player wants to read.
+	var state: ResearchStyle.State = ResearchStyle.State.BLOCKED
 	if manager.owns(_player_id, tech.tech_id):
-		modulate = RESEARCHED_MODULATE
+		state = ResearchStyle.State.OWNED
 	elif manager.can_research(_player_id, tech):
-		modulate = Color.WHITE
-	else:
-		modulate = UNAVAILABLE_MODULATE
+		state = ResearchStyle.State.AVAILABLE
+	_apply_state(state)
+
+
+## Paints one of the three states onto the pieces of the square.
+##
+## Each piece is set on its own rather than the whole square being modulated,
+## which is what lets the two dimmed states be ABSOLUTE - see ResearchStyle. It
+## also leaves the Ultimate highlight at full strength on a square the player
+## cannot afford, so the row can point at its four whatever state they are in.
+##
+## Skipped when nothing moved, because this is asked on every frame the screen
+## is open and the answer changes a handful of times in a whole match.
+func _apply_state(state: ResearchStyle.State) -> void:
+	if _state_drawn && state == _state:
+		return
+	_state = state
+	_state_drawn = true
+
+	if _background != null:
+		_background.color = ResearchStyle.background_for(_element, state)
+	if _icon_rect != null:
+		_icon_rect.modulate = ResearchStyle.icon_tint_for(state)
+	if _name_label != null:
+		_name_label.add_theme_color_override("font_color",
+			ResearchStyle.text_color_for(state))
+	if _hotkey_label != null:
+		_hotkey_label.add_theme_color_override("font_color",
+			ResearchStyle.hotkey_color_for(state))
+	if _badge != null:
+		_badge.visible = state == ResearchStyle.State.OWNED
 
 
 func _apply_icon(picture: Texture2D) -> void:

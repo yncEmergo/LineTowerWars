@@ -4,6 +4,11 @@ Draws the command card ACTION icons: Move, Stop, Attack, Sell, Build, Cancel
 and the rest of the buttons that are not about a unit. Output lands in
 `2DArt/UI/Icons/ability_*.png`, beside the hand made `stat_*.png`.
 
+It also draws the `state_*` marks - a glyph laid OVER a square to say what
+state it is in, rather than a button to press. Same canvas and same style
+rules; a different prefix only because nothing points a `UnitAbility` at one,
+so it is wired up by the scene that draws it instead of by a `.tres`.
+
 Not part of the build. Nothing at runtime knows it exists, and `.gdignore`
 keeps Godot's filesystem out of this folder entirely.
 
