@@ -5,6 +5,15 @@ is editing content rather than reading code. It carries no lesson WORDING - that
 ordinary `.tres` files under `Resources/Tutorial/Lessons/` and is meant to be argued with -
 and no rules of the game, which are `game_rules.md`'s.
 
+**Status, 2026-09-16: a shell awaiting a rework.** The lessons were written with the same
+shallow understanding of the game as the first computer opponent, and they need to change
+drastically: what they teach, the UX, and the individual steps. The plan is that Claude
+drafts a proper tutorial blueprint first, and the project owner then does most of the
+work on it. **`strategy.md` is the input for what should be taught.** For example, the maze
+the tutorial builds uses full-cell corridors, where a proper left-right maze uses half a cell
+(`strategy.md` 5.5). The mechanism described below (a real match with a script on top) is not
+in question.
+
 ---
 
 ## 1. The tutorial is a real match

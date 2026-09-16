@@ -770,7 +770,7 @@ def element_has_aura(ti):
 # tier metal - so when the metal left the path tiers, that one had to be given
 # a colour of its own or lose the only thing on it that says what it does.
 #
-# Sampled from ReferenceFilesFromOtherProjects/TowerVisualReferences, whose
+# Sampled from ReferencesForClaude/TowerVisualReferences, whose
 # README says which tower is which.
 #
 # Keyed by PATH and then by tier index, so only the three path tiers are ever

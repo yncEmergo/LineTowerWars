@@ -1693,7 +1693,7 @@ a local connection.
 
 ## 12. The reference template — adopt / avoid
 
-`ReferenceFilesFromOtherProjects/SteamLobbyTemplate/` (ViMayer, MIT), quarantined behind a
+`ReferencesForClaude/SteamLobbyTemplate/` (ViMayer, MIT), quarantined behind a
 `.gdignore` so Godot does not parse it. See `WHAT_THIS_IS.md` there.
 
 Its architecture is **peer-to-peer host-authority**, which D2 rejects, so it is less directly

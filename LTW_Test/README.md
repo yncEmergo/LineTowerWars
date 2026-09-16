@@ -327,7 +327,7 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | File | Contents |
 | --- | --- |
 | [game_rules.md](Docs/game_rules.md) | **The RULES**: how the game works — economy, mazing, sending, damage resolution, lives, win condition. Says which of them are built. Holds no numbers; points at unit_data.md for every one. |
-| [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferenceFilesFromOtherProjects/LineTowerWarsData/`. |
+| [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferencesForClaude/LineTowerWarsData/`. |
 | [content.md](Docs/content.md) | **The PROCEDURE**: how a tower, creep, disc or ability is added or changed — which files it is made of, which of them ModelGen generates and must not be hand-edited, how an id is picked, and what refuses bad content at boot. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
 | [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D29) behind it. The long one. |
@@ -442,7 +442,7 @@ Scripts/    GDScript
 Tools/      build-time tooling that runs OUTSIDE Godot, not part of the game,
             plus the control scripts: run_server, stop_server, run_bench
 addons/     godotsteam (GDExtension), log, godot_ai, reload_current_scene
-ReferenceFilesFromOtherProjects/   read-only reference material, not part of the build
+ReferencesForClaude/   read-only reference material, not part of the build
 ```
 
 `3DArt/` and `Audio/` are where meshes and sound go. They do not exist yet: nobody has drawn

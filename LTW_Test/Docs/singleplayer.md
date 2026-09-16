@@ -8,6 +8,13 @@ the game, which are `game_rules.md`'s.
 Read `content.md` first if you are adding a difficulty, and `game_rules.md` if you are
 arguing about what the AI *should* do. This is how it does it.
 
+**A replacement brain is planned in [ai-rework.md](ai-rework.md)**, with the review behind it in
+[Findings/2026-09-15-opponent-ai-review.md](Findings/2026-09-15-opponent-ai-review.md). Until a
+phase of it lands, this file describes what is actually built. Two things below are already
+known to be stale: section 3 says the pass stops at the first rule that spends, when every rule
+now gets its turn, and section 7 says a hard profile builds a saved maze, when no profile names
+one.
+
 ---
 
 ## 1. What single player IS

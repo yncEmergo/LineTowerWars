@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i0xm5ejrmoh2"
-path="res://.godot/imported/VoidTech.png-c6e330c3cf5d10911d2113a99efeafa8.ctex"
+uid="uid://d65uqspp2wus"
+path="res://.godot/imported/FireTech.png-f7aeb0003adf97ad69d88f1af9ab7737.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/VoidTech.png"
-dest_files=["res://.godot/imported/VoidTech.png-c6e330c3cf5d10911d2113a99efeafa8.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/FireTech.png"
+dest_files=["res://.godot/imported/FireTech.png-f7aeb0003adf97ad69d88f1af9ab7737.ctex"]
 
 [params]
 

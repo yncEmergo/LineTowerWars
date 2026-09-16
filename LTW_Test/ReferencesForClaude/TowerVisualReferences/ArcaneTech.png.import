@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brll2gvom3mt6"
-path="res://.godot/imported/WaterTech.png-3a1b1096077c733d283c5d086591d739.ctex"
+uid="uid://cl3mria5sr2vc"
+path="res://.godot/imported/ArcaneTech.png-3b83072745e620745826eddb8f014c96.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/WaterTech.png"
-dest_files=["res://.godot/imported/WaterTech.png-3a1b1096077c733d283c5d086591d739.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/ArcaneTech.png"
+dest_files=["res://.godot/imported/ArcaneTech.png-3b83072745e620745826eddb8f014c96.ctex"]
 
 [params]
 

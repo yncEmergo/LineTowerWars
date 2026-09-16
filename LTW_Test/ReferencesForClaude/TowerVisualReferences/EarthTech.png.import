@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rft7e8pdtvuw"
-path="res://.godot/imported/IceTech.png-98997a763278b720842b63bb2384a12d.ctex"
+uid="uid://cxicuabt5br2i"
+path="res://.godot/imported/EarthTech.png-85ef214ffd603e905efde91af2f6228c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/IceTech.png"
-dest_files=["res://.godot/imported/IceTech.png-98997a763278b720842b63bb2384a12d.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/EarthTech.png"
+dest_files=["res://.godot/imported/EarthTech.png-85ef214ffd603e905efde91af2f6228c.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c7p0l1op88tgv"
-path="res://.godot/imported/HolyTech.png-01a4e9ea93c93667a6793e2bfde2c5cc.ctex"
+uid="uid://cxjy6qo1d2yis"
+path="res://.godot/imported/PrimalTech.png-13d46a797c82ee2fd9efdeb752a51d02.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/HolyTech.png"
-dest_files=["res://.godot/imported/HolyTech.png-01a4e9ea93c93667a6793e2bfde2c5cc.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/PrimalTech.png"
+dest_files=["res://.godot/imported/PrimalTech.png-13d46a797c82ee2fd9efdeb752a51d02.ctex"]
 
 [params]
 

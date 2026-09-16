@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d0fudlku2whns"
-path="res://.godot/imported/IceBasic.png-5aec196e31740ec5be3ff077ba3e9b67.ctex"
+uid="uid://i0xm5ejrmoh2"
+path="res://.godot/imported/VoidTech.png-0f75d4ac9c216122847f8d378b727565.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/LineTowerWarsData/LTW 12.4a All Unitstats/IceBasic.png"
-dest_files=["res://.godot/imported/IceBasic.png-5aec196e31740ec5be3ff077ba3e9b67.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/VoidTech.png"
+dest_files=["res://.godot/imported/VoidTech.png-0f75d4ac9c216122847f8d378b727565.ctex"]
 
 [params]
 

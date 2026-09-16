@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cl3mria5sr2vc"
-path="res://.godot/imported/ArcaneTech.png-f315c003b29db9c539b520b6a03a8690.ctex"
+uid="uid://l3rb0esoqsj4"
+path="res://.godot/imported/UnholyTech.png-17630d196b58193bc60baad6e9a7eeb7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/ArcaneTech.png"
-dest_files=["res://.godot/imported/ArcaneTech.png-f315c003b29db9c539b520b6a03a8690.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/UnholyTech.png"
+dest_files=["res://.godot/imported/UnholyTech.png-17630d196b58193bc60baad6e9a7eeb7.ctex"]
 
 [params]
 

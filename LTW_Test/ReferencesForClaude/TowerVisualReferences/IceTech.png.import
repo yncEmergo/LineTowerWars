@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxjy6qo1d2yis"
-path="res://.godot/imported/PrimalTech.png-289b06a5a23fc3d97f53bcf359c324dc.ctex"
+uid="uid://rft7e8pdtvuw"
+path="res://.godot/imported/IceTech.png-cd061b1b19a50a1ea314d1601da89810.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/PrimalTech.png"
-dest_files=["res://.godot/imported/PrimalTech.png-289b06a5a23fc3d97f53bcf359c324dc.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/IceTech.png"
+dest_files=["res://.godot/imported/IceTech.png-cd061b1b19a50a1ea314d1601da89810.ctex"]
 
 [params]
 

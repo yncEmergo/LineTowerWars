@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxicuabt5br2i"
-path="res://.godot/imported/EarthTech.png-da8e1e76095620be9317592ba413fc4b.ctex"
+uid="uid://i50xtxijdwfs"
+path="res://.godot/imported/ElementalBase200g.png-c33baf219b59aeaf880f16f6cf494187.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/EarthTech.png"
-dest_files=["res://.godot/imported/EarthTech.png-da8e1e76095620be9317592ba413fc4b.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/ElementalBase200g.png"
+dest_files=["res://.godot/imported/ElementalBase200g.png-c33baf219b59aeaf880f16f6cf494187.ctex"]
 
 [params]
 

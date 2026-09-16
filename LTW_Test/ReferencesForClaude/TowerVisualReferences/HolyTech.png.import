@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ke5j5dkr4d32"
-path="res://.godot/imported/LightningTech.png-a32c0204f6511d9b92d1472122fc0be2.ctex"
+uid="uid://c7p0l1op88tgv"
+path="res://.godot/imported/HolyTech.png-f8aaabeb4b0d624f022e3fedd3446d6a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/LightningTech.png"
-dest_files=["res://.godot/imported/LightningTech.png-a32c0204f6511d9b92d1472122fc0be2.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/HolyTech.png"
+dest_files=["res://.godot/imported/HolyTech.png-f8aaabeb4b0d624f022e3fedd3446d6a.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://l3rb0esoqsj4"
-path="res://.godot/imported/UnholyTech.png-2e6022c6e345e98953d0de5c20be13aa.ctex"
+uid="uid://d0fudlku2whns"
+path="res://.godot/imported/IceBasic.png-27c69132defe6aca27bceb93f0faf6b3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/UnholyTech.png"
-dest_files=["res://.godot/imported/UnholyTech.png-2e6022c6e345e98953d0de5c20be13aa.ctex"]
+source_file="res://ReferencesForClaude/LineTowerWarsData/LTW 12.4a All Unitstats/IceBasic.png"
+dest_files=["res://.godot/imported/IceBasic.png-27c69132defe6aca27bceb93f0faf6b3.ctex"]
 
 [params]
 

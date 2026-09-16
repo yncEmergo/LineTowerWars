@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i50xtxijdwfs"
-path="res://.godot/imported/ElementalBase200g.png-f7970be5ddc4188992d9a8f2b7d7b865.ctex"
+uid="uid://brll2gvom3mt6"
+path="res://.godot/imported/WaterTech.png-37d7bfe3401e90edbfa2327f493430a9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ReferenceFilesFromOtherProjects/TowerVisualReferences/ElementalBase200g.png"
-dest_files=["res://.godot/imported/ElementalBase200g.png-f7970be5ddc4188992d9a8f2b7d7b865.ctex"]
+source_file="res://ReferencesForClaude/TowerVisualReferences/WaterTech.png"
+dest_files=["res://.godot/imported/WaterTech.png-37d7bfe3401e90edbfa2327f493430a9.ctex"]
 
 [params]
 

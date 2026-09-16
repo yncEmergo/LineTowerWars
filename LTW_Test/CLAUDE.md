@@ -612,6 +612,10 @@ art at all so far - so this is the placement rule, not a description of the tree
     Move, Stop, Attack, Sell, Build, Cancel - into 2DArt/UI/Icons. Same shape as
     ModelGen: stdlib Python, run from the project root, output checked in.
     Tools/IconGen/README.md has the style rules a new glyph has to meet
+  - Tools/MazeView draws any saved maze (a TowerLayout .tres) as text, with an
+    approximate creep route and its length. Read a blueprint with it rather than
+    guessing from the cell arrays, and never paste its drawing into a .md - the
+    file changes, the paste does not
   - an ability that ModelGen owns takes its icon through action_icon_path() in
     element_content.py or tower_content.py. Wiring one by hand into the .tres
     instead is silently thrown away by the next ModelGen run
@@ -691,6 +695,11 @@ art at all so far - so this is the placement rule, not a description of the tree
   copied. Once a unit is implemented its .tres is the authority and unit_data.md
   is the mirror - change both in the same commit, until the generator in its
   section 8 makes that automatic.
+- strategy.md is how the game is PLAYED WELL: the expert knowledge the rules do not state
+  (economy balance, sending, maze evolution and the endgame shape, tower roles). Read it
+  before touching the computer opponent or arguing about what a tower or creep is for.
+  Tag every addition with its source; an [expert] line outranks a [derived] one.
+  ai-rework.md is the plan for the next opponent AI built on it
 - content.md is the PROCEDURE for adding or changing a tower, creep, disc or
   ability: which files one is made of, which of them ModelGen generates and so
   must never be hand-edited, how to pick the next id, and what refuses bad
