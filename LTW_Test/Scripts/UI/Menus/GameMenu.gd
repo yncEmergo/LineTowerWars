@@ -65,8 +65,6 @@ func open() -> void:
 	if visible:
 		return
 	show()
-	if _resume_button != null:
-		_resume_button.grab_focus()
 
 
 ## Closes ONE layer: the options screen if it is up, this menu otherwise. So
@@ -105,16 +103,8 @@ func _connect_buttons() -> void:
 		Log.err("GameMenu has no OptionsMenu assigned, its Options button is dead")
 		return
 
-	_options_menu.closed.connect(_on_options_closed)
 	if _options_button != null:
 		_options_button.pressed.connect(_options_menu.open)
-
-
-## Focus goes back where it was before the options screen took it, so the menu
-## is still keyboard-drivable after backing out of a tab.
-func _on_options_closed() -> void:
-	if visible && _resume_button != null:
-		_resume_button.grab_focus()
 
 
 ## Back to the main menu, hanging up on the way: the menu is offline territory,

@@ -4,6 +4,7 @@
 
 [node name="HotkeyRow" type="HBoxContainer" node_paths=PackedStringArray("_name_label", "_key_button")]
 theme_override_constants/separation = 14
+focus_behavior_recursive = 1
 script = ExtResource("1_hotkey_row")
 _name_label = NodePath("NameLabel")
 _key_button = NodePath("KeyButton")

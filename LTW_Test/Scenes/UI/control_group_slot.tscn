@@ -37,6 +37,7 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_hover")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_normal")
 clip_text = true
+focus_behavior_recursive = 1
 script = ExtResource("1_control_group_slot")
 _hotkey_label = NodePath("HotkeyLabel")
 _count_label = NodePath("CountLabel")

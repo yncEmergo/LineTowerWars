@@ -15,4 +15,5 @@ text = "[center]Message[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
+focus_behavior_recursive = 1
 script = ExtResource("1_leak_message")

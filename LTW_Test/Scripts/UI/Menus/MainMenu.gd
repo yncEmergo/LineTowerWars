@@ -52,14 +52,6 @@ func _ready() -> void:
 
 	_connect_buttons()
 
-	# The first thing a new player should press, and the first thing a returning
-	# one skips past. Focus starts here rather than on the development shortcut
-	# above it.
-	if _tutorial_button != null:
-		_tutorial_button.grab_focus()
-	elif _play_button != null:
-		_play_button.grab_focus()
-
 
 func _apply_branding() -> void:
 	if _title_label != null:
@@ -102,17 +94,8 @@ func _connect_buttons() -> void:
 		Log.err("MainMenu has no OptionsMenu assigned, its Options button is dead")
 		return
 
-	_options_menu.closed.connect(_on_options_closed)
 	if _options_button != null:
 		_options_button.pressed.connect(_options_menu.open)
-
-
-## Focus goes back to the button that opened the screen rather than to the top of
-## the menu, so backing out with the keyboard leaves the cursor where the player
-## left it.
-func _on_options_closed() -> void:
-	if _options_button != null:
-		_options_button.grab_focus()
 
 
 func _on_play_pressed() -> void:

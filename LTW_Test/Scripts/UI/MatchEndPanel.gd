@@ -131,8 +131,6 @@ func _open(winner_slot: int) -> void:
 		_panel.show()
 	_draw_heading(winner_slot)
 	_build_rows()
-	if _continue_button != null:
-		_continue_button.grab_focus()
 	Log.info("Match over screen shown", {"winner": winner_slot})
 
 

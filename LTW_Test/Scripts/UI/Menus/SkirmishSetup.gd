@@ -89,12 +89,13 @@ func _ready() -> void:
 	_connect_controls()
 	_fill_all_option()
 	_redraw()
-	if _start_button != null:
-		_start_button.grab_focus()
 
 
 func _connect_controls() -> void:
 	if _opponents_spin != null:
+		# Click-only, because the editor inside a SpinBox is a node the .tscn
+		# cannot name. See FocusPolicy.
+		FocusPolicy.click_only(_opponents_spin)
 		_opponents_spin.min_value = 1.0
 		_opponents_spin.max_value = float(_max_opponents())
 		_opponents_spin.step = 1.0

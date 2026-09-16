@@ -20,6 +20,7 @@ corner_radius_bottom_left = 2
 custom_minimum_size = Vector2(22, 22)
 offset_right = 22.0
 offset_bottom = 22.0
+focus_behavior_recursive = 1
 script = ExtResource("1_status_icon")
 _icon = NodePath("Icon")
 _letter = NodePath("Letter")

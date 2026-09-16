@@ -60,6 +60,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_empty")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_empty")
+focus_behavior_recursive = 1
 script = ExtResource("1_tech_slot")
 _hotkey_label = NodePath("HotkeyLabel")
 _name_label = NodePath("NameLabel")

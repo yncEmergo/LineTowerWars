@@ -38,6 +38,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_menu_theme")
+focus_behavior_recursive = 1
 script = ExtResource("1_options_menu")
 _tab_row = NodePath("Layout/Column/TabRow")
 _page_stack = NodePath("Layout/Column/PageStack")

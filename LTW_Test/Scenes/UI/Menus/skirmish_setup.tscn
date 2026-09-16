@@ -21,6 +21,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("4_menu_theme")
+focus_behavior_recursive = 1
 script = ExtResource("1_skirmish")
 _title_label = NodePath("Margin/Column/TitleLabel")
 _slot_list = NodePath("Margin/Column/Body/Roster/SlotList")
@@ -100,6 +101,8 @@ layout_mode = 2
 min_value = 1.0
 max_value = 11.0
 value = 1.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="AllLabel" type="Label" parent="Margin/Column/Body/Roster/Controls"]
 layout_mode = 2

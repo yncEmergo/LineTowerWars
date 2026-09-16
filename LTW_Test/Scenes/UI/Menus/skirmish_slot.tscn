@@ -38,6 +38,7 @@ corner_radius_bottom_left = 3
 [node name="SkirmishSlot" type="PanelContainer" node_paths=PackedStringArray("_index_label", "_name_label", "_color_swatch", "_difficulty_option", "_role_label")]
 theme = ExtResource("2_compact")
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+focus_behavior_recursive = 1
 script = ExtResource("1_slot")
 _index_label = NodePath("Row/IndexLabel")
 _name_label = NodePath("Row/NameLabel")

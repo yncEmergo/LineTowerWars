@@ -65,6 +65,7 @@ visible = false
 [node name="SelectionBox" type="Control" parent="." unique_id=478782438]
 layout_mode = 3
 anchors_preset = 0
+focus_behavior_recursive = 1
 script = ExtResource("1_selection_box")
 
 [node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
@@ -105,6 +106,7 @@ offset_right = 186.5
 offset_bottom = 40.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_status_bar")
+focus_behavior_recursive = 1
 script = ExtResource("3_status_bar")
 _gold_label = NodePath("Row/Gold/GoldLabel")
 _population_label = NodePath("Row/Population/PopulationLabel")
@@ -183,6 +185,7 @@ offset_left = -312.0
 offset_bottom = 38.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_c6esv")
+focus_behavior_recursive = 1
 script = ExtResource("4_player_stats")
 _row_list = NodePath("Column/RowList")
 _height_source = NodePath("../MatchStatusBar")

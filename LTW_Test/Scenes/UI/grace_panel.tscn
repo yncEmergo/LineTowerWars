@@ -10,6 +10,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+focus_behavior_recursive = 1
 script = ExtResource("1_grace")
 _count_label = NodePath("Column/CountLabel")
 

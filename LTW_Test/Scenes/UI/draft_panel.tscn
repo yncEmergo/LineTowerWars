@@ -11,6 +11,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+focus_behavior_recursive = 1
 script = ExtResource("1_draft")
 _option_row = NodePath("Column/OptionRow")
 _status_label = NodePath("Column/StatusLabel")

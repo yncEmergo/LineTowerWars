@@ -36,6 +36,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("4_menu_theme")
+focus_behavior_recursive = 1
 script = ExtResource("1_browser")
 _lobby_list = NodePath("Margin/Column/ListArea/ListMargin/Scroll/LobbyList")
 _empty_label = NodePath("Margin/Column/ListArea/ListMargin/EmptyBox/EmptyLabel")
@@ -289,6 +290,8 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 max_length = 32
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="PlayersRow" type="HBoxContainer" parent="CreatePanel/Center/Dialog/DialogColumn"]
 layout_mode = 2
@@ -306,6 +309,8 @@ layout_mode = 2
 min_value = 2.0
 max_value = 15.0
 value = 2.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="ModeLabel" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn"]
 layout_mode = 2

@@ -4,6 +4,7 @@
 
 [node name="VolumeRow" type="HBoxContainer" node_paths=PackedStringArray("_name_label", "_slider", "_value_label")]
 theme_override_constants/separation = 14
+focus_behavior_recursive = 1
 script = ExtResource("1_volume_row")
 _name_label = NodePath("NameLabel")
 _slider = NodePath("Slider")

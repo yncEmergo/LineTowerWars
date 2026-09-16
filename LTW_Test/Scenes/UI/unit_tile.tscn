@@ -36,4 +36,5 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hover")
 clip_text = true
+focus_behavior_recursive = 1
 script = ExtResource("1_unit_tile")

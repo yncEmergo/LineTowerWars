@@ -391,6 +391,30 @@
     Docs/Findings/2026-09-08-shipped-blueprints-vanish-in-an-export.md, which
     has the full table and the worked reproduction
 
+- **THE UI HAS NO KEYBOARD FOCUS, AND A NEW UI SCENE HAS TO SAY SO.** Tab moves
+  nothing, Enter presses nothing, and a clicked button keeps no focus ring. A
+  control is worked with the MOUSE or with its own hotkey, and those are the
+  only two ways in. Every menu and HUD scene carries
+  `focus_behavior_recursive = 1` on its ROOT, which turns focus off for that
+  node and every Control under it - including the ones instanced into it at
+  runtime, and including the button somebody adds to it next year. One line per
+  SCENE rather than one per button, which is the same trade ButtonSoundBinder
+  made for the click sounds
+  - **the chain BREAKS at a non-Control node**, measured on 4.7.2: a plain Node
+    or a CanvasLayer between two Controls stops it dead. So a scene whose root
+    is a CanvasLayer carries the line on each of its Control children instead.
+    match_hud.tscn is the worked example
+  - a prefab whose root is itself a Button carries its own line, so it is
+    covered wherever it is instanced
+  - TYPING is the one thing that cannot work without focus, so a LineEdit or a
+    SpinBox opts back IN with `focus_behavior_recursive = 2` and
+    `focus_mode = 1` - a click reaches it and nothing else can. A SpinBox also
+    needs `FocusPolicy.click_only()`, because its editor is an INTERNAL child
+    the .tscn cannot name and `focus_mode` does not reach it
+  - so `grab_focus()` belongs to those two and nowhere else. On a button it
+    does not fail, it warns, which is a line in a log nobody is reading
+  - FocusPolicy.gd is where the whole rule is written down
+
 # Testing
 - Verify cheaply, then hand the rest over
   - boot the project once to confirm it loads with no errors

@@ -92,8 +92,6 @@ func _refresh() -> void:
 		# Offered only where pressing it is what finishes the lesson. On a
 		# lesson with something to do, the thing IS the button.
 		_continue_button.visible = step is TutorialReadStep
-		if _continue_button.visible:
-			_continue_button.grab_focus()
 	if _skip_button != null:
 		_skip_button.hide()
 
