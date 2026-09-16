@@ -186,7 +186,15 @@ func needs_local_pick() -> bool:
 	var session: MatchSession = _session
 	if session == null:
 		return false
-	return _pending.has(session.local_slot())
+	return needs_pick(session.local_slot())
+
+
+## Whether one named slot is still to choose.
+##
+## Asked by a computer opponent, which has to pick like anybody else or the
+## whole match waits out the timer for it - see AiPlayer._consider_draft.
+func needs_pick(slot: int) -> bool:
+	return _pending.has(slot)
 
 
 ## How many players the match is still waiting on, for the line the draft screen

@@ -214,6 +214,17 @@ static func order_random_ultimate(slot: int) -> void:
 	Commands.submit_player_action_for(slot, Command.PlayerAction.RANDOM_ULTIMATE)
 
 
+## Takes one of the three Ultimates a DRAFT is offering, named by the PATH
+## technology that leads to it.
+##
+## The same press the draft screen makes, and the one order a held match still
+## accepts - which is the whole reason a draft can end at all. See StartingTech.
+static func order_draft_pick(slot: int, tech_id: int) -> void:
+	Commands.submit_player_action_for(
+		slot, Command.PlayerAction.PICK_DRAFT_TECH, tech_id
+	)
+
+
 ## Spends it on ONE NAMED Ultimate: the same press the Show Ultimates row of the
 ## Research Center makes, named by the PATH technology that leads to the tower.
 ##

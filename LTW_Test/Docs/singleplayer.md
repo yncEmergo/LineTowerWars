@@ -9,11 +9,9 @@ Read `content.md` first if you are adding a difficulty, and `game_rules.md` if y
 arguing about what the AI *should* do. This is how it does it.
 
 **A replacement brain is planned in [ai-rework.md](ai-rework.md)**, with the review behind it in
-[Findings/2026-09-15-opponent-ai-review.md](Findings/2026-09-15-opponent-ai-review.md). Until a
-phase of it lands, this file describes what is actually built. Two things below are already
-known to be stale: section 3 says the pass stops at the first rule that spends, when every rule
-now gets its turn, and section 7 says a hard profile builds a saved maze, when no profile names
-one.
+[Findings/2026-09-15-opponent-ai-review.md](Findings/2026-09-15-opponent-ai-review.md), and the
+expert knowledge it needs in [strategy.md](strategy.md). **Phase 0 of that plan has landed** and
+this file describes what is built.
 
 ---
 
@@ -58,8 +56,10 @@ lobby that one day offers an AI seat costs no wire format change.
 ## 3. The shape of the brain, and why
 
 **It is a list of RULES run on a beat.** Every rule is a question about the world right now
-and an order if the answer is yes. They are tried in priority order and the pass stops at the
-first one that spends gold.
+and an order if the answer is yes. They are tried in priority order, and **every rule after the
+opening gets its turn on every pass** - stopping at the first that spent starved upgrades for a
+whole match, and what keeps the rules from eating each other is a spending floor each (section
+6).
 
 That is Age of Empires II's shape and it was chosen deliberately over the two obvious
 alternatives. A STATE MACHINE makes every new behaviour a state that has to be reachable from
@@ -67,12 +67,24 @@ every other one, and the transitions become the thing you maintain. A PLANNER ne
 the world good enough to simulate forward, which for a game where the other player decides
 what arrives in your lane is a model you cannot have. A rule list grows by one rule.
 
-The rules today, hardest first:
+The rules today, in the order a pass runs them:
 
-1. **OPENING** - spend the free research on an Ultimate, once.
-2. **SEND** - buy creeps for whoever this AI is attacking, on its own beat.
-3. **MAZE** - put up the next tower in the plan.
-4. **UPGRADE** - raise a tower that is already standing.
+1. **DRAFT** - take one of the three Ultimates a draft is offering. It takes the profile's own
+   Ultimate when the draft offers it and rolls otherwise, and it exists because **a draft holds
+   the whole world until every seat has picked**: an AI that never chose made every person in
+   the match wait out the timer.
+2. **OPENING** - spend the free research on an Ultimate, once.
+3. **SEND** - buy creeps for whoever this AI is attacking, on its own beat.
+4. **MAZE** - put up the next tower in the plan.
+5. **UPGRADE** - raise a tower that is already standing.
+
+The first two RETURN when they fire; the rest each get their turn.
+
+**A brain rolls on its OWN random stream**, seeded from the match seed and its slot, never on
+`MatchSession.match_rng()`. The match stream is shared with every damage roll and is hashed by
+`WorldChecksum`, so a brain rolling on it would move every later number in the match: two
+profiles could not be compared on one seed, a replay injecting the recorded AI orders would
+diverge, and a networked AI seat would desync every other peer.
 
 Sending sits above building, which is not the obvious order and is there for a reason worth
 knowing: a send fires on a beat and a build fires whenever there is ten gold, so a build rule
@@ -199,8 +211,12 @@ is a worse teacher than one that plays a simpler game properly.
 
 So the axes, roughly in order of how much they actually matter:
 
-1. **the maze.** An easy AI builds the short generated zigzag; a hard one builds a maze a
-   person saved. This is most of the difference and it is authored rather than coded
+1. **the maze.** Every profile builds the generated zigzag today - the left-right maze, from
+   the very top, with half a cell between its rows, which is what a proper one uses
+   (`strategy.md` 5.5). What differs is how long a plan is and what it is aimed at. **No
+   profile names a saved layout**, because a plan bigger than the AI finishes lost every match
+   it was tried in (section 6a); the saved-layout road is still the one the feature is meant to
+   grow along, and `ai-rework.md` phase 3 is where it does
 2. **the roster.** Which towers it ends up with, which is the upgrade targets in its plan
 3. **the economy.** The three floors and the send beat - how much of its gold goes to
    offence, and how early

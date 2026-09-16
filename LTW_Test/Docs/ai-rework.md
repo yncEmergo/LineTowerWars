@@ -831,22 +831,31 @@ can be planned around usage:
 - **M:** one session, possibly a few agents
 - **L:** several sessions
 
-### Phase 0: Baseline and hygiene (S). No behaviour change beyond bug fixes.
-- Fix review B1 (own RNG), B2 (draft pick through the profile's Ultimate), B3 (descriptions),
-  B4 (stale comments and docs).
-- **Give today's Easy the maze the expert describes** (`strategy.md` 5.5):
-  - The zigzag's corridor becomes a count of INTERNAL cells, so half a cell can be expressed.
-  - Easy builds a left-right maze from the very top with half-cell corridors.
-  - This is small and makes Easy look right to a person long before the new brain exists.
-- **Bench:**
-  - seat-swapped pairs
-  - a round-robin and transitivity report
-  - a placement-based score
-  - a way to seat today's `AiPlayer` against a future `AiBrain`
-- **Exploiter profiles** built on today's brain where it can express them (flyers only, never
-  defends, attacker spam).
-- **Record today's full matrix as the baseline**, in a finding.
-- *Positive control:* the report states how many matches ran per pair, with seats swapped.
+### Phase 0: Baseline and hygiene (S). LANDED 2026-09-16.
+What it built, so a later phase does not look for it:
+
+- **The brain owns its RNG** (review B1), seeded from the match seed and its slot. Nothing in an
+  AI touches `MatchSession.match_rng()` any more, so bench seeds are paired again and a replay
+  that injects recorded AI orders no longer diverges.
+- **A DRAFT rule** (review B2): the AI takes its profile's Ultimate when the draft offers it and
+  rolls on its own stream otherwise. A drafting match no longer waits out the timer for a seat
+  nobody is sitting at. `StartingTech.needs_pick(slot)` is what it asks.
+- **Honest difficulty descriptions** (review B3) and the stale comments corrected (review B4), in
+  `AiPlayer`, `AiProfile` and `singleplayer.md`.
+- **The zigzag corridor is counted in INTERNAL cells**, so half a cell can be expressed at all,
+  and every profile builds the left-right maze from the very top with half-cell corridors
+  (`strategy.md` 5.5). Easy's plan now runs the length of the lane: for a maze built front to
+  back, a plan it does not finish is a shorter maze rather than a hole.
+- **The bench prints a machine-readable `AI BENCH PAIR` line**, and `Tools/run_ai_matrix.ps1`
+  plays every pair both ways round over N seeds, then prints a win matrix, a ladder check and a
+  transitivity verdict.
+- **Two exploiter profiles**, unselectable, for the bench to test against: `All-in` (every coin
+  into sending, never defends) and `Turtle` (builds all match, never sends).
+- **The baseline matrix** is in `Findings/2026-09-16-ai-phase-0-baseline.md`.
+
+**Not built, and deliberately:** a flyer-only and an attacker-spam exploiter. Today's brain
+chooses a send by price and efficiency and cannot be told to prefer a creep TYPE, so those two
+wait for the send planner in phase 2.
 
 ### Phase 1: `AiView` and `LaneModel` (M). No behaviour change.
 - The view, with the fairness table from 3.3 as its docstring.
