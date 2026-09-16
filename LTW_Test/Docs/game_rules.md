@@ -2456,8 +2456,25 @@ The rules that hold whatever the roster says:
   - one creep is refused outright above that cap rather than merely paying
     less, because it is nothing BUT income and a cheaper version of it would be
     a creep with no purpose left
-  - the clock, the floor, the cap and the share are all in
-    `game_config.tres`; the creeps are `unit_data.md` 6.5
+  - **and every living player LOSES LIVES on the income beat, destroyed rather
+    than stolen.** It is the only place the life pool ever shrinks. Every other
+    life in the game changes hands, so a table of players who all hold their
+    mazes has no way of ending the match between them - this is the way out,
+    and it is what Sudden Death is ultimately FOR
+    - paid by everybody at once and paid to nobody, so it shortens every
+      remaining runway together rather than favouring whoever is ahead
+    - it can never eliminate anybody. A player is held at their last life and
+      only a LEAK can take that one: the clock shortens a match, a creep still
+      decides it
+    - FEWER PLAYERS LEFT MEANS A BIGGER DRAIN, because there is less left for it
+      to work on. A duel is the shape it exists to end
+    - the first income tick of Sudden Death is free, and the drain starts on the
+      one after. A player is handed the whole of tier 4 and the income floor at
+      that moment, and charging them in the same instant would be taking lives
+      for a chance they have not had a tick to use
+  - the clock, the floor, the cap, the share and the drain are all in
+    `game_config.tres`; the creeps are `unit_data.md` 6.5, and what the drain
+    takes is 1.7
 - Bounty is per creep, so a pack pays out once per creep in it
 - Income is per SEND rather than per creep, and the ratio of income to cost gets
   worse as creeps get stronger. That is what makes early sends compound
@@ -2775,6 +2792,8 @@ fixed for the life of that match.
 BUILT.
 
 - Lives are stolen, not just lost
+  - with ONE exception, and it is the only one in the game: Sudden Death drains
+    lives from everybody and destroys them. See The creep roster
 - When a creep reaches the end of a maze, its owner steals 1 life from the defending player
   - The defender loses 1 life and the owner gains 1
 - The creep is not removed. It is teleported to the next player's maze and continues

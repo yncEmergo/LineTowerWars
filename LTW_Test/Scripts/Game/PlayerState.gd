@@ -189,6 +189,29 @@ func steal_life_from(victim: PlayerState, count: int = 1) -> int:
 	return stolen
 
 
+## Destroys lives outright, which nothing else in the game does: a leak moves a
+## life from one player to another through steal_life_from, so the pool never
+## shrinks. SUDDEN DEATH'S DRAIN IS THE SINGLE EXCEPTION, and it is there so a
+## match nobody is leaking can still end. What it is for is written out on
+## GameConfig.sudden_death_life_drain.
+##
+## Held at ONE life rather than at zero, so the drain can never eliminate
+## anybody: the clock shortens a match, a creep still decides it. An eliminated
+## player falls out of that same clamp rather than needing a check of their
+## own - there is nothing above one life left to take.
+##
+## Answers how many actually went, for the same reason steal_life_from does: a
+## player already on their last life reports 0, so a caller can stay quiet
+## rather than announce a loss of none.
+func drain_life(count: int) -> int:
+	var lost: int = clampi(count, 0, maxi(0, lives - 1))
+	if lost <= 0:
+		return 0
+	lives -= lost
+	lives_changed.emit(lives)
+	return lost
+
+
 ## An amount held down to the ceiling GameConfig names, or left alone when it
 ## names none. Never below zero: gold is spent through spend(), which refuses
 ## what cannot be afforded, so a negative here would be a bug elsewhere.

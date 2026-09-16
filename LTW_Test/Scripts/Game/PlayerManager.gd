@@ -486,8 +486,10 @@ func _physics_process(_delta: float) -> void:
 	# match clock and cannot drift away from it a rounding at a time.
 	var now: float = session.elapsed_seconds()
 	while now >= _next_income_at:
+		var paid_at: float = _next_income_at
 		_next_income_at += _income_interval
 		_pay_all()
+		_drain_lives(paid_at)
 
 
 ## Raises anybody under the floor to it, once, the moment Sudden Death starts.
@@ -518,6 +520,56 @@ func _check_sudden_death() -> void:
 		if state.income < config.sudden_death_income_floor:
 			state.add_income(config.sudden_death_income_floor - state.income)
 	Log.info("Sudden Death", {"income_floor": config.sudden_death_income_floor})
+
+
+## Strips every living player of lives on each income tick once Sudden Death is
+## running - unit_data.md 1.7, and the only place a life leaves the match
+## instead of changing hands. What it is for is on
+## GameConfig.sudden_death_life_drain.
+##
+## Rides the income beat rather than owning a clock of its own. They are the
+## same beat, and a second schedule started a frame apart would drift away from
+## it - the same reason _next_income_at is read off the match clock rather than
+## accumulated here. It also means a stall that covers several intervals drains
+## once per interval it covered, exactly as it pays once per interval.
+##
+## THE FIRST INCOME TICK OF SUDDEN DEATH PAYS NOTHING. A player is handed the
+## whole of tier 4 and the income floor at that moment, and taking lives in the
+## same instant would charge them for a chance they have not had a tick to use.
+## Asked as "was this payout later than the line" rather than latched, so there
+## is no state that could disagree with the clock - the shape is_sudden_death()
+## already has.
+##
+## How many is read ONCE for the whole sweep, so two players cannot be charged
+## different numbers on the same tick. Nothing here can change it anyway, since
+## the drain never eliminates, but reading it once is what makes that true by
+## construction rather than by luck.
+func _drain_lives(paid_at: float) -> void:
+	var config: GameConfig = References.game_config
+	if config == null || config.sudden_death_seconds <= 0.0:
+		return
+	if paid_at <= config.unlock_clock(config.sudden_death_seconds):
+		return
+
+	# Nobody to end the match against. A lone world - a tutorial, a sandbox -
+	# is not a match the drain can finish, and is_match_over() does not catch
+	# it because a match of one is never over. See its comment.
+	var alive: int = living_count()
+	if alive <= 1:
+		return
+
+	var count: int = config.sudden_death_life_drain
+	if alive <= 2:
+		count = config.sudden_death_life_drain_duel
+	if count <= 0:
+		return
+
+	for player_id in _sorted_slots():
+		var state: PlayerState = _states[player_id]
+		if state == null || state.is_eliminated():
+			continue
+		state.drain_life(count)
+	Log.debug("Sudden Death drain", {"lives": count, "alive": alive})
 
 
 func _pay_all() -> void:

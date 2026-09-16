@@ -210,6 +210,14 @@ compensate). Regeneration on a creep now comes only from an ability or an aura.
   the prototype's own clock reaches it one opening phase later - see 6.1.
 - On entering Sudden Death, any player below 1,000,000 income is raised to 1,000,000.
   **BUILT.**
+- **During Sudden Death every living player loses lives on the income tick**, and those
+  lives are DESTROYED rather than stolen - the one place the life pool shrinks. **2 lives
+  per tick while only two players are alive, 1 while three or more are.** It cannot
+  eliminate anybody: a player is held at **1 life**, and only a leak takes that last one.
+  The first income tick of Sudden Death is free and the drain starts on the one after.
+  **BUILT.** These figures are the user's reading of the live game rather than a patch
+  note - 12.4a's own numbers for it were never found, and the rule was missed entirely on
+  the first pass through the notes.
 - The creep damage-taken modifier starts at 100% and falls by **1% per minute** during
   Sudden Death, making creeps progressively tankier. NOT BUILT.
 - Starting lives depend on player count and ruleset; for the 1v1 prototype the relevant

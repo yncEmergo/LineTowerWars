@@ -144,7 +144,10 @@ the whole of tier 4 unlocks at once, with no per-creep start delay, and tiers 1 
 sendable for the rest of the match — the only time a creep is ever taken away from a player.
 Anybody under an income floor is raised to it, once, so a player who has been losing slowly can
 still afford the tier that ends the match; and tier 4 sends stop paying properly above an
-income cap, so Sudden Death does not compound.
+income cap, so Sudden Death does not compound. From the next income tick on, every living
+player also bleeds lives on the income beat — destroyed rather than stolen, the one place the
+life pool shrinks, and more of them the fewer players are left. It cannot eliminate anybody:
+a player is held at their last life, so the clock shortens a match and a creep still decides it.
 
 **A creep sender has no body.** It stands nowhere on the map: no model, no footprint, nothing
 to click, nothing on the minimap and nowhere for the camera to fly to. There is one per creep

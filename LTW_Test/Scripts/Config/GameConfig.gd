@@ -376,6 +376,25 @@ extends Resource
 ## raised to it the moment it starts, so a match that is being lost slowly can
 ## still afford what the last tier costs. 0 switches the raise off.
 @export var sudden_death_income_floor: int = 1000000
+## Lives every living player is stripped of on each income tick while Sudden
+## Death runs. 0 switches the drain off.
+##
+## THE ONE PLACE A LIFE LEAVES THE MATCH. Every other life is STOLEN - a leak
+## moves one from the defender to the attacker and the pool never shrinks - so
+## two players who both hold their mazes have no way of ending the match
+## between them. This is that way out, and it is what Sudden Death is FOR: it
+## is paid by everybody at once, it goes to nobody, and it shortens every
+## remaining runway together rather than favouring whoever is ahead.
+##
+## It can never eliminate anybody. A player is held at one life and only a
+## LEAK can take that last one, so the match is still DECIDED by a creep
+## reaching the end of a maze rather than by the clock running out.
+@export var sudden_death_life_drain: int = 1
+## The same drain once only TWO players are left, which is larger because there
+## is nobody else for it to work on. A duel is the shape Sudden Death exists to
+## end, and one life each would take twice as long to end it. 0 switches the
+## drain off for a duel while leaving it running for a crowd.
+@export var sudden_death_life_drain_duel: int = 2
 ## Gold a player is handed when the ring closing gives them a NEW ATTACKER, as
 ## a multiple of that attacker's current income. 0 switches the rule off.
 ##
