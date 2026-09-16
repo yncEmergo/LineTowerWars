@@ -8,9 +8,9 @@ extends Control
 ## game entirely. Nothing here knows anything about networking or about AI -
 ## every one of them is a scene change like any other.
 ##
-## The test scene is still reachable and is still not a game mode: it opens the
-## match scene with no setup in front of it, which stands a single player one in
-## from GameConfig. It is how the prototype is iterated on and it says so.
+## The test scene is still reachable and is still not a game mode: there is no
+## setup screen in front of it, only the single player stand-in GameConfig
+## describes. It is how the prototype is iterated on and it says so.
 ##
 ## The title comes off MenuConfig rather than being typed into the scene, because
 ## the game has no name yet and there will be more than one screen showing it.
@@ -20,8 +20,8 @@ extends Control
 @export_group("References")
 @export var _title_label: Label
 @export var _version_label: Label
-## Opens the match scene with no setup at all, which stands in a one player
-## match from GameConfig. A development shortcut rather than a mode.
+## Opens the match scene on the single player stand-in GameConfig describes,
+## with no setup screen in front of it. A development shortcut, not a mode.
 @export var _play_button: Button
 @export var _tutorial_button: Button
 @export var _singleplayer_button: Button
@@ -98,8 +98,23 @@ func _connect_buttons() -> void:
 		_options_button.pressed.connect(_options_menu.open)
 
 
+## Down the SAME road as the tutorial, and for the same two reasons.
+##
+## The scene it opens is the whole 3D game, and `change_scene_to_file` loads it
+## INSIDE THE PRESS - so this button used to hold the menu still for about a
+## second with nothing to say why. Going through the loading screen puts a
+## screen and a bar up on the next frame and loads the world behind them, which
+## is what that screen is for. See SceneUtil.prewarm.
+##
+## And the content warm-up comes with it, which the test scene never had: the
+## first tower, the first creep and the first shot are paid for here rather than
+## in the middle of whatever is being tested.
+##
+## The stand-in setup is built HERE rather than left to the match scene to
+## invent, because the loading screen needs a roster to show and to hand on.
+## It is the same call `Main._take_setup` would have made.
 func _on_play_pressed() -> void:
-	MenuNavigation.to_game(self)
+	MenuNavigation.to_match_loading(self, MatchSetup.from_config(References.game_config))
 
 
 ## Straight into the teaching match. It has one shape and one roster, so there

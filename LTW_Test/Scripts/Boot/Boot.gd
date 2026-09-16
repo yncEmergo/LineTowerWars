@@ -76,7 +76,33 @@ func _dispatch() -> void:
 		# device and nothing a player wrote in a file may quieten it.
 		UserSettings.apply_volumes()
 		_start_logging()
-		_open("client", _client_scene_path())
+		var entry: String = _client_scene_path()
+		_prewarm_menus(entry)
+		_open("client", entry)
+
+
+## Every OTHER menu screen, loaded on a worker thread while this one opens the
+## first of them.
+##
+## The point is the LOADING SCREEN and the press that opens it. A menu button is
+## the one place in the game where a player gets no feedback whatsoever until
+## the next screen is up, because the scene it opens is loaded inside the press
+## - and the screen that arrives late is the one that would have said "loading".
+## The rest of the menus ride along because they are the same swap and cost
+## nothing to ask for. See SceneUtil.prewarm.
+##
+## The entry scene is skipped: it is loaded synchronously a line later, so
+## asking a worker for it too would only add a handoff.
+##
+## A CLIENT ONLY. The server opens one scene, has no menus, and has nobody
+## sitting in front of it waiting for a button to answer.
+func _prewarm_menus(entry_path: String) -> void:
+	if _menus == null:
+		return
+	for path: String in _menus.menu_scene_paths():
+		if path == entry_path:
+			continue
+		SceneUtil.prewarm(path)
 
 
 ## What a client's logs record from here on. A client only: the server's log is

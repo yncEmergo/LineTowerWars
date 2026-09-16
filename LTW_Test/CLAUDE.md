@@ -415,6 +415,31 @@
     does not fail, it warns, which is a line in a log nobody is reading
   - FocusPolicy.gd is where the whole rule is written down
 
+- **`change_scene_to_file` LOADS THE SCENE INSIDE THE PRESS, so a loading screen
+  cannot report its own loading.** The load is synchronous and happens before a
+  pixel of the new screen exists, so what a player sees after clicking Start is
+  the OLD screen holding still - and the screen that arrives late is the one
+  that would have said "loading". It is the only load in the game paid with
+  nothing at all on screen
+  - warm on a dev machine that is tens of milliseconds and invisible, which is
+    why it survives every local test. It is not invisible everywhere:
+    `ContentWarmer` measured a tester at a hundred times this machine's
+    per-asset cost, most likely a first read being scanned
+  - **the worked example is the main menu's Test Scene button**, which called
+    `to_game` directly and so loaded the whole 3D game in the press: one frozen
+    frame of about a second with the menu still on screen and no loading screen
+    anywhere in the path. A button that opens a MATCH goes through the loading
+    screen, always - that is also where the content warm-up lives, so a shortcut
+    that skips it gets playtest 1's freezes back
+  - so a screen a BUTTON can open is asked for ahead of time with
+    `SceneUtil.prewarm`, which loads it on a worker thread and holds it for the
+    process. `change_scene` then swaps a scene already in memory. `Boot` does
+    this for every menu screen, and deliberately NOT for the game scene - that
+    one is what the loading screen exists to load with a bar on screen
+  - the honest measurement of it is press-to-GLASS, from `SceneTree.node_added`
+    to `RenderingServer.frame_post_draw`, not a log line in `_ready`. See
+    Docs/Findings/2026-09-16-the-press-that-opens-the-loading-screen.md
+
 # Testing
 - Verify cheaply, then hand the rest over
   - boot the project once to confirm it loads with no errors
