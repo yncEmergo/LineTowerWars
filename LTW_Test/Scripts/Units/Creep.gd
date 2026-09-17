@@ -26,8 +26,10 @@ extends MobileUnit
 ##              fixed height, reachable only by a tower that can hit air
 ##   attacker   goes after the towers instead of past them, and is the one
 ##              creep its owner can command. Left alone it walks to the nearest
-##              tower and destroys it, and never advances on its own - so it
-##              only ever leaks because somebody told it to
+##              tower and destroys it, then the next, and only once there is
+##              nothing left to attack does it walk on to the end zone like any
+##              other creep. So it leaks because it was told to, or because it
+##              has finished
 ##
 ## Not controllable otherwise: a creep can be clicked and inspected but takes
 ## no orders, per game_rules.md.
@@ -170,8 +172,13 @@ var _aura_deaf: bool = false
 var _dodge_chance: float = 0.0
 ## The tower an unordered attacker creep is marching on, and the countdown to
 ## re-picking it. Null for every creep that is not an attacker.
+##
+## The countdown starts AT the interval, for the same reason _aura_elapsed
+## below does: an attacker that has just spawned holds no target, and one that
+## holds none only searches on the beat now, so starting at zero would leave it
+## standing about for a quarter second before it picked its first tower.
 var _march_target: Building = null
-var _march_elapsed: float = 0.0
+var _march_elapsed: float = AURA_REFRESH_SECONDS
 ## Starts at the interval so the very first physics frame reads the auras
 ## rather than leaving a freshly spawned creep unbuffed for a quarter second.
 ##
@@ -1333,15 +1340,20 @@ func _physics_process(_engine_delta: float) -> void:
 		_reach_end()
 		return
 
+	# Hoisted above the attacker branch because BOTH kinds want it and want it
+	# exactly once: an attacker that has run out of towers falls through to the
+	# same walk an ordinary creep takes, and recording the trail inside both
+	# would record it twice on the tick it changes over.
+	if !ignores_maze():
+		_record_trail()
+
 	# AN ATTACKER IS ASKED FIRST, before anything about how it travels. What
-	# an attacker does is go after towers and never advance on its own
-	# (game_rules.md), and that is true of one that flies as much as of one
-	# that walks - the Phoenix is the first creep in the game that is both, and
-	# asking "does it ignore the maze" first sent it gliding straight past the
-	# maze it had been sent to take apart.
+	# an attacker does is go after towers (game_rules.md), and that is true of
+	# one that flies as much as of one that walks - the Phoenix is the first
+	# creep in the game that is both, and asking "does it ignore the maze"
+	# first sent it gliding straight past the maze it had been sent to take
+	# apart.
 	if is_attacker():
-		if !ignores_maze():
-			_record_trail()
 		_march(delta)
 		# AFTER the march and outside it, because an attacker that did not move
 		# this tick is exactly the case that needs it: one standing on a tower
@@ -1350,14 +1362,19 @@ func _physics_process(_engine_delta: float) -> void:
 		_hold_apart()
 		return
 
-	# A flyer and an ethereal creep both read none of the maze and go straight
-	# down the lane. What separates them is only how high they are drawn and
-	# what may shoot them, neither of which is a movement question.
+	_travel(delta)
+
+
+## How a creep that is not fighting anything gets down the lane: a flyer and an
+## ethereal creep read none of the maze and go straight, everything else walks
+## the route round it. What separates the two is only how high one is drawn and
+## what may shoot it, neither of which is a movement question.
+##
+## Shared with the attacker path, which reaches it once the maze is empty.
+func _travel(delta: float) -> void:
 	if ignores_maze():
 		_glide(delta)
 		return
-
-	_record_trail()
 	_walk_route(delta)
 
 
@@ -1486,9 +1503,11 @@ func _glide(delta: float) -> void:
 ## An attacker creep with nobody steering it: walk to the nearest tower and
 ## stand on it until it falls, then pick the next one.
 ##
-## It never advances towards the end zone of its own accord, which is what
-## makes stealing a life something its owner has to ORDER rather than something
-## it does eventually. See game_rules.md.
+## While a tower is still standing it never advances towards the end zone of
+## its own accord, so stealing a life out of a maze that still has a defence is
+## something its owner has to ORDER. Once the maze holds NOTHING it could
+## attack there is no work left for it to walk to, and it heads for the exit
+## exactly as an ordinary creep does. See game_rules.md.
 ##
 ## Steering is straight at the tower rather than through the flow field, and
 ## that is deliberate: the thing it is walking at IS the obstacle, so bumping
@@ -1509,7 +1528,11 @@ func _march(delta: float) -> void:
 		return
 
 	_refresh_march_target(delta)
+	# Nothing left standing to pull down. An attacker that has finished the
+	# maze walks it like any other creep and steals a life at the end of it,
+	# rather than parking on the rubble - see game_rules.md.
 	if _march_target == null:
+		_travel(delta)
 		return
 
 	var offset: Vector3 = _march_target.global_position - global_position
@@ -1704,11 +1727,17 @@ func _face_attack_target(delta: float) -> void:
 ## Kept rather than re-picked every tick so an attacker does not swap targets
 ## because two towers are a hair apart, and re-picked at all so it moves on the
 ## moment the one it was chewing falls.
+##
+## Holding NO target is on the beat rather than immediate, unlike losing one:
+## an attacker walking an empty maze towards the exit would otherwise scan
+## every building in the area on every tick to be told again that there are
+## none. What that costs is noticing a tower built in front of it a quarter
+## second late, which is the same lateness every aura already has.
 func _refresh_march_target(delta: float) -> void:
 	_march_elapsed += delta
-	var standing: bool = _march_target != null && is_instance_valid(_march_target) \
-		&& _march_target.is_alive()
-	if standing && _march_elapsed < AURA_REFRESH_SECONDS:
+	var lost: bool = _march_target != null && (!is_instance_valid(_march_target) \
+		|| !_march_target.is_alive())
+	if !lost && _march_elapsed < AURA_REFRESH_SECONDS:
 		return
 
 	_march_elapsed = 0.0

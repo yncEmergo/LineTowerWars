@@ -2363,8 +2363,17 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
   - they are the only creep their owner can select, box-select and command, and
     they carry Move, Stop and Attack like any other unit
   - left alone, one walks to the NEAREST tower, destroys it, and moves on to the
-    next. It never advances towards the end zone of its own accord, so stealing
-    a life with one is something its owner has to ORDER
+    next. While anything it could attack is still standing it never advances
+    towards the end zone of its own accord, so stealing a life out of a maze
+    that still has a defence is something its owner has to ORDER
+  - **an attacker with NOTHING left to attack walks to the end zone and steals
+    a life, exactly as an ordinary creep does.** BUILT. It has finished the job
+    it was sent to do and there is no work left for it to walk to, so standing
+    on the rubble would only mean the maze that lost every tower kept its lives
+    - a maze holding only discs is exactly this case, since an attacker can do
+      nothing with one - see the disc rule below
+    - it reads the maze on the way out like any other creep of its kind: one
+      that walks takes a route, one that flies goes straight
   - a move order means MOVE: it walks and does not stop to fight. An attack
     order cancels the move rather than fighting it
     - which is about FIRING and not about being ORDERED. A walking attacker
