@@ -1092,6 +1092,36 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The command card shows only the abilities every selected unit shares
   - Selecting more units than the grid pictures is allowed. The extra ones are
     simply not shown, and stay selected
+- A selection holding more than one KIND of unit can be narrowed to a SUBGROUP -
+  one kind's worth of it - without the selection itself changing
+  - The card shared by everything selected is the right card for ordering them
+    together, and has nothing to say about what one KIND of them can do alone.
+    A subgroup is how that is reached without taking a hand-built mixture apart
+  - One key steps through the subgroups and then back to the whole selection,
+    and the same key with shift steps back. Which key is the controls config's
+    answer, and the player may rebind it
+  - The steps run in the order the kinds first appear in the selection. A
+    mixture is assembled by hand, so the order it was built in is the order it
+    is cycled in
+  - Warcraft has no "whole selection" step because it never draws a shared card
+    at all - it always shows one subgroup. This game draws one, so there is
+    something to come back to
+  - While a subgroup is up the card shows THAT kind's own abilities, so a
+    per-kind command is reachable with the rest of the selection still held
+  - A command pressed on the CARD goes to the subgroup. A command given by
+    clicking the WORLD - a move, an attack, the minimap - still goes to the
+    whole selection, which is what Warcraft does for every order
+  - The grid keeps picturing every selected unit in the order it was selected,
+    with the subgroup's tiles marked. Cycling moves the marks and moves nothing
+    else, so the strip never reflows under the player's hands
+  - Two kinds are the minimum. A single unit, and a selection of one kind, have
+    nothing to cycle and the key does nothing
+  - A unit of the active subgroup dying leaves the subgroup on its own kind.
+    Only when the last of that kind goes does it fall back to the whole
+    selection
+  - Changing the selection at all puts it back to the whole selection
+  - An upgraded tower is a different kind, so a subgroup part-way through
+    upgrading splits in two. That is correct: the two tiers draw different cards
 
 # Camera
 - The camera never follows the builder automatically

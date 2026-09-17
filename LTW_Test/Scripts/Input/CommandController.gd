@@ -203,7 +203,10 @@ func _set_range_circles(value: bool) -> void:
 
 	var overlay: AttackRangeOverlay = _ensure_range_overlay()
 	if overlay != null:
-		overlay.show_attack_ranges(_selected_units())
+		# The circles belong to the ORDER being aimed, and an order aimed from
+		# the card is the subgroup's. Drawing the whole selection's reach would
+		# promise ground the click is not going to cover.
+		overlay.show_attack_ranges(_commanded_units())
 
 
 ## Puts every range the selection carries - attack reach AND the radius of each
@@ -218,7 +221,9 @@ func reveal_ranges(seconds: float) -> void:
 	if overlay == null:
 		return
 
-	overlay.show_all_ranges(_selected_units())
+	# Show Ranges is a card square like any other, so it answers for whatever
+	# the card is currently describing.
+	overlay.show_all_ranges(_commanded_units())
 	_range_reveal_left = maxf(0.0, seconds)
 
 
@@ -690,7 +695,9 @@ func _default_ability_for(unit: Unit) -> UnitAbility:
 
 func _execute_on_selection(ability: UnitAbility, target: AbilityTarget,
 		queued: bool = false) -> void:
-	var units: Array = _orderable(ability, _selected_units(), queued)
+	# The card's own units, which is the selection narrowed to the active
+	# subgroup when there is one. See _commanded_units.
+	var units: Array = _orderable(ability, _commanded_units(), queued)
 
 	# A local-only ability changes what THIS machine draws and nothing else, so
 	# sending it would be asking a server with no grid, no selection and no
@@ -740,6 +747,27 @@ func _selected_units() -> Array:
 	if _selection_controller == null:
 		return []
 	return _selection_controller.get_selection()
+
+
+## Who a CARD PRESS orders: the active subgroup when the player has narrowed
+## the selection to one, and the whole selection otherwise.
+##
+## THE SPLIT IS AT THE GESTURE, and it is the whole of what a subgroup costs.
+## A square on the card is pressed while looking at the card, which is the one
+## place that says which subgroup is up - so narrowing there is what the player
+## asked for and can see. A click in the WORLD is made while looking at the
+## world, so it keeps going to everything selected: that is Warcraft's rule for
+## every order, and it is the safer half of it to keep, because a right click
+## is the one order given without looking at the HUD at all.
+##
+## _selected_units stays as it is and is still what the world gestures read.
+## Two named questions rather than one getter that quietly changed its answer,
+## so which of them a call site wants is visible at the call site.
+func _commanded_units() -> Array:
+	if _selection_controller == null:
+		return []
+	return _selection_controller.active_subgroup() if \
+		_selection_controller.has_subgroup() else _selection_controller.get_selection()
 
 
 # --- Targeting ----------------------------------------------------------

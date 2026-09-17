@@ -3,10 +3,15 @@ extends Control
 
 ## Bottom HUD panel describing the currently selected unit.
 ##
-## Shows for exactly one selected unit. A multi-unit selection deliberately
-## hides it for now: that case needs its own layout listing the abilities
-## shared by the selection and no portrait, which is only worth building once
-## there is more than the builder to select.
+## One selected unit fills it out completely. A selection holding several
+## swaps the stat lines for a grid picturing everything selected, and draws the
+## abilities all of them SHARE - which is the right card for ordering them
+## together and has nothing to say about what one KIND of them can do alone.
+##
+## That is what a SUBGROUP is for: the card narrows to one type's worth of the
+## selection without the selection changing, so a per-type command is reachable
+## without taking a hand-built mixture apart. The selection controller owns
+## which subgroup is up and this panel follows it - see _on_subgroup_changed.
 ##
 ## The command card is a STACK, not a flat list. A submenu ability such as
 ## Build pushes a new card and cancelling pops back, which is how WC3 shows
@@ -122,6 +127,9 @@ var _card_stack: Array = []
 var _unit: Unit = null
 ## Every selected unit when more than one is picked, empty otherwise.
 var _group: Array = []
+## The part of _group the card is currently narrowed to, empty while the whole
+## selection is described. A copy, for the reason _group is one.
+var _subgroup: Array = []
 ## Units whose signals are currently connected, so they can be released again.
 var _watched: Array[Unit] = []
 ## Whether the job row is on screen, which is what the stat lines hide behind.
@@ -150,6 +158,7 @@ func _ready() -> void:
 		Log.err("UnitPanel found no SelectionController on References, it will never show")
 	else:
 		selection.selection_changed.connect(_on_selection_changed)
+		selection.subgroup_changed.connect(_on_subgroup_changed)
 
 	var commands: CommandController = _command_controller
 	if commands == null:
@@ -279,6 +288,19 @@ func _on_selection_changed(units: Array) -> void:
 		show_group(units)
 
 
+## The selection was narrowed to one of its types, or put back. The selection
+## itself did not change, so this rebuilds the panel and nothing else - there
+## is no armed ability to drop and nothing for the rest of the HUD to hear.
+func _on_subgroup_changed(_units: Array) -> void:
+	if _group.is_empty():
+		return
+	# A key being HELD was repeating at the whole selection. It must not
+	# silently carry on at half of it, so the hold ends with the card it was
+	# started from.
+	_release_hold()
+	show_group(_selection_controller.get_selection())
+
+
 ## Fills the panel from a unit and reveals it.
 func show_unit(unit: Variant) -> void:
 	if unit == null || _name_label == null:
@@ -294,6 +316,7 @@ func show_unit(unit: Variant) -> void:
 	_detach_units()
 	_unit = unit as Unit
 	_group = []
+	_subgroup = []
 	_attach_units([_unit])
 	_set_group_mode(false)
 
@@ -320,16 +343,33 @@ func show_unit(unit: Variant) -> void:
 ## The portrait and health come from the first unit, which is cosmetic - the
 ## point of the panel here is the grid of what is selected and the abilities
 ## they all share.
+##
+## Re-entered rather than duplicated when only the SUBGROUP changed, so there
+## is exactly one place that decides what a group looks like. Every step of it
+## is idempotent, and it runs on a key press rather than on a frame.
 func show_group(units: Array) -> void:
 	if units.is_empty():
 		clear()
 		return
 
 	_detach_units()
-	_unit = units[0] as Unit
-	# Copied, because the controller keeps mutating the array it handed over
-	# when units leave the selection.
+	# Asked of the controller rather than passed in, so this is right however
+	# it was reached - a new selection, a subgroup press, or a tower finishing
+	# an upgrade under one.
+	var selection: SelectionController = _selection_controller
+	_subgroup = selection.active_subgroup() if selection != null else []
+
+	# _group and the signal connections stay the WHOLE selection whatever the
+	# card is narrowed to: any of these units starting a sale changes what the
+	# group shares, so all of them have to stay watched.
 	_group = units.duplicate()
+
+	# The unit every square is asked about - whether it can be afforded, its
+	# charges, its cooldown - so it has to come from the set the card is
+	# DESCRIBING. Left on units[0] the Upgrade square would read a tower from
+	# another type's group, and grey out against the wrong tower's state.
+	# After _detach_units, which nulls it.
+	_unit = (_subgroup[0] if !_subgroup.is_empty() else units[0]) as Unit
 	_attach_units(_group)
 	_set_group_mode(true)
 	_show_portrait(_unit)
@@ -344,8 +384,8 @@ func show_group(units: Array) -> void:
 		# asked - the row is one unit's or nobody's.
 		_status_bar.clear()
 
-	_fill_selection_grid(units)
-	_card_stack = [_shared_abilities(units)]
+	_fill_selection_grid(units, _subgroup)
+	_card_stack = [_shared_abilities(_card_units())]
 	_refresh_slots()
 	visible = true
 
@@ -362,6 +402,7 @@ func clear() -> void:
 	_detach_units()
 	_unit = null
 	_group = []
+	_subgroup = []
 	_card_stack = []
 	_busy = false
 	if _job_row != null:
@@ -608,7 +649,18 @@ func _set_group_mode(group: bool) -> void:
 		_selection_grid.visible = group
 
 
-func _fill_selection_grid(units: Array) -> void:
+## The strip of everything selected, with the active subgroup marked.
+##
+## The ORDER never changes - the tiles stay in the order the selection was
+## built in, so cycling a subgroup moves a border and moves nothing else. The
+## marked tiles are then scattered rather than contiguous, which is the price
+## of the strip holding still.
+##
+## Membership decides the mark rather than an index range, so a subgroup whose
+## units sit anywhere in the strip is marked wherever they are. Units past the
+## grid's capacity are unpictured as before, and a subgroup made entirely of
+## those draws no mark at all - the same limitation the strip already has.
+func _fill_selection_grid(units: Array, highlighted: Array) -> void:
 	if units.size() > _tiles.size():
 		Log.info("More units selected than the grid pictures", {
 			"selected": units.size(),
@@ -617,7 +669,9 @@ func _fill_selection_grid(units: Array) -> void:
 
 	for index in range(_tiles.size()):
 		if index < units.size():
-			_tiles[index].set_unit(units[index] as Unit)
+			var unit: Unit = units[index] as Unit
+			_tiles[index].set_unit(unit)
+			_tiles[index].set_highlighted(highlighted.has(unit))
 		else:
 			_tiles[index].clear()
 
@@ -637,6 +691,17 @@ func _commandable_abilities(unit: Unit) -> Array:
 	if unit == null || !is_instance_valid(unit) || !unit.is_owned_by_local_player():
 		return []
 	return unit.current_abilities()
+
+
+## Whose abilities the card describes: the active subgroup when there is one,
+## the whole selection otherwise.
+##
+## Routed through _shared_abilities either way rather than short-cutting to the
+## lead's own card, so there is one path and one place that skips a unit
+## part-way through being freed. A subgroup is homogeneous, so the two give the
+## same answer.
+func _card_units() -> Array:
+	return _subgroup if !_subgroup.is_empty() else _group
 
 
 func _shared_abilities(units: Array) -> Array:
@@ -728,7 +793,7 @@ func _on_unit_abilities_changed() -> void:
 	if _group.is_empty():
 		_card_stack = [_commandable_abilities(_unit)]
 	else:
-		_card_stack = [_shared_abilities(_group)]
+		_card_stack = [_shared_abilities(_card_units())]
 	_refresh_slots()
 
 

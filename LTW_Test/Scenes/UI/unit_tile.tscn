@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/UnitTile.gd" id="1_unit_tile"]
 
@@ -26,7 +26,19 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[node name="UnitTile" type="Button"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_subgroup"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.84, 0.36, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="UnitTile" type="Button" node_paths=PackedStringArray("_highlight")]
 custom_minimum_size = Vector2(38, 38)
 offset_right = 38.0
 offset_bottom = 38.0
@@ -38,3 +50,15 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_hover")
 clip_text = true
 focus_behavior_recursive = 1
 script = ExtResource("1_unit_tile")
+_highlight = NodePath("Highlight")
+
+[node name="Highlight" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_subgroup")

@@ -30,6 +30,18 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 ## Used both for selecting every unit of a type and for centring on a control
 ## group.
 @export var double_click_seconds: float = 0.5
+## What steps through the subgroups of a selection holding more than one kind
+## of unit, and back to the whole selection. Held with SHIFT it steps back.
+##
+## A rebindable action rather than a command card square, because it is not an
+## ability and sits on no card - the same reason the Research Center's toggle
+## is one. Nothing NAMES this action the way an ability names its own
+## hotkey_action, so the reader has to be able to find it: hence the export.
+##
+## Belongs in hotkey_actions as well, which is what puts it in the options
+## screen beside the others. Null, or an action with no key, leaves subgroups
+## unreachable and everything else working.
+@export var subgroup_cycle_action: HotkeyAction
 
 @export_group("Command card")
 ## Shape of the command card grid, in slots.
@@ -160,6 +172,17 @@ func is_research_toggle_key(key: Key, shift_held: bool) -> bool:
 	if shift_held || research_toggle_action == null:
 		return false
 	return research_toggle_action.matches(key)
+
+
+## Whether a press is the key that steps the subgroup of a selection on.
+##
+## Shift is NOT part of the answer, unlike the Research Center's toggle: there
+## it picks between a screen and a technology and so changes which command was
+## meant, while here it only picks the direction. So one key, asked once.
+func is_subgroup_cycle_key(key: Key) -> bool:
+	if subgroup_cycle_action == null:
+		return false
+	return subgroup_cycle_action.matches(key)
 
 
 ## The letter the Research Center's own button draws, which is whatever its
@@ -420,6 +443,11 @@ func _validate_hotkey_actions() -> bool:
 	if research_toggle_action != null && !hotkey_actions.has(research_toggle_action):
 		Log.warn("Research Center toggle is not in hotkey_actions, so it cannot be rebound", {
 			"action": research_toggle_action.action_id,
+		})
+
+	if subgroup_cycle_action != null && !hotkey_actions.has(subgroup_cycle_action):
+		Log.warn("Subgroup cycle is not in hotkey_actions, so it cannot be rebound", {
+			"action": subgroup_cycle_action.action_id,
 		})
 
 	return complete
