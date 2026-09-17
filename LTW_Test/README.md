@@ -124,7 +124,10 @@ Timber Wolf that only ever arrives inside a Sheep pack and the Ghoul that only e
 of a dead Obsidian Statue. They unlock one at a time on the match clock, cost population that
 is now enforced, and come in three kinds: ordinary creeps that walk the maze, flyers that
 ignore it entirely, and attackers that go after the towers and are the only creeps their owner
-can command. A Boss steals more than one life; how many is per creep, in the roster.
+can command. A pack of them takes a spot each rather than one shared point — a block on the
+lane's grid for a move order, a ring of ground within reach for a tower — and holds it, which is
+what makes commanding them read like an RTS rather than like a fluid. A Boss steals more than
+one life; how many is per creep, in the roster.
 
 **Building that roster is where most of the game's machinery came from**, because a creep is
 where the rules get interesting. Creeps carry MANA, banked from being hit or regenerated on a

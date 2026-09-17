@@ -2362,15 +2362,21 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     - a tower built across the line a creep is walking is the commit rule
       above: nothing changes until the creep reaches the tower's face. A tower
       built merely beside the line changes nothing at all
-  - Only ATTACKER creeps push each other apart. A pack of them crowds at a
-    choke point rather than stacking into one body, and no two of them may ever
-    stand inside each other at all - see the attacker rules below
+  - **NO creep is ever pushed apart by another creep.** BUILT. An ATTACKER
+    instead takes a SPOT of its own before it sets off, and no other attacker
+    is sent to that spot - see the attacker rules below. While it is walking it
+    holds no ground at all and passes through anything in its way
+    - pushing was tried and is what made a commanded pack behave like a liquid:
+      one shared destination plus a per-tick mutual correction has no
+      arrangement to settle into, so it shoves itself about for ever. Nothing
+      that ships steers a commanded unit that way
   - Every other creep walks straight through its own kind. They are sent in
     packs and a lane holds a hundred of them, so nobody can read one body from
     two anyway, and shoving them apart pairwise cost more per tick than every
     other thing a creep does put together
-  - Both halves are a number rather than a rule in code, so crowding can be
-    switched back on for the whole roster without touching one
+  - a soft push for the ORDINARY roster is still a number rather than a rule in
+    code, and it is off. Nothing switches the attackers' spots off - taking a
+    spot is what replaced pushing rather than a setting beside it
 - Killed creeps pay bounty gold to the player whose maze they died in
   - Not to whoever fired the killing shot and not to the sender, so nothing
     anywhere has to track who dealt the damage
@@ -2387,12 +2393,13 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     branch has been waiting for
   - the height is visual only. Every distance in the game is measured flat, so
     nothing is ever out of reach for being in the air
-  - they crowd only against other flyers: a pack walking underneath one is not
-    something either of them can feel
+  - a flyer takes up room the same way and only against other flyers: a pack
+    walking underneath one is not something either of them can feel
 - ATTACKER creeps go after the towers instead of past them. BUILT.
   - they are the only creep their owner can select, box-select and command, and
     they carry Move, Stop and Attack like any other unit
-  - left alone, one walks to the NEAREST tower, destroys it, and moves on to the
+  - left alone - meaning with no order outstanding - one walks to the NEAREST
+    tower, destroys it, and moves on to the
     next. While anything it could attack is still standing it never advances
     towards the end zone of its own accord, so stealing a life out of a maze
     that still has a defence is something its owner has to ORDER
@@ -2438,19 +2445,19 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
       swing from sealed off from where it stands - keeps the order and stands
       still rather than pressing into the wall, and tries again when a tower is
       built or sold. It never silently gives up and walks somewhere else
-  - **an attacker keeps a ring of ground to itself and no other attacker may
-    enter it**, which is the one place in the game where two units are held
-    apart rather than merely nudged. The room it claims is a share of its own
-    SELECTION CIRCLE, so what a player is looking at is what the creep takes up
-    and a bigger attacker takes more of it
-    - held every tick and wherever the tick left it, so it holds for one
-      standing still as much as for one walking. A creep walked into is shoved
-      out of the way rather than stood inside, which is what pushing looks like
-      in any other RTS
+  - **an attacker takes up room only when it is STANDING STILL.** BUILT. The
+    room it takes is a share of its own SELECTION CIRCLE, so what a player is
+    looking at is what the creep takes up and a bigger attacker takes more of
+    it - and a spot is only ever offered on ground no standing attacker already
+    covers, so two of them cannot be sent inside each other
+    - a WALKING attacker holds nothing and is walked through. That is the whole
+      correction: room is something a spot is chosen to respect, never
+      something a push negotiates at runtime, so nothing is ever shoved and
+      there is nothing left to oscillate
     - only against other ATTACKERS, and only on its own layer: a pack walking
       underneath a flyer is not something either of them can feel
-    - the share is a number rather than a rule in code, and zero switches the
-      whole thing off and leaves the soft push every other creep has
+    - a spot is given up when the creep is told to do something else, when it
+      is Stopped, and when the world moves it. Never by being walked into
   - **a pack ordered onto a point is given a SPOT EACH rather than all being
     sent to the one point.** BUILT. They are laid out in a block around it,
     facing the way they are travelling, so every creep has somewhere of its own
@@ -2462,23 +2469,35 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
       order lands, each at its own speed by its own route; nothing forms up
       first, nothing waits for a straggler, and nothing walks backwards to hold
       the shape
-    - the spots are spaced by exactly the room the creeps already claim - see
-      the personal space rule above - so a pack that has arrived is standing
-      still because nobody is inside anybody, rather than because something
-      stopped pushing
+    - the spots are whole CELLS of the lane's own grid, spaced by at least the
+      room the widest creep in the group takes up, so a pack that has arrived
+      is standing still because no two of them were ever sent to the same
+      ground - not because something stopped pushing
+    - **and it STAYS there.** An attacker that was sent somewhere and got there
+      is still carrying that order: it keeps its spot and does not wander off
+      to a tower of its own accord. Stop is what hands it back to the march.
+      It still shoots whatever walks into its reach while it stands there
     - where the ground will not take the whole block the block SQUEEZES to the
       width that is free, a spot that still lands in a wall moves to the
       nearest ground that is not, and anything left over falls back on the old
       rule below
-  - a pack that could not be given spots - one creep, or ground too broken to
-    lay a block on - piles up around the point rather than stacking on it.
-    Whoever gets there first holds the point and the rest stop where they are
-    blocked, so the pack settles outwards a ring at a time instead of circling
-    forever looking for a way in
-    - that giving-up is for a point on the GROUND only. An attack order names a
-      tower, and there is a whole ring of ground within reach of one, so a
-      creep sent onto a tower keeps going and is shoved round the outside until
-      it finds a place to stand
+  - there is no piling up and no settling outwards. A creep for which no free
+    spot could be found at all keeps its order and stands where it is
+  - **a pack ordered onto one TOWER is given a spot each on the ring of ground
+    within reach of it.** BUILT. Found by the same route search the walk uses,
+    so the near face wins by route rather than by straight line, and a pack
+    coming at one face takes that face rather than walking round
+    - as many attack at once as the free ground around that tower allows and no
+      more. The number is geometry, not a chosen cap
+    - a creep with no free spot inside reach is given one just OUTSIDE it: it
+      walks there, stands facing the tower and waits. It is not idle - anything
+      that comes into its own reach while it stands there is still hit
+    - it never switches to another tower on its own. The player named this one,
+      and being ignored is worse than being kept waiting. An attack-MOVE is the
+      order that picks its own fights, and an attacker marching with nobody
+      steering it takes the next tower when a ring is full
+    - killing the named tower ends the order, so the pack moves on rather than
+      standing on the rubble. Only a creep sent to a PLACE keeps its spot
   - an attacker creep can only ever target a TOWER. The builder and technology
     discs cannot be attacked at all - not "are tough", not "are ignored while a
     tower is in range": they are not valid targets, ever. Enforced by their
@@ -3020,12 +3039,18 @@ that gets edited with it. What is recorded is WHICH decision was never yours.
 - The senders' display names are still placeholders, all four of them
 - Creep models are primitives varying only by shape, size and colour. Tower
   models are primitives too, but to a deliberate system - see Presentation
-- Creep separation strength is a tuning value you change while testing. Whatever
-  it currently reads is a test state, not a decision - and the waypoint bug it was
-  once masking is gone, so it is worth a real call at some point
-- So is the share of its selection circle an ATTACKER keeps clear, and how near
-  an ordered point a crowd counts as arriving. Both were set to feel their way
-  to a number rather than decided, and both are one value in the match config
+- Creep separation strength for the ORDINARY roster is a tuning value you change
+  while testing. Whatever it currently reads is a test state, not a decision -
+  and the waypoint bug it was once masking is gone, so it is worth a real call at
+  some point. The attacker half of it is gone rather than turned down
+- So is the share of its selection circle an ATTACKER takes up, which now sets
+  how far apart its spots are laid out rather than how hard it shoves. It was set
+  to feel its way to a number rather than decided, and it is one value in the
+  match config
+- So is whether a commanded attacker that arrived KEEPS its spot or goes back to
+  hunting towers. Holding is what lets a formation survive its own completion;
+  not holding is an attacker that carries on eating the maze. One value in the
+  match config, and a mildly balance-relevant call rather than a feel one
 
 # Open questions
 - Recycling rule generalisation for 3+ players (deferred)

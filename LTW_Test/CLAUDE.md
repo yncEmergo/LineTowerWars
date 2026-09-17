@@ -579,6 +579,19 @@
       `drops_seen`, `echo`, `sealed_held` and the bench's nodes-disabled column
       all exist because a run that never reached the code under test looks
       exactly like one that passed
+  - **Scripts/Dev/FormationProbe.gd EXISTS and is kept**, with
+    Scenes/Dev/formation_probe.tscn, which is the one thing in Scenes/Dev that
+    does not get deleted. It boots a real server match, spawns real attacker
+    creeps and sends a real order through Commands, then prints what each creep
+    was ACTUALLY told and where it ended up
+    - it exists because a formation was shipped having been proven only as
+      arithmetic, and "barely improved" and "never ran" are indistinguishable
+      from outside. `targets_distinct`, `ever_held` and `ring_cells_free` are
+      there to tell them apart
+    - `mode=ground` or `mode=tower`, `creep=<name>`, `creeps=<n>`. Run it
+      against PHOENIX as well as the default: it has the widest selection
+      circle in the roster and is the creep every spacing bug shows up on
+      first
   - **Scripts/Dev/ShaderProbe.gd EXISTS and is kept too**, for the one cost
     nothing else here can see: a shader compiled on its FIRST DRAW. The GL
     renderer writes every variant it compiles to
@@ -826,6 +839,10 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   PlayerArea.gd by a lot. Intended fix for it: extract the grid half - occupancy,
   cell maths, flow field - into an AreaGrid it owns. Touches Building, Builder,
   BuildGrid, CommandController. Not started
+  - it went further over when attack orders gained a ring of spots: reach_cells
+    and assign_reach_cells are both grid questions and both belong in that
+    AreaGrid when it exists. They are there rather than on Formation because
+    the area owns the occupancy grid and the sweep buffer they read
 - Creep.gd gained three more public methods with tier 2's creep mana - the pool
   itself, its second-resource reading and the per-creep clock a timed passive
   advances. The pool is already an object the creep owns (CreepMana) rather
@@ -879,9 +896,14 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   Creep._refresh_aura. One spatial hash fixes both. TargetFinder is by far the
   worse of them and is the largest single cost in a loaded tick - a tower with
   nothing in range rescans the whole lane every tick and finds nothing again
-  - creep separation was the third, and is no longer paid: it now runs for
-    ATTACKER creeps only and is skipped without a call for everything else.
-    Switching it back on for the whole roster puts it straight back
+  - creep separation was the third and is no longer paid AT ALL. It is off for
+    the ordinary roster and GONE for attackers: an attacker takes a spot
+    nothing else was offered rather than pushing its way into one, so a
+    commanded attacker now performs zero neighbour iterations per tick where
+    it used to pay up to three whole walks over the lane's creep list. The
+    ordinary roster's switch survives as a config value and putting it back
+    on puts the cost straight back. See
+    Findings/2026-09-17-the-formation-that-existed-for-one-tick.md
 - **The per-unit simulation cost is what limits player count.** Every client
   simulates every lane under lockstep, so it is a client problem as well as a
   server one. MEASURED 2026-09-05 on client hardware: a 1v1 has better than 2x

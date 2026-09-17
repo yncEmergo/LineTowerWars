@@ -66,11 +66,6 @@ extends Resource
 ## under that many creeps anyway. Anything above zero switches it back on for
 ## them, at that price. See game_rules.md.
 @export var creep_separation_limit: float = 0.0
-## The same ceiling for an ATTACKER creep, which is the one kind that still
-## crowds. There are few of them, they are commanded one at a time, and a stack
-## of them standing inside each other on one tower is something their owner
-## would be looking straight at.
-@export var attacker_separation_limit: float = 0.6
 ## How much room an ATTACKER creep keeps around itself, as a share of its own
 ## selection circle. Two attackers may never stand closer than the sum of the
 ## two, and this is the HARD half of crowding: the push above steers a creep
@@ -84,14 +79,6 @@ extends Resource
 ## Zero switches the hard half off entirely and leaves only the soft push,
 ## which is what every creep in the game had before.
 @export var attacker_personal_space_ratio: float = 0.5
-## How near its ordered point an ATTACKER has to be before the crowd already
-## standing on it counts as arriving, in player cells.
-##
-## Without it a pack ordered onto one point never settles: the first creep
-## there holds the point and the rest slide round the outside looking for a way
-## in that the rule above will never give them. With it they stop where they
-## are blocked, which is how a pack piles up in any other RTS.
-@export var attacker_crowd_arrive_cells: float = 1.5
 ## How far inside its own reach a commanded ATTACKER plans to end up, as a
 ## share of that reach.
 ##
@@ -154,23 +141,48 @@ extends Resource
 ## TowerPassive.extra_target_range.
 @export var multishot_reach_cells: float = 3.0
 
+## Whether an ATTACKER that was SENT somewhere and got there keeps that spot,
+## rather than walking off to the nearest tower the moment the order finishes.
+##
+## **Off is the behaviour that made a formation invisible.** The march resumes on
+## the tick the move task completes, so a pack that had just arranged itself
+## immediately streamed away - the layout existed for about one tick and no
+## amount of care over where the spots were could survive it.
+##
+## Mildly balance relevant rather than purely a feel knob: an attacker standing
+## where it was put is an attacker not eating the maze, so a player who wants
+## them always chewing turns this off. It never affects an attacker marching on
+## its own, which has no spot of its own to keep and must still move on when the
+## tower it was hitting falls.
+@export var attacker_holds_position: bool = true
+## How far outside the ring of attack spots a creep that did not fit stands and
+## waits, in whole internal cells.
+##
+## A pack sent onto one tower only has room for as many attackers as the free
+## ground around it allows - the number is geometry, not a designed cap. The
+## ones left over are given a spot on a second ring this far out, walk to it and
+## stand facing the tower. Far enough to read as a reserve rather than as a
+## scrum, near enough to step in when a spot frees.
+@export_range(1, 6) var attacker_wait_ring_cells: int = 2
+
 @export_group("Formation")
 ## Whether a group order lays its units out at all. Off is exactly the old
 ## behaviour - every unit of a selection aimed at the one clicked point - and it
 ## is here so the two can be measured against each other on ONE commit with one
 ## variable flipped in place, which is the only honest way to compare them.
 @export var formation_enabled: bool = true
-## Spacing between neighbouring units in a formation, as a share of the room the
-## two of them already claim.
+## Extra breathing room between neighbouring spots in a formation, in whole
+## internal cells, on top of the one the units' own personal space already
+## demands.
 ##
-## **Derived from the personal space rather than authored beside it, and that is
-## what makes a parked group hold still.** Creep._hold_apart stops correcting a
-## pair once they are their combined personal space apart, so slots at or above
-## that distance mean a formation at rest computes a zero correction and never
-## moves. Below it the pack goes back to shoving itself about forever, which is
-## the thing being fixed - so this is clamped in code to a floor that accounts
-## for each unit stopping within its own arrive_threshold of its slot.
-@export_range(1.0, 3.0) var formation_spacing_ratio: float = 1.15
+## **The pitch itself is DERIVED, not authored**, and that is deliberate: it is
+## the largest personal space in the group rounded up to a whole cell, so two
+## parked neighbours can never overlap whichever creeps were selected. An
+## authored pitch was tried and was silently quantised to the grid, which made
+## the number inert and let the widest creep in the roster overlap itself. This
+## is the only part of it a person tunes, and zero is correct unless a block
+## reads too tight.
+@export_range(0, 4) var formation_extra_pitch_cells: int = 0
 ## Roughly how many times wider than deep a formation block is. Above one it is
 ## a line abreast, which is what a group walking into open ground should look
 ## like; at one it is square.

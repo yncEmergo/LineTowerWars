@@ -53,6 +53,10 @@ const CELL_WALKABLE: int = 2
 ## creeps start re-planning away from the spawn strip; see route_to_exit.
 const ROUTE_CACHE_LIMIT: int = 512
 
+## Stands for "no cell": the answer when no spot could be found for a walker.
+## Negative on both axes, so it can never be a cell the grid really holds.
+const OFF_GRID: Vector2i = Vector2i(-1, -1)
+
 ## Bounds GameConfig.creep_path_clearance_cells is held inside, in internal
 ## cells. Above zero, or a straight line could slip through the point where two
 ## towers touch at a corner. Below a half, or a creep could not walk along a
@@ -690,7 +694,7 @@ func route_between(from: Vector3, to: Vector3, within: float = 0.0) -> Array[Vec
 	var depth: int = internal_depth()
 
 	if within > 0.0:
-		var ring: Array[Vector2i] = _reach_cells(to, within)
+		var ring: Array[Vector2i] = reach_cells(to, within)
 		# An empty ring is a target walled in by its own neighbours. Falling
 		# through to the single-cell rule is never worse than what it did
 		# before, and is the only case that still reaches nearest_free_point.
@@ -727,6 +731,12 @@ func is_within_reach_cell(from: Vector3, to: Vector3, within: float) -> bool:
 
 ## Every free internal cell whose CENTRE is within `within` of a world point.
 ##
+## Public because it is TWO answers, not one: the goal set a route may finish
+## in, and the set of spots a pack may be arranged into around a target. They
+## are the same cells for the same reason - a cell that passes here is a cell
+## the swing lands from - and having one function answer both is what stops a
+## creep being sent to a spot it cannot actually fight from.
+##
 ## Measured centre to centre, because that is what TargetFinder.is_in_range
 ## measures and therefore what ends the chase - so a cell that passes here is a
 ## cell the swing lands from, and there is no second notion of reach to keep in
@@ -736,7 +746,109 @@ func is_within_reach_cell(from: Vector3, to: Vector3, within: float) -> bool:
 ## on every side, which covers the half-cell the floor above may have shifted it
 ## by. Every candidate is then tested against the real radius, so the box being
 ## generous costs a few compares and changes no answer.
-func _reach_cells(to: Vector3, within: float) -> Array[Vector2i]:
+## Hands each walker one of `goals`, choosing by ROUTE rather than by straight
+## line, so a pack arriving at a tower's north face claims north-face cells.
+##
+## **One sweep for the whole group, and it answers both questions at once**:
+## which spot is mine, and how do I get there. The goals are seeded together
+## into a single breadth-first field, exactly as an attack order's route already
+## is, so each walker descending that field arrives at whichever goal is nearest
+## to it BY ROUTE - and the cell three metres away through a wall is forty steps
+## away and loses to the one beside it. A straight-line assignment is the same
+## mistake nearest_free_point made, reached one layer up.
+##
+## Walkers are served in order of how far they are from the ring, nearest first,
+## so the creep already standing at the face is not turned away from it by one
+## that has the whole maze to cross. Ties go to the earlier entry, which the
+## caller has already put in unit_id order - so this is a pure function of the
+## unit set and agrees on every peer.
+##
+## Answers OFF_GRID for a walker that can reach no goal at all, and for one
+## left over when the goals ran out. Both are the caller's to handle; this does
+## not invent a spot that was not offered.
+func assign_reach_cells(froms: Array[Vector3], goals: Array[Vector2i]) -> Array[Vector2i]:
+	var taken: Array[Vector2i] = []
+	taken.resize(froms.size())
+	taken.fill(OFF_GRID)
+	if goals.is_empty() || froms.is_empty():
+		return taken
+
+	var width: int = internal_width()
+	_order_flow.build_to_any(_blocking, width, internal_depth(), goals)
+
+	var free_goals: Dictionary = {}
+	for cell: Vector2i in goals:
+		free_goals[cell] = true
+
+	# Sorted by route distance to the ring, nearest first. The distance is an
+	# integer step count out of the field, so nothing here is decided by a float.
+	var ranked: Array[int] = []
+	for index in range(froms.size()):
+		ranked.append(index)
+	ranked.sort_custom(func(a: int, b: int) -> bool:
+		var da: int = _order_flow.distance_at(world_to_internal_cell(froms[a]))
+		var db: int = _order_flow.distance_at(world_to_internal_cell(froms[b]))
+		if da == db:
+			return a < b
+		# Unreachable sorts last rather than first, which is what a negative
+		# sentinel would otherwise do.
+		if da == FlowField.UNREACHABLE:
+			return false
+		if db == FlowField.UNREACHABLE:
+			return true
+		return da < db)
+
+	for index: int in ranked:
+		var start: Vector2i = world_to_internal_cell(froms[index])
+		if _order_flow.distance_at(start) == FlowField.UNREACHABLE:
+			continue
+
+		# Where this walker's own route ends. Already standing on a goal means
+		# an empty route, which is its own answer rather than a failure.
+		var wanted: Vector2i = start
+		if !free_goals.has(start):
+			var route: Array[Vector2i] = _order_flow.path_from(start, _blocking)
+			if route.is_empty():
+				continue
+			wanted = route[route.size() - 1]
+
+		if free_goals.has(wanted):
+			free_goals.erase(wanted)
+			taken[index] = wanted
+			continue
+
+		# Somebody got there first. The nearest goal still going, measured in
+		# whole cells from the one this walker wanted, with an integer tie-break
+		# so two equally near cells resolve the same way on every machine.
+		var best: Vector2i = OFF_GRID
+		var best_score: int = 0
+		for cell: Vector2i in goals:
+			if !free_goals.has(cell):
+				continue
+			var dx: int = cell.x - wanted.x
+			var dz: int = cell.y - wanted.y
+			var score: int = dx * dx + dz * dz
+			if best == OFF_GRID || score < best_score \
+					|| (score == best_score && _before(cell, best)):
+				best_score = score
+				best = cell
+		if best == OFF_GRID:
+			continue
+		free_goals.erase(best)
+		taken[index] = best
+
+	return taken
+
+
+## Fixed order over two cells, so a tie in a distance never falls to whatever
+## order a dictionary or an array happened to be built in.
+func _before(a: Vector2i, b: Vector2i) -> bool:
+	if a.y != b.y:
+		return a.y < b.y
+	return a.x < b.x
+
+
+func reach_cells(to: Vector3, within: float) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var size: float = internal_cell_size()
 	if size <= 0.0:

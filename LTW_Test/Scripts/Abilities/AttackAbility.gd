@@ -77,7 +77,7 @@ func advance_task(unit: Unit, target: AbilityTarget, _delta: float) -> void:
 	var attack: AttackComponent = unit.attack_component
 	var ordered: Unit = attack.ordered_target()
 	if ordered != null:
-		_chase(unit, attack, ordered)
+		_chase(unit, attack, ordered, target)
 		return
 
 	# An attack-MOVE stops for anything at all, which is the difference between
@@ -92,7 +92,10 @@ func advance_task(unit: Unit, target: AbilityTarget, _delta: float) -> void:
 	var found: Unit = attack.current_target()
 	if found != null:
 		attack.order_attack(found)
-		_chase(unit, attack, found)
+		# No spot was ever assigned for this one - an attack-MOVE picks its own
+		# fights, so nothing could have laid a ring out around a target nobody
+		# had named yet. It closes on the target itself, as it always did.
+		_chase(unit, attack, found, null)
 		return
 
 	if target.has_position && !unit.has_arrived_at(target.position):
@@ -141,17 +144,37 @@ func shows_attack_range() -> bool:
 ##
 ## A committed windup is never walked out of: the swing is what is happening,
 ## and it lands on the creep it was aimed at wherever that has got to.
-func _chase(unit: Unit, attack: AttackComponent, ordered: Unit) -> void:
-	if attack.is_in_reach(ordered) || attack.is_winding_up():
+func _chase(unit: Unit, attack: AttackComponent, ordered: Unit,
+		target: AbilityTarget) -> void:
+	# **Where this unit was told to stand**, which for a group order is its own
+	# spot on the ring around the target rather than the target's own centre.
+	# See Formation.attack_slots_for. Falls back to the target itself, which is
+	# what a single unit ordered on its own is given.
+	var spot: Vector3 = ordered.global_position
+	if target != null && target.has_position:
+		spot = target.position
+
+	if attack.is_winding_up():
 		_hold(unit)
 		return
+
+	# **In reach is not the same as ARRIVED, and holding on the first is what
+	# would collapse a ring into a clump.** The spots sit a little inside reach
+	# so a creep shoved off one does not fall straight out of it, which means a
+	# creep walking to its spot crosses the outer reach arc BEFORE it gets
+	# there. Stopping then would park the whole pack on that arc, on ground
+	# nobody was offered, and no ring would ever form.
+	if attack.is_in_reach(ordered) && unit.has_arrived_at(spot):
+		_hold(unit)
+		return
+
 	if !attack.has_reached_order() || attack.is_ready_to_attack():
-		unit.move_to(ordered.global_position)
+		unit.move_to(spot)
 		return
 	# On cooldown and already been there. A unit still walking finishes the
 	# approach into reach; one standing only sets off once the slack runs out.
 	if unit.is_moving() || !attack.is_in_reach(ordered, true):
-		unit.move_to(ordered.global_position)
+		unit.move_to(spot)
 
 
 ## Plants the unit where it stands so it can fight. Called rather than simply

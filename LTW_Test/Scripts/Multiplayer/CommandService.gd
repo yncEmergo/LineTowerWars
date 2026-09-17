@@ -458,12 +458,25 @@ func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 ## tower, and there is a whole ring of those - which is the router's question
 ## and is answered in PlayerArea.route_between.
 func _slots_for(command: Command, ability: UnitAbility, units: Array) -> Array[Vector3]:
-	if ability == null || !ability.spreads_group || !command.has_target_position \
-			|| command.target_unit_id != MatchSession.NO_UNIT:
-		var plain: Array[Vector3] = []
-		plain.resize(units.size())
-		plain.fill(command.target_position)
+	var plain: Array[Vector3] = []
+	plain.resize(units.size())
+	plain.fill(command.target_position)
+	if ability == null || !ability.spreads_group || !command.has_target_position:
 		return plain
+
+	# **An order that NAMES something gets the ring, not the block.** This used
+	# to bail out here, which meant the commonest order in the game - a pack
+	# sent onto a tower - got no layout at all and every creep was aimed at that
+	# tower's own centre. A named target is not a patch of ground: what the pack
+	# wants is a spot each within reach of it, and there is a whole ring of those.
+	if command.target_unit_id != MatchSession.NO_UNIT:
+		if _session == null:
+			return plain
+		var target: Unit = _session.unit_for(command.target_unit_id)
+		if target == null:
+			return plain
+		return Formation.attack_slots_for(units, target)
+
 	return Formation.slots_for(units, command.target_position)
 
 

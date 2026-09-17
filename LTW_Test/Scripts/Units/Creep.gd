@@ -68,22 +68,9 @@ const CLIMB_SPEED: float = 2.0
 ## on both axes, so it can never be a cell the grid really holds.
 const OFF_GRID: Vector2i = Vector2i(-1, -1)
 
-## The distance below which two points in a crowding test are the same point:
-## two creeps with no direction between them to be pushed apart along, and two
-## ordered points that are the same order. See _away_from and has_arrived_at.
+## The distance below which two points are the same point: a step so short that
+## there is no direction in it to walk along.
 const CROWD_MIN_AXIS: float = 0.0001
-
-## How much further apart than their personal space two creeps may stand and
-## still count as touching. Slack rather than an exact test because _hold_apart
-## parks a pair at exactly that distance, and floating point puts them a hair
-## either side of it. See _is_crowd_blocked.
-const CROWD_CONTACT_SLACK: float = 1.1
-
-## Whether this creep stopped short of its ordered point because the crowd was
-## already standing on it, and the point it stopped short of. Cleared by the
-## next walk it is given - see has_arrived_at.
-var _crowd_settled: bool = false
-var _crowd_settled_point: Vector3 = Vector3.ZERO
 
 ## Route the creep committed to, as internal cells in walking order.
 var _path: Array[Vector2i] = []
@@ -130,6 +117,14 @@ var _order_within_value: float = 0.0
 ## way through - never in between, which is what keeps it free.
 var _order_unreachable: bool = false
 var _order_grid_version: int = 0
+## Whether this creep was SENT somewhere, got there, and is now keeping the spot
+## it was given. Only ever true for a commanded creep, and what stops the march
+## undoing an order the tick after it completes - see _march.
+##
+## Given up when the creep is told to do something else, when it is Stopped, and
+## when the world moves it. Never by being walked into: a spot is kept until its
+## owner is done with it.
+var _holding_position: bool = false
 ## Route already covered, newest last, for being set back along it.
 var _trail: Array[Vector3] = []
 
@@ -433,7 +428,8 @@ func dive_to(point: Vector3, facing: Vector3) -> void:
 ## tick, and sweeping the grid twenty times a second for a tower that has not
 ## moved would be work for nothing.
 func move_to(world_target: Vector3) -> void:
-	_crowd_settled = false
+	# Given something else to do, so whatever spot it was keeping is given up.
+	_holding_position = false
 	super(world_target)
 
 	# Nothing that ignores the maze reads the occupancy grid at all, so there
@@ -447,28 +443,6 @@ func move_to(world_target: Vector3) -> void:
 		_plan_order_route(goal)
 
 
-## A creep that stopped short of an ordered point because the crowd was already
-## standing on it counts as having ARRIVED there. It is as near as the rule
-## will ever let it get, and the point it was aimed at is now under somebody.
-##
-## Without this an attack-move never finishes: it asks this every tick to
-## decide whether to keep walking, so the creep is sent back at a point it
-## cannot reach, gives up again, and the chain behind it never starts.
-func has_arrived_at(world_point: Vector3) -> bool:
-	if super(world_point):
-		return true
-	if !_crowd_settled || area == null:
-		return false
-
-	# The point it settled for and no other: this is asked about whatever a
-	# task happens to be aimed at, and having given up on one spot says nothing
-	# about any other. Clamped on the way in for the reason the base class
-	# clamps - an order past the edge is a point the creep can never stand on.
-	var offset: Vector3 = area.clamp_point(world_point) - _crowd_settled_point
-	offset.y = 0.0
-	return offset.length() <= CROWD_MIN_AXIS
-
-
 ## Halting a creep also calls off a dive, which is what makes Stop the way a
 ## player ends one - and what pays the armour back for doing so.
 ##
@@ -478,6 +452,11 @@ func has_arrived_at(world_point: Vector3) -> bool:
 func stop() -> void:
 	super()
 	_clear_order_route()
+	# Stop hands the creep back to the march, so it stops keeping a spot too.
+	# Deliberately NOT the same event as arriving: one means "you are done here",
+	# the other means "stop what you are doing", and planting a creep wherever it
+	# was interrupted is not a spot anybody chose.
+	_holding_position = false
 	cancel_dive()
 
 
@@ -1355,11 +1334,6 @@ func _physics_process(_engine_delta: float) -> void:
 	# apart.
 	if is_attacker():
 		_march(delta)
-		# AFTER the march and outside it, because an attacker that did not move
-		# this tick is exactly the case that needs it: one standing on a tower
-		# or parked on an ordered point takes no step of its own, and without
-		# this the next creep to walk in would simply stand inside it.
-		_hold_apart()
 		return
 
 	_travel(delta)
@@ -1527,6 +1501,19 @@ func _march(delta: float) -> void:
 		_face_attack_target(delta)
 		return
 
+	# **Sent somewhere and got there, so it STAYS there.** Without this the
+	# march resumes on the very tick the move task completes, and a pack that
+	# has just arranged itself walks straight off again - which is why a
+	# formation was invisible however carefully its spots were worked out. It
+	# holds only for a creep somebody ORDERED: one marching on its own has no
+	# spot of its own to keep and must still move on when its tower falls.
+	#
+	# Still fights. Only the walking stops, and the attack component runs its
+	# own search, so anything that comes into reach is hit from where it stands.
+	if _holding_position:
+		_face_attack_target(delta)
+		return
+
 	_refresh_march_target(delta)
 	# Nothing left standing to pull down. An attacker that has finished the
 	# maze walks it like any other creep and steals a life at the end of it,
@@ -1580,17 +1567,6 @@ func _walk_to_order(delta: float) -> void:
 	var remaining: Vector3 = _target_position - global_position
 	remaining.y = 0.0
 	var distance: float = remaining.length()
-
-	# Somebody else got there first. Stopping rather than arriving, so the
-	# creep stays where the crowd left it instead of snapping onto a point it
-	# was never able to reach - and stop() ends the task either way, which is
-	# what MoveAbility means by "arrived or was stopped".
-	if _is_crowd_blocked(distance):
-		var point: Vector3 = _target_position
-		stop()
-		_crowd_settled = true
-		_crowd_settled_point = point
-		return
 
 	if _has_order_step() && _order_step_offset().length() <= _step_reach(delta):
 		_advance_order_step()
@@ -1766,6 +1742,23 @@ func _arrive() -> void:
 	_clear_order_route()
 	global_position.y = _ground_height()
 
+	# Reached the spot it was sent to, so it now KEEPS that spot. Set here
+	# rather than where the order finishes because this is the one place that
+	# means "got there" - stop() means something else entirely and must not
+	# plant a creep where it happened to be interrupted.
+	#
+	# **Not while it is fighting something it was AIMED at.** A creep walking to
+	# its spot on a tower's ring arrives here too, and if that made it hold, it
+	# would still be holding once the tower fell - standing on rubble instead of
+	# moving on to the next one. Being SENT somewhere and being sent to KILL
+	# something are different orders: the first is done when you arrive, the
+	# second when the target is gone, and only the first leaves a spot worth
+	# keeping.
+	if attack_component != null && attack_component.ordered_target() != null:
+		return
+	var config: GameConfig = References.game_config
+	_holding_position = config == null || config.attacker_holds_position
+
 
 ## Whether the committed route still has a step the creep can take.
 ##
@@ -1879,16 +1872,22 @@ func _crowding_push(speed: float, delta: float) -> Vector3:
 
 ## Ceiling on this creep's crowding push, as a share of its own speed.
 ##
-## Asked per creep rather than read once, because the answer is about WHAT the
-## creep is: an attacker crowds and everything else walks through its own kind.
-## Both halves are config values, so the rule is data and neither half is
-## written into this file. See game_rules.md.
+## **ZERO for an ATTACKER, and that is the whole of what replaced the pushing.**
+## A commanded attacker is walking to a spot nothing else was offered, so there
+## is nobody to be pushed away from - and a push at all was the reason a pack
+## behaved like a liquid: one shared goal plus a per-tick mutual correction is
+## Continuum Crowds, whose stated purpose is to make a crowd flow. No shipping
+## RTS steers a commanded unit this way. See game_rules.md, and
+## Findings/2026-09-16-attacker-pathing-and-group-movement.md.
+##
+## The ORDINARY roster's half survives as a config value and is off, so the
+## switch described in game_rules.md still exists for them.
 func _separation_limit() -> float:
+	if is_attacker():
+		return 0.0
 	var config: GameConfig = References.game_config
 	if config == null:
 		return 0.0
-	if is_attacker():
-		return config.attacker_separation_limit
 	return config.creep_separation_limit
 
 
@@ -1973,13 +1972,11 @@ func _separation() -> Vector3:
 ## that shrank to nothing while it was down would let the rest of the pack
 ## close over the spot it is about to stand up in.
 ##
-## **Public because a FORMATION has to space its slots by exactly this number
-## and not by a second copy of it.** _hold_apart stops correcting a pair once
-## they are the sum of their two apart, so a block laid out at that distance
-## computes a zero correction and holds still - the jiggling stops because
-## there is nothing left to correct rather than because anything was switched
-## off. A formation that derived its own spacing would be one edit away from
-## disagreeing with the rule it is trying to satisfy. See Formation.
+## **Public because a FORMATION sizes its spots by exactly this number and not
+## by a second copy of it.** It is the room a creep is understood to take up, so
+## two spots at least the sum of two of them apart are two spots that cannot
+## overlap - which is what lets a parked pack be at rest by construction rather
+## than by anything pushing it there. See Formation.
 func crowd_radius() -> float:
 	if !is_attacker():
 		return body_radius()
@@ -1987,115 +1984,6 @@ func crowd_radius() -> float:
 	if config == null:
 		return 0.0
 	return config.attacker_personal_space_ratio * select_radius
-
-
-## Pushes this creep out of any ATTACKER it is standing inside, and is the hard
-## half of crowding.
-##
-## The soft push in _separation only ever steers a creep that is TAKING A STEP,
-## which is why a commanded pack still ended up as one body: they all walk onto
-## the same point, and the ones that got there stop walking and stop being
-## pushed. This runs whatever the tick did and is what the rule actually rests
-## on - see GameConfig.attacker_personal_space_ratio.
-##
-## Each creep corrects HALF the overlap and only its own position, so a pair
-## separates by the whole of it over the tick they both run, and no creep ever
-## writes another one's position. A neighbour that cannot move itself - one
-## held by a stun, one waiting on a revive - simply contributes nothing back,
-## and the mover walks its own way out over a few more ticks.
-##
-## Goes through _move_by like every other movement, so a creep shoved against a
-## tower slides along it rather than being pushed inside it.
-func _hold_apart() -> void:
-	if area == null || !is_attacker():
-		return
-
-	var own_space: float = crowd_radius()
-	if own_space <= 0.0:
-		return
-
-	var correction: Vector3 = Vector3.ZERO
-	for other: Creep in area.creeps():
-		if other == self || other.is_down() || !other.is_attacker():
-			continue
-		# The same layer rule the soft push uses: a flyer and the pack walking
-		# underneath it never touch, so neither can be inside the other.
-		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
-			continue
-
-		var space: float = own_space + other.crowd_radius()
-		var offset: Vector3 = global_position - other.global_position
-		offset.y = 0.0
-		var distance: float = offset.length()
-		if distance >= space:
-			continue
-
-		correction += _away_from(other, offset, distance) * (space - distance) * 0.5
-
-	if correction != Vector3.ZERO:
-		_move_by(correction)
-
-
-## Which way out of a neighbour this creep goes.
-##
-## Straight away from it, except when the two are standing on the very same
-## point and there is no direction to be had. That happens - two creeps spawned
-## together and given one order arrive on one spot - and it is settled by
-## UNIT ID rather than by anything about the world, so the two pick opposite
-## sides and stay picked instead of trading places every tick.
-func _away_from(other: Creep, offset: Vector3, distance: float) -> Vector3:
-	if distance > CROWD_MIN_AXIS:
-		return offset / distance
-	var side: float = 1.0 if unit_id > other.unit_id else -1.0
-	return Vector3(side, 0.0, 0.0)
-
-
-## Whether the point this creep was ordered to is already taken by the crowd.
-##
-## True only close to that point, because the rule out here is "somebody is in
-## my way" and further out that is something to walk around rather than a
-## reason to stop. The blocker also has to be standing STILL and standing
-## nearer the point than this creep is, which is what makes a pack settle
-## outwards one ring at a time: the creep on the point stops first, the one
-## touching it stops next, and so on to the edge of the pack.
-func _is_crowd_blocked(distance: float) -> bool:
-	if area == null || !is_attacker():
-		return false
-
-	# A creep sent onto a NAMED target is not after a spot on the ground, it is
-	# after one within reach of that target - and there is a whole ring of
-	# them. Giving up here would leave it standing behind whoever arrived
-	# first, where being shoved round the outside gets it into reach on its own.
-	if attack_component != null && attack_component.ordered_target() != null:
-		return false
-
-	var config: GameConfig = References.game_config
-	if config == null:
-		return false
-	if distance > config.attacker_crowd_arrive_cells * config.cell_size:
-		return false
-
-	var own_space: float = crowd_radius()
-	for other: Creep in area.creeps():
-		if other == self || other.is_down() || !other.is_attacker() || other.is_moving():
-			continue
-		if other.is_flying() != is_flying() || other.is_ethereal() != is_ethereal():
-			continue
-
-		# Touching, with a little slack: _hold_apart parks a pair at exactly
-		# their combined space, and a test for "closer than that" would then
-		# answer false for two creeps pressed right up against each other.
-		var gap: Vector3 = global_position - other.global_position
-		gap.y = 0.0
-		if gap.length() > (own_space + other.crowd_radius()) * CROWD_CONTACT_SLACK:
-			continue
-
-		var theirs: Vector3 = _target_position - other.global_position
-		theirs.y = 0.0
-		if theirs.length() < distance:
-			return true
-
-	return false
 
 
 ## Takes a fresh route from where the creep stands and commits to it.
@@ -2146,6 +2034,10 @@ func _record_trail() -> void:
 ## flies.
 func _teleport_to(world_pos: Vector3) -> void:
 	teleport_to(Vector3(world_pos.x, _ground_height(), world_pos.z))
+	# The WORLD moved it, so it is no longer standing where it was sent and has
+	# no business holding that ground. The single funnel for a tower going up on
+	# top of it, a progress steal, and a leak.
+	_holding_position = false
 	_replan()
 
 
