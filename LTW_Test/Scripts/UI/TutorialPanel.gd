@@ -24,6 +24,9 @@ extends Control
 ## It owns nothing. Which lesson is open and whether it is finished are
 ## TutorialDirector's; the two buttons report a press and nothing else.
 
+## What the objective line says while a finished lesson waits for the next.
+const DONE_TEXT: String = "Done!"
+
 @export_group("References")
 ## "3 of 14", so a player knows how much of this is left.
 @export var _progress_label: Label
@@ -121,12 +124,17 @@ func _process(_delta: float) -> void:
 func _draw_objective(step: TutorialStep, director: TutorialDirector) -> void:
 	if _objective_label == null:
 		return
-	var progress: String = step.progress_text(director)
+	# Between two lessons the one on screen is done, and says so while the next
+	# waits out its delay. See TutorialStep.delay_seconds.
+	var done: bool = director.is_between_lessons()
+	var progress: String = DONE_TEXT if done else step.progress_text(director)
 	if progress == _progress_shown:
 		return
 	_progress_shown = progress
-	_objective_label.visible = !step.objective.is_empty()
-	if progress.is_empty():
+	_objective_label.visible = done || !step.objective.is_empty()
+	if done:
+		_objective_label.text = DONE_TEXT
+	elif progress.is_empty():
 		_objective_label.text = step.objective
 	else:
 		_objective_label.text = "%s   %s" % [step.objective, progress]

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TutorialReachStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReachStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/build_menu_ability.tres" id="a0"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_elemental_core_ability.tres" id="a1"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Elemental towers"
+body = "An Elemental Core turns, for free, into a tower of an element you own. Every tier above that is an upgrade."
+objective = "Build an Elemental Core, select it and turn it into an elemental tower."
+delay_seconds = 2.0
+skip_after_seconds = 150.0
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
+from_tower_path = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"

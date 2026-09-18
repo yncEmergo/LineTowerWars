@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TutorialWaveStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialWaveStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="a0"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialWave.gd" id="3_wave"]
+
+[sub_resource type="Resource" id="Wave_0"]
+script = ExtResource("3_wave")
+delay_seconds = 3.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_1"]
+script = ExtResource("3_wave")
+delay_seconds = 12.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[resource]
+script = ExtResource("1_step")
+title = "Here they come"
+body = "Two small waves are on their way. Your towers do the rest."
+objective = "Let your towers kill them."
+delay_seconds = 2.0
+holds_clock = true
+skip_after_seconds = 90.0
+waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1")])
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

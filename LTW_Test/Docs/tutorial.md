@@ -42,9 +42,12 @@ scene and costs a multiplayer match and a skirmish one comparison.
 Three parts, and the lessons are written against this shape:
 
 1. **THE HELD OPENING.** The match clock stands still, the player may do only what the lesson
-   asks, and every lesson hands over exactly the gold for its task. They build the first rows of
-   the maze on a blueprint, watch a wave die in it, and send their first creeps from a reserve
-   set to exactly the number asked for. Nothing can go wrong and nothing is timed.
+   asks, and every lesson hands over the gold for its task. They select the builder - the Build
+   menu is shut until they have - build a few towers in the middle of the first row, watch two
+   small waves walk round them, close the row and build a second one, watch a bigger wave zigzag
+   through, and send their first creeps from a reserve set to exactly the number asked for.
+   Nothing is timed. The waves are real packs, so their Timber Wolves pay a little bounty on
+   top of the granted gold; that is accepted rather than engineered away.
 2. **THE FIRST OPPONENT.** The limits come off, the clock runs, the base income arrives, and the
    first opponent is WOKEN from sparring into a real profile. The lesson ends when it is beaten.
    This is where the basics - Basic towers, the maze, sending, income - are played rather than
@@ -63,9 +66,12 @@ Three parts, and the lessons are written against this shape:
 | `Scripts/Game/Tutorial/TutorialScript.gd` | The lessons in teaching order, and the board: opponents' profiles, lives, what is always allowed. |
 | `Scripts/Game/Tutorial/TutorialDirector.gd` | Which lesson is open, what it handed over, what has happened since. |
 | `Scripts/Game/Tutorial/TutorialSetup.gd` | The match it is played in: lanes, names, settings. |
+| `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a lesson sends: a delay, a creep, a number of sends. |
+| `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a lesson walks the player to, and whether it is selected. |
+| `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
 | `Scripts/Game/ActionLimits.gd` | What one player may do when that is less than the rules allow. |
 | `Scripts/UI/TutorialPanel.gd` | The lesson on screen, its progress, and the way on. |
-| `Scripts/UI/TutorialPointer.gd` | The arrow at a named HUD control, and the dim around it. |
+| `Scripts/UI/TutorialPointer.gd` | The arrow at the HUD button a lesson wants pressed. |
 | `Scripts/UI/TutorialSpotlight.gd` | The dim around one thing in the WORLD. |
 | `Resources/Tutorial/` | The lessons, the script, and the mazes they draw. |
 | `Resources/Config/Ai/ai_tutorial*.tres` | The sparring partner, and the two profiles the opponents wake into. |
@@ -80,8 +86,12 @@ kind.
 **Short is the rule**: a lesson is read by somebody who wants to be playing. A lesson that can
 count its task draws the count next to the objective, which is the cheapest telegraph there is.
 
-**WHAT IT GIVES** - gold, income, a reserve of sends set to an exact number, a blueprint, a
-wave in the player's lane, an opponent woken, the Research Center opened.
+**WHAT IT GIVES** - gold, income, a reserve of sends set to an exact number, a blueprint, waves
+in the player's lane, an opponent woken, the Research Center opened.
+
+**A lesson waits before it opens** (`delay_seconds`): a beat after the last one is done, to see
+the last tower go up or the last creep die. The panel says the last lesson is done meanwhile, and
+everything that lesson held stays held through the gap.
 
 **WHAT IT ALLOWS** - whether the match clock runs, and whether the player is held to a short
 list of abilities and to the blueprint's cells. See sections 5 and 6.
@@ -134,13 +144,19 @@ ordinary match pays one lookup and nothing changes.
 
 It is a WHITELIST: a restricted lesson names the abilities that work (`allowed_abilities`), the
 script names the few every restricted lesson allows on top (`always_allowed` - moving and
-stopping the builder, calling off an order), and anything that changes nothing in the world - a
-submenu, a passive, a presentation toggle - is always allowed. Everything else on the card is
+stopping the builder, calling off an order), and a passive or a presentation toggle is allowed
+without being named. A SUBMENU is not: which menus open is part of what a lesson teaches, so
+the Build menu stays shut until the lesson about building lists it. Everything not allowed is
 drawn dim. `build_on_blueprint_only` adds the blueprint's cells as the only place a tower may
 start. The Research Center is locked until a lesson opens it and stays open after.
 
+On top of all of it the script carries a FORBIDDEN list (`forbidden_abilities`), refused in
+every lesson, restricted or not: the builder's blueprint screens, whose saved mazes would compete
+with the one a lesson draws.
+
 It is asked where intent becomes an order, and nowhere deeper: the command card dims the square
-(`CommandSlot`), the controller will not arm or send it (`CommandController`), the order road
+(`CommandSlot`), the panel will not open a submenu (`UnitPanel`), the controller will not arm or
+send it (`CommandController`), the order road
 refuses it (`CommandService`, which is the one that holds whatever the other two missed), the
 area refuses the cell so the build ghost turns red (`PlayerArea.can_place`), and the Research
 Center neither opens nor accepts an order.
@@ -169,12 +185,12 @@ send; and they still count as ALIVE, which is what keeps the match from ending t
 first opponent falls. It is offline only, like the limits: set by the tutorial, never
 replicated.
 
-**A wave of the lesson's own** (`spawn_creep_path`, `spawn_creep_count`) puts creeps into the
-player's lane before any opponent sends, spawned as the first opponent's creeps so the leak and
-the life steal resolve as in a real match. It must be a creep that pays NO bounty, or the kill
-hands the player gold the next lesson did not count on. The lesson waiting on it finishes when
-the lane is EMPTY rather than on a kill count: a creep that leaks walks straight back into the
-same lane in a duel, so an empty lane always arrives.
+**Waves of the lesson's own** (`waves`, a list of `TutorialWave`: a delay, a creep, a number of
+SENDS) put creeps into the player's lane before any opponent sends. Each send is a whole pack,
+as `SendBuilding` spawns it, and the creeps are the first opponent's, so the leak and the life
+steal resolve as in a real match. Two entries with the same delay are one mixed wave. The lesson
+waiting on them finishes when every wave has gone out and the lane is EMPTY, rather than on a
+kill count: a creep that leaks walks on or leaves, so an empty lane always arrives.
 
 ## 8. Saying where, and saying which
 
@@ -185,19 +201,28 @@ the player's slots, which are theirs. The camera is moved onto the first row sti
 The mazes are the left-right maze of `strategy.md` 5.5 - from the very top, half a cell
 between rows - and the early lessons' plans are its first rows, so they grow into it.
 
-**AN ARROW at a named HUD control**, with the rest of the screen dimmed behind a hole cut around
-it. The lesson carries a KEY and the map from a key to a Control is authored in
-`match_hud.tscn`, so relaying the HUD out moves the arrow with it.
+**AN ARROW at a HUD BUTTON** (`TutorialPointer`) - the button, never the bar it sits in: the
+first version pointed at whole panels and landed between two buttons every time. Every frame it
+resolves, in order: the button that selects the lesson's `guide_unit` while that unit is not
+selected; then the command card square showing one of its `guide_abilities` (the Build menu,
+then the tower inside it; nothing while an order is being aimed); then the control named by
+`highlight_key`. The keys map to Controls in `match_hud.tscn`, so relaying the HUD out moves
+the arrow with it. The dim around the target is opt-in (`dims_around_highlight`): on by default
+it greyed out the whole screen, lane included.
+
+**ARROWS IN THE WORLD** (`TutorialWorldArrows`), billboarded so they read from the high camera:
+one over the builder while a lesson wants it selected, and one over every blueprint cell still
+open when `arrows_on_blueprint` is set. The mesh and its generator are
+`3DArt/Effects/tutorial_arrow*`, the scene `Scenes/Effects/tutorial_hover_arrow.tscn`, and the
+shader warm-up draws it in a tutorial so its material compiles before the first lesson.
+`TutorialGuide` is the one answer both arrows share to "which unit, and is it selected".
 
 **A SPOTLIGHT on the world**, dimming everything but a circle around one thing and following
 it. The lesson names a SUBJECT (`MY_LANE`, `TARGET_LANE`, `MY_NEWEST_TOWER`, `LEADING_CREEP`)
 rather than a position.
 
-**A SELECTION**: a lesson can put the builder on the command card when it opens, so the first
-thing the player sees is the card the lesson is talking about.
-
-**The DIM SQUARES** of section 6 are the fourth, and in the held opening the strongest: the one
-lit button on the card is the answer.
+**The DIM SQUARES** of section 6, in the held opening the strongest of all: the one lit button
+on the card is the answer.
 
 ## 9. Changing it
 
@@ -228,9 +253,10 @@ lesson nobody can finish. That check is what turns it into a message.
 
 - **It is untested with a real new player.** The pacing, the wording, the opponents' strength
   and how long each part takes are all first guesses
-- **The demonstration wave is over in moments.** A bounty-free creep weak enough for the first
-  rows dies almost as soon as it reaches them, so "watch your maze work" is a glimpse rather
-  than a walk. A tougher creep would need its bounty suppressed to keep the gold exact
+- **The opening's waves can leak.** Against the first four towers one creep of the second
+  wave usually walks round them, and the bigger wave usually gets one or two through the
+  two-row maze. It costs a life or two out of plenty, and arguably teaches what a leak is,
+  but nothing in the lessons says so yet
 - **Nothing in the held opening teaches the builder's own attack**, although the wave lesson
   allows it. `strategy.md` 2.1 says it matters early
 - **It never shows a leak on purpose**, or the send ring beyond a duel. The second opponent
@@ -251,6 +277,10 @@ lesson with the clock, whether it is held, gold and income, and a PASS or FAIL p
 
 It is scaffolding under `Scripts/Dev`, kept while the tutorial is still being iterated, and it
 is written against the current lesson order: re-ordering the lessons means updating it.
+
+Run WINDOWED with `-- shots` it also saves a screenshot to `user://tutorial_shots/` at each
+moment an arrow is up, which is the only way to see where an arrow DRAWS - headless draws
+nothing, and a correct target can still be drawn in the wrong place.
 
 **Print which lesson was reached and what was checked, not whether there were errors.** A
 tutorial that stalls on its third lesson and one that runs to the end look identical in a log

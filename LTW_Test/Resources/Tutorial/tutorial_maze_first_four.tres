@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TowerLayout" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/TowerLayout.gd" id="1_tower_layout"]
+
+; The first four towers, (3|1) to (6|1): the middle of the maze's first row. A subset of
+; tutorial_maze_row_2.tres, which the next build lesson completes.
+[resource]
+script = ExtResource("1_tower_layout")
+unit_type_ids = PackedInt32Array(46, 46, 46, 46)
+cells = Array[Vector2i]([Vector2i(6, 6), Vector2i(8, 6), Vector2i(10, 6), Vector2i(12, 6)])
+grid_size = Vector2i(16, 68)

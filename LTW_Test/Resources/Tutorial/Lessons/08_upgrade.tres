@@ -7,4 +7,5 @@ script = ExtResource("1_step")
 title = "Upgrade"
 body = "The game is yours now - no more limits. A tower gets stronger by upgrading where it stands."
 objective = "Select one of your towers and upgrade it."
+delay_seconds = 2.0
 skip_after_seconds = 120.0

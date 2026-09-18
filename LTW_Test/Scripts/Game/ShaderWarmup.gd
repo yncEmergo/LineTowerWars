@@ -293,6 +293,16 @@ func _draw_acted() -> void:
 		_root.add_child(plan.warmup_proxy())
 	_drawn += 8
 
+	# The tutorial's hover arrow, only in a tutorial - no other match draws one.
+	# Its scene is named by a script constant rather than reached through any
+	# content folder, so nothing else would warm it.
+	var director: TutorialDirector = References.tutorial_director
+	if director != null && director.is_running():
+		var arrow: Node3D = TutorialWorldArrows.warmup_proxy()
+		if arrow != null:
+			_root.add_child(arrow)
+			_drawn += 1
+
 
 ## Every selectable unit in `units` drawn in the portrait's own world. The
 ## portrait copies meshes exactly as it does for a selection, and `end_warm` puts

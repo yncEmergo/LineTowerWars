@@ -26,7 +26,7 @@ func is_complete(director: TutorialDirector) -> bool:
 		return false
 	var plan: TowerLayout = blueprint()
 	if plan != null:
-		return _built_on(director, plan) >= plan.entry_count()
+		return _built_on(plan) >= plan.entry_count()
 	return director.towers_built_this_step() >= maxi(1, towers)
 
 
@@ -35,7 +35,7 @@ func progress_text(director: TutorialDirector) -> String:
 		return ""
 	var plan: TowerLayout = blueprint()
 	if plan != null:
-		return "%d / %d" % [_built_on(director, plan), plan.entry_count()]
+		return "%d / %d" % [_built_on(plan), plan.entry_count()]
 	return "%d / %d" % [mini(director.towers_built_this_step(), towers), towers]
 
 
@@ -44,8 +44,8 @@ func progress_text(director: TutorialDirector) -> String:
 ## Walks the player's own buildings, which in the lessons that ask this is a
 ## few dozen at most. Matched on the footprint's top-left cell, which is how a
 ## TowerLayout names a cell and how Building.cell stores one.
-func _built_on(director: TutorialDirector, plan: TowerLayout) -> int:
-	var area: PlayerArea = director.local_area()
+func _built_on(plan: TowerLayout) -> int:
+	var area: PlayerArea = _local_area()
 	if area == null:
 		return 0
 	var wanted: Dictionary = {}

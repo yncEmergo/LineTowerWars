@@ -47,12 +47,14 @@ enum Rival {
 	SECOND,
 }
 
-## What to put on the command card when the lesson opens, so the first thing
-## the player sees is the card the lesson is talking about.
+## A unit of the player's that a lesson GUIDES them to select, before pointing
+## at a button on its card. See guide_unit.
 enum Select {
 	NONE,
 	## The player's builder.
 	BUILDER,
+	## The player's tier 1 sender, which is where the first creeps are bought.
+	FIRST_SENDER,
 }
 
 @export_group("What it says")
@@ -63,6 +65,12 @@ enum Select {
 @export var objective: String = ""
 
 @export_group("Pacing")
+## Seconds between the lesson before this one being DONE and this one opening.
+##
+## A beat to see the thing just done land - the last tower going up, the last
+## creep dying - before the next instruction arrives. The panel says the last
+## lesson is done while it waits, and everything that lesson held stays held.
+@export var delay_seconds: float = 2.0
 ## Whether the WORLD is held still while this step is on screen - nothing moves
 ## at all, and only the lesson panel answers a click.
 ##
@@ -115,18 +123,16 @@ enum Select {
 ## slot one would be shown that maze by a lesson meaning to show them the shape
 ## it is teaching. See BlueprintOverlay.show_layout.
 @export_file("*.tres") var blueprint_path: String = ""
-## A creep to put into the PLAYER's own lane when this step opens, as a res://
-## path to its CreepStats, or empty for a lesson that spawns nothing.
+## Waves this lesson sends into the PLAYER's own lane, each on its own delay
+## after the lesson opens. Empty for a lesson that sends nothing.
 ##
 ## **The tutorial has to be able to attack the player before any opponent
 ## does.** The first opponent sends nothing until the basics are taught, so the
-## lesson about watching a maze work sets up its own wave.
+## lessons about a maze working set up their own waves.
 ##
-## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
-## all resolve exactly as they would in a real match.
-@export_file("*.tres") var spawn_creep_path: String = ""
-## How many of them.
-@export var spawn_creep_count: int = 0
+## Spawned as the OPPONENT's creeps and as whole packs, so the leak, the bounty
+## and the life steal all resolve exactly as they would from a real send.
+@export var waves: Array[TutorialWave] = []
 ## A creep whose reserve is SET, not topped up, to stock_count when this step
 ## opens, as a res:// path to its CreepStats. Empty leaves every reserve alone.
 ##
@@ -192,8 +198,23 @@ enum Spotlight {
 }
 
 @export var spotlight: Spotlight = Spotlight.NONE
-## What to select for the player when the lesson opens. Presentation only.
-@export var selects: Select = Select.NONE
+## Whether the screen is dimmed around the highlighted HUD control. Off by
+## default: a dim over the whole screen hides the lane the player is being
+## asked to act in, and the arrow alone says where to look.
+@export var dims_around_highlight: bool = false
+## A unit to walk the player to first. While it is not selected, the arrow
+## points at the HUD button that selects it - and, for the builder, a second
+## arrow hovers over the unit itself. Once it is selected, the arrow moves on to
+## guide_abilities.
+@export var guide_unit: Select = Select.NONE
+## Command card buttons to point at, in the order they are pressed - the Build
+## menu, then the tower inside it. The arrow points at whichever of them is on
+## the card right now, and at nothing while an order is being aimed. Takes
+## precedence over highlight_key once guide_unit is satisfied.
+@export var guide_abilities: Array[UnitAbility] = []
+## Whether an arrow hovers over every cell of the lesson's blueprint still to
+## build on, disappearing as each is filled.
+@export var arrows_on_blueprint: bool = false
 
 
 ## Whether the world is now in the state this step was waiting for.
@@ -233,32 +254,29 @@ func validate() -> bool:
 	# The editor does not rewrite a path string when a .tres moves, so a renamed
 	# blueprint would leave a lesson quietly pointing at nothing - which reads as
 	# a lesson that forgot to say where.
-	for path: String in [blueprint_path, spawn_creep_path, stock_creep_path]:
+	for path: String in [blueprint_path, stock_creep_path]:
 		if !path.is_empty() && !ResourceLoader.exists(path):
 			Log.err("Tutorial step names a resource that does not resolve", {
 				"step": title,
 				"path": path,
 			})
 			complete = false
-	if restricts_actions && allowed_abilities.is_empty():
-		# Either authored empty or emptied by one entry failing to load. Both
-		# leave a lesson the player cannot finish, because nothing works.
-		Log.err("Tutorial step restricts the player to no abilities at all", title)
-		complete = false
-	for ability: UnitAbility in allowed_abilities:
+	# An EMPTY allowed list on a restricted lesson is legitimate - nothing but
+	# the script's always_allowed, which is what the lesson about selecting the
+	# builder wants - so only a null entry is refused here. The typed-array trap
+	# that empties a list silently is caught by the probe instead: a lesson that
+	# names a button and then allows nothing never finishes.
+	for ability: UnitAbility in allowed_abilities + guide_abilities:
 		if ability == null:
-			Log.err("Tutorial step allows a null ability", title)
+			Log.err("Tutorial step allows or points at a null ability", title)
+			complete = false
+	for wave: TutorialWave in waves:
+		if wave == null || !wave.validate(title):
 			complete = false
 	if build_on_blueprint_only && blueprint_path.is_empty():
 		Log.err("Tutorial step keeps building to a blueprint it does not have", title)
 		complete = false
 	return complete
-
-
-## The creep this lesson puts in the player's lane, or null for one that puts
-## none. Loaded on first ask, on the same terms the blueprint is.
-func spawn_creep() -> CreepStats:
-	return _load_creep(spawn_creep_path)
 
 
 ## The creep whose reserve this lesson sets, or null.
@@ -285,3 +303,9 @@ func _load_creep(path: String) -> CreepStats:
 	if path.is_empty() || !ResourceLoader.exists(path):
 		return null
 	return ResourceLoader.load(path, "") as CreepStats
+
+
+## The player's own lane, for a step reading the ground rather than a counter.
+func _local_area() -> PlayerArea:
+	var manager: PlayerManager = References.player_manager
+	return null if manager == null else manager.area_for(manager.local_player_id())

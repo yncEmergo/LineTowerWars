@@ -30,9 +30,18 @@ extends RefCounted
 ##
 ## A WHITELIST rather than a list of what is forbidden, because a lesson knows
 ## the few things it wants and cannot know every button the roster will ever
-## grow. Anything that changes nothing in the world - a submenu, a passive, a
-## presentation-only toggle - is always allowed: dimming the Build button would
-## hide the tower the lesson is asking for.
+## grow. Anything that changes nothing in the world - a passive, a
+## presentation-only toggle - is allowed unless it is FORBIDDEN outright.
+##
+## A SUBMENU is not free, although opening one changes nothing: which menus
+## open is part of what a lesson teaches, and a Build menu that opens onto a
+## card of dim squares before the lesson about building is noise. A lesson
+## that wants one open lists it.
+##
+## The FORBIDDEN list is the other way round and wins over everything: what the
+## tutorial never wants pressed at all, restricted lesson or not - the builder's
+## blueprint screens, whose own saved mazes would compete with the one a lesson
+## draws.
 ##
 ## Offline only, like everything that sets the board for the tutorial. It is
 ## not replicated and not checksummed; a networked match never has one.
@@ -43,6 +52,9 @@ var restricts_abilities: bool = false
 ## The abilities that may be used while restricts_abilities is on, besides the
 ## ones that change nothing - see is_free().
 var abilities: Array[UnitAbility] = []
+## Abilities that may never be used while this limit stands, whatever else is
+## allowed. Checked first.
+var forbidden: Array[UnitAbility] = []
 ## Internal cells a tower's footprint may START on, as keys. Empty is anywhere.
 ##
 ## The top-left cell of a footprint, which is how a TowerLayout names one and
@@ -56,6 +68,8 @@ var research: bool = true
 func allows(ability: UnitAbility) -> bool:
 	if ability == null:
 		return false
+	if ability in forbidden:
+		return false
 	if !restricts_abilities || is_free(ability):
 		return true
 	return ability in abilities
@@ -66,13 +80,12 @@ func allows_cell(cell: Vector2i) -> bool:
 	return build_cells.is_empty() || build_cells.has(cell)
 
 
-## Whether an ability changes nothing in the world, so no limit is ever needed
-## on it: a submenu only swaps the card, a passive is only read, and a
-## presentation toggle draws something on this machine alone.
+## Whether an ability changes nothing in the world, so a restricted lesson
+## need not list it: a passive is only read, and a presentation toggle draws
+## something on this machine alone. A submenu is deliberately NOT free - see
+## the note at the top.
 static func is_free(ability: UnitAbility) -> bool:
-	return ability.targeting == UnitAbility.Targeting.PASSIVE \
-		|| ability.targeting == UnitAbility.Targeting.SUBMENU \
-		|| ability.is_local_only()
+	return ability.targeting == UnitAbility.Targeting.PASSIVE || ability.is_local_only()
 
 
 ## The limits on one player, or null for a player who has none - which is

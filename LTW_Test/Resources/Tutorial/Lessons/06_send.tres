@@ -2,19 +2,21 @@
 
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialSendStep.gd" id="1_step"]
 [ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_sheep_ability.tres" id="3_allowed"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_sheep_ability.tres" id="a0"]
 
 [resource]
 script = ExtResource("1_step")
 title = "Send creeps"
 body = "You win by sending creeps down the Rookie's lane. Every creep you send also raises your income - for the rest of the match."
-objective = "Open your first sender and send 4 Sheep."
+objective = "Select your first sender and send 4 Sheep."
+delay_seconds = 2.0
 holds_clock = true
 skip_after_seconds = 120.0
 grant_gold = 40
 stock_creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 stock_count = 4
 restricts_actions = true
-allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("3_allowed")])
-highlight_key = &"send_bar"
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_unit = 2
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
 sends = 4

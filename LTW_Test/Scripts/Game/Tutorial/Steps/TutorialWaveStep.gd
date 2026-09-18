@@ -9,7 +9,7 @@ extends TutorialStep
 ## maze gets another go at it. Waiting for a kill count would wait for ever on a
 ## creep that leaked into nowhere; waiting for an empty lane cannot.
 ##
-## Pair it with spawn_creep_path on the same step. Without a wave there is
+## Pair it with waves on the same step. Without a wave there is
 ## nothing to clear, and the step finishes the tick it opens.
 
 

@@ -46,6 +46,10 @@ extends Resource
 ## the one thing it is about. See TutorialStep.allowed_abilities, and the
 ## typed-array warning on it, which holds here too.
 @export var always_allowed: Array[UnitAbility] = []
+## Abilities the player may not use at any point in the tutorial, restricted
+## lesson or not - the builder's own blueprint screens, whose saved mazes would
+## compete with the one a lesson draws on the ground. See ActionLimits.forbidden.
+@export var forbidden_abilities: Array[UnitAbility] = []
 
 @export_group("Lessons")
 ## In teaching order. **A TYPED ARRAY IN A .TRES IS ALL OR NOTHING**: one entry
@@ -96,9 +100,9 @@ func validate() -> bool:
 			complete = false
 		elif !profile.validate():
 			complete = false
-	for ability: UnitAbility in always_allowed:
+	for ability: UnitAbility in always_allowed + forbidden_abilities:
 		if ability == null:
-			Log.err("The tutorial always allows a null ability", resource_path)
+			Log.err("The tutorial always allows or forbids a null ability", resource_path)
 			complete = false
 
 	for index in range(steps.size()):

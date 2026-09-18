@@ -63,8 +63,13 @@ var _running: bool = false
 ## opened. Counted off PlayerManager.income_paid, since nothing else keeps it.
 var _payouts: int = 0
 var _payouts_mark: int = 0
-## Whether the current lesson put a wave into the player's lane.
-var _wave_spawned: bool = false
+## Which of the current lesson's waves have gone out, by index.
+var _waves_sent: Dictionary = {}
+## Seconds left before the next lesson opens, while the last one is DONE and
+## the player is given a beat to see it land. Below zero when nothing waits.
+var _gap_left: float = -1.0
+## The world arrows over the builder and the blueprint. Built on begin.
+var _arrows: TutorialWorldArrows = null
 ## Whether a lesson has opened the Research Center. Latched: it stays open.
 var _research_open: bool = false
 ## [from type id, type id] -> whether that tower is somewhere up that one's
@@ -103,6 +108,11 @@ func begin(setup: MatchSetup) -> void:
 	_running = true
 	set_physics_process(true)
 	_set_the_board(setup)
+	# A child of this node, and built here rather than in _ready, so nothing is
+	# built for a match that is not a tutorial.
+	_arrows = TutorialWorldArrows.new()
+	_arrows.name = "WorldArrows"
+	add_child(_arrows)
 	var manager: PlayerManager = References.player_manager
 	if manager != null:
 		manager.income_paid.connect(_on_income_paid)
@@ -170,6 +180,12 @@ func is_running() -> bool:
 	return _running && _step != null
 
 
+## Whether the lesson on screen is already DONE and the next one is waiting out
+## its delay. The panel says so; the pointers point at nothing.
+func is_between_lessons() -> bool:
+	return _gap_left >= 0.0
+
+
 ## The lesson on screen, or null once the tutorial is over.
 func current_step() -> TutorialStep:
 	return _step
@@ -192,7 +208,7 @@ func lesson_count() -> int:
 ## HELD, and has to: a lesson that holds the world is measured in exactly the
 ## time it holds it for.
 func may_skip() -> bool:
-	if _step == null || _step.skip_after_seconds <= 0.0:
+	if _step == null || _step.skip_after_seconds <= 0.0 || is_between_lessons():
 		return false
 	return _elapsed >= _step.skip_after_seconds
 
@@ -222,12 +238,12 @@ func payouts_this_step() -> int:
 	return _payouts - _payouts_mark
 
 
-## Whether the wave this lesson put in the player's lane is gone from it. True
-## for a lesson that put none there.
+## Whether every wave this lesson sends has gone out and the player's lane is
+## empty again. True at once for a lesson that sends none.
 func wave_cleared() -> bool:
-	if !_wave_spawned:
-		return true
-	var area: PlayerArea = local_area()
+	if _step == null || _waves_sent.size() < _step.waves.size():
+		return false
+	var area: PlayerArea = _local_area()
 	return area == null || area.creeps().is_empty()
 
 
@@ -257,7 +273,7 @@ func rival_lives(rival: TutorialStep.Rival) -> int:
 ## Whether the player has a tower standing that `from` upgrades into - the Core
 ## becoming an elemental tower. The tower itself does not count.
 func owns_tower_reached_from(from: BuildingStats) -> bool:
-	var area: PlayerArea = local_area()
+	var area: PlayerArea = _local_area()
 	if area == null || from == null:
 		return false
 	for child in area.get_children():
@@ -276,7 +292,7 @@ func owns_tower_reached_from(from: BuildingStats) -> bool:
 
 
 ## The player's own lane.
-func local_area() -> PlayerArea:
+func _local_area() -> PlayerArea:
 	var manager: PlayerManager = References.player_manager
 	return null if manager == null else manager.area_for(manager.local_player_id())
 
@@ -300,9 +316,29 @@ func _since(read: Callable) -> int:
 func _physics_process(_engine_delta: float) -> void:
 	if !_running || _step == null:
 		return
-	_elapsed += MatchSession.tick_seconds()
+	var delta: float = MatchSession.tick_seconds()
+	if is_between_lessons():
+		_gap_left -= delta
+		if _gap_left < 0.0:
+			_open(_index + 1)
+		return
+	_elapsed += delta
+	_send_due_waves()
 	if _step.is_complete(self):
-		advance()
+		_finish_lesson()
+
+
+## The current lesson is done: wait out the next one's delay, then open it.
+## Everything this one held stays held through the gap, so nothing starts moving
+## in the beat between two lessons that both hold the clock.
+func _finish_lesson() -> void:
+	var next: TutorialStep = script_resource.step_at(_index + 1)
+	var gap: float = 0.0 if next == null else maxf(0.0, next.delay_seconds)
+	if gap <= 0.0:
+		_open(_index + 1)
+		return
+	_gap_left = gap
+	lesson_changed.emit()
 
 
 ## The player pressed Continue. What finishes a lesson that is only read, and
@@ -325,7 +361,8 @@ func skip() -> void:
 	advance()
 
 
-## On to the next lesson, or to the end of the tutorial.
+## On to the next lesson now, or to the end of the tutorial - the skip, which
+## does not wait out a delay the player just asked to be spared.
 func advance() -> void:
 	if !_running:
 		return
@@ -337,7 +374,8 @@ func _open(index: int) -> void:
 	_step = null if script_resource == null else script_resource.step_at(index)
 	_elapsed = 0.0
 	_acknowledged = false
-	_wave_spawned = false
+	_waves_sent.clear()
+	_gap_left = -1.0
 
 	if _step == null:
 		_finish()
@@ -347,7 +385,6 @@ func _open(index: int) -> void:
 	_payouts_mark = _payouts
 	_apply_grants(_step)
 	_apply_limits(_step)
-	_select_for(_step)
 	_step.on_enter(self)
 	# After the grants, so a lesson that hands over gold does it before the
 	# world stops rather than on the frame it starts again.
@@ -412,7 +449,6 @@ func _apply_grants(step: TutorialStep) -> void:
 		_research_open = true
 
 	_draw_blueprint(step.blueprint())
-	_spawn_wave(step)
 	_set_stock(step)
 	if step.wakes_rival != TutorialStep.Rival.NONE:
 		_wake(step.wakes_rival)
@@ -430,6 +466,7 @@ func _apply_limits(step: TutorialStep) -> void:
 
 	var limits: ActionLimits = ActionLimits.new()
 	limits.research = _research_open
+	limits.forbidden.append_array(script_resource.forbidden_abilities)
 	if step.restricts_actions:
 		limits.restricts_abilities = true
 		limits.abilities.append_array(script_resource.always_allowed)
@@ -445,7 +482,7 @@ func _apply_limits(step: TutorialStep) -> void:
 ## Every sender whose card carries that creep, though in practice it is one.
 func _set_stock(step: TutorialStep) -> void:
 	var creep: CreepStats = step.stock_creep()
-	var area: PlayerArea = local_area()
+	var area: PlayerArea = _local_area()
 	if creep == null || area == null:
 		return
 	for sender in area.send_buildings():
@@ -479,22 +516,6 @@ func _wake(rival: TutorialStep.Rival) -> void:
 	Log.info("Tutorial opponent woken", {
 		"slot": slot, "profile": profile.display_name, "income": state.income,
 	})
-
-
-## Puts something on the player's command card for them. PRESENTATION, local
-## from end to end: selecting changes nothing in the world.
-func _select_for(step: TutorialStep) -> void:
-	if step.selects != TutorialStep.Select.BUILDER:
-		return
-	var selection: SelectionController = References.selection_controller
-	var session: MatchSession = _session
-	if selection == null || session == null:
-		return
-	for unit: Unit in session.live_units():
-		var builder: Builder = unit as Builder
-		if builder != null && builder.is_owned_by_local_player():
-			selection.select_single(builder)
-			return
 
 
 ## Puts a saved plan on the ground, or takes one off.
@@ -534,7 +555,7 @@ func _draw_blueprint(plan: TowerLayout) -> void:
 ## the world and moving it changes nothing in it.
 func _look_at_plan(plan: TowerLayout) -> void:
 	var camera: RTSCamera = References.rts_camera
-	var area: PlayerArea = local_area()
+	var area: PlayerArea = _local_area()
 	if camera == null || area == null || plan.entry_count() <= 0:
 		return
 
@@ -607,28 +628,35 @@ func _snapshot_line() -> MatchStatLine:
 	return line.duplicate() as MatchStatLine
 
 
-## Puts a lesson's wave into the player's own lane.
+## Sends every wave of the current lesson whose delay has run out.
+func _send_due_waves() -> void:
+	for index in range(_step.waves.size()):
+		if _waves_sent.has(index):
+			continue
+		var wave: TutorialWave = _step.waves[index]
+		if wave == null || _elapsed < wave.delay_seconds:
+			continue
+		_waves_sent[index] = true
+		_send_wave(wave)
+
+
+## Puts one wave into the player's own lane.
 ##
 ## **The one thing the tutorial does TO the player**, and it exists because
 ## nothing else will before the basics are taught: the first opponent spars
 ## until then and sends nothing.
 ##
-## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
-## resolve exactly as they would in a real match - the area already decides who
-## the bounty goes to and the creep's owner decides who steals the life.
+## Spawned as the OPPONENT's creeps and as whole PACKS, so a Sheep send is two
+## Sheep and a Timber Wolf exactly as a real one is, and the leak, the bounty
+## and the life steal resolve as in a real match.
 ##
-## The same three calls SendBuilding._spawn_one makes, and deliberately not a
-## SEND: a send is a player order with a price, a reserve and a start delay, and
-## none of those is a thing the tutorial is asking for. This is the board being
-## set up, the way the opening gold above is.
-func _spawn_wave(step: TutorialStep) -> void:
-	var stats: CreepStats = step.spawn_creep()
-	if stats == null || step.spawn_creep_count <= 0:
-		return
-
+## The same calls SendBuilding makes, and deliberately not a SEND: a send is a
+## player order with a price, a reserve and a start delay, and none of those is
+## a thing the tutorial is asking for. This is the board being set up.
+func _send_wave(wave: TutorialWave) -> void:
+	var stats: CreepStats = wave.creep()
 	var manager: PlayerManager = References.player_manager
-	var session: MatchSession = _session
-	if manager == null || session == null:
+	if stats == null || manager == null:
 		return
 
 	var into: PlayerArea = manager.area_for(manager.local_player_id())
@@ -636,25 +664,36 @@ func _spawn_wave(step: TutorialStep) -> void:
 	if into == null:
 		return
 
+	var spawned: int = 0
+	for send in range(wave.sends):
+		for entry: Array in stats.pack_contents():
+			spawned += _spawn_creeps(entry[0] as CreepStats, int(entry[1]), into, sender)
+
+	Log.info("Tutorial wave", {
+		"creep": stats.display_name,
+		"sends": wave.sends,
+		"creeps": spawned,
+		"into": into.player_id,
+		"from": sender,
+	})
+
+
+## Spawns `count` of one creep into a lane as `sender`'s. Reports how many.
+func _spawn_creeps(stats: CreepStats, count: int, into: PlayerArea, sender: int) -> int:
+	if stats == null:
+		return 0
 	var scene: PackedScene = stats.scene()
 	if scene == null:
-		Log.err("A tutorial lesson names a creep with no loadable prefab", stats.display_name)
-		return
+		Log.err("A tutorial wave names a creep with no loadable prefab", stats.display_name)
+		return 0
 
-	for index in range(step.spawn_creep_count):
+	for index in range(count):
 		var creep: Creep = scene.instantiate() as Creep
 		if creep == null:
 			Log.err("Tutorial creep prefab root is not a Creep", stats.display_name)
-			return
+			return index
 		into.creeps_root().add_child(creep)
 		creep.spawn(sender, into, into.random_spawn_point(
 			stats.body_radius, MatchSession.match_rng()
 		))
-	_wave_spawned = true
-
-	Log.info("Tutorial wave", {
-		"creep": stats.display_name,
-		"count": step.spawn_creep_count,
-		"into": into.player_id,
-		"from": sender,
-	})
+	return count

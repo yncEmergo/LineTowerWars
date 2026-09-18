@@ -7,16 +7,21 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="a1_always"]
 [ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="a2_always"]
 [ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="a3_always"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_wall.tres" id="s0_01_wall"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_zigzag.tres" id="s1_02_zigzag"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_wave.tres" id="s2_03_wave"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_send.tres" id="s3_04_send"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_income.tres" id="s4_05_income"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_upgrade.tres" id="s5_06_upgrade"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_beat_rookie.tres" id="s6_07_beat_rookie"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_technology.tres" id="s7_08_technology"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_elemental.tres" id="s8_09_elemental"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_beat_veteran.tres" id="s9_10_beat_veteran"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprints_ability.tres" id="f0_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprints_ability.tres" id="f1_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/restore_blueprints_ability.tres" id="f2_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_builder.tres" id="s0_01_builder"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_first_towers.tres" id="s1_02_first_towers"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_first_waves.tres" id="s2_03_first_waves"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_zigzag.tres" id="s3_04_zigzag"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_bigger_wave.tres" id="s4_05_bigger_wave"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_send.tres" id="s5_06_send"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_income.tres" id="s6_07_income"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_upgrade.tres" id="s7_08_upgrade"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_beat_rookie.tres" id="s8_09_beat_rookie"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_technology.tres" id="s9_10_technology"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_elemental.tres" id="s10_11_elemental"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_beat_veteran.tres" id="s11_12_beat_veteran"]
 
 [resource]
 script = ExtResource("1_script")
@@ -27,4 +32,5 @@ rival_lives = 10
 rival_income_share = 1.0
 player_lives = 30
 always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always"), ExtResource("a3_always")])
-steps = Array[ExtResource("2_step")]([ExtResource("s0_01_wall"), ExtResource("s1_02_zigzag"), ExtResource("s2_03_wave"), ExtResource("s3_04_send"), ExtResource("s4_05_income"), ExtResource("s5_06_upgrade"), ExtResource("s6_07_beat_rookie"), ExtResource("s7_08_technology"), ExtResource("s8_09_elemental"), ExtResource("s9_10_beat_veteran")])
+forbidden_abilities = Array[ExtResource("3_ability")]([ExtResource("f0_forbidden"), ExtResource("f1_forbidden"), ExtResource("f2_forbidden")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_first_towers"), ExtResource("s2_03_first_waves"), ExtResource("s3_04_zigzag"), ExtResource("s4_05_bigger_wave"), ExtResource("s5_06_send"), ExtResource("s6_07_income"), ExtResource("s7_08_upgrade"), ExtResource("s8_09_beat_rookie"), ExtResource("s9_10_technology"), ExtResource("s10_11_elemental"), ExtResource("s11_12_beat_veteran")])
