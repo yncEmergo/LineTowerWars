@@ -13,10 +13,11 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | [unit_data.md](unit_data.md) | **The NUMBERS.** Every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements. |
 | [content.md](content.md) | **The PROCEDURE.** How a tower, creep, disc or ability is actually added or changed: which files it is made of, which of them are generated, how an id is picked, and what refuses bad content at boot. Carries no rules and no numbers. |
 | [singleplayer.md](singleplayer.md) | **The opponent AI.** What single player is, how the brain is shaped and why, why it cannot cheat, where difficulty actually comes from, and what it does not do yet. Carries no numbers - those are authored on the profiles. |
+| [strategy.md](strategy.md) | **How the game is played WELL.** The expert knowledge the rules do not state: the greedy/aggressive economy balance, how aggressive sends are composed and timed, how a maze evolves from the first blueprint to the endgame shape, which tower does which job, and what is still missing. Every claim is tagged with where it came from. Written so an agent can configure and train the computer opponent. |
+| [ai-rework.md](ai-rework.md) | **The next computer opponent, in full.** Why today's AI cannot be tuned into a good one, what the research on AoE2 and the rest of the field established, the layered design (senses, models, stance and budget, planners, hands), how it learns, how difficulty scales, and a phase-by-phase plan. A plan, not a record: what lands moves into `singleplayer.md`. |
 | [tutorial.md](tutorial.md) | **The teaching match.** How a lesson is made, what holds the world and what unsticks it, the three ways it says *where*, and how to change what it teaches without reading code. Carries no lesson wording. |
-| [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it, and the costs deliberately not paid yet. |
+| [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it, the costs deliberately not paid yet, and the little that is still open. |
 | [netcode-rework.md](netcode-rework.md) | **The next big netcode job, in full.** Why one lagging player currently freezes everybody, what shipping games do instead, exactly which lines are wrong, the design, and a phase-by-phase plan. Written to be executed by somebody with no prior context. Delete it when the phases have landed and `multiplayer.md` carries what they built. |
-| [multiplayer-todo.md](multiplayer-todo.md) | **What the networked build still needs**, in the order it is worth doing - and the long view on getting input latency below the raw ping between players on different continents. A plan, not a record. |
 | [audio.md](audio.md) | **The audio build.** The bus layout and the settings seam, AudioHub and the voice budget, how every button gets its sound without being authored, and where a sound is named. Architecture only; the levels and caps live in `audio_config.tres`. |
 | [building.md](building.md) | **Making a build.** How a playable client is exported and handed to a tester: the export templates a machine needs first, the one command, what the preset leaves out and why, and the rule that the server is deployed from the same commit. Procedure only. |
 | [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server, and how two PCs in different places reach each other to test. Controls only, never architecture — that is `multiplayer.md`. |
@@ -30,8 +31,11 @@ Ask what kind of thing it is, in this order:
 
 1. **A rule about how the game works** → into `game_rules.md`. Not a new file.
 2. **A number the design decides or copies from LTW 12.4a** → into `unit_data.md`. Not a new file.
-3. **Something about the networked build** → into `multiplayer.md` if it is BUILT, into
-   `multiplayer-todo.md` if it is not.
+   **Something about how the game is PLAYED well** — meta, maze shapes, send patterns, what a
+   tower is for in a maze → into `strategy.md`, tagged with where it came from. Not a rule and
+   not a stat.
+3. **Something about the networked build** → into `multiplayer.md`: what is built in §2, an
+   open question at the end of §1, open work and deliberate omissions in §13.
    **Something about how the computer opponent plays** → into `singleplayer.md`.
    **Something about how a lesson works** → into `tutorial.md`. Neither takes the WORDING of a
    lesson or the VALUE of an AI knob: those live in the `.tres` files they are authored in.

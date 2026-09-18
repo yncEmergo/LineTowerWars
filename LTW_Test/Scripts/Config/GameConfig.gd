@@ -66,11 +66,6 @@ extends Resource
 ## under that many creeps anyway. Anything above zero switches it back on for
 ## them, at that price. See game_rules.md.
 @export var creep_separation_limit: float = 0.0
-## The same ceiling for an ATTACKER creep, which is the one kind that still
-## crowds. There are few of them, they are commanded one at a time, and a stack
-## of them standing inside each other on one tower is something their owner
-## would be looking straight at.
-@export var attacker_separation_limit: float = 0.6
 ## How much room an ATTACKER creep keeps around itself, as a share of its own
 ## selection circle. Two attackers may never stand closer than the sum of the
 ## two, and this is the HARD half of crowding: the push above steers a creep
@@ -84,14 +79,20 @@ extends Resource
 ## Zero switches the hard half off entirely and leaves only the soft push,
 ## which is what every creep in the game had before.
 @export var attacker_personal_space_ratio: float = 0.5
-## How near its ordered point an ATTACKER has to be before the crowd already
-## standing on it counts as arriving, in player cells.
+## How far inside its own reach a commanded ATTACKER plans to end up, as a
+## share of that reach.
 ##
-## Without it a pack ordered onto one point never settles: the first creep
-## there holds the point and the rest slide round the outside looking for a way
-## in that the rule above will never give them. With it they stop where they
-## are blocked, which is how a pack piles up in any other RTS.
-@export var attacker_crowd_arrive_cells: float = 1.5
+## A chase is routed to the SET of cells it could swing from rather than to the
+## tower itself, and this is how far in from the edge of that set the route is
+## allowed to finish. Pulled in a little so a creep shoved off its cell by the
+## pack beside it does not fall straight back out of reach and pay for another
+## sweep of the grid.
+##
+## A share rather than a length, so it cannot go negative on a short-reach creep
+## and needs no second number per unit. 1.0 aims at the very edge of reach; the
+## nearer zero, the more the pack walks into the tower's face before stopping.
+@export_range(0.1, 1.0) var attacker_order_reach_ratio: float = 0.8
+
 ## Radius of EVERY creep aura, in player cells. One value for the whole game
 ## rather than a per creep one, so an aura is the same size whichever creep
 ## brings it and a player only ever has to learn the shape once. Auras also do
@@ -140,6 +141,65 @@ extends Resource
 ## TowerPassive.extra_target_range.
 @export var multishot_reach_cells: float = 3.0
 
+## Whether an ATTACKER that was SENT somewhere and got there keeps that spot,
+## rather than walking off to the nearest tower the moment the order finishes.
+##
+## **Off is the behaviour that made a formation invisible.** The march resumes on
+## the tick the move task completes, so a pack that had just arranged itself
+## immediately streamed away - the layout existed for about one tick and no
+## amount of care over where the spots were could survive it.
+##
+## Mildly balance relevant rather than purely a feel knob: an attacker standing
+## where it was put is an attacker not eating the maze, so a player who wants
+## them always chewing turns this off. It never affects an attacker marching on
+## its own, which has no spot of its own to keep and must still move on when the
+## tower it was hitting falls.
+@export var attacker_holds_position: bool = true
+## How far outside the ring of attack spots a creep that did not fit stands and
+## waits, in whole internal cells.
+##
+## A pack sent onto one tower only has room for as many attackers as the free
+## ground around it allows - the number is geometry, not a designed cap. The
+## ones left over are given a spot on a second ring this far out, walk to it and
+## stand facing the tower. Far enough to read as a reserve rather than as a
+## scrum, near enough to step in when a spot frees.
+@export_range(1, 6) var attacker_wait_ring_cells: int = 2
+
+@export_group("Formation")
+## Whether a group order lays its units out at all. Off is exactly the old
+## behaviour - every unit of a selection aimed at the one clicked point - and it
+## is here so the two can be measured against each other on ONE commit with one
+## variable flipped in place, which is the only honest way to compare them.
+@export var formation_enabled: bool = true
+## Extra breathing room between neighbouring spots in a formation, in whole
+## internal cells, on top of the one the units' own personal space already
+## demands.
+##
+## **The pitch itself is DERIVED, not authored**, and that is deliberate: it is
+## the largest personal space in the group rounded up to a whole cell, so two
+## parked neighbours can never overlap whichever creeps were selected. An
+## authored pitch was tried and was silently quantised to the grid, which made
+## the number inert and let the widest creep in the roster overlap itself. This
+## is the only part of it a person tunes, and zero is correct unless a block
+## reads too tight.
+@export_range(0, 4) var formation_extra_pitch_cells: int = 0
+## Roughly how many times wider than deep a formation block is. Above one it is
+## a line abreast, which is what a group walking into open ground should look
+## like; at one it is square.
+@export_range(0.5, 4.0) var formation_aspect: float = 1.6
+## How far a slot that landed inside a wall may be moved to find free ground, in
+## internal cells. Nothing free inside that range and the unit is given the raw
+## ordered point instead, which is exactly what it would have got with no
+## formation at all - so the fallback is never worse than the old behaviour.
+@export_range(0, 12) var formation_slot_search_cells: int = 4
+## How short the travel vector may get before a formation keeps the heading the
+## group already has instead of recomputing one.
+##
+## A click just outside a spread-out group gives a very short vector whose
+## DIRECTION flips between two near-identical clicks, which snaps the whole
+## block ninety degrees for no reason the player can see. Measured in player
+## cells against the distance from the group's centre to the click.
+@export_range(0.0, 8.0) var formation_min_travel_cells: float = 1.5
 @export_group("Buildings")
 ## Seconds a building takes to go up, and the same figure an UPGRADE takes.
 ##
@@ -327,6 +387,20 @@ extends Resource
 ## Ceiling on a player's living sent creeps, as the sum of their population
 ## costs. Displayed today; nothing enforces it yet.
 @export var population_cap: int = 100
+## Seconds the world is held completely still at the very start of a match,
+## before anything at all can happen.
+##
+## THE GRACE PERIOD, the user's call on 2026-09-15 after playtest 7 opened laggy
+## for everybody. Nothing moves, no order is accepted and no clock runs - the
+## match clock is given back what the hold took, so it costs nobody a start
+## delay. What it buys is every machine reaching the first real turn together:
+## the seal clock has settled, the peer that loaded last is no longer catching
+## up, and the players are looking at their lane rather than at a loading screen.
+##
+## It comes BEFORE the technology opening, so a draft's own deadline starts only
+## once this is over, and a tutorial skips it. Measured in SIMULATION seconds and
+## counted by the turn stream, like the draft. See StartingTech. 0 removes it.
+@export var start_grace_seconds: float = 5.0
 ## Seconds of preparation before the match's timings start counting.
 ##
 ## THE OPENING. The source game starts its clock at -0:20 and the first Sheep
@@ -362,6 +436,25 @@ extends Resource
 ## raised to it the moment it starts, so a match that is being lost slowly can
 ## still afford what the last tier costs. 0 switches the raise off.
 @export var sudden_death_income_floor: int = 1000000
+## Lives every living player is stripped of on each income tick while Sudden
+## Death runs. 0 switches the drain off.
+##
+## THE ONE PLACE A LIFE LEAVES THE MATCH. Every other life is STOLEN - a leak
+## moves one from the defender to the attacker and the pool never shrinks - so
+## two players who both hold their mazes have no way of ending the match
+## between them. This is that way out, and it is what Sudden Death is FOR: it
+## is paid by everybody at once, it goes to nobody, and it shortens every
+## remaining runway together rather than favouring whoever is ahead.
+##
+## It can never eliminate anybody. A player is held at one life and only a
+## LEAK can take that last one, so the match is still DECIDED by a creep
+## reaching the end of a maze rather than by the clock running out.
+@export var sudden_death_life_drain: int = 1
+## The same drain once only TWO players are left, which is larger because there
+## is nobody else for it to work on. A duel is the shape Sudden Death exists to
+## end, and one life each would take twice as long to end it. 0 switches the
+## drain off for a duel while leaving it running for a crowd.
+@export var sudden_death_life_drain_duel: int = 2
 ## Gold a player is handed when the ring closing gives them a NEW ATTACKER, as
 ## a multiple of that attacker's current income. 0 switches the rule off.
 ##

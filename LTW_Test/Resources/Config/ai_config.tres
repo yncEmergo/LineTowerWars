@@ -7,7 +7,9 @@
 [ext_resource type="Resource" path="res://Resources/Config/Ai/ai_hard.tres" id="5_ai_hard"]
 [ext_resource type="Resource" path="res://Resources/Config/Ai/ai_insane.tres" id="6_ai_insane"]
 [ext_resource type="Resource" path="res://Resources/Config/Ai/ai_tutorial.tres" id="7_ai_tutorial"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_exploit_all_in.tres" id="8_ai_all_in"]
+[ext_resource type="Resource" path="res://Resources/Config/Ai/ai_exploit_turtle.tres" id="9_ai_turtle"]
 
 [resource]
 script = ExtResource("1_ai_config")
-profiles = Array[ExtResource("2_ai_profile")]([ExtResource("3_ai_easy"), ExtResource("4_ai_normal"), ExtResource("5_ai_hard"), ExtResource("6_ai_insane"), ExtResource("7_ai_tutorial")])
+profiles = Array[ExtResource("2_ai_profile")]([ExtResource("3_ai_easy"), ExtResource("4_ai_normal"), ExtResource("5_ai_hard"), ExtResource("6_ai_insane"), ExtResource("7_ai_tutorial"), ExtResource("8_ai_all_in"), ExtResource("9_ai_turtle")])

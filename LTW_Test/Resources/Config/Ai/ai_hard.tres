@@ -5,13 +5,13 @@
 [resource]
 script = ExtResource("1_ai_profile")
 display_name = "Hard"
-description = "Builds a maze somebody actually played, takes an Ultimate at the start and keeps its income moving."
+description = "Mazes tightly, takes a named Ultimate at the start and turns part of its maze elemental."
 decision_seconds = 0.5
 distraction_chance = 0.0
 builds_per_pass = 2
 maze_layout_path = ""
 zigzag_rows = 5
-zigzag_corridor_cells = 1
+zigzag_corridor_internal_cells = 1
 base_tower_path = ""
 send_floor_gold = 35
 build_floor_gold = 25

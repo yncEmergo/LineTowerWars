@@ -80,12 +80,10 @@ func ask(title: String, message: String, on_confirm: Callable,
 	if _cancel_button != null:
 		_cancel_button.text = cancel_text
 
+	# Neither answer is armed by a keystroke, here least of all: the box is only
+	# ever opened for something that cannot be undone, so there is nothing for
+	# leaning on Enter to do. Both answers are a click. See FocusPolicy.
 	show()
-	# Cancel takes the focus, not Confirm. The box is only ever opened for
-	# something that cannot be undone, so leaning on Enter or Space should do
-	# the harmless thing.
-	if _cancel_button != null:
-		_cancel_button.grab_focus()
 
 
 ## Whether a question is on screen. Asked by anything that wants to know the

@@ -17,6 +17,13 @@ extends Node
 ##           have all chosen** - or until the clock runs out and one is chosen
 ##           for whoever has not.
 ##
+## **And in front of all three, the GRACE PERIOD**: the world held still for a
+## few seconds before anything at all can happen, so every machine reaches the
+## first real turn together - the user's call after playtest 7. It lives here
+## rather than in a class of its own because it is exactly this kind of thing, a
+## hold every peer has to release on the same turn, and because the technology
+## openings have to wait for it, which one state machine says in one line.
+##
 ## A node in the match scene next to TechManager, reached through References,
 ## and NOT an autoload: it receives no `@rpc` of its own. A draft pick is an
 ## ordinary player order and travels the road every other one takes - through
@@ -66,6 +73,8 @@ enum Phase {
 	NONE,
 	DRAFT,
 	REVEAL,
+	## The few seconds before anything can happen. See GameConfig.start_grace_seconds.
+	GRACE,
 }
 
 var _phase: Phase = Phase.NONE
@@ -77,6 +86,8 @@ var _rolled: TechDefinition = null
 ## Simulation ticks left on the phase. See the note at the top about why this is
 ## ticks rather than seconds.
 var _ticks_left: int = 0
+## The setup the technology opening is dealt from once the grace period ends.
+var _setup: MatchSetup = null
 
 var _session: MatchSession:
 	get:
@@ -101,14 +112,25 @@ func _ready() -> void:
 	Lockstep.turn_ready.connect(_on_turn_ready)
 
 
-## Deals the opening. Called by Main once the world is built and the technology
-## registry exists, on every machine - a replication client reaches the holding
-## branches and nothing else, because everything that grants anything is the
-## authority's.
+## Deals the opening, grace period first. Called by Main once the world is built
+## and the technology registry exists, on every machine - a replication client
+## reaches the holding branches and nothing else, because everything that grants
+## anything is the authority's.
 func apply(setup: MatchSetup) -> void:
 	if setup == null || setup.settings == null:
 		return
+	_setup = setup
 
+	# A tutorial is a lesson, and the lesson says for itself when the world moves.
+	# A countdown in front of it would only make the first instruction wait.
+	if setup.mode != MatchSetup.Mode.TUTORIAL && _grace_seconds() > 0.0:
+		_begin_grace()
+		return
+	_deal(setup)
+
+
+## The technology opening itself, once nothing is in front of it.
+func _deal(setup: MatchSetup) -> void:
 	match setup.settings.tech_mode:
 		MatchSettings.TechMode.RANDOM:
 			_begin_reveal(setup)
@@ -140,6 +162,12 @@ func is_revealing() -> bool:
 	return _phase == Phase.REVEAL
 
 
+## Whether the match is in its grace period, counting down to the first moment
+## anything can happen.
+func is_in_grace() -> bool:
+	return _phase == Phase.GRACE
+
+
 ## The Ultimates on offer, in the order they are drawn. Empty unless a draft is
 ## running, and briefly empty on a replication client that is held and has not
 ## had its first snapshot yet.
@@ -158,7 +186,15 @@ func needs_local_pick() -> bool:
 	var session: MatchSession = _session
 	if session == null:
 		return false
-	return _pending.has(session.local_slot())
+	return needs_pick(session.local_slot())
+
+
+## Whether one named slot is still to choose.
+##
+## Asked by a computer opponent, which has to pick like anybody else or the
+## whole match waits out the timer for it - see AiPlayer._consider_draft.
+func needs_pick(slot: int) -> bool:
+	return _pending.has(slot)
 
 
 ## How many players the match is still waiting on, for the line the draft screen
@@ -230,10 +266,13 @@ func _advance(ticks: int) -> void:
 			opening_changed.emit()
 		return
 
-	if _phase == Phase.DRAFT:
-		_force_remaining_picks()
-	else:
-		_finish_reveal()
+	match _phase:
+		Phase.DRAFT:
+			_force_remaining_picks()
+		Phase.REVEAL:
+			_finish_reveal()
+		Phase.GRACE:
+			_finish_grace()
 
 
 func _whole_seconds(ticks: int) -> int:
@@ -246,6 +285,34 @@ func _ticks_for(seconds: float) -> int:
 	if seconds <= 0.0:
 		return 0
 	return maxi(1, ceili(seconds / MatchSession.tick_seconds()))
+
+
+# --- the grace period ------------------------------------------------------
+
+## Holds the world for the grace period. Every machine reaches this from the same
+## setup, so a replication client holds too and is told when it ends.
+func _begin_grace() -> void:
+	_phase = Phase.GRACE
+	_ticks_left = _ticks_for(_grace_seconds())
+	Log.info("Grace period before the match begins", {
+		"seconds": snappedf(_grace_seconds(), 0.1),
+	})
+	_settle()
+
+
+## The end of the grace period. The technology opening starts on this turn, on
+## every peer at once, or the match simply begins. Authority only, like every
+## other end of a phase: `_advance` is the only road here.
+func _finish_grace() -> void:
+	_phase = Phase.NONE
+	if _setup != null:
+		_deal(_setup)
+	_settle()
+
+
+func _grace_seconds() -> float:
+	var config: GameConfig = _config
+	return 0.0 if config == null else maxf(0.0, config.start_grace_seconds)
 
 
 # --- RANDOM: one Ultimate for the whole match ------------------------------
@@ -528,7 +595,7 @@ func set_replicated_opening(record: PackedInt32Array) -> void:
 	var registry: TechRegistry = _registry()
 
 	if record.size() >= 4:
-		phase = clampi(record[0], 0, int(Phase.REVEAL)) as Phase
+		phase = clampi(record[0], 0, int(Phase.GRACE)) as Phase
 		ticks = maxi(0, record[1])
 		if registry != null:
 			rolled = registry.tech_for(record[2])

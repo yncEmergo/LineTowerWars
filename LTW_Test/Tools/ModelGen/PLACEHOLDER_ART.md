@@ -20,7 +20,7 @@ wrong.
 run it. This is the method.
 
 **The source game's own towers are in
-`ReferenceFilesFromOtherProjects/TowerVisualReferences/`**, one screenshot per
+`ReferencesForClaude/TowerVisualReferences/`**, one screenshot per
 element, and that folder's own README says which tower is which cell of which
 sheet. They are what a builder here should be argued against — not copied, since
 these are primitives and those are finished art, but a tower whose reference is a

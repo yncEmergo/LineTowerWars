@@ -315,6 +315,26 @@ def blueprint_save(mask):
     mask.erase(mask.polygon, [(32.0, 49.0), (18.0, 31.0), (46.0, 31.0)])
 
 
+# -- HUD state marks ------------------------------------------------------
+#
+# Not a command card action: a mark laid OVER a square to say what state it
+# is in. Same rules, same canvas, different prefix - `state_*` rather than
+# `ability_*` - because nothing points a UnitAbility at one of these.
+
+
+def researched(mask):
+    """A tick. Says a technology in the Research Center is already bought.
+
+    A mark rather than an object, which the style note above argues against.
+    ability_cancel is an X on exactly the same terms and for the same reason:
+    what "done" looks like is a tick everywhere there has ever been a list,
+    and an object meaning it would be a puzzle in a corner this small.
+
+    Drawn fat - well over STROKE - because it is shown at a fraction of the
+    size the card icons are, sitting in one corner of a 36 pixel square.
+    """
+    mask.polyline([(11.0, 33.0), (26.0, 48.0), (53.0, 15.0)], 11.0)
+
 ## Every icon this tool writes: file stem to the function that draws it.
 ##
 ## The stem is what the .tres names, so renaming one here is a content edit
@@ -341,6 +361,7 @@ GLYPHS = {
     "ability_show_ranges": show_ranges,
     "ability_blueprint": blueprint,
     "ability_blueprint_save": blueprint_save,
+    "state_researched": researched,
 }
 
 

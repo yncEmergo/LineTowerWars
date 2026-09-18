@@ -56,6 +56,9 @@ S_DISC_REVERT = "res://Scripts/Abilities/DiscRevertAbility.gd"
 S_DISC = "res://Scripts/Units/Disc.gd"
 
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
+# The inactive disc spends Sell's usual square on a morph, exactly as the
+# Elemental Core does, and takes the same way out of it.
+A_SELL_MORPH_CARD = ec.A_SELL_MORPH_CARD
 A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
@@ -93,10 +96,7 @@ PASSIVE_SLOT = ec.PASSIVE_SLOT
 UPGRADE_SLOT = ec.BRANCH_SLOTS[0]
 
 # The square the way back down asks for, shared with Return to Core so that the
-# key which undoes a choice is one key across the whole game. It does not
-# usually GET this one - Sell claims it first, off the grid, and pushes this
-# along to the next free square - and it is authored as the square it wants
-# rather than the one it lands on for the reason element_content gives.
+# key which undoes a choice is one key across the whole game.
 REVERT_SLOT = ec.RETURN_SLOT
 
 BY_KEY = dr.by_key()
@@ -273,9 +273,10 @@ def _card(s, row):
     replace.
 
     THE INACTIVE DISC IS THE EXCEPTION and is the reason this is a branch. It
-    carries all ten morphs directly, which with Sell and Show Ranges fills the
-    card exactly - so it has no room for anything else and needs none: it does
-    nothing, so it has no effect to show and nothing to go back to.
+    carries all ten morphs directly, which with Sell all but fills the card -
+    so it has no room for anything else and needs none: it does nothing, so it
+    has no effect to show, no range to draw and nothing to go back to. Its Sell
+    moves off the square the water morph takes, as the Core's does.
     """
     card = []
     if row["passive"] is not None:
@@ -289,6 +290,10 @@ def _card(s, row):
     # disc, which is already at the bottom.
     if row["tier"] > 0:
         card.append(s.ext("Resource", A_REVERT))
+
+    if row["tier"] == 0:
+        card.append(s.ext("Resource", A_SELL_MORPH_CARD))
+        return card
 
     card.append(s.ext("Resource", A_SELL))
     card.append(s.ext("Resource", A_SHOW_RANGES))

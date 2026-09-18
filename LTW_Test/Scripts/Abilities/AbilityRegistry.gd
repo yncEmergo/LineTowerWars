@@ -79,6 +79,14 @@ func count() -> int:
 	return _by_id.size()
 
 
+## Every id this build contains, ascending, so anything written from it reads
+## the same on every machine. Read by MatchRecorder for its name table.
+func ids() -> PackedInt32Array:
+	var result: PackedInt32Array = PackedInt32Array(_by_id.keys())
+	result.sort()
+	return result
+
+
 ## Whether every ability found has an id of its own. Reported at boot alongside
 ## the other content checks, because an unassigned id is invisible until the
 ## first time somebody presses that button over a network.

@@ -4,6 +4,7 @@
 
 [node name="SummaryHighlightRow" type="HBoxContainer" node_paths=PackedStringArray("_title_label", "_name_label", "_value_label")]
 theme_override_constants/separation = 10
+focus_behavior_recursive = 1
 script = ExtResource("1_highlight_row")
 _title_label = NodePath("TitleLabel")
 _name_label = NodePath("NameLabel")

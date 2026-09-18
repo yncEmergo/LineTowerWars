@@ -1,0 +1,9 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[godot_ai game_helper] registered mcp capture (debugger active=false, logger=true)
+[LobbyRoom:71]: [WARN] LobbyRoom opened with no lobby, showing a stand-in
+WARNING: [LobbyRoom:71]: LobbyRoom opened with no lobby, showing a stand-in
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] _ready (res://Scripts/UI/Menus/LobbyRoom.gd:71)

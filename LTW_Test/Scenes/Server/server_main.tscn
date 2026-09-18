@@ -19,6 +19,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_menu_theme")
+focus_behavior_recursive = 1
 script = ExtResource("1_server_main")
 _title_label = NodePath("Margin/Column/Header/TitleLabel")
 _status_label = NodePath("Margin/Column/StatusLabel")

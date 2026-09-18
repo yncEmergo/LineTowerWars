@@ -52,6 +52,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_row_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_row_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_row_pressed")
 toggle_mode = true
+focus_behavior_recursive = 1
 script = ExtResource("1_entry")
 _name_label = NodePath("Row/NameLabel")
 _host_label = NodePath("Row/HostLabel")

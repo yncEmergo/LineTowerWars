@@ -10,6 +10,17 @@
 - Player counts above four are still unproven, and the per-unit simulation cost is
   what limits them. See Known weaknesses
 
+# Before starting any task
+- **Only this file is loaded automatically.** Nothing in `Docs/` is read unless
+  you open it, and most of what binds a particular task lives there - the game's
+  rules, the procedure for adding content, how the netcode is built, what an
+  earlier investigation already measured or ruled out
+- so before planning or changing anything, open `Docs/README.md`, the index of
+  which document answers what, and read the ones covering the area the task
+  touches. A task that crosses two areas reads both
+- and before investigating a bug or a cost, search `Docs/Findings/` for the
+  subject. It may already have been measured, or already been ruled out
+
 # Hard rules
 - you're here to implement the game not design it
 - do NOT alter the rules unless on your own without asking
@@ -380,6 +391,55 @@
     Docs/Findings/2026-09-08-shipped-blueprints-vanish-in-an-export.md, which
     has the full table and the worked reproduction
 
+- **THE UI HAS NO KEYBOARD FOCUS, AND A NEW UI SCENE HAS TO SAY SO.** Tab moves
+  nothing, Enter presses nothing, and a clicked button keeps no focus ring. A
+  control is worked with the MOUSE or with its own hotkey, and those are the
+  only two ways in. Every menu and HUD scene carries
+  `focus_behavior_recursive = 1` on its ROOT, which turns focus off for that
+  node and every Control under it - including the ones instanced into it at
+  runtime, and including the button somebody adds to it next year. One line per
+  SCENE rather than one per button, which is the same trade ButtonSoundBinder
+  made for the click sounds
+  - **the chain BREAKS at a non-Control node**, measured on 4.7.2: a plain Node
+    or a CanvasLayer between two Controls stops it dead. So a scene whose root
+    is a CanvasLayer carries the line on each of its Control children instead.
+    match_hud.tscn is the worked example
+  - a prefab whose root is itself a Button carries its own line, so it is
+    covered wherever it is instanced
+  - TYPING is the one thing that cannot work without focus, so a LineEdit or a
+    SpinBox opts back IN with `focus_behavior_recursive = 2` and
+    `focus_mode = 1` - a click reaches it and nothing else can. A SpinBox also
+    needs `FocusPolicy.click_only()`, because its editor is an INTERNAL child
+    the .tscn cannot name and `focus_mode` does not reach it
+  - so `grab_focus()` belongs to those two and nowhere else. On a button it
+    does not fail, it warns, which is a line in a log nobody is reading
+  - FocusPolicy.gd is where the whole rule is written down
+
+- **`change_scene_to_file` LOADS THE SCENE INSIDE THE PRESS, so a loading screen
+  cannot report its own loading.** The load is synchronous and happens before a
+  pixel of the new screen exists, so what a player sees after clicking Start is
+  the OLD screen holding still - and the screen that arrives late is the one
+  that would have said "loading". It is the only load in the game paid with
+  nothing at all on screen
+  - warm on a dev machine that is tens of milliseconds and invisible, which is
+    why it survives every local test. It is not invisible everywhere:
+    `ContentWarmer` measured a tester at a hundred times this machine's
+    per-asset cost, most likely a first read being scanned
+  - **the worked example is the main menu's Test Scene button**, which called
+    `to_game` directly and so loaded the whole 3D game in the press: one frozen
+    frame of about a second with the menu still on screen and no loading screen
+    anywhere in the path. A button that opens a MATCH goes through the loading
+    screen, always - that is also where the content warm-up lives, so a shortcut
+    that skips it gets playtest 1's freezes back
+  - so a screen a BUTTON can open is asked for ahead of time with
+    `SceneUtil.prewarm`, which loads it on a worker thread and holds it for the
+    process. `change_scene` then swaps a scene already in memory. `Boot` does
+    this for every menu screen, and deliberately NOT for the game scene - that
+    one is what the loading screen exists to load with a bar on screen
+  - the honest measurement of it is press-to-GLASS, from `SceneTree.node_added`
+    to `RenderingServer.frame_post_draw`, not a log line in `_ready`. See
+    Docs/Findings/2026-09-16-the-press-that-opens-the-loading-screen.md
+
 # Testing
 - Verify cheaply, then hand the rest over
   - boot the project once to confirm it loads with no errors
@@ -519,6 +579,19 @@
       `drops_seen`, `echo`, `sealed_held` and the bench's nodes-disabled column
       all exist because a run that never reached the code under test looks
       exactly like one that passed
+  - **Scripts/Dev/FormationProbe.gd EXISTS and is kept**, with
+    Scenes/Dev/formation_probe.tscn, which is the one thing in Scenes/Dev that
+    does not get deleted. It boots a real server match, spawns real attacker
+    creeps and sends a real order through Commands, then prints what each creep
+    was ACTUALLY told and where it ended up
+    - it exists because a formation was shipped having been proven only as
+      arithmetic, and "barely improved" and "never ran" are indistinguishable
+      from outside. `targets_distinct`, `ever_held` and `ring_cells_free` are
+      there to tell them apart
+    - `mode=ground` or `mode=tower`, `creep=<name>`, `creeps=<n>`. Run it
+      against PHOENIX as well as the default: it has the widest selection
+      circle in the roster and is the creep every spacing bug shows up on
+      first
   - **Scripts/Dev/ShaderProbe.gd EXISTS and is kept too**, for the one cost
     nothing else here can see: a shader compiled on its FIRST DRAW. The GL
     renderer writes every variant it compiles to
@@ -601,6 +674,10 @@ art at all so far - so this is the placement rule, not a description of the tree
     Move, Stop, Attack, Sell, Build, Cancel - into 2DArt/UI/Icons. Same shape as
     ModelGen: stdlib Python, run from the project root, output checked in.
     Tools/IconGen/README.md has the style rules a new glyph has to meet
+  - Tools/MazeView draws any saved maze (a TowerLayout .tres) as text, with an
+    approximate creep route and its length. Read a blueprint with it rather than
+    guessing from the cell arrays, and never paste its drawing into a .md - the
+    file changes, the paste does not
   - an ability that ModelGen owns takes its icon through action_icon_path() in
     element_content.py or tower_content.py. Wiring one by hand into the .tres
     instead is silently thrown away by the next ModelGen run
@@ -661,6 +738,20 @@ art at all so far - so this is the placement rule, not a description of the tree
       holding a space arrives split in two. Both of this project's hold one -
       the project path ("LTW Standalone") and the preset name ("Windows
       Desktop") - so the fix for the first trap walks straight into the second
+    - and **`-NoNewWindow` HANDS THE CHILD THIS CONSOLE**, so what it prints
+      goes to the terminal and never enters the CALLER'S pipeline. A script
+      that runs another one this way and reads its output -
+      `$out = & .\Tools\run_ai_bench.ps1 ... 2>&1 | Out-String` - captures an
+      EMPTY STRING while the run prints its results perfectly on screen
+      - it cost a whole twelve-match AI matrix, most of an hour: every match
+        finished and printed its result line, and the runner reported that not
+        one of them had. The two failures are indistinguishable from the
+        caller, which is the same shape as the positive-control rule above -
+        "no output" and "output I cannot see" read identically
+      - a caller that has to READ the output passes
+        `-RedirectStandardOutput <file>` and reads the FILE.
+        `Tools/run_ai_bench.ps1 -LogFile` and `run_ai_matrix.ps1` are the
+        worked example
     - the Bash tool waits correctly, which is what makes this specific to the
       `.ps1` scripts and invisible when the same command is run by hand
     - `Tools/build_client.ps1` is the worked example, and it also checks the
@@ -680,15 +771,20 @@ art at all so far - so this is the placement rule, not a description of the tree
   copied. Once a unit is implemented its .tres is the authority and unit_data.md
   is the mirror - change both in the same commit, until the generator in its
   section 8 makes that automatic.
+- strategy.md is how the game is PLAYED WELL: the expert knowledge the rules do not state
+  (economy balance, sending, maze evolution and the endgame shape, tower roles). Read it
+  before touching the computer opponent or arguing about what a tower or creep is for.
+  Tag every addition with its source; an [expert] line outranks a [derived] one.
+  ai-rework.md is the plan for the next opponent AI built on it
 - content.md is the PROCEDURE for adding or changing a tower, creep, disc or
   ability: which files one is made of, which of them ModelGen generates and so
   must never be hand-edited, how to pick the next id, and what refuses bad
   content at boot. Read it before authoring content; it carries no rules and no
   numbers, only the steps.
-- multiplayer.md is what the networked build is and where each part of it lives.
-  multiplayer-todo.md is what it still NEEDS, including the long view on getting input
-  latency below the ping between players on different continents. Keep the two apart:
-  built goes in the first, planned in the second.
+- multiplayer.md is what the networked build is and where each part of it lives -
+  and, in a short list at its end, what is still open. There is no separate plan
+  document any more: open work that will not fit in a few lines is a Finding or a
+  plan of its own, deleted when it lands.
 - server.md is how to start, stop and aim the dedicated server. Controls only, not
   architecture. KEEP IT UPDATED whenever the server gains or loses a control.
 - NEVER write a COUNT or a live value into a .md file. No "26 abilities", no
@@ -743,6 +839,10 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   PlayerArea.gd by a lot. Intended fix for it: extract the grid half - occupancy,
   cell maths, flow field - into an AreaGrid it owns. Touches Building, Builder,
   BuildGrid, CommandController. Not started
+  - it went further over when attack orders gained a ring of spots: reach_cells
+    and assign_reach_cells are both grid questions and both belong in that
+    AreaGrid when it exists. They are there rather than on Formation because
+    the area owns the occupancy grid and the sweep buffer they read
 - Creep.gd gained three more public methods with tier 2's creep mana - the pool
   itself, its second-resource reading and the per-creep clock a timed passive
   advances. The pool is already an object the creep owns (CreepMana) rather
@@ -796,9 +896,14 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   Creep._refresh_aura. One spatial hash fixes both. TargetFinder is by far the
   worse of them and is the largest single cost in a loaded tick - a tower with
   nothing in range rescans the whole lane every tick and finds nothing again
-  - creep separation was the third, and is no longer paid: it now runs for
-    ATTACKER creeps only and is skipped without a call for everything else.
-    Switching it back on for the whole roster puts it straight back
+  - creep separation was the third and is no longer paid AT ALL. It is off for
+    the ordinary roster and GONE for attackers: an attacker takes a spot
+    nothing else was offered rather than pushing its way into one, so a
+    commanded attacker now performs zero neighbour iterations per tick where
+    it used to pay up to three whole walks over the lane's creep list. The
+    ordinary roster's switch survives as a config value and putting it back
+    on puts the cost straight back. See
+    Findings/2026-09-17-the-formation-that-existed-for-one-tick.md
 - **The per-unit simulation cost is what limits player count.** Every client
   simulates every lane under lockstep, so it is a client problem as well as a
   server one. MEASURED 2026-09-05 on client hardware: a 1v1 has better than 2x

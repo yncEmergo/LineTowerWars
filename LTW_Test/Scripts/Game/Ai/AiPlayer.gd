@@ -7,17 +7,19 @@ extends Node
 ## planner**, and that is the shape Age of Empires II's AI has for a reason
 ## worth copying: every rule is a question about the world right now and an
 ## order if the answer is yes, so a new behaviour is a new rule rather than a
-## new state somebody has to reach from everywhere else. The rules are tried in
-## PRIORITY order and the pass stops at the first one that spends gold, which is
-## the whole of its economy: it buys the most important thing it can afford and
-## comes back on the next beat.
+## new state somebody has to reach from everywhere else.
 ##
-## The rules, hardest first:
+## The rules, in the order the pass runs them:
 ##
-##   1. OPENING. Spend the free research on an Ultimate, once.
-##   2. MAZE. Put up the next tower in the plan.
-##   3. UPGRADE. Raise a tower that is already standing.
-##   4. SEND. Buy creeps for the player it is attacking.
+##   1. OPENING. Spend the free research on an Ultimate, or pick one when the
+##      match is DRAFTING. Once, and it returns before anything else can spend.
+##   2. SEND. Buy creeps for the player it is attacking.
+##   3. MAZE. Put up the next tower in the plan.
+##   4. UPGRADE. Raise a tower that is already standing.
+##
+## **Every rule after the opening gets its turn on every pass.** Stopping at the
+## first that spent was the first design, and it starved upgrades for a whole
+## match - see _think.
 ##
 ## What decides how much goes to each is a FLOOR per rule rather than the order
 ## alone: every rule refuses to spend below its own, so gold filling up switches
@@ -33,12 +35,25 @@ extends Node
 ## so an AI in a match that is held still for a draft does not get a free pass
 ## while everybody is waiting.
 
-## How far the builder may be from a spot before the AI bothers to queue rather
-## than replace - in other words, always. Kept as a named constant because the
-## reason is worth stating: the builder walks, and an AI that replaced its order
-## every beat would have a builder that never arrives anywhere.
+## Whether a second build in one pass is CHAINED behind the first rather than
+## replacing it - in other words, always. Kept as a named constant because the
+## reason is worth stating: the builder walks, and an AI that replaced its own
+## order every beat would have a builder that never arrives anywhere.
 const CHAIN_BUILDS: bool = true
 
+## This brain's OWN random stream, seeded from the match seed and its slot.
+##
+## **Never MatchSession.match_rng(), and that is not a style preference.** The
+## match stream is shared with every damage roll, every crit and the draft's own
+## auto-pick, and WorldChecksum hashes its state. A brain rolling on it moves
+## every later number in the match, so two profiles that skip a different number
+## of passes cannot be compared on one seed, a replay injecting the recorded AI
+## orders without running the brain would diverge at the first roll, and a
+## networked AI seat run on one peer would desync every other peer.
+##
+## Seeded rather than left to chance, so the bench stays reproducible: the same
+## setup and the same slot make the same decisions.
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _slot: int = 0
 var _profile: AiProfile = null
 var _plan: AiMazePlan = null
@@ -78,6 +93,12 @@ func begin(slot: int, profile: AiProfile) -> void:
 	if area == null || profile == null:
 		Log.err("An AI was started with no area or no profile", {"slot": slot})
 		return
+
+	var session: MatchSession = References.match_session
+	var seed_base: int = 0 if session == null || session.setup() == null 			else session.setup().rng_seed
+	# Mixed rather than added, so two slots of one match cannot line up with two
+	# slots of a match one seed along.
+	_rng.seed = hash([seed_base, slot])
 
 	_plan = AiMazePlan.for_profile(profile, area)
 	# Spread the first pass across the AIs by slot, so four opponents in one
@@ -131,13 +152,12 @@ func _physics_process(_engine_delta: float) -> void:
 	# Sloppiness, and it is the whole of it: a pass that did not happen. See
 	# AiProfile.distraction_chance for why it is not a worse decision instead.
 	if _profile.distraction_chance > 0.0 \
-			&& MatchSession.match_rng().randf() < _profile.distraction_chance:
+			&& _rng.randf() < _profile.distraction_chance:
 		return
 	_think()
 
 
-## One pass of the rules, in priority order, stopping at the first one that
-## spent anything.
+## One pass of the rules, in priority order.
 ##
 ## **SENDING COMES BEFORE BUILDING, and that is not the obvious order.** It is
 ## there because of what the two rules cost: a send fires on a beat and a build
@@ -151,6 +171,8 @@ func _physics_process(_engine_delta: float) -> void:
 ## sent at all until there is a maze standing - see
 ## AiProfile.min_towers_before_sending.
 func _think() -> void:
+	if _consider_draft():
+		return
 	if _consider_opening():
 		return
 	# **Every rule gets its turn, rather than the pass stopping at the first that
@@ -173,7 +195,43 @@ func _think() -> void:
 	_consider_upgrade()
 
 
-## RULE 1. The opening: the free research spent on one Ultimate.
+## RULE 1a. The DRAFT: take one of the three Ultimates on offer.
+##
+## **A draft holds the whole world until everybody has picked** (game_rules.md,
+## Match settings), so a seat that never chooses makes every person in the match
+## wait out the timer and then be handed a random option by
+## StartingTech._force_remaining_picks. That is what this rule is for: the AI
+## picks like a player, and the match gets on with it.
+##
+## It takes the profile's own Ultimate when the draft happens to offer it, and
+## otherwise rolls on its OWN stream rather than the match's - see _rng. A
+## profile that names nothing is a profile with no preference, and rolls too.
+##
+## Nothing is latched. The world is held while a draft runs, so this rule stops
+## being true the moment the pick lands.
+func _consider_draft() -> bool:
+	var draft: StartingTech = References.starting_tech
+	if draft == null || !draft.is_drafting() || !draft.needs_pick(_slot):
+		return false
+
+	var offered: Array[TechDefinition] = draft.options()
+	if offered.is_empty():
+		return false
+
+	var wanted: int = _profile.ultimate_tech_id
+	for tech in offered:
+		if tech != null && tech.tech_id == wanted:
+			AiHand.order_draft_pick(_slot, tech.tech_id)
+			return true
+
+	var rolled: TechDefinition = offered[_rng.randi_range(0, offered.size() - 1)]
+	if rolled == null:
+		return false
+	AiHand.order_draft_pick(_slot, rolled.tech_id)
+	return true
+
+
+## RULE 1b. The opening: the free research spent on one Ultimate.
 ##
 ## Once, and only while the allowance still covers a whole one - which is what
 ## TechManager refuses it on afterwards anyway, so the latch here is about not
@@ -502,14 +560,14 @@ func _towers_front_to_back() -> Array[Building]:
 ## rule that fires the moment it can afford anything would spend every coin on
 ## the cheapest creep in the game for the whole match.
 ##
-## **What it buys is the creep with the best INCOME FOR THE GOLD, not the most
-## expensive one it can afford**, and that swap is worth a tier of difficulty on
-## its own. Every creep has an implicit ratio of cost to income granted and the
-## ratio gets WORSE as creeps get stronger (game_rules.md, Economy) - so an AI
-## that always bought the biggest thing on the card was paying a premium for
-## creeps the other player's maze killed anyway, while an AI buying cheap
-## efficient ones out-earned it. Measured: the difficulty that bought big lost
-## to the one below it, twice.
+## **What it buys is the BIGGEST creep that is efficient ENOUGH**, where enough
+## is AiProfile.send_efficiency as a share of the best ratio on offer. Every
+## creep has an implicit ratio of cost to income granted and the ratio gets WORSE
+## as creeps get stronger (game_rules.md, Economy), so that dial spans two
+## measured failures: buying the biggest thing on the card pays a premium for
+## creeps the other maze kills anyway, and buying the most efficient thing earns
+## beautifully and threatens nobody. Every shipped profile sits near the biggest
+## end - see AiProfile.send_efficiency and Findings/2026-09-12.
 ##
 ## What it does NOT do is choose a creep for what the other player has BUILT,
 ## which is where a harder AI has to go next; see Docs/singleplayer.md.

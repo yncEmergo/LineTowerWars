@@ -13,7 +13,8 @@ extends UnitAbility
 ## two sets of .tres are authored to, and content.md says so.
 
 @export_group("Blueprints")
-## The nine slots, in card order. Every entry should be a SaveBlueprintAbility.
+## The nine slots, in card order, and the RestoreBlueprintsAbility that resets
+## them all. Every slot entry should be a SaveBlueprintAbility.
 @export var slots: Array[UnitAbility] = []
 
 

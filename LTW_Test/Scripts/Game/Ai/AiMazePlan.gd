@@ -159,8 +159,9 @@ func _generate_zigzag(profile: AiProfile, area: PlayerArea) -> void:
 	var first_row: int = area.build_zone_first_row()
 	var last_row: int = area.build_zone_row_end()
 	# One row of towers is one player cell deep, and the corridor under it is
-	# however many the profile asked for.
-	var stride: int = step * (1 + maxi(1, profile.zigzag_corridor_cells))
+	# however many INTERNAL cells the profile asked for - half a cell is one,
+	# which is what a proper left-right maze uses (strategy.md 5.5).
+	var stride: int = step + maxi(1, profile.zigzag_corridor_internal_cells)
 	# Towers across, leaving exactly one player cell open at one end.
 	var across: int = maxi(1, int(width / step) - 1)
 	var base: int = _base_type_id(profile)

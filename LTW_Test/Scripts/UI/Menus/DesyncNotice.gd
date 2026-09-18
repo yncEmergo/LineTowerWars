@@ -61,8 +61,6 @@ func _on_desync_detected(tick: int, detail: String) -> void:
 
 	Log.info("Desync notice shown", {"tick": tick})
 	show()
-	if _menu_button != null:
-		_menu_button.grab_focus()
 
 
 func _on_menu_pressed() -> void:

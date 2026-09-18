@@ -112,6 +112,20 @@ const AUTO_SLOT: int = -1
 ## Cancel by leaning on a key would be a disaster, while repeating a send is
 ## exactly what a player wants when dumping a full reserve.
 @export var repeat_on_hold: bool = false
+## Whether a group given this order is spread over a spot each rather than all
+## being aimed at the one point that was clicked. See Formation.
+##
+## **Opt-in by name rather than worked out from the target, because the shape of
+## a target does not answer this.** AbilityTarget.at_unit copies the target's
+## position, so an attack click carries a position too; and a creep's own aimed
+## ability is ground-targeted while meaning "in THAT direction", where scattering
+## a group's aim points over a block would aim each one somewhere nobody asked
+## for. Only the two orders that mean "go there" set this.
+##
+## A plain export rather than a virtual, because UnitAbility is already over
+## gdlint's public-method ceiling and this is data about an order rather than
+## behaviour it carries - see CLAUDE.md's known weaknesses.
+@export var spreads_group: bool = false
 
 
 ## Runs the ability. Stateless: everything it needs comes in as arguments.

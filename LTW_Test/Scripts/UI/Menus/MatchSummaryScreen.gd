@@ -48,7 +48,6 @@ func _ready() -> void:
 	_summary = MenuNavigation.take_pending_summary()
 	if _menu_button != null:
 		_menu_button.pressed.connect(_on_menu_pressed)
-		_menu_button.grab_focus()
 
 	if _summary == null:
 		# Reachable by running this scene on its own from the editor, and by a

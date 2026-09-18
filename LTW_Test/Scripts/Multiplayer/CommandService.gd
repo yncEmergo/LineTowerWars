@@ -115,7 +115,9 @@ func submit_for(slot: int, ability: UnitAbility, units: Array, target: AbilityTa
 	# Offline is not a special case so much as the absence of one: with no peer
 	# there is nobody to ask, so this machine is its own authority.
 	if !Net.is_online():
+		_record_begin(command)
 		_apply(command, ability, units)
+		_record_end()
 		return
 
 	if ability.ability_id == AbilityRegistry.NO_ABILITY:
@@ -181,7 +183,9 @@ func submit_player_action_for(slot: int, action: Command.PlayerAction,
 	# Same three machines, same branch as submit(): offline is its own
 	# authority, a server queues for the tick, a client asks and waits.
 	if !Net.is_online():
+		_record_begin(command)
 		_apply_player_order(command)
+		_record_end()
 		return
 
 	# Same reasoning as submit(): under lockstep this waits for its turn like
@@ -221,7 +225,9 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 	command.player_slot = slot
 
 	if !Net.is_online():
+		_record_begin(command)
 		_apply_player_order(command)
+		_record_end()
 		return
 
 	if MatchSession.is_lockstep():
@@ -294,7 +300,9 @@ func apply_turn(payloads: Array) -> void:
 	for entry: Variant in payloads:
 		var command: Command = Command.from_dict(entry as Dictionary)
 		if command != null:
+			_record_begin(command)
 			_validate_and_apply(command)
+			_record_end()
 
 
 ## The top of a simulation tick, before anything in the match scene moves.
@@ -311,7 +319,9 @@ func _physics_process(_delta: float) -> void:
 	var batch: Array[Command] = _pending
 	_pending = []
 	for command in batch:
+		_record_begin(command)
 		_validate_and_apply(command)
+		_record_end()
 
 
 func _validate_and_apply(command: Command) -> void:
@@ -422,20 +432,66 @@ func _reaches(entries: Array, wanted: UnitAbility, seen: Dictionary) -> bool:
 ## UnitAbility.is_queueable.
 func _apply(command: Command, ability: UnitAbility, units: Array) -> void:
 	var acted: bool = false
-	for unit in units:
+	var slots: Array[Vector3] = _slots_for(command, ability, units)
+	for index in range(units.size()):
+		var unit: Unit = units[index] as Unit
 		if !is_instance_valid(unit):
 			continue
-		if _run_on(unit, ability, command):
+		if _run_on(unit, ability, command, slots[index]):
 			acted = true
 
 	if acted:
 		command_applied.emit(command)
 
 
+## Where each named unit is actually being sent.
+##
+## **This is the one place the whole group is visible at once**, and it is
+## reached identically by all three roads - the offline path through
+## submit_for, the lockstep path through apply_turn on EVERY peer, and the
+## replication server - which is exactly what a layout needs: every machine
+## derives the same slots from the same command, so nothing has to be sent and
+## nothing new has to be checksummed. See Formation.
+##
+## An order that names a UNIT is left alone. A pack sent onto one tower is not
+## after a patch of ground at all, it is after somewhere within reach of that
+## tower, and there is a whole ring of those - which is the router's question
+## and is answered in PlayerArea.route_between.
+func _slots_for(command: Command, ability: UnitAbility, units: Array) -> Array[Vector3]:
+	var plain: Array[Vector3] = []
+	plain.resize(units.size())
+	plain.fill(command.target_position)
+	if ability == null || !ability.spreads_group || !command.has_target_position:
+		return plain
+
+	# **An order that NAMES something gets the ring, not the block.** This used
+	# to bail out here, which meant the commonest order in the game - a pack
+	# sent onto a tower - got no layout at all and every creep was aimed at that
+	# tower's own centre. A named target is not a patch of ground: what the pack
+	# wants is a spot each within reach of it, and there is a whole ring of those.
+	if command.target_unit_id != MatchSession.NO_UNIT:
+		if _session == null:
+			return plain
+		var target: Unit = _session.unit_for(command.target_unit_id)
+		if target == null:
+			return plain
+		return Formation.attack_slots_for(units, target)
+
+	return Formation.slots_for(units, command.target_position)
+
+
 ## One unit's share of an order. Answers whether it was taken, so a command
 ## that every named unit refused emits nothing.
-func _run_on(unit: Unit, ability: UnitAbility, command: Command) -> bool:
+##
+## `slot` is where THIS unit is being sent, which is the ordered point itself
+## unless a formation spread the group out. Written into the target rather than
+## carried beside it, so a queued order holds the real destination, the order
+## overlay draws each unit's own waypoint, and a replication client gets it
+## without a wire field.
+func _run_on(unit: Unit, ability: UnitAbility, command: Command, slot: Vector3) -> bool:
 	var target: AbilityTarget = command.to_target(_session)
+	if target.has_position:
+		target.position = slot
 
 	if !ability.is_queueable():
 		if !ability.can_execute(unit):
@@ -745,6 +801,26 @@ func _cheat_target(command: Command) -> PlayerState:
 	if state == null:
 		_reject(command, "slot %d has no player state" % command.player_slot)
 	return state
+
+
+## Tells the match recorder an order is about to be applied, when this match is
+## being recorded. Paired with _record_end around EVERY application rather than
+## once inside _validate_and_apply, because an offline order skips that function
+## and goes straight to _apply - and a road the recorder does not stand on is a
+## road whose orders are missing from the file.
+##
+## What came of the order is not passed in: the recorder hears it from
+## command_applied and command_rejected, which is where it is already said.
+func _record_begin(command: Command) -> void:
+	var recorder: MatchRecorder = References.match_recorder
+	if recorder != null && recorder.is_recording():
+		recorder.begin_order(command)
+
+
+func _record_end() -> void:
+	var recorder: MatchRecorder = References.match_recorder
+	if recorder != null && recorder.is_recording():
+		recorder.end_order()
 
 
 func _reject(command: Command, reason: String) -> void:

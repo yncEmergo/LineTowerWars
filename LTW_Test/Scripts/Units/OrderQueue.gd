@@ -91,11 +91,17 @@ func enqueue(ability: UnitAbility, target: AbilityTarget) -> void:
 ## The rule the player sees is "a new order wipes the plan", and it is one
 ## rule rather than two: clearing cancels whatever the head was in the middle
 ## of, and the new task then starts from a unit that is doing nothing.
+##
+## The ONE exception is an attack on the creep the unit is already swinging
+## at. That order says what the unit is doing anyway, so the swing in the air
+## is kept rather than dropped and restarted - otherwise a player clicking the
+## creep again and again, which players do, would restart the windup on every
+## click and never land a blow.
 func replace(ability: UnitAbility, target: AbilityTarget) -> void:
 	if !MatchSession.is_authority() || ability == null:
 		return
 
-	clear()
+	_clear(_is_current_swing(ability, target))
 	enqueue(ability, target)
 
 
@@ -106,14 +112,7 @@ func replace(ability: UnitAbility, target: AbilityTarget) -> void:
 ## builder told to move while walking to a tower it queued has to actually
 ## forget that tower, or it would place it the moment the walk carried it past.
 func clear() -> void:
-	if !MatchSession.is_authority():
-		return
-
-	var had_any: bool = !_orders.is_empty()
-	_orders.clear()
-	_cancel_current()
-	if had_any:
-		_changed()
+	_clear(false)
 
 
 ## Runs the chain for one tick: supervise the head, drop it when its ability
@@ -201,6 +200,27 @@ func _matches_replicated(incoming: Array[QueuedOrder]) -> bool:
 
 # --- internals ------------------------------------------------------------
 
+func _clear(keep_swing: bool) -> void:
+	if !MatchSession.is_authority():
+		return
+
+	var had_any: bool = !_orders.is_empty()
+	_orders.clear()
+	_cancel_current(keep_swing)
+	if had_any:
+		_changed()
+
+
+## Whether an order is an attack on exactly the unit this one is mid-swing at.
+func _is_current_swing(ability: UnitAbility, target: AbilityTarget) -> bool:
+	if !(ability is AttackAbility) || target == null || target.unit == null:
+		return false
+	if _unit == null || !is_instance_valid(_unit) || _unit.attack_component == null:
+		return false
+	var attack: AttackComponent = _unit.attack_component
+	return attack.is_winding_up() && attack.current_target() == target.unit
+
+
 ## Runs a task for the first time. Marked started either way, including when
 ## the ability refuses it: a task that cannot run is finished rather than
 ## stuck, and the chain moves on to the next one.
@@ -237,15 +257,16 @@ func _is_complete(order: QueuedOrder) -> bool:
 ## and cancelling the swing stops the blow already on its way - so a builder
 ## sent off to build sets off at once rather than finishing an arc nobody
 ## asked for. A TOWER keeps its swing on purpose, see
-## AttackComponent.cancel_attack.
-func _cancel_current() -> void:
+## AttackComponent.cancel_attack. So does a unit re-ordered onto the very
+## creep it is swinging at, see replace.
+func _cancel_current(keep_swing: bool) -> void:
 	if _unit == null || !is_instance_valid(_unit):
 		return
 	if _unit.has_method("stop"):
 		_unit.stop()
 	if _unit.attack_component != null:
 		_unit.attack_component.clear_order()
-		if _unit is MobileUnit:
+		if _unit is MobileUnit && !keep_swing:
 			_unit.attack_component.cancel_attack()
 
 

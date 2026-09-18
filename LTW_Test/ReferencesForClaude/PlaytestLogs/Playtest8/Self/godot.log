@@ -1,0 +1,163 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.62 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4080
+
+[godot_ai game_helper] registered mcp capture (debugger active=true, logger=true)
+[Boot:102]: [INFO] Boot dispatching { "role": client, "scene": res://Scenes/UI/Menus/main_menu.tscn, "tag": false, "args": [  ], "headless": false }
+[Main:172]: [INFO] Main found no pending match, standing in a single player setup
+[Main:345]: [INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[MatchRecorder:223]: [INFO] Recording this match { "keep": false }
+[Main:144]: [INFO] Match ready { "players": 1, "local_slot": 1, "seed": 2902661175, "starting_lives": 200, "settings": ranked, All Creeps, Pick Tech, None, random lanes, "ai_slots": [] }
+[MatchSession:475]: [INFO] Match paused { "tick": 0, "by": &"shader_warmup", "holders": [ &"shader_warmup" ] }
+[ContentWarmer:379]: [INFO] Content warmed { "stats": 219, "scenes": 382, "other": 7, "held": 608, "ms": 1036.0 }
+[ShaderWarmup:463]: [INFO] Shaders warmed { "drawn": 7073, "steps": 26, "of": 26, "ms": 1534 }
+[MatchSession:475]: [INFO] Match resumed { "tick": 0, "by": &"shader_warmup", "holders": [  ] }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[MatchRecorder:521]: [INFO] Match recording saved { "last_match": C:/Users/yaand/AppData/Roaming/Godot/app_userdata/LTW_Test/recordings/last_match.jsonl, "kept": "", "reason": left }
+[MatchLoading:177]: [INFO] Match scene loaded { "match": tutorial, "path": res://Scenes/Main.tscn }
+[Main:345]: [INFO] Registries built { "abilities": 401, "unit_types": 196, "technologies": 30 }
+[AiPlayer:87]: [INFO] AI started { "slot": 2, "difficulty": Sparring Partner, "maze": 28 }
+[AiDirector:55]: [INFO] AI opponents ready { "count": 1 }
+[TutorialDirector:81]: [INFO] Tutorial started { "lessons": 15 }
+[MatchSession:475]: [INFO] Match paused { "tick": 0, "by": &"tutorial", "holders": [ &"tutorial" ] }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 1, "of": 15, "title": Your lane }
+[Main:144]: [INFO] Match ready { "players": 2, "local_slot": 1, "seed": 2704632779, "starting_lives": 100, "settings": unranked, All Creeps, Pick Tech, None, "ai_slots": [2] }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 2, "of": 15, "title": Your builder }
+[BlueprintOverlay:119]: [INFO] Blueprint shown from a file { "towers": 3 }
+[MatchSession:475]: [INFO] Match resumed { "tick": 0, "by": &"tutorial", "holders": [  ] }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 3, "of": 15, "title": Build three towers }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[Builder:176]: [INFO] Tower placed { "cell": (0,6), "tower": &"LesserArcher_0_6", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (2,6), "tower": &"LesserArcher_2_6", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (4,6), "tower": &"LesserArcher_4_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (3,9), "tower": &"LesserArcher_3_9", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (6,10), "tower": &"LesserArcher_6_10", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (6,6), "tower": &"LesserArcher_6_6", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (9,10), "tower": &"LesserArcher_9_10", "cost": 10 }
+[BlueprintOverlay:141]: [INFO] Blueprint hidden { "slot": 0 }
+[MatchSession:475]: [INFO] Match paused { "tick": 170, "by": &"tutorial", "holders": [ &"tutorial" ] }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 4, "of": 15, "title": What a maze is for }
+[BlueprintOverlay:119]: [INFO] Blueprint shown from a file { "towers": 42 }
+[MatchSession:475]: [INFO] Match resumed { "tick": 170, "by": &"tutorial", "holders": [  ] }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 5, "of": 15, "title": The simplest maze }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[Builder:176]: [INFO] Tower placed { "cell": (8,6), "tower": &"LesserArcher_8_6", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 2 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[Builder:176]: [INFO] Tower placed { "cell": (10,6), "tower": &"LesserArcher_10_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (0,6), "tower": &"LesserArcher_0_6", "cost": 10 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_6_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_9_10", "refund": 6 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (2,6), "tower": &"LesserArcher_2_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_3_9", "refund": 6 }
+[Builder:176]: [INFO] Tower placed { "cell": (4,6), "tower": &"LesserArcher_4_6", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (12,6), "tower": &"LesserArcher_12_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (6,6), "tower": &"LesserArcher_6_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (8,6), "tower": &"LesserArcher_8_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (10,6), "tower": &"LesserArcher_10_6", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:55]: [WARN] Tower cannot be placed there { "cell": (11,6) }
+WARNING: [Builder:55]: Tower cannot be placed there { "cell": (11,6) }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] order_build (res://Scripts/Units/Builder.gd:55)
+       [2] execute (res://Scripts/Abilities/BuildTowerAbility.gd:27)
+       [3] _start (res://Scripts/Units/OrderQueue.gd:221)
+       [4] enqueue (res://Scripts/Units/OrderQueue.gd:84)
+       [5] replace (res://Scripts/Units/OrderQueue.gd:99)
+       [6] _run_on (res://Scripts/Multiplayer/CommandService.gd:467)
+       [7] _apply (res://Scripts/Multiplayer/CommandService.gd:438)
+       [8] submit_for (res://Scripts/Multiplayer/CommandService.gd:119)
+       [9] submit (res://Scripts/Multiplayer/CommandService.gd:80)
+       [10] _execute_on_selection (res://Scripts/Input/CommandController.gd:703)
+       [11] _confirm_armed (res://Scripts/Input/CommandController.gd:455)
+       [12] _unhandled_input (res://Scripts/Input/CommandController.gd:428)
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (12,6), "tower": &"LesserArcher_12_6", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (2,12), "tower": &"LesserArcher_2_12", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (2,10), "tower": &"LesserArcher_2_10", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (4,10), "tower": &"LesserArcher_4_10", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (4,12), "tower": &"LesserArcher_4_12", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (6,10), "tower": &"LesserArcher_6_10", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (8,10), "tower": &"LesserArcher_8_10", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (10,10), "tower": &"LesserArcher_10_10", "cost": 10 }
+[BlueprintOverlay:141]: [INFO] Blueprint hidden { "slot": 0 }
+[TutorialDirector:244]: [INFO] Tutorial lesson { "lesson": 6, "of": 15, "title": Upgrading a tower }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:55]: [WARN] Tower cannot be placed there { "cell": (11,10) }
+WARNING: [Builder:55]: Tower cannot be placed there { "cell": (11,10) }
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://addons/log/log.gd:720)
+       [1] order_build (res://Scripts/Units/Builder.gd:55)
+       [2] execute (res://Scripts/Abilities/BuildTowerAbility.gd:27)
+       [3] _start (res://Scripts/Units/OrderQueue.gd:221)
+       [4] enqueue (res://Scripts/Units/OrderQueue.gd:84)
+       [5] replace (res://Scripts/Units/OrderQueue.gd:99)
+       [6] _run_on (res://Scripts/Multiplayer/CommandService.gd:467)
+       [7] _apply (res://Scripts/Multiplayer/CommandService.gd:438)
+       [8] submit_for (res://Scripts/Multiplayer/CommandService.gd:119)
+       [9] submit (res://Scripts/Multiplayer/CommandService.gd:80)
+       [10] _execute_on_selection (res://Scripts/Input/CommandController.gd:703)
+       [11] _confirm_armed (res://Scripts/Input/CommandController.gd:455)
+       [12] _unhandled_input (res://Scripts/Input/CommandController.gd:428)
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (6,12), "tower": &"LesserArcher_6_12", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (12,10), "tower": &"LesserArcher_12_10", "cost": 10 }
+[CommandController:183]: [INFO] Ability armed, waiting for target { "ability": Lesser Archer }
+[Builder:176]: [INFO] Tower placed { "cell": (14,10), "tower": &"LesserArcher_14_10", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (8,12), "tower": &"LesserArcher_8_12", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (10,12), "tower": &"LesserArcher_10_12", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (12,12), "tower": &"LesserArcher_12_12", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (14,12), "tower": &"LesserArcher_14_12", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 7 }
+[Builder:176]: [INFO] Tower placed { "cell": (0,18), "tower": &"LesserArcher_0_18", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (2,18), "tower": &"LesserArcher_2_18", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 7 }
+[Builder:176]: [INFO] Tower placed { "cell": (4,18), "tower": &"LesserArcher_4_18", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (6,18), "tower": &"LesserArcher_6_18", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 5 }
+[Builder:176]: [INFO] Tower placed { "cell": (8,18), "tower": &"LesserArcher_8_18", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 5 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[SelectionController:662]: [INFO] Selection changed { "count": 2 }
+[Builder:176]: [INFO] Tower placed { "cell": (10,18), "tower": &"LesserArcher_10_18", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (12,18), "tower": &"LesserArcher_12_18", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (2,24), "tower": &"LesserArcher_2_24", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (4,24), "tower": &"LesserArcher_4_24", "cost": 10 }
+WARNING: [Physics interpolation] Interpolated Camera3D triggered from outside physics process: "/root/Main/Camera" (possibly benign).
+   at: _notification (scene/3d/camera_3d.cpp:218)
+[Builder:176]: [INFO] Tower placed { "cell": (6,24), "tower": &"LesserArcher_6_24", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 1 }
+[Builder:176]: [INFO] Tower placed { "cell": (8,24), "tower": &"LesserArcher_8_24", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 7 }
+[Builder:176]: [INFO] Tower placed { "cell": (10,24), "tower": &"LesserArcher_10_24", "cost": 10 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_2_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_4_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_6_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_8_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_10_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_12_10", "refund": 6 }
+[Building:796]: [INFO] Building sold { "building": &"LesserArcher_14_10", "refund": 6 }
+[Builder:176]: [INFO] Tower placed { "cell": (12,24), "tower": &"LesserArcher_12_24", "cost": 10 }
+[Builder:176]: [INFO] Tower placed { "cell": (14,24), "tower": &"LesserArcher_14_24", "cost": 10 }
+[SelectionController:662]: [INFO] Selection changed { "count": 0 }

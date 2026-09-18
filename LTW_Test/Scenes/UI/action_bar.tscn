@@ -21,6 +21,7 @@ corner_radius_bottom_left = 4
 
 [node name="ActionBar" type="PanelContainer" node_paths=PackedStringArray("_builder_button", "_research_button")]
 theme_override_styles/panel = SubResource("StyleBoxFlat_bar")
+focus_behavior_recursive = 1
 script = ExtResource("1_action_bar")
 _builder_button = NodePath("Row/BuilderButton")
 _research_button = NodePath("Row/ResearchButton")

@@ -82,11 +82,16 @@ const TARGET_AIR: int = 2
 ## picked its target and cannot pick another - and the damage lands at the end.
 ##
 ## **It comes OUT of the attack period, never on top of it.** A 1 APS tower with
-## a 0.1s windup still attacks once a second: the cooldown starts ticking when
-## the windup does, so what changes is when in the second the damage lands, not
-## how often. A windup that added to the cooldown would make every animation a
-## silent balance change, and nobody would ever be able to tell which of the two
-## numbers a tower's real rate came from.
+## a 0.1s windup still attacks once a second: the cooldown charged when the blow
+## lands is the period LESS the windup, so what changes is when in the second
+## the damage lands, not how often. A windup that added to the cooldown would
+## make every animation a silent balance change, and nobody would ever be able
+## to tell which of the two numbers a tower's real rate came from.
+##
+## Charged on LANDING rather than on starting, so a swing that never went
+## through - dropped for a new order, or aimed at a creep that died with nothing
+## left to catch - costs nothing and the next one may start at once. See
+## AttackComponent._release.
 ##
 ## 0 lands the damage the instant the tower fires, which is what everything
 ## without an animation wants.
@@ -112,6 +117,19 @@ const TARGET_AIR: int = 2
 ## Measured in player cells from the tower's centre to the creep's, which is
 ## the same as world units because cell_size is 1.0.
 @export var attack_range: float = 4.0
+## How far BEYOND attack_range a target it is fighting may drift, in cells,
+## before a unit that walks sets off after it while its attack is on cooldown.
+##
+## Only a unit that WALKS reads this, which is the builder; a tower never moves.
+## It is the slack that stops a melee unit stutter-stepping after a creep that
+## keeps walking: without it every cell the creep moved would be a step taken
+## and a stop made. Inside it the unit stands and waits out its cooldown;
+## past it, it walks until the target is back in reach. Once the attack is
+## ready none of this applies - it closes at once, however near. See
+## AttackAbility._chase.
+##
+## 0 follows the moment the target is out of reach.
+@export var chase_margin: float = 0.0
 ## Whether this reach is worth DRAWING on the ground when an attack is aimed
 ## or Show Ranges is pressed.
 ##

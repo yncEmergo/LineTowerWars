@@ -27,12 +27,9 @@ signal unhovered(tech: TechDefinition)
 ## This square was pressed. The screen above decides what that means.
 signal chosen(tech: TechDefinition)
 
-## Greyed tint for an Ultimate that cannot be taken - the free allowance has
-## been spent, or this one is already owned.
-const UNAVAILABLE_MODULATE: Color = Color(0.5, 0.5, 0.5, 1.0)
-## Lit tint for one the player already has all four technologies of. Above 1 on
-## purpose, the same way every other lit square in this HUD is.
-const OWNED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
+## What the three states LOOK like is ResearchStyle's, shared with TechSlot so
+## the row and the grid above it cannot drift apart. It is also where the
+## reason they are no longer a `modulate` is written down.
 
 @export_group("References")
 ## The Ultimate tower's own picture, over the element hue. A TextureRect rather
@@ -45,6 +42,10 @@ const OWNED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
 ## The element's own hue behind everything else, so the row reads as ten pairs
 ## rather than twenty strangers.
 @export var _background: ColorRect
+## The tick in the bottom right corner, shown once the player owns all four
+## technologies this Ultimate is made of. Says the same thing on all ten
+## element hues, which is what a tint could not.
+@export var _badge: Control
 ## Rich hover tooltip, the command card's own scene. An Ultimate has exactly
 ## the blocks it draws: a title, a list of what it needs, and a refusal.
 @export var _tooltip_scene: PackedScene
@@ -54,6 +55,12 @@ var tech: TechDefinition
 
 ## Whose Research Center this is. What can be taken is per player.
 var _player_id: int = 0
+## The element hue this square was filled with, kept because the background is
+## now the hue and the state together.
+var _element: Color = Color.TRANSPARENT
+## The state currently drawn, so a row on screen is not repainted every frame.
+var _state: ResearchStyle.State = ResearchStyle.State.BLOCKED
+var _state_drawn: bool = false
 
 var _manager: TechManager:
 	get:
@@ -89,8 +96,8 @@ func set_tech(new_tech: TechDefinition, player_id: int) -> void:
 	if _name_label != null:
 		_name_label.visible = picture == null
 		_name_label.text = tech.grid_label()
-	if _background != null:
-		_background.color = tech.element_color()
+	_element = tech.element_color()
+	_state_drawn = false
 	_refresh_state()
 
 
@@ -99,7 +106,8 @@ func clear() -> void:
 	tech = null
 	_player_id = 0
 	tooltip_text = ""
-	modulate = Color.WHITE
+	_element = Color.TRANSPARENT
+	_state_drawn = false
 	if _icon_rect != null:
 		_icon_rect.texture = null
 		_icon_rect.visible = false
@@ -107,6 +115,8 @@ func clear() -> void:
 		_name_label.visible = false
 	if _background != null:
 		_background.color = Color.TRANSPARENT
+	if _badge != null:
+		_badge.visible = false
 
 
 ## What can be taken moves on its own - every technology researched by hand
@@ -118,20 +128,43 @@ func _process(_delta: float) -> void:
 		_refresh_state()
 
 
-## Greyed rather than disabled, because a square the player cannot press is
+## Dimmed rather than disabled, because a square the player cannot press is
 ## precisely the one whose tooltip they want to read.
+##
+## Owned is asked SECOND on purpose: an Ultimate the player already has is one
+## the rules also refuse, and "you have it" is the more useful of the two
+## answers to draw.
 func _refresh_state() -> void:
 	var manager: TechManager = _manager
 	if manager == null:
 		return
 
 	var reason: String = manager.refusal_for_ultimate(_player_id, tech)
+	var state: ResearchStyle.State = ResearchStyle.State.BLOCKED
 	if reason == TechManager.ALLOWED:
-		modulate = Color.WHITE
+		state = ResearchStyle.State.AVAILABLE
 	elif _owns_all(manager):
-		modulate = OWNED_MODULATE
-	else:
-		modulate = UNAVAILABLE_MODULATE
+		state = ResearchStyle.State.OWNED
+	_apply_state(state)
+
+
+## Paints one of the three states onto the pieces of the square, the same way
+## and with the same numbers a grid square does. Skipped when nothing moved.
+func _apply_state(state: ResearchStyle.State) -> void:
+	if _state_drawn && state == _state:
+		return
+	_state = state
+	_state_drawn = true
+
+	if _background != null:
+		_background.color = ResearchStyle.background_for(_element, state)
+	if _icon_rect != null:
+		_icon_rect.modulate = ResearchStyle.icon_tint_for(state)
+	if _name_label != null:
+		_name_label.add_theme_color_override("font_color",
+			ResearchStyle.text_color_for(state))
+	if _badge != null:
+		_badge.visible = state == ResearchStyle.State.OWNED
 
 
 func _owns_all(manager: TechManager) -> bool:

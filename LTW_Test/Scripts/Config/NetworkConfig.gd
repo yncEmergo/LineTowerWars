@@ -468,6 +468,26 @@ extends Resource
 ## fill. See `LockstepService.receive_seal_echo`.
 @export_range(0, 100, 1) var debug_echo_loss_percent: int = 0
 
+@export_group("Session log")
+## Whether a windowed client writes a session log without being asked. The lobby
+## box still switches it off for that process. See `SessionLog`.
+##
+## **On, because an opt-in log is the one that is missing.** Playtest 8 lost a
+## player's whole match to a box nobody ticked after restarting the game.
+@export var session_log_on_by_default: bool = true
+## How many session logs a machine keeps. The oldest go when a new one opens, so
+## a player who never sends one back is not left with a folder that grows for
+## ever. Zero keeps everything.
+@export var session_logs_kept: int = 20
+## A frame at least this long, in milliseconds, is written to the session log as
+## a hitch. A tenth of a second is where a frame stops being a dip in the frame
+## rate and becomes a stop somebody feels.
+@export var hitch_threshold_ms: int = 100
+## At most this many hitch lines are written in any few seconds; the rest are
+## only counted. A machine running at single-digit frame rates hitches on every
+## frame, and would otherwise write nothing but hitches.
+@export var hitch_lines_per_window: int = 10
+
 @export_group("Command line")
 ## Collapses server_addresses to the one named, e.g.
 ##   godot -- --address 192.168.1.20

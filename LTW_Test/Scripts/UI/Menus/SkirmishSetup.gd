@@ -35,6 +35,9 @@ extends Control
 @export var _start_button: Button
 @export var _back_button: Button
 @export var _hint_label: Label
+## Keeps the match about to be played, rather than letting the next one replace
+## it as the last match. See MatchRecorder.
+@export var _record_check: CheckBox
 
 @export_group("Settings")
 @export var _slot_scene: PackedScene
@@ -86,12 +89,13 @@ func _ready() -> void:
 	_connect_controls()
 	_fill_all_option()
 	_redraw()
-	if _start_button != null:
-		_start_button.grab_focus()
 
 
 func _connect_controls() -> void:
 	if _opponents_spin != null:
+		# Click-only, because the editor inside a SpinBox is a node the .tscn
+		# cannot name. See FocusPolicy.
+		FocusPolicy.click_only(_opponents_spin)
 		_opponents_spin.min_value = 1.0
 		_opponents_spin.max_value = float(_max_opponents())
 		_opponents_spin.step = 1.0
@@ -104,6 +108,11 @@ func _connect_controls() -> void:
 		_back_button.pressed.connect(_on_back_pressed)
 	if _settings_panel != null:
 		_settings_panel.settings_changed.connect(_on_settings_changed)
+	if _record_check != null:
+		# Reflects the choice rather than forcing it. It is off again after every
+		# match, because starting one spends the tick. See LobbyRoom.
+		_record_check.button_pressed = MatchRecorder.is_armed()
+		_record_check.toggled.connect(_on_record_toggled)
 
 
 func _fill_all_option() -> void:
@@ -256,6 +265,10 @@ func _on_start_pressed() -> void:
 		"settings": setup.settings.describe(),
 	})
 	MenuNavigation.to_match_loading(self, setup)
+
+
+func _on_record_toggled(on: bool) -> void:
+	MatchRecorder.set_armed(on)
 
 
 func _on_back_pressed() -> void:

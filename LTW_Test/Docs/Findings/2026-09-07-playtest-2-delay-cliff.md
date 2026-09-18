@@ -22,7 +22,7 @@ Find the source of the lag in the playtest 2 journals, and say which commit caus
 
 ## How it was measured
 
-Only the journals: `ReferenceFilesFromOtherProjects/PlaytestLogs/Playtest{1,2}/`.
+Only the journals: `ReferencesForClaude/PlaytestLogs/Playtest{1,2}/`.
 
 `SessionLog` already writes what is needed. Once per hundred turns:
 

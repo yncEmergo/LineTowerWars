@@ -55,19 +55,45 @@ var _start_y: float = 0.0
 ## authority pays the bounty in Creep._pay_bounty, and a client only ever sees
 ## the creep vanish out of a snapshot. Neither needed a new field on the wire
 ## and neither needed a new method on Creep.
+##
+## The creep's AREA is who got paid, on exactly the terms Creep._pay_bounty
+## pays on: bounty goes to whoever owns the maze it died in, never to whoever
+## fired and never to whoever sent it. A creep with no area is one nobody was
+## paid for, so nothing is drawn for it.
 static func show_for(unit: Unit) -> void:
-	if unit == null:
+	if unit == null || unit.area == null:
 		return
 	var stats: CreepStats = unit.stats as CreepStats
 	if stats != null:
-		show_gold(unit.global_position, stats.bounty)
+		show_gold(unit.global_position, stats.bounty, unit.area.player_id)
 
 
-## Draws `gold` over `at`. Does nothing at all when there is no effects root,
-## which is what a dedicated server has - so this is safe to call from the
-## simulation without asking whether anybody is watching.
-static func show_gold(at: Vector3, gold: int) -> void:
+## Draws `gold` over `at`, ONLY IF `paid_to` is the player sitting at this
+## machine.
+##
+## That test is the whole reason this takes a slot. Every peer simulates every
+## lane under lockstep (multiplayer.md), so every peer reaches Creep._die for
+## every creep in the match - and without the test each client pops a number
+## over deaths in six other mazes, reporting gold it is not being paid and
+## cannot spend. It read as the number being wrong rather than as it not being
+## yours.
+##
+## The slot is an ARGUMENT rather than something worked out from `at`, because
+## only the caller knows who was actually credited - the position says which
+## maze the creep is standing in, which is the same answer today and would
+## quietly stop being one the moment anything pays a bounty to somebody else.
+## Making the caller say so is what stops the next one forgetting the rule.
+##
+## Does nothing at all when there is no effects root, which is what a dedicated
+## server has - so this is safe to call from the simulation without asking
+## whether anybody is watching.
+static func show_gold(at: Vector3, gold: int, paid_to: int) -> void:
 	if gold <= 0:
+		return
+	# No session is no match, so there is nobody this could be gold for. A
+	# server and a spectator both play slot 0 and are refused here too.
+	var session: MatchSession = References.match_session
+	if session == null || !session.is_local_player(paid_to):
 		return
 	var root: Node3D = References.effects_root
 	if root == null:

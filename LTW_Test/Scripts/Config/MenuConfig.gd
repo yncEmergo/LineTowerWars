@@ -124,6 +124,22 @@ func validate() -> bool:
 	return complete
 
 
+## Every screen a menu button can open, for loading them before one is pressed.
+##
+## Deliberately NOT the game scene. That one is the whole 3D game, it is what
+## the loading screen exists to load with a bar on screen, and dragging it into
+## memory at boot would undo the reason the menus name it by path at all.
+func menu_scene_paths() -> PackedStringArray:
+	return PackedStringArray([
+		main_menu_scene_path,
+		lobby_browser_scene_path,
+		lobby_room_scene_path,
+		match_loading_scene_path,
+		match_summary_scene_path,
+		skirmish_setup_scene_path,
+	])
+
+
 ## The name a new lobby is offered, given who is hosting it.
 func default_lobby_name(host_name: String) -> String:
 	if default_lobby_name_pattern.is_empty():

@@ -22,6 +22,7 @@ corner_radius_bottom_left = 3
 [node name="LobbySettingsPanel" type="PanelContainer" unique_id=2040763823 node_paths=PackedStringArray("_lives_spin", "_lives_label", "_gold_spin", "_research_spin", "_income_spin", "_interval_spin", "_ranked_check", "_creeps_option", "_lanes_check", "_cheats_check", "_tech_option", "_modifier_option", "_defaults_button", "_hint_label")]
 theme = ExtResource("2_compact")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+focus_behavior_recursive = 1
 script = ExtResource("1_settings")
 _lives_spin = NodePath("Column/Columns/Resources/Grid/LivesSpin")
 _lives_label = NodePath("Column/Columns/Resources/Grid/LivesLabel")
@@ -75,6 +76,8 @@ layout_mode = 2
 min_value = 1.0
 max_value = 500.0
 value = 100.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="GoldLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=1580943061]
 layout_mode = 2
@@ -88,6 +91,8 @@ custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 10000000.0
 step = 10.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="ResearchLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=848343925]
 layout_mode = 2
@@ -100,6 +105,8 @@ horizontal_alignment = 2
 custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 30.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="IncomeLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=86911462]
 layout_mode = 2
@@ -113,6 +120,8 @@ custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 max_value = 1000000.0
 step = 5.0
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="IntervalLabel" type="Label" parent="Column/Columns/Resources/Grid" unique_id=1270581647]
 layout_mode = 2
@@ -128,6 +137,8 @@ min_value = 1.0
 max_value = 300.0
 value = 10.0
 suffix = "s"
+focus_behavior_recursive = 2
+focus_mode = 1
 
 [node name="Gameplay" type="VBoxContainer" parent="Column/Columns" unique_id=1712910494]
 layout_mode = 2

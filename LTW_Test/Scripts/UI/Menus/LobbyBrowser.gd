@@ -323,6 +323,9 @@ func _setup_create_panel() -> void:
 		return
 
 	if _player_count_spin != null:
+		# Click-only, because the editor inside a SpinBox is a node the .tscn
+		# cannot name. See FocusPolicy.
+		FocusPolicy.click_only(_player_count_spin)
 		_player_count_spin.min_value = _config.min_players
 		_player_count_spin.max_value = _config.max_players
 		_player_count_spin.value = _config.default_lobby_size

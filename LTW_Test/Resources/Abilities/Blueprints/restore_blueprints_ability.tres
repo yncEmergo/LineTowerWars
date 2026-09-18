@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RestoreBlueprintsAbility" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Abilities/RestoreBlueprintsAbility.gd" id="1_restore_blueprints"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_blueprint.png" id="2_ability_blueprint"]
+
+[resource]
+script = ExtResource("1_restore_blueprints")
+ability_id = 466
+display_name = "Restore Default Blueprints"
+description = "Erase every blueprint you saved and bring back the plans that came with the game. Asks before anything is deleted."
+targeting = 1
+slot = 11
+icon = ExtResource("2_ability_blueprint")

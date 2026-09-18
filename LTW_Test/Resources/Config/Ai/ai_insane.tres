@@ -5,13 +5,13 @@
 [resource]
 script = ExtResource("1_ai_profile")
 display_name = "Insane"
-description = "The endgame maze from the first tower, upgrading every rung it can pay for and sending as hard as it can hold."
+description = "Thinks fastest, upgrades every rung it can pay for, and turns most of its maze elemental."
 decision_seconds = 0.35
 distraction_chance = 0.0
 builds_per_pass = 3
 maze_layout_path = ""
 zigzag_rows = 6
-zigzag_corridor_cells = 1
+zigzag_corridor_internal_cells = 1
 base_tower_path = ""
 send_floor_gold = 25
 build_floor_gold = 15

@@ -28,6 +28,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_menu_theme")
+focus_behavior_recursive = 1
 script = ExtResource("1_desync")
 _detail_label = NodePath("Center/Panel/Column/DetailLabel")
 _menu_button = NodePath("Center/Panel/Column/MenuButton")

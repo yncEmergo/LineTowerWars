@@ -26,6 +26,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+focus_behavior_recursive = 1
 script = ExtResource("1_confirm")
 _title_label = NodePath("Center/Dialog/Column/TitleLabel")
 _message_label = NodePath("Center/Dialog/Column/MessageLabel")

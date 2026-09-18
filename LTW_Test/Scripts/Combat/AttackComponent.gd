@@ -23,8 +23,8 @@ extends Node
 ##
 ## Everything else here stands aside in the editor.
 
-## Raised when an attack COMMITS: the target is chosen, the cooldown has
-## started, and the windup is now running. This is what an attack animation
+## Raised when an attack COMMITS: the target is chosen and the windup is now
+## running. The cooldown has NOT started - it is charged when the blow lands. This is what an attack animation
 ## plays on, and the animation has exactly `windup_seconds` to finish.
 signal attack_started(target: Unit, windup: float)
 ## Raised the moment the damage is released - the hammer lands, the shot
@@ -56,6 +56,10 @@ const MULTISHOT_FALLBACK_REACH: float = 3.0
 @export var _muzzle: Node3D
 ## Part of the model that turns to face the target, usually the barrel.
 ## Optional, since a grinder or a stomper has nothing to aim.
+##
+## The builder wires its WHOLE UNIT here, with a turn speed fast enough to be a
+## snap, so it faces what it is swinging at the moment the windup starts.
+## Facing is presentation only - see MobileUnit.face_instantly.
 @export var _turret_head: Node3D
 
 @export_group("Settings")
@@ -65,7 +69,8 @@ const MULTISHOT_FALLBACK_REACH: float = 3.0
 @export var turn_towards_target: bool = true
 @export var turret_turn_speed: float = 10.0
 
-## Seconds left before the next attack may fire.
+## Seconds left before the next attack may fire. Only ever set by a blow that
+## LANDED, see _release.
 var _cooldown: float = 0.0
 ## What this is shooting. A Unit rather than a Creep, because an attacker creep
 ## uses this same component to chew on a tower - see AttackStats.TargetClass.
@@ -100,17 +105,12 @@ var _ordered_target: Unit = null
 ## Whether the standing order has been REACHED - whether this unit has ever
 ## stood in range of it since the order was given.
 ##
-## **Close once, then hold.** A unit walks straight at a target it has not got
-## to yet, however long its cooldown happens to be: it has to be there anyway,
-## arriving early costs nothing, and an order that left it standing about for a
-## whole attack period would read as an order that never registered. From the
-## moment it arrives it stops following between attacks, and running the creep
-## down again is the player's to order. See AttackAbility._chase.
-##
-## Reaching rather than SWINGING, which is what this used to ask. The two are
-## the same on the way in and come apart on the way out: a unit that arrived and
-## has not swung yet is still a unit that has arrived, and letting it set off
-## again would be the trailing this exists to stop.
+## A unit walks straight at a target it has not got to yet, however long its
+## cooldown happens to be: it has to be there anyway, arriving early costs
+## nothing, and an order that left it standing about for a whole attack period
+## would read as an order that never registered. From the moment it arrives it
+## only follows through a cooldown once the target has drifted past the chase
+## margin. See AttackAbility._chase and AttackStats.chase_margin.
 ##
 ## The UNIT rather than a flag, and that is forced. A new order arrives through
 ## OrderQueue.replace, which clears the old one first - so a flag would be wiped
@@ -175,16 +175,21 @@ func current_target() -> Unit:
 	return null
 
 
-## Whether a unit is close enough for this attack to land on it.
+## Whether a unit is close enough for this attack to land on it, or with
+## `with_chase_margin` whether it is still inside the slack a walking unit
+## gives a target before following it - see AttackStats.chase_margin.
 ##
 ## Public because closing the distance is the ORDER's job rather than this
 ## one's: a unit walking onto a target has to know when to stop, and the reach
 ## it stops at is the same one every other range test here uses.
-func is_in_reach(target: Unit) -> bool:
+func is_in_reach(target: Unit, with_chase_margin: bool = false) -> bool:
 	var attack: AttackStats = _attack
 	if attack == null || target == null || !is_instance_valid(target):
 		return false
-	return TargetFinder.is_in_range(_origin(), target, _reach(attack))
+	var reach: float = _reach(attack)
+	if with_chase_margin:
+		reach += maxf(0.0, attack.chase_margin)
+	return TargetFinder.is_in_range(_origin(), target, reach)
 
 
 ## Whether an attack is committed and its damage has not landed yet.
@@ -285,9 +290,12 @@ func order_attack(target: Unit) -> bool:
 ## finished its arc into a creep a moment later would read as an order that
 ## was only half heard.
 ##
-## Nothing is refunded: the cooldown was spent the moment the attack committed,
-## exactly as it would have been had the blow landed. So spamming orders at a
-## unit is not a way to make it attack faster.
+## Nothing is charged either: the cooldown only starts when a blow LANDS, so a
+## dropped swing leaves the unit free to start the next one at once. Spamming
+## orders is still no way to attack faster, because the damage can only ever
+## land at the end of a whole windup and the cooldown behind it always runs.
+## Re-ordering the creep ALREADY being swung at does not come through here at
+## all - see OrderQueue.replace.
 ##
 ## A TOWER is deliberately left out of this. It has the opposite rule - it
 ## commits when the windup starts and may not be retargeted mid-swing - and
@@ -310,9 +318,8 @@ func clear_order() -> void:
 ## nothing left on the clock.
 ##
 ## Public because CLOSING THE DISTANCE is the order's job rather than this
-## one's, and when to close is the same question as when it could swing - a
-## unit that walks after its target through a cooldown it cannot use is
-## following it for no reason it could act on.
+## one's, and a unit that could swing closes at once however near its target
+## is - see AttackAbility._chase.
 func is_ready_to_attack() -> bool:
 	return _windup_left <= 0.0 && _cooldown <= 0.0
 
@@ -327,6 +334,24 @@ func has_reached_order() -> bool:
 
 ## The unit a standing order names, or null once it has died, been sold or
 ## stopped being a legal target. Read by the attack task waiting on it.
+## How far this unit can act from, buffs included - the same number is_in_reach
+## tests against, handed out so a WALK can be planned to end exactly where the
+## swing becomes possible.
+##
+## It exists because there were two answers to that question and they disagreed:
+## Creep._attack_reach read the raw attack_range off the stats while everything
+## that actually fires went through _reach, which adds attack_range_bonus. So an
+## attacker standing in a disc that lends it reach marched to the wrong distance
+## - not far enough to be a bug anyone would report, and far enough that a route
+## planned against one number and ended against the other would disagree about
+## whether the creep had arrived.
+func order_reach() -> float:
+	var attack: AttackStats = _attack
+	if attack == null:
+		return 0.0
+	return _reach(attack)
+
+
 func ordered_target() -> Unit:
 	if _ordered_target == null || !is_instance_valid(_ordered_target):
 		return null
@@ -520,14 +545,9 @@ func _apply_order(attack: AttackStats) -> void:
 		_reached_target = _ordered_target
 
 
-## Commits to an attack. The cooldown starts HERE rather than when the damage
-## lands, which is what keeps the windup inside the attack period instead of on
-## top of it - see AttackStats.windup_seconds.
+## Commits to an attack. Charges NO cooldown: that waits for the blow to land,
+## so a swing that is dropped or whiffs costs nothing - see _release.
 func _begin_attack(attack: AttackStats) -> void:
-	# Asked of the UNIT rather than read off the stats, so an aura standing
-	# over an attacker creep really does make it swing faster. Every tower
-	# answers 1.0 and pays nothing for the question.
-	_cooldown = attack.cooldown_seconds() / maxf(0.01, _unit.attack_speed_ratio())
 	_windup_target = _target
 	_windup_point = _target.global_position
 	_windup_left = attack.windup_seconds_clamped()
@@ -560,8 +580,8 @@ func _advance_windup(delta: float, attack: AttackStats) -> void:
 		_release(attack)
 
 
-## Drops a swing that can no longer land. Nothing is refunded: the cooldown was
-## already spent, exactly as it would have been if the attack had landed.
+## Drops a swing that can no longer land. Nothing is refunded because nothing
+## was charged: the cooldown only starts when a blow lands.
 ##
 ## GUARDED rather than unconditional, because the can-attack test at the top of
 ## the tick calls this every tick for a tower that is upgrading - so an
@@ -580,17 +600,38 @@ func _cancel_windup() -> void:
 ## A creep that died during the windup leaves the swing to land where it stood,
 ## so a splash still catches the crowd around it - the same rule a projectile
 ## already follows when its target dies mid flight.
+##
+## **The cooldown is charged HERE, and only for a blow that went through.** One
+## whose target is gone and which carries no effect to land on the ground hits
+## nothing at all, so it costs nothing and the unit may swing again at once.
 func _release(attack: AttackStats) -> void:
 	var target: Unit = _windup_target
 	var point: Vector3 = _windup_point
+	# How far the windup ran past zero on the tick it ended. Taken back off the
+	# cooldown so the period lands on exactly the tick it did when the cooldown
+	# started with the windup: rounding up to a whole tick twice would stretch it.
+	var overrun: float = maxf(0.0, -_windup_left)
 	_windup_left = 0.0
 	_windup_target = null
 
 	var gone: bool = target == null || !is_instance_valid(target) || !target.is_alive()
 	_fire(attack, null if gone else target, point)
+	if !gone || !attack.effects.is_empty():
+		_start_cooldown(attack, overrun)
 	if gone:
 		_target = null
 		_scan_wait = 0
+
+
+## Starts the gap before the next attack: the attack period LESS the windup
+## that has already been served, so a windup comes out of the period rather
+## than on top of it - see AttackStats.windup_seconds.
+func _start_cooldown(attack: AttackStats, overrun: float) -> void:
+	# Asked of the UNIT rather than read off the stats, so an aura standing
+	# over an attacker creep really does make it swing faster. Every tower
+	# answers 1.0 and pays nothing for the question.
+	var period: float = attack.cooldown_seconds() / maxf(0.01, _unit.attack_speed_ratio())
+	_cooldown = maxf(0.0, period - attack.windup_seconds_clamped() - overrun)
 
 
 func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:

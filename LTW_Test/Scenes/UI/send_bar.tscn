@@ -21,6 +21,7 @@ corner_radius_bottom_left = 4
 
 [node name="SendBar" type="PanelContainer" node_paths=PackedStringArray("_buttons")]
 theme_override_styles/panel = SubResource("StyleBoxFlat_bar")
+focus_behavior_recursive = 1
 script = ExtResource("1_send_bar")
 _buttons = [NodePath("Row/SendTier1"), NodePath("Row/SendTier2"), NodePath("Row/SendTier3"), NodePath("Row/SendTier4")]
 

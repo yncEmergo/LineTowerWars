@@ -35,6 +35,21 @@ described here is implemented and working. Values marked TBD are not decided yet
 - The mode decides who is DRIVING and never what the rules are. Everything the players agreed
   to is Match settings, below, and a mode may not change one
 
+# The start of a match
+- **A GRACE PERIOD comes first.** For its first few seconds a match is held
+  completely still: nothing moves, no order is accepted, no clock runs, and a
+  countdown says how long is left. It exists so that every player's machine
+  arrives at the first moment of play together, rather than some starting while
+  others are still settling. BUILT
+  - it costs nobody a start delay: the match clock is given back what the hold
+    took, so every creep unlock and income payment is timed from its end
+  - it comes BEFORE the technology opening, so a draft's own clock only starts
+    once the grace period has run out
+  - a TUTORIAL skips it - the lesson decides for itself when the world moves
+  - its length is `start_grace_seconds` on the game config
+- Then the opening phase (under Sending creeps) and the technology opening (under
+  Match settings) run as they always have
+
 # Send topology
 - Players are arranged in a fixed ring
 - Every player sends creeps to their right neighbor and receives from their left neighbor
@@ -1077,6 +1092,36 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The command card shows only the abilities every selected unit shares
   - Selecting more units than the grid pictures is allowed. The extra ones are
     simply not shown, and stay selected
+- A selection holding more than one KIND of unit can be narrowed to a SUBGROUP -
+  one kind's worth of it - without the selection itself changing
+  - The card shared by everything selected is the right card for ordering them
+    together, and has nothing to say about what one KIND of them can do alone.
+    A subgroup is how that is reached without taking a hand-built mixture apart
+  - One key steps through the subgroups and then back to the whole selection,
+    and the same key with shift steps back. Which key is the controls config's
+    answer, and the player may rebind it
+  - The steps run in the order the kinds first appear in the selection. A
+    mixture is assembled by hand, so the order it was built in is the order it
+    is cycled in
+  - Warcraft has no "whole selection" step because it never draws a shared card
+    at all - it always shows one subgroup. This game draws one, so there is
+    something to come back to
+  - While a subgroup is up the card shows THAT kind's own abilities, so a
+    per-kind command is reachable with the rest of the selection still held
+  - A command pressed on the CARD goes to the subgroup. A command given by
+    clicking the WORLD - a move, an attack, the minimap - still goes to the
+    whole selection, which is what Warcraft does for every order
+  - The grid keeps picturing every selected unit in the order it was selected,
+    with the subgroup's tiles marked. Cycling moves the marks and moves nothing
+    else, so the strip never reflows under the player's hands
+  - Two kinds are the minimum. A single unit, and a selection of one kind, have
+    nothing to cycle and the key does nothing
+  - A unit of the active subgroup dying leaves the subgroup on its own kind.
+    Only when the last of that kind goes does it fall back to the whole
+    selection
+  - Changing the selection at all puts it back to the whole selection
+  - An upgraded tower is a different kind, so a subgroup part-way through
+    upgrading splits in two. That is correct: the two tiers draw different cards
 
 # Camera
 - The camera never follows the builder automatically
@@ -1164,10 +1209,13 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - Saving over a slot that already holds a plan asks first, in a box that
     blocks the rest of the game until it is answered. Saving into an empty one
     does not ask
+  - The save card also carries a RESTORE DEFAULTS command, which erases every
+    blueprint the player saved and puts every slot back the way a fresh install
+    has it. It always asks first, in the same blocking box
 - Some blueprints SHIP WITH THE GAME, so a new player opens with a set of
   worked mazes rather than nine empty squares
   - They are ordinary blueprints in every other way, and saving over one
-    replaces it on that machine
+    replaces it on that machine until the defaults are restored
 
 # Mazing
 - Players place towers to lengthen the creep path
@@ -1324,23 +1372,19 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     option VISIBLE, which a key nobody mentioned is not
   - it backs out of ONE thing per press: the order being aimed first, then the
     menu it was aimed from
-- **CLOSE ONCE, THEN HOLD.** A unit sent at a target walks straight at it, and
-  from the moment it is in reach it stays put - through the windup and the whole
-  cooldown behind it - setting off after the creep again only when the next
-  attack is ready
-  - the approach is never gated on the cooldown. The unit has to be in reach
-    anyway, arriving early costs nothing anybody would want back, and an order
-    that left it standing for a whole attack period would read as an order that
-    never registered
-  - what IS refused is TRAILING: once it has arrived, following a creep through
-    a cooldown it can do nothing with buys nothing and quietly takes the kiting
-    out of the player's hands. Hit and run is the PLAYER's to order, which is
-    what makes it a skill
-  - re-issuing the order on the creep it is ALREADY standing at does not hand
-    the walk back. Otherwise the rule would be undone by clicking twice, and
-    the fastest player would be the one who spams the button
-  - a DIFFERENT creep is a different quarry and gets its own approach, at once,
-    however long the cooldown has left
+- **A UNIT THAT WALKS FOLLOWS ITS TARGET WITH SLACK.** Sent at a target, it
+  walks straight at it and stands to fight from the moment it is in reach
+  - with its attack READY it closes at once, however near the target is, and
+    swings the moment it arrives. The first approach is never gated either: an
+    order that left it standing for a whole attack period would read as one
+    that never registered
+  - it never walks out of a WINDUP. The swing is committed and lands on the
+    creep it was aimed at
+  - ON COOLDOWN, having arrived, it stands still while the target stays within
+    its reach plus a CHASE MARGIN, and sets off only once the target is past
+    that - then walks until the target is back in REACH, not merely back inside
+    the margin. Following every step a walking creep takes read as a
+    stutter-step. The margin is the attack's own setting
   - it changes nothing for a tower, which never moves, or for an attacker creep
     marching on a tower that cannot run away. The builder is the unit it is
     actually about
@@ -1352,14 +1396,20 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     with a 0.1s windup still attacks once a second: what changes is where in
     that second the damage lands, not how often it lands. A windup that added
     to the cooldown would make every animation a silent balance change
+  - **the cooldown is charged when the blow LANDS, never when the swing
+    starts,** and it is the period less the windup. So an attack that never
+    went through costs nothing and the next swing may start at once: one
+    dropped mid-windup, or one whose creep died with nothing left to catch
   - a tower COMMITS when the windup starts. It has picked what it is hitting
     and cannot be retargeted mid-swing, or the animation would play at one
     creep and land on another
   - a creep that dies during the windup does not waste the swing: it lands
     where that creep stood, so a splash still catches the crowd around it. The
-    same rule a projectile already follows when its target dies mid flight
+    same rule a projectile already follows when its target dies mid flight.
+    With no splash or other effect to land it hits nothing, and charges no
+    cooldown
   - a tower that stops being able to attack mid-swing - one that starts
-    upgrading - drops the swing. The cooldown is not handed back
+    upgrading - drops the swing, which charges no cooldown
   - **a unit that WALKS drops its swing the moment a new order arrives**, and
     that is the one place the commitment above gives way. Told to move, to
     build or to fight something else mid-windup, it abandons the blow at once
@@ -1370,8 +1420,12 @@ PANEL shows and what a countdown means are gameplay and are the user's.
       saying the fight is over
     - it is only for what walks. Nothing a player can order a tower to do is a
       reason to take a swing back, and a tower is never in the player's way
-    - the cooldown is not handed back here either, so spamming orders at a
-      unit is not a way to make it attack faster
+    - no cooldown is charged, and spamming orders still cannot make it attack
+      faster: damage only ever lands at the end of a whole windup, and the
+      cooldown behind it always runs
+    - re-ordering the creep it is ALREADY swinging at keeps the swing. That
+      order says what it is doing anyway, and dropping the blow on every click
+      would mean a player clicking repeatedly never lands one
     - SHIFT-queueing does not cancel anything: a queued order is what to do
       NEXT, and the swing in the air is still what is happening now
   - a windup is authored only where there is an animation to fill it. A delay
@@ -2308,15 +2362,21 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     - a tower built across the line a creep is walking is the commit rule
       above: nothing changes until the creep reaches the tower's face. A tower
       built merely beside the line changes nothing at all
-  - Only ATTACKER creeps push each other apart. A pack of them crowds at a
-    choke point rather than stacking into one body, and no two of them may ever
-    stand inside each other at all - see the attacker rules below
+  - **NO creep is ever pushed apart by another creep.** BUILT. An ATTACKER
+    instead takes a SPOT of its own before it sets off, and no other attacker
+    is sent to that spot - see the attacker rules below. While it is walking it
+    holds no ground at all and passes through anything in its way
+    - pushing was tried and is what made a commanded pack behave like a liquid:
+      one shared destination plus a per-tick mutual correction has no
+      arrangement to settle into, so it shoves itself about for ever. Nothing
+      that ships steers a commanded unit that way
   - Every other creep walks straight through its own kind. They are sent in
     packs and a lane holds a hundred of them, so nobody can read one body from
     two anyway, and shoving them apart pairwise cost more per tick than every
     other thing a creep does put together
-  - Both halves are a number rather than a rule in code, so crowding can be
-    switched back on for the whole roster without touching one
+  - a soft push for the ORDINARY roster is still a number rather than a rule in
+    code, and it is off. Nothing switches the attackers' spots off - taking a
+    spot is what replaced pushing rather than a setting beside it
 - Killed creeps pay bounty gold to the player whose maze they died in
   - Not to whoever fired the killing shot and not to the sender, so nothing
     anywhere has to track who dealt the damage
@@ -2333,14 +2393,24 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
     branch has been waiting for
   - the height is visual only. Every distance in the game is measured flat, so
     nothing is ever out of reach for being in the air
-  - they crowd only against other flyers: a pack walking underneath one is not
-    something either of them can feel
+  - a flyer takes up room the same way and only against other flyers: a pack
+    walking underneath one is not something either of them can feel
 - ATTACKER creeps go after the towers instead of past them. BUILT.
   - they are the only creep their owner can select, box-select and command, and
     they carry Move, Stop and Attack like any other unit
-  - left alone, one walks to the NEAREST tower, destroys it, and moves on to the
-    next. It never advances towards the end zone of its own accord, so stealing
-    a life with one is something its owner has to ORDER
+  - left alone - meaning with no order outstanding - one walks to the NEAREST
+    tower, destroys it, and moves on to the
+    next. While anything it could attack is still standing it never advances
+    towards the end zone of its own accord, so stealing a life out of a maze
+    that still has a defence is something its owner has to ORDER
+  - **an attacker with NOTHING left to attack walks to the end zone and steals
+    a life, exactly as an ordinary creep does.** BUILT. It has finished the job
+    it was sent to do and there is no work left for it to walk to, so standing
+    on the rubble would only mean the maze that lost every tower kept its lives
+    - a maze holding only discs is exactly this case, since an attacker can do
+      nothing with one - see the disc rule below
+    - it reads the maze on the way out like any other creep of its kind: one
+      that walks takes a route, one that flies goes straight
   - a move order means MOVE: it walks and does not stop to fight. An attack
     order cancels the move rather than fighting it
     - which is about FIRING and not about being ORDERED. A walking attacker
@@ -2358,27 +2428,76 @@ apart: armour TYPE, which is a matchup, and armour POINTS, which is a number.
       instead of for the exit, and it is only planned again when that spot
       moves to another cell. An attack order re-aims its walk every tick and
       must not cost a search every tick
-  - **an attacker keeps a ring of ground to itself and no other attacker may
-    enter it**, which is the one place in the game where two units are held
-    apart rather than merely nudged. The room it claims is a share of its own
-    SELECTION CIRCLE, so what a player is looking at is what the creep takes up
-    and a bigger attacker takes more of it
-    - held every tick and wherever the tick left it, so it holds for one
-      standing still as much as for one walking. A creep walked into is shoved
-      out of the way rather than stood inside, which is what pushing looks like
-      in any other RTS
+  - **a walk onto a TOWER is aimed at the ring of ground within reach of it,
+    never at the tower itself**, and it takes whichever of that ring is nearest
+    BY ROUTE rather than by straight line. BUILT.
+    - there is no standing on a tower, so a route asked for one has to be
+      given some other cell instead - and the cell that is nearest as the crow
+      flies is routinely on the far side of it. In a maze the far side is round
+      the outside of a wall, so an attacker standing in front of a tower would
+      set off on a long walk to reach its back. Asking for the whole ring at
+      once makes the near face win on its own, because the near face is one
+      step away and the far one is forty
+    - the walk finishes a little inside that reach rather than exactly at its
+      edge, so a creep shoved off its spot by the pack beside it does not fall
+      straight back out of reach
+    - an attacker that can reach NO part of that ring - every cell it could
+      swing from sealed off from where it stands - keeps the order and stands
+      still rather than pressing into the wall, and tries again when a tower is
+      built or sold. It never silently gives up and walks somewhere else
+  - **an attacker takes up room only when it is STANDING STILL.** BUILT. The
+    room it takes is a share of its own SELECTION CIRCLE, so what a player is
+    looking at is what the creep takes up and a bigger attacker takes more of
+    it - and a spot is only ever offered on ground no standing attacker already
+    covers, so two of them cannot be sent inside each other
+    - a WALKING attacker holds nothing and is walked through. That is the whole
+      correction: room is something a spot is chosen to respect, never
+      something a push negotiates at runtime, so nothing is ever shoved and
+      there is nothing left to oscillate
     - only against other ATTACKERS, and only on its own layer: a pack walking
       underneath a flyer is not something either of them can feel
-    - the share is a number rather than a rule in code, and zero switches the
-      whole thing off and leaves the soft push every other creep has
-  - a pack ordered onto ONE POINT piles up around it rather than stacking on
-    it. Whoever gets there first holds the point and the rest stop where they
-    are blocked, so the pack settles outwards a ring at a time instead of
-    circling forever looking for a way in
-    - that giving-up is for a point on the GROUND only. An attack order names a
-      tower, and there is a whole ring of ground within reach of one, so a
-      creep sent onto a tower keeps going and is shoved round the outside until
-      it finds a place to stand
+    - a spot is given up when the creep is told to do something else, when it
+      is Stopped, and when the world moves it. Never by being walked into
+  - **a pack ordered onto a point is given a SPOT EACH rather than all being
+    sent to the one point.** BUILT. They are laid out in a block around it,
+    facing the way they are travelling, so every creep has somewhere of its own
+    to arrive at and nobody is waiting on anybody
+    - whoever was at the front of the group gets a spot at the front of the
+      block, so the pack keeps the shape it had and no creep walks through
+      another to reach its place
+    - it is a LAYOUT and never a marching order. They leave the instant the
+      order lands, each at its own speed by its own route; nothing forms up
+      first, nothing waits for a straggler, and nothing walks backwards to hold
+      the shape
+    - the spots are whole CELLS of the lane's own grid, spaced by at least the
+      room the widest creep in the group takes up, so a pack that has arrived
+      is standing still because no two of them were ever sent to the same
+      ground - not because something stopped pushing
+    - **and it STAYS there.** An attacker that was sent somewhere and got there
+      is still carrying that order: it keeps its spot and does not wander off
+      to a tower of its own accord. Stop is what hands it back to the march.
+      It still shoots whatever walks into its reach while it stands there
+    - where the ground will not take the whole block the block SQUEEZES to the
+      width that is free, a spot that still lands in a wall moves to the
+      nearest ground that is not, and anything left over falls back on the old
+      rule below
+  - there is no piling up and no settling outwards. A creep for which no free
+    spot could be found at all keeps its order and stands where it is
+  - **a pack ordered onto one TOWER is given a spot each on the ring of ground
+    within reach of it.** BUILT. Found by the same route search the walk uses,
+    so the near face wins by route rather than by straight line, and a pack
+    coming at one face takes that face rather than walking round
+    - as many attack at once as the free ground around that tower allows and no
+      more. The number is geometry, not a chosen cap
+    - a creep with no free spot inside reach is given one just OUTSIDE it: it
+      walks there, stands facing the tower and waits. It is not idle - anything
+      that comes into its own reach while it stands there is still hit
+    - it never switches to another tower on its own. The player named this one,
+      and being ignored is worse than being kept waiting. An attack-MOVE is the
+      order that picks its own fights, and an attacker marching with nobody
+      steering it takes the next tower when a ring is full
+    - killing the named tower ends the order, so the pack moves on rather than
+      standing on the rubble. Only a creep sent to a PLACE keeps its spot
   - an attacker creep can only ever target a TOWER. The builder and technology
     discs cannot be attacked at all - not "are tough", not "are ignored while a
     tower is in range": they are not valid targets, ever. Enforced by their
@@ -2432,8 +2551,25 @@ The rules that hold whatever the roster says:
   - one creep is refused outright above that cap rather than merely paying
     less, because it is nothing BUT income and a cheaper version of it would be
     a creep with no purpose left
-  - the clock, the floor, the cap and the share are all in
-    `game_config.tres`; the creeps are `unit_data.md` 6.5
+  - **and every living player LOSES LIVES on the income beat, destroyed rather
+    than stolen.** It is the only place the life pool ever shrinks. Every other
+    life in the game changes hands, so a table of players who all hold their
+    mazes has no way of ending the match between them - this is the way out,
+    and it is what Sudden Death is ultimately FOR
+    - paid by everybody at once and paid to nobody, so it shortens every
+      remaining runway together rather than favouring whoever is ahead
+    - it can never eliminate anybody. A player is held at their last life and
+      only a LEAK can take that one: the clock shortens a match, a creep still
+      decides it
+    - FEWER PLAYERS LEFT MEANS A BIGGER DRAIN, because there is less left for it
+      to work on. A duel is the shape it exists to end
+    - the first income tick of Sudden Death is free, and the drain starts on the
+      one after. A player is handed the whole of tier 4 and the income floor at
+      that moment, and charging them in the same instant would be taking lives
+      for a chance they have not had a tick to use
+  - the clock, the floor, the cap, the share and the drain are all in
+    `game_config.tres`; the creeps are `unit_data.md` 6.5, and what the drain
+    takes is 1.7
 - Bounty is per creep, so a pack pays out once per creep in it
 - Income is per SEND rather than per creep, and the ratio of income to cost gets
   worse as creeps get stronger. That is what makes early sends compound
@@ -2751,6 +2887,8 @@ fixed for the life of that match.
 BUILT.
 
 - Lives are stolen, not just lost
+  - with ONE exception, and it is the only one in the game: Sudden Death drains
+    lives from everybody and destroys them. See The creep roster
 - When a creep reaches the end of a maze, its owner steals 1 life from the defending player
   - The defender loses 1 life and the owner gains 1
 - The creep is not removed. It is teleported to the next player's maze and continues
@@ -2901,12 +3039,18 @@ that gets edited with it. What is recorded is WHICH decision was never yours.
 - The senders' display names are still placeholders, all four of them
 - Creep models are primitives varying only by shape, size and colour. Tower
   models are primitives too, but to a deliberate system - see Presentation
-- Creep separation strength is a tuning value you change while testing. Whatever
-  it currently reads is a test state, not a decision - and the waypoint bug it was
-  once masking is gone, so it is worth a real call at some point
-- So is the share of its selection circle an ATTACKER keeps clear, and how near
-  an ordered point a crowd counts as arriving. Both were set to feel their way
-  to a number rather than decided, and both are one value in the match config
+- Creep separation strength for the ORDINARY roster is a tuning value you change
+  while testing. Whatever it currently reads is a test state, not a decision -
+  and the waypoint bug it was once masking is gone, so it is worth a real call at
+  some point. The attacker half of it is gone rather than turned down
+- So is the share of its selection circle an ATTACKER takes up, which now sets
+  how far apart its spots are laid out rather than how hard it shoves. It was set
+  to feel its way to a number rather than decided, and it is one value in the
+  match config
+- So is whether a commanded attacker that arrived KEEPS its spot or goes back to
+  hunting towers. Holding is what lets a formation survive its own completion;
+  not holding is an attacker that carries on eating the maze. One value in the
+  match config, and a mildly balance-relevant call rather than a feel one
 
 # Open questions
 - Recycling rule generalisation for 3+ players (deferred)

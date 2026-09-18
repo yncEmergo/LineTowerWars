@@ -41,6 +41,7 @@ offset_bottom = 44.0
 size_flags_horizontal = 3
 theme = ExtResource("2_compact")
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+focus_behavior_recursive = 1
 script = ExtResource("1_slot")
 _index_label = NodePath("Row/IndexLabel")
 _name_label = NodePath("Row/NameLabel")

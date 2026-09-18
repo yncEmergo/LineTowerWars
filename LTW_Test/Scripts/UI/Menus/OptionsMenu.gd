@@ -103,7 +103,6 @@ func open() -> void:
 		return
 	_sync_from_settings()
 	show()
-	_focus_active_tab()
 
 
 func close() -> void:
@@ -344,14 +343,3 @@ func _refresh_hotkey_rows() -> void:
 func _say(text: String) -> void:
 	if _hotkey_message != null:
 		_hotkey_message.text = text
-
-
-## Focus lands on the tab that is open rather than on the first control of the
-## page, so the arrow keys walk the tabs the way the mouse does.
-func _focus_active_tab() -> void:
-	if _tab_row == null:
-		return
-	for button: BaseButton in _buttons_of(_tab_row):
-		if button.button_pressed:
-			button.grab_focus()
-			return

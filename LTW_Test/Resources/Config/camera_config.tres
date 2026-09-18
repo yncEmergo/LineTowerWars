@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_camera_config")
 pitch_degrees = -70.0
-distance = 15.0
+distance = 20.0
 edge_margin_px = 40

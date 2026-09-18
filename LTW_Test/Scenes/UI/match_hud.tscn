@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/draft_panel.tscn" id="17_draft"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/match_end_panel.tscn" id="17_match_end"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tech_reveal_panel.tscn" id="17_reveal"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/grace_panel.tscn" id="17_grace"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_spotlight.tscn" id="20_spotlight"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_pointer.tscn" id="21_pointer"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_panel.tscn" id="22_tutorial"]
@@ -64,6 +65,7 @@ visible = false
 [node name="SelectionBox" type="Control" parent="." unique_id=478782438]
 layout_mode = 3
 anchors_preset = 0
+focus_behavior_recursive = 1
 script = ExtResource("1_selection_box")
 
 [node name="UnitPanel" parent="." unique_id=650437609 instance=ExtResource("2_unit_panel")]
@@ -104,6 +106,7 @@ offset_right = 186.5
 offset_bottom = 40.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_status_bar")
+focus_behavior_recursive = 1
 script = ExtResource("3_status_bar")
 _gold_label = NodePath("Row/Gold/GoldLabel")
 _population_label = NodePath("Row/Population/PopulationLabel")
@@ -182,6 +185,7 @@ offset_left = -312.0
 offset_bottom = 38.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_c6esv")
+focus_behavior_recursive = 1
 script = ExtResource("4_player_stats")
 _row_list = NodePath("Column/RowList")
 _height_source = NodePath("../MatchStatusBar")
@@ -254,6 +258,10 @@ process_mode = 3
 visible = false
 
 [node name="TechRevealPanel" parent="." instance=ExtResource("17_reveal")]
+process_mode = 3
+visible = false
+
+[node name="GracePanel" parent="." instance=ExtResource("17_grace")]
 process_mode = 3
 visible = false
 

@@ -64,6 +64,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 theme_override_styles/focus = SubResource("StyleBoxFlat_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
+focus_behavior_recursive = 1
 script = ExtResource("1_option")
 _icon_rect = NodePath("Margin/Column/Portrait/Icon")
 _background = NodePath("Margin/Column/Portrait/Background")

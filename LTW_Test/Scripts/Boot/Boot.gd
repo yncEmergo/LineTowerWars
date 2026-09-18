@@ -75,7 +75,51 @@ func _dispatch() -> void:
 		# after it, and the server branch never asks because it has no output
 		# device and nothing a player wrote in a file may quieten it.
 		UserSettings.apply_volumes()
-		_open("client", _client_scene_path())
+		_start_logging()
+		var entry: String = _client_scene_path()
+		_prewarm_menus(entry)
+		_open("client", entry)
+
+
+## Every OTHER menu screen, loaded on a worker thread while this one opens the
+## first of them.
+##
+## The point is the LOADING SCREEN and the press that opens it. A menu button is
+## the one place in the game where a player gets no feedback whatsoever until
+## the next screen is up, because the scene it opens is loaded inside the press
+## - and the screen that arrives late is the one that would have said "loading".
+## The rest of the menus ride along because they are the same swap and cost
+## nothing to ask for. See SceneUtil.prewarm.
+##
+## The entry scene is skipped: it is loaded synchronously a line later, so
+## asking a worker for it too would only add a handoff.
+##
+## A CLIENT ONLY. The server opens one scene, has no menus, and has nobody
+## sitting in front of it waiting for a button to answer.
+func _prewarm_menus(entry_path: String) -> void:
+	if _menus == null:
+		return
+	for path: String in _menus.menu_scene_paths():
+		if path == entry_path:
+			continue
+		SceneUtil.prewarm(path)
+
+
+## What a client's logs record from here on. A client only: the server's log is
+## the journal, which stamps every line itself.
+##
+## **Timestamps on the Godot log**, in milliseconds since the process began. It
+## had none, so in playtest 8 the only lines that could be lined up with the
+## session log beside it were the few that happened to carry a turn number. The
+## session log's header writes the same clock's reading when it opens, which is
+## what joins the two files.
+##
+## Stamped here rather than in project.godot so the editor, which keeps its own
+## copy of the project settings, cannot quietly write it back out.
+func _start_logging() -> void:
+	Log.show_timestamps()
+	Log.use_timestamp_type(Log.TimestampTypes.TICKS_MSEC)
+	SessionLog.start_by_default()
 
 
 ## The server's entry scene, named by BootConfig.

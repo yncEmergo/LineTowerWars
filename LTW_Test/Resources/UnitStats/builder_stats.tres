@@ -22,9 +22,10 @@ script = ExtResource("7_AttackStats")
 damage_min = 4
 damage_max = 5
 attacks_per_second = 0.3333333
-windup_seconds = 0.75
+windup_seconds = 0.5
 auto_acquire = false
 attack_range = 1.25
+chase_margin = 0.5
 shows_range = false
 delivery = SubResource("Delivery")
 

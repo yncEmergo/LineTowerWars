@@ -51,6 +51,7 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_empty")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_empty")
 clip_text = true
+focus_behavior_recursive = 1
 script = ExtResource("1_command_slot")
 _hotkey_label = NodePath("HotkeyLabel")
 _charge_label = NodePath("ChargeLabel")

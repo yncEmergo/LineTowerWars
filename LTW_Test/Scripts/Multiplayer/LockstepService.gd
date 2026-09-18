@@ -76,6 +76,17 @@ signal turn_ready(turn: int, commands: Array)
 ## would stall waiting; today it is only worth knowing about.
 signal turn_stalled(turn: int, missing: PackedInt32Array)
 
+## A stall ended: the turn it was waiting on arrived and was played. How long the
+## world was held, in wall-clock milliseconds, and how many sealed turns were
+## already queued behind it.
+##
+## **The backlog is what tells a frozen MACHINE from a late SEAL.** A peer that
+## stopped for a second while the relay kept sending comes back with a second's
+## worth of turns waiting; a seal that was merely late arrives with nothing behind
+## it. Playtest 8's diagnosis rested on exactly that, reconstructed the long way
+## from catch-up lines because nothing marked the end of a stall.
+signal turn_resumed(turn: int, held_ms: int, backlog: int)
+
 ## The turn a match-start comparison belongs to, which is before any turn has
 ## run. Mirrors MatchStartService.DESYNC_START_TICK.
 const NO_TURN: int = -1
@@ -396,6 +407,9 @@ var _repairs_served: int = 0
 var _repair_seals_sent: int = 0
 ## Relay: drift reports so far, which is what paces the link report.
 var _drift_reports: int = 0
+## Relay: what this match is costing, for the one summary line written when it
+## ends. See `RelayMatchStats`.
+var _relay_stats: RelayMatchStats = RelayMatchStats.new()
 
 ## Peer: the highest turn ever filed in `_sealed`. A turn above the one being
 ## waited on having ARRIVED is the proof that the one being waited on was lost,
@@ -445,6 +459,7 @@ func _ready() -> void:
 	# was scheduled for would take effect a tick later on this machine than the
 	# schedule says - and every machine has to agree about that to the tick.
 	set_physics_process(true)
+	MatchStart.match_abandoned.connect(_on_match_abandoned)
 
 
 func _physics_process(_delta: float) -> void:
@@ -475,6 +490,8 @@ func _physics_process(_delta: float) -> void:
 	# never stalls, so the measurement never stops on the machine that takes it.
 	if MatchSession.is_relay():
 		_frames += 1
+		if _relay_stats.is_open():
+			_relay_stats.note_tick(_authored_rate())
 		_drop_silent_peers()
 		_seal_stream()
 		_report_drift()
@@ -597,6 +614,7 @@ func _advance_turn(clock_turn: int) -> void:
 		Log.debug("Turn arrived, resuming", {
 			"turn": turn, "waited_on": _stalled_on,
 		})
+		turn_resumed.emit(turn, Time.get_ticks_msec() - _stall_started_msec, _sealed.size())
 		_stalling = false
 		_stalled_on = NO_TURN
 		_set_held(false)
@@ -1016,6 +1034,20 @@ func _report_drift() -> void:
 	})
 
 
+## Relay only: the match is over, so what it cost goes into the journal as one
+## line. See `RelayMatchStats`.
+##
+## On the signal rather than from this service's own reset, because the reset
+## only runs when the NEXT match begins - which may be never, and is too late to
+## say anything about this one either way.
+func _on_match_abandoned(match_id: String) -> void:
+	if !_relay_stats.is_open():
+		return
+	var summary: Dictionary = _relay_stats.summary(_repairs_served, _repair_seals_sent)
+	summary["match"] = match_id
+	Log.info("Relay match summary", summary)
+
+
 ## Seconds per ENGINE physics tick, for wall-clock arithmetic only.
 ##
 ## **Deliberately not `MatchSession.tick_seconds()`, and the split is the point.**
@@ -1432,6 +1464,7 @@ func _seal_stream() -> void:
 			"peers": _match_peers(),
 			"waited_frames": _seal_wait_frames,
 		})
+		_relay_stats.begin(_match_id, _match_peers().size())
 
 	var pending: Array = _pending_orders
 	_pending_orders = []
@@ -1488,6 +1521,7 @@ func _seal_stream() -> void:
 	_recent_seals.append([turn, orders])
 	while _recent_seals.size() > ECHO_TURNS:
 		_recent_seals.remove_at(0)
+	_relay_stats.note_seal(turn, orders, _recent_seals)
 	for peer: int in _match_peers():
 		if peer in live:
 			receive_seal_echo.rpc_id(peer, _recent_seals)
@@ -2230,7 +2264,7 @@ func _pace_engine() -> void:
 		return
 	if wanted != authored && _paced_at != wanted:
 		SessionLog.note("lockstep.catchup", {
-			"rate": wanted, "authored": authored,
+			"turn": _last_run_turn, "rate": wanted, "authored": authored,
 			"behind_ms": behind + _catch_up_target_ms(), "held": _sealed.size(),
 		})
 	_paced_at = wanted

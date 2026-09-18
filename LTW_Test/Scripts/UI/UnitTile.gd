@@ -11,6 +11,16 @@ extends Button
 
 signal unit_clicked(unit: Unit)
 
+@export_group("References")
+## Border drawn over the icon while this unit is in the active subgroup.
+##
+## A child laid over the button rather than a swapped stylebox. The prefab's
+## own normal and hover boxes are theme overrides already, so a second pair
+## would have to be kept in step with them - and neither sets a content margin,
+## so each side falls back to its BORDER WIDTH and a thicker border would
+## silently change the padding and jump the icon. See CLAUDE.md.
+@export var _highlight: Control
+
 var unit: Unit
 
 
@@ -27,6 +37,10 @@ func set_unit(new_unit: Unit) -> void:
 	unit = new_unit
 	visible = true
 	disabled = false
+	# Tiles are pooled and refilled rather than freed, so a mark left behind by
+	# the last selection would reappear on an unrelated unit. Cleared HERE as
+	# well as in clear(), because this is the path a refill takes.
+	set_highlighted(false)
 	# The prefab sets expand_icon, without which a Button grows to fit whatever
 	# it is given - see CommandSlot for the same trap.
 	icon = new_unit.stats.icon if new_unit.stats != null else null
@@ -41,6 +55,17 @@ func clear() -> void:
 	disabled = true
 	icon = null
 	tooltip_text = ""
+	set_highlighted(false)
+
+
+## Whether this unit is in the active subgroup.
+##
+## A BORDER rather than a size change, which is what Warcraft draws: the strip
+## is a fixed grid, so a bigger tile would reflow the whole row every time the
+## subgroup was cycled - and the point of the strip is that it holds still.
+func set_highlighted(value: bool) -> void:
+	if _highlight != null:
+		_highlight.visible = value
 
 
 func _tooltip(target: Unit) -> String:

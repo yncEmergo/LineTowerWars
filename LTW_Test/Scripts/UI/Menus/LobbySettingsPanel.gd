@@ -347,6 +347,12 @@ func _set_range(spin: SpinBox, low: float, high: float, step: float) -> void:
 
 
 func _connect_controls() -> void:
+	# Click-only, because the editor inside a SpinBox is a node the .tscn
+	# cannot name. See FocusPolicy.
+	for spin: SpinBox in [
+		_lives_spin, _gold_spin, _research_spin, _income_spin, _interval_spin
+	]:
+		FocusPolicy.click_only(spin)
 	if _lives_spin != null:
 		_lives_spin.value_changed.connect(_on_lives_changed)
 	for spin: SpinBox in [_gold_spin, _research_spin, _income_spin, _interval_spin]:

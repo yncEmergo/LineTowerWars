@@ -47,6 +47,14 @@ func count() -> int:
 	return _by_id.size()
 
 
+## Every id this build contains, ascending, so anything written from it reads
+## the same on every machine. Read by MatchRecorder for its name table.
+func ids() -> PackedInt32Array:
+	var result: PackedInt32Array = PackedInt32Array(_by_id.keys())
+	result.sort()
+	return result
+
+
 ## Reports every unit type nobody numbered. An unnumbered type is invisible to
 ## replication, so a creep carrying one would spawn on the server and never
 ## appear on any client - which looks like a networking fault and is not one.

@@ -54,7 +54,7 @@ extends Node
 ## more than this method is. Called `on()` at first, it failed to PARSE with
 ## "Static function on() not found in base ButtonSounds" - in a file that
 ## plainly declares it. The cause was not the name: the reference copy this
-## class was rewritten from, sitting under ReferenceFilesFromOtherProjects,
+## class was rewritten from, sitting under ReferencesForClaude,
 ## still declared `class_name ButtonSounds` too, and the global class cache
 ## had resolved that identifier to THAT file. Every call was reaching a
 ## different class than the one being read.

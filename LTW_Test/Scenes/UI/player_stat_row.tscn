@@ -6,6 +6,7 @@
 offset_right = 292.0
 offset_bottom = 24.0
 theme_override_constants/separation = 6
+focus_behavior_recursive = 1
 script = ExtResource("1_row")
 _name_label = NodePath("NameLabel")
 _life_label = NodePath("LifeLabel")

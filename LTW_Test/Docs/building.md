@@ -131,7 +131,7 @@ Excluded by the preset's filter:
   `steam_api` DLL next to the game as a startup dependency, in exchange for nothing, and a
   missing or blocked one fails at load rather than politely. It stays in the repo for the day
   it is used; the filter is the line to remove.
-- **`ReferenceFilesFromOtherProjects`** — reference material from elsewhere, imported by
+- **`ReferencesForClaude`** — reference material from elsewhere, imported by
   Godot because only its `SteamLobbyTemplate` subfolder carries a `.gdignore`. None of it is
   reachable from the game, and none of it is ours to hand out.
 

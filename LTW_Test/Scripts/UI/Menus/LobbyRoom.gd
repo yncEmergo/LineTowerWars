@@ -33,6 +33,9 @@ extends Control
 @export var _leave_button: Button
 ## Turns the session log on for this run. See SessionLog.
 @export var _log_check: CheckBox
+## Keeps the match this machine is about to play, rather than letting the next
+## one replace it as the last match. See MatchRecorder.
+@export var _record_check: CheckBox
 
 @export_group("Settings")
 ## The slot row prefab. A node's own prefab stays a PackedScene export.
@@ -52,6 +55,7 @@ var _config: MenuConfig:
 func _ready() -> void:
 	_connect_buttons()
 	_setup_log_check()
+	_setup_record_check()
 	Lobby.current_lobby_changed.connect(_on_current_lobby_changed)
 	Lobby.lobby_closed.connect(_on_lobby_closed)
 	Lobby.countdown_changed.connect(_on_countdown_changed)
@@ -267,9 +271,10 @@ func _set_status(text_value: String) -> void:
 
 ## The session log switch.
 ##
-## **Off unless the player asks for it**, which it is by default because the
-## logger starts closed and nothing else opens it. A tester who was not asked to
-## reproduce anything does not need a file quietly growing on their disk.
+## **On unless the player turns it off**, because `Boot` opens it for every
+## windowed client when `NetworkConfig.session_log_on_by_default` says so. An
+## opt-in log is the one that is missing when it is needed (playtest 8), and the
+## folder is pruned, so it does not grow for ever.
 ##
 ## The box REFLECTS the current state rather than forcing it - an earlier version
 ## reset it to off here, which quietly switched off a log the player had already
@@ -290,6 +295,28 @@ func _on_log_toggled(on: bool) -> void:
 		_set_status("Session log: " + ProjectSettings.globalize_path(SessionLog.path()))
 	else:
 		_set_status("Session logging off.")
+
+
+## The same shape as the log box, for the same reasons: off unless asked for,
+## and it reflects the choice rather than forcing it, since the choice is a
+## static that outlives this screen - so stepping out of the lobby and back in
+## keeps a tick. Starting a match spends it, so the box is empty again for the
+## next one (MatchRecorder.begin). It is THIS machine's choice alone - every
+## peer simulates the same match, so whoever wants the file ticks the box and
+## nobody else's disk is touched.
+func _setup_record_check() -> void:
+	if _record_check == null:
+		return
+	_record_check.button_pressed = MatchRecorder.is_armed()
+	_record_check.toggled.connect(_on_record_toggled)
+
+
+func _on_record_toggled(on: bool) -> void:
+	MatchRecorder.set_armed(on)
+	if on:
+		_set_status("This match will be kept in " + MatchRecorder.folder_path())
+	else:
+		_set_status("This match will only be the last match, until the next one.")
 
 
 func _stand_in_lobby() -> LobbyInfo:

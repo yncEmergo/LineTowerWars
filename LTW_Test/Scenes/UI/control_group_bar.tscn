@@ -26,6 +26,7 @@ offset_top = 16.0
 offset_right = 16.0
 offset_bottom = 16.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+focus_behavior_recursive = 1
 script = ExtResource("1_control_group_bar")
 _slot_grid = NodePath("SlotGrid")
 _slot_scene = ExtResource("2_control_group_slot")

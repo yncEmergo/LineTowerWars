@@ -48,6 +48,11 @@ extends Node
 ## PRESENTATION-ADJACENT rather than simulation: nothing in it is checksummed
 ## and nothing reads it back into the world. See MatchStats.
 @export var _match_stats: MatchStats
+## Writes this match to a file, when this machine asked for it in the lobby.
+## Wired by the client match scene only: a relay builds no world to record.
+##
+## Like MatchStats it only READS the world. See MatchRecorder.
+@export var _match_recorder: MatchRecorder
 ## The computer opponents in this match, or a node that makes none. Wired by
 ## both match scenes, because a SKIRMISH is a match like any other and the
 ## server scene has to stay the same shape as the client one.
@@ -108,10 +113,12 @@ extends Node
 ## nothing after it ever reads it again.
 @export var _boot_config: BootConfig
 ## What this build is and when it was made. Wired by the menu scenes, which are
-## where it is shown; a match never asks.
+## where it is shown, and by the boot scene, where the session log that names it
+## is opened.
 @export var _build_info: BuildInfo
 ## Where the server listens and where a client dials. Wired by every scene
-## that can touch the network: the lobby screens and the server.
+## that can touch the network: the lobby screens and the server - and the boot
+## scene, which reads the session log settings off it.
 @export var _network_config: NetworkConfig
 ## How the local player's view is drawn. PRESENTATION ONLY, so a dedicated
 ## server leaves it null and everything that reads it falls back to a sane
@@ -124,6 +131,9 @@ extends Node
 ## Every AI difficulty this build contains. Wired by the match scenes and by the
 ## single player setup screen, which is the one place a player picks one.
 @export var _ai_config: AiConfig
+## The shape of a match recording. Wired by the client match scene, the only
+## one that records.
+@export var _recording_config: RecordingConfig
 
 static var instance: References
 
@@ -204,6 +214,12 @@ static var match_stats: MatchStats:
 		if instance == null:
 			return null
 		return instance._match_stats
+
+static var match_recorder: MatchRecorder:
+	get:
+		if instance == null:
+			return null
+		return instance._match_recorder
 
 static var effects_root: Node3D:
 	get:
@@ -312,6 +328,12 @@ static var ai_config: AiConfig:
 		if instance == null:
 			return null
 		return instance._ai_config
+
+static var recording_config: RecordingConfig:
+	get:
+		if instance == null:
+			return null
+		return instance._recording_config
 
 ## Claimed on entering the tree rather than in _init, so the static handle
 ## only ever points at a node that is actually live. _init would also fire

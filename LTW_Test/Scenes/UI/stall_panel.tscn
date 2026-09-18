@@ -26,6 +26,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+focus_behavior_recursive = 1
 script = ExtResource("1_stall")
 _panel = NodePath("Panel")
 _status_label = NodePath("Panel/Box/Column/StatusLabel")

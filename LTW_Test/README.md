@@ -47,6 +47,18 @@ format, so a
 divergence reported by a tester is reproducible rather than a shrug. It lands in the game's
 user folder; on Windows that is `%APPDATA%\Godot\app_userdata\LTW_Test\logs\`.
 
+**Every match is recorded to a file**, the way Warcraft III keeps its last replay: the match
+just played is always `last_match.jsonl`, and the next match to finish replaces it. A "Keep
+replay" tick box in the lobby room and on the single player setup screen keeps a copy under
+its own name as well - per machine and per match, off by default. Nothing is recorded on the
+server. The file holds every
+order every player gave and what came of it, every tower built, upgraded, sold or destroyed
+with its cell and its tick, every send, and regular snapshots of each player's economy and
+whole maze, under a header naming the seed, the roster and every id it uses. It is written for
+two readers that do not exist yet - a replay, and training the computer opponent - and it
+lands in `%APPDATA%\Godot\app_userdata\LTW_Test\recordings\`. `MatchRecorder.gd` documents the
+format.
+
 **The match does not stop the first time something is spawned.** Everything a match can put
 in the world — every unit, model, disc, projectile, impact and sound — is loaded on the load
 screen rather than the first time it appears. That matters more under lockstep than it would
@@ -112,7 +124,10 @@ Timber Wolf that only ever arrives inside a Sheep pack and the Ghoul that only e
 of a dead Obsidian Statue. They unlock one at a time on the match clock, cost population that
 is now enforced, and come in three kinds: ordinary creeps that walk the maze, flyers that
 ignore it entirely, and attackers that go after the towers and are the only creeps their owner
-can command. A Boss steals more than one life; how many is per creep, in the roster.
+can command. A pack of them takes a spot each rather than one shared point — a block on the
+lane's grid for a move order, a ring of ground within reach for a tower — and holds it, which is
+what makes commanding them read like an RTS rather than like a fluid. A Boss steals more than
+one life; how many is per creep, in the roster.
 
 **Building that roster is where most of the game's machinery came from**, because a creep is
 where the rules get interesting. Creeps carry MANA, banked from being hit or regenerated on a
@@ -132,7 +147,10 @@ the whole of tier 4 unlocks at once, with no per-creep start delay, and tiers 1 
 sendable for the rest of the match — the only time a creep is ever taken away from a player.
 Anybody under an income floor is raised to it, once, so a player who has been losing slowly can
 still afford the tier that ends the match; and tier 4 sends stop paying properly above an
-income cap, so Sudden Death does not compound.
+income cap, so Sudden Death does not compound. From the next income tick on, every living
+player also bleeds lives on the income beat — destroyed rather than stolen, the one place the
+life pool shrinks, and more of them the fewer players are left. It cannot eliminate anybody:
+a player is held at their last life, so the clock shortens a match and a creep still decides it.
 
 **A creep sender has no body.** It stands nowhere on the map: no model, no footprint, nothing
 to click, nothing on the minimap and nowhere for the camera to fly to. There is one per creep
@@ -315,7 +333,7 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | File | Contents |
 | --- | --- |
 | [game_rules.md](Docs/game_rules.md) | **The RULES**: how the game works — economy, mazing, sending, damage resolution, lives, win condition. Says which of them are built. Holds no numbers; points at unit_data.md for every one. |
-| [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferenceFilesFromOtherProjects/LineTowerWarsData/`. |
+| [unit_data.md](Docs/unit_data.md) | **The NUMBERS**: every tower, creep, disc and technology of Warcraft III Line Tower Wars 12.4a, whose balance the prototype copies. Costs, stats, upgrade paths, tech requirements, and what is still unknown. Reconstructed from `ReferencesForClaude/LineTowerWarsData/`. |
 | [content.md](Docs/content.md) | **The PROCEDURE**: how a tower, creep, disc or ability is added or changed — which files it is made of, which of them ModelGen generates and must not be hand-edited, how an id is picked, and what refuses bad content at boot. |
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
 | [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D29) behind it. The long one. |
@@ -430,7 +448,7 @@ Scripts/    GDScript
 Tools/      build-time tooling that runs OUTSIDE Godot, not part of the game,
             plus the control scripts: run_server, stop_server, run_bench
 addons/     godotsteam (GDExtension), log, godot_ai, reload_current_scene
-ReferenceFilesFromOtherProjects/   read-only reference material, not part of the build
+ReferencesForClaude/   read-only reference material, not part of the build
 ```
 
 `3DArt/` and `Audio/` are where meshes and sound go. They do not exist yet: nobody has drawn

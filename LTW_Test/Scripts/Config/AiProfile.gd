@@ -78,10 +78,22 @@ extends Resource
 ## How many rows of the generated zigzag to lay down. Fewer is a shorter maze
 ## and so a shorter walk for a creep, which is most of what makes an easy AI
 ## easy to leak.
+##
+## **A plan bigger than the AI can BUILD is a hole rather than a maze**
+## (Findings/2026-09-12) - but that is about a plan with expensive entries in the
+## middle of it. A LEFT-RIGHT maze is built front to back, so a plan it never
+## finishes is simply a shorter maze, and rows past what it can afford cost
+## nothing. That is why the easy profile plans the whole lane and the others do
+## not.
 @export var zigzag_rows: int = 12
-## Player cells of corridor between one row of towers and the next. One is the
-## tightest a creep can walk; wider is a shorter path through the same lane.
-@export var zigzag_corridor_cells: int = 1
+## INTERNAL cells of corridor between one row of towers and the next.
+##
+## **Internal rather than player cells, because half a cell is the corridor a
+## proper left-right maze uses** (strategy.md 5.5) and a whole-cell count cannot
+## say it. One internal cell is the tightest a creep can walk and fits about a
+## third more rows into the lane than two do; wider is a shorter path through
+## the same ground.
+@export var zigzag_corridor_internal_cells: int = 1
 ## Which tower the AI opens with, as a res:// path to its BuildingStats. It has
 ## to be one the builder can actually place - a 10g Basic or the Elemental Core
 ## - because everything above those is reached by upgrading.
@@ -195,12 +207,12 @@ extends Resource
 ## that Ultimate.
 ##
 ## **This number is the whole of whether a hard AI ever gets there**, and it took
-## two runs to find. An elemental cell resolves down to a 200g Elemental Core,
-## and the build rule stops at the entry it cannot afford rather than stepping
-## past it - so an AI whose maze turns elemental early saves for one Core at
-## twenty gold a payout, never reaches a maze worth sending from, never grows its
-## income, and is still saving for the same Core ten minutes later. Measured:
-## eight towers in five minutes and not one creep sent.
+## two runs to find. An elemental cell resolves down to a 200g Elemental Core, so
+## an AI whose maze turns elemental early spends its opening saving for Cores
+## instead of putting up the cheap wall that lets it send at all. Measured: eight
+## towers in five minutes and not one creep sent. (The build rule no longer
+## STALLS on that cell - the plan is a set, walked for the cheapest thing it can
+## afford - but the gold still goes somewhere, and early is the wrong place.)
 ##
 ## Long enough that the cheap wall is up and the income is moving, which is also
 ## the order a person builds in.

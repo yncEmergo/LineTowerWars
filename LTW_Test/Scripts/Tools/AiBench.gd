@@ -5,6 +5,7 @@ extends Node
 ##
 ##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- a=hard b=normal
 ##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- players=4 minutes=25
+##   godot --path . --headless res://Scenes/Tools/ai_bench.tscn -- record=1
 ##
 ## **The question it answers is "is this difficulty actually harder than that
 ## one", and there is no other way to ask it.** A profile is a dozen numbers -
@@ -70,6 +71,13 @@ func _ready() -> void:
 	])
 	for player in setup.players:
 		print("  slot %d  %s" % [player.slot, player.display_name])
+
+	# Every match is recorded as the last match, this one included. `record=1`
+	# KEEPS it too, like a player's ticked box - which makes the bench a source of
+	# AI-against-AI matches as well as a referee. See MatchRecorder.
+	if int(_number("record", 0.0)) != 0:
+		MatchRecorder.set_armed(true)
+		print("  keeping the recording in %s" % MatchRecorder.folder_path())
 
 	MenuNavigation.pending_match = setup
 	var scene: PackedScene = load(MATCH_SCENE) as PackedScene
@@ -161,6 +169,7 @@ func _finish() -> void:
 		"  (Sudden Death)" if record.reached_sudden_death else "",
 	])
 	_print_table(record)
+	_print_pair_line(record)
 	get_tree().quit()
 
 
@@ -182,6 +191,49 @@ func _print_table(record: MatchSummary) -> void:
 		])
 		if !line.ultimates.is_empty():
 			print("       %s" % ", ".join(line.ultimates))
+
+
+## ONE LINE a script can read, about the two seats being compared.
+##
+## **The table above is for a person and this is for the matrix runner**
+## (Tools/run_ai_matrix.ps1), which plays every pair both ways round over several
+## seeds and has to total up who won. Parsing the table would mean parsing
+## placement words and padded columns; this is `key=value` and cannot drift with
+## the layout.
+##
+## `winner` is by PLACEMENT rather than by lives, because that is what winning a
+## match means: a match that reached the clock with both alive says `none`, and
+## the lives either side of it are on the line for whoever wants to break the tie
+## themselves.
+func _print_pair_line(record: MatchSummary) -> void:
+	var first: MatchStatLine = _line_for(record, 1)
+	var second: MatchStatLine = _line_for(record, 2)
+	if first == null || second == null:
+		print("AI BENCH PAIR  incomplete: fewer than two seats were recorded")
+		return
+
+	var winner: String = "none"
+	if first.placement > 0 && second.placement > 0 && first.placement != second.placement:
+		winner = "a" if first.placement < second.placement else "b"
+
+	print(("AI BENCH PAIR a=%s b=%s seed=%d minutes=%s winner=%s"
+		+ " lives_a=%d lives_b=%d income_a=%d income_b=%d towers_a=%d towers_b=%d"
+		+ " sent_a=%d sent_b=%d sudden_death=%d") % [
+		_text("a", "Normal"), _text("b", _text("a", "Normal")),
+		int(_number("seed", 0.0)), StringUtil.trim_number(_minutes, 1), winner,
+		first.lives_left, second.lives_left,
+		first.peak_income, second.peak_income,
+		first.towers_built, second.towers_built,
+		first.creeps_sent, second.creeps_sent,
+		1 if record.reached_sudden_death else 0,
+	])
+
+
+func _line_for(record: MatchSummary, slot: int) -> MatchStatLine:
+	for line in record.lines:
+		if line.slot == slot:
+			return line
+	return null
 
 
 ## A profile's index, by the display name its .tres carries.
