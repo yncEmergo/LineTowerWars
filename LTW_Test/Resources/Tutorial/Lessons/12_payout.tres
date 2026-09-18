@@ -8,4 +8,5 @@ continues_lesson = true
 body = "Watch your gold when the timer runs out."
 objective = "Wait for a payout."
 delay_seconds = 0.0
+next_payout_seconds = 5.0
 highlight_key = &"income_timer"

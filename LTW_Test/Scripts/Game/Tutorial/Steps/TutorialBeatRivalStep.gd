@@ -15,11 +15,15 @@ func is_complete(director: TutorialDirector) -> bool:
 	return director != null && director.is_rival_beaten(rival)
 
 
-func progress_text(director: TutorialDirector) -> String:
-	if director == null:
-		return ""
+## Lives taken of the lives it started with - "(3/10)".
+func progress(director: TutorialDirector) -> Vector2i:
+	if director == null || director.script_resource == null:
+		return Vector2i.ZERO
 	var lives: int = director.rival_lives(rival)
-	return "" if lives < 0 else "Their lives: %d" % lives
+	var start: int = director.script_resource.rival_lives
+	if lives < 0 || start <= 0:
+		return Vector2i.ZERO
+	return Vector2i(clampi(start - lives, 0, start), start)
 
 
 func validate() -> bool:

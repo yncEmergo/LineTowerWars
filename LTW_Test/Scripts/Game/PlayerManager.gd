@@ -357,6 +357,16 @@ func conclude(winner_slot: int) -> void:
 	match_ended.emit(winner_slot)
 
 
+## Moves the next income payout to `seconds` from now. The ones after it follow
+## on the usual interval from there. The tutorial's, for a lesson that waits on
+## a payout; offline only by use, like everything that sets its board.
+func pay_next_income_in(seconds: float) -> void:
+	var session: MatchSession = References.match_session
+	if session == null || !MatchSession.is_authority():
+		return
+	_next_income_at = session.elapsed_seconds() + maxf(0.0, seconds)
+
+
 ## A player's living creeps, counted as the sum of what each one costs in
 ## population - which is per SENDER rather than per lane, because it is a limit
 ## on what you have put into the world, not on what is walking through yours.

@@ -50,6 +50,10 @@ const HOLD_REASON: StringName = &"tutorial"
 ## The name a MOMENT holds the world and pins the camera by, separate from a
 ## lesson's so the two let go independently.
 const MOMENT_REASON: StringName = &"tutorial_moment"
+## How far down the lane from a moment's creep the camera is pinned, in world
+## units, so the creep sits in the upper part of the screen - clear of the
+## panel in the middle that says what it is. Presentation, so a constant.
+const MOMENT_CAMERA_LEAD: float = 4.0
 ## The name a lesson pins the camera by.
 const CAMERA_REASON: StringName = &"tutorial_lesson"
 ## The name the world is held by once the player has lost. Never released: the
@@ -534,6 +538,9 @@ func _apply_grants(step: TutorialStep) -> void:
 			Log.warn("A lesson sets an income below what the player already earns, left alone",
 				{"wanted": step.set_income, "income": state.income})
 	_apply_unlock_clock(step)
+	var manager: PlayerManager = References.player_manager
+	if step.next_payout_seconds >= 0.0 && manager != null:
+		manager.pay_next_income_in(step.next_payout_seconds)
 	if step.unlocks_research:
 		_research_open = true
 
@@ -717,7 +724,7 @@ func _fire_moment(moment: TutorialMoment, subject: Creep) -> void:
 		session.hold(MOMENT_REASON, true)
 	var camera: RTSCamera = References.rts_camera
 	if camera != null:
-		camera.pin(MOMENT_REASON, subject.global_position)
+		camera.pin(MOMENT_REASON, subject.global_position + Vector3(0.0, 0.0, MOMENT_CAMERA_LEAD))
 	Log.info("Tutorial moment", {"title": moment.title})
 	lesson_changed.emit()
 

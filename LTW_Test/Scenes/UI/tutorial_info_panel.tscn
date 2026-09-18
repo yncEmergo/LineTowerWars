@@ -18,7 +18,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialInfoPanel" type="Control" node_paths=PackedStringArray("_text_label", "_count_label", "_continue_button")]
+[node name="TutorialInfoPanel" type="Control" node_paths=PackedStringArray("_title_label", "_text_label", "_count_label", "_continue_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,9 +28,10 @@ grow_vertical = 2
 mouse_filter = 2
 focus_behavior_recursive = 1
 script = ExtResource("1_info")
+_title_label = NodePath("Center/Board/Column/TitleLabel")
 _text_label = NodePath("Center/Board/Column/TextLabel")
-_count_label = NodePath("Center/Board/Column/Footer/CountLabel")
-_continue_button = NodePath("Center/Board/Column/Footer/ContinueButton")
+_count_label = NodePath("Center/Board/Column/CountLabel")
+_continue_button = NodePath("Center/Board/Column/ContinueButton")
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -50,26 +51,32 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_board")
 layout_mode = 2
 theme_override_constants/separation = 12
 
+[node name="TitleLabel" type="Label" parent="Center/Board/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+horizontal_alignment = 1
+
 [node name="TextLabel" type="Label" parent="Center/Board/Column"]
 custom_minimum_size = Vector2(312, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.91, 0.94, 1)
 theme_override_font_sizes/font_size = 14
 text = ""
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Footer" type="HBoxContainer" parent="Center/Board/Column"]
+[node name="CountLabel" type="Label" parent="Center/Board/Column"]
 layout_mode = 2
-
-[node name="CountLabel" type="Label" parent="Center/Board/Column/Footer"]
-layout_mode = 2
-size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.6, 0.62, 0.68, 1)
 theme_override_font_sizes/font_size = 12
 text = ""
+horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="Center/Board/Column/Footer"]
-custom_minimum_size = Vector2(110, 0)
+[node name="ContinueButton" type="Button" parent="Center/Board/Column"]
+custom_minimum_size = Vector2(130, 32)
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 13
 text = "Continue"

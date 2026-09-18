@@ -132,6 +132,11 @@ enum CameraPin {
 ## income until a lesson hands them over, and a lesson hands over exactly what
 ## its task costs. That is why this is per step rather than a starting total.
 @export var grant_gold: int = 0
+## Seconds until the next income payout when this step opens, or below zero to
+## leave the beat alone. Only the NEXT payout moves; the ones after it follow on
+## the usual interval. For a lesson that waits on a payout and should not keep
+## the player waiting a whole beat for it.
+@export var next_payout_seconds: float = -1.0
 ## Income handed over permanently when this step opens - the base income a real
 ## match starts with, arriving at the moment the lesson about income opens.
 @export var grant_income: int = 0
@@ -305,9 +310,12 @@ func tasks(director: TutorialDirector) -> Array[Task]:
 	var list: Array[Task] = []
 	if objective.is_empty():
 		return list
-	var progress_line: String = "" if director == null else progress_text(director)
-	var text: String = objective if progress_line.is_empty() \
-		else "%s\n%s" % [objective, progress_line]
+	# One line: the count goes on the end of the task in brackets rather than on
+	# a line of its own - "Kill the Skeletons (12/45)".
+	var counted: Vector2i = Vector2i.ZERO if director == null else progress(director)
+	var text: String = objective
+	if counted.y > 0:
+		text = "%s (%d/%d)" % [objective.trim_suffix("."), mini(counted.x, counted.y), counted.y]
 	list.append(Task.new(text, director != null && director.is_between_lessons()))
 	return list
 

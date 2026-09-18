@@ -411,6 +411,10 @@ func _read_moment(director: TutorialDirector) -> void:
 		_check(References.rts_camera.is_pinned(), "moment '%s': the camera is pinned" % moment.title)
 		_check(director.moment_focus() != Vector3.INF, "moment '%s': it has a creep to light" % moment.title)
 		_check(_pointer_target_name() == "<none>", "moment '%s': no button highlighted" % moment.title)
+		var info: Control = get_tree().root.find_child("TutorialInfoPanel", true, false) as Control
+		var panel: Control = get_tree().root.find_child("TutorialPanel", true, false) as Control
+		_check(info != null && info.visible, "moment '%s': in the centred info panel" % moment.title)
+		_check(panel != null && !panel.visible, "moment '%s': the lesson panel is out of the way" % moment.title)
 	if _shoot("moment_" + moment.title.to_lower().replace(" ", "_")):
 		return
 	_moment_ticks += 1

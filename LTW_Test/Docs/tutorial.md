@@ -106,8 +106,8 @@ kind.
 **WHAT IT SAYS** - a title, a paragraph, and one line in the imperative saying what to do now.
 **Short is the rule**: a lesson is read by somebody who wants to be playing. Each TASK is a row
 with a tickbox on the right that gets a green tick when it is done, and a task that can be
-counted says what it counts (`progress_label`): "Towers built: 1 / 4", "Waves killed: 2 / 4",
-counting only what this lesson asked for. A wave is every entry sharing one delay, and it is
+counted carries its count on the same line, in brackets after the task - "(1/4)" - counting
+only what this lesson asked for. A wave is every entry sharing one delay, and it is
 killed once none of its creeps is still in the lane (`TutorialWaves`). A LESSON CAN BE SEVERAL TASKS:
 each task is a step of its own - its own gold, limits, blueprint, highlights and waves - and a
 step with `continues_lesson` set is drawn as the next row of the lesson before it, under that
@@ -179,8 +179,10 @@ every income payout inside the skipped time on the next tick.
 the first time the player's creeps are about to leak past a row nothing can reach, the first
 flyer they send, the first attacker. Each fires once, whichever lesson is up - a player who
 never sends a flyer is never told about flyers, and one who sends one late is told then. The
-world is held under its own name, the camera is pinned on the creep, the spotlight dims
-everything else, the panel shows it with an OK, and the lesson underneath waits.
+world is held under its own name, the camera is pinned just down the lane from the creep so it
+sits clear of the middle of the screen, the spotlight dims everything else, and the moment is
+shown in the same centred panel an explanation uses (`TutorialInfoPanel`), with the same
+Continue. The lesson panel steps aside and the lesson underneath waits.
 
 **There is no skip.** A lesson cannot be passed without doing it, and a tutorial that offers a
 way out invites taking it. What makes that safe is the held opening's design: exact gold, exact

@@ -31,9 +31,8 @@ const POP_START: float = 0.94
 const POP_PEAK: float = 1.03
 const POP_UP_SECONDS: float = 0.12
 const POP_DOWN_SECONDS: float = 0.14
-## What the button says on a lesson that is read, and on a moment.
+## What the button says on a lesson that is read.
 const CONTINUE_TEXT: String = "Continue"
-const MOMENT_TEXT: String = "OK"
 
 @export_group("References")
 ## The board that pops, which is everything drawn.
@@ -56,8 +55,6 @@ const MOMENT_TEXT: String = "OK"
 
 ## The lesson last drawn, so a new one pops and a redraw of the same one does not.
 var _shown_lesson: int = 0
-## Whether a moment is what is drawn, so the lesson pops back when it is over.
-var _showing_moment: bool = false
 ## The tasks as last drawn, so the rows are only rewritten when something moved.
 var _tasks_shown: String = ""
 var _rows: Array[TutorialTaskRow] = []
@@ -97,16 +94,11 @@ func _refresh() -> void:
 
 	# An explanation has the middle of the screen to itself - see
 	# TutorialInfoPanel - and this panel would only be dimmed beside it.
-	if step is TutorialExplainStep && director.current_moment() == null:
+	# A moment has the middle of the screen too, in the same panel.
+	if step is TutorialExplainStep || director.current_moment() != null:
 		hide()
 		return
 	show()
-	if director.current_moment() != null:
-		_show_moment(director.current_moment())
-		return
-	if _showing_moment:
-		_showing_moment = false
-		_shown_lesson = 0
 	# A lesson can be several steps, one per task: the title and the text come
 	# from the lesson's first step, unless the current task has words of its own.
 	var lessons: TutorialScript = director.script_resource
@@ -129,28 +121,6 @@ func _refresh() -> void:
 
 	if position_in_script.x != _shown_lesson:
 		_shown_lesson = position_in_script.x
-		_play_pop()
-
-
-## A moment in place of the lesson: its words and an OK, and no tasks - the
-## lesson's are still there when it is dismissed.
-func _show_moment(moment: TutorialMoment) -> void:
-	if _progress_label != null:
-		_progress_label.text = ""
-	if _title_label != null:
-		_title_label.text = moment.title
-	if _body_label != null:
-		_body_label.text = moment.body
-	if _task_list != null:
-		_task_list.visible = false
-	if _tasks_heading != null:
-		_tasks_heading.visible = false
-	_tasks_shown = ""
-	if _continue_button != null:
-		_continue_button.visible = true
-		_continue_button.text = MOMENT_TEXT
-	if !_showing_moment:
-		_showing_moment = true
 		_play_pop()
 
 
@@ -227,10 +197,6 @@ func _play_pop() -> void:
 
 func _on_continue_pressed() -> void:
 	var director: TutorialDirector = _director
-	if director == null:
-		return
-	if director.current_moment() != null:
-		director.dismiss_moment()
-	else:
+	if director != null:
 		director.acknowledge()
 
