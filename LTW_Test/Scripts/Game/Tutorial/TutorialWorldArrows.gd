@@ -26,9 +26,6 @@ const ARROW_SCENE_PATH: String = "res://Scenes/Effects/tutorial_hover_arrow.tscn
 const ABOVE_UNIT: float = 1.3
 ## How far above an empty cell the tip hovers.
 const ABOVE_CELL: float = 0.35
-## How much bigger than the authored mesh the arrow is drawn. The mesh is sized
-## for a close camera; this game's sits high over a whole lane.
-const ARROW_SCALE: float = 1.8
 
 var _scene: PackedScene = null
 var _pool: Array[Node3D] = []
@@ -103,16 +100,11 @@ func _open_cells(plan: TowerLayout) -> Array[Vector3]:
 	return points
 
 
-## The arrow is a flat slab facing +Z with its tip down local -Y, so it is
-## turned to face the camera COMPLETELY - a billboard - and then points straight
-## down the screen at the thing under it. Turning it about the vertical alone was
-## the first version, and under a camera looking almost straight down that left
-## a flat arrow seen nearly edge-on: a red smudge on the builder.
+## The arrow stands upright in the world and points straight down, as the
+## authored mesh does - a 3D object in the scene rather than a billboard. A
+## camera-facing version was tried and read worse than this.
 func _facing() -> Basis:
-	var camera: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
-	if camera == null:
-		return Basis.IDENTITY.scaled(Vector3.ONE * ARROW_SCALE)
-	return camera.global_basis.orthonormalized().scaled(Vector3.ONE * ARROW_SCALE)
+	return Basis.IDENTITY
 
 
 func _make_arrow() -> Node3D:

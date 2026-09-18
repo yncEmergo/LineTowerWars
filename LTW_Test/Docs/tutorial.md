@@ -210,7 +210,7 @@ then the tower inside it; nothing while an order is being aimed); then the contr
 the arrow with it. The dim around the target is opt-in (`dims_around_highlight`): on by default
 it greyed out the whole screen, lane included.
 
-**ARROWS IN THE WORLD** (`TutorialWorldArrows`), billboarded so they read from the high camera:
+**ARROWS IN THE WORLD** (`TutorialWorldArrows`), standing upright and pointing straight down:
 one over the builder while a lesson wants it selected, and one over every blueprint cell still
 open when `arrows_on_blueprint` is set. The mesh and its generator are
 `3DArt/Effects/tutorial_arrow*`, the scene `Scenes/Effects/tutorial_hover_arrow.tscn`, and the
