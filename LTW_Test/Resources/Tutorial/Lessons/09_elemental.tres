@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TutorialReachStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialReachStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Elemental towers"
+body = "An Elemental Core turns, for free, into a tower of an element you own. Every tier above that is an upgrade."
+objective = "Build an Elemental Core, then turn it into an elemental tower."
+skip_after_seconds = 150.0
+from_tower_path = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"

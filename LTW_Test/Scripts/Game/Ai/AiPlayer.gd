@@ -112,6 +112,24 @@ func begin(slot: int, profile: AiProfile) -> void:
 	})
 
 
+## Plays on as a different difficulty from now on: a new maze plan, new floors,
+## a new send beat.
+##
+## The tutorial's, and the reason is its shape: an opponent sits in its seat
+## as a sparring partner that only builds while the player learns, and then
+## starts playing properly when the lesson says so. Everything already standing
+## stays standing - the new plan steps past a cell something is already on, so
+## a partner whose short zigzag is the start of the new profile's long one
+## simply carries on building it.
+func change_profile(next_profile: AiProfile) -> void:
+	if next_profile == null:
+		Log.err("An AI was handed no profile to change to", {"slot": _slot})
+		return
+	_done.clear()
+	_send_clock = 0.0
+	begin(_slot, next_profile)
+
+
 ## The player this brain is playing for, for a name or a log line.
 func slot() -> int:
 	return _slot

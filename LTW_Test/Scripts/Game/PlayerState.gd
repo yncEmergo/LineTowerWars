@@ -47,6 +47,22 @@ var creeps_unlocked: bool = false
 ## The RULES that decide whether any of it may change are TechManager's. This
 ## only holds the record.
 var tech: PlayerTech = PlayerTech.new()
+## What this player may do when that is less than the rules allow, or null for
+## no limits at all - which is every player outside the tutorial. See
+## ActionLimits. Offline only: set by the tutorial and never replicated.
+var limits: ActionLimits = null
+## Whether this player is waiting OUTSIDE THE SEND RING: alive, with a lane and
+## a maze, but sent nothing and sending nothing until they are brought in.
+##
+## The tutorial's second opponent sits like this through the first half, so the
+## first half is a plain duel and the second opponent is already there - maze
+## and all - when it starts. The ring skips a player on standby exactly as it
+## skips an eliminated one (PlayerManager), and a standby player cannot send
+## (SendBuilding.can_send). They still count as ALIVE, which is what keeps the
+## match from ending the moment the first opponent falls.
+##
+## Offline only, like limits.
+var standby: bool = false
 
 var _config: GameConfig:
 	get:
@@ -151,6 +167,17 @@ func set_replicated(
 ## their maze is erased and they are given a placement; see PlayerManager.
 func is_eliminated() -> bool:
 	return lives <= 0
+
+
+## Sets how many lives this player has, outright. The tutorial setting its board
+## - an opponent that needs beating in minutes rather than in a match's length -
+## and nothing else: in a real match lives only ever change hands.
+func set_lives(count: int) -> void:
+	var wanted: int = maxi(1, count)
+	if wanted == lives:
+		return
+	lives = wanted
+	lives_changed.emit(lives)
 
 
 ## The authority's own figures, set rather than earned. Emits only on a change,

@@ -489,6 +489,13 @@ func _slots_for(command: Command, ability: UnitAbility, units: Array) -> Array[V
 ## overlay draws each unit's own waypoint, and a replication client gets it
 ## without a wire field.
 func _run_on(unit: Unit, ability: UnitAbility, command: Command, slot: Vector3) -> bool:
+	# A player held to a lesson's few buttons - see ActionLimits. Null for every
+	# player outside the tutorial, so this costs an ordinary match one lookup.
+	if !ActionLimits.permits(ability, unit):
+		Log.debug("Order refused, not allowed right now", {
+			"ability": ability.display_name, "slot": command.player_slot,
+		})
+		return false
 	var target: AbilityTarget = command.to_target(_session)
 	if target.has_position:
 		target.position = slot
@@ -556,6 +563,12 @@ func _apply_player_order(command: Command) -> void:
 		Command.PlayerAction.CHEAT_LOAD_LAYOUT:
 			_apply_cheat_load_layout(command)
 			return
+
+	# Everything past the cheats is the Research Center, which a lesson can lock
+	# until it is the thing being taught. See ActionLimits.
+	if !ActionLimits.permits_research(command.player_slot):
+		_reject(command, "the Research Center is not open to this player yet")
+		return
 
 	var tech: TechManager = References.tech_manager
 	if tech == null:

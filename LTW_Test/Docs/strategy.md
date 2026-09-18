@@ -525,8 +525,8 @@ catching both corridors at once.
 - A half-cell corridor fits about a third more rows into the lane than a full-cell corridor
   (measured with `Tools/MazeView`'s route on 2026-09-15). Every tower row then borders two
   corridors half a cell away.
-- The tutorial's full maze uses full-cell corridors, and today's AI generator cannot produce a
-  half-cell corridor at all (`ai-rework.md` phase 0).
+- The tutorial teaches this maze: from the very top, half a cell between rows, the same shape
+  the AI generator builds.
 
 ### 5.5a Upgrading while creeps are walking [expert]
 **It does not matter.** A tower stops shooting while it upgrades (`game_rules.md`, Upgrading a
@@ -782,7 +782,7 @@ described** (10.6). Only the questions that help the core understanding are aske
 Recorded so they are not mistaken for gaps in the AI's knowledge:
 - how juggling will be removed from the game (5.7)
 - how clicking a Kodo that is hidden behind other creeps should work (5.6)
-- the tutorial, which is a shell in the same state the AI was and is to be reworked
+- the tutorial, which had its first rework on 2026-09-18 and is still a first pass
   (`tutorial.md`)
 
 ### 10.6 What recordings of serious matches should answer

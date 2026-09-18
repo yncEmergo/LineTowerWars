@@ -99,6 +99,11 @@ func refresh_hotkeys() -> void:
 func open() -> void:
 	if _panel == null || _panel.visible:
 		return
+	# A lesson can keep the Research Center shut until it is what is being
+	# taught - see ActionLimits. Every road to this screen comes through here.
+	var players: PlayerManager = References.player_manager
+	if players != null && !ActionLimits.permits_research(players.local_player_id()):
+		return
 	_build()
 	_panel.show()
 	# This node's own processing is the two buttons at the foot. Each square

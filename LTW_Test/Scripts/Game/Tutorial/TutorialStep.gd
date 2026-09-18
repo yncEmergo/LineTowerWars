@@ -2,8 +2,8 @@
 class_name TutorialStep
 extends Resource
 
-## ONE LESSON of the tutorial: what it says, what it hands over, what has to
-## happen before the next one, and what it points at while the player does it.
+## ONE LESSON of the tutorial: what it says, what it hands over, what the player
+## may do while it is up, and what has to happen before the next one.
 ##
 ## A polymorphic Resource rather than a row in a table, and it is the same shape
 ## every other piece of behaviour in this project has: an attack's delivery is a
@@ -17,19 +17,43 @@ extends Resource
 ## TutorialDirector, which is the one object that knows a tutorial is being
 ## played at all.
 ##
-## Three things a step owns, and they are deliberately separate:
+## Four things a step owns, and they are deliberately separate:
 ##
-##   WHAT IT SAYS      the panel: a title, a paragraph, and the one line that
-##                     says what to do now.
-##   WHAT IT GIVES     gold, a blueprint to follow, a rule switched on. The
-##                     tutorial is not a normal match and does not pretend to
-##                     be: a lesson hands over exactly what it is about to talk
-##                     about and nothing else.
+##   WHAT IT SAYS      the panel: a title, a SHORT paragraph, and the one line
+##                     that says what to do now. Short is the rule - a lesson is
+##                     read by somebody who wants to be playing.
+##   WHAT IT GIVES     gold, a reserve of sends, a blueprint to follow, an
+##                     opponent woken up. A lesson hands over exactly what its
+##                     task needs and nothing else.
+##   WHAT IT ALLOWS    whether the match clock runs, and which buttons and cells
+##                     the player may use. The early lessons allow only the one
+##                     thing they ask for, so the gold they handed over cannot be
+##                     spent anywhere else.
 ##   WHEN IT IS DONE   asked of the world every tick, never reported by the
 ##                     thing that did it. That is what keeps the steps
 ##                     independent of the systems they teach - nothing in the
 ##                     builder, the sender or the tech screen knows a tutorial
 ##                     exists.
+
+## Which opponent a lesson is about. By ROLE rather than by slot, so a lesson
+## never has to know which lane the tutorial put anybody in - TutorialSetup
+## decides that and TutorialSetup.slot_for answers it.
+enum Rival {
+	NONE,
+	## The first opponent: a duel with it is where the basics are played out.
+	FIRST,
+	## The second: on standby, maze and all, until the first is beaten. Its half
+	## of the tutorial is where technology is taught.
+	SECOND,
+}
+
+## What to put on the command card when the lesson opens, so the first thing
+## the player sees is the card the lesson is talking about.
+enum Select {
+	NONE,
+	## The player's builder.
+	BUILDER,
+}
 
 @export_group("What it says")
 @export var title: String = ""
@@ -39,36 +63,45 @@ extends Resource
 @export var objective: String = ""
 
 @export_group("Pacing")
-## Whether the world is HELD STILL while this step is on screen.
+## Whether the WORLD is held still while this step is on screen - nothing moves
+## at all, and only the lesson panel answers a click.
 ##
-## True for anything that is read rather than done: the popup stops the match so
-## a player reading a paragraph is not being leaked on while they read. False
-## for a step whose objective IS to do something, where a frozen world would
-## make it impossible.
+## **Off for nearly everything, and that is deliberate.** A world held for
+## reading is a world the player cannot touch, which is the opposite of what a
+## lesson is for. Reach for it only where something really would go wrong
+## while the player reads - and prefer holds_clock, which stops what the match
+## does TO the player while leaving them free to act.
+@export var pauses_world: bool = false
+## Whether the match CLOCK stands still while this step is open: no income
+## payout, no creep unlock, no reserve refilling. Units still walk, towers
+## still go up and creeps still die.
 ##
-## Held through MatchSession.hold, which is the same mechanism a technology
-## draft uses, so the HUD stops with everything else and only the panel answers.
-@export var pauses_world: bool = true
+## What makes a task untimed. The early lessons hold it, so a player asked to
+## build a row takes as long as they like over it and nothing the clock times
+## moves on without them - the clock only runs again once a lesson that lets it
+## go opens. See MatchSession.hold_clock.
+@export var holds_clock: bool = false
 ## How long before the panel offers a way past this step, in seconds, or 0 for
-## one that is offered immediately.
+## never.
 ##
-## **This is the anti-softlock rule and it is not optional.** A step waits on
-## the world reaching a state, and a world can always be put in a state it
-## cannot reach - a maze built somewhere the blueprint did not ask for, gold
-## spent on the wrong thing, a creep that walked past. A tutorial that can be
-## stuck is worse than one that can be skipped.
-@export var skip_after_seconds: float = 45.0
-
+## **The anti-softlock rule.** A step waits on the world reaching a state, and
+## a world can sometimes be put in a state it cannot reach. The restricted
+## lessons are built so that it cannot - exact gold, exact cells, nothing else
+## allowed - so their skip is a safety net for a bug rather than a way out
+## anybody should need. A step whose end is an opponent BEATEN sets 0: skipping
+## it would wake the next opponent with the last one still in the ring, and the
+## match ends one way or the other on its own.
+@export var skip_after_seconds: float = 90.0
 
 @export_group("What it gives")
 ## Gold handed to the player when this step opens, on top of what they have.
 ##
-## The tutorial does NOT start as a normal match: there is no income until the
-## economy is taught, and a lesson hands over exactly enough to do the thing it
-## is about. That is why this is per step rather than a starting total.
+## The tutorial does NOT start as a normal match: there is no gold and no
+## income until a lesson hands them over, and a lesson hands over exactly what
+## its task costs. That is why this is per step rather than a starting total.
 @export var grant_gold: int = 0
-## Income handed over permanently when this step opens, for the economy lesson -
-## the first moment the tutorial starts behaving like a real match.
+## Income handed over permanently when this step opens - the base income a real
+## match starts with, arriving at the moment the lesson about income opens.
 @export var grant_income: int = 0
 ## A saved maze to draw over the player's zone while this step is up, as a
 ## res:// path to a TowerLayout, or empty for none.
@@ -85,27 +118,51 @@ extends Resource
 ## A creep to put into the PLAYER's own lane when this step opens, as a res://
 ## path to its CreepStats, or empty for a lesson that spawns nothing.
 ##
-## **The tutorial has to be able to attack the player, and in a two lane match
-## it otherwise cannot.** A creep that leaks walks on to the next lane in ring
-## order skipping its own sender, and in a 1v1 that resolves back to the lane it
-## just leaked - so nothing the player sends ever comes back at them, and the
-## sparring partner deliberately never sends. Without this the "watch your maze
-## work" lesson could only ever be skipped, which is a softlock wearing a
-## timer.
+## **The tutorial has to be able to attack the player before any opponent
+## does.** The first opponent sends nothing until the basics are taught, so the
+## lesson about watching a maze work sets up its own wave.
 ##
 ## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
 ## all resolve exactly as they would in a real match.
 @export_file("*.tres") var spawn_creep_path: String = ""
 ## How many of them.
 @export var spawn_creep_count: int = 0
-
-## Whether this step opens the whole send card, waiving every creep's start
-## delay for the player.
+## A creep whose reserve is SET, not topped up, to stock_count when this step
+## opens, as a res:// path to its CreepStats. Empty leaves every reserve alone.
 ##
-## The same switch the developer cheat throws, and reached for the same reason:
-## a tutorial teaching how sending works cannot spend four minutes waiting for
-## the second creep in the game to unlock.
-@export var unlocks_creeps: bool = false
+## What makes a sending lesson exact: four sends available and the gold for
+## four, with the clock held so nothing refills behind them.
+@export_file("*.tres") var stock_creep_path: String = ""
+@export var stock_count: int = 0
+## An opponent this step brings into the match properly: out of standby if it
+## was waiting there, and playing its real profile from now on instead of
+## sparring. See TutorialScript for which profile each one plays.
+@export var wakes_rival: Rival = Rival.NONE
+## Whether the Research Center opens with this step, and stays open for the rest
+## of the tutorial. Until one step says so it is shut, so technology arrives
+## when the lesson about it does rather than whenever a player finds the button.
+@export var unlocks_research: bool = false
+
+@export_group("What it allows")
+## Whether the player is held to allowed_abilities while this step is up.
+##
+## Off, the player may press anything the rules allow - which is every lesson
+## once the basics are done. On, only the abilities listed here and on the
+## script's always_allowed list work at all, and everything else on the card is
+## drawn dim. See ActionLimits.
+@export var restricts_actions: bool = false
+## The only abilities that work while restricts_actions is on, besides the
+## script's always_allowed. A build lesson lists the one tower it asks for; a
+## send lesson lists the one creep.
+##
+## **A TYPED ARRAY IN A .TRES IS ALL OR NOTHING** - one entry that fails to load
+## empties the list silently, and a restricted lesson with an empty list allows
+## nothing and cannot be finished. validate() refuses exactly that.
+@export var allowed_abilities: Array[UnitAbility] = []
+## Whether a restricted lesson's blueprint is also the only place a tower may
+## go. On, a tower can be started on the blueprint's cells and nowhere else, and
+## the build ghost turns red off it.
+@export var build_on_blueprint_only: bool = false
 
 @export_group("What it points at")
 ## A named control on the HUD to draw an arrow at while this step is up, or
@@ -135,6 +192,8 @@ enum Spotlight {
 }
 
 @export var spotlight: Spotlight = Spotlight.NONE
+## What to select for the player when the lesson opens. Presentation only.
+@export var selects: Select = Select.NONE
 
 
 ## Whether the world is now in the state this step was waiting for.
@@ -147,6 +206,15 @@ enum Spotlight {
 ## know is nearly always about the LOCAL player and about what has happened
 ## since the step opened, and the director is what holds both.
 @abstract func is_complete(director: TutorialDirector) -> bool
+
+
+## How far along the task is, as a short line the panel draws under the
+## objective - "4 / 7" - or empty for a task with nothing to count.
+##
+## The cheapest telegraph there is: a player who can see the number move knows
+## the thing they did counted.
+func progress_text(_director: TutorialDirector) -> String:
+	return ""
 
 
 ## What a step DOES when it opens, beyond the grants above. Nothing for most of
@@ -165,17 +233,24 @@ func validate() -> bool:
 	# The editor does not rewrite a path string when a .tres moves, so a renamed
 	# blueprint would leave a lesson quietly pointing at nothing - which reads as
 	# a lesson that forgot to say where.
-	if !blueprint_path.is_empty() && !ResourceLoader.exists(blueprint_path):
-		Log.err("Tutorial step names a blueprint that does not resolve", {
-			"step": title,
-			"path": blueprint_path,
-		})
+	for path: String in [blueprint_path, spawn_creep_path, stock_creep_path]:
+		if !path.is_empty() && !ResourceLoader.exists(path):
+			Log.err("Tutorial step names a resource that does not resolve", {
+				"step": title,
+				"path": path,
+			})
+			complete = false
+	if restricts_actions && allowed_abilities.is_empty():
+		# Either authored empty or emptied by one entry failing to load. Both
+		# leave a lesson the player cannot finish, because nothing works.
+		Log.err("Tutorial step restricts the player to no abilities at all", title)
 		complete = false
-	if !spawn_creep_path.is_empty() && !ResourceLoader.exists(spawn_creep_path):
-		Log.err("Tutorial step names a creep that does not resolve", {
-			"step": title,
-			"path": spawn_creep_path,
-		})
+	for ability: UnitAbility in allowed_abilities:
+		if ability == null:
+			Log.err("Tutorial step allows a null ability", title)
+			complete = false
+	if build_on_blueprint_only && blueprint_path.is_empty():
+		Log.err("Tutorial step keeps building to a blueprint it does not have", title)
 		complete = false
 	return complete
 
@@ -183,9 +258,12 @@ func validate() -> bool:
 ## The creep this lesson puts in the player's lane, or null for one that puts
 ## none. Loaded on first ask, on the same terms the blueprint is.
 func spawn_creep() -> CreepStats:
-	if spawn_creep_path.is_empty() || !ResourceLoader.exists(spawn_creep_path):
-		return null
-	return ResourceLoader.load(spawn_creep_path, "") as CreepStats
+	return _load_creep(spawn_creep_path)
+
+
+## The creep whose reserve this lesson sets, or null.
+func stock_creep() -> CreepStats:
+	return _load_creep(stock_creep_path)
 
 
 ## The plan this lesson puts on the ground, or null for one that puts none.
@@ -201,3 +279,9 @@ func blueprint() -> TowerLayout:
 	if blueprint_path.is_empty() || !ResourceLoader.exists(blueprint_path):
 		return null
 	return ResourceLoader.load(blueprint_path, "") as TowerLayout
+
+
+func _load_creep(path: String) -> CreepStats:
+	if path.is_empty() || !ResourceLoader.exists(path):
+		return null
+	return ResourceLoader.load(path, "") as CreepStats

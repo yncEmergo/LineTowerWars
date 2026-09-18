@@ -19,7 +19,7 @@ extends Control
 ##
 ## It is pinned to the TOP of that edge and grows DOWNWARDS, rather than sitting
 ## centred: a long lesson then runs towards empty screen instead of into the
-## send bar - which lesson nine points an arrow at.
+## send bar - which the sending lesson points an arrow at.
 ##
 ## It owns nothing. Which lesson is open and whether it is finished are
 ## TutorialDirector's; the two buttons report a press and nothing else.
@@ -38,6 +38,10 @@ extends Control
 ## - see TutorialDirector.may_skip - rather than being offered at once, which
 ## would read as an invitation.
 @export var _skip_button: Button
+
+## The progress reading last drawn, so the label is only rewritten when it
+## moves. "-" is a value no step returns, which forces the first draw.
+var _progress_shown: String = "-"
 
 var _director: TutorialDirector:
 	get:
@@ -84,9 +88,8 @@ func _refresh() -> void:
 		_title_label.text = step.title
 	if _body_label != null:
 		_body_label.text = step.body
-	if _objective_label != null:
-		_objective_label.visible = !step.objective.is_empty()
-		_objective_label.text = step.objective
+	_progress_shown = "-"
+	_draw_objective(step, director)
 
 	if _continue_button != null:
 		# Offered only where pressing it is what finishes the lesson. On a
@@ -103,10 +106,30 @@ func _refresh() -> void:
 ## it appears on is a render frame. The reading behind it is the director's
 ## simulation clock either way.
 func _process(_delta: float) -> void:
-	if _skip_button == null || !visible:
+	if !visible:
 		return
 	var director: TutorialDirector = _director
-	_skip_button.visible = director != null && director.may_skip()
+	if _skip_button != null:
+		_skip_button.visible = director != null && director.may_skip()
+	if director != null && director.current_step() != null:
+		_draw_objective(director.current_step(), director)
+
+
+## The objective line, with how far along it is when the step can count that -
+## "Build a Lesser Sentry on each blue square.  3 / 7". Redrawn only when the
+## count moves, since this is asked every frame.
+func _draw_objective(step: TutorialStep, director: TutorialDirector) -> void:
+	if _objective_label == null:
+		return
+	var progress: String = step.progress_text(director)
+	if progress == _progress_shown:
+		return
+	_progress_shown = progress
+	_objective_label.visible = !step.objective.is_empty()
+	if progress.is_empty():
+		_objective_label.text = step.objective
+	else:
+		_objective_label.text = "%s   %s" % [step.objective, progress]
 
 
 func _on_continue_pressed() -> void:

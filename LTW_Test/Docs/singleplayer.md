@@ -232,6 +232,13 @@ sends, upgrades or researches. `AiConfig.selectable_indices` is what keeps it ou
 dropdown, and the dropdown therefore maps a POSITION to a profile INDEX - the two are
 different numbers and anything that assumes otherwise offers a difficulty nobody should pick.
 
+Both tutorial opponents start as that sparring partner and are later WOKEN into a real
+profile - `ai_tutorial_rookie.tres` and `ai_tutorial_veteran.tres` - through
+`AiPlayer.change_profile`. Those two are not in `ai_config.tres` at all: the tutorial script
+names them by path, and nothing else can reach them. The partner's zigzag has the same rows
+and corridors as theirs, so the short maze it sparred with is the top of the longer one they
+go on to build. See `tutorial.md`.
+
 ## 8. What it does NOT do yet
 
 In roughly the order they are worth doing. Everything here is a rule or a field, not a

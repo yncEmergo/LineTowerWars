@@ -152,7 +152,7 @@ func next_maze_after(defender_id: int, sender_id: int) -> int:
 
 
 ## Walks the ring from `from` and returns the next living player who is not
-## `excluded`.
+## `excluded` and is not on standby.
 ##
 ## Falls back to `from` when the ring holds nobody else. In a match that means
 ## everybody else is out, so it is over and nothing is sent any more; in a one
@@ -164,8 +164,7 @@ func _next_living(from: int, excluded: int) -> int:
 		var slot: int = ((from - 1 + step) % count) + 1
 		if slot == excluded:
 			continue
-		var state: PlayerState = state_for(slot)
-		if state != null && !state.is_eliminated():
+		if _in_ring(state_for(slot)):
 			return slot
 	return from
 
@@ -182,10 +181,17 @@ func attacker_of(defender_id: int) -> int:
 		var slot: int = ((defender_id - 1 - step + count) % count) + 1
 		if slot == defender_id:
 			continue
-		var state: PlayerState = state_for(slot)
-		if state != null && !state.is_eliminated():
+		if _in_ring(state_for(slot)):
 			return slot
 	return defender_id
+
+
+## Whether a player takes part in the ring right now: alive, and not waiting on
+## STANDBY outside it. A standby player is skipped exactly as a dead one is, so
+## nothing is sent to them and nothing they would send has anywhere to go - see
+## PlayerState.standby.
+func _in_ring(state: PlayerState) -> bool:
+	return state != null && !state.is_eliminated() && !state.standby
 
 
 func _player_count() -> int:

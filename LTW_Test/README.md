@@ -294,13 +294,14 @@ left-right zigzag, which is the simplest maze the game has and the one the tutor
 See [singleplayer.md](Docs/singleplayer.md).
 
 **And there is a TUTORIAL**, which is a real match with a script on top rather than a
-diorama: the same world, economy, towers and send ring, with lessons handing over exactly what
-they are about to talk about. Fifteen of them, from what a lane is to why income beats bounty.
-A lesson is a resource, is finished by the world reaching a state it asks about every tick —
-so nothing in the builder or the sender knows a tutorial exists — and can always be skipped,
-because a step that waits on a world state can always be given a world it cannot reach. It
-points at a named HUD button with the rest of the screen dimmed, and can dim the lane around
-one creep and follow it while it walks. See [tutorial.md](Docs/tutorial.md).
+diorama: the same world, economy, towers and send ring. It opens HELD — the match clock stands
+still, each lesson hands over exactly the gold its task costs, and only the buttons and cells
+that task needs work, so the first maze and the first sends cannot go wrong. Then the limits
+come off and it is a real match against a computer opponent until that opponent is beaten, and
+a second one, waiting on standby outside the send ring the whole time, comes in to teach
+technology. A lesson is a resource finished by the world reaching a state, and it points at a
+named HUD button, draws a blueprint on the ground or dims the lane around one creep. It is a
+first pass at a proper tutorial, not a finished one. See [tutorial.md](Docs/tutorial.md).
 
 What is deliberately not built yet, in rough order of size: **bandwidth optimisation** (the
 server sends the whole world every tick, which is fine for a 1v1 on a LAN and nowhere near

@@ -81,6 +81,13 @@ func _process(_delta: float) -> void:
 	if _research_button != null:
 		var screen: ResearchCenter = _research
 		_research_button.set_active(screen != null && screen.is_open())
+		# Dimmed while a lesson keeps the Research Center shut, the way a
+		# command square is. See ActionLimits and CommandSlot.GATED_MODULATE.
+		var players: PlayerManager = References.player_manager
+		var locked: bool = players != null && !ActionLimits.permits_research(
+			players.local_player_id()
+		)
+		_research_button.modulate = CommandSlot.GATED_MODULATE if locked else Color.WHITE
 
 
 func _physics_process(_delta: float) -> void:

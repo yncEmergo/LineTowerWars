@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ai_profile")
 display_name = "Sparring Partner"
-description = "The tutorial's opponent. Builds a short maze for creeps to walk through, never sends anything back, and never finishes anybody off."
+description = "What both tutorial opponents play until a lesson wakes them. Builds a short maze for creeps to walk through and sends nothing. Its maze has the same rows and corridors as the profiles they wake into, so the short maze is the top of the long one."
 player_name_pattern = "%s"
 selectable = false
 decision_seconds = 2.0
@@ -13,7 +13,7 @@ distraction_chance = 0.0
 builds_per_pass = 1
 maze_layout_path = ""
 zigzag_rows = 4
-zigzag_corridor_internal_cells = 2
+zigzag_corridor_internal_cells = 1
 base_tower_path = ""
 send_floor_gold = 999999
 build_floor_gold = 999999

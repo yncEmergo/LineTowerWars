@@ -2,23 +2,29 @@
 
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialScript.gd" id="1_script"]
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialStep.gd" id="2_step"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_welcome.tres" id="3_01_welcome"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_builder.tres" id="4_02_builder"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_first_towers.tres" id="5_03_first_towers"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_maze_idea.tres" id="6_04_maze_idea"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_build_maze.tres" id="7_05_build_maze"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_upgrades.tres" id="8_06_upgrades"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_creeps.tres" id="9_07_creeps"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_ring.tres" id="10_08_ring"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_sending.tres" id="11_09_sending"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_income.tres" id="12_10_income"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_defend.tres" id="13_11_defend"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_technology.tres" id="14_12_technology"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_elementals.tres" id="15_13_elementals"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_discs.tres" id="16_14_discs"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_done.tres" id="17_15_done"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="3_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="a0_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="a1_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="a2_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="a3_always"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_wall.tres" id="s0_01_wall"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_zigzag.tres" id="s1_02_zigzag"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_wave.tres" id="s2_03_wave"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_send.tres" id="s3_04_send"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_income.tres" id="s4_05_income"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_upgrade.tres" id="s5_06_upgrade"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_beat_rookie.tres" id="s6_07_beat_rookie"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_technology.tres" id="s7_08_technology"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_elemental.tres" id="s8_09_elemental"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_beat_veteran.tres" id="s9_10_beat_veteran"]
 
 [resource]
 script = ExtResource("1_script")
 opponent_gold = 400
-steps = Array[ExtResource("2_step")]([ExtResource("3_01_welcome"), ExtResource("4_02_builder"), ExtResource("5_03_first_towers"), ExtResource("6_04_maze_idea"), ExtResource("7_05_build_maze"), ExtResource("8_06_upgrades"), ExtResource("9_07_creeps"), ExtResource("10_08_ring"), ExtResource("11_09_sending"), ExtResource("12_10_income"), ExtResource("13_11_defend"), ExtResource("14_12_technology"), ExtResource("15_13_elementals"), ExtResource("16_14_discs"), ExtResource("17_15_done")])
+first_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_rookie.tres"
+second_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_veteran.tres"
+rival_lives = 10
+rival_income_share = 1.0
+player_lives = 30
+always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always"), ExtResource("a3_always")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_wall"), ExtResource("s1_02_zigzag"), ExtResource("s2_03_wave"), ExtResource("s3_04_send"), ExtResource("s4_05_income"), ExtResource("s5_06_upgrade"), ExtResource("s6_07_beat_rookie"), ExtResource("s7_08_technology"), ExtResource("s8_09_elemental"), ExtResource("s9_10_beat_veteran")])

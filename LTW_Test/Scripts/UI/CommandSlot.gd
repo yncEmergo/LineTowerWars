@@ -23,6 +23,11 @@ signal ability_activated(ability: UnitAbility)
 ## Above 1 on purpose: it brightens the square rather than recolouring it, so
 ## it still reads once real icons replace the placeholder squares.
 const TOGGLED_MODULATE: Color = Color(1.4, 1.25, 0.7, 1.0)
+## A square the player is not ALLOWED to use right now, rather than one that is
+## merely not ready - see ActionLimits. The one case the card does tint, because
+## "not ready" says wait and this says look elsewhere, and a player being shown
+## the one button a lesson wants has to be able to tell the two apart.
+const GATED_MODULATE: Color = Color(0.3, 0.3, 0.3, 1.0)
 
 ## Charge count no ability can ever report, so the first refresh after a slot
 ## is filled always redraws the corner. Without it a slot refilled from a send
@@ -202,8 +207,11 @@ func _refresh_state() -> void:
 	# Nothing TINTS an unusable square either, any more: the icon stays lit and
 	# the cooldown fill says "not ready" on its own. See _sweep_progress().
 	var passive: bool = ability.targeting == UnitAbility.Targeting.PASSIVE
-	var usable: bool = !passive && ability.can_execute(_unit)
-	if ability.is_toggled_on(_unit):
+	var permitted: bool = ActionLimits.permits(ability, _unit)
+	var usable: bool = !passive && permitted && ability.can_execute(_unit)
+	if !permitted:
+		modulate = GATED_MODULATE
+	elif ability.is_toggled_on(_unit):
 		modulate = TOGGLED_MODULATE
 	else:
 		modulate = Color.WHITE

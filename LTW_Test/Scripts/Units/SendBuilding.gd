@@ -197,6 +197,21 @@ func fill_all_stocks() -> void:
 		stock_changed.emit()
 
 
+## Sets one reserve to exactly this many, and counts as its unlock if the creep
+## had not opened yet. The tutorial setting its board - a lesson that teaches
+## sending hands over the sends it is about and not one more - and nothing else.
+func set_stock(creep_stats: CreepStats, count: int) -> void:
+	var stock: CreepStock = stock_for(creep_stats)
+	if stock == null:
+		Log.err("There is no reserve for that creep on this sender", {
+			"sender": name,
+			"creep": creep_stats.display_name if creep_stats != null else "null",
+		})
+		return
+	stock.set_count(count)
+	stock_changed.emit()
+
+
 ## One reserve per creep the card offers, built from the abilities themselves
 ## so adding a creep to the card is all it takes to give it a reserve.
 ##
@@ -229,6 +244,13 @@ func _physics_process(_engine_delta: float) -> void:
 	# server sent, so anything that would advance the world here has to stand
 	# aside. See MatchSession.is_authority().
 	if !MatchSession.is_authority():
+		return
+	# **A reserve refills on the match clock's behalf, so it stops when the
+	# clock does.** It counts ticks rather than reading the clock, which is why
+	# it has to ask: a clock held for a lesson would otherwise go on handing out
+	# free sends to a player the lesson meant to have exactly four.
+	var session: MatchSession = References.match_session
+	if session != null && session.is_clock_held():
 		return
 
 	var changed: bool = false
@@ -340,6 +362,12 @@ func can_send(creep_stats: CreepStats) -> bool:
 
 	var manager: PlayerManager = References.player_manager
 	if manager != null && manager.is_match_over():
+		return false
+	# A player waiting outside the ring has nobody to send to. The ring would
+	# otherwise route them to the next player round it, who is fighting
+	# somebody else entirely. See PlayerState.standby.
+	var owner_state: PlayerState = _owner_state()
+	if owner_state != null && owner_state.standby:
 		return false
 	if !is_unlocked(creep_stats):
 		return false

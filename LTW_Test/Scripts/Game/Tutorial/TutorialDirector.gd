@@ -1,8 +1,8 @@
 class_name TutorialDirector
 extends Node
 
-## Runs the tutorial: which lesson is open, what it has handed over, and what
-## has happened since it opened.
+## Runs the tutorial: which lesson is open, what it has handed over, what the
+## player may do while it is up, and what has happened since it opened.
 ##
 ## A node in the match scene beside PlayerManager, reached through References.
 ## It does nothing at all unless the match says it is a TUTORIAL, so it sits in
@@ -11,24 +11,38 @@ extends Node
 ## towers and the same opponent machinery, with a script on top telling somebody
 ## what to press. A separate scene would be a second game to keep working.
 ##
+## **The shape of the match it runs, which the lessons are written against:**
+##
+##   THE OPENING IS HELD. The first lessons hold the match clock, hand over
+##   exactly the gold their task costs, and allow only the one thing they ask
+##   for - build these towers on these cells, send these four creeps. No
+##   income, no creep unlocking, nothing refilling, and all the time in the
+##   world. See TutorialStep, "What it allows".
+##
+##   THEN IT IS A MATCH. Once the basics are done the clock runs, the limits
+##   come off, and the first opponent is WOKEN: it stops sparring and plays its
+##   real profile. The lesson ends when it is beaten.
+##
+##   THEN A SECOND ONE. It has been in the match since the start, building a
+##   maze on STANDBY outside the send ring, so the first half was a plain duel.
+##   Beating the first brings it in, and its half is where technology is taught.
+##
 ## **It counts what has happened SINCE the current lesson opened**, and every
 ## step asks it rather than the world. That is what makes the lessons
 ## independent of the systems they teach: nothing in the builder, the sender or
 ## the Research Center knows a tutorial exists, and adding a lesson about
 ## something new is a step subclass and a counter here rather than a hook in the
-## thing being taught.
-##
-## The counters come off `MatchStats`, which is already counting all of it for
-## the end screen - so a lesson that asks "have they built three towers" is
-## reading a number that was going to be kept anyway. What this holds is only
-## the mark: what those totals were when the lesson opened.
+## thing being taught. The one thing the systems DO answer to is ActionLimits,
+## which is a general "this player may only do this much" rather than anything
+## that names a tutorial.
 
 ## The lesson changed - opened, finished, or the whole tutorial ended. One
 ## signal rather than three, because the panel that listens redraws whole.
 signal lesson_changed()
 
-## The name this holds the world still by. Its own rather than the draft's, so
-## the two can overlap without either releasing the other - see MatchSession.
+## The name this holds the world still by, and the clock. Its own rather than
+## the draft's, so the two can overlap without either releasing the other -
+## see MatchSession.
 const HOLD_REASON: StringName = &"tutorial"
 
 @export_group("Settings")
@@ -45,6 +59,17 @@ var _acknowledged: bool = false
 ## asks is "since this lesson" rather than "ever".
 var _mark: MatchStatLine = null
 var _running: bool = false
+## Income payouts since the tutorial began, and the count when the lesson
+## opened. Counted off PlayerManager.income_paid, since nothing else keeps it.
+var _payouts: int = 0
+var _payouts_mark: int = 0
+## Whether the current lesson put a wave into the player's lane.
+var _wave_spawned: bool = false
+## Whether a lesson has opened the Research Center. Latched: it stays open.
+var _research_open: bool = false
+## [from type id, type id] -> whether that tower is somewhere up that one's
+## upgrade chain. The walk is the same answer every time it is asked.
+var _reach_cache: Dictionary = {}
 
 var _session: MatchSession:
 	get:
@@ -77,27 +102,67 @@ func begin(setup: MatchSetup) -> void:
 
 	_running = true
 	set_physics_process(true)
-	_fund_opponents(setup)
+	_set_the_board(setup)
+	var manager: PlayerManager = References.player_manager
+	if manager != null:
+		manager.income_paid.connect(_on_income_paid)
+		manager.match_ended.connect(_on_match_ended)
 	Log.info("Tutorial started", {"lessons": script_resource.count()})
 	_open(0)
 
 
-## Hands every player but this one their opening gold.
-##
-## A tutorial match starts everybody on nothing, so that a lesson can hand the
-## PLAYER exactly what it is about to talk about. The sparring partner needs the
-## same courtesy for the opposite reason: with no gold it builds no maze, and a
-## player sending creeps into an empty lane learns nothing from it.
-func _fund_opponents(setup: MatchSetup) -> void:
+## Everything that differs from an ordinary match at its first tick: who has
+## how many lives, who waits on standby, what the opponents build with, and
+## where the clock starts.
+func _set_the_board(setup: MatchSetup) -> void:
 	var manager: PlayerManager = References.player_manager
-	if manager == null || script_resource.opponent_gold <= 0:
+	if manager == null:
 		return
-	for player in setup.players:
-		if player == null || player.slot == setup.local_slot:
+
+	var player: PlayerState = manager.local_state()
+	if player != null:
+		player.set_lives(script_resource.player_lives)
+
+	for rival: TutorialStep.Rival in [TutorialStep.Rival.FIRST, TutorialStep.Rival.SECOND]:
+		var state: PlayerState = manager.state_for(TutorialSetup.slot_for(rival))
+		if state == null:
 			continue
-		var state: PlayerState = manager.state_for(player.slot)
-		if state != null:
-			state.gain(script_resource.opponent_gold)
+		state.set_lives(script_resource.rival_lives)
+		# A lump rather than income, because until it is woken an opponent is a
+		# demonstration rather than a player: enough for the short maze its
+		# sparring profile plans and no more.
+		state.gain(script_resource.opponent_gold)
+		# The second waits outside the ring, so the first half is a plain duel.
+		state.standby = rival == TutorialStep.Rival.SECOND
+
+	_skip_the_opening(manager.area_for(setup.local_slot))
+
+
+## Starts the clock at the moment the first creep can be sent, rather than at
+## the start of an opening phase.
+##
+## **The opening is time spent waiting in a real match, and the lessons hold
+## the clock anyway** - so the first time it would be read is the sending
+## lesson, which must find its creep already open. Moving the clock on, rather
+## than waiving the creep's delay, keeps everything after it an ordinary match:
+## the next creep unlocks exactly when it would, counted from here.
+func _skip_the_opening(area: PlayerArea) -> void:
+	var session: MatchSession = _session
+	var config: GameConfig = References.game_config
+	if session == null || config == null || area == null:
+		return
+
+	var earliest: float = INF
+	for sender in area.send_buildings():
+		if sender.is_sudden_death_tier:
+			continue
+		for entry: Variant in sender.current_abilities():
+			var send: SendCreepAbility = entry as SendCreepAbility
+			if send != null && send.creep_stats != null:
+				earliest = minf(earliest, send.creep_stats.unlock_seconds)
+	if is_inf(earliest):
+		return
+	session.fast_forward(config.unlock_clock(earliest))
 
 
 ## Whether a tutorial is being played at all, for the panel that draws it.
@@ -119,24 +184,17 @@ func lesson_count() -> int:
 	return 0 if script_resource == null else script_resource.count()
 
 
-## Whether the player may be offered a way past the current lesson yet.
+## Whether the player may be offered a way past the current lesson yet. Never,
+## for a lesson authored with no skip at all.
 ##
 ## The anti-softlock rule, and the panel asks it every frame. See
-## TutorialStep.skip_after_seconds for why it is not optional.
+## TutorialStep.skip_after_seconds. The clock behind it runs while the world is
+## HELD, and has to: a lesson that holds the world is measured in exactly the
+## time it holds it for.
 func may_skip() -> bool:
-	if _step == null:
+	if _step == null || _step.skip_after_seconds <= 0.0:
 		return false
-	return _elapsed >= maxf(0.0, _step.skip_after_seconds)
-
-
-## Seconds the current lesson has been open.
-##
-## It runs while the world is HELD, and it has to: a lesson that is only read
-## holds the world for the whole time it is up, and the way past it - the skip
-## the anti-softlock rule promises - is measured in exactly this number. A clock
-## that stopped with the world would make every read lesson unskippable.
-func seconds_on_step() -> float:
-	return _elapsed
+	return _elapsed >= _step.skip_after_seconds
 
 
 # --- what the lessons ask -------------------------------------------------
@@ -159,8 +217,18 @@ func sends_this_step() -> int:
 	return _since(func(line: MatchStatLine) -> int: return line.sends)
 
 
-func kills_this_step() -> int:
-	return _since(func(line: MatchStatLine) -> int: return line.creeps_killed)
+## Income payouts since the lesson opened.
+func payouts_this_step() -> int:
+	return _payouts - _payouts_mark
+
+
+## Whether the wave this lesson put in the player's lane is gone from it. True
+## for a lesson that put none there.
+func wave_cleared() -> bool:
+	if !_wave_spawned:
+		return true
+	var area: PlayerArea = local_area()
+	return area == null || area.creeps().is_empty()
 
 
 ## How many technologies the player owns in total.
@@ -172,6 +240,45 @@ func kills_this_step() -> int:
 func technologies_owned() -> int:
 	var state: PlayerState = _local_state()
 	return 0 if state == null else state.tech.owned_count()
+
+
+## Whether an opponent is out of the match.
+func is_rival_beaten(rival: TutorialStep.Rival) -> bool:
+	var state: PlayerState = _rival_state(rival)
+	return state != null && state.is_eliminated()
+
+
+## An opponent's lives, or -1 for one that does not exist.
+func rival_lives(rival: TutorialStep.Rival) -> int:
+	var state: PlayerState = _rival_state(rival)
+	return -1 if state == null else state.lives
+
+
+## Whether the player has a tower standing that `from` upgrades into - the Core
+## becoming an elemental tower. The tower itself does not count.
+func owns_tower_reached_from(from: BuildingStats) -> bool:
+	var area: PlayerArea = local_area()
+	if area == null || from == null:
+		return false
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building == null:
+			continue
+		var stats: BuildingStats = building.stats as BuildingStats
+		if stats == null || stats == from:
+			continue
+		var key: Array = [from.unit_type_id, stats.unit_type_id]
+		if !_reach_cache.has(key):
+			_reach_cache[key] = AiHand.branch_reaches(from, stats.unit_type_id, {})
+		if _reach_cache[key]:
+			return true
+	return false
+
+
+## The player's own lane.
+func local_area() -> PlayerArea:
+	var manager: PlayerManager = References.player_manager
+	return null if manager == null else manager.area_for(manager.local_player_id())
 
 
 ## One counter's movement since the lesson opened.
@@ -189,7 +296,7 @@ func _since(read: Callable) -> int:
 # --- running --------------------------------------------------------------
 
 ## Simulation, so a lesson's clock runs on the same beat the world does. It
-## keeps running while the world is held - see seconds_on_step.
+## keeps running while the world is held - see may_skip.
 func _physics_process(_engine_delta: float) -> void:
 	if !_running || _step == null:
 		return
@@ -230,29 +337,58 @@ func _open(index: int) -> void:
 	_step = null if script_resource == null else script_resource.step_at(index)
 	_elapsed = 0.0
 	_acknowledged = false
+	_wave_spawned = false
 
 	if _step == null:
 		_finish()
 		return
 
 	_mark = _snapshot_line()
+	_payouts_mark = _payouts
 	_apply_grants(_step)
+	_apply_limits(_step)
+	_select_for(_step)
 	_step.on_enter(self)
 	# After the grants, so a lesson that hands over gold does it before the
 	# world stops rather than on the frame it starts again.
 	_hold(_step.pauses_world)
+	var session: MatchSession = _session
+	if session != null:
+		session.hold_clock(HOLD_REASON, _step.holds_clock)
 	Log.info("Tutorial lesson", {
 		"lesson": lesson_number(), "of": lesson_count(), "title": _step.title,
 	})
 	lesson_changed.emit()
 
 
+## The end of the tutorial, whether the last lesson finished or the match did.
+## Everything the lessons held is let go: the world, the clock, the limits.
 func _finish() -> void:
+	if !_running:
+		return
 	_running = false
+	_step = null
 	set_physics_process(false)
 	_hold(false)
+	var session: MatchSession = _session
+	if session != null:
+		session.hold_clock(HOLD_REASON, false)
+	var state: PlayerState = _local_state()
+	if state != null:
+		state.limits = null
+	_draw_blueprint(null)
 	Log.info("Tutorial finished")
 	lesson_changed.emit()
+
+
+func _on_income_paid() -> void:
+	_payouts += 1
+
+
+## The match is decided - the last opponent beaten, or the player out of lives.
+## Either way there is nothing left to teach, and the result board takes over.
+func _on_match_ended(_winner_slot: int) -> void:
+	_finish()
 
 
 ## What a lesson hands over the moment it opens.
@@ -272,31 +408,93 @@ func _apply_grants(step: TutorialStep) -> void:
 			state.gain(step.grant_gold)
 		if step.grant_income > 0:
 			state.add_income(step.grant_income)
-		if step.unlocks_creeps:
-			_unlock_creeps(state)
+	if step.unlocks_research:
+		_research_open = true
 
 	_draw_blueprint(step.blueprint())
 	_spawn_wave(step)
+	_set_stock(step)
+	if step.wakes_rival != TutorialStep.Rival.NONE:
+		_wake(step.wakes_rival)
 
 
-## Opens the whole send card for the player: every creep's start delay counts as
-## served, and every reserve is filled to go with it.
+## Holds the player to what this lesson allows, or to nothing but the Research
+## Center lock once the lessons stop restricting. See ActionLimits.
 ##
-## The same two halves the developer cheat throws, for the same reason it throws
-## both: a card that is open and empty is not an open card. See
-## CommandService._apply_cheat_unlock_creeps, which this deliberately mirrors
-## rather than calls - that one is an order with an authority behind it, and
-## this is the tutorial setting the board up.
-func _unlock_creeps(state: PlayerState) -> void:
-	state.creeps_unlocked = true
-	var manager: PlayerManager = References.player_manager
-	if manager == null:
+## A fresh object every lesson rather than one edited in place, so nothing a
+## lesson allowed can outlive it by accident.
+func _apply_limits(step: TutorialStep) -> void:
+	var state: PlayerState = _local_state()
+	if state == null:
 		return
-	var area: PlayerArea = manager.area_for(state.player_id)
-	if area == null:
+
+	var limits: ActionLimits = ActionLimits.new()
+	limits.research = _research_open
+	if step.restricts_actions:
+		limits.restricts_abilities = true
+		limits.abilities.append_array(script_resource.always_allowed)
+		limits.abilities.append_array(step.allowed_abilities)
+		var plan: TowerLayout = step.blueprint()
+		if step.build_on_blueprint_only && plan != null:
+			for cell: Vector2i in plan.cells:
+				limits.build_cells[cell] = true
+	state.limits = limits
+
+
+## Sets one reserve on the player's senders to exactly what the lesson asks.
+## Every sender whose card carries that creep, though in practice it is one.
+func _set_stock(step: TutorialStep) -> void:
+	var creep: CreepStats = step.stock_creep()
+	var area: PlayerArea = local_area()
+	if creep == null || area == null:
 		return
-	for building in area.send_buildings():
-		building.fill_all_stocks()
+	for sender in area.send_buildings():
+		if sender.stock_for(creep) != null:
+			sender.set_stock(creep, step.stock_count)
+
+
+## Brings an opponent into the match properly: into the ring, onto an income
+## that matches the player's, and playing its real profile from here on.
+func _wake(rival: TutorialStep.Rival) -> void:
+	var slot: int = TutorialSetup.slot_for(rival)
+	var state: PlayerState = _rival_state(rival)
+	var player: PlayerState = _local_state()
+	if state == null:
+		Log.err("A lesson wakes an opponent the tutorial does not have", slot)
+		return
+
+	state.standby = false
+	if player != null:
+		var matched: int = int(round(float(player.income) * script_resource.rival_income_share))
+		if matched > state.income:
+			state.add_income(matched - state.income)
+
+	var profile: AiProfile = script_resource.rival_profile(rival)
+	var ai: AiDirector = References.ai_director
+	var brain: AiPlayer = null if ai == null else ai.brain_for(slot)
+	if brain == null || profile == null:
+		Log.err("A lesson wakes an opponent that has no brain or no profile", slot)
+		return
+	brain.change_profile(profile)
+	Log.info("Tutorial opponent woken", {
+		"slot": slot, "profile": profile.display_name, "income": state.income,
+	})
+
+
+## Puts something on the player's command card for them. PRESENTATION, local
+## from end to end: selecting changes nothing in the world.
+func _select_for(step: TutorialStep) -> void:
+	if step.selects != TutorialStep.Select.BUILDER:
+		return
+	var selection: SelectionController = References.selection_controller
+	var session: MatchSession = _session
+	if selection == null || session == null:
+		return
+	for unit: Unit in session.live_units():
+		var builder: Builder = unit as Builder
+		if builder != null && builder.is_owned_by_local_player():
+			selection.select_single(builder)
+			return
 
 
 ## Puts a saved plan on the ground, or takes one off.
@@ -308,7 +506,7 @@ func _unlock_creeps(state: PlayerState) -> void:
 ##
 ## It is the SAME overlay the builder's own Show Blueprint command drives, so a
 ## player who puts one up themselves and a lesson that puts one up for them are
-## using one thing. A lesson that names no slot takes whatever is up down, which
+## using one thing. A lesson that names no plan takes whatever is up down, which
 ## is what stops the last lesson's plan hanging around over the next one.
 func _draw_blueprint(plan: TowerLayout) -> void:
 	var overlay: BlueprintOverlay = References.blueprint_overlay
@@ -321,34 +519,47 @@ func _draw_blueprint(plan: TowerLayout) -> void:
 	_look_at_plan(plan)
 
 
-## Puts the camera where the plan is.
+## Puts the camera on the part of the plan still to build.
 ##
-## **A lesson that says "the three blue squares at the top of your lane" is
-## useless if the camera is looking at the middle of it**, which is where the
-## builder starts and therefore where every tutorial opens. The first version
-## drew the squares perfectly and off the top of the screen.
+## **A lesson that says "build on the blue squares" is useless if the camera is
+## looking somewhere else**, which is where the builder starts and therefore
+## where every tutorial opens. The first version drew the squares perfectly and
+## off the top of the screen.
 ##
-## Automatic rather than a field on the step, because a lesson that puts a plan
-## on the ground always means "look here" - there is no case where it does not.
+## The cells still EMPTY rather than the whole plan, because a lesson that adds
+## a second row to the first means the second row - and a plan that is the
+## whole lane would otherwise centre on the middle of it.
 ##
 ## PRESENTATION, and local from end to end: the camera is this machine's view of
 ## the world and moving it changes nothing in it.
 func _look_at_plan(plan: TowerLayout) -> void:
 	var camera: RTSCamera = References.rts_camera
-	var manager: PlayerManager = References.player_manager
-	if camera == null || manager == null || plan.entry_count() <= 0:
-		return
-	var area: PlayerArea = manager.area_for(manager.local_player_id())
-	if area == null:
+	var area: PlayerArea = local_area()
+	if camera == null || area == null || plan.entry_count() <= 0:
 		return
 
-	# The middle of the plan, in world space. Averaged over the cells rather than
-	# taken from the first one, so a lesson whose plan is a whole maze frames the
-	# maze instead of its top left corner.
+	var taken: Dictionary = {}
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building != null:
+			taken[building.cell] = true
+
+	# The first row still to build: its middle, so the camera frames the part of
+	# the plan the lesson is about rather than the top left corner of it.
+	var first_row: int = -1
 	var middle: Vector3 = Vector3.ZERO
-	for index in range(plan.entry_count()):
-		middle += area.internal_cell_center(plan.cells[index])
-	camera.center_on(middle / float(plan.entry_count()))
+	var count: int = 0
+	for cell: Vector2i in plan.cells:
+		if taken.has(cell):
+			continue
+		if first_row < 0 || cell.y < first_row:
+			first_row = cell.y
+	for cell: Vector2i in plan.cells:
+		if cell.y == first_row && !taken.has(cell):
+			middle += area.internal_cell_center(cell)
+			count += 1
+	if count > 0:
+		camera.center_on(middle / float(count))
 
 
 # --- lookups --------------------------------------------------------------
@@ -367,6 +578,12 @@ func _hold(held: bool) -> void:
 func _local_state() -> PlayerState:
 	var manager: PlayerManager = References.player_manager
 	return null if manager == null else manager.local_state()
+
+
+func _rival_state(rival: TutorialStep.Rival) -> PlayerState:
+	var manager: PlayerManager = References.player_manager
+	var slot: int = TutorialSetup.slot_for(rival)
+	return null if manager == null || slot <= 0 else manager.state_for(slot)
 
 
 ## The player's live totals, still moving.
@@ -392,12 +609,9 @@ func _snapshot_line() -> MatchStatLine:
 
 ## Puts a lesson's wave into the player's own lane.
 ##
-## **The one thing the tutorial does TO the player**, and it exists because in a
-## two lane match nothing else can: a creep that leaks walks on to the next lane
-## in ring order SKIPPING ITS OWN SENDER, which in a 1v1 resolves back to the
-## lane it just leaked. So nothing the player sends ever comes back at them, the
-## sparring partner deliberately never sends, and without this the lesson about
-## watching a maze work could only ever be skipped.
+## **The one thing the tutorial does TO the player**, and it exists because
+## nothing else will before the basics are taught: the first opponent spars
+## until then and sends nothing.
 ##
 ## Spawned as the OPPONENT's creeps, so the leak, the bounty and the life steal
 ## resolve exactly as they would in a real match - the area already decides who
@@ -436,6 +650,7 @@ func _spawn_wave(step: TutorialStep) -> void:
 		creep.spawn(sender, into, into.random_spawn_point(
 			stats.body_radius, MatchSession.match_rng()
 		))
+	_wave_spawned = true
 
 	Log.info("Tutorial wave", {
 		"creep": stats.display_name,

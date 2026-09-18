@@ -30,8 +30,9 @@ described here is implemented and working. Values marked TBD are not decided yet
   purse and a place in the send ring, and plays by every rule below. It is never RANKED,
   because ranked means two results are comparable and a result against a computer opponent is
   not comparable with anything. See `singleplayer.md`
-- **TUTORIAL**: a real match with a script on top, teaching the rules in this file one at a
-  time. Same world, same economy, same opponent machinery. See `tutorial.md`
+- **TUTORIAL**: a real match with a script on top. Same world, same economy, same opponent
+  machinery. It opens with the clock held and the player limited to what each lesson asks,
+  then plays out against two computer opponents in turn. See `tutorial.md`
 - The mode decides who is DRIVING and never what the rules are. Everything the players agreed
   to is Match settings, below, and a mode may not change one
 

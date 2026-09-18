@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Tutorial Rookie"
+description = "The tutorial's first real opponent, woken once the basics are taught. Slower and simpler than Easy: a short left-right maze it never upgrades, tier 1 sends on a slow beat, no technology. Loaded by path from the tutorial script, never offered in a menu."
+player_name_pattern = "%s"
+selectable = false
+decision_seconds = 2.0
+distraction_chance = 0.3
+builds_per_pass = 1
+maze_layout_path = ""
+zigzag_rows = 8
+zigzag_corridor_internal_cells = 1
+base_tower_path = ""
+send_floor_gold = 40
+build_floor_gold = 40
+upgrade_floor_gold = 999999
+min_towers_before_sending = 0
+send_seconds = 20.0
+max_send_tier = 1
+send_efficiency = 0.1
+upgrades_towers = false
+takes_opening_ultimate = false
+ultimate_tech_id = 0
+elemental_share = 0.0
+elemental_after_towers = 40

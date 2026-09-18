@@ -1,24 +1,59 @@
 class_name TutorialBuildStep
 extends TutorialStep
 
-## Finished once the player has put up a number of towers.
+## Finished once the lesson's BLUEPRINT is built, or once the player has put up
+## a number of towers.
 ##
-## COUNTED SINCE THE STEP OPENED rather than in total, which is the whole
-## difference between "build three towers" and "have three towers": a player who
-## already has three from the last lesson would otherwise walk straight past
-## this one. The director keeps that count, because "since when" is a fact about
-## the run rather than about the lesson.
+## **With a blueprint it reads the GROUND, not a counter.** Every cell the plan
+## names has to have a tower of the player's standing on it - started is
+## enough, the builder is free the moment it starts one. A count would be wrong
+## here in both directions: a tower started and cancelled counts once and stands
+## nowhere, and a plan whose first row was the last lesson's already has towers
+## the count would not see. What is standing is the only honest answer to "is
+## the shape there".
 ##
-## What it does NOT check is WHERE. The blueprint on the ground says where, the
-## maze lesson explains why, and a player who builds somewhere else has built a
-## tower and learned what the button does - which is what this step is for. The
-## step that cares about the shape is the one that watches a creep walk it.
+## Without one it counts towers put up SINCE THE STEP OPENED, for a lesson that
+## only wants a button pressed.
 
 @export_group("Objective")
-## How many towers have to go up. One is enough for the first lesson; a maze
-## lesson asks for the row.
+## How many towers have to go up, for a lesson with no blueprint. Ignored when
+## the lesson has one: then it is every cell of the plan.
 @export var towers: int = 1
 
 
 func is_complete(director: TutorialDirector) -> bool:
-	return director != null && director.towers_built_this_step() >= maxi(1, towers)
+	if director == null:
+		return false
+	var plan: TowerLayout = blueprint()
+	if plan != null:
+		return _built_on(director, plan) >= plan.entry_count()
+	return director.towers_built_this_step() >= maxi(1, towers)
+
+
+func progress_text(director: TutorialDirector) -> String:
+	if director == null:
+		return ""
+	var plan: TowerLayout = blueprint()
+	if plan != null:
+		return "%d / %d" % [_built_on(director, plan), plan.entry_count()]
+	return "%d / %d" % [mini(director.towers_built_this_step(), towers), towers]
+
+
+## How many of the plan's cells have one of the player's towers on them.
+##
+## Walks the player's own buildings, which in the lessons that ask this is a
+## few dozen at most. Matched on the footprint's top-left cell, which is how a
+## TowerLayout names a cell and how Building.cell stores one.
+func _built_on(director: TutorialDirector, plan: TowerLayout) -> int:
+	var area: PlayerArea = director.local_area()
+	if area == null:
+		return 0
+	var wanted: Dictionary = {}
+	for cell: Vector2i in plan.cells:
+		wanted[cell] = true
+	var count: int = 0
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building != null && wanted.has(building.cell):
+			count += 1
+	return count

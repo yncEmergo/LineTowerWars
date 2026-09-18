@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Tutorial Veteran"
+description = "The tutorial's second opponent, woken once the first is beaten. Close to Normal: a longer maze it upgrades, sends up to tier 2, and takes an Ultimate on waking - which is what makes technology worth learning against it. Loaded by path from the tutorial script, never offered in a menu."
+player_name_pattern = "%s"
+selectable = false
+decision_seconds = 1.2
+distraction_chance = 0.15
+builds_per_pass = 1
+maze_layout_path = ""
+zigzag_rows = 10
+zigzag_corridor_internal_cells = 1
+base_tower_path = ""
+send_floor_gold = 45
+build_floor_gold = 40
+upgrade_floor_gold = 150
+min_towers_before_sending = 0
+send_seconds = 20.0
+max_send_tier = 2
+send_efficiency = 0.1
+upgrades_towers = true
+takes_opening_ultimate = true
+ultimate_tech_id = 3
+elemental_share = 0.0
+elemental_after_towers = 40

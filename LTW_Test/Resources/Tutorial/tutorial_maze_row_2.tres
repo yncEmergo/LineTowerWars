@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TowerLayout" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/TowerLayout.gd" id="1_tower_layout"]
+
+; The first two rows: the second row's gap is on the other side, so creeps walk the width of the lane twice.
+[resource]
+script = ExtResource("1_tower_layout")
+unit_type_ids = PackedInt32Array(46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46)
+cells = Array[Vector2i]([Vector2i(0, 6), Vector2i(2, 6), Vector2i(4, 6), Vector2i(6, 6), Vector2i(8, 6), Vector2i(10, 6), Vector2i(12, 6), Vector2i(2, 9), Vector2i(4, 9), Vector2i(6, 9), Vector2i(8, 9), Vector2i(10, 9), Vector2i(12, 9), Vector2i(14, 9)])
+grid_size = Vector2i(16, 68)
