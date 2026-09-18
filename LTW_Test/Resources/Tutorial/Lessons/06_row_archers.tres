@@ -8,12 +8,11 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "An Archer shoots further, and can hit flyers too."
+body = "Archers shoot further and hit flyers too."
 objective = "Build the third row with Lesser Archers."
 progress_label = "Towers built"
 delay_seconds = 0.8
 holds_clock = true
-skip_after_seconds = 150.0
 grant_gold = 70
 blueprint_path = "res://Resources/Tutorial/tutorial_maze_row_3_archers.tres"
 restricts_actions = true

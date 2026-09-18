@@ -37,7 +37,6 @@ objective = "Let your towers kill them."
 progress_label = "Waves killed"
 delay_seconds = 2.0
 holds_clock = true
-skip_after_seconds = 90.0
 waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1"), SubResource("Wave_2"), SubResource("Wave_3")])
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

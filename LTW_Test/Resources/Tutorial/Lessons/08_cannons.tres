@@ -7,12 +7,11 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "A Cannon's shot hits every creep around its target - just what a big, packed wave needs."
-objective = "Turn both Archers into Lesser Cannons."
+body = "A Cannon's shot hits every creep around its target - ideal against packed waves."
+objective = "Upgrade both Archers to Lesser Cannons."
 progress_label = "Cannons"
 delay_seconds = 0.8
 holds_clock = true
-skip_after_seconds = 150.0
 grant_gold = 300
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TutorialMoveStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialMoveStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Move"
+body = "Right-click the ground while your builder is selected, or use the Move command."
+objective = "Move your builder."
+delay_seconds = 1.0
+holds_clock = true
+restricts_actions = true
+guide_unit = 1
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

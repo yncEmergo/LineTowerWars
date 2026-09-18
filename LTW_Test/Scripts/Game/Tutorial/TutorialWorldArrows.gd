@@ -21,9 +21,9 @@ extends Node3D
 ## because this node is built in code, and the scene is a visual asset rather
 ## than a setting.
 const ARROW_SCENE_PATH: String = "res://Scenes/Effects/tutorial_hover_arrow.tscn"
-## How far above a unit's origin the arrow's tip hovers, in world units - over
-## its head rather than through it.
-const ABOVE_UNIT: float = 1.3
+## How far above a unit's origin the arrow's tip hovers, in world units - clear
+## over its head rather than into it.
+const ABOVE_UNIT: float = 2.4
 ## How far above an empty cell the tip hovers.
 const ABOVE_CELL: float = 0.35
 ## How far above a standing tower's origin the tip hovers - over its top.

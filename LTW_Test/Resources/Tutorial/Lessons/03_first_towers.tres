@@ -7,14 +7,13 @@
 
 [resource]
 script = ExtResource("1_step")
-title = "Build a maze"
-body = "The creeps simply walked around your towers. Build rows across the lane, each with its gap at the other end - then they have to walk back and forth past every tower."
-objective = "Finish the first row with Lesser Sentries."
+title = "Build towers"
+body = "Creeps will come down your lane. Towers shoot them."
+objective = "Build a Lesser Sentry on each marked spot."
 progress_label = "Towers built"
-delay_seconds = 2.0
+delay_seconds = 1.0
 holds_clock = true
-skip_after_seconds = 150.0
-grant_gold = 30
+grant_gold = 70
 blueprint_path = "res://Resources/Tutorial/tutorial_maze_row_1.tres"
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])

@@ -115,17 +115,6 @@ enum Select {
 ## moves on without them - the clock only runs again once a lesson that lets it
 ## go opens. See MatchSession.hold_clock.
 @export var holds_clock: bool = false
-## How long before the panel offers a way past this step, in seconds, or 0 for
-## never.
-##
-## **The anti-softlock rule.** A step waits on the world reaching a state, and
-## a world can sometimes be put in a state it cannot reach. The restricted
-## lessons are built so that it cannot - exact gold, exact cells, nothing else
-## allowed - so their skip is a safety net for a bug rather than a way out
-## anybody should need. A step whose end is an opponent BEATEN sets 0: skipping
-## it would wake the next opponent with the last one still in the ring, and the
-## match ends one way or the other on its own.
-@export var skip_after_seconds: float = 90.0
 
 @export_group("What it gives")
 ## Gold handed to the player when this step opens, on top of what they have.

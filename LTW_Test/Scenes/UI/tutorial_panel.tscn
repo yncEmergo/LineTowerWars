@@ -20,7 +20,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_task_list", "_continue_button", "_skip_button")]
+[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_task_list", "_continue_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,7 +38,6 @@ _body_label = NodePath("Board/Column/BodyLabel")
 _task_list = NodePath("Board/Column/TaskList")
 _task_row_scene = ExtResource("2_task_row")
 _continue_button = NodePath("Board/Column/Footer/ContinueButton")
-_skip_button = NodePath("Board/Column/Footer/SkipButton")
 
 [node name="Board" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -51,7 +50,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_board")
 
 [node name="Column" type="VBoxContainer" parent="Board"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Header" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2
@@ -62,14 +61,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 18
 text = "Lesson"
 
 [node name="ProgressLabel" type="Label" parent="Board/Column/Header"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = ""
 vertical_alignment = 1
 
@@ -77,24 +76,26 @@ vertical_alignment = 1
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = ""
 autowrap_mode = 3
+
+[node name="TasksHeading" type="Label" parent="Board/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 13
+text = "Tasks"
 
 [node name="TaskList" type="VBoxContainer" parent="Board/Column"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="Footer" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 2
-
-[node name="SkipButton" type="Button" parent="Board/Column/Footer"]
-custom_minimum_size = Vector2(140, 34)
-layout_mode = 2
-text = "Skip lesson"
 
 [node name="ContinueButton" type="Button" parent="Board/Column/Footer"]
 custom_minimum_size = Vector2(180, 34)

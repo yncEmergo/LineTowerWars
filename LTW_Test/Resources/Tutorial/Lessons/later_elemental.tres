@@ -11,6 +11,5 @@ title = "Elemental towers"
 body = "An Elemental Core turns, for free, into a tower of an element you own. Every tier above that is an upgrade."
 objective = "Build an Elemental Core, select it and turn it into an elemental tower."
 delay_seconds = 2.0
-skip_after_seconds = 150.0
 guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
 from_tower_path = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"

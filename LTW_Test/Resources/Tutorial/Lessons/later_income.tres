@@ -8,6 +8,5 @@ title = "Income"
 body = "Everyone is paid their income on the same beat. Sending is how you raise yours, and it decides most matches."
 objective = "Wait for your next payout."
 delay_seconds = 1.0
-skip_after_seconds = 60.0
 grant_income = 20
 highlight_key = &"income"

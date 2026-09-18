@@ -21,7 +21,7 @@ extends Control
 ## then arrives with a POP of the whole board.
 ##
 ## It owns nothing. Which lesson is open and whether it is finished are
-## TutorialDirector's; the buttons report a press and nothing else.
+## TutorialDirector's. There is no skip button - see TutorialDirector.advance.
 
 ## The pop a new lesson arrives with: from a touch small, past full size, and
 ## back. The peak is kept small and the board pops about its own middle, so it
@@ -48,10 +48,6 @@ const POP_DOWN_SECONDS: float = 0.14
 ## Finishes a lesson that is only read. Hidden on one with something to do,
 ## where pressing it would mean skipping the thing.
 @export var _continue_button: Button
-## The way past a lesson that will not finish. Appears on its own after a while
-## - see TutorialDirector.may_skip - rather than being offered at once, which
-## would read as an invitation.
-@export var _skip_button: Button
 
 ## The lesson last drawn, so a new one pops and a redraw of the same one does not.
 var _shown_lesson: int = 0
@@ -69,8 +65,6 @@ func _ready() -> void:
 	hide()
 	if _continue_button != null:
 		_continue_button.pressed.connect(_on_continue_pressed)
-	if _skip_button != null:
-		_skip_button.pressed.connect(_on_skip_pressed)
 
 	var director: TutorialDirector = _director
 	if director == null:
@@ -113,22 +107,17 @@ func _refresh() -> void:
 		# Offered only where pressing it is what finishes the lesson. On a
 		# lesson with something to do, the thing IS the button.
 		_continue_button.visible = step is TutorialReadStep && !director.is_between_lessons()
-	if _skip_button != null:
-		_skip_button.hide()
 
 	if position_in_script.x != _shown_lesson:
 		_shown_lesson = position_in_script.x
 		_play_pop()
 
 
-## The skip button appears on its own once the lesson has been open long enough,
-## and the task counts move with the world, so both are polled.
+## The task counts move with the world, so they are polled.
 func _process(_delta: float) -> void:
 	if !visible:
 		return
 	var director: TutorialDirector = _director
-	if _skip_button != null:
-		_skip_button.visible = director != null && director.may_skip()
 	if director != null && director.current_step() != null:
 		_draw_tasks(director.current_step(), director)
 
@@ -197,8 +186,3 @@ func _on_continue_pressed() -> void:
 	if director != null:
 		director.acknowledge()
 
-
-func _on_skip_pressed() -> void:
-	var director: TutorialDirector = _director
-	if director != null:
-		director.skip()

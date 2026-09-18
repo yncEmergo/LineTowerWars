@@ -7,13 +7,12 @@
 
 [resource]
 script = ExtResource("1_step")
-continues_lesson = true
-body = "Towers are not all the same. A Cutter hits hard, but only up close."
-objective = "Build the second row with Lesser Cutters. Its gap is on the left."
+title = "Build a maze"
+body = "Rows with their gaps at alternating ends make creeps walk back and forth. Cutters hit hard, but only up close."
+objective = "Build the second row with Lesser Cutters."
 progress_label = "Towers built"
-delay_seconds = 0.8
+delay_seconds = 2.0
 holds_clock = true
-skip_after_seconds = 150.0
 grant_gold = 70
 blueprint_path = "res://Resources/Tutorial/tutorial_maze_row_2_cutters.tres"
 restricts_actions = true

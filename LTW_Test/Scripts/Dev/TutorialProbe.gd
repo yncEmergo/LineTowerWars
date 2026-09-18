@@ -141,9 +141,11 @@ func _play(director: TutorialDirector) -> void:
 	match director.current_step().resource_path.get_file().get_basename():
 		"01_builder":
 			_play_select_builder()
-		"02_first_towers", "04_row_one", "05_row_cutters", "06_row_archers":
+		"02_move":
+			_play_move()
+		"03_first_towers", "05_row_cutters", "06_row_archers":
 			_play_build(director)
-		"03_first_waves", "09_skeleton_wave":
+		"04_first_waves", "09_skeleton_wave":
 			_play_wave()
 		"07_upgrade_archers", "08_cannons":
 			_play_upgrade_task(director)
@@ -157,6 +159,20 @@ func _play(director: TutorialDirector) -> void:
 			_play_core()
 		"later_beat_veteran":
 			_play_beat(TutorialStep.Rival.SECOND, 1200)
+
+
+## The move lesson: check where the highlight is, then walk the builder a few
+## cells down the lane.
+func _play_move() -> void:
+	if _acted.has("moved"):
+		return
+	_acted["moved"] = true
+	_check(_pointer_target_name().begins_with("CommandSlot"),
+		"move lesson: highlight on the Move square (%s)" % _pointer_target_name())
+	var builder: Builder = _builder()
+	var move: UnitAbility = load("res://Resources/Abilities/move_ability.tres") as UnitAbility
+	Commands.submit_for(1, move, [builder],
+		AbilityTarget.at_position(builder.global_position + Vector3(0.0, 0.0, 4.0)))
 
 
 ## An upgrade task: first try what it must refuse, then press the one allowed

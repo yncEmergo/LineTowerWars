@@ -5,9 +5,7 @@ extends TutorialStep
 ##
 ## The long lessons: everything before one of these is taught, and this is the
 ## player playing it. They carry the tips worth having to hand while doing that,
-## and they are never skipped - see skip_after_seconds - because the match ends
-## this one on its own either way, and skipping it would wake the next opponent
-## with this one still in the ring.
+## and the match ends this one on its own either way.
 
 @export_group("Objective")
 @export var rival: Rival = Rival.FIRST

@@ -141,14 +141,11 @@ pauses the world gives the clock back one gap when both let go, not the same gap
 A reserve refills on the TICK rather than by reading the clock, so it asks `is_clock_held()`
 for itself - that is what keeps the sending lesson's reserve at exactly what was set.
 
-**The anti-softlock rule.** A lesson waits on the world reaching a state, and a world can
-sometimes be put in a state it cannot reach. The held opening is built so that it cannot -
-exact gold, exact cells, nothing else allowed - so the skip it offers after a while is a
-safety net for a bug rather than a way out anybody should need. A lesson whose end is an
-opponent BEATEN offers no skip at all (`skip_after_seconds = 0`): skipping it would wake the
-next opponent with the last one still in the ring, and the match ends that lesson on its own
-either way. **A skipped lesson has still handed over what it hands over**, because the lesson
-after it was written assuming it happened.
+**There is no skip.** A lesson cannot be passed without doing it, and a tutorial that offers a
+way out invites taking it. What makes that safe is the held opening's design: exact gold, exact
+cells, nothing else allowed - cancelling a tower build is forbidden throughout for the same
+reason - so it cannot be got stuck in; and a lesson whose end is an opponent beaten is ended by
+the match either way.
 
 ## 6. Limits: only this, only here
 

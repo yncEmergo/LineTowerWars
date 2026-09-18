@@ -7,12 +7,11 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "A tower gets stronger by upgrading where it stands - no need to build it again."
-objective = "Select a Lesser Archer and upgrade it. Do it twice."
+body = "Upgrading makes a tower stronger where it stands."
+objective = "Select 2 Lesser Archers and upgrade them."
 progress_label = "Archers"
 delay_seconds = 0.8
 holds_clock = true
-skip_after_seconds = 150.0
 grant_gold = 60
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

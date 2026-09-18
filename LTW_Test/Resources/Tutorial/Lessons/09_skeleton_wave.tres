@@ -98,13 +98,12 @@ sends = 1
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "Here comes a big, tightly packed wave of Skeletons. Watch your Cannons."
+body = "A big, packed wave of Skeletons."
 objective = "Kill the Skeletons."
 progress_label = "Skeletons killed"
 counts_creeps = true
 delay_seconds = 1.0
 holds_clock = true
-skip_after_seconds = 120.0
 waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4"), SubResource("Wave_5"), SubResource("Wave_6"), SubResource("Wave_7"), SubResource("Wave_8"), SubResource("Wave_9"), SubResource("Wave_10"), SubResource("Wave_11"), SubResource("Wave_12"), SubResource("Wave_13"), SubResource("Wave_14")])
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

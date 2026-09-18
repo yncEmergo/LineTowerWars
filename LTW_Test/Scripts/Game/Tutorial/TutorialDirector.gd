@@ -68,6 +68,9 @@ var _waves: TutorialWaves = TutorialWaves.new()
 ## How many of the current lesson's blueprint cells were already built when it
 ## opened, so a lesson finishing a plan counts only what it asked for.
 var _blueprint_mark: int = 0
+## Where the builder stood when the current lesson opened, so a lesson about
+## moving it can tell that it moved.
+var _builder_mark: Vector3 = Vector3.ZERO
 ## Seconds left before the next lesson opens, while the last one is DONE and
 ## the player is given a beat to see it land. Below zero when nothing waits.
 var _gap_left: float = -1.0
@@ -201,19 +204,6 @@ func step_index() -> int:
 	return _index
 
 
-## Whether the player may be offered a way past the current lesson yet. Never,
-## for a lesson authored with no skip at all.
-##
-## The anti-softlock rule, and the panel asks it every frame. See
-## TutorialStep.skip_after_seconds. The clock behind it runs while the world is
-## HELD, and has to: a lesson that holds the world is measured in exactly the
-## time it holds it for.
-func may_skip() -> bool:
-	if _step == null || _step.skip_after_seconds <= 0.0 || is_between_lessons():
-		return false
-	return _elapsed >= _step.skip_after_seconds
-
-
 # --- what the lessons ask -------------------------------------------------
 
 ## Whether the player has pressed Continue on the lesson that is open.
@@ -249,6 +239,11 @@ func waves() -> TutorialWaves:
 ## opened.
 func blueprint_built_at_open() -> int:
 	return _blueprint_mark
+
+
+## Where the builder stood when the current lesson opened.
+func builder_at_open() -> Vector3:
+	return _builder_mark
 
 
 ## How many technologies the player owns in total.
@@ -316,7 +311,7 @@ func _since(read: Callable) -> int:
 # --- running --------------------------------------------------------------
 
 ## Simulation, so a lesson's clock runs on the same beat the world does. It
-## keeps running while the world is held - see may_skip.
+## keeps running while the world is held.
 func _physics_process(_engine_delta: float) -> void:
 	if !_running || _step == null:
 		return
@@ -352,21 +347,13 @@ func acknowledge() -> void:
 	_acknowledged = true
 
 
-## Past this lesson whether or not it was finished. The panel's way out, offered
-## once skip_after_seconds has passed.
+## On to the next lesson now, or to the end of the tutorial, without waiting out
+## a delay.
 ##
-## The same call as finishing it, deliberately: a skipped lesson has still
-## handed over its gold and switched on whatever it switches on, because the one
-## that comes after it was written assuming the one before happened.
-func skip() -> void:
-	if _step != null:
-		Log.info("Tutorial lesson skipped", {"lesson": _index + 1,
-			"title": _step.title})
-	advance()
-
-
-## On to the next lesson now, or to the end of the tutorial - the skip, which
-## does not wait out a delay the player just asked to be spared.
+## **There is no skip.** A lesson cannot be passed without doing it: the early
+## ones are built so they cannot be got stuck in - exact gold, exact cells,
+## nothing else allowed - and a lesson whose end is an opponent beaten is ended
+## by the match either way. A tutorial that offers a way out invites taking it.
 func advance() -> void:
 	if !_running:
 		return
@@ -388,6 +375,8 @@ func _open(index: int) -> void:
 	_payouts_mark = _payouts
 	_waves.reset(_step.waves)
 	_blueprint_mark = _step.blueprint_built()
+	var builder: Unit = TutorialGuide.unit_for(TutorialStep.Select.BUILDER)
+	_builder_mark = Vector3.ZERO if builder == null else builder.global_position
 	_apply_grants(_step)
 	_apply_limits(_step)
 	_step.on_enter(self)

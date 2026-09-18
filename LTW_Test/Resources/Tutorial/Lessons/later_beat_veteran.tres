@@ -8,5 +8,4 @@ title = "Beat the Veteran"
 body = "Upgrade your elemental towers towards their Ultimate, and keep sending."
 objective = "Take all of the Veteran's lives."
 delay_seconds = 2.0
-skip_after_seconds = 0.0
 rival = 2

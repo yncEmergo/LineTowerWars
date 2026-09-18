@@ -5,10 +5,9 @@
 [resource]
 script = ExtResource("1_step")
 title = "Your builder"
-body = "This is your builder. It builds every tower you own, and nothing can hurt it."
-objective = "Select it: click on it, or press its button."
+body = "Your builder is invulnerable and is mainly used to build towers."
+objective = "Select your builder."
 delay_seconds = 0.0
 holds_clock = true
-skip_after_seconds = 90.0
 restricts_actions = true
 guide_unit = 1

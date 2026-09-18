@@ -12,7 +12,6 @@ objective = "Select your first sender and send 4 Sheep."
 progress_label = "Sheep sent"
 delay_seconds = 2.0
 holds_clock = true
-skip_after_seconds = 120.0
 grant_gold = 40
 stock_creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 stock_count = 4
