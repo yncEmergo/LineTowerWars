@@ -53,6 +53,19 @@ const READERS_GROUP: String = "hotkey_readers"
 ## refusing the player one in the options screen. A key that meant two things
 ## at once would mean the grid stopped being learnable.
 @export var default_key: String = ""
+## Whether this action only ever answers a press the selected unit's command
+## card leaves alone, and so MAY sit on a grid letter.
+##
+## The one honest exception to the rule above. A key that yields to the card
+## never means two things at once: with a unit whose square carries the letter
+## selected, the square has it, and otherwise nothing else could. Selecting the
+## builder is the worked example - a player wants it under the hand, on the
+## grid, and every card that does not use that square leaves it free.
+##
+## Whoever ANSWERS the action is what makes this true, by asking
+## UnitPanel.claims_key first. Setting it on an action whose reader does not ask
+## is how one key comes to mean two commands.
+@export var yields_to_card: bool = false
 
 
 ## The key this action answers to right now: what the player bound, or the

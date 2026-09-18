@@ -32,6 +32,9 @@ extends PanelContainer
 ## The builder this bar selects, found once and held. Null until the world has
 ## one, and again once its owner is eliminated.
 var _builder: Builder = null
+## When the builder was last selected from here, by square or key, in seconds on
+## a monotonic clock. -1 before the first. See _on_builder_pressed.
+var _last_select_time: float = -1.0
 
 var _controls: ControlsConfig:
 	get:
@@ -65,14 +68,16 @@ func _ready() -> void:
 	_bind()
 
 
-## Re-reads the letter drawn on the Research Center square, because the player
-## rebound it in the options screen. The builder square answers to no key, so
-## it draws none.
+## Re-reads the letters drawn on both squares, because the player rebound one
+## in the options screen.
 func refresh_hotkeys() -> void:
 	var config: ControlsConfig = _controls
-	if _research_button == null || config == null:
+	if config == null:
 		return
-	_research_button.show_hotkey(config.research_toggle_label())
+	if _builder_button != null:
+		_builder_button.show_hotkey(config.builder_select_label())
+	if _research_button != null:
+		_research_button.show_hotkey(config.research_toggle_label())
 
 
 ## The Research Center opens and closes from three places - this square, its own
@@ -125,11 +130,54 @@ func _bind() -> void:
 ## select_single rather than adding to the selection, because pressing this is
 ## how a player says "show me the builder" - joining it onto whatever was
 ## already selected would answer a question nobody asked.
+##
+## Twice in quick succession also snaps the camera there, the same as a control
+## group recalled twice, and inside the same window. The square and the key
+## share the one clock, so a click then a press counts as a double.
 func _on_builder_pressed() -> void:
 	var selection: SelectionController = _selection
 	if selection == null || _builder == null || !is_instance_valid(_builder):
 		return
+
+	var now: float = float(Time.get_ticks_msec()) / 1000.0
+	var window: float = _controls.double_click_seconds if _controls != null else 0.5
+	var double_tap: bool = _last_select_time >= 0.0 && now - _last_select_time <= window
+	# A double is spent once it fires, so a third press starts over rather than
+	# snapping the camera again.
+	_last_select_time = -1.0 if double_tap else now
+
 	selection.select_single(_builder)
+
+	var camera: RTSCamera = References.rts_camera
+	if double_tap && camera != null:
+		camera.center_on(_builder.global_position)
+
+
+## The builder's key does what its square does, on every selection EXCEPT one
+## whose command card answers the same letter - the card outranks it, which is
+## what lets it sit on a grid letter at all. See HotkeyAction.yields_to_card.
+##
+## Unhandled, so a LineEdit being typed into keeps its letters, and the card is
+## ASKED rather than left to consume the press first: the order two
+## _unhandled_key_input handlers run in is tree order, and nothing here should
+## depend on that.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null || !key.pressed || key.echo || key.ctrl_pressed || key.alt_pressed:
+		return
+
+	var config: ControlsConfig = _controls
+	if config == null || !config.is_builder_select_key(key.keycode):
+		return
+
+	var panel: UnitPanel = References.unit_panel
+	if panel != null && panel.claims_key(key.keycode):
+		return
+
+	if _builder == null || !is_instance_valid(_builder):
+		return
+	_on_builder_pressed()
+	get_viewport().set_input_as_handled()
 
 
 func _on_research_pressed() -> void:

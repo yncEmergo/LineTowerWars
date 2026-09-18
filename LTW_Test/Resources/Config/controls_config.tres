@@ -7,12 +7,14 @@
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/cancel_hotkey.tres" id="5_cancel"]
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/research_center_hotkey.tres" id="6_research"]
 [ext_resource type="Resource" path="res://Resources/Config/Hotkeys/subgroup_hotkey.tres" id="7_subgroup"]
+[ext_resource type="Resource" path="res://Resources/Config/Hotkeys/select_builder_hotkey.tres" id="8_builder"]
 
 [resource]
 script = ExtResource("1_controls")
 subgroup_cycle_action = ExtResource("7_subgroup")
+builder_select_action = ExtResource("8_builder")
 command_hotkey_rows = null
-hotkey_actions = Array[ExtResource("2_HotkeyAction")]([ExtResource("3_sell"), ExtResource("4_build"), ExtResource("5_cancel"), ExtResource("6_research"), ExtResource("7_subgroup")])
+hotkey_actions = Array[ExtResource("2_HotkeyAction")]([ExtResource("3_sell"), ExtResource("4_build"), ExtResource("5_cancel"), ExtResource("6_research"), ExtResource("7_subgroup"), ExtResource("8_builder")])
 research_toggle_action = ExtResource("6_research")
 research_hotkey_rows = null
 hold_repeat_delay = 0.1
