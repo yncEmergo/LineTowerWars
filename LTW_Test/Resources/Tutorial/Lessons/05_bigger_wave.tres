@@ -22,6 +22,7 @@ script = ExtResource("1_step")
 title = "A bigger wave"
 body = "More creeps, and tougher ones. Watch them zigzag through your maze."
 objective = "Let your towers kill them."
+progress_label = "Waves killed"
 delay_seconds = 1.0
 holds_clock = true
 skip_after_seconds = 90.0

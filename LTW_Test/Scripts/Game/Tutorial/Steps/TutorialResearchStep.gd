@@ -18,7 +18,7 @@ func is_complete(director: TutorialDirector) -> bool:
 	return director != null && director.technologies_owned() >= maxi(1, technologies)
 
 
-func progress_text(director: TutorialDirector) -> String:
-	if director == null || technologies <= 1:
-		return ""
-	return "%d / %d" % [mini(director.technologies_owned(), technologies), technologies]
+func progress(director: TutorialDirector) -> Vector2i:
+	if director == null:
+		return Vector2i.ZERO
+	return Vector2i(director.technologies_owned(), maxi(1, technologies))

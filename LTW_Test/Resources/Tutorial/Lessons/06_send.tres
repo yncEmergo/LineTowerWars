@@ -9,6 +9,7 @@ script = ExtResource("1_step")
 title = "Send creeps"
 body = "You win by sending creeps down the Rookie's lane. Every creep you send also raises your income - for the rest of the match."
 objective = "Select your first sender and send 4 Sheep."
+progress_label = "Sheep sent"
 delay_seconds = 2.0
 holds_clock = true
 skip_after_seconds = 120.0

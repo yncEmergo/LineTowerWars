@@ -7,6 +7,7 @@ script = ExtResource("1_step")
 title = "Technology"
 body = "The Veteran joins in, and it is stronger. Basic towers will not hold it for long.\n\nYour first four technologies are free - exactly one Ultimate tower."
 objective = "Open the Research Center and research four technologies."
+progress_label = "Technologies researched"
 delay_seconds = 3.0
 skip_after_seconds = 150.0
 wakes_rival = 2

@@ -63,8 +63,11 @@ var _running: bool = false
 ## opened. Counted off PlayerManager.income_paid, since nothing else keeps it.
 var _payouts: int = 0
 var _payouts_mark: int = 0
-## Which of the current lesson's waves have gone out, by index.
-var _waves_sent: Dictionary = {}
+## The current lesson's waves: which have gone out and which are killed.
+var _waves: TutorialWaves = TutorialWaves.new()
+## How many of the current lesson's blueprint cells were already built when it
+## opened, so a lesson finishing a plan counts only what it asked for.
+var _blueprint_mark: int = 0
 ## Seconds left before the next lesson opens, while the last one is DONE and
 ## the player is given a beat to see it land. Below zero when nothing waits.
 var _gap_left: float = -1.0
@@ -191,13 +194,10 @@ func current_step() -> TutorialStep:
 	return _step
 
 
-## Which lesson this is and how many there are, for the "3 of 14" a panel draws.
-func lesson_number() -> int:
-	return _index + 1
-
-
-func lesson_count() -> int:
-	return 0 if script_resource == null else script_resource.count()
+## Which lesson this is (x) and how many there are (y), for the "3 of 14" a
+## panel draws.
+func lesson_position() -> Vector2i:
+	return Vector2i(_index + 1, 0 if script_resource == null else script_resource.count())
 
 
 ## Whether the player may be offered a way past the current lesson yet. Never,
@@ -238,13 +238,16 @@ func payouts_this_step() -> int:
 	return _payouts - _payouts_mark
 
 
-## Whether every wave this lesson sends has gone out and the player's lane is
-## empty again. True at once for a lesson that sends none.
-func wave_cleared() -> bool:
-	if _step == null || _waves_sent.size() < _step.waves.size():
-		return false
-	var area: PlayerArea = _local_area()
-	return area == null || area.creeps().is_empty()
+## The current lesson's waves, for a step asking whether they are over and how
+## many are killed.
+func waves() -> TutorialWaves:
+	return _waves
+
+
+## How many cells of the current lesson's blueprint were already built when it
+## opened.
+func blueprint_built_at_open() -> int:
+	return _blueprint_mark
 
 
 ## How many technologies the player owns in total.
@@ -323,7 +326,7 @@ func _physics_process(_engine_delta: float) -> void:
 			_open(_index + 1)
 		return
 	_elapsed += delta
-	_send_due_waves()
+	_waves.send_due(_elapsed, _send_wave)
 	if _step.is_complete(self):
 		_finish_lesson()
 
@@ -356,7 +359,7 @@ func acknowledge() -> void:
 ## that comes after it was written assuming the one before happened.
 func skip() -> void:
 	if _step != null:
-		Log.info("Tutorial lesson skipped", {"lesson": lesson_number(),
+		Log.info("Tutorial lesson skipped", {"lesson": _index + 1,
 			"title": _step.title})
 	advance()
 
@@ -374,7 +377,6 @@ func _open(index: int) -> void:
 	_step = null if script_resource == null else script_resource.step_at(index)
 	_elapsed = 0.0
 	_acknowledged = false
-	_waves_sent.clear()
 	_gap_left = -1.0
 
 	if _step == null:
@@ -383,6 +385,8 @@ func _open(index: int) -> void:
 
 	_mark = _snapshot_line()
 	_payouts_mark = _payouts
+	_waves.reset(_step.waves)
+	_blueprint_mark = _step.blueprint_built()
 	_apply_grants(_step)
 	_apply_limits(_step)
 	_step.on_enter(self)
@@ -393,7 +397,7 @@ func _open(index: int) -> void:
 	if session != null:
 		session.hold_clock(HOLD_REASON, _step.holds_clock)
 	Log.info("Tutorial lesson", {
-		"lesson": lesson_number(), "of": lesson_count(), "title": _step.title,
+		"lesson": _index + 1, "of": script_resource.count(), "title": _step.title,
 	})
 	lesson_changed.emit()
 
@@ -628,18 +632,6 @@ func _snapshot_line() -> MatchStatLine:
 	return line.duplicate() as MatchStatLine
 
 
-## Sends every wave of the current lesson whose delay has run out.
-func _send_due_waves() -> void:
-	for index in range(_step.waves.size()):
-		if _waves_sent.has(index):
-			continue
-		var wave: TutorialWave = _step.waves[index]
-		if wave == null || _elapsed < wave.delay_seconds:
-			continue
-		_waves_sent[index] = true
-		_send_wave(wave)
-
-
 ## Puts one wave into the player's own lane.
 ##
 ## **The one thing the tutorial does TO the player**, and it exists because
@@ -653,47 +645,52 @@ func _send_due_waves() -> void:
 ## The same calls SendBuilding makes, and deliberately not a SEND: a send is a
 ## player order with a price, a reserve and a start delay, and none of those is
 ## a thing the tutorial is asking for. This is the board being set up.
-func _send_wave(wave: TutorialWave) -> void:
+##
+## Answers the creeps it spawned, so TutorialWaves can tell when this wave is
+## over.
+func _send_wave(wave: TutorialWave) -> Array:
+	var spawned: Array = []
 	var stats: CreepStats = wave.creep()
 	var manager: PlayerManager = References.player_manager
 	if stats == null || manager == null:
-		return
+		return spawned
 
 	var into: PlayerArea = manager.area_for(manager.local_player_id())
 	var sender: int = manager.attacker_of(manager.local_player_id())
 	if into == null:
-		return
+		return spawned
 
-	var spawned: int = 0
 	for send in range(wave.sends):
 		for entry: Array in stats.pack_contents():
-			spawned += _spawn_creeps(entry[0] as CreepStats, int(entry[1]), into, sender)
+			_spawn_creeps(entry[0] as CreepStats, int(entry[1]), into, sender, spawned)
 
 	Log.info("Tutorial wave", {
 		"creep": stats.display_name,
 		"sends": wave.sends,
-		"creeps": spawned,
+		"creeps": spawned.size(),
 		"into": into.player_id,
 		"from": sender,
 	})
+	return spawned
 
 
-## Spawns `count` of one creep into a lane as `sender`'s. Reports how many.
-func _spawn_creeps(stats: CreepStats, count: int, into: PlayerArea, sender: int) -> int:
+## Spawns `count` of one creep into a lane as `sender`'s, adding each to `into_list`.
+func _spawn_creeps(stats: CreepStats, count: int, into: PlayerArea, sender: int,
+		into_list: Array) -> void:
 	if stats == null:
-		return 0
+		return
 	var scene: PackedScene = stats.scene()
 	if scene == null:
 		Log.err("A tutorial wave names a creep with no loadable prefab", stats.display_name)
-		return 0
+		return
 
 	for index in range(count):
 		var creep: Creep = scene.instantiate() as Creep
 		if creep == null:
 			Log.err("Tutorial creep prefab root is not a Creep", stats.display_name)
-			return index
+			return
 		into.creeps_root().add_child(creep)
 		creep.spawn(sender, into, into.random_spawn_point(
 			stats.body_radius, MatchSession.match_rng()
 		))
-	return count
+		into_list.append(creep)

@@ -13,18 +13,31 @@ sends = 1
 
 [sub_resource type="Resource" id="Wave_1"]
 script = ExtResource("3_wave")
-delay_seconds = 12.0
+delay_seconds = 5.0
 creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
-sends = 2
+sends = 1
+
+[sub_resource type="Resource" id="Wave_2"]
+script = ExtResource("3_wave")
+delay_seconds = 7.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_3"]
+script = ExtResource("3_wave")
+delay_seconds = 9.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 1
 
 [resource]
 script = ExtResource("1_step")
 title = "Here they come"
-body = "Two small waves are on their way. Your towers do the rest."
+body = "Some small waves are on their way. Your towers do the rest."
 objective = "Let your towers kill them."
+progress_label = "Waves killed"
 delay_seconds = 2.0
 holds_clock = true
 skip_after_seconds = 90.0
-waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1")])
+waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1"), SubResource("Wave_2"), SubResource("Wave_3")])
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

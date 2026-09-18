@@ -35,6 +35,18 @@ extends Resource
 ##                     builder, the sender or the tech screen knows a tutorial
 ##                     exists.
 
+## One line of a lesson's task list: what to do, and whether it is done. The
+## panel draws one row per task, with a tickbox that fills when it is done.
+class Task:
+	extends RefCounted
+	var text: String = ""
+	var done: bool = false
+
+	func _init(what: String, finished: bool) -> void:
+		text = what
+		done = finished
+
+
 ## Which opponent a lesson is about. By ROLE rather than by slot, so a lesson
 ## never has to know which lane the tutorial put anybody in - TutorialSetup
 ## decides that and TutorialSetup.slot_for answers it.
@@ -63,6 +75,10 @@ enum Select {
 ## The one line under the paragraph that says what to do NOW, in the imperative.
 ## Empty on a step that only explains, where the Continue button is the answer.
 @export var objective: String = ""
+## What the count after the objective counts - "Towers built", "Waves killed" -
+## for a lesson that can count its task. Drawn as "Towers built: 1 / 4". Empty
+## draws the bare numbers.
+@export var progress_label: String = ""
 
 @export_group("Pacing")
 ## Seconds between the lesson before this one being DONE and this one opening.
@@ -229,13 +245,56 @@ enum Spotlight {
 @abstract func is_complete(director: TutorialDirector) -> bool
 
 
-## How far along the task is, as a short line the panel draws under the
-## objective - "4 / 7" - or empty for a task with nothing to count.
+## How far along the task is, as a short line the panel draws with the
+## objective - "Towers built: 1 / 4" - or empty for a task with nothing to count.
 ##
 ## The cheapest telegraph there is: a player who can see the number move knows
 ## the thing they did counted.
-func progress_text(_director: TutorialDirector) -> String:
-	return ""
+func progress_text(director: TutorialDirector) -> String:
+	var counted: Vector2i = progress(director)
+	if counted.y <= 0:
+		return ""
+	var numbers: String = "%d / %d" % [mini(counted.x, counted.y), counted.y]
+	return numbers if progress_label.is_empty() else "%s: %s" % [progress_label, numbers]
+
+
+## The count behind progress_text: how many done (x) of how many (y), or a y of
+## 0 for a task with nothing to count. A step that can count overrides it.
+func progress(_director: TutorialDirector) -> Vector2i:
+	return Vector2i.ZERO
+
+
+## The lesson's tasks, each a row with its own tickbox. One by default - the
+## objective with its count - done once the lesson is. A lesson with several
+## things to do overrides it and ticks them off one at a time.
+func tasks(director: TutorialDirector) -> Array[Task]:
+	var list: Array[Task] = []
+	if objective.is_empty():
+		return list
+	var progress_line: String = "" if director == null else progress_text(director)
+	var text: String = objective if progress_line.is_empty() \
+		else "%s\n%s" % [objective, progress_line]
+	list.append(Task.new(text, director != null && director.is_between_lessons()))
+	return list
+
+
+## How many cells of this lesson's blueprint have one of the player's towers on
+## them. Matched on the footprint's top-left cell, which is how a TowerLayout
+## names a cell and how Building.cell stores one.
+func blueprint_built() -> int:
+	var plan: TowerLayout = blueprint()
+	var area: PlayerArea = _local_area()
+	if plan == null || area == null:
+		return 0
+	var wanted: Dictionary = {}
+	for cell: Vector2i in plan.cells:
+		wanted[cell] = true
+	var count: int = 0
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building != null && wanted.has(building.cell):
+			count += 1
+	return count
 
 
 ## What a step DOES when it opens, beyond the grants above. Nothing for most of

@@ -2,7 +2,21 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/TutorialPointer.gd" id="1_pointer"]
 
-[node name="TutorialPointer" type="Control" node_paths=PackedStringArray("_arrow", "_dim_top", "_dim_bottom", "_dim_left", "_dim_right")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_highlight"]
+draw_center = false
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0.25, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_color = Color(1, 0.75, 0.15, 0.45)
+shadow_size = 6
+
+[node name="TutorialPointer" type="Control" node_paths=PackedStringArray("_highlight", "_dim_top", "_dim_bottom", "_dim_left", "_dim_right")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +26,7 @@ grow_vertical = 2
 mouse_filter = 2
 focus_behavior_recursive = 1
 script = ExtResource("1_pointer")
-_arrow = NodePath("Arrow")
+_highlight = NodePath("Highlight")
 _dim_top = NodePath("DimTop")
 _dim_bottom = NodePath("DimBottom")
 _dim_left = NodePath("DimLeft")
@@ -38,16 +52,7 @@ layout_mode = 0
 mouse_filter = 2
 color = Color(0.02, 0.024, 0.035, 0.62)
 
-[node name="Arrow" type="Label" parent="."]
-custom_minimum_size = Vector2(40, 40)
+[node name="Highlight" type="Panel" parent="."]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 34
-text = "V"
-horizontal_alignment = 1
-vertical_alignment = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_highlight")

@@ -9,11 +9,13 @@ extends TutorialStep
 ## enough, the builder is free the moment it starts one. A count would be wrong
 ## here in both directions: a tower started and cancelled counts once and stands
 ## nowhere, and a plan whose first row was the last lesson's already has towers
-## the count would not see. What is standing is the only honest answer to "is
-## the shape there".
+## the count would not see.
 ##
-## Without one it counts towers put up SINCE THE STEP OPENED, for a lesson that
-## only wants a button pressed.
+## Its PROGRESS counts only what this lesson asked for: a plan that is the last
+## lesson's four towers plus ten more reads 0 / 10 when it opens, not 4 / 14.
+##
+## Without a blueprint it counts towers put up SINCE THE STEP OPENED, for a
+## lesson that only wants a button pressed.
 
 @export_group("Objective")
 ## How many towers have to go up, for a lesson with no blueprint. Ignored when
@@ -26,34 +28,15 @@ func is_complete(director: TutorialDirector) -> bool:
 		return false
 	var plan: TowerLayout = blueprint()
 	if plan != null:
-		return _built_on(plan) >= plan.entry_count()
+		return blueprint_built() >= plan.entry_count()
 	return director.towers_built_this_step() >= maxi(1, towers)
 
 
-func progress_text(director: TutorialDirector) -> String:
+func progress(director: TutorialDirector) -> Vector2i:
 	if director == null:
-		return ""
+		return Vector2i.ZERO
 	var plan: TowerLayout = blueprint()
 	if plan != null:
-		return "%d / %d" % [_built_on(plan), plan.entry_count()]
-	return "%d / %d" % [mini(director.towers_built_this_step(), towers), towers]
-
-
-## How many of the plan's cells have one of the player's towers on them.
-##
-## Walks the player's own buildings, which in the lessons that ask this is a
-## few dozen at most. Matched on the footprint's top-left cell, which is how a
-## TowerLayout names a cell and how Building.cell stores one.
-func _built_on(plan: TowerLayout) -> int:
-	var area: PlayerArea = _local_area()
-	if area == null:
-		return 0
-	var wanted: Dictionary = {}
-	for cell: Vector2i in plan.cells:
-		wanted[cell] = true
-	var count: int = 0
-	for child in area.get_children():
-		var building: Building = child as Building
-		if building != null && wanted.has(building.cell):
-			count += 1
-	return count
+		var already: int = director.blueprint_built_at_open()
+		return Vector2i(blueprint_built() - already, plan.entry_count() - already)
+	return Vector2i(director.towers_built_this_step(), maxi(1, towers))

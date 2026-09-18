@@ -1,24 +1,26 @@
 class_name TutorialPointer
 extends Control
 
-## The arrow that says WHICH BUTTON.
+## The golden border that says WHICH BUTTON.
 ##
 ## A tutorial that describes a button in words is a tutorial somebody has to
-## hunt through a HUD for. This points at it: an arrow beside the one control
-## the lesson wants pressed, bobbing so it is found at a glance.
+## hunt through a HUD for. This marks it: a glowing gold border drawn exactly
+## over the one control the lesson wants pressed, pulsing so it is found at a
+## glance. A border ON the button rather than an arrow beside it, because an
+## arrow beside a button in a tight row sits over its neighbour.
 ##
-## **It points at the BUTTON, never at the bar the button sits in.** The first
-## version pointed at whole panels - the middle of the send bar, the middle of
-## the unit panel - which put the arrow between two buttons or over a portrait,
-## and read as pointing at the wrong thing every time. So what it resolves to,
-## every frame and in this order, is:
+## **It marks the BUTTON, never the bar the button sits in.** The first version
+## pointed at whole panels - the middle of the send bar, the middle of the unit
+## panel - which landed between two buttons or over a portrait, and read as
+## pointing at the wrong thing every time. So what it resolves to, every frame
+## and in this order, is:
 ##
 ##   1. the button that SELECTS the unit the lesson is guiding the player to,
 ##      while that unit is not selected - the builder's square, the tier 1
 ##      sender's square. See TutorialGuide.
 ##   2. the command card square showing one of the lesson's guide_abilities -
 ##      the Build menu, then the tower inside it. Nothing while an order is
-##      being aimed: the player is doing the thing, and an arrow on the square
+##      being aimed: the player is doing the thing, and a border on the square
 ##      they already pressed only competes with the build ghost.
 ##   3. the control the lesson names by highlight_key.
 ##
@@ -28,7 +30,7 @@ extends Control
 ##
 ## **The lesson names the button and never where it is.** A key - "send_tier_1",
 ## "research_button" - maps to a Control HERE, in the HUD scene, next to the
-## things it names, so relaying the HUD out moves the arrow with it. Two
+## things it names, so relaying the HUD out moves the border with it. Two
 ## parallel arrays rather than a Dictionary export, because a Dictionary of
 ## NodePaths cannot be authored in the inspector. They are kept in step by
 ## _validate().
@@ -37,15 +39,16 @@ extends Control
 ## default it greyed out the whole screen, lane included, while the lesson was
 ## asking the player to act in it.
 
-## How far the arrow floats up and down, in pixels, and how fast.
-const BOB_PIXELS: float = 6.0
-const BOB_SPEED: float = 3.0
-## Gap between the arrow and the control it is pointing at.
-const ARROW_GAP: float = 4.0
+## How far the border sits OUTSIDE the control, in pixels, so it frames the
+## button rather than covering its edge.
+const OUTSET: float = 3.0
+## The pulse: how fast, and how low the border's alpha dips.
+const PULSE_SPEED: float = 4.0
+const PULSE_MIN_ALPHA: float = 0.45
 
 @export_group("References")
-## The arrow itself, moved to whatever the lesson names.
-@export var _arrow: Control
+## The border itself, moved and sized onto whatever the lesson names.
+@export var _highlight: Control
 ## The dim that covers everything BUT the highlighted control. Four rectangles
 ## rather than a shader, because that is all a rectangular hole needs and it
 ## costs no material, no compile and nothing for ShaderWarmup to know about.
@@ -69,15 +72,15 @@ var _director: TutorialDirector:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# The whole screen, always. The arrow is placed in SCREEN space - see
+	# The whole screen, always. The border is placed in SCREEN space - see
 	# _process - so this node's own rect must not move it.
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# The HUD scene authors this hidden; what is drawn is decided per child.
 	show()
 	_validate()
 	_set_dim_visible(false)
-	if _arrow != null:
-		_arrow.hide()
+	if _highlight != null:
+		_highlight.hide()
 
 	var director: TutorialDirector = _director
 	if director != null:
@@ -85,7 +88,7 @@ func _ready() -> void:
 
 
 ## Two lists that have to agree, so a mismatch is a message at boot rather than
-## an arrow that points at nothing in the middle of a lesson.
+## a border that marks nothing in the middle of a lesson.
 func _validate() -> void:
 	if _keys.size() == _controls.size():
 		return
@@ -111,13 +114,13 @@ func _process(delta: float) -> void:
 	var target: Control = _resolve()
 	if target == null || !is_instance_valid(target) || !target.is_visible_in_tree():
 		_set_dim_visible(false)
-		if _arrow != null:
-			_arrow.hide()
+		if _highlight != null:
+			_highlight.hide()
 		return
 
-	_phase += delta * BOB_SPEED
+	_phase += delta * PULSE_SPEED
 	var rect: Rect2 = _screen_rect_of(target)
-	_place_arrow(rect)
+	_place_highlight(rect)
 	var step: TutorialStep = _director.current_step()
 	if step != null && step.dims_around_highlight:
 		_place_dim(rect)
@@ -125,7 +128,7 @@ func _process(delta: float) -> void:
 		_set_dim_visible(false)
 
 
-## What the arrow points at this frame, in the order the class note gives.
+## What the border marks this frame, in the order the class note gives.
 func _resolve() -> Control:
 	var director: TutorialDirector = _director
 	if director == null || !director.is_running() || director.is_between_lessons():
@@ -171,25 +174,16 @@ func _screen_rect_of(target: Control) -> Rect2:
 	return to_here * Rect2(Vector2.ZERO, target.size)
 
 
-## Puts the arrow over the control, or under it when the control is too near
-## the top of the screen for an arrow to fit above.
-func _place_arrow(rect: Rect2) -> void:
-	if _arrow == null:
+## Frames the control with the border, pulsing.
+func _place_highlight(rect: Rect2) -> void:
+	if _highlight == null:
 		return
-	_arrow.show()
-
-	var bob: float = sin(_phase) * BOB_PIXELS
-	var arrow_size: Vector2 = _arrow.size
-	var above: bool = rect.position.y > arrow_size.y + ARROW_GAP * 2.0
-	# The arrow is drawn pointing DOWN, so it is flipped when it sits under the
-	# thing it is pointing at. Flipped about its own middle, which is where the
-	# pivot is put before anything is moved.
-	_arrow.pivot_offset = arrow_size * 0.5
-	_arrow.scale = Vector2(1.0, 1.0 if above else -1.0)
-	var y: float = rect.end.y + ARROW_GAP - bob
-	if above:
-		y = rect.position.y - arrow_size.y - ARROW_GAP + bob
-	_arrow.position = Vector2(rect.get_center().x - arrow_size.x * 0.5, y)
+	_highlight.show()
+	var framed: Rect2 = rect.grow(OUTSET)
+	_highlight.position = framed.position
+	_highlight.size = framed.size
+	var pulse: float = 0.5 + 0.5 * sin(_phase)
+	_highlight.modulate.a = lerpf(PULSE_MIN_ALPHA, 1.0, pulse)
 
 
 ## Cuts a hole in the dim around the control, as four rectangles.

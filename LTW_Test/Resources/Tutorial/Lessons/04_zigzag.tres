@@ -10,6 +10,7 @@ script = ExtResource("1_step")
 title = "Make them walk"
 body = "The creeps simply walked around your towers. Close the first row, then build a second one with its gap on the other side - now they have to walk back and forth."
 objective = "Build on every marked spot."
+progress_label = "Towers built"
 delay_seconds = 2.0
 holds_clock = true
 skip_after_seconds = 150.0

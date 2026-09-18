@@ -10,6 +10,7 @@ script = ExtResource("1_step")
 title = "Build towers"
 body = "Creeps will come down your lane. Towers shoot them."
 objective = "Open Build and place a Lesser Sentry on each marked spot."
+progress_label = "Towers built"
 delay_seconds = 1.0
 holds_clock = true
 skip_after_seconds = 150.0

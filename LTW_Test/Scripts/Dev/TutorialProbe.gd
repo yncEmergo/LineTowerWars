@@ -46,7 +46,9 @@ func _ready() -> void:
 	_shots = "shots" in OS.get_cmdline_user_args()
 	var setup: MatchSetup = TutorialSetup.create(_game_config, _ai_config)
 	MenuNavigation.pending_match = setup
-	Engine.physics_ticks_per_second = SPEED
+	# Real time when shooting, so a shot lands inside a moment as short as the
+	# beat between two lessons.
+	Engine.physics_ticks_per_second = 20 if _shots else SPEED
 	Engine.max_physics_steps_per_frame = 64
 	add_child((load(MATCH_SCENE) as PackedScene).instantiate())
 	print("PROBE started")
@@ -80,11 +82,19 @@ func _physics_process(_delta: float) -> void:
 		_was_between = director.is_between_lessons()
 		if _was_between:
 			_gaps_seen += 1
+			var tasks: Array[TutorialStep.Task] = director.current_step().tasks(director)
+			_check(tasks.is_empty() || tasks[0].done,
+				"lesson %d: its task is ticked in the gap" % _lesson)
+			if _lesson == 2:
+				_shoot("l2_done")
+			if _lesson in [2, 3, 4, 6]:
+				_note("lesson %d finished reading '%s'" % [
+					_lesson, director.current_step().progress_text(director)])
 	if director.is_between_lessons():
 		return
 
-	if director.lesson_number() != _lesson:
-		_lesson = director.lesson_number()
+	if director.lesson_position().x != _lesson:
+		_lesson = director.lesson_position().x
 		_lesson_ticks = 0
 		_acted.clear()
 		print("LESSON %d  %s  clock=%.1f held=%s gold=%d income=%d" % [

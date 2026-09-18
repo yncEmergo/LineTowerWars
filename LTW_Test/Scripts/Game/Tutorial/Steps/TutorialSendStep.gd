@@ -15,7 +15,7 @@ func is_complete(director: TutorialDirector) -> bool:
 	return director != null && director.sends_this_step() >= maxi(1, sends)
 
 
-func progress_text(director: TutorialDirector) -> String:
-	if director == null || sends <= 1:
-		return ""
-	return "%d / %d" % [mini(director.sends_this_step(), sends), sends]
+func progress(director: TutorialDirector) -> Vector2i:
+	if director == null:
+		return Vector2i.ZERO
+	return Vector2i(director.sends_this_step(), maxi(1, sends))

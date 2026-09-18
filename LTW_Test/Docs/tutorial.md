@@ -71,7 +71,7 @@ Three parts, and the lessons are written against this shape:
 | `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
 | `Scripts/Game/ActionLimits.gd` | What one player may do when that is less than the rules allow. |
 | `Scripts/UI/TutorialPanel.gd` | The lesson on screen, its progress, and the way on. |
-| `Scripts/UI/TutorialPointer.gd` | The arrow at the HUD button a lesson wants pressed. |
+| `Scripts/UI/TutorialPointer.gd` | The golden border on the HUD button a lesson wants pressed. |
 | `Scripts/UI/TutorialSpotlight.gd` | The dim around one thing in the WORLD. |
 | `Resources/Tutorial/` | The lessons, the script, and the mazes they draw. |
 | `Resources/Config/Ai/ai_tutorial*.tres` | The sparring partner, and the two profiles the opponents wake into. |
@@ -83,8 +83,13 @@ a BUILD one rather than a SEND one is which subclass it is, so nothing anywhere 
 kind.
 
 **WHAT IT SAYS** - a title, a paragraph, and one line in the imperative saying what to do now.
-**Short is the rule**: a lesson is read by somebody who wants to be playing. A lesson that can
-count its task draws the count next to the objective, which is the cheapest telegraph there is.
+**Short is the rule**: a lesson is read by somebody who wants to be playing. Each TASK is a row
+with a tickbox on the right that gets a green tick when it is done, and a task that can be
+counted says what it counts (`progress_label`): "Towers built: 1 / 4", "Waves killed: 2 / 4",
+counting only what this lesson asked for. A wave is every entry sharing one delay, and it is
+killed once none of its creeps is still in the lane (`TutorialWaves`). One task per lesson
+today; `TutorialStep.tasks()` is where a lesson with several would list them. A new lesson
+arrives with a small POP of the whole board, about its own middle so it never leaves the screen.
 
 **WHAT IT GIVES** - gold, income, a reserve of sends set to an exact number, a blueprint, waves
 in the player's lane, an opponent woken, the Research Center opened.
@@ -201,8 +206,9 @@ the player's slots, which are theirs. The camera is moved onto the first row sti
 The mazes are the left-right maze of `strategy.md` 5.5 - from the very top, half a cell
 between rows - and the early lessons' plans are its first rows, so they grow into it.
 
-**AN ARROW at a HUD BUTTON** (`TutorialPointer`) - the button, never the bar it sits in: the
-first version pointed at whole panels and landed between two buttons every time. Every frame it
+**A GOLDEN BORDER on a HUD BUTTON** (`TutorialPointer`), pulsing - on the button itself rather
+than an arrow beside it, and the button, never the bar it sits in: the first version pointed at
+whole panels and landed between two buttons every time. Every frame it
 resolves, in order: the button that selects the lesson's `guide_unit` while that unit is not
 selected; then the command card square showing one of its `guide_abilities` (the Build menu,
 then the tower inside it; nothing while an order is being aimed); then the control named by

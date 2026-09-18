@@ -1,39 +1,50 @@
 class_name TutorialPanel
 extends Control
 
-## The lesson on screen: what it says, what to do, and the way on.
+## The lesson on screen: what it says, its tasks with a tickbox each, and the
+## way on.
 ##
 ## **It runs while the tree is paused**, which is what its PROCESS_MODE_ALWAYS
-## is for and is the whole reason a lesson can hold the world at all. A lesson
-## that is only READ stops the match while it is up, so the player is not being
-## leaked on while they read a paragraph - and the only two things that answer a
-## click are this and the menu that lets them leave.
+## is for: a lesson that holds the world still must still be readable, and the
+## only two things that answer a click then are this and the game menu.
 ##
 ## **It sits down the LEFT EDGE**, unlike the draft and the result board, which
 ## fill the middle. Those two are decisions that stop everything; a lesson has
 ## to be readable while the player is doing the thing it is talking about, so it
-## may not cover the lane and it absolutely may not cover the COMMAND CARD -
-## which the first version did, while telling the player to press a button on
-## it. The left edge is the one part of this HUD with nothing in it but the
-## minimap.
+## may not cover the lane and it absolutely may not cover the COMMAND CARD. It
+## is pinned to the TOP of that edge and grows DOWNWARDS.
 ##
-## It is pinned to the TOP of that edge and grows DOWNWARDS, rather than sitting
-## centred: a long lesson then runs towards empty screen instead of into the
-## send bar - which the sending lesson points an arrow at.
+## **It says when a task is done and when a new lesson starts**, because a
+## tutorial that moves on silently leaves the player unsure whether what they
+## did counted. Each task's box gets a green tick the moment the lesson is done,
+## and stays ticked through the beat before the next lesson; the next lesson
+## then arrives with a POP of the whole board.
 ##
 ## It owns nothing. Which lesson is open and whether it is finished are
-## TutorialDirector's; the two buttons report a press and nothing else.
+## TutorialDirector's; the buttons report a press and nothing else.
 
-## What the objective line says while a finished lesson waits for the next.
-const DONE_TEXT: String = "Done!"
+## The pop a new lesson arrives with: from a touch small, past full size, and
+## back. The peak is kept small and the board pops about its own middle, so it
+## never grows past the screen's edge - the board sits a margin in from the
+## left, and the overshoot is a few pixels of that margin.
+const POP_START: float = 0.94
+const POP_PEAK: float = 1.03
+const POP_UP_SECONDS: float = 0.12
+const POP_DOWN_SECONDS: float = 0.14
 
 @export_group("References")
-## "3 of 14", so a player knows how much of this is left.
+## The board that pops, which is everything drawn.
+@export var _board: Control
+## Drives the pop. A child of the board.
+@export var _pop: ScaleAnimation2D
+## "Lesson 3 of 14", so a player knows how much of this is left.
 @export var _progress_label: Label
 @export var _title_label: Label
 @export var _body_label: Label
-## The one line saying what to do NOW, hidden on a lesson that only explains.
-@export var _objective_label: Label
+## Where the task rows go, one per task.
+@export var _task_list: Container
+## One task row, instanced per task.
+@export var _task_row_scene: PackedScene
 ## Finishes a lesson that is only read. Hidden on one with something to do,
 ## where pressing it would mean skipping the thing.
 @export var _continue_button: Button
@@ -42,9 +53,11 @@ const DONE_TEXT: String = "Done!"
 ## would read as an invitation.
 @export var _skip_button: Button
 
-## The progress reading last drawn, so the label is only rewritten when it
-## moves. "-" is a value no step returns, which forces the first draw.
-var _progress_shown: String = "-"
+## The lesson last drawn, so a new one pops and a redraw of the same one does not.
+var _shown_lesson: int = 0
+## The tasks as last drawn, so the rows are only rewritten when something moved.
+var _tasks_shown: String = ""
+var _rows: Array[TutorialTaskRow] = []
 
 var _director: TutorialDirector:
 	get:
@@ -69,8 +82,7 @@ func _ready() -> void:
 	_refresh()
 
 
-## Redrawn whole when the lesson changes. It changes a few dozen times in a
-## whole tutorial, so there is nothing here worth being clever about.
+## Redrawn whole when the lesson changes - opens, or finishes and waits.
 func _refresh() -> void:
 	var director: TutorialDirector = _director
 	if director == null || !director.is_running():
@@ -83,31 +95,30 @@ func _refresh() -> void:
 		return
 
 	show()
+	var position_in_script: Vector2i = director.lesson_position()
 	if _progress_label != null:
-		_progress_label.text = "Lesson %d of %d" % [
-			director.lesson_number(), director.lesson_count(),
-		]
+		_progress_label.text = "Lesson %d of %d" % [position_in_script.x, position_in_script.y]
 	if _title_label != null:
 		_title_label.text = step.title
 	if _body_label != null:
 		_body_label.text = step.body
-	_progress_shown = "-"
-	_draw_objective(step, director)
+	_tasks_shown = ""
+	_draw_tasks(step, director)
 
 	if _continue_button != null:
 		# Offered only where pressing it is what finishes the lesson. On a
 		# lesson with something to do, the thing IS the button.
-		_continue_button.visible = step is TutorialReadStep
+		_continue_button.visible = step is TutorialReadStep && !director.is_between_lessons()
 	if _skip_button != null:
 		_skip_button.hide()
 
+	if position_in_script.x != _shown_lesson:
+		_shown_lesson = position_in_script.x
+		_play_pop()
+
 
 ## The skip button appears on its own once the lesson has been open long enough,
-## which is why this is polled rather than drawn once with the rest.
-##
-## _process rather than _physics_process: it is a button appearing, and the beat
-## it appears on is a render frame. The reading behind it is the director's
-## simulation clock either way.
+## and the task counts move with the world, so both are polled.
 func _process(_delta: float) -> void:
 	if !visible:
 		return
@@ -115,29 +126,48 @@ func _process(_delta: float) -> void:
 	if _skip_button != null:
 		_skip_button.visible = director != null && director.may_skip()
 	if director != null && director.current_step() != null:
-		_draw_objective(director.current_step(), director)
+		_draw_tasks(director.current_step(), director)
 
 
-## The objective line, with how far along it is when the step can count that -
-## "Build a Lesser Sentry on each blue square.  3 / 7". Redrawn only when the
-## count moves, since this is asked every frame.
-func _draw_objective(step: TutorialStep, director: TutorialDirector) -> void:
-	if _objective_label == null:
+## One row per task, rewritten only when a task's text or tick changed, since
+## this is asked every frame.
+func _draw_tasks(step: TutorialStep, director: TutorialDirector) -> void:
+	if _task_list == null || _task_row_scene == null:
 		return
-	# Between two lessons the one on screen is done, and says so while the next
-	# waits out its delay. See TutorialStep.delay_seconds.
-	var done: bool = director.is_between_lessons()
-	var progress: String = DONE_TEXT if done else step.progress_text(director)
-	if progress == _progress_shown:
+	var tasks: Array[TutorialStep.Task] = step.tasks(director)
+	var signature: String = ""
+	for task: TutorialStep.Task in tasks:
+		signature += "%s|%s;" % [task.text, task.done]
+	if signature == _tasks_shown:
 		return
-	_progress_shown = progress
-	_objective_label.visible = done || !step.objective.is_empty()
-	if done:
-		_objective_label.text = DONE_TEXT
-	elif progress.is_empty():
-		_objective_label.text = step.objective
-	else:
-		_objective_label.text = "%s   %s" % [step.objective, progress]
+	_tasks_shown = signature
+
+	while _rows.size() < tasks.size():
+		var row: TutorialTaskRow = _task_row_scene.instantiate() as TutorialTaskRow
+		if row == null:
+			Log.err("The tutorial task row scene is not a TutorialTaskRow")
+			return
+		_task_list.add_child(row)
+		_rows.append(row)
+	for index in range(_rows.size()):
+		var shown: bool = index < tasks.size()
+		_rows[index].visible = shown
+		if shown:
+			_rows[index].show_task(tasks[index])
+	_task_list.visible = !tasks.is_empty()
+
+
+## The board pops about its own middle. Deferred a frame so the board has been
+## laid out for the new lesson's text before its middle is taken.
+func _play_pop() -> void:
+	if _board == null || _pop == null:
+		return
+	await get_tree().process_frame
+	if !is_instance_valid(_board):
+		return
+	_board.pivot_offset = _board.size * 0.5
+	_pop.do_pop(Vector2.ONE * POP_START, Vector2.ONE * POP_PEAK, Vector2.ONE,
+		POP_UP_SECONDS, POP_DOWN_SECONDS)
 
 
 func _on_continue_pressed() -> void:

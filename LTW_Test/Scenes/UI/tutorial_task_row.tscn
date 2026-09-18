@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/TutorialTaskRow.gd" id="1_row"]
+[ext_resource type="Script" path="res://Scripts/UI/TutorialTickBox.gd" id="2_tick"]
+
+[node name="TutorialTaskRow" type="HBoxContainer" node_paths=PackedStringArray("_label", "_tick")]
+mouse_filter = 2
+focus_behavior_recursive = 1
+theme_override_constants/separation = 12
+script = ExtResource("1_row")
+_label = NodePath("TaskLabel")
+_tick = NodePath("TickBox")
+
+[node name="TaskLabel" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 0.6, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+autowrap_mode = 3
+
+[node name="TickBox" type="Control" parent="."]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("2_tick")
