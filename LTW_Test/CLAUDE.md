@@ -603,6 +603,14 @@
       first match pays and a developer never sees
     - loaded through `override.cfg` like `LockstepProbe`, and it has to run
       WINDOWED: headless has no renderer and compiles nothing
+  - **Scripts/Dev/TutorialProbe.gd EXISTS and is kept too**, with
+    Scenes/Dev/tutorial_probe.tscn, for as long as the tutorial is being iterated.
+    It plays the whole tutorial through the real order road and checks every
+    lesson - what it must refuse, where the border lands, how it ends. No
+    autoload: it is a scene, run headless for the checks, `-- lose` for the
+    defeat path, and WINDOWED with `-- shots` for screenshots in
+    `user://tutorial_shots/`. Every tutorial change is verified with it; see
+    Docs/tutorial.md section 11
   - stop and restart the server between runs. A lobby left over from the last one
     looks exactly like a bug in the next
 

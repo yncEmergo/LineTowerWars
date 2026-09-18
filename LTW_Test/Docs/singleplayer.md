@@ -232,12 +232,23 @@ sends, upgrades or researches. `AiConfig.selectable_indices` is what keeps it ou
 dropdown, and the dropdown therefore maps a POSITION to a profile INDEX - the two are
 different numbers and anything that assumes otherwise offers a difficulty nobody should pick.
 
-Both tutorial opponents start as that sparring partner and are later WOKEN into a real
-profile - `ai_tutorial_rookie.tres` and `ai_tutorial_veteran.tres` - through
-`AiPlayer.change_profile`. Those two are not in `ai_config.tres` at all: the tutorial script
-names them by path, and nothing else can reach them. The partner's zigzag has the same rows
-and corridors as theirs, so the short maze it sparred with is the top of the longer one they
-go on to build. See `tutorial.md`.
+The tutorial's opponents are handed further profiles through `AiPlayer.change_profile` - the
+second one a sparring profile of its own while it waits, and each a real one when a lesson
+WAKES it (`ai_tutorial_*.tres`). None of those is in `ai_config.tres`: the tutorial script
+names them by path, and nothing else can reach them. See `tutorial.md`.
+
+Those profiles are what the AI's narrower knobs were built for, and any profile may use them:
+
+- an UPGRADE BUDGET (`upgrade_target_paths`): the only upgrades it makes, one named tower per
+  entry, each claiming the tower nearest the spawn that can climb to it, spaced by
+  `upgrade_seconds`
+- RANDOM upgrades (`random_upgrade_seconds`, `random_upgrade_max_gold`): one random affordable
+  rung on one random tower the plan is not still growing, rolled on the brain's own stream
+- `upgrades_only_to_plan`: a tower is only raised toward what its maze plan names, so a plan
+  of cheap walls stays walls
+- `max_maze_value`: no build or upgrade that would take the maze past it
+- `max_send_gold_per_payout` and `sends_attackers`: how much it may send between two payouts,
+  and whether attackers are ever among it
 
 ## 8. What it does NOT do yet
 

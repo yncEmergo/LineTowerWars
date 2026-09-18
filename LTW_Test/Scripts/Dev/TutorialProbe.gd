@@ -8,8 +8,11 @@ extends Node
 ##
 ##   godot --path . --headless res://Scenes/Dev/tutorial_probe.tscn
 ##
-## Written against the current lesson ORDER: the numbers in _play() are lesson
-## numbers, so re-ordering the lessons means updating it.
+## It dispatches on each lesson's FILE name in _play(), so re-ordering lessons
+## costs nothing, and a lesson added or renamed needs a line there.
+##
+##   -- lose    run out of lives in the Rookie lesson and check the defeat screen
+##   -- shots   run windowed and save screenshots to user://tutorial_shots/
 
 const MATCH_SCENE: String = "res://Scenes/Main.tscn"
 const ARCHER: String = "res://Resources/UnitStats/Towers/lesser_archer_stats.tres"

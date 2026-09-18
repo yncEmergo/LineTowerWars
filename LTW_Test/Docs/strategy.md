@@ -782,8 +782,7 @@ described** (10.6). Only the questions that help the core understanding are aske
 Recorded so they are not mistaken for gaps in the AI's knowledge:
 - how juggling will be removed from the game (5.7)
 - how clicking a Kodo that is hidden behind other creeps should work (5.6)
-- the tutorial, which had its first rework on 2026-09-18 and is still a first pass
-  (`tutorial.md`)
+- the tutorial, complete end to end as of 2026-09-18 and under review (`tutorial.md`)
 
 ### 10.6 What recordings of serious matches should answer
 These were deliberately not described, because a recording shows them better. They are what

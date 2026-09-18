@@ -101,7 +101,12 @@ they stack:
   player ends up with exactly the Ultimate the rest of the tutorial is written around.
 - **The camera held** (`pinned_camera`): pinned where the task happens when it happens somewhere
   the player would not look - the first send appears in another player's lane - and released
-  the moment the task is done.
+  the moment the task is done. Where the player only needs pointing somewhere, the camera
+  GLIDES there instead and leaves them free (`looks_at`, and a blueprint's first open row).
+  Every move the tutorial makes is a quick glide rather than a cut, with panning locked until
+  it arrives.
+- **Nothing covers the thing named.** The lesson panel steps to the right of the Research
+  Center while it is open, and aside entirely for an explanation or a moment.
 - **The task list**: every task of the lesson as a row with a tickbox, the current one lit,
   those to come faded so the plan is visible, the count on the same line in brackets. A done
   task gets a green tick, and there is a beat (`delay_seconds`) before the next opens so the
@@ -276,3 +281,22 @@ worth looking at - the only way to see where something DRAWS, since headless dra
 
 **Print which lesson was reached and what was checked, not whether there were errors.** A
 tutorial that stalls part way and one that runs to the end look the same in a quiet log.
+
+## 12. Picking it up
+
+The tutorial is built in review ROUNDS: the project owner plays it, sends a list of notes, and
+each round is implemented, checked with the probe (headless, then windowed screenshots that are
+actually looked at) and committed. Keep to that, and keep the principles in section 1 - most
+notes so far have been about them: shorter words, less stopping, a border on the button rather
+than anything beside it, nothing shown before it is needed.
+
+**Open with the owner as of 2026-09-18**, nothing of lessons six and seven tested by them yet:
+
+- how strong both opponents should be - the first falls fast, the second is hard for a player
+  who does not adapt (section 10)
+- whether the payout the income lesson waits on should only be brought forward for that task,
+  as it is, or the whole tutorial's payout beat shortened
+- whether the open maze-building task needs a guard against spending the gold on the wrong
+  branch while the clock is held
+- "a 10k Glyph tower" was read as the Greater Annihilation Glyph, and the second opponent's
+  elemental Ultimate as the Annihilation Glyph's own
