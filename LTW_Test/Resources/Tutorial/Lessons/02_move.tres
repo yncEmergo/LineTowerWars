@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("1_step")
-title = "Move"
+continues_lesson = true
 body = "Right-click the ground while your builder is selected, or use the Move command."
 objective = "Move your builder."
-delay_seconds = 1.0
+delay_seconds = 0.8
 holds_clock = true
 restricts_actions = true
 guide_unit = 1

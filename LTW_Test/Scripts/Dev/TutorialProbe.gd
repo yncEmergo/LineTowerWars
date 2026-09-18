@@ -166,6 +166,8 @@ func _play(director: TutorialDirector) -> void:
 func _play_move() -> void:
 	if _acted.has("moved"):
 		return
+	if _shoot("l1_move"):
+		return
 	_acted["moved"] = true
 	_check(_pointer_target_name().begins_with("CommandSlot"),
 		"move lesson: highlight on the Move square (%s)" % _pointer_target_name())
