@@ -41,6 +41,9 @@ var _distance: float = 0.0
 var _target_distance: float = 0.0
 
 var _grabbing: bool = false
+## Reasons the camera is PINNED, each to the ground point it holds. While any is
+## set nothing the player does moves the focus - see pin().
+var _pins: Dictionary = {}
 ## World point that was under the cursor when the middle drag started. The pan
 ## keeps putting this point back under the cursor, which makes the drag
 ## independent of resolution, pitch and any future zoom.
@@ -66,9 +69,39 @@ func set_focus_bounds(bounds: Rect2) -> void:
 
 
 ## Snaps the camera to a world position. This is the center-on-target hook
-## for the builder or any other unit or building.
+## for the builder or any other unit or building. Ignored while pinned.
 func center_on(world_position: Vector3) -> void:
+	if is_pinned():
+		return
 	_set_focus(world_position)
+
+
+## Holds the camera on one ground point until the same reason unpins it: no
+## panning, no drag, no minimap jump. The wheel still zooms.
+##
+## The tutorial's, for the moments it shows the player something they must be
+## looking at - the lane their first creeps walk down, a creep about to leak.
+## By REASON rather than a flag, so two of those overlapping each let go of
+## their own and the camera goes back to whichever is still holding it.
+func pin(reason: StringName, world_position: Vector3) -> void:
+	_pins.erase(reason)
+	_pins[reason] = world_position
+	_grabbing = false
+	_set_focus(world_position)
+
+
+## Lets go of one pin. The camera stays where it is, or moves to the pin still
+## holding it.
+func unpin(reason: StringName) -> void:
+	if !_pins.has(reason):
+		return
+	_pins.erase(reason)
+	if is_pinned():
+		_set_focus(_pins[_pins.keys().back()] as Vector3)
+
+
+func is_pinned() -> bool:
+	return !_pins.is_empty()
 
 
 ## How far back the camera is right now. Read by anything that has to scale
@@ -139,7 +172,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _handle_zoom(button):
 			get_viewport().set_input_as_handled()
 			return
-		if !_config.allow_middle_drag_pan:
+		if !_config.allow_middle_drag_pan || is_pinned():
 			return
 		if button.button_index != MOUSE_BUTTON_MIDDLE:
 			return
@@ -200,7 +233,7 @@ func _update_grab(screen_pos: Vector2) -> void:
 func _process(delta: float) -> void:
 	if _config == null:
 		return
-	var pan: Vector2 = _read_pan_input()
+	var pan: Vector2 = Vector2.ZERO if is_pinned() else _read_pan_input()
 	if pan != Vector2.ZERO:
 		_set_focus(_focus + Vector3(pan.x, 0.0, pan.y) * _config.pan_speed * delta)
 	_advance_zoom(delta)

@@ -5,9 +5,9 @@ is editing content rather than reading code. It carries no lesson WORDING - that
 `.tres` files under `Resources/Tutorial/Lessons/` and is meant to be argued with - and no rules
 of the game, which are `game_rules.md`'s.
 
-**Status, 2026-09-18: first rework landed, more iterations to come.** The lessons after the maze
-lesson are out of `tutorial_script.tres` for now (their files are the `later_*` ones) while the
-early lessons are gone over one at a time. The tutorial was rebuilt
+**Status, 2026-09-18: first rework landed, more iterations to come.** The lessons after the
+sending lesson are out of `tutorial_script.tres` for now (their files are the `later_*` ones)
+while the lessons are gone over one at a time. The tutorial was rebuilt
 around three wishes of the project owner: far fewer and far shorter lessons; time that stops
 only when it has to, with the player held by what they HAVE instead; and an opening where the
 player can do only the one thing they are asked, with exactly the gold it costs. What it
@@ -50,10 +50,13 @@ Three parts, and the lessons are written against this shape:
    through, and send their first creeps from a reserve set to exactly the number asked for.
    Nothing is timed. The waves are real packs, so their Timber Wolves pay a little bounty on
    top of the granted gold; that is accepted rather than engineered away.
-2. **THE FIRST OPPONENT.** The limits come off, the clock runs, the base income arrives, and the
-   first opponent is WOKEN from sparring into a real profile. The lesson ends when it is beaten.
-   This is where the basics - Basic towers, the maze, sending, income - are played rather than
-   explained.
+2. **THE FIRST OPPONENT.** The sending lesson: income and its timer are pointed at, then the
+   camera is held on the first opponent's lane while the player sends their first creeps from a
+   reserve set to exactly the number asked for. Then the limits come off, the clock runs, the
+   income is set to a lump, the creep roster is moved ahead, and the first opponent is WOKEN
+   from sparring into a profile that DEFENDS and never sends - the lesson keeps sending its own
+   waves at the player instead, none stronger than the opening already threw. The lesson ends
+   when it is beaten. This is where the basics are played rather than explained.
 3. **THE SECOND OPPONENT.** It has been in the match from the start, building a maze on STANDBY
    outside the send ring, so part 2 was a plain duel. Beating the first brings it in, the
    Research Center opens, and its half teaches technology and elemental towers. Beating it ends
@@ -69,6 +72,7 @@ Three parts, and the lessons are written against this shape:
 | `Scripts/Game/Tutorial/TutorialDirector.gd` | Which lesson is open, what it handed over, what has happened since. |
 | `Scripts/Game/Tutorial/TutorialSetup.gd` | The match it is played in: lanes, names, settings. |
 | `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a lesson sends: a delay, a creep, a number of sends. |
+| `Scripts/Game/Tutorial/TutorialMoment.gd` | Something that stops the match the first time it happens, whichever lesson is up. |
 | `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a lesson walks the player to, and whether it is selected. |
 | `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
 | `Scripts/Game/ActionLimits.gd` | What one player may do when that is less than the rules allow. |
@@ -100,8 +104,9 @@ the towers to upgrade (`arrows_on_towers_path`). A wave lesson can count creeps 
 waves (`counts_creeps`), for one big wave where "1 / 1" says nothing. A new lesson
 arrives with a small POP of the whole board, about its own middle so it never leaves the screen.
 
-**WHAT IT GIVES** - gold, income, a reserve of sends set to an exact number, a blueprint, waves
-in the player's lane, an opponent woken, the Research Center opened.
+**WHAT IT GIVES** - gold, income (added, or SET once with `set_income`), a reserve of sends set
+to an exact number, a blueprint, waves in the player's lane, an opponent woken, the Research
+Center opened, and the creep roster moved ahead or held short of a tier - see section 5.
 
 **A lesson waits before it opens** (`delay_seconds`): a beat after the last one is done, to see
 the last tower go up or the last creep die. The panel says the last lesson is done meanwhile, and
@@ -141,6 +146,20 @@ pauses the world gives the clock back one gap when both let go, not the same gap
 A reserve refills on the TICK rather than by reading the clock, so it asks `is_clock_held()`
 for itself - that is what keeps the sending lesson's reserve at exactly what was set.
 
+**The creep roster has a clock of its own** (`MatchSession.unlock_elapsed_seconds`): the match
+clock, moved AHEAD by any lead and STOPPED at any ceiling. A lesson moves it on with
+`unlocks_ahead_seconds` and stops it short of a tier with `holds_back_tier` - it runs until the
+last creep below that tier is open and stands there. Only a creep's start delay reads it, so
+income is paid exactly as it would have been. Moving the match clock itself instead would pay
+every income payout inside the skipped time on the next tick.
+
+**A MOMENT holds the world** (`TutorialMoment`, on the script rather than in the lesson list):
+the first time the player's creeps are about to leak past a row nothing can reach, the first
+flyer they send, the first attacker. Each fires once, whichever lesson is up - a player who
+never sends a flyer is never told about flyers, and one who sends one late is told then. The
+world is held under its own name, the camera is pinned on the creep, the spotlight dims
+everything else, the panel shows it with an OK, and the lesson underneath waits.
+
 **There is no skip.** A lesson cannot be passed without doing it, and a tutorial that offers a
 way out invites taking it. What makes that safe is the held opening's design: exact gold, exact
 cells, nothing else allowed - cancelling a tower build is forbidden throughout for the same
@@ -159,7 +178,9 @@ stopping the builder, calling off an order), and a passive or a presentation tog
 without being named. A SUBMENU is not: which menus open is part of what a lesson teaches, so
 the Build menu stays shut until the lesson about building lists it. Everything not allowed is
 drawn dim. `build_on_blueprint_only` adds the blueprint's cells as the only place a tower may
-start. The Research Center is locked until a lesson opens it and stays open after.
+start. `max_upgrade_gold` keeps the top of the upgrade tree back even on a lesson that
+restricts nothing else. The Research Center is locked until a lesson opens it and stays open
+after.
 
 On top of all of it the script carries a FORBIDDEN list (`forbidden_abilities`), refused in
 every lesson, restricted or not: the builder's blueprint screens, whose saved mazes would compete
@@ -188,6 +209,13 @@ script hands them, and send nothing. A lesson WAKES one with `wakes_rival`:
 
 The partner's zigzag has the same rows and corridors as the profiles they wake into, so the
 short maze is the top of the long one and the woken opponent simply carries on building it.
+
+The FIRST opponent wakes into a profile that only defends: it never sends, never builds below
+the partner's rows, and upgrades nothing but an UPGRADE BUDGET (`AiProfile.upgrade_target_paths`)
+- one named tower per entry, each claiming the tower nearest the spawn that can climb to it,
+spaced out by `upgrade_seconds` so it gets stronger over time rather than all at once. A maze
+that stops near the top of the lane is what makes a leak certain once a creep is past it, and
+the moment about life stealing is built on that.
 
 **STANDBY** (`PlayerState.standby`) is what lets the second opponent sit in the match through
 the first half. The ring skips a standby player exactly as it skips an eliminated one, so
@@ -231,7 +259,13 @@ shader warm-up draws it in a tutorial so its material compiles before the first 
 
 **A SPOTLIGHT on the world**, dimming everything but a circle around one thing and following
 it. The lesson names a SUBJECT (`MY_LANE`, `TARGET_LANE`, `MY_NEWEST_TOWER`, `LEADING_CREEP`)
-rather than a position.
+rather than a position. A MOMENT uses it too, around the creep it is about.
+
+**A PINNED CAMERA** (`pinned_camera`, `RTSCamera.pin`): the camera held on one point until the
+task is done - no panning, no drag, no minimap jump; the wheel still zooms. For a task the
+player cannot do right while looking elsewhere, which is the first send: its creeps appear in
+somebody else's lane. Pins are by reason, so a moment pinning the camera over a lesson's pin
+lets go of its own and hands the camera back.
 
 **The DIM SQUARES** of section 6, in the held opening the strongest of all: the one lit button
 on the card is the answer.
@@ -271,8 +305,10 @@ lesson nobody can finish. That check is what turns it into a message.
   but nothing in the lessons says so yet
 - **Nothing in the held opening teaches the builder's own attack**, although the wave lesson
   allows it. `strategy.md` 2.1 says it matters early
-- **It never shows a leak on purpose**, or the send ring beyond a duel. The second opponent
-  joining is the closest it comes
+- **It never shows the send ring beyond a duel.** The second opponent joining is the closest it
+  comes
+- **The first opponent falls quickly** once the player is set free on the lesson's income, and
+  its strength has not been tuned against a real new player
 - **It does not teach discs, creep abilities or tower abilities.** Deliberately, for now
 - **It has no way back in.** A player who leaves half way starts again from the first lesson
 - **Nothing is voiced or animated**, and the lessons do not react to what the player did
@@ -282,7 +318,9 @@ lesson nobody can finish. That check is what turns it into a message.
 
 `Scripts/Dev/TutorialProbe.gd`, run as `Scenes/Dev/tutorial_probe.tscn` headless, plays the
 whole tutorial through the real order road, faster than real time: it builds on the blueprint,
-sends, upgrades, researches and morphs a Core, and ends each opponent once it has seen it send.
+sends, upgrades, researches and morphs a Core. Against the first opponent it sends for real,
+notes when it would have fallen, and keeps it standing until every MOMENT has fired and been
+dismissed, so each one's hold, pin and spotlight is checked.
 In the held lessons it also TRIES what they must refuse - a tower off the list, a cell off the
 blueprint, an upgrade, another creep - and checks the gold did not move. It prints a line per
 lesson with the clock, whether it is held, gold and income, and a PASS or FAIL per check.

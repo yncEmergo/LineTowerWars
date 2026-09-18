@@ -171,6 +171,18 @@ extends Resource
 ## Whether it spends on UPGRADES at all. An AI that never upgrades is a wall of
 ## 10g towers, which is what an easy one should be.
 @export var upgrades_towers: bool = true
+## The ONLY upgrades it makes, as res:// paths to the towers it raises one of
+## its own to, one tower per entry - or empty to upgrade freely.
+##
+## A BUDGET rather than a policy: an opponent that should end with one Watch
+## Tower and two Cannons names exactly those three and nothing more is ever
+## upgraded. The tutorial's Rookie, whose maze has to stay beatable by somebody
+## who has just learned to send.
+@export_file("*.tres") var upgrade_target_paths: Array[String] = []
+## Seconds between one upgrade and the next, or 0 for as fast as gold allows. A
+## budget spent on one beat reads as a switch being flipped; spread out, it
+## reads as an opponent getting stronger.
+@export var upgrade_seconds: float = 0.0
 
 @export_group("Technology")
 ## Whether it spends its free research on an Ultimate at the start of the match.
@@ -242,7 +254,26 @@ func validate() -> bool:
 			"path": base_tower_path,
 		})
 		complete = false
+	for path: String in upgrade_target_paths:
+		if !ResourceLoader.exists(path):
+			Log.err("AI profile names an upgrade target that does not resolve", {
+				"profile": display_name,
+				"path": path,
+			})
+			complete = false
 	return complete
+
+
+## The towers this profile's upgrade budget raises to, one entry per tower, or
+## empty for a profile that upgrades freely.
+func upgrade_targets() -> Array[BuildingStats]:
+	var targets: Array[BuildingStats] = []
+	for path: String in upgrade_target_paths:
+		if !path.is_empty() && ResourceLoader.exists(path):
+			var stats: BuildingStats = ResourceLoader.load(path, "") as BuildingStats
+			if stats != null:
+				targets.append(stats)
+	return targets
 
 
 ## The maze this profile plays, or null when it builds the generated one.
@@ -279,7 +310,8 @@ func ultimate_tower(registry: TechRegistry) -> BuildingStats:
 			"tech": ultimate_tech_id,
 		})
 		return null
-	if path.ultimate_stats_path.is_empty()             || !ResourceLoader.exists(path.ultimate_stats_path):
+	if path.ultimate_stats_path.is_empty() \
+			|| !ResourceLoader.exists(path.ultimate_stats_path):
 		return null
 	return ResourceLoader.load(path.ultimate_stats_path, "") as BuildingStats
 

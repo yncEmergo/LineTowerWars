@@ -875,7 +875,8 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   THIS match" means. The settings and the pause added four more: what the
   match agreed to, and whether the world is moving. The tutorial's clock hold
   added three: holding the clock without the world, asking whether it is held,
-  and moving it on past the opening. Splitting the unit
+  and moving it on past the opening. Its creep unlock clock added three more:
+  the reading, moving it ahead, and capping it. Splitting the unit
   registry out is the obvious cut if it is ever worth making; the other three
   belong together
 - LockstepService.gd is over gdlint's public-method ceiling, and for a reason no

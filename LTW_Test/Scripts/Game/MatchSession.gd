@@ -68,6 +68,10 @@ var _turn_ticks: int = 0
 var _clock_base: int = -1
 var _clock_turn_base: int = 0
 var _clock_complaints: int = 0
+## Seconds the creep UNLOCK clock runs ahead of the match clock, and the latest
+## time it may show. See unlock_elapsed_seconds().
+var _unlock_lead: float = 0.0
+var _unlock_ceiling: float = INF
 var _abilities: AbilityRegistry = AbilityRegistry.new()
 var _unit_types: UnitTypeRegistry = UnitTypeRegistry.new()
 var _techs: TechRegistry = TechRegistry.new()
@@ -555,6 +559,36 @@ func _refresh_freeze() -> void:
 		_freeze_frame = Engine.get_physics_frames()
 	else:
 		_start_frame += Engine.get_physics_frames() - _freeze_frame
+
+
+## The clock a creep's start delay is measured against: the match clock, moved
+## ahead by any lead and stopped at any ceiling. Everything else the clock times
+## - income, Sudden Death - reads elapsed_seconds() and is untouched by either.
+##
+## The tutorial's, and it is why this is separate from fast_forward(): a lesson
+## opening the creep roster two minutes early must not pay two minutes of income
+## on the next tick, and a lesson holding tier 2 back must not stop the income
+## beat it is teaching. Offline only by use, like hold_clock().
+func unlock_elapsed_seconds() -> float:
+	return minf(elapsed_seconds() + _unlock_lead, _unlock_ceiling)
+
+
+## Moves the unlock clock further ahead of the match clock. See
+## unlock_elapsed_seconds().
+func lead_unlocks(seconds: float) -> void:
+	if _lockstep:
+		Log.err("The unlock clock cannot be moved on under lockstep", seconds)
+		return
+	_unlock_lead += maxf(0.0, seconds)
+
+
+## Stops the unlock clock at a match clock time, or lets it run again with INF.
+## The time is where it STOPS, so a creep unlocking exactly then is open.
+func cap_unlocks(at_seconds: float) -> void:
+	if _lockstep:
+		Log.err("The unlock clock cannot be capped under lockstep", at_seconds)
+		return
+	_unlock_ceiling = at_seconds
 
 
 ## Whether the match has reached Sudden Death.

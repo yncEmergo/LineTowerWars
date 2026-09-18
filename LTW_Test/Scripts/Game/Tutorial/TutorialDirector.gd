@@ -44,6 +44,11 @@ signal lesson_changed()
 ## the draft's, so the two can overlap without either releasing the other -
 ## see MatchSession.
 const HOLD_REASON: StringName = &"tutorial"
+## The name a MOMENT holds the world and pins the camera by, separate from a
+## lesson's so the two let go independently.
+const MOMENT_REASON: StringName = &"tutorial_moment"
+## The name a lesson pins the camera by.
+const CAMERA_REASON: StringName = &"tutorial_lesson"
 
 @export_group("Settings")
 ## The lessons, in teaching order.
@@ -81,6 +86,14 @@ var _research_open: bool = false
 ## [from type id, type id] -> whether that tower is somewhere up that one's
 ## upgrade chain. The walk is the same answer every time it is asked.
 var _reach_cache: Dictionary = {}
+## The moment on screen, and the creep it is about. See TutorialMoment.
+var _moment: TutorialMoment = null
+var _moment_subject: Creep = null
+## Moments that have fired, as keys. Each fires once.
+var _moments_done: Dictionary = {}
+## Moment -> simulation seconds since its creep was first seen, for one that
+## waits a beat before it fires.
+var _moments_seen: Dictionary = {}
 
 var _session: MatchSession:
 	get:
@@ -315,7 +328,13 @@ func _since(read: Callable) -> int:
 func _physics_process(_engine_delta: float) -> void:
 	if !_running || _step == null:
 		return
+	# The world is held while a moment is read, and so is the lesson.
+	if _moment != null:
+		return
 	var delta: float = MatchSession.tick_seconds()
+	_watch_moments(delta)
+	if _moment != null:
+		return
 	if is_between_lessons():
 		_gap_left -= delta
 		if _gap_left < 0.0:
@@ -331,6 +350,9 @@ func _physics_process(_engine_delta: float) -> void:
 ## Everything this one held stays held through the gap, so nothing starts moving
 ## in the beat between two lessons that both hold the clock.
 func _finish_lesson() -> void:
+	# A lesson's camera is let go the moment its task is done, not when the
+	# next one opens: the player has seen what they were shown.
+	_pin_camera(null)
 	var next: TutorialStep = script_resource.step_at(_index + 1)
 	var gap: float = 0.0 if next == null else maxf(0.0, next.delay_seconds)
 	if gap <= 0.0:
@@ -379,6 +401,7 @@ func _open(index: int) -> void:
 	_builder_mark = Vector3.ZERO if builder == null else builder.global_position
 	_apply_grants(_step)
 	_apply_limits(_step)
+	_pin_camera(_step)
 	_step.on_enter(self)
 	# After the grants, so a lesson that hands over gold does it before the
 	# world stops rather than on the frame it starts again.
@@ -408,6 +431,8 @@ func _finish() -> void:
 	if state != null:
 		state.limits = null
 	_draw_blueprint(null)
+	_pin_camera(null)
+	_end_moment()
 	Log.info("Tutorial finished")
 	lesson_changed.emit()
 
@@ -439,6 +464,12 @@ func _apply_grants(step: TutorialStep) -> void:
 			state.gain(step.grant_gold)
 		if step.grant_income > 0:
 			state.add_income(step.grant_income)
+		if step.set_income >= 0 && step.set_income > state.income:
+			state.add_income(step.set_income - state.income)
+		elif step.set_income >= 0 && step.set_income < state.income:
+			Log.warn("A lesson sets an income below what the player already earns, left alone",
+				{"wanted": step.set_income, "income": state.income})
+	_apply_unlock_clock(step)
 	if step.unlocks_research:
 		_research_open = true
 
@@ -460,6 +491,7 @@ func _apply_limits(step: TutorialStep) -> void:
 
 	var limits: ActionLimits = ActionLimits.new()
 	limits.research = _research_open
+	limits.max_upgrade_gold = step.max_upgrade_gold
 	limits.forbidden.append_array(script_resource.forbidden_abilities)
 	if step.restricts_actions:
 		limits.restricts_abilities = true
@@ -470,6 +502,160 @@ func _apply_limits(step: TutorialStep) -> void:
 			for cell: Vector2i in plan.cells:
 				limits.build_cells[cell] = true
 	state.limits = limits
+
+
+## Moves the creep roster on, and stops it short of a tier, as the lesson asks.
+##
+## Through the UNLOCK clock rather than the match clock, so income - which the
+## lesson is also running - is paid exactly as it would have been. See
+## MatchSession.unlock_elapsed_seconds.
+func _apply_unlock_clock(step: TutorialStep) -> void:
+	var session: MatchSession = _session
+	if session == null:
+		return
+	if step.unlocks_ahead_seconds > 0.0:
+		session.lead_unlocks(step.unlocks_ahead_seconds)
+	if step.holds_back_tier == 0:
+		session.cap_unlocks(INF)
+	elif step.holds_back_tier > 0:
+		session.cap_unlocks(_last_unlock_below(step.holds_back_tier))
+
+
+## The match clock time the last creep BELOW a tier opens at, on the player's
+## own senders - where the unlock clock stops to hold that tier back.
+func _last_unlock_below(tier: int) -> float:
+	var area: PlayerArea = _local_area()
+	var config: GameConfig = References.game_config
+	var latest: float = 0.0
+	if area == null || config == null:
+		return latest
+	for sender in area.send_buildings():
+		if sender.is_sudden_death_tier || sender.send_tier >= tier:
+			continue
+		for entry: Variant in sender.current_abilities():
+			var send: SendCreepAbility = entry as SendCreepAbility
+			if send != null && send.creep_stats != null:
+				latest = maxf(latest, config.unlock_clock(send.creep_stats.unlock_seconds))
+	return latest
+
+
+## Holds the camera where a lesson wants it, or lets go with null.
+##
+## PRESENTATION, like _look_at_plan: the camera is this machine's view.
+func _pin_camera(step: TutorialStep) -> void:
+	var camera: RTSCamera = References.rts_camera
+	if camera == null:
+		return
+	if step == null || step.pinned_camera == TutorialStep.CameraPin.NONE:
+		camera.unpin(CAMERA_REASON)
+		return
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return
+	var target: PlayerArea = manager.area_for(manager.sends_into(manager.local_player_id()))
+	if target == null:
+		return
+	# A few rows into the maze: the spawn above it and the towers the creeps
+	# walk into are both on screen.
+	var config: GameConfig = References.game_config
+	var per_cell: int = 2 if config == null else config.internal_cells_per_cell
+	var cell: Vector2i = Vector2i(target.internal_width() / 2,
+		target.build_zone_first_row() + 3 * per_cell)
+	camera.pin(CAMERA_REASON, target.internal_cell_center(cell))
+
+
+# --- moments --------------------------------------------------------------
+
+## The moment on screen, or null. See TutorialMoment.
+func current_moment() -> TutorialMoment:
+	return _moment
+
+
+## Where the moment on screen is, for the spotlight, or Vector3.INF.
+func moment_focus() -> Vector3:
+	if _moment == null || _moment_subject == null || !is_instance_valid(_moment_subject):
+		return Vector3.INF
+	return _moment_subject.global_position
+
+
+## The player pressed OK on a moment: the world goes on.
+func dismiss_moment() -> void:
+	if _moment == null:
+		return
+	_end_moment()
+	lesson_changed.emit()
+
+
+func _end_moment() -> void:
+	_moment = null
+	_moment_subject = null
+	var session: MatchSession = _session
+	if session != null:
+		session.hold(MOMENT_REASON, false)
+	var camera: RTSCamera = References.rts_camera
+	if camera != null:
+		camera.unpin(MOMENT_REASON)
+
+
+## Looks for every moment still to come, and fires the first one that is due.
+##
+## Cheap enough for the tick: it walks the creeps of the lanes the player sends
+## into, which in the tutorial is one lane, and stops asking about a moment the
+## moment it has fired.
+func _watch_moments(delta: float) -> void:
+	for moment: TutorialMoment in script_resource.moments:
+		if moment == null || _moments_done.has(moment):
+			continue
+		var subject: Creep = _find_subject(moment)
+		if subject == null:
+			_moments_seen.erase(moment)
+			continue
+		var seen: float = float(_moments_seen.get(moment, -delta)) + delta
+		_moments_seen[moment] = seen
+		if seen >= moment.delay_seconds:
+			_fire_moment(moment, subject)
+			return
+
+
+## The player's creep a moment is about, or null. For a leak, the one furthest
+## down the lane.
+func _find_subject(moment: TutorialMoment) -> Creep:
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return null
+	var mine: int = manager.local_player_id()
+	var best: Creep = null
+	var deepest: float = -INF
+	for area: PlayerArea in manager.areas():
+		if area == null || area.player_id == mine:
+			continue
+		for creep: Creep in area.creeps():
+			if creep == null || !is_instance_valid(creep) || !creep.is_alive():
+				continue
+			if creep.owner_player_id != mine || !moment.matches(creep, area):
+				continue
+			var depth: float = area.to_local(creep.global_position).z
+			if depth > deepest:
+				deepest = depth
+				best = creep
+	return best
+
+
+## Stops the world on one moment: held, the camera on the creep, and the panel
+## saying what it is.
+func _fire_moment(moment: TutorialMoment, subject: Creep) -> void:
+	_moments_done[moment] = true
+	_moments_seen.erase(moment)
+	_moment = moment
+	_moment_subject = subject
+	var session: MatchSession = _session
+	if session != null:
+		session.hold(MOMENT_REASON, true)
+	var camera: RTSCamera = References.rts_camera
+	if camera != null:
+		camera.pin(MOMENT_REASON, subject.global_position)
+	Log.info("Tutorial moment", {"title": moment.title})
+	lesson_changed.emit()
 
 
 ## Sets one reserve on the player's senders to exactly what the lesson asks.

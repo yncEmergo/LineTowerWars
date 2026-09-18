@@ -5,16 +5,16 @@
 [resource]
 script = ExtResource("1_ai_profile")
 display_name = "Sparring Partner"
-description = "What both tutorial opponents play until a lesson wakes them. Builds a short maze for creeps to walk through and sends nothing. Its maze has the same rows and corridors as the profiles they wake into, so the short maze is the top of the long one."
+description = "What both tutorial opponents play until a lesson wakes them. Builds a short maze of Lesser Archers in the top rows of the lane and sends nothing. Its maze has the same rows and corridors as the profiles they wake into, so the short maze is the top of the long one."
 player_name_pattern = "%s"
 selectable = false
 decision_seconds = 2.0
 distraction_chance = 0.0
 builds_per_pass = 1
 maze_layout_path = ""
-zigzag_rows = 4
+zigzag_rows = 3
 zigzag_corridor_internal_cells = 1
-base_tower_path = ""
+base_tower_path = "res://Resources/UnitStats/Towers/lesser_archer_stats.tres"
 send_floor_gold = 999999
 build_floor_gold = 999999
 upgrade_floor_gold = 999999

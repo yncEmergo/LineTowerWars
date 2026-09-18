@@ -486,11 +486,15 @@ func unlock_remaining(creep_stats: CreepStats) -> float:
 	# clock runs from the start of the MATCH - the opening phase is the gap
 	# between the two, and unlock_clock is the one place it is closed. See
 	# GameConfig.start_delay_seconds.
+	#
+	# The UNLOCK clock rather than the match clock, which is the same thing in
+	# every match but the tutorial - see MatchSession.unlock_elapsed_seconds.
 	var config: GameConfig = References.game_config
+	var now: float = session.unlock_elapsed_seconds()
 	if config == null:
-		return maxf(0.0, creep_stats.unlock_seconds - session.elapsed_seconds())
+		return maxf(0.0, creep_stats.unlock_seconds - now)
 	var at: float = config.unlock_clock(creep_stats.unlock_seconds)
-	return maxf(0.0, at - session.elapsed_seconds())
+	return maxf(0.0, at - now)
 
 
 ## When this creep first becomes sendable, as a match clock time.

@@ -6,17 +6,18 @@
 
 [resource]
 script = ExtResource("1_step")
-title = "Send creeps"
-body = "You win by sending creeps down the Rookie's lane. Every creep you send also raises your income - for the rest of the match."
-objective = "Select your first sender and send 4 Sheep."
+continues_lesson = true
+body = "Creeps you send walk down the Rookie's lane. Every send raises your income for good."
+objective = "Send 5 Sheep."
 progress_label = "Sheep sent"
-delay_seconds = 2.0
+delay_seconds = 1.0
 holds_clock = true
-grant_gold = 40
+grant_gold = 50
 stock_creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
-stock_count = 4
+stock_count = 5
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
 guide_unit = 2
 guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
-sends = 4
+pinned_camera = 1
+sends = 5

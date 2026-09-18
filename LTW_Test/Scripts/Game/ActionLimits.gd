@@ -62,6 +62,10 @@ var forbidden: Array[UnitAbility] = []
 var build_cells: Dictionary = {}
 ## Whether the Research Center may be used.
 var research: bool = true
+## The dearest tower upgrade that may be started, in gold, or below zero for
+## any. Checked whether or not the list above restricts, so a lesson that
+## leaves the player free can still keep the top of the upgrade tree for later.
+var max_upgrade_gold: int = -1
 
 
 ## Whether this player may press this ability at all.
@@ -69,6 +73,9 @@ func allows(ability: UnitAbility) -> bool:
 	if ability == null:
 		return false
 	if ability in forbidden:
+		return false
+	var upgrade: UpgradeTowerAbility = ability as UpgradeTowerAbility
+	if max_upgrade_gold >= 0 && upgrade != null && upgrade.gold_cost() > max_upgrade_gold:
 		return false
 	if !restricts_abilities || is_free(ability):
 		return true

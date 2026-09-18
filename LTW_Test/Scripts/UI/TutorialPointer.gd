@@ -133,6 +133,8 @@ func _resolve() -> Control:
 	var director: TutorialDirector = _director
 	if director == null || !director.is_running() || director.is_between_lessons():
 		return null
+	if director.current_moment() != null:
+		return null
 	var step: TutorialStep = director.current_step()
 	if step == null:
 		return null

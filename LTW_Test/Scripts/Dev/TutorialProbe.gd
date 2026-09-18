@@ -15,6 +15,7 @@ const MATCH_SCENE: String = "res://Scenes/Main.tscn"
 const ARCHER: String = "res://Resources/UnitStats/Towers/lesser_archer_stats.tres"
 const CORE: String = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"
 const SHEEP: String = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+const KNIGHT: String = "res://Resources/UnitStats/Creeps/knight_stats.tres"
 const BUILD_MENU: String = "res://Resources/Abilities/build_menu_ability.tres"
 const SHOW_BLUEPRINTS: String = "res://Resources/Abilities/Blueprints/show_blueprints_ability.tres"
 const SPEED: int = 200
@@ -39,6 +40,9 @@ var _shots: bool = false
 var _shot_name: String = ""
 var _shot_frames: int = 0
 var _shots_taken: Dictionary = {}
+## Moment title -> the tick it fired on, and ticks spent on the one up now.
+var _moments_seen: Dictionary = {}
+var _moment_ticks: int = 0
 
 
 func _ready() -> void:
@@ -78,6 +82,9 @@ func _physics_process(_delta: float) -> void:
 			_finish()
 		return
 
+	if director.current_moment() != null:
+		_read_moment(director)
+		return
 	if director.is_between_lessons() != _was_between:
 		_was_between = director.is_between_lessons()
 		if _was_between:
@@ -149,10 +156,14 @@ func _play(director: TutorialDirector) -> void:
 			_play_wave()
 		"07_upgrade_archers", "08_cannons":
 			_play_upgrade_task(director)
-		"later_send":
+		"10_income":
+			_play_income()
+		"11_payout":
+			_play_payout()
+		"12_send_sheep":
 			_play_send()
-		"later_beat_rookie":
-			_play_beat(TutorialStep.Rival.FIRST, 1200)
+		"13_beat_rookie":
+			_play_rookie()
 		"later_technology":
 			_play_research()
 		"later_elemental":
@@ -231,7 +242,7 @@ func _play_upgrade_task(director: TutorialDirector) -> void:
 func _on_lesson_opened() -> void:
 	var rookie: MatchStatLine = References.match_stats.line_for(TutorialSetup.FIRST_RIVAL_SLOT)
 	var vet: MatchStatLine = References.match_stats.line_for(TutorialSetup.SECOND_RIVAL_SLOT)
-	if _lesson <= 9:
+	if _lesson <= 13:
 		_check(rookie.sends == 0, "lesson %d: the Rookie has sent nothing yet" % _lesson)
 		_check(vet.sends == 0, "lesson %d: the Veteran has sent nothing yet" % _lesson)
 		_check(!ActionLimits.permits_research(1), "lesson %d: research still shut" % _lesson)
@@ -338,37 +349,150 @@ func _play_wave() -> void:
 			References.player_manager.area_for(1).creeps().size(), _me().lives])
 
 
+## A moment is up: check the world is held, the camera is on it and the
+## panel says it, then press OK after a beat.
+func _read_moment(director: TutorialDirector) -> void:
+	var moment: TutorialMoment = director.current_moment()
+	if !_moments_seen.has(moment.title):
+		_moments_seen[moment.title] = _ticks
+		_moment_ticks = 0
+		_note("moment '%s' fired in lesson %d" % [moment.title, _lesson])
+		_check(_session().is_paused(), "moment '%s': the world is held" % moment.title)
+		_check(References.rts_camera.is_pinned(), "moment '%s': the camera is pinned" % moment.title)
+		_check(director.moment_focus() != Vector3.INF, "moment '%s': it has a creep to light" % moment.title)
+		_check(_pointer_target_name() == "<none>", "moment '%s': no button highlighted" % moment.title)
+	if _shoot("moment_" + moment.title.to_lower().replace(" ", "_")):
+		return
+	_moment_ticks += 1
+	if _moment_ticks == 20:
+		director.dismiss_moment()
+		_check(!_session().is_paused(), "moment '%s': OK lets the world go" % moment.title)
+
+
+func _play_income() -> void:
+	if _acted.has("read"):
+		return
+	if _shoot("l5_income"):
+		return
+	_acted["read"] = true
+	_check(_pointer_target_name() == "IncomeIcon",
+		"income: border on the income column (%s)" % _pointer_target_name())
+	_check(_me().income == 20, "income: base income handed over (%d)" % _me().income)
+	References.tutorial_director.acknowledge()
+
+
+func _play_payout() -> void:
+	if _acted.has("seen"):
+		return
+	if _shoot("l5_payout"):
+		return
+	_acted["seen"] = true
+	_check(_pointer_target_name() == "Timer",
+		"payout: border on the income timer (%s)" % _pointer_target_name())
+	_check(!_session().is_clock_held(), "payout: the clock runs")
+
+
 func _play_send() -> void:
 	var sender: SendBuilding = _sender(1)
 	var sheep: CreepStats = load(SHEEP) as CreepStats
 	if sender == null:
 		return
 	if !_acted.has("checked"):
-		if _shoot("l6_send_bar"):
+		if _shoot("l5_send_bar"):
 			return
 		_acted["checked"] = true
+		_check(References.rts_camera.is_pinned(), "send: the camera is pinned on the Rookie's lane")
 		_check(_pointer_target_name() == "SendTier1",
-			"lesson 6: sender not selected, arrow on its button (%s)" % _pointer_target_name())
-		_check(sender.stock_for(sheep).count == 4, "lesson 6: sheep stock is exactly 4 (%d)" % sender.stock_for(sheep).count)
-		_note("lesson 6: gold %d (40 granted, the rest wave bounty)" % _me().gold)
+			"send: sender not selected, border on its button (%s)" % _pointer_target_name())
+		_check(sender.stock_for(sheep).count == 5, "send: sheep stock is exactly 5 (%d)" % sender.stock_for(sheep).count)
+		_note("send: gold %d (50 granted, the rest bounty and a payout)" % _me().gold)
 		for send in AiHand.sends_on(sender):
 			if send.creep_stats != sheep:
-				_check(!ActionLimits.permits(send, sender), "lesson 6: %s not permitted" % send.creep_stats.display_name)
+				_check(!ActionLimits.permits(send, sender), "send: %s not permitted" % send.creep_stats.display_name)
 				break
 		References.selection_controller.select_single(sender)
 		return
 	if !_acted.has("slot"):
-		if _shoot("l6_sheep_square"):
+		if _shoot("l5_sheep_square"):
 			return
 		_acted["slot"] = true
 		_check(_pointer_target_name().begins_with("CommandSlot"),
-			"lesson 6: sender selected, arrow on the Sheep square (%s)" % _pointer_target_name())
+			"send: sender selected, border on the Sheep square (%s)" % _pointer_target_name())
 	var sends: int = int(_acted.get("sends", 0))
 	if sends < 6 && _lesson_ticks % 40 == 0:
-		_check(sender.stock_for(sheep).count == 4 - sends,
-			"lesson 6: before send %d the stock is %d, nothing refilled" % [sends + 1, sender.stock_for(sheep).count])
+		_check(sender.stock_for(sheep).count == 5 - sends,
+			"send: before send %d the stock is %d, nothing refilled" % [sends + 1, sender.stock_for(sheep).count])
 		AiHand.order_send(1, sender, AiHand.send_ability(sender, sheep))
 		_acted["sends"] = sends + 1
+
+
+## The Rookie lesson, played like a person who has just been taught to send:
+## every few seconds, the dearest creep the gold covers. No cheats - the point
+## is to see how long beating the Rookie really takes.
+func _play_rookie() -> void:
+	var sender: SendBuilding = _sender(1)
+	var rookie: PlayerState = References.player_manager.state_for(TutorialSetup.FIRST_RIVAL_SLOT)
+	var rookie_area: PlayerArea = References.player_manager.area_for(TutorialSetup.FIRST_RIVAL_SLOT)
+	if !_acted.has("checks"):
+		_acted["checks"] = true
+		_check(!References.rts_camera.is_pinned(), "rookie: the camera is free again")
+		_check(_me().income == 200, "rookie: income set to 200 (%d)" % _me().income)
+		var lead: float = _session().unlock_elapsed_seconds() - _session().elapsed_seconds()
+		_note("rookie: unlock clock %.1f, match clock %.1f" % [
+			_session().unlock_elapsed_seconds(), _session().elapsed_seconds()])
+		_check(absf(lead - 120.0) < 1.0, "rookie: unlocks moved 120s ahead (%.1f)" % lead)
+		_check(!rookie.standby, "rookie: in the ring")
+		var brain: AiPlayer = References.ai_director.brain_for(TutorialSetup.FIRST_RIVAL_SLOT)
+		_check(brain.profile().display_name == "Tutorial Rookie", "rookie: plays %s" % brain.profile().display_name)
+		var limits: ActionLimits = _me().limits
+		_check(limits != null && !limits.restricts_abilities, "rookie: the player is free")
+		_check(limits != null && limits.max_upgrade_gold == 1000, "rookie: upgrades over 1000 held back")
+		_check(limits.allows(_upgrade_named("upgrade_lesser_cannon_to_cannon")), "rookie: a 1000g upgrade is allowed")
+		_check(!limits.allows(_upgrade_named("upgrade_cannon_to_greater_cannon")), "rookie: a dearer upgrade is not")
+	# The Rookie falls long before a Shade or a Treant unlocks, so note when it
+	# WOULD have, then keep it standing until both of those moments have fired.
+	var waiting: bool = !(_moments_seen.has("Flyers") && _moments_seen.has("Attackers"))
+	if rookie.lives <= 6 && waiting:
+		if !_acted.has("would_fall"):
+			_acted["would_fall"] = true
+			_note("rookie: down to %d lives after %ds of real sending" % [rookie.lives, _lesson_ticks / 20])
+		rookie.lives = 10
+		rookie.lives_changed.emit(10)
+	if _lesson_ticks % 100 == 0 && sender != null:
+		var best: SendCreepAbility = null
+		for send in AiHand.sends_on(sender):
+			if send.can_execute(sender) && (best == null || send.creep_stats.gold_cost > best.creep_stats.gold_cost):
+				best = send
+		if best != null:
+			AiHand.order_send(1, sender, best)
+	if _lesson_ticks % 1200 == 0:
+		_note("rookie t=%ds: their lives %d, my lives %d, gold %d, income %d, unlock clock %.0f" % [
+			_lesson_ticks / 20, rookie.lives, _me().lives, _me().gold, _me().income,
+			_session().unlock_elapsed_seconds()])
+		_note("  rookie towers: %s" % _tower_census(rookie_area))
+		var knight: CreepStats = load(KNIGHT) as CreepStats
+		var tier2: SendBuilding = _sender(2)
+		if tier2 != null:
+			_check(tier2.unlock_remaining(knight) > 0.0, "rookie t=%ds: the Knight is still locked (%.0fs)" % [
+				_lesson_ticks / 20, tier2.unlock_remaining(knight)])
+
+
+## The Rookie's towers by type, and the deepest row any of them stands on.
+func _tower_census(area: PlayerArea) -> String:
+	var counts: Dictionary = {}
+	var deepest: int = -1
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower == null || tower.stats == null || tower.cell.y < 0:
+			continue
+		counts[tower.stats.display_name] = int(counts.get(tower.stats.display_name, 0)) + 1
+		deepest = maxi(deepest, tower.cell.y)
+	_check(deepest <= 12, "rookie builds nothing below row 4 (deepest internal row %d)" % deepest)
+	return "%s, deepest internal row %d" % [counts, deepest]
+
+
+func _upgrade_named(file: String) -> UnitAbility:
+	return load("res://Resources/Abilities/Towers/%s_ability.tres" % file) as UnitAbility
 
 
 func _play_upgrade() -> void:

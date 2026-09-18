@@ -20,7 +20,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_task_list", "_continue_button")]
+[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_tasks_heading", "_task_list", "_continue_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,6 +35,7 @@ _pop = NodePath("Board/PopAnimation")
 _progress_label = NodePath("Board/Column/Header/ProgressLabel")
 _title_label = NodePath("Board/Column/Header/TitleLabel")
 _body_label = NodePath("Board/Column/BodyLabel")
+_tasks_heading = NodePath("Board/Column/TasksHeading")
 _task_list = NodePath("Board/Column/TaskList")
 _task_row_scene = ExtResource("2_task_row")
 _continue_button = NodePath("Board/Column/Footer/ContinueButton")

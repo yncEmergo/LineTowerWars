@@ -1,0 +1,168 @@
+[gd_resource type="Resource" script_class="TutorialBeatRivalStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialBeatRivalStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialWave.gd" id="3_wave"]
+
+[sub_resource type="Resource" id="Wave_0"]
+script = ExtResource("3_wave")
+delay_seconds = 12.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[sub_resource type="Resource" id="Wave_1"]
+script = ExtResource("3_wave")
+delay_seconds = 32.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 3
+
+[sub_resource type="Resource" id="Wave_2"]
+script = ExtResource("3_wave")
+delay_seconds = 52.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 4
+
+[sub_resource type="Resource" id="Wave_3"]
+script = ExtResource("3_wave")
+delay_seconds = 72.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 5
+
+[sub_resource type="Resource" id="Wave_4"]
+script = ExtResource("3_wave")
+delay_seconds = 92.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 8
+
+[sub_resource type="Resource" id="Wave_5"]
+script = ExtResource("3_wave")
+delay_seconds = 112.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[sub_resource type="Resource" id="Wave_6"]
+script = ExtResource("3_wave")
+delay_seconds = 132.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 3
+
+[sub_resource type="Resource" id="Wave_7"]
+script = ExtResource("3_wave")
+delay_seconds = 152.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 4
+
+[sub_resource type="Resource" id="Wave_8"]
+script = ExtResource("3_wave")
+delay_seconds = 172.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 5
+
+[sub_resource type="Resource" id="Wave_9"]
+script = ExtResource("3_wave")
+delay_seconds = 192.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 8
+
+[sub_resource type="Resource" id="Wave_10"]
+script = ExtResource("3_wave")
+delay_seconds = 212.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[sub_resource type="Resource" id="Wave_11"]
+script = ExtResource("3_wave")
+delay_seconds = 232.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 3
+
+[sub_resource type="Resource" id="Wave_12"]
+script = ExtResource("3_wave")
+delay_seconds = 252.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 4
+
+[sub_resource type="Resource" id="Wave_13"]
+script = ExtResource("3_wave")
+delay_seconds = 272.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 5
+
+[sub_resource type="Resource" id="Wave_14"]
+script = ExtResource("3_wave")
+delay_seconds = 292.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 8
+
+[sub_resource type="Resource" id="Wave_15"]
+script = ExtResource("3_wave")
+delay_seconds = 312.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[sub_resource type="Resource" id="Wave_16"]
+script = ExtResource("3_wave")
+delay_seconds = 332.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 3
+
+[sub_resource type="Resource" id="Wave_17"]
+script = ExtResource("3_wave")
+delay_seconds = 352.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 4
+
+[sub_resource type="Resource" id="Wave_18"]
+script = ExtResource("3_wave")
+delay_seconds = 372.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 5
+
+[sub_resource type="Resource" id="Wave_19"]
+script = ExtResource("3_wave")
+delay_seconds = 392.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 8
+
+[sub_resource type="Resource" id="Wave_20"]
+script = ExtResource("3_wave")
+delay_seconds = 412.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 2
+
+[sub_resource type="Resource" id="Wave_21"]
+script = ExtResource("3_wave")
+delay_seconds = 432.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 3
+
+[sub_resource type="Resource" id="Wave_22"]
+script = ExtResource("3_wave")
+delay_seconds = 452.0
+creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+sends = 4
+
+[sub_resource type="Resource" id="Wave_23"]
+script = ExtResource("3_wave")
+delay_seconds = 472.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 5
+
+[sub_resource type="Resource" id="Wave_24"]
+script = ExtResource("3_wave")
+delay_seconds = 492.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 8
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "Creeps unlock over time. Keep sending, and keep your own maze up."
+objective = "Take all of the Rookie's lives."
+delay_seconds = 1.0
+set_income = 200
+unlocks_ahead_seconds = 120.0
+holds_back_tier = 2
+waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4"), SubResource("Wave_5"), SubResource("Wave_6"), SubResource("Wave_7"), SubResource("Wave_8"), SubResource("Wave_9"), SubResource("Wave_10"), SubResource("Wave_11"), SubResource("Wave_12"), SubResource("Wave_13"), SubResource("Wave_14"), SubResource("Wave_15"), SubResource("Wave_16"), SubResource("Wave_17"), SubResource("Wave_18"), SubResource("Wave_19"), SubResource("Wave_20"), SubResource("Wave_21"), SubResource("Wave_22"), SubResource("Wave_23"), SubResource("Wave_24")])
+wakes_rival = 1
+max_upgrade_gold = 1000
+rival = 1

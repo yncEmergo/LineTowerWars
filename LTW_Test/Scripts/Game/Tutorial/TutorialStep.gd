@@ -116,6 +116,15 @@ enum Select {
 ## go opens. See MatchSession.hold_clock.
 @export var holds_clock: bool = false
 
+## Where a lesson holds the camera while it is open. See pinned_camera.
+enum CameraPin {
+	## Wherever the player puts it, which is nearly every lesson.
+	NONE,
+	## The top of the lane the player sends into: the spawn and the maze under
+	## it, where the creeps they are about to send appear.
+	TARGET_LANE_TOP,
+}
+
 @export_group("What it gives")
 ## Gold handed to the player when this step opens, on top of what they have.
 ##
@@ -155,6 +164,20 @@ enum Select {
 ## four, with the clock held so nothing refills behind them.
 @export_file("*.tres") var stock_creep_path: String = ""
 @export var stock_count: int = 0
+## The player's income is SET to this when the step opens, whatever it was,
+## or left alone below zero. Once: sending raises it from there as usual.
+@export var set_income: int = -1
+## Seconds the creep roster is moved AHEAD when this step opens: creeps unlock as
+## if that much more of the match had been played. Income is untouched. See
+## MatchSession.unlock_elapsed_seconds.
+@export var unlocks_ahead_seconds: float = 0.0
+## A send tier the unlock clock is stopped short of from this step on: it runs
+## until the last creep BELOW this tier is open, and stands there. 0 lets it run
+## again, and below zero leaves whatever an earlier step set.
+##
+## What keeps a lesson's roster to what it has taught, while the rest of the
+## match - income, the reserves refilling - goes on as normal.
+@export var holds_back_tier: int = -1
 ## An opponent this step brings into the match properly: out of standby if it
 ## was waiting there, and playing its real profile from now on instead of
 ## sparring. See TutorialScript for which profile each one plays.
@@ -184,6 +207,10 @@ enum Select {
 ## go. On, a tower can be started on the blueprint's cells and nowhere else, and
 ## the build ghost turns red off it.
 @export var build_on_blueprint_only: bool = false
+## The dearest tower upgrade the player may start while this step is up, in
+## gold, or below zero for any. Holds whether or not the step restricts, so a
+## lesson that sets the player free can still keep the top of the tree back.
+@export var max_upgrade_gold: int = -1
 
 @export_group("What it points at")
 ## A named control on the HUD to draw an arrow at while this step is up, or
@@ -234,6 +261,10 @@ enum Spotlight {
 ## every tower of the player's of exactly that type - the Lesser Archers a
 ## lesson wants upgraded. Empty for none.
 @export_file("*.tres") var arrows_on_towers_path: String = ""
+## Where the camera is held while this step is open, released the moment it is
+## done. For a task the player cannot do right while looking elsewhere - the
+## first send, whose creeps appear in somebody else's lane.
+@export var pinned_camera: CameraPin = CameraPin.NONE
 
 
 ## Whether the world is now in the state this step was waiting for.

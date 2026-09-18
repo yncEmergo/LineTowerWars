@@ -51,6 +51,11 @@ extends Resource
 ## compete with the one a lesson draws on the ground. See ActionLimits.forbidden.
 @export var forbidden_abilities: Array[UnitAbility] = []
 
+@export_group("Moments")
+## What stops the match the FIRST time it happens, whichever lesson is open -
+## see TutorialMoment. Watched for from the first lesson to the last.
+@export var moments: Array[TutorialMoment] = []
+
 @export_group("Lessons")
 ## In teaching order. **A TYPED ARRAY IN A .TRES IS ALL OR NOTHING**: one entry
 ## that fails to load empties the whole list silently, and the editor writes
@@ -130,6 +135,11 @@ func validate() -> bool:
 	for ability: UnitAbility in always_allowed + forbidden_abilities:
 		if ability == null:
 			Log.err("The tutorial always allows or forbids a null ability", resource_path)
+			complete = false
+
+	for moment: TutorialMoment in moments:
+		if moment == null || !moment.validate():
+			Log.err("The tutorial script holds a moment it cannot use", resource_path)
 			complete = false
 
 	for index in range(steps.size()):
