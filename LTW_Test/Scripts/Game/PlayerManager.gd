@@ -45,6 +45,8 @@ var _areas: Dictionary = {}
 var _next_income_at: float = 0.0
 ## Latched rather than recomputed, so match_ended fires exactly once.
 var _over: bool = false
+## Whether the match was ENDED rather than decided - see conclude().
+var _concluded: bool = false
 ## Whether the one-off raise that Sudden Death brings has already been paid.
 ## A latch rather than a reading of the clock, because the raise happens ONCE
 ## at the moment the line is crossed - a player who spends their way back under
@@ -332,7 +334,27 @@ func living_count() -> int:
 ## Whether the match has been decided. A one player run is never "over": there
 ## is nobody to beat, and it is how the prototype is still mostly tested.
 func is_match_over() -> bool:
-	return _states.size() > 1 && living_count() <= 1
+	return _concluded || (_states.size() > 1 && living_count() <= 1)
+
+
+## Ends the match now with `winner_slot` in first place, whoever else is still
+## standing, exactly as a decided match ends: every creep off the field, nothing
+## paid or sent any more, and match_ended for the result board.
+##
+## The tutorial's, which is finished when its last lesson is rather than when
+## its last opponent is - the second one may still be waiting on standby. Offline
+## only by use: a networked match is only ever over when it is decided.
+func conclude(winner_slot: int) -> void:
+	if _over || !MatchSession.is_authority():
+		return
+	_concluded = true
+	_over = true
+	_clear_creeps()
+	var state: PlayerState = state_for(winner_slot)
+	if state != null:
+		state.set_standing(value_for(winner_slot), 1)
+	Log.info("Match concluded", {"winner": winner_slot})
+	match_ended.emit(winner_slot)
 
 
 ## A player's living creeps, counted as the sum of what each one costs in

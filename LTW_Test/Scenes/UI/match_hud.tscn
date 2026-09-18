@@ -26,6 +26,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_pointer.tscn" id="21_pointer"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_panel.tscn" id="22_tutorial"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_info_panel.tscn" id="23_tutorial_info"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_defeat_panel.tscn" id="24_tutorial_defeat"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
@@ -283,6 +284,9 @@ visible = false
 [node name="TutorialInfoPanel" parent="." instance=ExtResource("23_tutorial_info")]
 process_mode = 3
 visible = false
+
+[node name="TutorialDefeatPanel" parent="." instance=ExtResource("24_tutorial_defeat")]
+process_mode = 3
 
 [node name="ConfirmPrompt" parent="." unique_id=159550192 instance=ExtResource("80_confirm")]
 process_mode = 3

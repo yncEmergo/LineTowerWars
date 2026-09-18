@@ -64,6 +64,16 @@ Three parts, and the lessons are written against this shape:
    Research Center opens, and its half teaches technology and elemental towers. Beating it ends
    the match, and the ordinary result board takes over.
 
+**How it ends.** When the last lesson in the script is done the match ENDS, whoever is still
+standing (`PlayerManager.conclude`): every creep is taken off the field, nothing is paid or sent
+any more, nothing more can be ordered (`ActionLimits.nothing`), and the ordinary result board
+opens - its Continue leads back to the main menu rather than to a match summary. So cutting the
+script short is enough to end the tutorial early, which is how it is iterated on. When the
+player runs OUT OF LIVES the world is held for good and `TutorialDefeatPanel` covers the screen,
+swallowing every click, with Retry (the tutorial again, through the loading screen) and Main
+Menu. It is caught on the elimination rather than on the match ending, because the match
+usually goes on without the player - two opponents are still standing.
+
 ## 3. The pieces
 
 | File | What it is |
@@ -76,6 +86,7 @@ Three parts, and the lessons are written against this shape:
 | `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a lesson sends: a delay, a creep, a number of sends. |
 | `Scripts/Game/Tutorial/TutorialPage.gd` | One page of an explanation: its words, the HUD element it is about, a caption. |
 | `Scripts/UI/TutorialInfoPanel.gd` | An explanation's page, in the middle of the screen. |
+| `Scripts/UI/TutorialDefeatPanel.gd` | The screen for running out of lives: Retry, or the main menu. |
 | `Scripts/Game/Tutorial/TutorialMoment.gd` | Something that stops the match the first time it happens, whichever lesson is up. |
 | `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a lesson walks the player to, and whether it is selected. |
 | `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
@@ -334,7 +345,8 @@ lesson nobody can finish. That check is what turns it into a message.
 - **It does not teach discs, creep abilities or tower abilities.** Deliberately, for now
 - **It has no way back in.** A player who leaves half way starts again from the first lesson
 - **Nothing is voiced or animated**, and the lessons do not react to what the player did
-  wrong - a player losing to the first opponent is simply shown the defeat board
+  wrong - a player who runs out of lives is offered a retry from the first lesson and nothing
+  more
 
 ## 11. Testing it
 
@@ -342,7 +354,9 @@ lesson nobody can finish. That check is what turns it into a message.
 whole tutorial through the real order road, faster than real time: it builds on the blueprint,
 sends, upgrades, researches and morphs a Core. Against the first opponent it sends for real,
 notes when it would have fallen, and keeps it standing until every MOMENT has fired and been
-dismissed, so each one's hold, pin and spotlight is checked.
+dismissed, so each one's hold, pin and spotlight is checked. At the end it checks the match was
+concluded - creeps cleared, nothing orderable, the result board up. `-- lose` runs the player
+out of lives in the Rookie lesson instead and checks the defeat screen.
 In the held lessons it also TRIES what they must refuse - a tower off the list, a cell off the
 blueprint, an upgrade, another creep - and checks the gold did not move. It prints a line per
 lesson with the clock, whether it is held, gold and income, and a PASS or FAIL per check.

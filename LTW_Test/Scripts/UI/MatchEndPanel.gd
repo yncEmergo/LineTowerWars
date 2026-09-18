@@ -83,6 +83,10 @@ func _connect_match() -> void:
 
 
 func _on_match_ended(winner_slot: int) -> void:
+	# A tutorial the player LOST has its own screen - see TutorialDefeatPanel -
+	# and the match can still end behind it once the opponents are the last two.
+	if _is_tutorial() && !_session.is_local_player(winner_slot):
+		return
 	_open(winner_slot)
 
 
@@ -104,8 +108,16 @@ func _on_standing_changed() -> void:
 	if manager == null || !manager.is_match_over():
 		return
 	var winner: int = _winner_from_standings(manager)
-	if winner != 0:
+	if winner != 0 && !(_is_tutorial() && !_session.is_local_player(winner)):
 		_open(winner)
+
+
+## Whether this match is the tutorial, whose end leads back to the main menu
+## rather than to a summary of a match nobody needs one of.
+func _is_tutorial() -> bool:
+	var session: MatchSession = _session
+	return session != null && session.setup() != null \
+		&& session.setup().mode == MatchSetup.Mode.TUTORIAL
 
 
 ## Whoever holds first place, for the road that was not handed a winner.
@@ -152,6 +164,9 @@ func _draw_heading(winner_slot: int) -> void:
 		return
 	if session == null || winner_slot == 0:
 		_subtitle_label.text = ""
+		return
+	if _is_tutorial():
+		_subtitle_label.text = "Tutorial complete."
 		return
 	_subtitle_label.text = "%s wins." % session.display_name_for(winner_slot)
 
@@ -217,6 +232,10 @@ func _finishing_order(manager: PlayerManager, session: MatchSession) -> Array[in
 ## goodbye first, socket second, so a deliberate leave does not look like a
 ## crash to the other players.
 func _on_continue_pressed() -> void:
+	if _is_tutorial():
+		MatchStart.leave_match()
+		MenuNavigation.to_main_menu(self)
+		return
 	var summary: MatchSummary = null
 	if References.match_stats != null:
 		summary = References.match_stats.take_summary()

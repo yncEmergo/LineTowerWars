@@ -39,6 +39,9 @@ extends Node
 ## The lesson changed - opened, finished, or the whole tutorial ended. One
 ## signal rather than three, because the panel that listens redraws whole.
 signal lesson_changed()
+## The player ran out of lives. The world is held from here on; the defeat
+## screen offers the way out. See TutorialDefeatPanel.
+signal lost()
 
 ## The name this holds the world still by, and the clock. Its own rather than
 ## the draft's, so the two can overlap without either releasing the other -
@@ -49,6 +52,9 @@ const HOLD_REASON: StringName = &"tutorial"
 const MOMENT_REASON: StringName = &"tutorial_moment"
 ## The name a lesson pins the camera by.
 const CAMERA_REASON: StringName = &"tutorial_lesson"
+## The name the world is held by once the player has lost. Never released: the
+## only way on is the defeat screen's, which leaves the match.
+const DEFEAT_REASON: StringName = &"tutorial_defeat"
 
 @export_group("Settings")
 ## The lessons, in teaching order.
@@ -96,6 +102,8 @@ var _moments_done: Dictionary = {}
 ## Moment -> simulation seconds since its creep was first seen, for one that
 ## waits a beat before it fires.
 var _moments_seen: Dictionary = {}
+## Whether the player ran out of lives. See lost.
+var _defeated: bool = false
 
 var _session: MatchSession:
 	get:
@@ -138,6 +146,7 @@ func begin(setup: MatchSetup) -> void:
 	if manager != null:
 		manager.income_paid.connect(_on_income_paid)
 		manager.match_ended.connect(_on_match_ended)
+		manager.player_eliminated.connect(_on_player_eliminated)
 	Log.info("Tutorial started", {"lessons": script_resource.count()})
 	_open(0)
 
@@ -411,7 +420,7 @@ func _open(index: int) -> void:
 	_gap_left = -1.0
 
 	if _step == null:
-		_finish()
+		_complete()
 		return
 
 	_mark = _snapshot_line()
@@ -436,8 +445,42 @@ func _open(index: int) -> void:
 	lesson_changed.emit()
 
 
+## Whether the player ran out of lives.
+func is_defeated() -> bool:
+	return _defeated
+
+
+## Every lesson is done: the match ENDS, as a won match does - creeps off the
+## field, nothing paid or sent, and the result board, whose Continue leads back
+## to the main menu. See PlayerManager.conclude and MatchEndPanel.
+func _complete() -> void:
+	_finish()
+	var manager: PlayerManager = References.player_manager
+	if manager != null:
+		manager.conclude(manager.local_player_id())
+
+
+## The player is out of lives: the world stops where it is, nothing more can be
+## ordered, and the defeat screen takes over.
+##
+## Caught on the ELIMINATION rather than on the match ending, because the
+## match usually goes on without them - two opponents are still standing.
+func _on_player_eliminated(slot: int) -> void:
+	var manager: PlayerManager = References.player_manager
+	if _defeated || !_running || manager == null || slot != manager.local_player_id():
+		return
+	_defeated = true
+	var session: MatchSession = _session
+	if session != null:
+		session.hold(DEFEAT_REASON, true)
+	_finish()
+	Log.info("Tutorial lost", {"lesson": _index + 1})
+	lost.emit()
+
+
 ## The end of the tutorial, whether the last lesson finished or the match did.
-## Everything the lessons held is let go: the world, the clock, the limits.
+## Everything the lessons held is let go - the world, the clock - and nothing
+## more can be ORDERED: whatever ended it, the match is over for this player.
 func _finish() -> void:
 	if !_running:
 		return
@@ -450,7 +493,7 @@ func _finish() -> void:
 		session.hold_clock(HOLD_REASON, false)
 	var state: PlayerState = _local_state()
 	if state != null:
-		state.limits = null
+		state.limits = ActionLimits.nothing()
 	_draw_blueprint(null)
 	_pin_camera(null)
 	_end_moment()

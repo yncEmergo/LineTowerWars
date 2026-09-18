@@ -95,6 +95,16 @@ static func is_free(ability: UnitAbility) -> bool:
 	return ability.targeting == UnitAbility.Targeting.PASSIVE || ability.is_local_only()
 
 
+## Limits that allow nothing a player could change the world with: every card
+## square dim, the Research Center shut. For a match that is over but still on
+## screen - the tutorial's end.
+static func nothing() -> ActionLimits:
+	var limits: ActionLimits = ActionLimits.new()
+	limits.restricts_abilities = true
+	limits.research = false
+	return limits
+
+
 ## The limits on one player, or null for a player who has none - which is
 ## every player in an ordinary match.
 static func of(player_id: int) -> ActionLimits:

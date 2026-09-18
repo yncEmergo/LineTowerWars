@@ -37,6 +37,9 @@ var _was_between: bool = false
 ## moments an arrow is up, so where it DRAWS can be looked at. Headless cannot
 ## draw, so this is the only way to see it.
 var _shots: bool = false
+## `-- lose`: run out of lives in the Rookie lesson and check the defeat screen
+## instead of playing to the end.
+var _lose: bool = false
 var _shot_name: String = ""
 var _shot_frames: int = 0
 var _shots_taken: Dictionary = {}
@@ -48,6 +51,7 @@ var _moment_ticks: int = 0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_shots = "shots" in OS.get_cmdline_user_args()
+	_lose = "lose" in OS.get_cmdline_user_args()
 	var setup: MatchSetup = TutorialSetup.create(_game_config, _ai_config)
 	MenuNavigation.pending_match = setup
 	# Real time when shooting, so a shot lands inside a moment as short as the
@@ -76,9 +80,20 @@ func _physics_process(_delta: float) -> void:
 		return
 	if !director.is_running():
 		if _lesson > 0:
+			if !_acted.has("ended"):
+				_acted["ended"] = true
+				_acted["end_ticks"] = 0
+				return
+			# A few ticks for the end screen to arrive.
+			_acted["end_ticks"] = int(_acted["end_ticks"]) + 1
+			if int(_acted["end_ticks"]) < 10:
+				return
+			if _shoot("the_end_%s" % ("defeat" if _lose else "victory")):
+				return
 			_note("tutorial finished after lesson %d, %d gaps between lessons seen" % [
 				_lesson, _gaps_seen])
 			_check(_gaps_seen > 0, "lessons waited out their delay")
+			_check_the_end(director)
 			_finish()
 		return
 
@@ -355,6 +370,35 @@ func _play_wave() -> void:
 			References.player_manager.area_for(1).creeps().size(), _me().lives])
 
 
+## The tutorial is over: won to the end, or lost with `-- lose`.
+func _check_the_end(director: TutorialDirector) -> void:
+	var manager: PlayerManager = References.player_manager
+	var limits: ActionLimits = _me().limits
+	_check(limits != null && limits.restricts_abilities && limits.abilities.is_empty(),
+		"end: nothing more can be ordered")
+	_check(!limits.allows(load(BUILD_MENU) as UnitAbility), "end: the Build menu is shut")
+	var end_panel: MatchEndPanel = get_tree().root.find_child("MatchEndPanel", true, false) as MatchEndPanel
+	var defeat: Control = get_tree().root.find_child("TutorialDefeatPanel", true, false) as Control
+	var defeat_dim: Control = null if defeat == null else defeat.get_node_or_null("Dim") as Control
+	var end_board: Control = null if end_panel == null else end_panel.get_node_or_null("Panel") as Control
+	if _lose:
+		_check(director.is_defeated(), "defeat: the director says lost")
+		_check(_session().is_paused(), "defeat: the world is held")
+		_check(defeat_dim != null && defeat_dim.visible, "defeat: the defeat screen is up")
+		_check(defeat_dim != null && defeat_dim.mouse_filter == Control.MOUSE_FILTER_STOP,
+			"defeat: the screen swallows clicks")
+		_check(end_board == null || !end_board.visible, "defeat: no result board over it")
+		return
+	_check(manager.is_match_over(), "victory: the match is over")
+	var creeps: int = 0
+	for area: PlayerArea in manager.areas():
+		creeps += area.creeps().size()
+	_check(creeps == 0, "victory: every creep cleared (%d)" % creeps)
+	_check(_me().placement == 1, "victory: the player placed first (%d)" % _me().placement)
+	_check(end_board != null && end_board.visible, "victory: the result board is up")
+	_check(defeat_dim == null || !defeat_dim.visible, "victory: no defeat screen")
+
+
 ## A moment is up: check the world is held, the camera is on it and the
 ## panel says it, then press OK after a beat.
 func _read_moment(director: TutorialDirector) -> void:
@@ -396,6 +440,9 @@ func _play_explain() -> void:
 	var panel: Control = get_tree().root.find_child("TutorialPanel", true, false) as Control
 	_check(info != null && info.visible, "explain page %d: the info panel is up" % (at + 1))
 	_check(panel != null && !panel.visible, "explain page %d: the lesson panel is out of the way" % (at + 1))
+	# Drawn on the render frame; make sure this frame's caption is current.
+	var pointer: TutorialPointer = get_tree().root.find_child("TutorialPointer", true, false) as TutorialPointer
+	pointer._process(0.0)
 	var caption: Label = get_tree().root.find_child("CaptionLabel", true, false) as Label
 	_check(caption != null && caption.is_visible_in_tree() && caption.text == page.caption,
 		"explain page %d: captioned '%s'" % [at + 1, "" if caption == null else caption.text])
@@ -474,6 +521,10 @@ func _play_rookie() -> void:
 		_check(limits != null && limits.max_upgrade_gold == 1000, "rookie: upgrades over 1000 held back")
 		_check(limits.allows(_upgrade_named("upgrade_lesser_cannon_to_cannon")), "rookie: a 1000g upgrade is allowed")
 		_check(!limits.allows(_upgrade_named("upgrade_cannon_to_greater_cannon")), "rookie: a dearer upgrade is not")
+	if _lose && _moments_seen.has("Life stealing"):
+		_me().lives = 0
+		_me().lives_changed.emit(0)
+		return
 	# The Rookie falls long before a Shade or a Treant unlocks, so note when it
 	# WOULD have, then keep it standing until both of those moments have fired.
 	var waiting: bool = !(_moments_seen.has("Flyers") && _moments_seen.has("Attackers"))
