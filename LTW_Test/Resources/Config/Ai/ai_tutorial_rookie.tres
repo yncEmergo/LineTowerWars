@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ai_profile")
 display_name = "Tutorial Rookie"
-description = "The tutorial's first opponent once the sending lesson wakes it. It DEFENDS and nothing else: the same three rows of Lesser Archers the sparring partner built, never deeper, and over time exactly one Watch Tower and two Cannons. It never sends - the lesson sends its own waves at the player. Loaded by path from the tutorial script, never offered in a menu."
+description = "The tutorial's first opponent once the sending lesson wakes it. It DEFENDS and nothing else: the same three rows of Lesser Archers the sparring partner built, never deeper, over time one Watch Tower and two Cannons, and every few seconds one random cheap upgrade somewhere else. It never sends - the lesson sends its own waves at the player. Loaded by path from the tutorial script, never offered in a menu."
 player_name_pattern = "%s"
 selectable = false
 decision_seconds = 2.0
@@ -25,6 +25,8 @@ send_efficiency = 0.5
 upgrades_towers = true
 upgrade_target_paths = Array[String](["res://Resources/UnitStats/Towers/lesser_watch_tower_stats.tres", "res://Resources/UnitStats/Towers/lesser_cannon_stats.tres", "res://Resources/UnitStats/Towers/lesser_cannon_stats.tres"])
 upgrade_seconds = 30.0
+random_upgrade_seconds = 10.0
+random_upgrade_max_gold = 150
 takes_opening_ultimate = false
 ultimate_tech_id = 0
 elemental_share = 0.0

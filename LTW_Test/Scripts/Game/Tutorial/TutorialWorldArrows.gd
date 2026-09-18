@@ -16,6 +16,13 @@ extends Node3D
 ##
 ## PRESENTATION, local from end to end. The arrows are reused rather than freed
 ## and made again, so a cell filling in costs a hide rather than a free.
+##
+## **Every arrow bobs IN STEP with every other.** The pool hands an arrow to
+## whatever needs one this frame, so the arrow over a cell can be a different
+## instance from one frame to the next - the builder's arrow going away shifts
+## every other one down a place. Arrows each on their own phase made that read
+## as the animation restarting whenever the selection changed; one shared phase
+## makes the hand-over invisible.
 
 ## The arrow's scene. Loaded on first use. A constant rather than an export
 ## because this node is built in code, and the scene is a visual asset rather
@@ -28,6 +35,8 @@ const ABOVE_UNIT: float = 2.4
 const ABOVE_CELL: float = 0.35
 ## How far above a standing tower's origin the tip hovers - over its top.
 const ABOVE_TOWER: float = 1.2
+
+const ANIMATION_PLAYER: String = "AnimationPlayer"
 
 var _scene: PackedScene = null
 var _pool: Array[Node3D] = []
@@ -75,7 +84,10 @@ func _points() -> Array[Vector3]:
 		if builder != null:
 			points.append(builder.global_position + Vector3.UP * ABOVE_UNIT)
 
-	if step.arrows_on_blueprint:
+	# Only while the tower is in hand: the squares on the ground already say
+	# where, and arrows over them as well before the Build menu is even open
+	# only compete with the border on the button to press.
+	if step.arrows_on_blueprint && _placing_lesson_tower(step):
 		points.append_array(_open_cells(step.blueprint()))
 	points.append_array(_towers_of(step.arrow_tower()))
 	return points
@@ -92,9 +104,20 @@ func _towers_of(stats: BuildingStats) -> Array[Vector3]:
 		return points
 	for child in area.get_children():
 		var building: Building = child as Building
-		if building != null && building.stats == stats:
+		# Gone the moment its upgrade starts: the tower has been dealt with.
+		if building != null && building.stats == stats && !building.is_upgrading():
 			points.append(building.global_position + Vector3.UP * ABOVE_TOWER)
 	return points
+
+
+## Whether the player is placing one of the towers this lesson is about.
+static func _placing_lesson_tower(step: TutorialStep) -> bool:
+	var controller: CommandController = References.command_controller
+	if controller == null:
+		return false
+	var armed: UnitAbility = controller.armed_ability()
+	return armed is BuildTowerAbility \
+		&& (armed in step.guide_abilities || armed in step.allowed_abilities)
 
 
 ## The world point over every cell of a plan that nothing stands on yet.
@@ -136,4 +159,11 @@ func _make_arrow() -> Node3D:
 		return null
 	var arrow: Node3D = _scene.instantiate() as Node3D
 	add_child(arrow)
+	# In step with the ones already bobbing - see the class note.
+	if !_pool.is_empty():
+		var leader: AnimationPlayer = _pool[0].get_node_or_null(ANIMATION_PLAYER) as AnimationPlayer
+		var player: AnimationPlayer = arrow.get_node_or_null(ANIMATION_PLAYER) as AnimationPlayer
+		if leader != null && player != null && leader.is_playing():
+			player.play(leader.current_animation)
+			player.seek(leader.current_animation_position, true)
 	return arrow

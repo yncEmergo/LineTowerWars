@@ -95,6 +95,11 @@ func _refresh() -> void:
 		hide()
 		return
 
+	# An explanation has the middle of the screen to itself - see
+	# TutorialInfoPanel - and this panel would only be dimmed beside it.
+	if step is TutorialExplainStep && director.current_moment() == null:
+		hide()
+		return
 	show()
 	if director.current_moment() != null:
 		_show_moment(director.current_moment())

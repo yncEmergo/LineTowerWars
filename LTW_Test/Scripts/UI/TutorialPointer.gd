@@ -45,6 +45,10 @@ const OUTSET: float = 3.0
 ## The pulse: how fast, and how low the border's alpha dips.
 const PULSE_SPEED: float = 4.0
 const PULSE_MIN_ALPHA: float = 0.45
+## How far below the border its caption sits, and how far it keeps from the
+## screen's edge.
+const CAPTION_GAP: float = 8.0
+const CAPTION_MARGIN: float = 8.0
 
 @export_group("References")
 ## The border itself, moved and sized onto whatever the lesson names.
@@ -56,6 +60,10 @@ const PULSE_MIN_ALPHA: float = 0.45
 @export var _dim_bottom: ColorRect
 @export var _dim_left: ColorRect
 @export var _dim_right: ColorRect
+## A short name for what the border frames - "Your current gold" - drawn just
+## under it, on an explanation page that has one. See TutorialPage.caption.
+@export var _caption: Control
+@export var _caption_label: Label
 
 @export_group("Targets")
 ## The names a lesson may point at, in the same order as the controls below.
@@ -116,16 +124,22 @@ func _process(delta: float) -> void:
 		_set_dim_visible(false)
 		if _highlight != null:
 			_highlight.hide()
+		if _caption != null:
+			_caption.hide()
 		return
 
 	_phase += delta * PULSE_SPEED
 	var rect: Rect2 = _screen_rect_of(target)
 	_place_highlight(rect)
 	var step: TutorialStep = _director.current_step()
-	if step != null && step.dims_around_highlight:
+	# An explanation always dims: what it is about and the page saying so are
+	# the only two things on screen.
+	if step != null && (step.dims_around_highlight || step is TutorialExplainStep):
 		_place_dim(rect)
 	else:
 		_set_dim_visible(false)
+	var page: TutorialPage = _director.current_page()
+	_place_caption(rect, "" if page == null else page.caption)
 
 
 ## What the border marks this frame, in the order the class note gives.
@@ -138,6 +152,9 @@ func _resolve() -> Control:
 	var step: TutorialStep = director.current_step()
 	if step == null:
 		return null
+	if step is TutorialExplainStep:
+		var page: TutorialPage = director.current_page()
+		return null if page == null else _control_for(page.highlight_key)
 
 	if TutorialGuide.needs_selecting(step):
 		return _control_for(TutorialGuide.button_key(step.guide_unit))
@@ -160,6 +177,11 @@ func _control_for(key: StringName) -> Control:
 		return null
 	for index in range(mini(_keys.size(), _controls.size())):
 		if StringName(_keys[index]) == key:
+			# The scoreboard rebuilds its rows whenever a number moves, so the
+			# one cell worth framing in it is asked for rather than named.
+			var stats: PlayerStatsPanel = _controls[index] as PlayerStatsPanel
+			if stats != null:
+				return stats.tutorial_part(key)
 			return _controls[index]
 	return null
 
@@ -186,6 +208,22 @@ func _place_highlight(rect: Rect2) -> void:
 	_highlight.size = framed.size
 	var pulse: float = 0.5 + 0.5 * sin(_phase)
 	_highlight.modulate.a = lerpf(PULSE_MIN_ALPHA, 1.0, pulse)
+
+
+## The caption under the border, kept on screen, or hidden with no text.
+func _place_caption(rect: Rect2, text: String) -> void:
+	if _caption == null || _caption_label == null:
+		return
+	if text.is_empty():
+		_caption.hide()
+		return
+	_caption_label.text = text
+	_caption.show()
+	_caption.reset_size()
+	var wanted: Vector2 = Vector2(rect.get_center().x - _caption.size.x * 0.5,
+		rect.end.y + OUTSET + CAPTION_GAP)
+	wanted.x = clampf(wanted.x, CAPTION_MARGIN, size.x - _caption.size.x - CAPTION_MARGIN)
+	_caption.position = wanted
 
 
 ## Cuts a hole in the dim around the control, as four rectangles.

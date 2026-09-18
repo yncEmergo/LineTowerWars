@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1_step")
-continues_lesson = true
+title = "Sending"
 body = "Creeps you send walk down the Rookie's lane. Every send raises your income for good."
 objective = "Send 5 Sheep."
 progress_label = "Sheep sent"

@@ -183,6 +183,12 @@ extends Resource
 ## budget spent on one beat reads as a switch being flipped; spread out, it
 ## reads as an opponent getting stronger.
 @export var upgrade_seconds: float = 0.0
+## Seconds between one RANDOM upgrade and the next, or 0 for none: a random rung
+## on a random tower, on top of the budget above. What makes an opponent's maze
+## grow stronger all over rather than in three named places.
+@export var random_upgrade_seconds: float = 0.0
+## The dearest single upgrade a random one may be, in gold.
+@export var random_upgrade_max_gold: int = 0
 
 @export_group("Technology")
 ## Whether it spends its free research on an Ultimate at the start of the match.

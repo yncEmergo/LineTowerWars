@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "This timer counts down to the next payout."
+body = "Watch your gold when the timer runs out."
 objective = "Wait for a payout."
-delay_seconds = 0.5
+delay_seconds = 0.0
 highlight_key = &"income_timer"

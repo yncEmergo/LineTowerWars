@@ -60,6 +60,8 @@ var _step: TutorialStep = null
 var _elapsed: float = 0.0
 ## Whether the player has pressed Continue on the current lesson.
 var _acknowledged: bool = false
+## Pages of the current explanation the player has pressed Continue on.
+var _pages_read: int = 0
 ## What the running totals were when the lesson opened, so everything a step
 ## asks is "since this lesson" rather than "ever".
 var _mark: MatchStatLine = null
@@ -224,6 +226,19 @@ func was_acknowledged() -> bool:
 	return _acknowledged
 
 
+## Pages of the current explanation read so far. See TutorialExplainStep.
+func pages_read() -> int:
+	return _pages_read
+
+
+## The explanation page up now, or null when the lesson is not one or is read.
+func current_page() -> TutorialPage:
+	var explain: TutorialExplainStep = _step as TutorialExplainStep
+	if explain == null || is_between_lessons() || _moment != null:
+		return null
+	return explain.page_at(_pages_read)
+
+
 ## Towers this player has put up since the lesson opened.
 func towers_built_this_step() -> int:
 	return _since(func(line: MatchStatLine) -> int: return line.towers_built)
@@ -366,6 +381,11 @@ func _finish_lesson() -> void:
 ## what is ignored by every other kind - a step decides for itself whether an
 ## acknowledgement means anything.
 func acknowledge() -> void:
+	# On an explanation, Continue turns the page; the last page finishes it.
+	if _step is TutorialExplainStep:
+		_pages_read += 1
+		lesson_changed.emit()
+		return
 	_acknowledged = true
 
 
@@ -387,6 +407,7 @@ func _open(index: int) -> void:
 	_step = null if script_resource == null else script_resource.step_at(index)
 	_elapsed = 0.0
 	_acknowledged = false
+	_pages_read = 0
 	_gap_left = -1.0
 
 	if _step == null:
@@ -760,7 +781,7 @@ func _look_at_plan(plan: TowerLayout) -> void:
 			middle += area.internal_cell_center(cell)
 			count += 1
 	if count > 0:
-		camera.center_on(middle / float(count))
+		camera.glide_to(middle / float(count))
 
 
 # --- lookups --------------------------------------------------------------

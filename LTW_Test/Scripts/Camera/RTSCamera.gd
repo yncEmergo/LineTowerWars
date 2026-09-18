@@ -44,6 +44,11 @@ var _grabbing: bool = false
 ## Reasons the camera is PINNED, each to the ground point it holds. While any is
 ## set nothing the player does moves the focus - see pin().
 var _pins: Dictionary = {}
+## A glide in progress: where it started, where it is going, and how far along
+## it is, 0 to 1. Below zero when the camera is not gliding. See glide_to().
+var _glide_from: Vector3 = Vector3.ZERO
+var _glide_to: Vector3 = Vector3.ZERO
+var _glide_t: float = -1.0
 ## World point that was under the cursor when the middle drag started. The pan
 ## keeps putting this point back under the cursor, which makes the drag
 ## independent of resolution, pitch and any future zoom.
@@ -51,6 +56,10 @@ var _grab_world_point: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
+	# A glide has to finish while the world is held - the tutorial holds it and
+	# moves the camera in the same breath. What the PLAYER can do while it is
+	# held is gated separately, in _process and _unhandled_input.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	if _config == null:
 		Log.err("RTSCamera found no CameraConfig on References, panning is disabled")
 		return
@@ -71,9 +80,27 @@ func set_focus_bounds(bounds: Rect2) -> void:
 ## Snaps the camera to a world position. This is the center-on-target hook
 ## for the builder or any other unit or building. Ignored while pinned.
 func center_on(world_position: Vector3) -> void:
-	if is_pinned():
+	if is_pinned() || is_gliding():
 		return
 	_set_focus(world_position)
+
+
+## Carries the camera to a point over a short moment rather than cutting there,
+## for a move the game chose - the tutorial's. Nothing the player does moves the
+## camera until it arrives.
+func glide_to(world_position: Vector3) -> void:
+	var seconds: float = 0.0 if _config == null else _config.glide_seconds
+	if seconds <= 0.0:
+		_set_focus(world_position)
+		return
+	_glide_from = _focus
+	_glide_to = Vector3(world_position.x, 0.0, world_position.z)
+	_glide_t = 0.0
+	_grabbing = false
+
+
+func is_gliding() -> bool:
+	return _glide_t >= 0.0
 
 
 ## Holds the camera on one ground point until the same reason unpins it: no
@@ -87,7 +114,7 @@ func pin(reason: StringName, world_position: Vector3) -> void:
 	_pins.erase(reason)
 	_pins[reason] = world_position
 	_grabbing = false
-	_set_focus(world_position)
+	glide_to(world_position)
 
 
 ## Lets go of one pin. The camera stays where it is, or moves to the pin still
@@ -97,7 +124,7 @@ func unpin(reason: StringName) -> void:
 		return
 	_pins.erase(reason)
 	if is_pinned():
-		_set_focus(_pins[_pins.keys().back()] as Vector3)
+		glide_to(_pins[_pins.keys().back()] as Vector3)
 
 
 func is_pinned() -> bool:
@@ -162,7 +189,9 @@ func ground_point_at(screen_pos: Vector2) -> Variant:
 # --- Middle mouse drag --------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _config == null:
+	# Held world, held camera: the player's input stops with the world, as it
+	# did before the camera ran through a hold.
+	if _config == null || get_tree().paused:
 		return
 
 	if event is InputEventMouseButton:
@@ -172,7 +201,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _handle_zoom(button):
 			get_viewport().set_input_as_handled()
 			return
-		if !_config.allow_middle_drag_pan || is_pinned():
+		if !_config.allow_middle_drag_pan || is_pinned() || is_gliding():
 			return
 		if button.button_index != MOUSE_BUTTON_MIDDLE:
 			return
@@ -233,10 +262,27 @@ func _update_grab(screen_pos: Vector2) -> void:
 func _process(delta: float) -> void:
 	if _config == null:
 		return
-	var pan: Vector2 = Vector2.ZERO if is_pinned() else _read_pan_input()
+	if is_gliding():
+		_advance_glide(delta)
+	if get_tree().paused:
+		return
+	var locked: bool = is_pinned() || is_gliding()
+	var pan: Vector2 = Vector2.ZERO if locked else _read_pan_input()
 	if pan != Vector2.ZERO:
 		_set_focus(_focus + Vector3(pan.x, 0.0, pan.y) * _config.pan_speed * delta)
 	_advance_zoom(delta)
+
+
+## One frame of a glide, eased out so it arrives gently. Real time rather than
+## the simulation's, because it is presentation and has to finish while the
+## world is held.
+func _advance_glide(delta: float) -> void:
+	var seconds: float = maxf(0.01, _config.glide_seconds)
+	_glide_t = minf(1.0, _glide_t + delta / seconds)
+	var eased: float = 1.0 - pow(1.0 - _glide_t, 3.0)
+	_set_focus(_glide_from.lerp(_glide_to, eased))
+	if _glide_t >= 1.0:
+		_glide_t = -1.0
 
 
 ## Eases the camera towards the zoom the wheel asked for.

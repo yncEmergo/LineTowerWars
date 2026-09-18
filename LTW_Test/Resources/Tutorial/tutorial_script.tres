@@ -19,9 +19,9 @@
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_upgrade_archers.tres" id="s6_07_upgrade_archers"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_cannons.tres" id="s7_08_cannons"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_skeleton_wave.tres" id="s8_09_skeleton_wave"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_income.tres" id="s9_10_income"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_payout.tres" id="s10_11_payout"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_send_sheep.tres" id="s11_12_send_sheep"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_send_sheep.tres" id="s9_10_send_sheep"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_income_explained.tres" id="s10_11_income_explained"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_payout.tres" id="s11_12_payout"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_beat_rookie.tres" id="s12_13_beat_rookie"]
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialMoment.gd" id="4_moment"]
 
@@ -57,4 +57,4 @@ player_lives = 30
 always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always")])
 moments = Array[ExtResource("4_moment")]([SubResource("Moment_leak"), SubResource("Moment_flyer"), SubResource("Moment_attacker")])
 forbidden_abilities = Array[ExtResource("3_ability")]([ExtResource("f0_forbidden"), ExtResource("f1_forbidden"), ExtResource("f2_forbidden"), ExtResource("f3_forbidden")])
-steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_income"), ExtResource("s10_11_payout"), ExtResource("s11_12_send_sheep"), ExtResource("s12_13_beat_rookie")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie")])

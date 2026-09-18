@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_spotlight.tscn" id="20_spotlight"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_pointer.tscn" id="21_pointer"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_panel.tscn" id="22_tutorial"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_info_panel.tscn" id="23_tutorial_info"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/leak_log.tscn" id="18_leak_log"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/action_bar.tscn" id="19_action_bar"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/confirm_prompt.tscn" id="80_confirm"]
@@ -272,10 +273,14 @@ _corner_panel = NodePath("../PlayerStatsPanel")
 [node name="TutorialPointer" parent="." node_paths=PackedStringArray("_controls") instance=ExtResource("21_pointer")]
 process_mode = 3
 visible = false
-_keys = PackedStringArray("unit_panel", "send_bar", "action_bar", "status_bar", "player_stats", "control_groups", "minimap", "research_center", "builder_button", "research_button", "send_tier_1", "income_timer", "income_value")
-_controls = [NodePath("../UnitPanel"), NodePath("../SendBar"), NodePath("../ActionBar"), NodePath("../MatchStatusBar"), NodePath("../PlayerStatsPanel"), NodePath("../ControlGroupBar"), NodePath("../Minimap"), NodePath("../ResearchCenter"), NodePath("../ActionBar/Row/BuilderButton"), NodePath("../ActionBar/Row/ResearchButton"), NodePath("../SendBar/Row/SendTier1"), NodePath("../MatchStatusBar/Row/Timer"), NodePath("../PlayerStatsPanel/Column/Header/IncomeIcon")]
+_keys = PackedStringArray("unit_panel", "send_bar", "action_bar", "status_bar", "player_stats", "control_groups", "minimap", "research_center", "builder_button", "research_button", "send_tier_1", "income_timer", "income_value", "gold")
+_controls = [NodePath("../UnitPanel"), NodePath("../SendBar"), NodePath("../ActionBar"), NodePath("../MatchStatusBar"), NodePath("../PlayerStatsPanel"), NodePath("../ControlGroupBar"), NodePath("../Minimap"), NodePath("../ResearchCenter"), NodePath("../ActionBar/Row/BuilderButton"), NodePath("../ActionBar/Row/ResearchButton"), NodePath("../SendBar/Row/SendTier1"), NodePath("../MatchStatusBar/Row/Timer"), NodePath("../PlayerStatsPanel"), NodePath("../MatchStatusBar/Row/Gold")]
 
 [node name="TutorialPanel" parent="." instance=ExtResource("22_tutorial")]
+process_mode = 3
+visible = false
+
+[node name="TutorialInfoPanel" parent="." instance=ExtResource("23_tutorial_info")]
 process_mode = 3
 visible = false
 

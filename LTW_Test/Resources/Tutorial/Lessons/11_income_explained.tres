@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TutorialExplainStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialExplainStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialPage.gd" id="2_page"]
+
+[sub_resource type="Resource" id="Page_gold"]
+script = ExtResource("2_page")
+text = "This is your gold. Towers, upgrades and creeps are all paid for with it."
+highlight_key = &"gold"
+caption = "Your current gold"
+
+[sub_resource type="Resource" id="Page_income"]
+script = ExtResource("2_page")
+text = "This is your income. Every payout adds this much to your gold, and every creep you send raises it for good."
+highlight_key = &"income_value"
+caption = "Your income"
+
+[sub_resource type="Resource" id="Page_timer"]
+script = ExtResource("2_page")
+text = "This counts down to the next payout."
+highlight_key = &"income_timer"
+caption = "Time until next income"
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+delay_seconds = 1.5
+pauses_world = true
+holds_clock = true
+pages = Array[ExtResource("2_page")]([SubResource("Page_gold"), SubResource("Page_income"), SubResource("Page_timer")])

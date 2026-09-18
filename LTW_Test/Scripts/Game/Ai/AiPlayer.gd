@@ -78,6 +78,9 @@ var _think_clock: float = 0.0
 var _send_clock: float = 0.0
 ## Simulation seconds since the last upgrade, for a profile that spaces them.
 var _upgrade_clock: float = 0.0
+## Simulation seconds since the last RANDOM upgrade. See
+## AiProfile.random_upgrade_seconds.
+var _random_upgrade_clock: float = 0.0
 ## Budget entry index -> the cell of the tower raised towards it, for a profile
 ## with an upgrade budget. See AiProfile.upgrade_target_paths.
 var _budget_cells: Dictionary = {}
@@ -134,6 +137,7 @@ func change_profile(next_profile: AiProfile) -> void:
 	_done.clear()
 	_send_clock = 0.0
 	_upgrade_clock = 0.0
+	_random_upgrade_clock = 0.0
 	_budget_cells.clear()
 	begin(_slot, next_profile)
 
@@ -163,6 +167,7 @@ func _physics_process(_engine_delta: float) -> void:
 
 	_send_clock += delta
 	_upgrade_clock += delta
+	_random_upgrade_clock += delta
 	_think_clock -= delta
 	if _think_clock > 0.0:
 		return
@@ -220,6 +225,7 @@ func _think() -> void:
 	_consider_send()
 	_consider_maze()
 	_consider_upgrade()
+	_consider_random_upgrade()
 
 
 ## RULE 1a. The DRAFT: take one of the three Ultimates on offer.
@@ -568,6 +574,36 @@ func _consider_budget_upgrade(state: PlayerState) -> bool:
 		_upgrade_clock = 0.0
 		return true
 	return false
+
+
+## RULE 3c. One random rung on one random tower, on its own beat, capped in
+## price. Never on a tower the budget has claimed, so the two do not undo each
+## other. Rolled on this brain's own stream - see _rng.
+func _consider_random_upgrade() -> bool:
+	var state: PlayerState = _state()
+	if state == null || _profile.random_upgrade_seconds <= 0.0:
+		return false
+	if _random_upgrade_clock < _profile.random_upgrade_seconds:
+		return false
+	var claimed: Dictionary = {}
+	for index: int in _budget_cells:
+		claimed[_budget_cells[index]] = true
+	var choices: Array = []
+	for tower in _towers_front_to_back():
+		if claimed.has(tower.cell):
+			continue
+		for entry in tower.current_abilities():
+			var upgrade: UpgradeTowerAbility = entry as UpgradeTowerAbility
+			if upgrade == null || upgrade.gold_cost() > _profile.random_upgrade_max_gold:
+				continue
+			if upgrade.gold_cost() <= state.gold:
+				choices.append([tower, upgrade])
+	if choices.is_empty():
+		return false
+	var chosen: Array = choices[_rng.randi_range(0, choices.size() - 1)]
+	AiHand.order_upgrade(_slot, chosen[0] as Building, chosen[1] as UpgradeTowerAbility)
+	_random_upgrade_clock = 0.0
+	return true
 
 
 ## The tower a budget entry raises, claimed now: nearest the spawn, able to

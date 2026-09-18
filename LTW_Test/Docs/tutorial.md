@@ -50,9 +50,11 @@ Three parts, and the lessons are written against this shape:
    through, and send their first creeps from a reserve set to exactly the number asked for.
    Nothing is timed. The waves are real packs, so their Timber Wolves pay a little bounty on
    top of the granted gold; that is accepted rather than engineered away.
-2. **THE FIRST OPPONENT.** The sending lesson: income and its timer are pointed at, then the
-   camera is held on the first opponent's lane while the player sends their first creeps from a
-   reserve set to exactly the number asked for. Then the limits come off, the clock runs, the
+2. **THE FIRST OPPONENT.** The sending lesson: the camera is held on the first opponent's lane
+   while the player sends their first creeps from a reserve set to exactly the number asked
+   for, with nothing else allowed. Then the world stops for an EXPLANATION of the numbers at the
+   top of the screen - gold, income, the payout timer - and the player watches one payout land.
+   Then the limits come off, the clock runs, the
    income is set to a lump, the creep roster is moved ahead, and the first opponent is WOKEN
    from sparring into a profile that DEFENDS and never sends - the lesson keeps sending its own
    waves at the player instead, none stronger than the opening already threw. The lesson ends
@@ -72,6 +74,8 @@ Three parts, and the lessons are written against this shape:
 | `Scripts/Game/Tutorial/TutorialDirector.gd` | Which lesson is open, what it handed over, what has happened since. |
 | `Scripts/Game/Tutorial/TutorialSetup.gd` | The match it is played in: lanes, names, settings. |
 | `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a lesson sends: a delay, a creep, a number of sends. |
+| `Scripts/Game/Tutorial/TutorialPage.gd` | One page of an explanation: its words, the HUD element it is about, a caption. |
+| `Scripts/UI/TutorialInfoPanel.gd` | An explanation's page, in the middle of the screen. |
 | `Scripts/Game/Tutorial/TutorialMoment.gd` | Something that stops the match the first time it happens, whichever lesson is up. |
 | `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a lesson walks the player to, and whether it is selected. |
 | `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
@@ -111,6 +115,13 @@ Center opened, and the creep roster moved ahead or held short of a tier - see se
 **A lesson waits before it opens** (`delay_seconds`): a beat after the last one is done, to see
 the last tower go up or the last creep die. The panel says the last lesson is done meanwhile, and
 everything that lesson held stays held through the gap.
+
+**AN EXPLANATION** (`TutorialExplainStep`) is the one kind of lesson that is READ rather than
+done, for what cannot be done - what the numbers on the HUD mean. It holds the world, hides the
+lesson panel, and shows one `TutorialPage` at a time in the middle of the screen: the element
+the page is about gets the golden border and a short CAPTION under it, everything else is
+dimmed, and Continue turns the page. Reach for a task first; keep an explanation to a handful of
+pages.
 
 **WHAT IT ALLOWS** - whether the match clock runs, and whether the player is held to a short
 list of abilities and to the blueprint's cells. See sections 5 and 6.
@@ -213,7 +224,9 @@ short maze is the top of the long one and the woken opponent simply carries on b
 The FIRST opponent wakes into a profile that only defends: it never sends, never builds below
 the partner's rows, and upgrades nothing but an UPGRADE BUDGET (`AiProfile.upgrade_target_paths`)
 - one named tower per entry, each claiming the tower nearest the spawn that can climb to it,
-spaced out by `upgrade_seconds` so it gets stronger over time rather than all at once. A maze
+spaced out by `upgrade_seconds` so it gets stronger over time rather than all at once. On
+top of that, `random_upgrade_seconds` has it take one random rung on one random unclaimed tower
+now and then, capped in price by `random_upgrade_max_gold`, rolled on the brain's own stream. A maze
 that stops near the top of the lane is what makes a leak certain once a creep is past it, and
 the moment about life stealing is built on that.
 
@@ -251,8 +264,13 @@ the arrow with it. The dim around the target is opt-in (`dims_around_highlight`)
 it greyed out the whole screen, lane included.
 
 **ARROWS IN THE WORLD** (`TutorialWorldArrows`), standing upright and pointing straight down:
-one over the builder while a lesson wants it selected, and one over every blueprint cell still
-open when `arrows_on_blueprint` is set. The mesh and its generator are
+one over the builder while a lesson wants it selected; one over every blueprint cell still open
+when `arrows_on_blueprint` is set, but only while the lesson's tower is IN HAND - the squares
+already say where, and arrows before the Build menu is even open only compete with the border
+on the button; and one over every tower an upgrade task wants upgraded, gone the moment that
+tower's upgrade STARTS. Every arrow bobs in step with every other, because the pool hands
+arrows round as the set changes and arrows on their own phases read as the animation
+restarting whenever the selection did. The mesh and its generator are
 `3DArt/Effects/tutorial_arrow*`, the scene `Scenes/Effects/tutorial_hover_arrow.tscn`, and the
 shader warm-up draws it in a tutorial so its material compiles before the first lesson.
 `TutorialGuide` is the one answer both arrows share to "which unit, and is it selected".
@@ -260,6 +278,10 @@ shader warm-up draws it in a tutorial so its material compiles before the first 
 **A SPOTLIGHT on the world**, dimming everything but a circle around one thing and following
 it. The lesson names a SUBJECT (`MY_LANE`, `TARGET_LANE`, `MY_NEWEST_TOWER`, `LEADING_CREEP`)
 rather than a position. A MOMENT uses it too, around the creep it is about.
+
+**THE CAMERA GLIDES** wherever the tutorial moves it (`RTSCamera.glide_to`): a quick eased move
+rather than a cut, so the player sees where they were taken, with panning locked until it
+arrives. `CameraConfig.glide_seconds` is how quick.
 
 **A PINNED CAMERA** (`pinned_camera`, `RTSCamera.pin`): the camera held on one point until the
 task is done - no panning, no drag, no minimap jump; the wheel still zooms. For a task the

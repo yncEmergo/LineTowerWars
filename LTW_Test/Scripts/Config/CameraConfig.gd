@@ -60,3 +60,7 @@ extends Resource
 ## a tower and rolling in arrives at that tower. The same thing the middle drag
 ## does with the point it grabbed.
 @export var zoom_to_cursor: bool = true
+## Seconds a GLIDE takes - the camera carried to a point the game chose rather
+## than the player, which the tutorial does. Quick, but a move rather than a cut,
+## so the player sees where they have been taken.
+@export var glide_seconds: float = 0.35

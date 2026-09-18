@@ -156,12 +156,12 @@ func _play(director: TutorialDirector) -> void:
 			_play_wave()
 		"07_upgrade_archers", "08_cannons":
 			_play_upgrade_task(director)
-		"10_income":
-			_play_income()
-		"11_payout":
-			_play_payout()
-		"12_send_sheep":
+		"10_send_sheep":
 			_play_send()
+		"11_income_explained":
+			_play_explain()
+		"12_payout":
+			_play_payout()
 		"13_beat_rookie":
 			_play_rookie()
 		"later_technology":
@@ -284,7 +284,7 @@ func _play_build(director: TutorialDirector) -> void:
 	if !_acted.has("guide_on"):
 		var off: Array = _acted["guide_off"]
 		_check(off[0] == "BuilderButton", "lesson %d: builder not selected, arrow on its button (%s)" % [_lesson, off[0]])
-		_check(off[1] == int(off[2]) + 1, "lesson %d: %d cell arrows + 1 builder arrow (%d)" % [_lesson, off[2], off[1]])
+		_check(off[1] == 1, "lesson %d: only the builder arrow while it is not selected (%d)" % [_lesson, off[1]])
 		References.selection_controller.select_single(builder)
 		_acted["guide_on"] = true
 		return
@@ -299,8 +299,14 @@ func _play_build(director: TutorialDirector) -> void:
 		_acted["guide_checked"] = true
 		_check(_pointer_target_name().begins_with("CommandSlot"),
 			"lesson %d: builder selected, arrow on a command square (%s)" % [_lesson, _pointer_target_name()])
+		_check(_world_arrows() == 0,
+			"lesson %d: no cell arrows before the tower is in hand (%d)" % [_lesson, _world_arrows()])
+		var controller: CommandController = References.command_controller
+		controller.activate_ability(_sentry(director))
+		_check(controller.is_armed(), "lesson %d: the lesson's tower can be armed" % _lesson)
 		_check(_world_arrows() == _open_cells(plan, area),
-			"lesson %d: one arrow per open cell (%d)" % [_lesson, _world_arrows()])
+			"lesson %d: tower in hand, one arrow per open cell (%d)" % [_lesson, _world_arrows()])
+		controller.cancel()
 
 	if !_acted.has("forbidden"):
 		_acted["forbidden"] = true
@@ -369,16 +375,33 @@ func _read_moment(director: TutorialDirector) -> void:
 		_check(!_session().is_paused(), "moment '%s': OK lets the world go" % moment.title)
 
 
-func _play_income() -> void:
-	if _acted.has("read"):
+## The explanation: every page frames its element with a caption, the world is
+## held, the info panel is up and the lesson panel is not. Turn each page.
+func _play_explain() -> void:
+	var director: TutorialDirector = References.tutorial_director
+	var page: TutorialPage = director.current_page()
+	if page == null:
 		return
-	if _shoot("l5_income"):
+	var at: int = director.pages_read()
+	if _acted.has("page%d" % at):
 		return
-	_acted["read"] = true
-	_check(_pointer_target_name() == "IncomeIcon",
-		"income: border on the income column (%s)" % _pointer_target_name())
-	_check(_me().income == 20, "income: base income handed over (%d)" % _me().income)
-	References.tutorial_director.acknowledge()
+	if _shoot("l5_explain_%d" % (at + 1)):
+		return
+	_acted["page%d" % at] = true
+	var wanted: Dictionary = {&"gold": "Gold", &"income_value": "IncomeLabel", &"income_timer": "Timer"}
+	_check(_pointer_target_name() == String(wanted.get(page.highlight_key, "?")),
+		"explain page %d: border on %s (%s)" % [at + 1, page.highlight_key, _pointer_target_name()])
+	_check(_session().is_paused(), "explain page %d: the world is held" % (at + 1))
+	var info: Control = get_tree().root.find_child("TutorialInfoPanel", true, false) as Control
+	var panel: Control = get_tree().root.find_child("TutorialPanel", true, false) as Control
+	_check(info != null && info.visible, "explain page %d: the info panel is up" % (at + 1))
+	_check(panel != null && !panel.visible, "explain page %d: the lesson panel is out of the way" % (at + 1))
+	var caption: Label = get_tree().root.find_child("CaptionLabel", true, false) as Label
+	_check(caption != null && caption.is_visible_in_tree() && caption.text == page.caption,
+		"explain page %d: captioned '%s'" % [at + 1, "" if caption == null else caption.text])
+	if at == 1:
+		_check(_me().income == 10, "explain: the five Sheep raised income to 10 (%d)" % _me().income)
+	director.acknowledge()
 
 
 func _play_payout() -> void:
@@ -402,6 +425,8 @@ func _play_send() -> void:
 			return
 		_acted["checked"] = true
 		_check(References.rts_camera.is_pinned(), "send: the camera is pinned on the Rookie's lane")
+		_check(!ActionLimits.permits(load(BUILD_MENU) as UnitAbility, _builder()),
+			"send: building is shut until the Sheep are sent")
 		_check(_pointer_target_name() == "SendTier1",
 			"send: sender not selected, border on its button (%s)" % _pointer_target_name())
 		_check(sender.stock_for(sheep).count == 5, "send: sheep stock is exactly 5 (%d)" % sender.stock_for(sheep).count)
