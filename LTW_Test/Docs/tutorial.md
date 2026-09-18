@@ -1,375 +1,278 @@
 # The tutorial
 
-**What this file is for:** how the teaching match is built, so that changing what it teaches
-is editing content rather than reading code. It carries no lesson WORDING - that is in ordinary
-`.tres` files under `Resources/Tutorial/Lessons/` and is meant to be argued with - and no rules
-of the game, which are `game_rules.md`'s.
+**What this file is for:** what the tutorial teaches, what it deliberately leaves out, and the
+methods it teaches with, so that a lesson can be written, split, merged or cut without
+re-deriving any of it. It does NOT describe the lessons one by one: their order, wording, gold
+and limits are ordinary `.tres` files under `Resources/Tutorial/` and change round to round.
+Nor does it carry rules of the game, which are `game_rules.md`'s.
 
-**Status, 2026-09-18: first rework landed, more iterations to come.** The lessons after the
-sending lesson are out of `tutorial_script.tres` for now (their files are the `later_*` ones)
-while the lessons are gone over one at a time. The tutorial was rebuilt
-around three wishes of the project owner: far fewer and far shorter lessons; time that stops
-only when it has to, with the player held by what they HAVE instead; and an opening where the
-player can do only the one thing they are asked, with exactly the gold it costs. What it
-teaches follows `strategy.md`: the maze it builds is the proper left-right maze from 5.5.
+**Status, 2026-09-18: complete from the first tower to the last opponent, and being reviewed
+with the project owner.** Every part is a first version; nothing has been tried on a real new
+player yet.
 
 ---
 
-## 1. The tutorial is a real match
+## 1. Principles
 
-Same world, same economy, same towers, same opponent machinery, same send ring. There is no
-second game underneath it and there must never be one: a separate scene would be a second thing
-to keep working, and a tutorial that teaches something the game does not do is worse than none.
+These are the project owner's, and every lesson is written against them.
 
-What differs is only what a lesson has to control. `TutorialSetup` builds the match and
-`TutorialDirector` sets the board on its first tick:
+- **It is a real match.** Same world, economy, towers, creeps, opponents and send ring. There is
+  no second game underneath, and there must never be one: a tutorial that teaches something the
+  game does not do is worse than none. What differs is only what a lesson must control, and
+  everything else is the defaults, so a player who finishes it recognises every number in a
+  lobby. `MatchSetup.mode == TUTORIAL` is the whole gate.
+- **Done, not read.** A player learns a thing by doing it. Words are as few as possible: a short
+  paragraph per lesson, and tasks of a handful of words each. Reading is reserved for what
+  cannot be done - what a number on the HUD means.
+- **Few lessons, several tasks each.** A lesson is one subject; its tasks are the steps of it,
+  ticked off one at a time.
+- **Telegraphed first, open later.** Early on the player can do only the one thing asked, with
+  exactly what it costs. Once the basics are in, the restrictions come off and the player plays;
+  later subjects are telegraphed again only as long as it takes to introduce them.
+- **Time stops as little as possible.** An untimed task holds the match CLOCK (income, unlocks),
+  not the world. The world stops only for an explanation or a first-time moment, and only until
+  the player says go on.
+- **No skip, and no way to get stuck.** A telegraphed task cannot be failed or wandered off; an
+  open one is ended by the match either way.
+- **The player can lose** where the tutorial is open, and is offered a retry. Where it is
+  telegraphed they cannot.
+- **Principles of good play are not taught.** How to compose a maze, where to put the expensive
+  towers, what to send against what - the player is shown an opponent that does these things and
+  reaches their own conclusions.
 
-- **three lanes**: the player, then the FIRST opponent, then the SECOND, in ring order and never
-  shuffled
-- **no starting gold and no starting income.** A lesson hands over exactly what its task costs
-- **no opening phase.** The match clock starts at the moment the first creep can be sent,
-  because the first lessons hold the clock anyway and the sending lesson must find its creep open
-- **fewer lives for the opponents** and plenty for the player, both on `tutorial_script.tres`:
-  beating an opponent is a lesson, and a lesson should take minutes
-- **technology is PICK**, so the technology lesson has the player spend the allowance themselves
+## 2. What it teaches, and what it does not
 
-Everything else is the defaults, deliberately: a player who finishes the tutorial and opens a
-lobby should recognise every number they saw.
+**Taught**, roughly in this order - the lesson boundaries around them are free to move:
 
-`MatchSetup.mode == TUTORIAL` is the whole gate. `TutorialDirector` lives in the ordinary match
-scene and costs a multiplayer match and a skirmish one comparison.
+- the builder: selecting it, moving it, and that building is what it is for
+- building towers on marked cells, and that towers shoot creeps coming down the lane
+- waves walking through a maze and dying in it
+- the left-right maze shape of `strategy.md` 5.5, built row by row, with the three basic tower
+  lines in it
+- upgrading towers, with the cost of each rung
+- sending creeps into an opponent's lane, and that every send raises income for good
+- gold, income and the payout timer on the HUD
+- life stealing: a creep that gets through takes a life from its defender for its sender
+- flyers and attackers, the first time the player sends one - whenever that is
+- technology: every element's Basic and two paths, and the four technologies an Ultimate
+  needs; the free allowance spent on one
+- the Elemental Core and how it becomes an element's tower
+- beating a defending opponent, then an attacking one with a proper maze
 
-## 2. The shape of it
+**Not taught**, deliberately:
 
-Three parts, and the lessons are written against this shape:
+- discs, creep abilities and tower abilities
+- the blueprint screens - the tutorial draws its own plans, and the player's saved slots would
+  compete with them, so they are forbidden throughout
+- maze composition and tower placement strategy - see the last principle
+- the builder's own attack, Sudden Death, the send ring beyond a duel, and the other
+  technology modes (the tutorial is PICK)
 
-1. **THE HELD OPENING.** The match clock stands still, the player may do only what the lesson
-   asks, and every lesson hands over the gold for its task. They select the builder - the Build
-   menu is shut until they have - build a few towers in the middle of the first row, watch two
-   small waves walk round them, close the row and build a second one, watch a bigger wave zigzag
-   through, and send their first creeps from a reserve set to exactly the number asked for.
-   Nothing is timed. The waves are real packs, so their Timber Wolves pay a little bounty on
-   top of the granted gold; that is accepted rather than engineered away.
-2. **THE FIRST OPPONENT.** The sending lesson: the camera is held on the first opponent's lane
-   while the player sends their first creeps from a reserve set to exactly the number asked
-   for, with nothing else allowed. Then the world stops for an EXPLANATION of the numbers at the
-   top of the screen - gold, income, the payout timer - and the player watches one payout land.
-   Then the limits come off, the clock runs, the
-   income is set to a lump, the creep roster is moved ahead, and the first opponent is WOKEN
-   from sparring into a profile that DEFENDS and never sends - the lesson keeps sending its own
-   waves at the player instead, none stronger than the opening already threw. The lesson ends
-   when it is beaten. This is where the basics are played rather than explained.
-3. **THE SECOND OPPONENT.** It has been in the match from the start, building a maze on STANDBY
-   outside the send ring, so part 2 was a plain duel. Beating the first brings it in, the
-   Research Center opens, and its half teaches technology and elemental towers. Beating it ends
-   the match, and the ordinary result board takes over.
+## 3. How it telegraphs
 
-**How it ends.** When the last lesson in the script is done the match ENDS, whoever is still
-standing (`PlayerManager.conclude`): every creep is taken off the field, nothing is paid or sent
-any more, nothing more can be ordered (`ActionLimits.nothing`), and the ordinary result board
-opens - its Continue leads back to the main menu rather than to a match summary. So cutting the
-script short is enough to end the tutorial early, which is how it is iterated on. When the
-player runs OUT OF LIVES the world is held for good and `TutorialDefeatPanel` covers the screen,
-swallowing every click, with Retry (the tutorial again, through the loading screen) and Main
-Menu. It is caught on the elimination rather than on the match ending, because the match
-usually goes on without the player - two opponents are still standing.
+A TELEGRAPHED task leaves exactly one thing to do and shows where. These are the methods, and
+they stack:
 
-## 3. The pieces
+- **Only this** (`restricts_actions`, `allowed_abilities`, `ActionLimits`). Every command card
+  square not on the task's list is drawn dim and refuses a click, a key and an order. Moving and
+  stopping the builder are always allowed (`always_allowed`); passives and presentation toggles
+  need no listing. A SUBMENU is not free: the Build menu stays shut until a task lists it.
+- **Only here** (`build_on_blueprint_only`). A tower may start only on the task's blueprint
+  cells; the build ghost turns red anywhere else.
+- **Exactly this much.** A telegraphed task hands over the gold it costs and no more
+  (`grant_gold`), and a send task sets the reserve to exactly the sends asked for
+  (`stock_creep_path`) with the clock held so nothing refills. The gold is what stops a third
+  tower being upgraded when two were asked for. Wave bounty makes it slightly more, and that is
+  accepted.
+- **A blueprint on the ground** (`blueprint_path`): one blue square per cell still to build on,
+  disappearing as each fills. The camera glides onto the first open row.
+- **A golden border on the button** (`TutorialPointer`), pulsing, on the button itself and never
+  the bar it sits in. It resolves every frame, in order: the button that selects the unit the
+  task needs while it is not selected (`guide_unit`); for a research task, the Research Center
+  button and then the square to press; the command card square showing one of the task's
+  `guide_abilities` - the Build menu, then the tower in it - and nothing while an order is being
+  aimed; otherwise a named HUD element (`highlight_key`).
+- **Arrows in the world** (`TutorialWorldArrows`), upright and pointing down: over the builder
+  while it needs selecting; over every open blueprint cell, but only while the task's tower is
+  IN HAND, so they never compete with the border; over every tower a task wants upgraded, each
+  gone the moment its upgrade starts. They all bob in step.
+- **Research by name** (`TutorialResearchStep.tech_ids`): only the named technologies can be
+  researched, every other square is dimmed, and the Ultimate shortcuts are refused, so the
+  player ends up with exactly the Ultimate the rest of the tutorial is written around.
+- **The camera held** (`pinned_camera`): pinned where the task happens when it happens somewhere
+  the player would not look - the first send appears in another player's lane - and released
+  the moment the task is done.
+- **The task list**: every task of the lesson as a row with a tickbox, the current one lit,
+  those to come faded so the plan is visible, the count on the same line in brackets. A done
+  task gets a green tick, and there is a beat (`delay_seconds`) before the next opens so the
+  thing just done can be seen to land. A new lesson pops the board.
+
+**Explaining** is separate from telegraphing and used as little as possible:
+
+- **An explanation** (`TutorialExplainStep`) holds the world and shows one page at a time in a
+  panel in the middle of the screen (`TutorialInfoPanel`), Continue to turn it. A page about a
+  HUD element frames it with the border and a short caption and dims everything else; a page
+  about nothing on screen dims the lot. The lesson panel steps aside.
+- **A moment** (`TutorialMoment`) is an explanation the player TRIGGERS, the first time it
+  happens and whichever lesson is up: their creeps about to leak, their first flyer, their first
+  attacker. The world is held, the camera is pinned just down the lane from the creep so it sits
+  clear of the panel, the spotlight dims everything but it, and the same centred panel says what
+  it is. A player who never sends a flyer is never told about flyers.
+
+**Where it deliberately does NOT telegraph** - the OPEN tasks, fighting an opponent and building
+one's own maze:
+
+- no border, no arrows, no blueprint, no list of allowed buttons; the task and a sentence are
+  all the help there is
+- only what a later lesson is for is held back, and by limits rather than by pointing: the
+  roster short of a tier (`holds_back_tier`), the top of the upgrade tree (`max_upgrade_gold`),
+  the basic towers while elemental ones are being learned (`forbids`)
+- selling is allowed; a player who sells their maze away can lose
+- nothing says what the opponent's maze does well or what to send against it
+
+## 4. Time
+
+**Two things can be held, and the tutorial nearly always wants the smaller one.**
+
+- **The CLOCK** (`holds_clock`, `MatchSession.hold_clock`): income payouts, creep unlocks,
+  reserves refilling and Sudden Death stand still; units walk, towers go up, creeps die. It is
+  what makes a task untimed. Telegraphed subjects hold it, so a payout never lands in the middle
+  of one.
+- **The WORLD** (`pauses_world`, `MatchSession.hold`): everything stops and only the tutorial's
+  panels answer. For explanations and moments only.
+
+They are one freeze with two ways in, so overlapping them gives the clock back one gap rather
+than two. A reserve refills on the tick, so it asks `is_clock_held()` for itself.
+
+**The creep roster has a clock of its own** (`MatchSession.unlock_elapsed_seconds`): the match
+clock moved AHEAD by any lead (`unlocks_ahead_seconds`) and STOPPED at any ceiling
+(`holds_back_tier`, where the last creep below a tier opens). Only start delays read it, so a
+lesson can open the roster early without paying the income that time would have paid.
+
+**A payout can be brought forward** (`next_payout_seconds`) for a task that waits on one.
+
+## 5. The opponents
+
+Two, both in the match from the first tick, both named by role rather than slot
+(`TutorialStep.Rival`). Their profiles are named by path on `tutorial_script.tres` and are not
+in `ai_config.tres`, so no menu offers them.
+
+- **The first** spars - builds a short maze and sends nothing - until a lesson WAKES it into a
+  profile that only DEFENDS: a shallow maze near the top of the lane, grown over time by an
+  upgrade budget (`upgrade_target_paths`) and random cheap upgrades. A maze that stops near the
+  top is what makes a leak certain once a creep is past it. While it is the opponent the lesson
+  sends its own waves at the player (`TutorialWave`), never stronger than what the player has
+  already beaten.
+- **The second** waits on STANDBY - outside the send ring, unable to send, still counted alive so
+  the match does not end when the first falls - building and growing its own maze with a lump of
+  its own (`second_rival_opening_path`, `second_rival_gold`). When a lesson wakes it, it sends,
+  goes on improving the maze, and is the last thing standing between the player and the end.
+
+Waking (`wakes_rival`) takes an opponent off standby, raises its income to a share of the
+player's (`rival_income_share`), hands it any head start (`grant_rival_gold`) and gives its brain
+the real profile (`AiPlayer.change_profile`).
+
+**The mazes are data.** An opponent's maze is a `TowerLayout` naming a target tower per cell
+(`AiProfile.maze_layout_path`); the AI builds whatever climbs to each target and upgrades toward
+it, and `upgrades_only_to_plan` keeps a wall a wall. The second opponent's shape is the project
+owner's own blueprint (`tutorial_veteran_blueprint.tres`), grown by the targets in
+`tutorial_veteran_maze.tres`. Its sending is bounded by `max_send_gold_per_payout` and
+`sends_attackers`, its maze by `max_maze_value`. None of these principles is explained to the
+player.
+
+## 6. How it ends
+
+When the last lesson in the script is done the match ENDS whoever is still standing
+(`PlayerManager.conclude`): every creep off the field, nothing paid, sent or orderable, and the
+ordinary result board, whose Continue leads back to the main menu. Cutting the script short
+therefore ends the tutorial early, which is how it is iterated on.
+
+When the player runs out of lives the world is held for good and `TutorialDefeatPanel` covers
+the screen, swallowing every click, with Retry (the tutorial again, through the loading screen)
+and Main Menu. It is caught on the elimination, because the match may well go on without them.
+
+## 7. Limits, in detail
+
+`ActionLimits`, held on `PlayerState.limits`, is what makes "only this" true. It is null for
+every player in every other match. It is asked where intent becomes an order and nowhere deeper:
+the card dims the square (`CommandSlot`), the panel will not open a submenu (`UnitPanel`), the
+controller will not arm or send it (`CommandController`), the order road refuses it
+(`CommandService`, which holds whatever the others missed), the area refuses the cell
+(`PlayerArea.can_place`), and the Research Center neither opens nor accepts what it should not.
+
+On top of any lesson's own, the script's FORBIDDEN list is refused throughout, restricted lesson
+or not. The director builds fresh limits every lesson, so nothing one allowed outlives it, and
+leaves the player with none that allow anything once the tutorial is over.
+
+## 8. The pieces
 
 | File | What it is |
 | --- | --- |
-| `Scripts/Game/Tutorial/TutorialStep.gd` | ONE LESSON, abstract. What it says, gives, allows and points at. |
-| `Scripts/Game/Tutorial/Steps/*.gd` | What FINISHES a lesson. One subclass per kind. |
-| `Scripts/Game/Tutorial/TutorialScript.gd` | The lessons in teaching order, and the board: opponents' profiles, lives, what is always allowed. |
-| `Scripts/Game/Tutorial/TutorialDirector.gd` | Which lesson is open, what it handed over, what has happened since. |
+| `Scripts/Game/Tutorial/TutorialStep.gd` | One task, abstract: what it says, gives, allows and points at. |
+| `Scripts/Game/Tutorial/Steps/*.gd` | What FINISHES a task. One subclass per kind. |
+| `Scripts/Game/Tutorial/TutorialScript.gd` | The tasks in order, the moments, and the board: opponents, lives, what is always allowed or never. |
+| `Scripts/Game/Tutorial/TutorialDirector.gd` | Which task is open, what it handed over, what has happened since. |
 | `Scripts/Game/Tutorial/TutorialSetup.gd` | The match it is played in: lanes, names, settings. |
-| `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a lesson sends: a delay, a creep, a number of sends. |
-| `Scripts/Game/Tutorial/TutorialPage.gd` | One page of an explanation: its words, the HUD element it is about, a caption. |
-| `Scripts/UI/TutorialInfoPanel.gd` | An explanation's page, in the middle of the screen. |
-| `Scripts/UI/TutorialDefeatPanel.gd` | The screen for running out of lives: Retry, or the main menu. |
-| `Scripts/Game/Tutorial/TutorialMoment.gd` | Something that stops the match the first time it happens, whichever lesson is up. |
-| `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a lesson walks the player to, and whether it is selected. |
-| `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows hovering over the builder and the open blueprint cells. |
+| `Scripts/Game/Tutorial/TutorialWave.gd` | One wave a task sends at the player. |
+| `Scripts/Game/Tutorial/TutorialPage.gd` | One page of an explanation. |
+| `Scripts/Game/Tutorial/TutorialMoment.gd` | A first-time event worth stopping for. |
+| `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a task walks the player to, and whether it is selected. |
+| `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows in the world. |
 | `Scripts/Game/ActionLimits.gd` | What one player may do when that is less than the rules allow. |
-| `Scripts/UI/TutorialPanel.gd` | The lesson on screen, its progress, and the way on. |
-| `Scripts/UI/TutorialPointer.gd` | The golden border on the HUD button a lesson wants pressed. |
-| `Scripts/UI/TutorialSpotlight.gd` | The dim around one thing in the WORLD. |
-| `Resources/Tutorial/` | The lessons, the script, and the mazes they draw. |
-| `Resources/Config/Ai/ai_tutorial*.tres` | The sparring partner, and the two profiles the opponents wake into. |
-
-## 4. A lesson is a resource, and it owns four things
-
-The same shape everything else in this project that carries behaviour has. What makes a lesson
-a BUILD one rather than a SEND one is which subclass it is, so nothing anywhere switches on a
-kind.
-
-**WHAT IT SAYS** - a title, a paragraph, and one line in the imperative saying what to do now.
-**Short is the rule**: a lesson is read by somebody who wants to be playing. Each TASK is a row
-with a tickbox on the right that gets a green tick when it is done, and a task that can be
-counted carries its count on the same line, in brackets after the task - "(1/4)" - counting
-only what this lesson asked for. A wave is every entry sharing one delay, and it is
-killed once none of its creeps is still in the lane (`TutorialWaves`). A LESSON CAN BE SEVERAL TASKS:
-each task is a step of its own - its own gold, limits, blueprint, highlights and waves - and a
-step with `continues_lesson` set is drawn as the next row of the lesson before it, under that
-lesson's title, rather than as a lesson of its own (`TutorialScript.lesson_range`). Tasks still
-to come are shown faded, so the player sees the plan. An UPGRADE task is split in two, each
-granted exactly its own gold, because the gold is what stops a third tower being upgraded; it
-is finished by towers of the target type STANDING (`TutorialOwnStep`), with arrows hovering over
-the towers to upgrade (`arrows_on_towers_path`). A wave lesson can count creeps rather than
-waves (`counts_creeps`), for one big wave where "1 / 1" says nothing. A new lesson
-arrives with a small POP of the whole board, about its own middle so it never leaves the screen.
-
-**WHAT IT GIVES** - gold, income (added, or SET once with `set_income`), a reserve of sends set
-to an exact number, a blueprint, waves in the player's lane, an opponent woken, the Research
-Center opened, and the creep roster moved ahead or held short of a tier - see section 5.
-
-**A lesson waits before it opens** (`delay_seconds`): a beat after the last one is done, to see
-the last tower go up or the last creep die. The panel says the last lesson is done meanwhile, and
-everything that lesson held stays held through the gap.
-
-**AN EXPLANATION** (`TutorialExplainStep`) is the one kind of lesson that is READ rather than
-done, for what cannot be done - what the numbers on the HUD mean. It holds the world, hides the
-lesson panel, and shows one `TutorialPage` at a time in the middle of the screen: the element
-the page is about gets the golden border and a short CAPTION under it, everything else is
-dimmed, and Continue turns the page. Reach for a task first; keep an explanation to a handful of
-pages.
-
-**WHAT IT ALLOWS** - whether the match clock runs, and whether the player is held to a short
-list of abilities and to the blueprint's cells. See sections 5 and 6.
-
-**WHEN IT IS DONE** - `is_complete(director)`, asked every tick of the current lesson and of
-nothing else. It reads the world and must not change it. **Nothing in the builder, the sender or
-the Research Center knows a tutorial exists**: a lesson is finished by the world reaching a
-state, and the counters come off `MatchStats`, which is keeping them for the end screen anyway.
-A lesson asking "four sends" subtracts against a mark the director took when it opened.
-
-Two readings are deliberately NOT counters. A BUILD lesson with a blueprint reads the GROUND -
-every cell of the plan has a tower of the player's on it - because a count is wrong both ways:
-a tower started and cancelled counts once and stands nowhere, and a plan whose first row is the
-last lesson's already has towers a count would not see. And the technology lesson counts what
-is OWNED in total, because research can be undone inside its window.
-
-## 5. Time: the clock, the world, and the anti-softlock rule
-
-**Two different things can be held, and the tutorial nearly always wants the smaller one.**
-
-- **The CLOCK** (`TutorialStep.holds_clock`, `MatchSession.hold_clock`). Income payouts, creep
-  unlocks, reserves refilling and Sudden Death stand still; units still walk, towers still go
-  up and creeps still die. This is what makes a task untimed: a player asked to build a row
-  takes as long as they like, and nothing the clock times moves on without them. The held
-  opening holds it; everything after lets it run.
-- **The WORLD** (`TutorialStep.pauses_world`, `MatchSession.hold`). Everything stops and only
-  the lesson panel answers a click. Off for every lesson today. It is there for something that
-  would really go wrong while the player reads, and nothing should.
-
-The two are one freeze with two ways in, so a lesson holding the clock while something else
-pauses the world gives the clock back one gap when both let go, not the same gap twice.
-
-A reserve refills on the TICK rather than by reading the clock, so it asks `is_clock_held()`
-for itself - that is what keeps the sending lesson's reserve at exactly what was set.
-
-**The creep roster has a clock of its own** (`MatchSession.unlock_elapsed_seconds`): the match
-clock, moved AHEAD by any lead and STOPPED at any ceiling. A lesson moves it on with
-`unlocks_ahead_seconds` and stops it short of a tier with `holds_back_tier` - it runs until the
-last creep below that tier is open and stands there. Only a creep's start delay reads it, so
-income is paid exactly as it would have been. Moving the match clock itself instead would pay
-every income payout inside the skipped time on the next tick.
-
-**A MOMENT holds the world** (`TutorialMoment`, on the script rather than in the lesson list):
-the first time the player's creeps are about to leak past a row nothing can reach, the first
-flyer they send, the first attacker. Each fires once, whichever lesson is up - a player who
-never sends a flyer is never told about flyers, and one who sends one late is told then. The
-world is held under its own name, the camera is pinned just down the lane from the creep so it
-sits clear of the middle of the screen, the spotlight dims everything else, and the moment is
-shown in the same centred panel an explanation uses (`TutorialInfoPanel`), with the same
-Continue. The lesson panel steps aside and the lesson underneath waits.
-
-**There is no skip.** A lesson cannot be passed without doing it, and a tutorial that offers a
-way out invites taking it. What makes that safe is the held opening's design: exact gold, exact
-cells, nothing else allowed - cancelling a tower build is forbidden throughout for the same
-reason - so it cannot be got stuck in; and a lesson whose end is an opponent beaten is ended by
-the match either way.
-
-## 6. Limits: only this, only here
-
-`ActionLimits`, held on `PlayerState.limits`, is what makes "only the one thing the lesson asks
-for" true rather than hoped for. It is null for every player in every other match, so an
-ordinary match pays one lookup and nothing changes.
-
-It is a WHITELIST: a restricted lesson names the abilities that work (`allowed_abilities`), the
-script names the few every restricted lesson allows on top (`always_allowed` - moving and
-stopping the builder, calling off an order), and a passive or a presentation toggle is allowed
-without being named. A SUBMENU is not: which menus open is part of what a lesson teaches, so
-the Build menu stays shut until the lesson about building lists it. Everything not allowed is
-drawn dim. `build_on_blueprint_only` adds the blueprint's cells as the only place a tower may
-start. `max_upgrade_gold` keeps the top of the upgrade tree back even on a lesson that
-restricts nothing else. The Research Center is locked until a lesson opens it and stays open
-after.
-
-On top of all of it the script carries a FORBIDDEN list (`forbidden_abilities`), refused in
-every lesson, restricted or not: the builder's blueprint screens, whose saved mazes would compete
-with the one a lesson draws.
-
-It is asked where intent becomes an order, and nowhere deeper: the command card dims the square
-(`CommandSlot`), the panel will not open a submenu (`UnitPanel`), the controller will not arm or
-send it (`CommandController`), the order road
-refuses it (`CommandService`, which is the one that holds whatever the other two missed), the
-area refuses the cell so the build ghost turns red (`PlayerArea.can_place`), and the Research
-Center neither opens nor accepts an order.
-
-The director builds a fresh one every lesson rather than editing it in place, so nothing a
-lesson allowed can outlive it, and clears it when the tutorial ends.
-
-## 7. The opponents
-
-Both start as the SPARRING PARTNER (`ai_tutorial.tres`): they build a short maze with gold the
-script hands them, and send nothing. A lesson WAKES one with `wakes_rival`:
-
-- it leaves standby, if it was on it
-- its income is raised to a share of the player's (`rival_income_share`), because a partner
-  that sent nothing earned nothing and would otherwise wake a match behind
-- its brain is handed its real profile through `AiPlayer.change_profile`. The profiles are
-  named by path on the script, not listed in `ai_config.tres`, so no menu can offer them
-
-The partner's zigzag has the same rows and corridors as the profiles they wake into, so the
-short maze is the top of the long one and the woken opponent simply carries on building it.
-
-The FIRST opponent wakes into a profile that only defends: it never sends, never builds below
-the partner's rows, and upgrades nothing but an UPGRADE BUDGET (`AiProfile.upgrade_target_paths`)
-- one named tower per entry, each claiming the tower nearest the spawn that can climb to it,
-spaced out by `upgrade_seconds` so it gets stronger over time rather than all at once. On
-top of that, `random_upgrade_seconds` has it take one random rung on one random unclaimed tower
-now and then, capped in price by `random_upgrade_max_gold`, rolled on the brain's own stream. A maze
-that stops near the top of the lane is what makes a leak certain once a creep is past it, and
-the moment about life stealing is built on that.
-
-**STANDBY** (`PlayerState.standby`) is what lets the second opponent sit in the match through
-the first half. The ring skips a standby player exactly as it skips an eliminated one, so
-nothing is sent to them and nothing that leaks walks into their lane; a standby player cannot
-send; and they still count as ALIVE, which is what keeps the match from ending the moment the
-first opponent falls. It is offline only, like the limits: set by the tutorial, never
-replicated.
-
-**Waves of the lesson's own** (`waves`, a list of `TutorialWave`: a delay, a creep, a number of
-SENDS) put creeps into the player's lane before any opponent sends. Each send is a whole pack,
-as `SendBuilding` spawns it, and the creeps are the first opponent's, so the leak and the life
-steal resolve as in a real match. Two entries with the same delay are one mixed wave. The lesson
-waiting on them finishes when every wave has gone out and the lane is EMPTY, rather than on a
-kill count: a creep that leaks walks on or leaves, so an empty lane always arrives.
-
-## 8. Saying where, and saying which
-
-**A BLUEPRINT on the ground.** One blue square per cell still to build on, disappearing as each
-is filled - exactly "these ones, in any order". It is the same overlay the builder's Show
-Blueprint command drives. A lesson names its blueprint by `res://` PATH rather than by one of
-the player's slots, which are theirs. The camera is moved onto the first row still to build.
-The mazes are the left-right maze of `strategy.md` 5.5 - from the very top, half a cell
-between rows - and the early lessons' plans are its first rows, so they grow into it.
-
-**A GOLDEN BORDER on a HUD BUTTON** (`TutorialPointer`), pulsing - on the button itself rather
-than an arrow beside it, and the button, never the bar it sits in: the first version pointed at
-whole panels and landed between two buttons every time. Every frame it
-resolves, in order: the button that selects the lesson's `guide_unit` while that unit is not
-selected; then the command card square showing one of its `guide_abilities` (the Build menu,
-then the tower inside it; nothing while an order is being aimed); then the control named by
-`highlight_key`. The keys map to Controls in `match_hud.tscn`, so relaying the HUD out moves
-the arrow with it. The dim around the target is opt-in (`dims_around_highlight`): on by default
-it greyed out the whole screen, lane included.
-
-**ARROWS IN THE WORLD** (`TutorialWorldArrows`), standing upright and pointing straight down:
-one over the builder while a lesson wants it selected; one over every blueprint cell still open
-when `arrows_on_blueprint` is set, but only while the lesson's tower is IN HAND - the squares
-already say where, and arrows before the Build menu is even open only compete with the border
-on the button; and one over every tower an upgrade task wants upgraded, gone the moment that
-tower's upgrade STARTS. Every arrow bobs in step with every other, because the pool hands
-arrows round as the set changes and arrows on their own phases read as the animation
-restarting whenever the selection did. The mesh and its generator are
-`3DArt/Effects/tutorial_arrow*`, the scene `Scenes/Effects/tutorial_hover_arrow.tscn`, and the
-shader warm-up draws it in a tutorial so its material compiles before the first lesson.
-`TutorialGuide` is the one answer both arrows share to "which unit, and is it selected".
-
-**A SPOTLIGHT on the world**, dimming everything but a circle around one thing and following
-it. The lesson names a SUBJECT (`MY_LANE`, `TARGET_LANE`, `MY_NEWEST_TOWER`, `LEADING_CREEP`)
-rather than a position. A MOMENT uses it too, around the creep it is about.
-
-**THE CAMERA GLIDES** wherever the tutorial moves it (`RTSCamera.glide_to`): a quick eased move
-rather than a cut, so the player sees where they were taken, with panning locked until it
-arrives. `CameraConfig.glide_seconds` is how quick.
-
-**A PINNED CAMERA** (`pinned_camera`, `RTSCamera.pin`): the camera held on one point until the
-task is done - no panning, no drag, no minimap jump; the wheel still zooms. For a task the
-player cannot do right while looking elsewhere, which is the first send: its creeps appear in
-somebody else's lane. Pins are by reason, so a moment pinning the camera over a lesson's pin
-lets go of its own and hands the camera back.
-
-**The DIM SQUARES** of section 6, in the held opening the strongest of all: the one lit button
-on the card is the answer.
+| `Scripts/UI/TutorialPanel.gd` | The lesson and its task list. |
+| `Scripts/UI/TutorialPointer.gd` | The golden border, its caption, and the dim around it. |
+| `Scripts/UI/TutorialInfoPanel.gd` | Explanations and moments, in the middle of the screen. |
+| `Scripts/UI/TutorialSpotlight.gd` | The dim around one thing in the world. |
+| `Scripts/UI/TutorialDefeatPanel.gd` | Running out of lives: Retry, or the main menu. |
+| `Resources/Tutorial/` | The lessons, the script, and the mazes. |
+| `Resources/Config/Ai/ai_tutorial*.tres` | The opponents' profiles. |
 
 ## 9. Changing it
 
-**Re-ordering, cutting or adding a lesson is editing `tutorial_script.tres` and nothing else.**
-The array in it IS the teaching order.
+- **Order, split, merge or cut** is editing the list in `tutorial_script.tres`. A step with
+  `continues_lesson` is the next task of the lesson before it; one without starts a lesson.
+- **What a task says, gives or allows** is its own `.tres`. The files were first written by a
+  scratch generator; they are the authority now and are edited by hand.
+- **A new kind of task** is a `TutorialStep` subclass with `is_complete`, plus a reading on the
+  director if it needs one. Prefer what `MatchStats` already counts, or the ground itself.
+- **A new thing to point at** is one entry in the two parallel arrays on `TutorialPointer` in
+  `match_hud.tscn`, checked against each other at boot.
+- **The opponents' strength** is their profiles, their mazes, their gold and lives on the script.
 
-**Changing what a lesson SAYS, gives or allows is editing its own `.tres`.** Nothing reads the
-wording. The lessons were first written by a small generator script rather than by hand, but
-the files are ordinary hand-editable Godot and are now the authority.
+Boot once after any of it: `TutorialScript.validate()` refuses a missing lesson, an untitled
+lesson head, a path that does not resolve, an opponent or moment it cannot use, and an
+explanation that does not hold the world. **A typed array in a `.tres` is all or nothing** - one
+entry that fails to load empties the list silently - and that check is what turns it into a
+message.
 
-**A new KIND of lesson** is a subclass of `TutorialStep` with one method - `is_complete` - plus a
-reading on `TutorialDirector` if it needs one that is not already there. Prefer a number
-`MatchStats` already keeps, or a reading of the world.
+## 10. Known gaps
 
-**A new thing to point at** is one more entry in the two parallel arrays on the
-`TutorialPointer` instance in `match_hud.tscn`. They are checked against each other at boot.
-
-**The opponents' strength** is their two profiles, their lives and the income share on the
-script. None of it has been tuned against a real new player yet.
-
-Boot once after any of it: `TutorialScript.validate()` refuses an empty list, a null lesson, a
-lesson with no title, a path that does not resolve, an opponent with no loadable profile, and a
-restricted lesson that allows nothing. **A typed array in a `.tres` is all or nothing** - one
-entry that fails to load empties the whole list silently, which for `allowed_abilities` is a
-lesson nobody can finish. That check is what turns it into a message.
-
-## 10. What it does NOT do yet
-
-- **It is untested with a real new player.** The pacing, the wording, the opponents' strength
-  and how long each part takes are all first guesses
-- **The opening's waves can leak.** Against the first four towers one creep of the second
-  wave usually walks round them, and the bigger wave usually gets one or two through the
-  two-row maze. It costs a life or two out of plenty, and arguably teaches what a leak is,
-  but nothing in the lessons says so yet
-- **Nothing in the held opening teaches the builder's own attack**, although the wave lesson
-  allows it. `strategy.md` 2.1 says it matters early
-- **It never shows the send ring beyond a duel.** The second opponent joining is the closest it
-  comes
-- **The first opponent falls quickly** once the player is set free on the lesson's income, and
-  its strength has not been tuned against a real new player
-- **It does not teach discs, creep abilities or tower abilities.** Deliberately, for now
-- **It has no way back in.** A player who leaves half way starts again from the first lesson
-- **Nothing is voiced or animated**, and the lessons do not react to what the player did
-  wrong - a player who runs out of lives is offered a retry from the first lesson and nothing
-  more
+- **Untested with a real new player.** Pacing, wording and both opponents' strength are guesses
+- **The first opponent falls quickly** once the player is set free, and the second is hard for a
+  player who does not change what they send. Neither has been tuned
+- **An open task can be wasted.** Building one's own maze is open and holds the clock, so a
+  player who spends the handed-over gold on the wrong branch has only what selling returns
+- **No way back in.** Leaving part way starts again from the first lesson
+- **It does not react to mistakes.** A player who runs out of lives is offered a retry and
+  nothing more
 
 ## 11. Testing it
 
 `Scripts/Dev/TutorialProbe.gd`, run as `Scenes/Dev/tutorial_probe.tscn` headless, plays the
-whole tutorial through the real order road, faster than real time: it builds on the blueprint,
-sends, upgrades, researches and morphs a Core. Against the first opponent it sends for real,
-notes when it would have fallen, and keeps it standing until every MOMENT has fired and been
-dismissed, so each one's hold, pin and spotlight is checked. At the end it checks the match was
-concluded - creeps cleared, nothing orderable, the result board up. `-- lose` runs the player
-out of lives in the Rookie lesson instead and checks the defeat screen.
-In the held lessons it also TRIES what they must refuse - a tower off the list, a cell off the
-blueprint, an upgrade, another creep - and checks the gold did not move. It prints a line per
-lesson with the clock, whether it is held, gold and income, and a PASS or FAIL per check.
+whole tutorial through the real order road faster than real time. In every telegraphed task it
+also TRIES what must be refused - a tower off the list, a cell off the blueprint, an upgrade,
+another creep, a technology off the list, an Ultimate shortcut - and checks nothing happened.
+It checks where the border resolves, how many arrows stand, that explanations and moments hold
+the world and show the right panel, and how the tutorial ends. Against each opponent it plays
+for real and notes how the fight goes before ending it; against the first it keeps it standing
+until every moment has fired. `-- lose` runs the player out of lives instead and checks the
+defeat screen. It dispatches on the lesson FILE name, so a lesson renamed or added needs a
+line there.
 
-It is scaffolding under `Scripts/Dev`, kept while the tutorial is still being iterated, and it
-is written against the current lesson order: re-ordering the lessons means updating it.
+It is scaffolding under `Scripts/Dev`, kept while the tutorial is iterated.
 
-Run WINDOWED with `-- shots` it also saves a screenshot to `user://tutorial_shots/` at each
-moment an arrow is up, which is the only way to see where an arrow DRAWS - headless draws
-nothing, and a correct target can still be drawn in the wrong place.
+Run WINDOWED with `-- shots` it saves screenshots to `user://tutorial_shots/` at the moments
+worth looking at - the only way to see where something DRAWS, since headless draws nothing.
 
 **Print which lesson was reached and what was checked, not whether there were errors.** A
-tutorial that stalls on its third lesson and one that runs to the end look identical in a log
-full of nothing. What proves the run is the lesson count at the end and the checks that fired.
+tutorial that stalls part way and one that runs to the end look the same in a quiet log.

@@ -31,6 +31,9 @@ const POP_START: float = 0.94
 const POP_PEAK: float = 1.03
 const POP_UP_SECONDS: float = 0.12
 const POP_DOWN_SECONDS: float = 0.14
+## How far right of the open Research Center the board steps, so a research task
+## can be read beside the squares it names rather than on top of them.
+const CLEAR_OF_RESEARCH: float = 12.0
 ## What the button says on a lesson that is read.
 const CONTINUE_TEXT: String = "Continue"
 
@@ -58,6 +61,8 @@ var _shown_lesson: int = 0
 ## The tasks as last drawn, so the rows are only rewritten when something moved.
 var _tasks_shown: String = ""
 var _rows: Array[TutorialTaskRow] = []
+## Where the board is authored, so it can step aside and come back.
+var _home_x: float = 0.0
 
 var _director: TutorialDirector:
 	get:
@@ -67,6 +72,8 @@ var _director: TutorialDirector:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
+	if _board != null:
+		_home_x = _board.position.x
 	if _continue_button != null:
 		_continue_button.pressed.connect(_on_continue_pressed)
 
@@ -128,10 +135,24 @@ func _refresh() -> void:
 func _process(_delta: float) -> void:
 	if !visible:
 		return
+	_keep_clear_of_research()
 	var director: TutorialDirector = _director
 	if director != null && director.current_moment() == null \
 			&& director.current_step() != null:
 		_draw_tasks(director.current_step(), director)
+
+
+## The Research Center opens in the same corner as this board; while it is up
+## the board sits to its right instead of over it.
+func _keep_clear_of_research() -> void:
+	if _board == null:
+		return
+	var center: ResearchCenter = References.research_center
+	var rect: Rect2 = Rect2() if center == null else center.screen_rect()
+	var wanted: float = _home_x
+	if rect.size.x > 0.0:
+		wanted = maxf(_home_x, rect.end.x - get_global_rect().position.x + CLEAR_OF_RESEARCH)
+	_board.position.x = wanted
 
 
 ## One row per task, rewritten only when a task's text or tick changed, since

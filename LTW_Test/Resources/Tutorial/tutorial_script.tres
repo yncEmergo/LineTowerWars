@@ -23,6 +23,13 @@
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_income_explained.tres" id="s10_11_income_explained"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_payout.tres" id="s11_12_payout"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_beat_rookie.tres" id="s12_13_beat_rookie"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_technology.tres" id="s13_14_technology"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_research_fire.tres" id="s14_15_research_fire"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/16_research_lightning.tres" id="s15_16_research_lightning"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/17_elemental_core.tres" id="s16_17_elemental_core"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/18_fire_pit.tres" id="s17_18_fire_pit"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/19_your_maze.tres" id="s18_19_your_maze"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/20_beat_veteran.tres" id="s19_20_beat_veteran"]
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialMoment.gd" id="4_moment"]
 
 [sub_resource type="Resource" id="Moment_leak"]
@@ -51,10 +58,12 @@ script = ExtResource("1_script")
 opponent_gold = 400
 first_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_rookie.tres"
 second_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_veteran.tres"
+second_rival_opening_path = "res://Resources/Config/Ai/ai_tutorial_veteran_sparring.tres"
+second_rival_gold = 90000
 rival_lives = 10
 rival_income_share = 1.0
 player_lives = 30
 always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always")])
 moments = Array[ExtResource("4_moment")]([SubResource("Moment_leak"), SubResource("Moment_flyer"), SubResource("Moment_attacker")])
 forbidden_abilities = Array[ExtResource("3_ability")]([ExtResource("f0_forbidden"), ExtResource("f1_forbidden"), ExtResource("f2_forbidden"), ExtResource("f3_forbidden")])
-steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie"), ExtResource("s13_14_technology"), ExtResource("s14_15_research_fire"), ExtResource("s15_16_research_lightning"), ExtResource("s16_17_elemental_core"), ExtResource("s17_18_fire_pit"), ExtResource("s18_19_your_maze"), ExtResource("s19_20_beat_veteran")])

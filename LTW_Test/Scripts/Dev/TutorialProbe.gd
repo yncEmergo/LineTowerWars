@@ -19,7 +19,7 @@ const KNIGHT: String = "res://Resources/UnitStats/Creeps/knight_stats.tres"
 const BUILD_MENU: String = "res://Resources/Abilities/build_menu_ability.tres"
 const SHOW_BLUEPRINTS: String = "res://Resources/Abilities/Blueprints/show_blueprints_ability.tres"
 const SPEED: int = 200
-const GIVE_UP_TICKS: int = 20 * 60 * 20
+const GIVE_UP_TICKS: int = 20 * 60 * 14
 
 @export var _ai_config: AiConfig
 @export var _game_config: GameConfig
@@ -179,12 +179,18 @@ func _play(director: TutorialDirector) -> void:
 			_play_payout()
 		"13_beat_rookie":
 			_play_rookie()
-		"later_technology":
-			_play_research()
-		"later_elemental":
+		"14_technology":
+			_play_explain()
+		"15_research_fire", "16_research_lightning":
+			_play_research(director)
+		"17_elemental_core":
 			_play_core()
-		"later_beat_veteran":
-			_play_beat(TutorialStep.Rival.SECOND, 1200)
+		"18_fire_pit":
+			_play_fire_pit()
+		"19_your_maze":
+			_play_your_maze()
+		"20_beat_veteran":
+			_play_veteran()
 
 
 ## The move lesson: check where the highlight is, then walk the builder a few
@@ -433,10 +439,11 @@ func _play_explain() -> void:
 	var at: int = director.pages_read()
 	if _acted.has("page%d" % at):
 		return
-	if _shoot("l5_explain_%d" % (at + 1)):
+	if _shoot("l%d_explain_%d" % [_lesson, at + 1]):
 		return
 	_acted["page%d" % at] = true
-	var wanted: Dictionary = {&"gold": "Gold", &"income_value": "IncomeLabel", &"income_timer": "Timer"}
+	var wanted: Dictionary = {&"gold": "Gold", &"income_value": "IncomeLabel",
+		&"income_timer": "Timer", &"research_button": "ResearchButton", &"": "<none>"}
 	_check(_pointer_target_name() == String(wanted.get(page.highlight_key, "?")),
 		"explain page %d: border on %s (%s)" % [at + 1, page.highlight_key, _pointer_target_name()])
 	_check(_session().is_paused(), "explain page %d: the world is held" % (at + 1))
@@ -448,9 +455,10 @@ func _play_explain() -> void:
 	var pointer: TutorialPointer = get_tree().root.find_child("TutorialPointer", true, false) as TutorialPointer
 	pointer._process(0.0)
 	var caption: Label = get_tree().root.find_child("CaptionLabel", true, false) as Label
-	_check(caption != null && caption.is_visible_in_tree() && caption.text == page.caption,
+	_check(caption != null && (caption.is_visible_in_tree() && caption.text == page.caption
+			|| page.caption.is_empty() && !caption.is_visible_in_tree()),
 		"explain page %d: captioned '%s'" % [at + 1, "" if caption == null else caption.text])
-	if at == 1:
+	if page.highlight_key == &"income_value":
 		_check(_me().income == 10, "explain: the five Sheep raised income to 10 (%d)" % _me().income)
 	director.acknowledge()
 
@@ -590,41 +598,38 @@ func _play_upgrade() -> void:
 			return
 
 
-func _play_beat(rival: TutorialStep.Rival, after_ticks: int) -> void:
-	var state: PlayerState = References.player_manager.state_for(TutorialSetup.slot_for(rival))
-	if !_acted.has("woken"):
-		_acted["woken"] = true
-		_check(!state.standby, "rival %d woken out of standby" % rival)
-		var brain: AiPlayer = References.ai_director.brain_for(TutorialSetup.slot_for(rival))
-		_check(brain.profile().display_name.begins_with("Tutorial"), "rival %d plays %s" % [rival, brain.profile().display_name])
-	# Keep the player's lane alive while the probe watches: gold for sends.
-	if _lesson_ticks % 200 == 0:
-		_me().gain(500)
-		var sender: SendBuilding = _sender(1)
-		for send in AiHand.sends_on(sender):
-			if send.can_execute(sender):
-				AiHand.order_send(1, sender, send)
-	if _lesson_ticks == after_ticks:
-		var line: MatchStatLine = References.match_stats.line_for(TutorialSetup.slot_for(rival))
-		_note("rival %d after %d ticks: sends=%d lives=%d income=%d towers=%d" % [
-			rival, after_ticks, line.sends, state.lives, state.income, line.towers_built])
-		_check(line.sends > 0, "rival %d sent creeps once woken" % rival)
-		# End it: the probe is not here to win a match.
-		state.lives = 0
-		state.lives_changed.emit(0)
-
-
-func _play_research() -> void:
-	if !_acted.has("vet"):
-		if _shoot("l10_research"):
-			return
-		_acted["vet"] = true
-		var vet: PlayerState = References.player_manager.state_for(TutorialSetup.SECOND_RIVAL_SLOT)
-		_check(!vet.standby, "lesson 10: veteran woken")
-		_check(ActionLimits.permits_research(1), "lesson 10: research open")
+## A named research task: the border walks from the Research Center button to
+## the square, nothing off the list can be researched, and then the list is.
+func _play_research(director: TutorialDirector) -> void:
+	var step: TutorialResearchStep = director.current_step() as TutorialResearchStep
+	var center: ResearchCenter = References.research_center
+	if !_acted.has("closed"):
+		_acted["closed"] = true
+		center.close()
 		_check(_pointer_target_name() == "ResearchButton",
-			"lesson 10: arrow on the Research Center button (%s)" % _pointer_target_name())
-		AiHand.order_ultimate(1, 3)
+			"%s: border on the Research Center button while it is shut (%s)" % [
+				step.resource_path.get_file(), _pointer_target_name()])
+		_check(_session().is_clock_held(), "%s: the clock is held" % step.resource_path.get_file())
+		center.open()
+		return
+	if !_acted.has("open"):
+		if _shoot("l%d_research_%d" % [_lesson, step.next_tech(director)]):
+			return
+		_acted["open"] = true
+		_check(_pointer_target_name() == "TechSlot%d" % _session().techs().tech_for(step.next_tech(director)).slot,
+			"%s: border on the square to press (%s)" % [step.resource_path.get_file(), _pointer_target_name()])
+		# Off the list: the Moonbeam path, and a whole Ultimate in one press.
+		var before: int = director.technologies_owned()
+		Commands.submit_player_action(Command.PlayerAction.RESEARCH, 2)
+		Commands.submit_player_action(Command.PlayerAction.RANDOM_ULTIMATE)
+		_acted["before"] = before
+		return
+	if !_acted.has("refused"):
+		_acted["refused"] = true
+		_check(director.technologies_owned() == int(_acted["before"]),
+			"%s: nothing off the list was researched" % step.resource_path.get_file())
+	if _lesson_ticks % 20 == 0 && step.next_tech(director) != 0:
+		Commands.submit_player_action(Command.PlayerAction.RESEARCH, step.next_tech(director))
 
 
 func _play_core() -> void:
@@ -632,22 +637,136 @@ func _play_core() -> void:
 	var area: PlayerArea = References.player_manager.area_for(1)
 	if !_acted.has("core"):
 		_acted["core"] = true
-		_me().gain(1000)
+		References.research_center.close()
+		var sentry: UnitAbility = load("res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres") as UnitAbility
+		_check(!ActionLimits.permits(sentry, builder), "core: a basic tower cannot be built")
 		var core: BuildTowerAbility = AiHand.build_ability(builder, load(CORE) as BuildingStats)
-		var cell: Vector2i = Vector2i(0, 40)
-		AiHand.order_build(1, builder, core, area.footprint_world_center(cell, Vector2i(2, 2)), false)
+		_check(ActionLimits.permits(core, builder), "core: the Elemental Core can")
+		AiHand.order_build(1, builder, core, area.footprint_world_center(Vector2i(0, 40), Vector2i(2, 2)), false)
+
+
+func _play_fire_pit() -> void:
+	var area: PlayerArea = References.player_manager.area_for(1)
+	if _acted.has("morphed"):
 		return
-	if _lesson_ticks % 100 != 0:
+	var core: Building = null
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower != null && tower.stats != null && tower.stats.resource_path == CORE && !tower.is_under_construction():
+			core = tower
+	if core == null:
+		return
+	if !_acted.has("selected"):
+		_acted["selected"] = true
+		_check(_world_arrows() == 1, "fire pit: an arrow over the Core (%d)" % _world_arrows())
+		References.selection_controller.select_single(core)
+		return
+	if _shoot("l%d_fire_pit" % _lesson):
+		return
+	_acted["morphed"] = true
+	_check(_pointer_target_name().begins_with("CommandSlot"),
+		"fire pit: border on the morph square (%s)" % _pointer_target_name())
+	var shock: UnitAbility = load("res://Resources/Abilities/Towers/upgrade_elemental_core_to_lightning_shock_particle_ability.tres") as UnitAbility
+	_check(!ActionLimits.permits(shock, core), "fire pit: no other element's morph")
+	AiHand.order_upgrade(1, core, AiHand.upgrade_toward(core, 65))
+
+
+## The open task: raise the Fire Pit to an Ultimate Firelord, build a second
+## Core and raise it to a Greater Annihilation Glyph - one rung at a time, as
+## each finishes.
+func _play_your_maze() -> void:
+	var builder: Builder = _builder()
+	var area: PlayerArea = References.player_manager.area_for(1)
+	if !_acted.has("checked"):
+		_acted["checked"] = true
+		var sentry: UnitAbility = load("res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres") as UnitAbility
+		_check(!ActionLimits.permits(sentry, builder), "your maze: basic towers still cannot be built")
+		_check(!_me().limits.restricts_abilities, "your maze: everything else is open")
+		_check(_session().is_clock_held(), "your maze: no income while it is built")
+		_note("your maze: gold %d" % _me().gold)
+		var core: BuildTowerAbility = AiHand.build_ability(builder, load(CORE) as BuildingStats)
+		AiHand.order_build(1, builder, core, area.footprint_world_center(Vector2i(4, 40), Vector2i(2, 2)), false)
+		_acted["started"] = _lesson_ticks
+		return
+	if _lesson_ticks % 20 != 0:
 		return
 	for child in area.get_children():
 		var tower: Building = child as Building
-		if tower == null || tower.stats == null || tower.stats.resource_path != CORE:
+		if tower == null || tower.stats == null || tower.is_under_construction() || tower.is_upgrading():
 			continue
-		for entry in tower.current_abilities():
-			var up: UpgradeTowerAbility = entry as UpgradeTowerAbility
-			if up != null && up.can_execute(tower):
-				AiHand.order_upgrade(1, tower, up)
-				return
+		var target: int = 0
+		# The Fire Pit is already on its way; any Core is the Glyph.
+		if tower.stats.resource_path == CORE || AiHand.branch_reaches(tower.stats as BuildingStats, 84, {}):
+			target = 84
+		elif AiHand.branch_reaches(tower.stats as BuildingStats, 72, {}):
+			target = 72
+		if target == 0 || tower.stats.unit_type_id == target:
+			continue
+		var up: UpgradeTowerAbility = AiHand.upgrade_toward(tower, target)
+		if up != null && up.can_execute(tower):
+			AiHand.order_upgrade(1, tower, up)
+	if _lesson_ticks % 400 == 0:
+		_note("your maze t=%ds: gold %d, %s" % [_lesson_ticks / 20, _me().gold, _census(area)])
+		for child in area.get_children():
+			var t: Building = child as Building
+			if t != null && t.stats != null && t.stats.gold_cost >= 1000:
+				_note("   %s path=%s upgrading=%s" % [t.stats.display_name, t.stats.resource_path, t.is_upgrading()])
+
+
+## The last lesson, played by sending the dearest thing the gold covers. Notes
+## what the Veteran does with its maze, and ends it after a while if the player
+## has not - the probe is here to see the lesson work, not to win it.
+func _play_veteran() -> void:
+	var slot: int = TutorialSetup.SECOND_RIVAL_SLOT
+	var vet: PlayerState = References.player_manager.state_for(slot)
+	var area: PlayerArea = References.player_manager.area_for(slot)
+	if !_acted.has("woken"):
+		_acted["woken"] = true
+		_check(!vet.standby, "veteran: in the ring")
+		var brain: AiPlayer = References.ai_director.brain_for(slot)
+		_check(brain.profile().display_name == "Tutorial Veteran", "veteran: plays %s" % brain.profile().display_name)
+		_check(!_session().is_clock_held(), "veteran: the clock runs")
+		_check(_me().limits.forbidden.size() == References.tutorial_director.script_resource.forbidden_abilities.size(),
+			"veteran: nothing but the script's own list is forbidden")
+		_note("veteran woken: gold %d, income %d, maze value %d" % [
+			vet.gold, vet.income, References.player_manager.value_for(slot)])
+	if _lesson_ticks % 100 == 0:
+		var sender: SendBuilding = _sender(1)
+		var best: SendCreepAbility = null
+		for tier in [1, 2]:
+			var from: SendBuilding = _sender(tier)
+			if from == null:
+				continue
+			for send in AiHand.sends_on(from):
+				if send.can_execute(from) && (best == null || send.creep_stats.gold_cost > best.creep_stats.gold_cost):
+					best = send
+					sender = from
+		if best != null:
+			AiHand.order_send(1, sender, best)
+	for creep: Creep in References.player_manager.area_for(1).creeps():
+		if creep.owner_player_id == slot && (creep.stats as CreepStats).is_attacker && !_acted.has("attacker"):
+			_acted["attacker"] = true
+			_fail("veteran: sent an attacker (%s)" % creep.stats.display_name)
+	if _lesson_ticks % 1200 == 0:
+		var value: int = References.player_manager.value_for(slot)
+		_note("veteran t=%ds: their lives %d, my lives %d, their gold %d income %d, maze value %d" % [
+			_lesson_ticks / 20, vet.lives, _me().lives, vet.gold, vet.income, value])
+		_note("  veteran towers: %s" % _census(area))
+		_check(value <= 100000, "veteran t=%ds: maze value within 100k (%d)" % [_lesson_ticks / 20, value])
+		_check(vet.tech.has(14), "veteran: owns the Annihilation Glyph path")
+	if _lesson_ticks == 20 * 60 * 4:
+		_note("veteran: still standing after four minutes, ended by the probe")
+		vet.lives = 0
+		vet.lives_changed.emit(0)
+
+
+func _census(area: PlayerArea) -> String:
+	var counts: Dictionary = {}
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower != null && tower.stats != null && tower.cell.y >= 0:
+			counts[tower.stats.display_name] = int(counts.get(tower.stats.display_name, 0)) + 1
+	return str(counts)
 
 
 # --- reading the arrows ------------------------------------------------------

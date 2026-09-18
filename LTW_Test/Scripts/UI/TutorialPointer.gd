@@ -121,7 +121,12 @@ func _check_keys() -> void:
 func _process(delta: float) -> void:
 	var target: Control = _resolve()
 	if target == null || !is_instance_valid(target) || !target.is_visible_in_tree():
-		_set_dim_visible(false)
+		# A page about nothing on the HUD still dims everything but itself.
+		var director: TutorialDirector = _director
+		if director != null && director.current_page() != null:
+			_place_dim(Rect2(size * 0.5, Vector2.ZERO))
+		else:
+			_set_dim_visible(false)
 		if _highlight != null:
 			_highlight.hide()
 		if _caption != null:
@@ -158,6 +163,15 @@ func _resolve() -> Control:
 
 	if TutorialGuide.needs_selecting(step):
 		return _control_for(TutorialGuide.button_key(step.guide_unit))
+
+	# A named technology: the button that opens the Research Center until it is
+	# open, then the square to press.
+	var research: TutorialResearchStep = step as TutorialResearchStep
+	if research != null && research.next_tech(director) != 0:
+		var center: ResearchCenter = References.research_center
+		if center == null || !center.is_open():
+			return _control_for(&"research_button")
+		return center.slot_for_tech(research.next_tech(director))
 
 	if !step.guide_abilities.is_empty():
 		var controller: CommandController = References.command_controller

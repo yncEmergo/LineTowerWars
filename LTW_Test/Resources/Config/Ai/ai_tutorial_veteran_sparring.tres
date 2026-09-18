@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Tutorial Veteran Sparring"
+description = "What the tutorial's second opponent plays while it waits on standby through the first half: it sends nothing, but builds its own maze and grows it toward its layout's targets - Glyph technologies taken at the start - so the maze a player finally meets is standing and upgraded. Stops at a set maze value; the woken profile takes it the rest of the way."
+player_name_pattern = "%s"
+selectable = false
+decision_seconds = 1.0
+distraction_chance = 0.0
+builds_per_pass = 1
+maze_layout_path = "res://Resources/Tutorial/tutorial_veteran_maze.tres"
+send_floor_gold = 999999
+build_floor_gold = 999999
+upgrade_floor_gold = 0
+min_towers_before_sending = 999
+send_seconds = 600.0
+max_send_tier = 0
+upgrades_towers = true
+upgrades_only_to_plan = true
+max_maze_value = 90000
+upgrade_seconds = 2.0
+takes_opening_ultimate = true
+ultimate_tech_id = 14
+elemental_share = 0.0
+elemental_after_towers = 999

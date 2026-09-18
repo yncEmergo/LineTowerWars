@@ -179,7 +179,8 @@ func _refresh_state() -> void:
 	var state: ResearchStyle.State = ResearchStyle.State.BLOCKED
 	if manager.owns(_player_id, tech.tech_id):
 		state = ResearchStyle.State.OWNED
-	elif manager.can_research(_player_id, tech):
+	elif manager.can_research(_player_id, tech) \
+			&& ActionLimits.permits_research_tech(_player_id, tech.tech_id):
 		state = ResearchStyle.State.AVAILABLE
 	_apply_state(state)
 

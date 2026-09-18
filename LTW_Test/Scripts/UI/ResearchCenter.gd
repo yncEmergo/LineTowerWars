@@ -134,6 +134,24 @@ func is_open() -> bool:
 	return _panel != null && _panel.visible
 
 
+## Where the open screen is drawn, in the canvas, for anything that must keep
+## clear of it - the tutorial's lesson panel shares its corner. Empty while shut.
+func screen_rect() -> Rect2:
+	if !is_open():
+		return Rect2()
+	return _panel.get_global_rect()
+
+
+## The square showing one technology, or null - for the tutorial to frame the
+## one it wants pressed. Null before the screen has first been opened, which is
+## when the squares are built.
+func slot_for_tech(tech_id: int) -> Control:
+	for slot in _slots:
+		if slot.tech != null && slot.tech.tech_id == tech_id:
+			return slot
+	return null
+
+
 ## Handled in _input rather than _unhandled_input because a square is not a
 ## Control that could take a press for itself, so an open screen has to see the
 ## key before the world does.
@@ -402,7 +420,8 @@ func _refresh_buttons() -> void:
 		return
 
 	if _random_button != null:
-		_random_button.disabled = !manager.can_roll_random_ultimate(_player_id)
+		_random_button.disabled = !manager.can_roll_random_ultimate(_player_id) \
+			|| !ActionLimits.permits_research_shortcuts(_player_id)
 
 	if _undo_button == null:
 		return

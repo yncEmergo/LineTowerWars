@@ -569,6 +569,15 @@ func _apply_player_order(command: Command) -> void:
 	if !ActionLimits.permits_research(command.player_slot):
 		_reject(command, "the Research Center is not open to this player yet")
 		return
+	match command.player_action:
+		Command.PlayerAction.RESEARCH:
+			if !ActionLimits.permits_research_tech(command.player_slot, command.tech_id):
+				_reject(command, "that technology is not open to this player yet")
+				return
+		Command.PlayerAction.RANDOM_ULTIMATE, Command.PlayerAction.CHOOSE_ULTIMATE:
+			if !ActionLimits.permits_research_shortcuts(command.player_slot):
+				_reject(command, "the Ultimate shortcuts are not open to this player yet")
+				return
 
 	var tech: TechManager = References.tech_manager
 	if tech == null:

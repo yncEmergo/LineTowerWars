@@ -175,9 +175,19 @@ func _set_the_board(setup: MatchSetup) -> void:
 		# A lump rather than income, because until it is woken an opponent is a
 		# demonstration rather than a player: enough for the short maze its
 		# sparring profile plans and no more.
-		state.gain(script_resource.opponent_gold)
+		var lump: int = script_resource.opponent_gold
+		if rival == TutorialStep.Rival.SECOND && script_resource.second_rival_gold > 0:
+			lump = script_resource.second_rival_gold
+		state.gain(lump)
 		# The second waits outside the ring, so the first half is a plain duel.
 		state.standby = rival == TutorialStep.Rival.SECOND
+		# And may build something other than the partner's zigzag while it
+		# waits - its own maze, so it is standing when it is woken.
+		var opening: AiProfile = script_resource.opening_profile(rival)
+		var ai: AiDirector = References.ai_director
+		var brain: AiPlayer = null if ai == null else ai.brain_for(TutorialSetup.slot_for(rival))
+		if opening != null && brain != null:
+			brain.change_profile(opening)
 
 	_skip_the_opening(manager.area_for(setup.local_slot))
 
@@ -296,6 +306,12 @@ func builder_at_open() -> Vector3:
 func technologies_owned() -> int:
 	var state: PlayerState = _local_state()
 	return 0 if state == null else state.tech.owned_count()
+
+
+## Whether the player owns one technology.
+func owns_tech(tech_id: int) -> bool:
+	var state: PlayerState = _local_state()
+	return state != null && state.tech.has(tech_id)
 
 
 ## Whether an opponent is out of the match.
@@ -436,6 +452,7 @@ func _open(index: int) -> void:
 	_apply_grants(_step)
 	_apply_limits(_step)
 	_pin_camera(_step)
+	_look_at(_step)
 	_step.on_enter(self)
 	# After the grants, so a lesson that hands over gold does it before the
 	# world stops rather than on the frame it starts again.
@@ -548,6 +565,9 @@ func _apply_grants(step: TutorialStep) -> void:
 	_set_stock(step)
 	if step.wakes_rival != TutorialStep.Rival.NONE:
 		_wake(step.wakes_rival)
+		var woken: PlayerState = _rival_state(step.wakes_rival)
+		if woken != null && step.grant_rival_gold > 0:
+			woken.gain(step.grant_rival_gold)
 
 
 ## Holds the player to what this lesson allows, or to nothing but the Research
@@ -564,6 +584,8 @@ func _apply_limits(step: TutorialStep) -> void:
 	limits.research = _research_open
 	limits.max_upgrade_gold = step.max_upgrade_gold
 	limits.forbidden.append_array(script_resource.forbidden_abilities)
+	limits.forbidden.append_array(step.forbids)
+	limits.research_techs.append_array(step.research_whitelist())
 	if step.restricts_actions:
 		limits.restricts_abilities = true
 		limits.abilities.append_array(script_resource.always_allowed)
@@ -608,6 +630,16 @@ func _last_unlock_below(tier: int) -> float:
 			if send != null && send.creep_stats != null:
 				latest = maxf(latest, config.unlock_clock(send.creep_stats.unlock_seconds))
 	return latest
+
+
+## Glides the camera where a lesson wants the player looking. Presentation.
+func _look_at(step: TutorialStep) -> void:
+	var camera: RTSCamera = References.rts_camera
+	if camera == null || step.looks_at == TutorialStep.LookAt.NONE:
+		return
+	var builder: Unit = TutorialGuide.unit_for(TutorialStep.Select.BUILDER)
+	if builder != null:
+		camera.glide_to(builder.global_position)
 
 
 ## Holds the camera where a lesson wants it, or lets go with null.

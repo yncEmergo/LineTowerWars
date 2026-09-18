@@ -187,6 +187,10 @@ enum CameraPin {
 ## was waiting there, and playing its real profile from now on instead of
 ## sparring. See TutorialScript for which profile each one plays.
 @export var wakes_rival: Rival = Rival.NONE
+## Gold handed to the opponent this step wakes, on top of its income - a head
+## start for one that has only sparred, so its maze is worth playing against
+## from the first minute rather than the tenth.
+@export var grant_rival_gold: int = 0
 ## Whether the Research Center opens with this step, and stays open for the rest
 ## of the tutorial. Until one step says so it is shut, so technology arrives
 ## when the lesson about it does rather than whenever a player finds the button.
@@ -212,6 +216,10 @@ enum CameraPin {
 ## go. On, a tower can be started on the blueprint's cells and nowhere else, and
 ## the build ghost turns red off it.
 @export var build_on_blueprint_only: bool = false
+## Abilities refused while this step is up on top of the script's own forbidden
+## list, whether or not it restricts - an open lesson that lets the player do
+## anything but build basic towers. See ActionLimits.forbidden.
+@export var forbids: Array[UnitAbility] = []
 ## The dearest tower upgrade the player may start while this step is up, in
 ## gold, or below zero for any. Holds whether or not the step restricts, so a
 ## lesson that sets the player free can still keep the top of the tree back.
@@ -266,6 +274,16 @@ enum Spotlight {
 ## every tower of the player's of exactly that type - the Lesser Archers a
 ## lesson wants upgraded. Empty for none.
 @export_file("*.tres") var arrows_on_towers_path: String = ""
+## Somewhere the camera GLIDES to when this step opens, and leaves the player
+## free to pan away from. For a task whose subject is off screen - the player's
+## own lane, after a lesson spent looking at an opponent's.
+enum LookAt {
+	NONE,
+	## The player's builder, which is where the next tower goes up.
+	MY_BUILDER,
+}
+
+@export var looks_at: LookAt = LookAt.NONE
 ## Where the camera is held while this step is open, released the moment it is
 ## done. For a task the player cannot do right while looking elsewhere - the
 ## first send, whose creeps appear in somebody else's lane.
@@ -339,6 +357,13 @@ func blueprint_built() -> int:
 	return count
 
 
+## The only technologies the player may research while this step is up, by
+## tech_id, or empty for any. See TutorialResearchStep, the one that names them.
+func research_whitelist() -> Array[int]:
+	var none: Array[int] = []
+	return none
+
+
 ## What a step DOES when it opens, beyond the grants above. Nothing for most of
 ## them; a step that has to put something in the world overrides it.
 func on_enter(_director: TutorialDirector) -> void:
@@ -368,7 +393,7 @@ func validate() -> bool:
 	# builder wants - so only a null entry is refused here. The typed-array trap
 	# that empties a list silently is caught by the probe instead: a lesson that
 	# names a button and then allows nothing never finishes.
-	for ability: UnitAbility in allowed_abilities + guide_abilities:
+	for ability: UnitAbility in allowed_abilities + guide_abilities + forbids:
 		if ability == null:
 			Log.err("Tutorial step allows or points at a null ability", title)
 			complete = false

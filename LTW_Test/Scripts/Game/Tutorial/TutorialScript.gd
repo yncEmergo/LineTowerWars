@@ -27,6 +27,14 @@ extends Resource
 ## The profile the SECOND opponent plays once a lesson wakes it. Until then it
 ## waits on standby outside the send ring, sparring.
 @export_file("*.tres") var second_rival_profile_path: String = ""
+## The profile the SECOND opponent spars as while it waits on standby, or empty
+## for the ordinary sparring partner. Its own, so the maze it builds while
+## waiting is the one it plays once woken rather than the partner's zigzag.
+@export_file("*.tres") var second_rival_opening_path: String = ""
+## Gold the SECOND opponent is handed at the start instead of opponent_gold, or
+## 0 for the same. It builds its maze on standby through the whole first half,
+## so the maze a player finally meets is as far along as this pays for.
+@export var second_rival_gold: int = 0
 ## Lives each opponent starts on. Far fewer than a match would give, because
 ## beating one is a lesson and a lesson should take minutes rather than a match.
 @export var rival_lives: int = 10
@@ -116,6 +124,16 @@ func rival_profile(rival: TutorialStep.Rival) -> AiProfile:
 	return ResourceLoader.load(path, "") as AiProfile
 
 
+## The profile an opponent spars as before it is woken, or null for the
+## ordinary sparring partner the match set it up with.
+func opening_profile(rival: TutorialStep.Rival) -> AiProfile:
+	if rival != TutorialStep.Rival.SECOND || second_rival_opening_path.is_empty():
+		return null
+	if !ResourceLoader.exists(second_rival_opening_path):
+		return null
+	return ResourceLoader.load(second_rival_opening_path, "") as AiProfile
+
+
 func validate() -> bool:
 	if steps.is_empty():
 		Log.err("The tutorial script holds no lessons, it would open on nothing",
@@ -131,6 +149,11 @@ func validate() -> bool:
 			})
 			complete = false
 		elif !profile.validate():
+			complete = false
+	if !second_rival_opening_path.is_empty():
+		var opening: AiProfile = opening_profile(TutorialStep.Rival.SECOND)
+		if opening == null || !opening.validate():
+			Log.err("The tutorial names an opening profile it cannot use", second_rival_opening_path)
 			complete = false
 	for ability: UnitAbility in always_allowed + forbidden_abilities:
 		if ability == null:

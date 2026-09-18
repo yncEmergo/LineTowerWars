@@ -143,6 +143,12 @@ extends Resource
 ## sends the moment it can pay, which is what makes an income tick land as a
 ## send rather than as a wasted beat.
 @export var send_seconds: float = 12.0
+## Most gold it spends on sends between one income payout and the next, or 0
+## for no limit. A cap on how hard it can hit in one beat, whatever it earns.
+@export var max_send_gold_per_payout: int = 0
+## Whether it sends ATTACKER creeps at all. Off for an opponent whose lesson is
+## not about defending towers from them.
+@export var sends_attackers: bool = true
 ## Highest creep tier it will ever buy from. 1 keeps an easy AI on the opening
 ## roster for the whole match.
 ##
@@ -171,6 +177,14 @@ extends Resource
 ## Whether it spends on UPGRADES at all. An AI that never upgrades is a wall of
 ## 10g towers, which is what an easy one should be.
 @export var upgrades_towers: bool = true
+## Whether a tower is only ever upgraded toward what its maze plan names for it.
+## Off, a tower the plan has no opinion on - or one already at its target - is
+## raised a cheapest rung anyway. On, a plan of mostly cheap walls stays walls,
+## and the plan alone says which towers grow.
+@export var upgrades_only_to_plan: bool = false
+## The most its maze may be worth, in gold spent on it, or 0 for no limit. No
+## tower is built and no upgrade started that would take it past.
+@export var max_maze_value: int = 0
 ## The ONLY upgrades it makes, as res:// paths to the towers it raises one of
 ## its own to, one tower per entry - or empty to upgrade freely.
 ##

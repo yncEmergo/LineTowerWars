@@ -62,6 +62,10 @@ var forbidden: Array[UnitAbility] = []
 var build_cells: Dictionary = {}
 ## Whether the Research Center may be used.
 var research: bool = true
+## The only technologies that may be researched, by tech_id, or empty for any.
+## While it names any, the Ultimate shortcuts - one press buying a whole set,
+## or a random one - are refused too, since they would buy what is not on it.
+var research_techs: Array[int] = []
 ## The dearest tower upgrade that may be started, in gold, or below zero for
 ## any. Checked whether or not the list above restricts, so a lesson that
 ## leaves the player free can still keep the top of the upgrade tree for later.
@@ -128,3 +132,18 @@ static func permits(ability: UnitAbility, unit: Unit) -> bool:
 static func permits_research(player_id: int) -> bool:
 	var limits: ActionLimits = of(player_id)
 	return limits == null || limits.research
+
+
+## Whether a player may research this one technology - the Research Center open,
+## and the technology on the list if there is one.
+static func permits_research_tech(player_id: int, tech_id: int) -> bool:
+	var limits: ActionLimits = of(player_id)
+	if limits == null:
+		return true
+	return limits.research && (limits.research_techs.is_empty() || tech_id in limits.research_techs)
+
+
+## Whether a player may use the Ultimate shortcuts, which buy a set in one press.
+static func permits_research_shortcuts(player_id: int) -> bool:
+	var limits: ActionLimits = of(player_id)
+	return limits == null || (limits.research && limits.research_techs.is_empty())

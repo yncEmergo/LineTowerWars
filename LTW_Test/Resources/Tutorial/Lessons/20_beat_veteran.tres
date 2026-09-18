@@ -4,8 +4,11 @@
 
 [resource]
 script = ExtResource("1_step")
-title = "Beat the Veteran"
-body = "Upgrade your elemental towers towards their Ultimate, and keep sending."
-objective = "Take all of the Veteran's lives."
+title = "The Veteran"
+body = "The Veteran joins in. It sends at you and keeps improving its maze. Everything is open to you now."
+objective = "Steal all lives from the Veteran"
 delay_seconds = 2.0
+holds_back_tier = 0
+wakes_rival = 2
+grant_rival_gold = 10000
 rival = 2
