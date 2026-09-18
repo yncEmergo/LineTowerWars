@@ -5,7 +5,9 @@ is editing content rather than reading code. It carries no lesson WORDING - that
 `.tres` files under `Resources/Tutorial/Lessons/` and is meant to be argued with - and no rules
 of the game, which are `game_rules.md`'s.
 
-**Status, 2026-09-18: first rework landed, more iterations to come.** The tutorial was rebuilt
+**Status, 2026-09-18: first rework landed, more iterations to come.** The lessons after the maze
+lesson are out of `tutorial_script.tres` for now (their files are the `later_*` ones) while the
+early lessons are gone over one at a time. The tutorial was rebuilt
 around three wishes of the project owner: far fewer and far shorter lessons; time that stops
 only when it has to, with the player held by what they HAVE instead; and an opening where the
 player can do only the one thing they are asked, with exactly the gold it costs. What it
@@ -87,8 +89,15 @@ kind.
 with a tickbox on the right that gets a green tick when it is done, and a task that can be
 counted says what it counts (`progress_label`): "Towers built: 1 / 4", "Waves killed: 2 / 4",
 counting only what this lesson asked for. A wave is every entry sharing one delay, and it is
-killed once none of its creeps is still in the lane (`TutorialWaves`). One task per lesson
-today; `TutorialStep.tasks()` is where a lesson with several would list them. A new lesson
+killed once none of its creeps is still in the lane (`TutorialWaves`). A LESSON CAN BE SEVERAL TASKS:
+each task is a step of its own - its own gold, limits, blueprint, highlights and waves - and a
+step with `continues_lesson` set is drawn as the next row of the lesson before it, under that
+lesson's title, rather than as a lesson of its own (`TutorialScript.lesson_range`). Tasks still
+to come are shown faded, so the player sees the plan. An UPGRADE task is split in two, each
+granted exactly its own gold, because the gold is what stops a third tower being upgraded; it
+is finished by towers of the target type STANDING (`TutorialOwnStep`), with arrows hovering over
+the towers to upgrade (`arrows_on_towers_path`). A wave lesson can count creeps rather than
+waves (`counts_creeps`), for one big wave where "1 / 1" says nothing. A new lesson
 arrives with a small POP of the whole board, about its own middle so it never leaves the screen.
 
 **WHAT IT GIVES** - gold, income, a reserve of sends set to an exact number, a blueprint, waves

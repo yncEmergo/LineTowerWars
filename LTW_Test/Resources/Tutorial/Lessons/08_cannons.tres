@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TutorialOwnStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOwnStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_archer_to_lesser_cannon_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "A Cannon's shot hits every creep around its target - just what a big, packed wave needs."
+objective = "Turn both Archers into Lesser Cannons."
+progress_label = "Cannons"
+delay_seconds = 0.8
+holds_clock = true
+skip_after_seconds = 150.0
+grant_gold = 300
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+arrows_on_towers_path = "res://Resources/UnitStats/Towers/archer_stats.tres"
+tower_path = "res://Resources/UnitStats/Towers/lesser_cannon_stats.tres"
+count = 2

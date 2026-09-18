@@ -13,19 +13,19 @@ sends = 1
 
 [sub_resource type="Resource" id="Wave_1"]
 script = ExtResource("3_wave")
-delay_seconds = 5.0
+delay_seconds = 5.5
 creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 sends = 1
 
 [sub_resource type="Resource" id="Wave_2"]
 script = ExtResource("3_wave")
-delay_seconds = 7.0
+delay_seconds = 8.0
 creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 sends = 1
 
 [sub_resource type="Resource" id="Wave_3"]
 script = ExtResource("3_wave")
-delay_seconds = 9.0
+delay_seconds = 10.5
 creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 sends = 1
 

@@ -41,10 +41,14 @@ class Task:
 	extends RefCounted
 	var text: String = ""
 	var done: bool = false
+	## A task of this lesson still to come: drawn, so the player sees the plan,
+	## but faded.
+	var pending: bool = false
 
-	func _init(what: String, finished: bool) -> void:
+	func _init(what: String, finished: bool, later: bool = false) -> void:
 		text = what
 		done = finished
+		pending = later
 
 
 ## Which opponent a lesson is about. By ROLE rather than by slot, so a lesson
@@ -70,6 +74,12 @@ enum Select {
 }
 
 @export_group("What it says")
+## Whether this step is the next TASK of the lesson before it rather than a
+## lesson of its own. The panel then keeps that lesson's title, adds this as one
+## more row under it with its own tickbox, and does not pop - the lesson is the
+## same one, a step further on. Its body, if it has one, replaces the lesson's
+## text while it is the current task; its title is not shown.
+@export var continues_lesson: bool = false
 @export var title: String = ""
 @export_multiline var body: String = ""
 ## The one line under the paragraph that says what to do NOW, in the imperative.
@@ -231,6 +241,10 @@ enum Spotlight {
 ## Whether an arrow hovers over every cell of the lesson's blueprint still to
 ## build on, disappearing as each is filled.
 @export var arrows_on_blueprint: bool = false
+## A tower type, as a res:// path to its BuildingStats: an arrow hovers over
+## every tower of the player's of exactly that type - the Lesser Archers a
+## lesson wants upgraded. Empty for none.
+@export_file("*.tres") var arrows_on_towers_path: String = ""
 
 
 ## Whether the world is now in the state this step was waiting for.
@@ -307,13 +321,14 @@ func on_enter(_director: TutorialDirector) -> void:
 ## rest of the content.
 func validate() -> bool:
 	var complete: bool = true
-	if title.is_empty():
+	# A task continuing a lesson shows that lesson's title, never its own.
+	if title.is_empty() && !continues_lesson:
 		Log.err("Tutorial step has no title", resource_path)
 		complete = false
 	# The editor does not rewrite a path string when a .tres moves, so a renamed
 	# blueprint would leave a lesson quietly pointing at nothing - which reads as
 	# a lesson that forgot to say where.
-	for path: String in [blueprint_path, stock_creep_path]:
+	for path: String in [blueprint_path, stock_creep_path, arrows_on_towers_path]:
 		if !path.is_empty() && !ResourceLoader.exists(path):
 			Log.err("Tutorial step names a resource that does not resolve", {
 				"step": title,
@@ -341,6 +356,13 @@ func validate() -> bool:
 ## The creep whose reserve this lesson sets, or null.
 func stock_creep() -> CreepStats:
 	return _load_creep(stock_creep_path)
+
+
+## The tower type arrows hover over, or null.
+func arrow_tower() -> BuildingStats:
+	if arrows_on_towers_path.is_empty() || !ResourceLoader.exists(arrows_on_towers_path):
+		return null
+	return ResourceLoader.load(arrows_on_towers_path, "") as BuildingStats
 
 
 ## The plan this lesson puts on the ground, or null for one that puts none.

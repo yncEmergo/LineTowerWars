@@ -9,10 +9,12 @@ extends RefCounted
 ## Skeletons arriving together. What the player is told is "waves killed", so
 ## that is the unit this counts in.
 ##
-## A wave is KILLED once it has gone out and none of its creeps is still alive
-## in the player's lane. A creep that leaked is gone from the lane too, and
-## counts - the lesson is about the wave being over, and a leak is shown by the
-## leak log and the lost life. Held by TutorialDirector, reset per lesson.
+## A wave is KILLED once it has gone out and none of its creeps is still in the
+## player's lane. A creep that leaked is gone from the lane too, and counts - the
+## lesson is about the wave being over, and a leak is shown by the leak log and
+## the lost life. A Skeleton lying dead for a moment before its Death Pact gets
+## it up again is still IN the lane, so it is not counted until it is gone for
+## good. Held by TutorialDirector, reset per lesson.
 
 ## Wave number -> the delay it goes out on, ascending.
 var _delays: Array[float] = []
@@ -54,6 +56,27 @@ func total() -> int:
 	return _delays.size()
 
 
+## How many creeps the lesson sends in all, whole packs counted.
+func total_creeps() -> int:
+	var count: int = 0
+	for entry: TutorialWave in _entries:
+		var stats: CreepStats = null if entry == null else entry.creep()
+		if stats != null:
+			count += entry.sends * stats.pack_creep_count()
+	return count
+
+
+## How many of the creeps sent so far are gone from the lane.
+func killed_creeps(area: PlayerArea) -> int:
+	var present: Dictionary = _present(area)
+	var count: int = 0
+	for members: Array in _members:
+		for member: Variant in members:
+			if !is_instance_valid(member) || !present.has(member):
+				count += 1
+	return count
+
+
 ## Whether every entry has gone out.
 func all_sent() -> bool:
 	return _sent.size() >= _entries.size()
@@ -63,11 +86,7 @@ func all_sent() -> bool:
 func killed(area: PlayerArea) -> int:
 	if area == null:
 		return 0
-	var alive: Dictionary = {}
-	for creep: Creep in area.creeps():
-		if creep != null && is_instance_valid(creep) && creep.is_alive():
-			alive[creep] = true
-
+	var alive: Dictionary = _present(area)
 	var count: int = 0
 	for wave in range(_delays.size()):
 		if !_wave_sent(wave):
@@ -80,6 +99,17 @@ func killed(area: PlayerArea) -> int:
 		if over:
 			count += 1
 	return count
+
+
+## Every creep in the lane right now, as keys.
+func _present(area: PlayerArea) -> Dictionary:
+	var present: Dictionary = {}
+	if area == null:
+		return present
+	for creep: Creep in area.creeps():
+		if creep != null && is_instance_valid(creep):
+			present[creep] = true
+	return present
 
 
 func _wave_sent(wave: int) -> bool:

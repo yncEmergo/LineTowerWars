@@ -95,13 +95,17 @@ func _refresh() -> void:
 		return
 
 	show()
-	var position_in_script: Vector2i = director.lesson_position()
+	# A lesson can be several steps, one per task: the title and the text come
+	# from the lesson's first step, unless the current task has words of its own.
+	var lessons: TutorialScript = director.script_resource
+	var head: TutorialStep = lessons.step_at(lessons.lesson_range(director.step_index()).x)
+	var position_in_script: Vector2i = lessons.lesson_position(director.step_index())
 	if _progress_label != null:
 		_progress_label.text = "Lesson %d of %d" % [position_in_script.x, position_in_script.y]
 	if _title_label != null:
-		_title_label.text = step.title
+		_title_label.text = head.title if head != null else step.title
 	if _body_label != null:
-		_body_label.text = step.body
+		_body_label.text = step.body if !step.body.is_empty() || head == null else head.body
 	_tasks_shown = ""
 	_draw_tasks(step, director)
 
@@ -134,10 +138,10 @@ func _process(_delta: float) -> void:
 func _draw_tasks(step: TutorialStep, director: TutorialDirector) -> void:
 	if _task_list == null || _task_row_scene == null:
 		return
-	var tasks: Array[TutorialStep.Task] = step.tasks(director)
+	var tasks: Array[TutorialStep.Task] = _lesson_tasks(step, director)
 	var signature: String = ""
 	for task: TutorialStep.Task in tasks:
-		signature += "%s|%s;" % [task.text, task.done]
+		signature += "%s|%s|%s;" % [task.text, task.done, task.pending]
 	if signature == _tasks_shown:
 		return
 	_tasks_shown = signature
@@ -155,6 +159,24 @@ func _draw_tasks(step: TutorialStep, director: TutorialDirector) -> void:
 		if shown:
 			_rows[index].show_task(tasks[index])
 	_task_list.visible = !tasks.is_empty()
+
+
+## Every task of the lesson the current step belongs to, in order: the ones
+## before it done, its own as it stands, and the ones after it still to come.
+func _lesson_tasks(step: TutorialStep, director: TutorialDirector) -> Array[TutorialStep.Task]:
+	var tasks: Array[TutorialStep.Task] = []
+	var lessons: TutorialScript = director.script_resource
+	var current: int = director.step_index()
+	var lesson: Vector2i = lessons.lesson_range(current)
+	for index in range(lesson.x, lesson.y + 1):
+		var other: TutorialStep = lessons.step_at(index)
+		if other == null || other.objective.is_empty():
+			continue
+		if index == current:
+			tasks.append_array(step.tasks(director))
+		else:
+			tasks.append(TutorialStep.Task.new(other.objective, index < current, index > current))
+	return tasks
 
 
 ## The board pops about its own middle. Deferred a frame so the board has been

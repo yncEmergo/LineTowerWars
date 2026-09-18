@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="TutorialBuildStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialBuildStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/build_menu_ability.tres" id="a0"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_lesser_archer_ability.tres" id="a1"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "An Archer shoots further, and can hit flyers too."
+objective = "Build the third row with Lesser Archers."
+progress_label = "Towers built"
+delay_seconds = 0.8
+holds_clock = true
+skip_after_seconds = 150.0
+grant_gold = 70
+blueprint_path = "res://Resources/Tutorial/tutorial_maze_row_3_archers.tres"
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
+build_on_blueprint_only = true
+guide_unit = 1
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
+arrows_on_blueprint = true

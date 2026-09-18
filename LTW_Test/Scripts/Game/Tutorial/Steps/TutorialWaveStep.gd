@@ -9,11 +9,16 @@ extends TutorialStep
 ## leaves, so an empty lane always arrives, where a kill count would wait for
 ## ever on a creep that leaked.
 ##
-## Its progress counts WAVES KILLED - a wave being every entry sharing one delay
-## - which is what a player watching them come in can follow. See TutorialWaves.
+## Its progress counts WAVES killed - a wave being every entry sharing one
+## delay - or, with counts_creeps, the CREEPS, for one big wave where "1 / 1"
+## says nothing. See TutorialWaves.
 ##
 ## Pair it with waves on the same step. Without a wave there is nothing to
 ## clear, and the step finishes the tick it opens.
+
+@export_group("Objective")
+## Whether the count is of creeps rather than of waves.
+@export var counts_creeps: bool = false
 
 
 func is_complete(director: TutorialDirector) -> bool:
@@ -26,4 +31,7 @@ func is_complete(director: TutorialDirector) -> bool:
 func progress(director: TutorialDirector) -> Vector2i:
 	if director == null:
 		return Vector2i.ZERO
-	return Vector2i(director.waves().killed(_local_area()), director.waves().total())
+	var waves: TutorialWaves = director.waves()
+	if counts_creeps:
+		return Vector2i(waves.killed_creeps(_local_area()), waves.total_creeps())
+	return Vector2i(waves.killed(_local_area()), waves.total())

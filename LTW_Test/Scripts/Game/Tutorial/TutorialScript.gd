@@ -71,6 +71,33 @@ func step_at(index: int) -> TutorialStep:
 	return steps[index]
 
 
+## The steps that make up the LESSON a step belongs to, as the first and last
+## index. A lesson is one step and every step after it that continues it - see
+## TutorialStep.continues_lesson - so a lesson with four tasks is four steps
+## drawn under one title.
+func lesson_range(index: int) -> Vector2i:
+	var first: int = clampi(index, 0, maxi(0, steps.size() - 1))
+	while first > 0 && steps[first] != null && steps[first].continues_lesson:
+		first -= 1
+	var last: int = first
+	while last + 1 < steps.size() && steps[last + 1] != null && steps[last + 1].continues_lesson:
+		last += 1
+	return Vector2i(first, last)
+
+
+## Which lesson a step is in, counting from 1, and how many lessons there are,
+## for the "Lesson 3 of 8" a panel draws.
+func lesson_position(index: int) -> Vector2i:
+	var number: int = 0
+	var total: int = 0
+	for at in range(steps.size()):
+		if steps[at] == null || !steps[at].continues_lesson || at == 0:
+			total += 1
+		if at == index:
+			number = total
+	return Vector2i(number, total)
+
+
 ## The profile an opponent plays once it is woken, or null.
 func rival_profile(rival: TutorialStep.Rival) -> AiProfile:
 	var path: String = ""

@@ -194,10 +194,11 @@ func current_step() -> TutorialStep:
 	return _step
 
 
-## Which lesson this is (x) and how many there are (y), for the "3 of 14" a
-## panel draws.
-func lesson_position() -> Vector2i:
-	return Vector2i(_index + 1, 0 if script_resource == null else script_resource.count())
+## Which STEP is open, as an index into the script. A lesson can be several
+## steps - see TutorialScript.lesson_range - so the panel asks the script which
+## lesson this is.
+func step_index() -> int:
+	return _index
 
 
 ## Whether the player may be offered a way past the current lesson yet. Never,

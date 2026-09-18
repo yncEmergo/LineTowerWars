@@ -87,14 +87,14 @@ func _physics_process(_delta: float) -> void:
 				"lesson %d: its task is ticked in the gap" % _lesson)
 			if _lesson == 2:
 				_shoot("l2_done")
-			if _lesson in [2, 3, 4, 6]:
+			if true:
 				_note("lesson %d finished reading '%s'" % [
 					_lesson, director.current_step().progress_text(director)])
 	if director.is_between_lessons():
 		return
 
-	if director.lesson_position().x != _lesson:
-		_lesson = director.lesson_position().x
+	if director.step_index() + 1 != _lesson:
+		_lesson = director.step_index() + 1
 		_lesson_ticks = 0
 		_acted.clear()
 		print("LESSON %d  %s  clock=%.1f held=%s gold=%d income=%d" % [
@@ -135,26 +135,79 @@ func _process(_delta: float) -> void:
 	_shot_name = ""
 
 
+## Keyed by the lesson FILE rather than by its number, so steps can be added or
+## taken out of the script without renumbering this.
 func _play(director: TutorialDirector) -> void:
-	match _lesson:
-		1:
+	match director.current_step().resource_path.get_file().get_basename():
+		"01_builder":
 			_play_select_builder()
-		2, 4:
+		"02_first_towers", "04_row_one", "05_row_cutters", "06_row_archers":
 			_play_build(director)
-		3, 5:
+		"03_first_waves", "09_skeleton_wave":
 			_play_wave()
-		6:
+		"07_upgrade_archers", "08_cannons":
+			_play_upgrade_task(director)
+		"later_send":
 			_play_send()
-		8:
-			_play_upgrade()
-		9:
+		"later_beat_rookie":
 			_play_beat(TutorialStep.Rival.FIRST, 1200)
-		10:
+		"later_technology":
 			_play_research()
-		11:
+		"later_elemental":
 			_play_core()
-		12:
+		"later_beat_veteran":
 			_play_beat(TutorialStep.Rival.SECOND, 1200)
+
+
+## An upgrade task: first try what it must refuse, then press the one allowed
+## upgrade on whichever tower offers it, one at a time.
+func _play_upgrade_task(director: TutorialDirector) -> void:
+	var step: TutorialStep = director.current_step()
+	var allowed: UnitAbility = step.allowed_abilities[0]
+	var area: PlayerArea = References.player_manager.area_for(1)
+	if !_acted.has("forbidden"):
+		_acted["forbidden"] = true
+		_acted["gold_before"] = _me().gold
+		for child in area.get_children():
+			var tower: Building = child as Building
+			if tower == null:
+				continue
+			for entry in tower.current_abilities():
+				var other: UpgradeTowerAbility = entry as UpgradeTowerAbility
+				if other != null && other != allowed:
+					_check(!ActionLimits.permits(other, tower), "%s: %s not permitted" % [
+						step.resource_path.get_file(), other.display_name])
+					AiHand.order_upgrade(1, tower, other)
+					return
+		return
+	if !_acted.has("checked_gold"):
+		_acted["checked_gold"] = true
+		_check(_me().gold == int(_acted["gold_before"]), "%s: refused upgrades cost nothing (%d -> %d)" % [
+			step.resource_path.get_file(), int(_acted["gold_before"]), _me().gold])
+		_note("%s: %d gold for it" % [step.resource_path.get_file(), _me().gold])
+	if _shoot("l%d_upgrade_world" % _lesson):
+		return
+	if !_acted.has("selected_one"):
+		# Select a tower that offers the upgrade, so its highlighted square can be
+		# looked at.
+		for child in area.get_children():
+			var candidate: Building = child as Building
+			if candidate != null && allowed in candidate.current_abilities():
+				References.selection_controller.select_single(candidate)
+				_acted["selected_one"] = true
+				break
+		return
+	if _shoot("l%d_upgrade_card" % _lesson):
+		return
+	if _lesson_ticks % 40 != 0:
+		return
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower == null:
+			continue
+		if allowed in tower.current_abilities() && allowed.can_execute(tower):
+			AiHand.order_upgrade(1, tower, allowed as UpgradeTowerAbility)
+			return
 
 
 func _on_lesson_opened() -> void:
@@ -223,8 +276,13 @@ func _play_build(director: TutorialDirector) -> void:
 	if !_acted.has("forbidden"):
 		_acted["forbidden"] = true
 		var gold_before: int = _me().gold
-		var archer: BuildTowerAbility = AiHand.build_ability(builder, load(ARCHER) as BuildingStats)
-		_check(!ActionLimits.permits(archer, builder), "lesson %d: archer not permitted" % _lesson)
+		# Some tower on the build menu other than the one this task asks for.
+		for other: BuildingStats in AiHand.buildable_towers(builder):
+			var other_ability: BuildTowerAbility = AiHand.build_ability(builder, other)
+			if other_ability != null && !(other_ability in director.current_step().allowed_abilities):
+				_check(!ActionLimits.permits(other_ability, builder), "lesson %d: %s not permitted" % [
+					_lesson, other.display_name])
+				break
 		var off_cell: Vector2i = Vector2i(0, 40)
 		_check(!area.can_place(off_cell, Vector2i(2, 2)), "lesson %d: off-blueprint cell refused" % _lesson)
 		var sentry: BuildTowerAbility = _sentry(director)

@@ -26,6 +26,8 @@ const ARROW_SCENE_PATH: String = "res://Scenes/Effects/tutorial_hover_arrow.tscn
 const ABOVE_UNIT: float = 1.3
 ## How far above an empty cell the tip hovers.
 const ABOVE_CELL: float = 0.35
+## How far above a standing tower's origin the tip hovers - over its top.
+const ABOVE_TOWER: float = 1.2
 
 var _scene: PackedScene = null
 var _pool: Array[Node3D] = []
@@ -75,6 +77,23 @@ func _points() -> Array[Vector3]:
 
 	if step.arrows_on_blueprint:
 		points.append_array(_open_cells(step.blueprint()))
+	points.append_array(_towers_of(step.arrow_tower()))
+	return points
+
+
+## The world point over every tower of the player's of exactly this type.
+func _towers_of(stats: BuildingStats) -> Array[Vector3]:
+	var points: Array[Vector3] = []
+	var manager: PlayerManager = References.player_manager
+	if stats == null || manager == null:
+		return points
+	var area: PlayerArea = manager.area_for(manager.local_player_id())
+	if area == null:
+		return points
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building != null && building.stats == stats:
+			points.append(building.global_position + Vector3.UP * ABOVE_TOWER)
 	return points
 
 
