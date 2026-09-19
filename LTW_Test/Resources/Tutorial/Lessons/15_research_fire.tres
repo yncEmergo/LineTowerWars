@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TutorialResearchStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialResearchStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "The Firelord's own element: Fire's Basic, then its second path."
+objective = "Research Fire Basic and Fire (2)"
+delay_seconds = 0.5
+holds_clock = true
+restricts_actions = true
+tech_ids = Array[int]([1, 3])

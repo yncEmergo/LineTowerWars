@@ -143,6 +143,12 @@ extends Resource
 ## sends the moment it can pay, which is what makes an income tick land as a
 ## send rather than as a wasted beat.
 @export var send_seconds: float = 12.0
+## Most gold it spends on sends between one income payout and the next, or 0
+## for no limit. A cap on how hard it can hit in one beat, whatever it earns.
+@export var max_send_gold_per_payout: int = 0
+## Whether it sends ATTACKER creeps at all. Off for an opponent whose lesson is
+## not about defending towers from them.
+@export var sends_attackers: bool = true
 ## Highest creep tier it will ever buy from. 1 keeps an easy AI on the opening
 ## roster for the whole match.
 ##
@@ -171,6 +177,32 @@ extends Resource
 ## Whether it spends on UPGRADES at all. An AI that never upgrades is a wall of
 ## 10g towers, which is what an easy one should be.
 @export var upgrades_towers: bool = true
+## Whether a tower is only ever upgraded toward what its maze plan names for it.
+## Off, a tower the plan has no opinion on - or one already at its target - is
+## raised a cheapest rung anyway. On, a plan of mostly cheap walls stays walls,
+## and the plan alone says which towers grow.
+@export var upgrades_only_to_plan: bool = false
+## The most its maze may be worth, in gold spent on it, or 0 for no limit. No
+## tower is built and no upgrade started that would take it past.
+@export var max_maze_value: int = 0
+## The ONLY upgrades it makes, as res:// paths to the towers it raises one of
+## its own to, one tower per entry - or empty to upgrade freely.
+##
+## A BUDGET rather than a policy: an opponent that should end with one Watch
+## Tower and two Cannons names exactly those three and nothing more is ever
+## upgraded. The tutorial's Rookie, whose maze has to stay beatable by somebody
+## who has just learned to send.
+@export_file("*.tres") var upgrade_target_paths: Array[String] = []
+## Seconds between one upgrade and the next, or 0 for as fast as gold allows. A
+## budget spent on one beat reads as a switch being flipped; spread out, it
+## reads as an opponent getting stronger.
+@export var upgrade_seconds: float = 0.0
+## Seconds between one RANDOM upgrade and the next, or 0 for none: a random rung
+## on a random tower, on top of the budget above. What makes an opponent's maze
+## grow stronger all over rather than in three named places.
+@export var random_upgrade_seconds: float = 0.0
+## The dearest single upgrade a random one may be, in gold.
+@export var random_upgrade_max_gold: int = 0
 
 @export_group("Technology")
 ## Whether it spends its free research on an Ultimate at the start of the match.
@@ -242,7 +274,26 @@ func validate() -> bool:
 			"path": base_tower_path,
 		})
 		complete = false
+	for path: String in upgrade_target_paths:
+		if !ResourceLoader.exists(path):
+			Log.err("AI profile names an upgrade target that does not resolve", {
+				"profile": display_name,
+				"path": path,
+			})
+			complete = false
 	return complete
+
+
+## The towers this profile's upgrade budget raises to, one entry per tower, or
+## empty for a profile that upgrades freely.
+func upgrade_targets() -> Array[BuildingStats]:
+	var targets: Array[BuildingStats] = []
+	for path: String in upgrade_target_paths:
+		if !path.is_empty() && ResourceLoader.exists(path):
+			var stats: BuildingStats = ResourceLoader.load(path, "") as BuildingStats
+			if stats != null:
+				targets.append(stats)
+	return targets
 
 
 ## The maze this profile plays, or null when it builds the generated one.
@@ -279,7 +330,8 @@ func ultimate_tower(registry: TechRegistry) -> BuildingStats:
 			"tech": ultimate_tech_id,
 		})
 		return null
-	if path.ultimate_stats_path.is_empty()             || !ResourceLoader.exists(path.ultimate_stats_path):
+	if path.ultimate_stats_path.is_empty() \
+			|| !ResourceLoader.exists(path.ultimate_stats_path):
 		return null
 	return ResourceLoader.load(path.ultimate_stats_path, "") as BuildingStats
 

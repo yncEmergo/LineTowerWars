@@ -147,6 +147,10 @@ func armed_ability() -> UnitAbility:
 func activate_ability(ability: UnitAbility) -> void:
 	if ability == null:
 		return
+	# Not even ARMED when nothing selected may use it, so a lesson that dims a
+	# square does not then hand the player a build ghost for it. See ActionLimits.
+	if !_permitted_for_any(ability):
+		return
 
 	match ability.targeting:
 		UnitAbility.Targeting.PASSIVE:
@@ -158,6 +162,15 @@ func activate_ability(ability: UnitAbility) -> void:
 			_execute_on_selection(ability, AbilityTarget.none())
 		_:
 			_arm(ability)
+
+
+## Whether any unit being commanded may use this ability under its owner's
+## limits. True for everybody outside the tutorial.
+func _permitted_for_any(ability: UnitAbility) -> bool:
+	for unit: Variant in _commanded_units():
+		if ActionLimits.permits(ability, unit as Unit):
+			return true
+	return false
 
 
 func cancel() -> void:
@@ -737,6 +750,10 @@ func _can_order(ability: UnitAbility, unit: Unit, queued: bool) -> bool:
 	# opponent's unit to read their build is legal and wanted. What is not
 	# wanted is offering an ORDER for it.
 	if unit == null || !unit.is_owned_by_local_player():
+		return false
+	# Asked here as well as by the server for the reason ownership is: an order
+	# that can only come back refused is not worth sending. See ActionLimits.
+	if !ActionLimits.permits(ability, unit):
 		return false
 	if queued && ability.is_queueable():
 		return ability.can_queue(unit)

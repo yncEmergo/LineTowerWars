@@ -42,6 +42,17 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 ## screen beside the others. Null, or an action with no key, leaves subgroups
 ## unreachable and everything else working.
 @export var subgroup_cycle_action: HotkeyAction
+## What selects the local player's builder, and the letter its square in the
+## action bar draws.
+##
+## Yields to the selected unit's command card, exactly as the Research Center's
+## toggle does, so it may take a grid letter: a unit whose card uses the letter
+## keeps it, and every other selection - nothing at all included - hands the
+## press to this. See HotkeyAction.yields_to_card.
+##
+## Belongs in hotkey_actions as well, for the options screen. Null, or an
+## action with no key, leaves the builder reachable by its square alone.
+@export var builder_select_action: HotkeyAction
 
 @export_group("Command card")
 ## Shape of the command card grid, in slots.
@@ -185,12 +196,28 @@ func is_subgroup_cycle_key(key: Key) -> bool:
 	return subgroup_cycle_action.matches(key)
 
 
+## Whether a press is the key that selects the builder. Whether the command
+## card claims it first is the caller's question, because only the HUD can
+## see the card.
+func is_builder_select_key(key: Key) -> bool:
+	if builder_select_action == null:
+		return false
+	return builder_select_action.matches(key)
+
+
 ## The letter the Research Center's own button draws, which is whatever its
 ## action currently answers to. Empty for a screen with no key at all.
 func research_toggle_label() -> String:
 	if research_toggle_action == null:
 		return ""
 	return research_toggle_action.label()
+
+
+## The letter the builder's square in the action bar draws. Empty for none.
+func builder_select_label() -> String:
+	if builder_select_action == null:
+		return ""
+	return builder_select_action.label()
 
 
 ## Whether a key is already spoken for by the game itself, and so can never be
@@ -211,7 +238,10 @@ func is_key_reserved(key: Key) -> bool:
 ## the game answers wherever you are: the control groups, the two that back out
 ## and open the menu, and a bare modifier, which is not a key anything could
 ## answer to on its own.
-func reserved_key_reason(key: Key) -> String:
+##
+## Naming the action being bound lets one that yields to the card through the
+## grid check - see HotkeyAction.yields_to_card. Everything else still holds.
+func reserved_key_reason(key: Key, for_action: HotkeyAction = null) -> String:
 	if key == KEY_NONE:
 		return "That is not a key."
 	if key == KEY_ESCAPE:
@@ -220,7 +250,8 @@ func reserved_key_reason(key: Key) -> String:
 		return "F10 opens the game menu."
 	if key in MODIFIER_KEYS:
 		return "A modifier on its own is not a key."
-	if _is_grid_key(key):
+	var yields: bool = for_action != null && for_action.yields_to_card
+	if !yields && _is_grid_key(key):
 		return "%s is a command card square." % OS.get_keycode_string(key)
 	if control_group_for_key(key) > 0:
 		return "%s selects a control group." % OS.get_keycode_string(key)
@@ -450,6 +481,11 @@ func _validate_hotkey_actions() -> bool:
 			"action": subgroup_cycle_action.action_id,
 		})
 
+	if builder_select_action != null && !hotkey_actions.has(builder_select_action):
+		Log.warn("Builder select is not in hotkey_actions, so it cannot be rebound", {
+			"action": builder_select_action.action_id,
+		})
+
 	return complete
 
 
@@ -474,7 +510,7 @@ func _validate_one_action(action: HotkeyAction, seen: Dictionary) -> bool:
 		})
 		return false
 
-	var reason: String = reserved_key_reason(key)
+	var reason: String = reserved_key_reason(key, action)
 	if !reason.is_empty():
 		Log.err("Hotkey action has a default key the game already answers", {
 			"action": action.action_id,

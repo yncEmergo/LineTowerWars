@@ -76,6 +76,17 @@ var _done: Dictionary = {}
 ## Simulation seconds banked toward the next pass, and toward the next send.
 var _think_clock: float = 0.0
 var _send_clock: float = 0.0
+## Simulation seconds since the last upgrade, for a profile that spaces them.
+var _upgrade_clock: float = 0.0
+## Simulation seconds since the last RANDOM upgrade. See
+## AiProfile.random_upgrade_seconds.
+var _random_upgrade_clock: float = 0.0
+## Budget entry index -> the cell of the tower raised towards it, for a profile
+## with an upgrade budget. See AiProfile.upgrade_target_paths.
+var _budget_cells: Dictionary = {}
+## Gold spent on sends since the last income payout. See
+## AiProfile.max_send_gold_per_payout.
+var _sent_since_payout: int = 0
 ## Whether the free research has been spent. A latch rather than a reading of
 ## what is owned, because the order takes a tick to land and a second press in
 ## the meantime would be refused with a line in the log every beat.
@@ -95,12 +106,16 @@ func begin(slot: int, profile: AiProfile) -> void:
 		return
 
 	var session: MatchSession = References.match_session
-	var seed_base: int = 0 if session == null || session.setup() == null 			else session.setup().rng_seed
+	var seed_base: int = 0 if session == null || session.setup() == null \
+			else session.setup().rng_seed
 	# Mixed rather than added, so two slots of one match cannot line up with two
 	# slots of a match one seed along.
 	_rng.seed = hash([seed_base, slot])
 
 	_plan = AiMazePlan.for_profile(profile, area)
+	var manager: PlayerManager = References.player_manager
+	if manager != null && !manager.income_paid.is_connected(_on_income_paid):
+		manager.income_paid.connect(_on_income_paid)
 	# Spread the first pass across the AIs by slot, so four opponents in one
 	# match do not all order their first tower on the same tick. Purely a
 	# smoothing measure - nothing about the world depends on the order.
@@ -110,6 +125,39 @@ func begin(slot: int, profile: AiProfile) -> void:
 		"difficulty": profile.display_name,
 		"maze": _plan.size(),
 	})
+
+
+func _on_income_paid() -> void:
+	_sent_since_payout = 0
+
+
+## Whether spending `cost` more on the maze keeps it within the profile's cap.
+func _within_value(cost: int) -> bool:
+	if _profile.max_maze_value <= 0:
+		return true
+	var manager: PlayerManager = References.player_manager
+	return manager == null || manager.value_for(_slot) + cost <= _profile.max_maze_value
+
+
+## Plays on as a different difficulty from now on: a new maze plan, new floors,
+## a new send beat.
+##
+## The tutorial's, and the reason is its shape: an opponent sits in its seat
+## as a sparring partner that only builds while the player learns, and then
+## starts playing properly when the lesson says so. Everything already standing
+## stays standing - the new plan steps past a cell something is already on, so
+## a partner whose short zigzag is the start of the new profile's long one
+## simply carries on building it.
+func change_profile(next_profile: AiProfile) -> void:
+	if next_profile == null:
+		Log.err("An AI was handed no profile to change to", {"slot": _slot})
+		return
+	_done.clear()
+	_send_clock = 0.0
+	_upgrade_clock = 0.0
+	_random_upgrade_clock = 0.0
+	_budget_cells.clear()
+	begin(_slot, next_profile)
 
 
 ## The player this brain is playing for, for a name or a log line.
@@ -136,6 +184,8 @@ func _physics_process(_engine_delta: float) -> void:
 	var delta: float = MatchSession.tick_seconds()
 
 	_send_clock += delta
+	_upgrade_clock += delta
+	_random_upgrade_clock += delta
 	_think_clock -= delta
 	if _think_clock > 0.0:
 		return
@@ -193,6 +243,7 @@ func _think() -> void:
 	_consider_send()
 	_consider_maze()
 	_consider_upgrade()
+	_consider_random_upgrade()
 
 
 ## RULE 1a. The DRAFT: take one of the three Ultimates on offer.
@@ -347,6 +398,8 @@ func _order_cheapest_affordable(builder: Builder, state: PlayerState,
 		# left for later rather than waited on. See AiProfile.
 		if state.gold - stats.gold_cost < _floor(_profile.build_floor_gold):
 			continue
+		if !_within_value(stats.gold_cost):
+			continue
 		if !_order_entry(builder, entry, stats, chained):
 			continue
 		return true
@@ -488,6 +541,10 @@ func _consider_upgrade() -> bool:
 	var state: PlayerState = _state()
 	if !_profile.upgrades_towers || state == null:
 		return false
+	if _upgrade_clock < maxf(0.0, _profile.upgrade_seconds):
+		return false
+	if !_profile.upgrade_target_paths.is_empty():
+		return _consider_budget_upgrade(state)
 	for tower in _towers_front_to_back():
 		var ability: UpgradeTowerAbility = _upgrade_for(tower)
 		if ability == null:
@@ -497,9 +554,103 @@ func _consider_upgrade() -> bool:
 		# does rather than what every AI does constantly.
 		if state.gold - ability.gold_cost() < maxi(0, _profile.upgrade_floor_gold):
 			continue
+		if !_within_value(ability.gold_cost()):
+			continue
 		AiHand.order_upgrade(_slot, tower, ability)
+		_upgrade_clock = 0.0
 		return true
 	return false
+
+
+## RULE 3, for a profile with an upgrade BUDGET: raise one tower a rung towards
+## the first budget entry that is not there yet, and nothing else.
+##
+## Each entry claims a tower the first time it is looked at - the one nearest
+## the spawn that can climb to it and is not claimed already - and keeps it, so
+## two Cannons are two towers rather than one tower asked twice. A claimed tower
+## that is gone (sold, destroyed) is claimed afresh.
+func _consider_budget_upgrade(state: PlayerState) -> bool:
+	# Busy towers included, so one mid-upgrade is still the tower its entry
+	# claimed rather than a reason to claim another.
+	var towers: Array[Building] = _towers_front_to_back(true)
+	var by_cell: Dictionary = {}
+	for tower in towers:
+		by_cell[tower.cell] = tower
+	var targets: Array[BuildingStats] = _profile.upgrade_targets()
+	for index in range(targets.size()):
+		var target: BuildingStats = targets[index]
+		var tower: Building = by_cell.get(_budget_cells.get(index, Vector2i(-1, -1)), null)
+		if tower == null:
+			tower = _claim_for_budget(index, target, towers)
+		if tower == null || tower.stats == target:
+			continue
+		if tower.is_under_construction() || tower.is_selling() || tower.is_upgrading():
+			# Its next rung waits for this one, and so does the rest of the budget.
+			return false
+		var ability: UpgradeTowerAbility = AiHand.upgrade_toward(tower, target.unit_type_id)
+		if ability == null:
+			continue
+		if state.gold - ability.gold_cost() < maxi(0, _profile.upgrade_floor_gold):
+			return false
+		if !_within_value(ability.gold_cost()):
+			return false
+		AiHand.order_upgrade(_slot, tower, ability)
+		_upgrade_clock = 0.0
+		return true
+	return false
+
+
+## RULE 3c. One random rung on one random tower, on its own beat, capped in
+## price. Never on a tower the budget has claimed, so the two do not undo each
+## other. Rolled on this brain's own stream - see _rng.
+func _consider_random_upgrade() -> bool:
+	var state: PlayerState = _state()
+	if state == null || _profile.random_upgrade_seconds <= 0.0:
+		return false
+	if _random_upgrade_clock < _profile.random_upgrade_seconds:
+		return false
+	var claimed: Dictionary = {}
+	for index: int in _budget_cells:
+		claimed[_budget_cells[index]] = true
+	var choices: Array = []
+	for tower in _towers_front_to_back():
+		if claimed.has(tower.cell):
+			continue
+		# Nor on a tower the plan is still growing toward something - a Core
+		# on its way to an Ultimate is not a wall to be dressed up.
+		var target: int = _plan_target_at(tower.cell)
+		if target != UnitTypeRegistry.NO_TYPE && tower.stats.unit_type_id != target:
+			continue
+		for entry in tower.current_abilities():
+			var upgrade: UpgradeTowerAbility = entry as UpgradeTowerAbility
+			if upgrade == null || upgrade.gold_cost() > _profile.random_upgrade_max_gold:
+				continue
+			if !upgrade.can_execute(tower):
+				continue
+			if upgrade.gold_cost() <= state.gold && _within_value(upgrade.gold_cost()):
+				choices.append([tower, upgrade])
+	if choices.is_empty():
+		return false
+	var chosen: Array = choices[_rng.randi_range(0, choices.size() - 1)]
+	AiHand.order_upgrade(_slot, chosen[0] as Building, chosen[1] as UpgradeTowerAbility)
+	_random_upgrade_clock = 0.0
+	return true
+
+
+## The tower a budget entry raises, claimed now: nearest the spawn, able to
+## climb to the target, and not already another entry's.
+func _claim_for_budget(index: int, target: BuildingStats, towers: Array[Building]) -> Building:
+	var taken: Dictionary = {}
+	for other: int in _budget_cells:
+		if other != index:
+			taken[_budget_cells[other]] = true
+	for tower in towers:
+		if taken.has(tower.cell) || tower.stats == null:
+			continue
+		if AiHand.branch_reaches(tower.stats as BuildingStats, target.unit_type_id, {}):
+			_budget_cells[index] = tower.cell
+			return tower
+	return null
 
 
 ## Which upgrade this tower should take, if any.
@@ -509,6 +660,8 @@ func _upgrade_for(tower: Building) -> UpgradeTowerAbility:
 		var aimed: UpgradeTowerAbility = AiHand.upgrade_toward(tower, target)
 		if aimed != null:
 			return aimed
+	if _profile.upgrades_only_to_plan:
+		return null
 	return AiHand.cheapest_upgrade(tower)
 
 
@@ -530,7 +683,7 @@ func _plan_target_at(cell: Vector2i) -> int:
 ## PlayerManager.value_for walks them: a running list needs correcting by every
 ## sale, every destroyed tower and every upgrade that replaces a node, and one
 ## missed hook makes it wrong for the rest of the match.
-func _towers_front_to_back() -> Array[Building]:
+func _towers_front_to_back(include_busy: bool = false) -> Array[Building]:
 	var area: PlayerArea = _area()
 	var found: Array[Building] = []
 	if area == null:
@@ -540,8 +693,8 @@ func _towers_front_to_back() -> Array[Building]:
 		var building: Building = child as Building
 		if building == null || building.cell.y < 0:
 			continue
-		if building.is_under_construction() || building.is_selling() \
-				|| building.is_upgrading():
+		if !include_busy && (building.is_under_construction() || building.is_selling()
+				|| building.is_upgrading()):
 			continue
 		found.append(building)
 
@@ -599,6 +752,8 @@ func _consider_send() -> bool:
 	var spendable: int = state.gold - maxi(
 		_floor(_profile.send_floor_gold), _saving_for()
 	)
+	if _profile.max_send_gold_per_payout > 0:
+		spendable = mini(spendable, _profile.max_send_gold_per_payout - _sent_since_payout)
 	if spendable <= 0:
 		return false
 
@@ -608,6 +763,7 @@ func _consider_send() -> bool:
 
 	var chosen: Array = _pick_send(offers)
 	AiHand.order_send(_slot, chosen[0] as SendBuilding, chosen[1] as SendCreepAbility)
+	_sent_since_payout += (chosen[1] as SendCreepAbility).creep_stats.gold_cost
 	_send_clock = 0.0
 	return true
 
@@ -629,6 +785,8 @@ func _affordable_sends(spendable: int) -> Array:
 		for send in AiHand.sends_on(sender):
 			var cost: int = send.creep_stats.gold_cost
 			if cost <= 0 || cost > spendable || !send.can_execute(sender):
+				continue
+			if !_profile.sends_attackers && send.creep_stats.is_attacker:
 				continue
 			offers.append([
 				sender, send, cost,

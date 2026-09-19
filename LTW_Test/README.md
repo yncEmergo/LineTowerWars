@@ -294,13 +294,14 @@ left-right zigzag, which is the simplest maze the game has and the one the tutor
 See [singleplayer.md](Docs/singleplayer.md).
 
 **And there is a TUTORIAL**, which is a real match with a script on top rather than a
-diorama: the same world, economy, towers and send ring, with lessons handing over exactly what
-they are about to talk about. Fifteen of them, from what a lane is to why income beats bounty.
-A lesson is a resource, is finished by the world reaching a state it asks about every tick —
-so nothing in the builder or the sender knows a tutorial exists — and can always be skipped,
-because a step that waits on a world state can always be given a world it cannot reach. It
-points at a named HUD button with the rest of the screen dimmed, and can dim the lane around
-one creep and follow it while it walks. See [tutorial.md](Docs/tutorial.md).
+diorama: the same world, economy, towers and send ring. New subjects are TELEGRAPHED — only
+the one thing asked works, with exactly the gold it costs, a golden border on the button and
+arrows in the world — and once they are in, the player is set free against a computer opponent:
+first one that only defends, then one that has spent the whole tutorial on standby building a
+proper maze and comes in attacking. It runs from the first tower to technology and the
+Elemental Core, ends the match itself when the last lesson is done, and offers a retry to a
+player who runs out of lives. It is complete end to end and under review with the project
+owner; nothing is tuned yet. See [tutorial.md](Docs/tutorial.md).
 
 What is deliberately not built yet, in rough order of size: **bandwidth optimisation** (the
 server sends the whole world every tick, which is fine for a 1v1 on a LAN and nowhere near
@@ -338,7 +339,7 @@ Each one is the authority on its own subject, and where two disagree the more sp
 | [CLAUDE.md](CLAUDE.md) | Code conventions, naming, the resource/reference architecture, and the engine gotchas that have already cost a debugging session. |
 | [multiplayer.md](Docs/multiplayer.md) | What the networked build is, where each part of it lives, and the decisions (D1–D29) behind it. The long one. |
 | [singleplayer.md](Docs/singleplayer.md) | **The opponent AI**: how the brain is shaped and why, why it cannot cheat, where difficulty comes from, and what it does not do yet. |
-| [tutorial.md](Docs/tutorial.md) | **The teaching match**: how a lesson is made and how to change what it teaches without reading code. |
+| [tutorial.md](Docs/tutorial.md) | **The teaching match**: its principles, what it teaches and how, and how to change it without reading code. |
 | [server.md](Docs/server.md) | How to start, stop and aim the dedicated server. Controls only. |
 | [Docs/](Docs/) | The index for all of the above — which file answers what, and where a new document goes. |
 | [Docs/Findings/](Docs/Findings/) | Investigations: something measured, chased down or ruled out, written up and dated. |

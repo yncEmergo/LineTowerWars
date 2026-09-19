@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TutorialOwnStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOwnStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_lesser_archer_to_archer_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "Upgrading makes a tower stronger where it stands."
+objective = "Select 2 Lesser Archers and upgrade them."
+progress_label = "Archers"
+delay_seconds = 0.8
+holds_clock = true
+grant_gold = 60
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+arrows_on_towers_path = "res://Resources/UnitStats/Towers/lesser_archer_stats.tres"
+tower_path = "res://Resources/UnitStats/Towers/archer_stats.tres"
+count = 2

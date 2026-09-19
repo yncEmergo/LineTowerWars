@@ -45,6 +45,8 @@ var _areas: Dictionary = {}
 var _next_income_at: float = 0.0
 ## Latched rather than recomputed, so match_ended fires exactly once.
 var _over: bool = false
+## Whether the match was ENDED rather than decided - see conclude().
+var _concluded: bool = false
 ## Whether the one-off raise that Sudden Death brings has already been paid.
 ## A latch rather than a reading of the clock, because the raise happens ONCE
 ## at the moment the line is crossed - a player who spends their way back under
@@ -152,7 +154,7 @@ func next_maze_after(defender_id: int, sender_id: int) -> int:
 
 
 ## Walks the ring from `from` and returns the next living player who is not
-## `excluded`.
+## `excluded` and is not on standby.
 ##
 ## Falls back to `from` when the ring holds nobody else. In a match that means
 ## everybody else is out, so it is over and nothing is sent any more; in a one
@@ -164,8 +166,7 @@ func _next_living(from: int, excluded: int) -> int:
 		var slot: int = ((from - 1 + step) % count) + 1
 		if slot == excluded:
 			continue
-		var state: PlayerState = state_for(slot)
-		if state != null && !state.is_eliminated():
+		if _in_ring(state_for(slot)):
 			return slot
 	return from
 
@@ -182,10 +183,17 @@ func attacker_of(defender_id: int) -> int:
 		var slot: int = ((defender_id - 1 - step + count) % count) + 1
 		if slot == defender_id:
 			continue
-		var state: PlayerState = state_for(slot)
-		if state != null && !state.is_eliminated():
+		if _in_ring(state_for(slot)):
 			return slot
 	return defender_id
+
+
+## Whether a player takes part in the ring right now: alive, and not waiting on
+## STANDBY outside it. A standby player is skipped exactly as a dead one is, so
+## nothing is sent to them and nothing they would send has anywhere to go - see
+## PlayerState.standby.
+func _in_ring(state: PlayerState) -> bool:
+	return state != null && !state.is_eliminated() && !state.standby
 
 
 func _player_count() -> int:
@@ -326,7 +334,37 @@ func living_count() -> int:
 ## Whether the match has been decided. A one player run is never "over": there
 ## is nobody to beat, and it is how the prototype is still mostly tested.
 func is_match_over() -> bool:
-	return _states.size() > 1 && living_count() <= 1
+	return _concluded || (_states.size() > 1 && living_count() <= 1)
+
+
+## Ends the match now with `winner_slot` in first place, whoever else is still
+## standing, exactly as a decided match ends: every creep off the field, nothing
+## paid or sent any more, and match_ended for the result board.
+##
+## The tutorial's, which is finished when its last lesson is rather than when
+## its last opponent is - the second one may still be waiting on standby. Offline
+## only by use: a networked match is only ever over when it is decided.
+func conclude(winner_slot: int) -> void:
+	if _over || !MatchSession.is_authority():
+		return
+	_concluded = true
+	_over = true
+	_clear_creeps()
+	var state: PlayerState = state_for(winner_slot)
+	if state != null:
+		state.set_standing(value_for(winner_slot), 1)
+	Log.info("Match concluded", {"winner": winner_slot})
+	match_ended.emit(winner_slot)
+
+
+## Moves the next income payout to `seconds` from now. The ones after it follow
+## on the usual interval from there. The tutorial's, for a lesson that waits on
+## a payout; offline only by use, like everything that sets its board.
+func pay_next_income_in(seconds: float) -> void:
+	var session: MatchSession = References.match_session
+	if session == null || !MatchSession.is_authority():
+		return
+	_next_income_at = session.elapsed_seconds() + maxf(0.0, seconds)
 
 
 ## A player's living creeps, counted as the sum of what each one costs in

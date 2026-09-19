@@ -99,6 +99,11 @@ func refresh_hotkeys() -> void:
 func open() -> void:
 	if _panel == null || _panel.visible:
 		return
+	# A lesson can keep the Research Center shut until it is what is being
+	# taught - see ActionLimits. Every road to this screen comes through here.
+	var players: PlayerManager = References.player_manager
+	if players != null && !ActionLimits.permits_research(players.local_player_id()):
+		return
 	_build()
 	_panel.show()
 	# This node's own processing is the two buttons at the foot. Each square
@@ -127,6 +132,24 @@ func toggle() -> void:
 
 func is_open() -> bool:
 	return _panel != null && _panel.visible
+
+
+## Where the open screen is drawn, in the canvas, for anything that must keep
+## clear of it - the tutorial's lesson panel shares its corner. Empty while shut.
+func screen_rect() -> Rect2:
+	if !is_open():
+		return Rect2()
+	return _panel.get_global_rect()
+
+
+## The square showing one technology, or null - for the tutorial to frame the
+## one it wants pressed. Null before the screen has first been opened, which is
+## when the squares are built.
+func slot_for_tech(tech_id: int) -> Control:
+	for slot in _slots:
+		if slot.tech != null && slot.tech.tech_id == tech_id:
+			return slot
+	return null
 
 
 ## Handled in _input rather than _unhandled_input because a square is not a
@@ -397,7 +420,8 @@ func _refresh_buttons() -> void:
 		return
 
 	if _random_button != null:
-		_random_button.disabled = !manager.can_roll_random_ultimate(_player_id)
+		_random_button.disabled = !manager.can_roll_random_ultimate(_player_id) \
+			|| !ActionLimits.permits_research_shortcuts(_player_id)
 
 	if _undo_button == null:
 		return

@@ -30,12 +30,15 @@ extends HBoxContainer
 ## Somebody who is out. Their row stays, because their placement is the point.
 @export var _eliminated_color: Color = Color(0.5, 0.52, 0.58, 1.0)
 
+var _is_local: bool = false
+
 
 ## Fills the row in. Everything comes in already decided, so the row itself
 ## never has to ask who is local or what a number means.
 func show_player(player_name: String, state: PlayerState, is_local: bool) -> void:
 	if state == null:
 		return
+	_is_local = is_local
 
 	var out: bool = state.placement != 0
 	var color: Color = _eliminated_color if out else (
@@ -47,6 +50,16 @@ func show_player(player_name: String, state: PlayerState, is_local: bool) -> voi
 	_write(_income_label, StringUtil.compact_number(state.income), color)
 	_write(_value_label, StringUtil.compact_number(state.value), color)
 	_write(_placement_label, _placement_text(state.placement), color)
+
+
+## Whether this row is the player at this machine.
+func is_local() -> bool:
+	return _is_local
+
+
+## The income number, for the tutorial to frame.
+func income_control() -> Control:
+	return _income_label
 
 
 ## Nothing until they are out, which is exactly when a placement becomes a

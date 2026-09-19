@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="TutorialSendStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialSendStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Creeps/send_sheep_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Sending"
+body = "Creeps you send walk down the Rookie's lane. Every send raises your income for good."
+objective = "Send 5 Sheep."
+progress_label = "Sheep sent"
+delay_seconds = 1.0
+holds_clock = true
+grant_gold = 50
+stock_creep_path = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
+stock_count = 5
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_unit = 2
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+pinned_camera = 1
+sends = 5

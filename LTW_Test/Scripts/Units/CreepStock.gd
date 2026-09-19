@@ -77,6 +77,16 @@ func fill() -> bool:
 	return true
 
 
+## Sets the reserve to exactly this many, clamped to what it can hold, and
+## COUNTS as its unlock where that has not happened yet - for the reason fill()
+## does: an unlock arriving later would otherwise overwrite this with the
+## starting reserve. The tutorial's, see SendBuilding.set_stock.
+func set_count(wanted: int) -> void:
+	_unlocked = true
+	count = clampi(wanted, 0, max_count())
+	_elapsed = 0.0
+
+
 func max_count() -> int:
 	if stats == null:
 		return 0

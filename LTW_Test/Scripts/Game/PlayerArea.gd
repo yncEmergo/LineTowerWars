@@ -409,8 +409,16 @@ func mark_rubble(cell: Vector2i, footprint: Vector2i) -> void:
 ## walkable one skips the route test entirely rather than passing it: a disc is
 ## not a wall, so there is no arrangement of them that could ever seal an area
 ## and no reason to sweep the grid to find that out again per placement.
+##
+## It also asks the owner's LIMITS, which is how a tutorial lesson holding a
+## player to a blueprint is enforced: the ghost turns red off the plan exactly
+## as it does over a tower, and the builder refuses the order the same way. Null
+## for every player outside the tutorial - see ActionLimits.
 func can_place(cell: Vector2i, footprint: Vector2i, blocks: bool = true) -> bool:
 	if !_fits_build_zone(cell, footprint):
+		return false
+	var limits: ActionLimits = ActionLimits.of(player_id)
+	if limits != null && !limits.allows_cell(cell):
 		return false
 	if !_footprint_free(cell, footprint):
 		return false

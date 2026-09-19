@@ -80,6 +80,19 @@ func _connect_states() -> void:
 	_redraw()
 
 
+## The part of the table a tutorial names: the local player's income for
+## "income_value", or the whole panel for anything else. Rows are rebuilt
+## whenever a number moves, so the tutorial asks each frame rather than holding
+## one.
+func tutorial_part(key: StringName) -> Control:
+	if key == &"income_value" && _row_list != null:
+		for child in _row_list.get_children():
+			var row: PlayerStatRow = child as PlayerStatRow
+			if row != null && !row.is_queued_for_deletion() && row.is_local():
+				return row.income_control()
+	return self
+
+
 func _on_changed(_value: int) -> void:
 	_redraw()
 

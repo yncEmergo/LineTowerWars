@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="AiProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Config/AiProfile.gd" id="1_ai_profile"]
+
+[resource]
+script = ExtResource("1_ai_profile")
+display_name = "Tutorial Veteran"
+description = "The tutorial's last opponent once it is woken. Opens on the Annihilation Glyph Ultimate, grows its maze toward the targets in its layout - Cannons in front, elemental towers in the middle, walls everywhere else - with a random cheap upgrade now and then, never past a set maze value. Sends harder than anything before it, but never attackers and never more than a set amount per payout. Loaded by path from the tutorial script, never offered in a menu."
+player_name_pattern = "%s"
+selectable = false
+decision_seconds = 1.0
+distraction_chance = 0.1
+builds_per_pass = 1
+maze_layout_path = "res://Resources/Tutorial/tutorial_veteran_maze.tres"
+send_floor_gold = 20
+build_floor_gold = 0
+upgrade_floor_gold = 0
+min_towers_before_sending = 0
+send_seconds = 8.0
+max_send_gold_per_payout = 50000
+sends_attackers = false
+max_send_tier = 2
+send_efficiency = 0.3
+upgrades_towers = true
+upgrades_only_to_plan = true
+max_maze_value = 100000
+upgrade_seconds = 6.0
+random_upgrade_seconds = 15.0
+random_upgrade_max_gold = 150
+takes_opening_ultimate = true
+ultimate_tech_id = 14
+elemental_share = 0.0
+elemental_after_towers = 999

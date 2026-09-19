@@ -47,9 +47,16 @@ var _holds: Array[StringName] = []
 ## here rather than only on the tree because the match clock has to be corrected
 ## for it; see hold().
 var _paused: bool = false
-## The frame the hold began on, so resuming can give the clock back what the
-## hold took.
-var _pause_frame: int = 0
+## Every reason the match CLOCK is being held while the world goes on moving -
+## see hold_clock(). A set of claims for the same reason `_holds` is one.
+var _clock_holds: Array[StringName] = []
+## Whether the clock is standing still for ANY reason: the world held, or the
+## clock held on its own. The two stop it the same way and must not refund each
+## other twice, so there is one freeze and two ways into it.
+var _frozen: bool = false
+## The frame the freeze began on, so ending it can give the clock back what it
+## took.
+var _freeze_frame: int = 0
 ## The match clock UNDER LOCKSTEP: ticks accumulated from the turn stream rather
 ## than from this machine's physics frames. See tick().
 var _turn_ticks: int = 0
@@ -61,6 +68,10 @@ var _turn_ticks: int = 0
 var _clock_base: int = -1
 var _clock_turn_base: int = 0
 var _clock_complaints: int = 0
+## Seconds the creep UNLOCK clock runs ahead of the match clock, and the latest
+## time it may show. See unlock_elapsed_seconds().
+var _unlock_lead: float = 0.0
+var _unlock_ceiling: float = INF
 var _abilities: AbilityRegistry = AbilityRegistry.new()
 var _unit_types: UnitTypeRegistry = UnitTypeRegistry.new()
 var _techs: TechRegistry = TechRegistry.new()
@@ -86,6 +97,8 @@ static var _lockstep: bool = false
 func begin(match_setup: MatchSetup) -> void:
 	_setup = match_setup
 	_paused = false
+	_frozen = false
+	_clock_holds.clear()
 	# Read once, here, so it cannot change under a running match. A single
 	# player run is its own authority either way, so the flag only means
 	# anything when there is a network.
@@ -299,7 +312,7 @@ func elapsed_seconds() -> float:
 func advance_clock(ticks: int) -> void:
 	if !_lockstep:
 		return
-	if _held_by_other_than(&"lockstep"):
+	if _held_by_other_than(&"lockstep") || is_clock_held():
 		return
 	_turn_ticks += ticks
 	_check_clock()
@@ -324,9 +337,10 @@ func _legacy_tick() -> int:
 	# Frozen while the world is held still. The engine goes on counting physics
 	# frames whether or not anything is processing them, so without this the
 	# clock would run through a pause and every creep unlock would come out of
-	# it having silently served time. See hold().
-	if _paused:
-		return _pause_frame - _start_frame
+	# it having silently served time. See hold(), and hold_clock() for the
+	# other way in.
+	if _frozen:
+		return _freeze_frame - _start_frame
 	return Engine.get_physics_frames() - _start_frame
 
 
@@ -433,6 +447,8 @@ func holders() -> Array:
 ## lines in the one place that always runs.
 func _exit_tree() -> void:
 	_holds.clear()
+	_clock_holds.clear()
+	_frozen = false
 	if _paused:
 		_paused = false
 		var tree: SceneTree = get_tree()
@@ -457,10 +473,7 @@ func hold(reason: StringName, held: bool) -> void:
 	var tree: SceneTree = get_tree()
 	if tree != null:
 		tree.paused = wanted
-	if wanted:
-		_pause_frame = Engine.get_physics_frames()
-	else:
-		_start_frame += Engine.get_physics_frames() - _pause_frame
+	_refresh_freeze()
 	# **A lockstep stall is not a player action, and under the sealed stream it is
 	# frequent** - every stall starts and ends here, and a peer on a jittery link
 	# can take dozens a minute. `Log.info` runs `get_stack()` and `print_rich()`,
@@ -473,6 +486,109 @@ func hold(reason: StringName, held: bool) -> void:
 		Log.debug("Match " + ("paused" if wanted else "resumed"), detail)
 	else:
 		Log.info("Match " + ("paused" if wanted else "resumed"), detail)
+
+
+## Holds the match CLOCK still while the world goes on moving, or releases ONE
+## holder's claim on it.
+##
+## **The other half of hold(), and the difference is the whole point of it.**
+## hold() stops everything: units, projectiles, the HUD. This stops only what
+## the CLOCK drives - income payouts, creep unlocks, a reserve refilling,
+## Sudden Death - so a builder still walks, a tower still goes up and a creep
+## still dies while nothing that is timed can move on. What a player does is
+## theirs to take as long over as they like; what the match does to them waits.
+##
+## The tutorial is the one holder, and it is why this exists: a lesson asking a
+## player to build a row has them build it on their own time, and the income
+## beat they have not been taught about yet does not tick past while they do.
+## A reserve reads is_clock_held() for itself - see SendBuilding - because its
+## refill runs on the tick rather than on the clock.
+##
+## **Offline only, by use rather than by guard.** Under lockstep the clock is
+## the turn stream and advance_clock() respects this as it respects hold(); but
+## nothing online holds it, and a peer holding a clock nobody else held would be
+## a desync with no other symptom.
+func hold_clock(reason: StringName, held: bool) -> void:
+	var had: bool = reason in _clock_holds
+	if held == had:
+		return
+	if held:
+		_clock_holds.append(reason)
+	else:
+		_clock_holds.erase(reason)
+	_refresh_freeze()
+	Log.info("Match clock " + ("held" if held else "released"), {
+		"tick": tick(), "by": reason,
+	})
+
+
+## Whether the match clock is being held while the world moves. See hold_clock.
+func is_clock_held() -> bool:
+	return !_clock_holds.is_empty()
+
+
+## Moves the match clock on without anything happening in between, for a match
+## that skips its opening. Offline only, and refused under lockstep, where the
+## clock is the turn stream every peer has to agree on.
+##
+## Whatever the clock times is answered against it afterwards exactly as if the
+## seconds had been played: a creep whose start delay has passed is open, and
+## an income payout that fell inside them is paid on the next tick - nothing,
+## on a match that started on no income.
+func fast_forward(seconds: float) -> void:
+	if _lockstep:
+		Log.err("The match clock cannot be moved on under lockstep", seconds)
+		return
+	var ticks: int = int(round(maxf(0.0, seconds) / tick_seconds()))
+	# Backwards, because the clock is "frames since the start": an earlier start
+	# is a later clock, frozen or not.
+	_start_frame -= ticks
+
+
+## Stops the clock or starts it again, from whichever of the two holds changed.
+##
+## One freeze with two ways into it rather than two refunds, because they
+## overlap: a lesson holding the clock while a draft pauses the world must give
+## the clock back ONE gap when both let go, not the same gap twice.
+func _refresh_freeze() -> void:
+	var wanted: bool = _paused || !_clock_holds.is_empty()
+	if wanted == _frozen:
+		return
+	_frozen = wanted
+	if wanted:
+		_freeze_frame = Engine.get_physics_frames()
+	else:
+		_start_frame += Engine.get_physics_frames() - _freeze_frame
+
+
+## The clock a creep's start delay is measured against: the match clock, moved
+## ahead by any lead and stopped at any ceiling. Everything else the clock times
+## - income, Sudden Death - reads elapsed_seconds() and is untouched by either.
+##
+## The tutorial's, and it is why this is separate from fast_forward(): a lesson
+## opening the creep roster two minutes early must not pay two minutes of income
+## on the next tick, and a lesson holding tier 2 back must not stop the income
+## beat it is teaching. Offline only by use, like hold_clock().
+func unlock_elapsed_seconds() -> float:
+	return minf(elapsed_seconds() + _unlock_lead, _unlock_ceiling)
+
+
+## Moves the unlock clock further ahead of the match clock. See
+## unlock_elapsed_seconds().
+func lead_unlocks(seconds: float) -> void:
+	if _lockstep:
+		Log.err("The unlock clock cannot be moved on under lockstep", seconds)
+		return
+	_unlock_lead += maxf(0.0, seconds)
+
+
+## Stops the unlock clock at a match clock time, or lets it run again with INF.
+## The time is where it STOPS, so a creep unlocking exactly then is open.
+func cap_unlocks(at_seconds: float) -> void:
+	if _lockstep:
+		Log.err("The unlock clock cannot be capped under lockstep", at_seconds)
+		return
+	_unlock_ceiling = at_seconds
 
 
 ## Whether the match has reached Sudden Death.

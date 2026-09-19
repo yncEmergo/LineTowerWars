@@ -30,8 +30,9 @@ described here is implemented and working. Values marked TBD are not decided yet
   purse and a place in the send ring, and plays by every rule below. It is never RANKED,
   because ranked means two results are comparable and a result against a computer opponent is
   not comparable with anything. See `singleplayer.md`
-- **TUTORIAL**: a real match with a script on top, teaching the rules in this file one at a
-  time. Same world, same economy, same opponent machinery. See `tutorial.md`
+- **TUTORIAL**: a real match with a script on top. Same world, same economy, same opponent
+  machinery. It opens with the clock held and the player limited to what each lesson asks,
+  then plays out against two computer opponents in turn. See `tutorial.md`
 - The mode decides who is DRIVING and never what the rules are. Everything the players agreed
   to is Match settings, below, and a mode may not change one
 
@@ -737,6 +738,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     keyboard layout, so a press never means two things at once. The keys the
     game answers wherever you are - the control groups, the ones that back out
     and open the menu - are refused for the same reason
+  - the one exception is a command that YIELDS to the card: it answers only a
+    press the selected unit's card leaves alone, so it may take a grid letter
+    without a press ever meaning two things. Selecting the builder is one - it
+    works on any selection, or none, except one whose card presses that letter
   - one key, one command: binding a key takes it off whatever held it before,
     which is then left with no key until it is given one
   - a command may also be left with NO key, which puts an ability back on the
@@ -1016,7 +1021,8 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   builder, one opens the Research Center
   - the builder square shows the builder's own picture and does nothing else -
     it selects, which is presentation, and the card that selection puts on
-    screen is what gives orders
+    screen is what gives orders. It has a key of its own too, drawn on it, which
+    yields to the selected unit's card
   - the Research Center square draws the key that does the same job, so the
     letter a player reads is the letter the screen answers to
   - they are here rather than each beside the thing they reach, because a

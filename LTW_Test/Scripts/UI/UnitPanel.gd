@@ -825,6 +825,18 @@ func shown_unit() -> Unit:
 	return _unit
 
 
+## The square on the card now showing one of these abilities, or null when none
+## of them is on screen. For the tutorial's arrow, which points at the button a
+## lesson wants pressed rather than at the whole panel.
+func command_slot_for(wanted: Array[UnitAbility]) -> Control:
+	if !is_visible_in_tree():
+		return null
+	for slot: CommandSlot in _slots:
+		if slot.ability != null && slot.is_visible_in_tree() && slot.ability in wanted:
+			return slot
+	return null
+
+
 ## Whether the card on screen would answer this key: the square it names holds
 ## an ability that can actually be pressed.
 ##
@@ -1068,7 +1080,11 @@ func _on_ability_activated(ability: UnitAbility) -> void:
 			# Nothing to do. Passives exist to be read, not pressed.
 			return
 		UnitAbility.Targeting.SUBMENU:
-			# Pure card navigation, so it never reaches the command controller.
+			# Pure card navigation, so it never reaches the command controller -
+			# which is why the panel asks the player's limits itself. A lesson
+			# can keep a menu shut until it is the thing being taught.
+			if _unit != null && !ActionLimits.permits(ability, _unit):
+				return
 			push_card(ability.submenu_abilities())
 		_:
 			if _command_controller != null:

@@ -23,6 +23,8 @@ extends Control
 const LANE_RADIUS: float = 0.34
 const BUILDING_RADIUS: float = 0.09
 const CREEP_RADIUS: float = 0.07
+## A moment's circle: a creep and the few walking with it.
+const MOMENT_RADIUS: float = 0.11
 ## How quickly the circle chases what it is lighting, per second. A creep walks,
 ## and a circle snapped to it every frame reads as a jitter rather than as a
 ## follow.
@@ -39,6 +41,8 @@ var _radius: float = LANE_RADIUS
 ## long way in - a creep leaking and the next one spawning at the top.
 var _at: Vector2 = Vector2(0.5, 0.5)
 var _has_position: bool = false
+## Whether a MOMENT is what is lit, rather than the lesson's subject.
+var _moment: bool = false
 
 var _director: TutorialDirector:
 	get:
@@ -60,18 +64,21 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	_subject = TutorialStep.Spotlight.NONE
+	_moment = false
 	var director: TutorialDirector = _director
 	if director != null && director.is_running():
 		var step: TutorialStep = director.current_step()
-		if step != null:
+		if director.current_moment() != null:
+			_moment = true
+		elif step != null:
 			_subject = step.spotlight
 
-	_radius = _radius_for(_subject)
+	_radius = MOMENT_RADIUS if _moment else _radius_for(_subject)
 	# Re-aimed rather than eased on the first frame of a lesson, so the circle
 	# opens where it belongs instead of sliding across the screen from wherever
 	# the last lesson left it.
 	_has_position = false
-	visible = _subject != TutorialStep.Spotlight.NONE
+	visible = _moment || _subject != TutorialStep.Spotlight.NONE
 
 
 func _radius_for(subject: TutorialStep.Spotlight) -> float:
@@ -87,10 +94,10 @@ func _radius_for(subject: TutorialStep.Spotlight) -> float:
 ## Re-projected every frame, because everything it can be pointed at moves: a
 ## creep walks, and the camera pans under all of them.
 func _process(delta: float) -> void:
-	if _subject == TutorialStep.Spotlight.NONE || _dim == null:
+	if (!_moment && _subject == TutorialStep.Spotlight.NONE) || _dim == null:
 		return
 
-	var world: Vector3 = _subject_point()
+	var world: Vector3 = _director.moment_focus() if _moment else _subject_point()
 	if world == Vector3.INF:
 		# Nothing to light: the creep died, the tower was sold, the lane is
 		# empty. The dim comes off rather than sitting over a circle of nothing.

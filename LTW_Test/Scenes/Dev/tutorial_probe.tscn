@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Dev/TutorialProbe.gd" id="1_probe"]
+[ext_resource type="Resource" path="res://Resources/Config/ai_config.tres" id="2_ai_config"]
+[ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="3_game_config"]
+
+[node name="TutorialProbe" type="Node"]
+script = ExtResource("1_probe")
+_ai_config = ExtResource("2_ai_config")
+_game_config = ExtResource("3_game_config")

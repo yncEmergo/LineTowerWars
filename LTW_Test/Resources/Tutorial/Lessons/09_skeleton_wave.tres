@@ -1,0 +1,109 @@
+[gd_resource type="Resource" script_class="TutorialWaveStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialWaveStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/attack_ability.tres" id="a0"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialWave.gd" id="3_wave"]
+
+[sub_resource type="Resource" id="Wave_0"]
+script = ExtResource("3_wave")
+delay_seconds = 3.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_1"]
+script = ExtResource("3_wave")
+delay_seconds = 3.6
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_2"]
+script = ExtResource("3_wave")
+delay_seconds = 3.9
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_3"]
+script = ExtResource("3_wave")
+delay_seconds = 4.15
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_4"]
+script = ExtResource("3_wave")
+delay_seconds = 4.35
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_5"]
+script = ExtResource("3_wave")
+delay_seconds = 4.5
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_6"]
+script = ExtResource("3_wave")
+delay_seconds = 4.65
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_7"]
+script = ExtResource("3_wave")
+delay_seconds = 4.8
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_8"]
+script = ExtResource("3_wave")
+delay_seconds = 4.9
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_9"]
+script = ExtResource("3_wave")
+delay_seconds = 5.0
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_10"]
+script = ExtResource("3_wave")
+delay_seconds = 5.1
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_11"]
+script = ExtResource("3_wave")
+delay_seconds = 5.2
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_12"]
+script = ExtResource("3_wave")
+delay_seconds = 5.3
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_13"]
+script = ExtResource("3_wave")
+delay_seconds = 5.4
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[sub_resource type="Resource" id="Wave_14"]
+script = ExtResource("3_wave")
+delay_seconds = 5.5
+creep_path = "res://Resources/UnitStats/Creeps/skeleton_warrior_stats.tres"
+sends = 1
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "A big, packed wave of Skeletons."
+objective = "Kill the skeletons"
+progress_label = "Skeletons killed"
+counts_creeps = true
+delay_seconds = 1.0
+holds_clock = true
+waves = Array[ExtResource("3_wave")]([SubResource("Wave_0"), SubResource("Wave_1"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4"), SubResource("Wave_5"), SubResource("Wave_6"), SubResource("Wave_7"), SubResource("Wave_8"), SubResource("Wave_9"), SubResource("Wave_10"), SubResource("Wave_11"), SubResource("Wave_12"), SubResource("Wave_13"), SubResource("Wave_14")])
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])

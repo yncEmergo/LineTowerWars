@@ -1,0 +1,92 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/TutorialDefeatPanel.gd" id="1_defeat"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_board"]
+content_margin_left = 28.0
+content_margin_top = 22.0
+content_margin_right = 28.0
+content_margin_bottom = 20.0
+bg_color = Color(0.08, 0.09, 0.12, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.38, 0.24, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="TutorialDefeatPanel" type="Control" node_paths=PackedStringArray("_panel", "_retry_button", "_menu_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+focus_behavior_recursive = 1
+script = ExtResource("1_defeat")
+_panel = NodePath("Dim")
+_retry_button = NodePath("Dim/Center/Board/Column/Buttons/RetryButton")
+_menu_button = NodePath("Dim/Center/Board/Column/Buttons/MenuButton")
+
+[node name="Dim" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.024, 0.035, 0.72)
+
+[node name="Center" type="CenterContainer" parent="Dim"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Board" type="PanelContainer" parent="Dim/Center"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_board")
+
+[node name="Column" type="VBoxContainer" parent="Dim/Center/Board"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="Dim/Center/Board/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.36, 0.32, 1)
+theme_override_font_sizes/font_size = 26
+text = "DEFEAT"
+horizontal_alignment = 1
+
+[node name="TextLabel" type="Label" parent="Dim/Center/Board/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.91, 0.94, 1)
+theme_override_font_sizes/font_size = 14
+text = "You ran out of lives."
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Dim/Center/Board/Column"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RetryButton" type="Button" parent="Dim/Center/Board/Column/Buttons"]
+custom_minimum_size = Vector2(130, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Retry"
+
+[node name="MenuButton" type="Button" parent="Dim/Center/Board/Column/Buttons"]
+custom_minimum_size = Vector2(130, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Main Menu"

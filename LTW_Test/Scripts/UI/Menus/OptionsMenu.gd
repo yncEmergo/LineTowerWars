@@ -288,7 +288,7 @@ func _on_key_chosen(action: HotkeyAction, key: Key) -> void:
 	if config == null || action == null:
 		return
 
-	var reason: String = config.reserved_key_reason(key)
+	var reason: String = config.reserved_key_reason(key, action)
 	if !reason.is_empty():
 		_say(reason)
 		_refresh_hotkey_rows()

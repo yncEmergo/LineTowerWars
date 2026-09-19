@@ -603,6 +603,14 @@
       first match pays and a developer never sees
     - loaded through `override.cfg` like `LockstepProbe`, and it has to run
       WINDOWED: headless has no renderer and compiles nothing
+  - **Scripts/Dev/TutorialProbe.gd EXISTS and is kept too**, with
+    Scenes/Dev/tutorial_probe.tscn, for as long as the tutorial is being iterated.
+    It plays the whole tutorial through the real order road and checks every
+    lesson - what it must refuse, where the border lands, how it ends. No
+    autoload: it is a scene, run headless for the checks, `-- lose` for the
+    defeat path, and WINDOWED with `-- shots` for screenshots in
+    `user://tutorial_shots/`. Every tutorial change is verified with it; see
+    Docs/tutorial.md section 11
   - stop and restart the server between runs. A lobby left over from the last one
     looks exactly like a bug in the next
 
@@ -873,7 +881,10 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   it before the match settings arrived - it answers for the roster, the RNG,
   the clock and the unit registry, and those four are what "what is true of
   THIS match" means. The settings and the pause added four more: what the
-  match agreed to, and whether the world is moving. Splitting the unit
+  match agreed to, and whether the world is moving. The tutorial's clock hold
+  added three: holding the clock without the world, asking whether it is held,
+  and moving it on past the opening. Its creep unlock clock added three more:
+  the reading, moving it ahead, and capping it. Splitting the unit
   registry out is the obvious cut if it is ever worth making; the other three
   belong together
 - LockstepService.gd is over gdlint's public-method ceiling, and for a reason no

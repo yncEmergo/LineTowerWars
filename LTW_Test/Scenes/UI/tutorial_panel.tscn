@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/TutorialPanel.gd" id="1_tutorial_panel"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_task_row.tscn" id="2_task_row"]
+[ext_resource type="Script" path="res://Scripts/Components/ScaleAnimation2D.gd" id="3_scale_anim"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_board"]
 content_margin_left = 22.0
@@ -18,7 +20,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_progress_label", "_title_label", "_body_label", "_objective_label", "_continue_button", "_skip_button")]
+[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_tasks_heading", "_task_list", "_continue_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,12 +30,15 @@ grow_vertical = 2
 mouse_filter = 2
 focus_behavior_recursive = 1
 script = ExtResource("1_tutorial_panel")
+_board = NodePath("Board")
+_pop = NodePath("Board/PopAnimation")
 _progress_label = NodePath("Board/Column/Header/ProgressLabel")
 _title_label = NodePath("Board/Column/Header/TitleLabel")
 _body_label = NodePath("Board/Column/BodyLabel")
-_objective_label = NodePath("Board/Column/ObjectiveLabel")
+_tasks_heading = NodePath("Board/Column/TasksHeading")
+_task_list = NodePath("Board/Column/TaskList")
+_task_row_scene = ExtResource("2_task_row")
 _continue_button = NodePath("Board/Column/Footer/ContinueButton")
-_skip_button = NodePath("Board/Column/Footer/SkipButton")
 
 [node name="Board" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -46,7 +51,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_board")
 
 [node name="Column" type="VBoxContainer" parent="Board"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Header" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2
@@ -57,14 +62,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 18
 text = "Lesson"
 
 [node name="ProgressLabel" type="Label" parent="Board/Column/Header"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.55, 0.58, 0.66, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = ""
 vertical_alignment = 1
 
@@ -72,29 +77,31 @@ vertical_alignment = 1
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = ""
 autowrap_mode = 3
 
-[node name="ObjectiveLabel" type="Label" parent="Board/Column"]
+[node name="TasksHeading" type="Label" parent="Board/Column"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.55, 0.85, 0.6, 1)
-theme_override_font_sizes/font_size = 15
-text = ""
-autowrap_mode = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 13
+text = "Tasks"
+
+[node name="TaskList" type="VBoxContainer" parent="Board/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
 
 [node name="Footer" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 2
 
-[node name="SkipButton" type="Button" parent="Board/Column/Footer"]
-custom_minimum_size = Vector2(140, 34)
-layout_mode = 2
-text = "Skip lesson"
-
 [node name="ContinueButton" type="Button" parent="Board/Column/Footer"]
 custom_minimum_size = Vector2(180, 34)
 layout_mode = 2
 text = "Continue"
+
+[node name="PopAnimation" type="Node" parent="Board"]
+script = ExtResource("3_scale_anim")

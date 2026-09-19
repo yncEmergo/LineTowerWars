@@ -2,23 +2,68 @@
 
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialScript.gd" id="1_script"]
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialStep.gd" id="2_step"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_welcome.tres" id="3_01_welcome"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_builder.tres" id="4_02_builder"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_first_towers.tres" id="5_03_first_towers"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_maze_idea.tres" id="6_04_maze_idea"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_build_maze.tres" id="7_05_build_maze"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_upgrades.tres" id="8_06_upgrades"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_creeps.tres" id="9_07_creeps"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_ring.tres" id="10_08_ring"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_sending.tres" id="11_09_sending"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_income.tres" id="12_10_income"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_defend.tres" id="13_11_defend"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_technology.tres" id="14_12_technology"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_elementals.tres" id="15_13_elementals"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_discs.tres" id="16_14_discs"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_done.tres" id="17_15_done"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="3_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/move_ability.tres" id="a0_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/stop_ability.tres" id="a1_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_order_ability.tres" id="a2_always"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/show_blueprints_ability.tres" id="f0_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/save_blueprints_ability.tres" id="f1_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Blueprints/restore_blueprints_ability.tres" id="f2_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="f3_forbidden"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/01_builder.tres" id="s0_01_builder"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/02_move.tres" id="s1_02_move"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/03_first_towers.tres" id="s2_03_first_towers"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/04_first_waves.tres" id="s3_04_first_waves"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/05_row_cutters.tres" id="s4_05_row_cutters"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/06_row_archers.tres" id="s5_06_row_archers"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/07_upgrade_archers.tres" id="s6_07_upgrade_archers"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/08_cannons.tres" id="s7_08_cannons"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/09_skeleton_wave.tres" id="s8_09_skeleton_wave"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/10_send_sheep.tres" id="s9_10_send_sheep"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_income_explained.tres" id="s10_11_income_explained"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_payout.tres" id="s11_12_payout"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_beat_rookie.tres" id="s12_13_beat_rookie"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_technology.tres" id="s13_14_technology"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_research_fire.tres" id="s14_15_research_fire"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/16_research_lightning.tres" id="s15_16_research_lightning"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/17_elemental_core.tres" id="s16_17_elemental_core"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/18_fire_pit.tres" id="s17_18_fire_pit"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/19_your_maze.tres" id="s18_19_your_maze"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/20_beat_veteran.tres" id="s19_20_beat_veteran"]
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialMoment.gd" id="4_moment"]
+
+[sub_resource type="Resource" id="Moment_leak"]
+script = ExtResource("4_moment")
+trigger = 0
+title = "Life stealing"
+body = "These creeps are past the Rookie's towers. Each one that reaches the end steals one of the Rookie's lives for you."
+leak_row = 20
+
+[sub_resource type="Resource" id="Moment_flyer"]
+script = ExtResource("4_moment")
+trigger = 1
+title = "Flyers"
+body = "Flyers ignore the maze and fly straight down the lane. Only towers that hit air can shoot them."
+delay_seconds = 2.0
+
+[sub_resource type="Resource" id="Moment_attacker"]
+script = ExtResource("4_moment")
+trigger = 2
+title = "Attackers"
+body = "Attackers fight the towers in their way. Select them to give them orders, like your builder."
+delay_seconds = 2.0
 
 [resource]
 script = ExtResource("1_script")
 opponent_gold = 400
-steps = Array[ExtResource("2_step")]([ExtResource("3_01_welcome"), ExtResource("4_02_builder"), ExtResource("5_03_first_towers"), ExtResource("6_04_maze_idea"), ExtResource("7_05_build_maze"), ExtResource("8_06_upgrades"), ExtResource("9_07_creeps"), ExtResource("10_08_ring"), ExtResource("11_09_sending"), ExtResource("12_10_income"), ExtResource("13_11_defend"), ExtResource("14_12_technology"), ExtResource("15_13_elementals"), ExtResource("16_14_discs"), ExtResource("17_15_done")])
+first_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_rookie.tres"
+second_rival_profile_path = "res://Resources/Config/Ai/ai_tutorial_veteran.tres"
+second_rival_opening_path = "res://Resources/Config/Ai/ai_tutorial_veteran_sparring.tres"
+second_rival_gold = 90000
+rival_lives = 10
+rival_income_share = 1.0
+player_lives = 30
+always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always")])
+moments = Array[ExtResource("4_moment")]([SubResource("Moment_leak"), SubResource("Moment_flyer"), SubResource("Moment_attacker")])
+forbidden_abilities = Array[ExtResource("3_ability")]([ExtResource("f0_forbidden"), ExtResource("f1_forbidden"), ExtResource("f2_forbidden"), ExtResource("f3_forbidden")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie"), ExtResource("s13_14_technology"), ExtResource("s14_15_research_fire"), ExtResource("s15_16_research_lightning"), ExtResource("s16_17_elemental_core"), ExtResource("s17_18_fire_pit"), ExtResource("s18_19_your_maze"), ExtResource("s19_20_beat_veteran")])

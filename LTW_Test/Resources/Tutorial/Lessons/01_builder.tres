@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TutorialSelectStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialSelectStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+title = "Your builder"
+body = "Your builder is invulnerable and is mainly used to build towers."
+objective = "Select your builder."
+delay_seconds = 0.0
+holds_clock = true
+restricts_actions = true
+guide_unit = 1

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "TutorialArrowMaterial"
+albedo_color = Color(0.850000, 0.090000, 0.130000, 1)
+roughness = 0.45
+metallic_specular = 0.35
