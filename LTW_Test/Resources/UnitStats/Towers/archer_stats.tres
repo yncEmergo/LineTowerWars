@@ -20,6 +20,7 @@ script = ExtResource("4_ProjectileDelivery")
 projectile_scene_path = "res://Scenes/Effects/arrow.tscn"
 speed = 16
 arc_height = 0.3
+impact_sound_path = "res://Audio/Generated/Impacts/impact_flesh.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -29,6 +30,7 @@ damage_type = 3
 attacks_per_second = 1.567
 attack_range = 4
 target_types = 3
+fire_sound_path = "res://Audio/Generated/Towers/arrow_release.wav"
 delivery = SubResource("Delivery")
 
 [resource]

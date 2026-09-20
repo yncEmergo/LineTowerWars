@@ -157,6 +157,29 @@ const TARGET_AIR: int = 2
 ## NOT BUILT: nothing reads this yet, see game_rules.md.
 @export var multishot_targets: int = 0
 
+@export_group("Sound")
+## WORLD. Played at the MUZZLE every time this attack fires, or empty for an
+## attack that makes no sound of its own.
+##
+## On the attack rather than on the unit, because it is the attack that changes
+## when a tower is upgraded and because a unit that ever gains a second attack
+## should not have to grow a second sound field. Its counterpart is the impact,
+## which belongs to the DELIVERY: what a shot sounds like leaving is a property
+## of the weapon, and what it sounds like landing is a property of how it
+## arrives. See AttackDelivery.impact_sound_path.
+##
+## By PATH and not as a stream, for the reason the scene paths here are: an
+## AudioStream ext_resource would be a hard load-time dependency, so reading
+## one tower's damage would pull the whole line's audio in behind it. AudioHub
+## owns the cache; ContentWarmer finds this by reflection and warms it on the
+## load screen.
+##
+## **Written by ModelGen for every generated tower** - see tower_content.py and
+## element_content.py, where the mapping from a branch to a sound lives. A hand
+## edit to a generated .tres is overwritten by the next run; change the
+## generator.
+@export_file("*.wav", "*.ogg") var fire_sound_path: String = ""
+
 @export_group("Delivery")
 ## How the hit travels. Instant lands at once, a projectile flies there first.
 @export var delivery: AttackDelivery

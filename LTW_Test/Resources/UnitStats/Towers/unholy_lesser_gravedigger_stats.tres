@@ -22,6 +22,7 @@ projectile_scene_path = "res://Scenes/Effects/poison_glob.tscn"
 speed = 18
 arc_height = 0.5
 impact_scene_path = "res://Scenes/Effects/toxic_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_flesh.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -31,6 +32,7 @@ damage_type = 2
 attacks_per_second = 1.429
 attack_range = 5.5
 target_types = 3
+fire_sound_path = "res://Audio/Generated/Towers/magic_cast.wav"
 delivery = SubResource("Delivery")
 
 [resource]

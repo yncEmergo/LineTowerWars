@@ -268,6 +268,12 @@ func spawn(sender_id: int, target_area: PlayerArea, world_pos: Vector3) -> void:
 	for passive in _passives:
 		passive.on_spawn(self)
 
+	# Presentation, and here rather than in _ready so only a fresh SEND is
+	# heard: a creep recycled into the next maze after a leak goes through
+	# _recycle_into and has not spawned again. A pack asks for this three to
+	# six times on one tick and AudioHub's same-sound gap lets one through.
+	MatchAudio.creep_spawned(_creep_stats, global_position)
+
 
 ## Creeps take no orders, so a right click on one does nothing and a selection
 ## box never picks it up. See game_rules.md.
@@ -2055,6 +2061,9 @@ func _teleport_to(world_pos: Vector3) -> void:
 func _die() -> void:
 	if _run_death_passives():
 		return
+	# AFTER the passives, so a creep that got back up is not heard dying. The
+	# same test the bounty is paid on, for the same reason: it did not die.
+	MatchAudio.creep_died(_creep_stats, global_position)
 	_pay_bounty()
 	super()
 

@@ -57,7 +57,80 @@ to stop a simulation.
 
 It owns three things and nothing else: the pooled players, the stream cache and
 the voice budget. How loud one tower's shot is belongs on that tower's stats;
-the mixing rules belong on `AudioConfig`.
+the mixing rules belong on `AudioConfig`; which sound a match event makes
+belongs to `MatchAudio`.
+
+**The autoload is called `Audio`, not `AudioHub`.** An autoload name and a
+`class_name` share one namespace in Godot, so naming it after its class would
+collide with the class every caller uses. The handle is never typed anyway -
+everything reaches the hub through statics on `AudioHub` - and it matches what
+the rest of the project already does: `Net`, `Commands`, `Replication` and
+`Lockstep` are all short handles on classes named something longer.
+
+### 2.1 The three ways to play a sound
+
+**This is the one decision a caller makes, and it is the difference between a
+sound that works and one that is silent at the moment it mattered.**
+
+| | Where | Bus | Budgeted | For |
+| --- | --- | --- | --- | --- |
+| `play_at()` | a point in the world | SFX | yes | a tower firing, a shell landing, a creep dying |
+| `play_event()` | nowhere | SFX | no | a life lost, income arriving, a build refused |
+| `play_ui()` | nowhere | UI | no | a click, a hover, a press on a dead button |
+
+**DIEGETIC (`play_at`)** is heard from where the camera is standing. It is
+attenuated, culled by distance and pays the voice budget, because it is the
+only one of the three a full maze can ask for a thousand times a second.
+
+**EXTRADIEGETIC (`play_event`)** is about the MATCH rather than about a place
+in it. It is deliberately not positional, and that is the whole point: these
+are the sounds a player is meant to hear *while looking somewhere else*, which
+is most of the time in a game with twelve lanes. Attenuating a leak by how far
+the camera happens to be from the end zone would silence it in exactly the case
+it exists for - the lane nobody was watching.
+
+**THE INTERFACE (`play_ui`)** is the same flat shape on a different bus, so a
+player who wants the clicks quieter has a slider that does not also turn the
+game down.
+
+The line between the last two is easy to get wrong and worth stating: `play_ui`
+is about a CONTROL the player operated, `play_event` about something that
+happened in the match. A build refused for want of gold is an event - it
+arrives seconds after the press, with the player already doing something else.
+A press on a greyed-out button is interface.
+
+Getting it wrong is silent both ways round, which is why every entry on
+`AudioConfig` says which it is in its own docstring.
+
+### 2.2 MatchAudio
+
+`Scripts/Audio/MatchAudio.gd`, the hub's own child, alongside
+`ButtonSoundBinder` and for the same reason - audio is wanted wherever the hub
+is and a second `[autoload]` line breaks a running editor.
+
+**It is the score and the hub is the mixer.** It answers which sound a leak
+makes, whether a refused build is the local player's business, and which of the
+three calls above each event wants. Gameplay code calls one named line -
+`MatchAudio.tower_placed(at)` - and never reaches for `AudioConfig` itself.
+
+**It is both a node and a set of statics, deliberately.** A leak already has a
+channel: `ReplicationService.leak_reported`, on an autoload that outlives a
+match scene. Listening to it is strictly better than a call, because it fires
+on the same terms wherever the leak was noticed and cannot be forgotten by the
+next caller. Nothing emits "a tower landed", and adding a signal for audio
+alone would be a channel with one subscriber - so those are calls. The node
+half listens where there is something to listen to; the static half is called
+where there is not.
+
+**A sound named on a stats resource is NOT its business.** A tower's fire sound
+is played by `AttackComponent`, straight out of the `AttackStats` it is already
+holding, and an impact by the `AttackDelivery` that owns the path. `MatchAudio`
+is only for what belongs to nobody.
+
+**Two of its calls are on a per-unit path** - a creep spawning and a creep
+dying - and both ask `AudioHub.is_available()` before they reach for anything
+else, so a dedicated server pays one static bool per creep rather than a
+`References` lookup.
 
 ## 3. The voice budget
 
@@ -120,6 +193,33 @@ and a creep's death sound on its `CreepStats`, for the same reason a tower's
 gold cost lives on its `BuildingStats`. `AudioConfig` holds only what belongs to
 nobody: the interface, and the match-wide events.
 
+Four fields carry it, and the split between the first two is the one worth
+remembering:
+
+- `AttackStats.fire_sound_path` - the RELEASE, played at the muzzle. A property
+  of the weapon.
+- `AttackDelivery.impact_sound_path` - the ARRIVAL, played where the hit lands.
+  A property of how the shot got there and what it hit. A mortar and a crossbow
+  share neither.
+- `CreepStats.death_sound_path` and `spawn_sound_path` - per creep, and empty
+  for the whole roster today.
+
+**An empty path is an answer, not a fault**, on both of the attack fields, in
+exactly the way `impact_scene_path` already works: a spinning blade that grinds
+whatever stands next to it has no launch to announce, and the whole cutter line
+is authored silent on the way out for that reason.
+
+**The two creep fields have a roster-wide default behind them**, on
+`AudioConfig.creep_death_path` and `creep_spawn_path`, which a creep naming
+nothing falls back to. That is the one place the config names something a stats
+resource could own, and it is a DEFAULT rather than a list: one entry, not two
+hundred, and consulted only when the creep is silent about it. Every creep
+should be audible when it dies - it is the feedback that says the maze is
+working - so silence there is not something the roster wants to author.
+
+The impacts deliberately have no such default: a default would take the silence
+away from the things that mean it.
+
 **By path, never as a stream.** An `AudioStream` held as an `ext_resource` is a
 hard load-time dependency, so loading a config or a stats resource would pull
 every sound it names into memory whether or not one is ever played. Same rule
@@ -143,6 +243,12 @@ Two silent couplings follow from that, neither of which errors:
   either. `AudioHub.warm()` exists for that case and is currently called by
   nothing.
 
+The reflection is why the four new fields needed nothing doing to them:
+`ContentWarmer._asset_paths_on` walks NESTED resources, so an
+`impact_sound_path` on an `AttackDelivery` hanging off an `AttackStats` hanging
+off a tower's `BuildingStats` is collected without anything at the top level
+mentioning it.
+
 `References.audio_config` is **wired per scene**, like every other `References`
 entry, and a missing wire fails silently — the getter returns null and the
 sounds simply never play.
@@ -162,34 +268,122 @@ a line turns out wrong.
 UI sounds are hand-made and live in `Audio/Placeholder/`. That is where a real
 recording is worth most and where there are fewest of them.
 
-## 7. The one step still outstanding
+**WHICH tower gets which sound is ModelGen's, not SfxGen's.**
+`Tools/ModelGen/audio.py` holds the whole mapping - branch to release, branch to
+impact, element to both, and a short list of the shapes that disagree with their
+own line - and `tower_content.py` and `element_content.py` write it into every
+generated `.tres`. The two tools are deliberately apart: SfxGen renders `.wav`
+files and has never heard of a roster, and that file knows the roster and
+renders nothing.
 
-`AudioHub` is written, tested and committed, but **it is not yet an autoload**,
-so at runtime `AudioHub.instance` is null and every call no-ops. Nothing breaks
-— the project boots clean and silent — but no sound plays until this lands.
+So **a hand edit to a `fire_sound_path` in a generated `.tres` is overwritten by
+the next ModelGen run.** Change `audio.py` and re-run, the same rule every other
+generated value follows.
 
-Add to `project.godot`, in the existing `[autoload]` section:
+The mapping reads richer than the set actually is, and `audio.py` says so at the
+top: there is ONE arcane release sound, so nine of the ten element lines share
+it and are told apart by their projectile and their impact rather than by what
+leaving the tower sounds like. SfxGen also carries a TIER table that no tower
+uses yet. Both are gaps in the rendered set rather than in the mapping, and the
+fix for both is more sounds in `sounds.py`.
 
-```
-AudioHub="*res://Scripts/Audio/AudioHub.gd"
-```
+## 7. What is wired
 
-**Godot's editor must be closed when this is written.** The editor holds its own
-copy of ProjectSettings, does not re-read the file, and a filesystem scan does
-not help — an autoload added from outside reads as "Identifier not found" until
-the editor is restarted. Headless runs are unaffected, which is what makes it
-confusing. See `CLAUDE.md`.
+Everything generated has a home. The events below are live and were each proven
+firing in a real client match:
 
-To confirm it took, boot and press a button in the main menu: it should click.
-`AudioHub.is_available()` returns true once the instance exists.
+| Sound | Kind | Fires from |
+| --- | --- | --- |
+| click, hover, refused | interface | `ButtonSoundBinder`, automatically |
+| tower fire | world | `AttackComponent._fire`, at the muzzle |
+| impact | world | `AttackDelivery.spawn_impact`, where the hit lands |
+| creep spawn | world | `Creep.spawn` - a fresh send only, never a recycle |
+| creep death | world | `Creep._die`, after the death passives have had their turn |
+| tower placed | world | `Builder._start_pending_build`, at the tower |
+| build refused | flat | `Builder`, on each of the four ways an order comes to nothing |
+| life lost | flat | `MatchAudio`, on `Replication.leak_reported` |
+| income paid | flat | `PlayerManager._pay_all` |
+
+Two of those are worth knowing the reasoning behind, because both look like
+mistakes until the reason is stated.
+
+**A tower being placed is a WORLD sound and is not filtered to the local
+player.** Under lockstep every client simulates every lane, so it fires on every
+machine for every player in the match. Played flat that would be twelve players'
+building heard at once by all of them; played at the tower, the distance gate
+decides whose maze anybody hears - which is the answer a player wants.
+
+**A build REFUSED is flat and IS filtered.** There is no tower to play it at,
+and the whole news is that there is not.
+
+**Income is the payout, not every coin.** Gold also arrives as a bounty for
+every creep that dies in your maze, which is a continuous drip in a working
+match; a ping on each one says nothing a player cannot already see. The payout
+is an event - it arrives on a clock and the whole economy is paced against it.
+
+### Proving it
+
+Audio cannot be checked by a headless run: `AudioHub` sets `_silent` on a
+process with no output device and every call returns early, so a headless pass
+is a test of the early return. It cannot easily be checked windowed either - a
+windowed run spends its first thousand frames compiling shaders and a
+frame-counted probe quits before the match has spawned anything.
+
+What worked, and is worth repeating if this is ever touched again: force
+`_silent` false, add a counter to `AudioHub._claim_gap`, and run a throwaway
+probe HEADLESS against `Main.tscn` that builds a tower through the builder,
+spawns creeps next to it, reports a leak through `Replication.report_leak` and
+pays income. Then read the counter.
+
+Three traps were paid for on the way, all of which read as "the audio does not
+work":
+
+- **A probe against `server_match.tscn` reports silence and is right to.** A
+  dedicated server wires no `audio_config` on its `References` at all, so
+  `MatchAudio` finds nothing and plays nothing. The client scene is `Main.tscn`
+  and it is the only one worth probing.
+- **A one-player match is won the instant it starts**, the summary screen
+  changes the scene, and a probe that was the root node goes with it - which
+  looks exactly like the audio never firing. Two players.
+- **Starting gold is 0 in the default settings preset**, so a build ordered by a
+  probe is refused on arrival. That is the `build_denied` path working
+  perfectly and the `tower_placed` path never running.
+
+The general form of all three is CLAUDE.md's rule about a positive control: ask
+what in the output proves the thing under test actually executed. The counter
+printing a sound's name is that proof; an absence of errors is not.
 
 ## 8. Not built yet
 
-- **Nothing in the world makes a sound.** Towers, creeps and impacts have no
-  sound wired; the paths on `AttackStats` and `CreepStats` do not exist yet.
-  The match-event sounds are authored in the config but nothing emits them.
-- **Music and ambience.** `AudioHub.play_music()` works and nothing calls it.
-  `AudioClipSet` and `IntervalClipSet` are authored and unused.
-- **The voice budget is unmeasured**, as above.
-- **`AudioListener3D`** is not placed; world sounds currently use the camera as
-  the listener by default.
+- **Music and ambience.** `AudioHub.play_music()` works and nothing calls it;
+  `music_menu_path` and `music_match_path` are empty because there are no
+  tracks. `AudioClipSet` and `IntervalClipSet` are authored and unused.
+- **Five match events have no file**, so their paths are empty and they are
+  silent rather than wrong: a tower sold, a life TAKEN off somebody else, a
+  player eliminated, victory and defeat. Adding one is a sound in SfxGen's
+  roster, a path in `audio_config.tres` and a call - the first two of the five
+  already have somewhere obvious to be called from.
+- **The voice budget is unmeasured.** The caps in `audio_config.tres` are
+  starting guesses and `Scenes/Tools/perf_bench.tscn` is where they should be
+  checked, against a full maze rather than against a probe.
+- **The tier axis is unused.** SfxGen renders one sound per branch and scales
+  nothing by tier, so an Ultimate fires with the same sample as the 10g tower
+  under it. The table for it is already in `sounds.py`.
+- **`AudioListener3D`** is not placed; world sounds use the camera as the
+  listener by default.
+- **Nothing is mixed**, with one exception. Every sound plays at whatever level
+  SfxGen normalised it to: `AudioClipSet.volume_offset_db` is the authored place
+  for a trim and nothing uses it yet, and no sound is balanced against any
+  other. The first real listening pass will want per-sound trims before it wants
+  anything else on this list.
+  - the exception is `build_refused`, which is rendered 8 dB under the set's
+    ceiling in `sounds.py`. It was reported as far too loud and measured that
+    way: a bitcrushed square wave is dense across its whole band, so at the
+    shared peak it sat 10 dB above the impacts, and being FLAT it is never
+    pulled down by the distance attenuation that quietens everything in the
+    world. Both halves of that are worth remembering the next time a flat sound
+    is added.
+  - **measure before trimming one.** Peak tells you nothing about loudness
+    here; RMS over the loudest 50 ms window ranks the set in the order a person
+    hears it, and a throwaway script over `Audio/` is a minute's work. Guessing
+    a decibel number is how a sound ends up inaudible instead.

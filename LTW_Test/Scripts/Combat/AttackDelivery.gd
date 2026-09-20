@@ -18,6 +18,26 @@ extends Resource
 ## empty path means no visual rather than a missing one.
 @export_file("*.tscn") var impact_scene_path: String = ""
 
+@export_group("Sound")
+## WORLD. Played where the hit lands, or empty for a hit that makes no sound.
+##
+## On the DELIVERY rather than on the attack, and the split is worth stating:
+## what a shot sounds like LEAVING is a property of the weapon and lives on
+## AttackStats.fire_sound_path, while what it sounds like ARRIVING is a
+## property of how it got there and of what it hit. A mortar and a crossbow
+## share neither.
+##
+## **Empty is an answer, not a fault**, exactly as the impact scene above is: a
+## spinning blade that grinds whatever stands next to it has no arrival to
+## announce. So there is no roster-wide default behind this the way there is
+## behind a creep's death - a default would take the silence away from the
+## things that want it.
+##
+## By path rather than as a stream, for the reason the scene above is. AudioHub
+## owns the cache and ContentWarmer warms it off the stats file that reaches
+## here. Written by ModelGen for every generated tower.
+@export_file("*.wav", "*.ogg") var impact_sound_path: String = ""
+
 ## Cached impact and whether loading it has been tried, see impact_scene().
 var _cached_impact: PackedScene = null
 var _impact_loaded: bool = false
@@ -39,7 +59,8 @@ func impact_scene() -> PackedScene:
 	return _cached_impact
 
 
-## Drops the impact visual at a world point, if this delivery has one. Parented
+## Drops the impact visual at a world point, and plays the impact SOUND there,
+## either of which this delivery may have without the other. Parented
 ## to the shared effects root rather than to the tower, so selling the tower
 ## mid animation cannot take the effect with it.
 ##
@@ -52,6 +73,13 @@ func impact_scene() -> PackedScene:
 ## given effect should sit depends on the effect, so it belongs in the scene
 ## next to the thing being offset rather than as a number here.
 func spawn_impact(at: Vector3, from: Vector3 = Vector3.ZERO) -> void:
+	# BEFORE the scene, and outside the early return below on purpose: the two
+	# are independent answers. An attack can land audibly with nothing to draw
+	# - a blade that simply hurts what it touches - and a flash with no noise
+	# is just as legitimate. Tying the sound to the visual would make one of
+	# those two impossible to author.
+	AudioHub.play_at(impact_sound_path, at)
+
 	var scene: PackedScene = impact_scene()
 	if scene == null:
 		return

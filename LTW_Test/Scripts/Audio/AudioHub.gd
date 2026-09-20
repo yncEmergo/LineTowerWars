@@ -24,7 +24,44 @@ extends Node
 ##
 ## WHAT IT IS NOT. It holds no per-sound settings: how loud a tower's shot is
 ## lives on that tower's stats, and the mixing rules live on AudioConfig. This
-## file owns the players, the cache and the budget, and nothing else.
+## file owns the players, the cache and the budget, and nothing else. WHICH
+## match event sounds like what is MatchAudio's, not this file's.
+##
+## THREE WAYS TO PLAY A SOUND, and picking between them is the one decision a
+## caller here actually makes:
+##
+##   play_at()     DIEGETIC. It happens at a POINT in the world and is heard
+##                 from where the camera is standing: a tower firing, a shell
+##                 landing, a creep dying. 3D, on the SFX bus, and the only one
+##                 of the three that pays the voice budget - because it is the
+##                 only one a full maze can ask for a thousand times a second.
+##
+##   play_event()  EXTRADIEGETIC. It is about the MATCH rather than about a
+##                 place in it: a life lost, income arriving, a placement the
+##                 world refused. Flat, on the SFX bus, and deliberately NOT
+##                 positional - the whole point of these is that they are heard
+##                 while the player is looking somewhere else, which is most of
+##                 the time. Attenuating one by distance would silence exactly
+##                 the moments it exists for.
+##
+##   play_ui()     THE INTERFACE. A click, a hover, a press on a greyed-out
+##                 button. Flat, on the UI bus, so a player who wants the
+##                 clicks down without turning the game down has a slider that
+##                 does it.
+##
+## The line between the last two is worth stating because it is easy to get
+## wrong: play_ui is about a CONTROL the player operated, play_event about
+## something that happened in the match. A build refused for want of gold is an
+## event; a press on a disabled button is interface. They are separate sounds
+## on separate buses for that reason.
+
+## Buses, spelled exactly as Resources/Config/default_bus_layout.tres names
+## them. By NAME and never by index, the same rule UserSettings follows: the
+## layout's order is not a contract and reordering it must not silently move
+## every sound in the game onto the wrong channel.
+const BUS_UI: StringName = &"UI"
+const BUS_SFX: StringName = &"SFX"
+const BUS_MUSIC: StringName = &"Music"
 
 ## The autoload, or null everywhere else. Never assume it.
 static var instance: AudioHub
@@ -41,7 +78,13 @@ static var _cache: Dictionary = {}
 ## Wall-clock milliseconds each path was last started at, for the rate limits.
 static var _last_started_ms: Dictionary = {}
 
-var _ui_players: Array[AudioStreamPlayer] = []
+## The flat pool, shared by play_ui and play_event.
+##
+## ONE pool rather than one per bus, because a player's bus is a property set
+## when it is claimed and an idle player belongs to nobody. Two pools would be
+## two caps to author and two ways to run out while the other sat empty, for a
+## distinction that lasts only as long as one sound.
+var _flat_players: Array[AudioStreamPlayer] = []
 var _world_players: Array[AudioStreamPlayer3D] = []
 var _music_player: AudioStreamPlayer = null
 var _music_path: String = ""
@@ -70,6 +113,14 @@ func _ready() -> void:
 	var binder: ButtonSoundBinder = ButtonSoundBinder.new()
 	binder.name = "ButtonSoundBinder"
 	add_child(binder)
+
+	# Owned on the same terms and for the same reason: the match events have to
+	# be heard from a node that outlives a match scene - a leak arrives on an
+	# autoload's signal - and adding a second [autoload] line is a change that
+	# breaks a running editor. See MatchAudio.
+	var events: MatchAudio = MatchAudio.new()
+	events.name = "MatchAudio"
+	add_child(events)
 
 
 # --- asking ----------------------------------------------------------------
@@ -129,7 +180,28 @@ static func warm(paths: PackedStringArray) -> void:
 ## which is what hover needs - a mouse crossing a command card touches a dozen
 ## buttons in a few frames and every one of them asks.
 static func play_ui(path: String, min_gap_seconds: float = -1.0) -> void:
-	if instance == null || instance._silent:
+	_play_flat(path, BUS_UI, min_gap_seconds)
+
+
+## A match event with no place in the world: a life lost, income arriving, a
+## build the world refused. Flat, SFX bus, no distance and no budget.
+##
+## **NOT POSITIONAL, and that is the whole point of it being separate from
+## play_at().** These are the sounds a player is meant to hear while looking at
+## a different lane - that is what they are FOR - so attenuating one by how far
+## the camera happens to be from where it happened would silence it at exactly
+## the moment it mattered. A leak in your own maze is news wherever you are
+## looking.
+##
+## On SFX rather than UI because it is not the interface: a player who turns
+## the clicks down has not asked to stop being told they are losing.
+static func play_event(path: String, min_gap_seconds: float = -1.0) -> void:
+	_play_flat(path, BUS_SFX, min_gap_seconds)
+
+
+## The body of both of the above. A flat voice on the named bus.
+static func _play_flat(path: String, bus: StringName, min_gap_seconds: float) -> void:
+	if instance == null || instance._silent || path.is_empty():
 		return
 	var audio: AudioStream = stream(path)
 	if audio == null:
@@ -142,9 +214,10 @@ static func play_ui(path: String, min_gap_seconds: float = -1.0) -> void:
 	if !_claim_gap(path, gap):
 		return
 
-	var player: AudioStreamPlayer = instance._claim_ui_player()
+	var player: AudioStreamPlayer = instance._claim_flat_player()
 	if player == null:
 		return
+	player.bus = bus
 	player.stream = audio
 	player.volume_db = _offset_db(audio)
 	player.play()
@@ -158,6 +231,13 @@ static func play_ui(path: String, min_gap_seconds: float = -1.0) -> void:
 ## closer. See _claim_world_player().
 static func play_at(path: String, position: Vector3, min_gap_seconds: float = -1.0) -> void:
 	if instance == null || instance._silent:
+		return
+	# FIRST, and it belongs first rather than being left to stream() below.
+	# This is the hottest call in the whole file - every shot of every tower in
+	# every lane arrives here - and an unset path is how a sound is turned off,
+	# so the common case must not pay for the camera lookup and the distance
+	# maths to find out it had nothing to play.
+	if path.is_empty():
 		return
 	var config: AudioConfig = instance._config
 	if config == null:
@@ -235,8 +315,8 @@ static func _claim_gap(path: String, gap_seconds: float) -> bool:
 
 ## Decibels this stream asks to be shifted by, which only an AudioClipSet does.
 static func _offset_db(audio: AudioStream) -> float:
-	var set: AudioClipSet = audio as AudioClipSet
-	return set.volume_offset_db if set != null else 0.0
+	var clip_set: AudioClipSet = audio as AudioClipSet
+	return  clip_set.volume_offset_db if  clip_set != null else 0.0
 
 
 ## Whether a world point is inside the camera's view.
@@ -255,19 +335,24 @@ static func _is_on_screen(camera: Camera3D, position: Vector3) -> bool:
 		&& screen.y > -margin && screen.y < size.y + margin
 
 
-func _claim_ui_player() -> AudioStreamPlayer:
-	for player: AudioStreamPlayer in _ui_players:
+## An idle flat voice, or null when the cap is reached.
+##
+## No nearest-wins rule here, unlike the world pool below: a flat sound has no
+## distance to be ranked by, and running out of these means something is asking
+## far more often than a player can act. Dropping the newest is the honest
+## answer to that.
+func _claim_flat_player() -> AudioStreamPlayer:
+	for player: AudioStreamPlayer in _flat_players:
 		if !player.playing:
 			return player
 
 	var config: AudioConfig = _config
-	var cap: int = config.budget_ui_voices if config != null else 8
-	if _ui_players.size() >= cap:
+	var cap: int = config.budget_flat_voices if config != null else 8
+	if _flat_players.size() >= cap:
 		return null
 
 	var fresh: AudioStreamPlayer = AudioStreamPlayer.new()
-	fresh.bus = &"UI"
-	_ui_players.append(fresh)
+	_flat_players.append(fresh)
 	add_child(fresh)
 	return fresh
 
@@ -287,7 +372,7 @@ func _claim_world_player(position: Vector3, camera: Camera3D,
 
 	if _world_players.size() < config.budget_world_voices:
 		var fresh: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
-		fresh.bus = &"SFX"
+		fresh.bus = BUS_SFX
 		# Godot's own falloff past unit_size. Inverse rather than the default,
 		# which is far too aggressive for a camera this high.
 		fresh.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
@@ -329,7 +414,7 @@ func _change_music(audio: AudioStream) -> void:
 
 	if _music_player == null:
 		_music_player = AudioStreamPlayer.new()
-		_music_player.bus = &"Music"
+		_music_player.bus = BUS_MUSIC
 		add_child(_music_player)
 
 	if _music_tween != null && _music_tween.is_valid():

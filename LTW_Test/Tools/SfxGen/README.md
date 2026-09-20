@@ -73,6 +73,17 @@ whole set moves together.
   idempotency note above.
 - **Peak normalised, never RMS.** These are transients; an RMS match makes a
   long explosion quiet and a short click deafening.
+- **A sound that should be QUIETER than the set says so with `finish(peak=...)`,
+  never with `gain()`.** `finish` normalises after whatever it is handed, so a
+  gain applied before it is scaled straight back out and does nothing at all -
+  silently. `build_refused` carried a pointless `gain(tone, 0.7)` for exactly
+  that reason until it was reported as too loud.
+  - the shared ceiling is about arriving unclipped and about none of the set
+    being accidentally 20 dB from its neighbour. A DELIBERATE trim is a
+    different thing and is allowed, but it needs a reason written next to it -
+    peak normalisation and perceived loudness only agree when two sounds have
+    similar spectral density, and a bitcrushed square wave against a noise
+    transient is the case where they disagree most.
 
 ## Traps already paid for
 

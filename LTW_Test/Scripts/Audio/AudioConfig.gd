@@ -16,6 +16,27 @@ extends Resource
 ## match-wide events. Those have no stats resource to live on, and this is their
 ## home.
 ##
+## **EVERY SOUND BELOW SAYS WHETHER IT IS IN THE WORLD OR NOT**, because that is
+## the one thing about a sound that cannot be worked out by looking at it later,
+## and it decides which of two completely different calls plays it:
+##
+##   WORLD  happens at a point, is heard from where the camera stands, and is
+##          attenuated, culled by distance and budgeted. AudioHub.play_at().
+##   FLAT   happens to the MATCH rather than to a place in it, and is heard the
+##          same wherever the player is looking. AudioHub.play_event(), or
+##          play_ui() when it is about a control rather than about the match.
+##
+## Getting it wrong is silent both ways round: a flat sound written as a world
+## one is never heard at the moment it mattered, and a world sound played flat
+## is every lane in a twelve player match shouting at once.
+##
+## THE TWO CREEP DEFAULTS are the one place this file names something a stats
+## resource could own, and they are deliberate. A DEFAULT is one entry, not a
+## roster - it is what a creep that names nothing sounds like, and the moment a
+## creep wants its own it says so on its own CreepStats and this is not
+## consulted. That is the opposite of the two hundred entry list the rule above
+## exists to prevent.
+##
 ## PATHS, NOT STREAMS. Same rule and the same reasoning as a .tres naming a
 ## scene: an AudioStream held as an ext_resource is a hard load-time dependency,
 ## so loading this config would pull every sound in it into memory whether or
@@ -26,6 +47,9 @@ extends Resource
 ## References.audio_config.
 
 @export_group("Interface", "ui_")
+## **FLAT**, and on the UI bus rather than SFX - the interface is a channel a
+## player may want quieter without turning the game down.
+##
 ## The ordinary button press. Every BaseButton in the project plays this unless
 ## a ButtonSounds child says otherwise.
 @export_file("*.wav", "*.ogg") var ui_click_path: String = ""
@@ -39,30 +63,73 @@ extends Resource
 @export_file("*.wav", "*.ogg") var ui_refused_path: String = ""
 
 @export_group("Building", "build_")
-## A tower finished being placed.
+## **WORLD.** A tower landed on the grid, played where it landed.
+##
+## In the world rather than flat, although it is the player's own doing: under
+## lockstep every client simulates every lane, so this fires on every machine
+## for every player in the match. Played flat it would be twelve players'
+## building heard at once by all of them; played at the tower it is heard by
+## whoever is looking at that maze, which is what a player wants to know.
 @export_file("*.wav", "*.ogg") var build_placed_path: String = ""
-## A placement the world refused: no gold, no stock, or it would have sealed
-## the maze. Distinct from ui_refused, which is about a BUTTON.
+## **FLAT.** A placement the world refused: the spot was taken while the
+## builder walked, or the gold ran out before it arrived.
+##
+## Distinct from ui_refused, which is about a BUTTON that could not be pressed.
+## This one is the order itself coming to nothing, seconds later and usually
+## while the player is already doing something else - which is exactly why it
+## cannot be positional. Played for the LOCAL player's own refusals and nobody
+## else's; see MatchAudio.
 @export_file("*.wav", "*.ogg") var build_denied_path: String = ""
-## A tower sold.
+## **WORLD.** A tower sold, played where it stood. NOT WIRED: there is no file
+## for it yet.
 @export_file("*.wav", "*.ogg") var build_sold_path: String = ""
 
 @export_group("Match", "match_")
-## Gold arriving, whether from income or from a bounty.
+## **FLAT.** The income payout landing.
+##
+## THE PAYOUT AND NOT EVERY COIN, which is a decision rather than an oversight.
+## Gold also arrives as a bounty for every creep that dies in your maze, and
+## that is a continuous drip in a working match - a ping on each one says
+## nothing a player cannot already see, and at twenty ticks a second it is a
+## machine gun. The payout is an EVENT: it arrives on a clock, the whole
+## economy is paced against it, and hearing it is how a player knows the
+## interval turned over without watching the timer.
 @export_file("*.wav", "*.ogg") var match_gold_path: String = ""
-## A creep reached the end of your lane and took a life.
+## **FLAT.** A creep reached the end of your lane and took a life.
 ##
 ## Has to be understood while the player is looking somewhere else, which is
-## most of the time - see the note in SfxGen's sounds.py.
+## most of the time - see the note in SfxGen's sounds.py. That is the whole
+## argument for this being flat rather than played at the end zone it happened
+## in: the lane it happened in is precisely the one nobody was watching.
 @export_file("*.wav", "*.ogg") var match_life_lost_path: String = ""
-## You are the one who took a life off somebody else.
+## **FLAT.** You are the one who took a life off somebody else. NOT WIRED:
+## there is no file for it yet, so a leak you profited from is silent rather
+## than borrowing the sound of one you suffered.
 @export_file("*.wav", "*.ogg") var match_life_taken_path: String = ""
-## A player was knocked out.
+## **FLAT.** A player was knocked out. NOT WIRED: no file yet.
 @export_file("*.wav", "*.ogg") var match_eliminated_path: String = ""
-## The match ended and you won it.
+## **FLAT.** The match ended and you won it. NOT WIRED: no file yet.
 @export_file("*.wav", "*.ogg") var match_victory_path: String = ""
-## The match ended and you did not.
+## **FLAT.** The match ended and you did not. NOT WIRED: no file yet.
 @export_file("*.wav", "*.ogg") var match_defeat_path: String = ""
+
+@export_group("Creep defaults", "creep_")
+## **WORLD.** What a creep dying sounds like when its own CreepStats names
+## nothing, played where it died.
+##
+## A DEFAULT rather than a list, which is why it is allowed in this file at all
+## - see the note at the top. The roster shares one death sound today, and a
+## creep that wants its own says so on its own stats resource without anything
+## here changing.
+##
+## EMPTY here means the WHOLE ROSTER is silent when it dies, not one creep -
+## which nothing wants. It is the feedback that says the maze is working, and
+## the one sound a player must never have to look at the screen to identify.
+@export_file("*.wav", "*.ogg") var creep_death_path: String = ""
+## **WORLD.** A freshly sent creep arriving, on the same terms. A RECYCLED
+## creep - one walking on into the next maze after a leak - is not a spawn and
+## does not play this.
+@export_file("*.wav", "*.ogg") var creep_spawn_path: String = ""
 
 @export_group("Music", "music_")
 ## Plays under the menus.
@@ -85,9 +152,13 @@ extends Resource
 ## 32 is a starting guess, not a measured number. Measure it with a full maze
 ## before trusting it.
 @export_range(4, 128, 1) var budget_world_voices: int = 32
-## How many INTERFACE sounds may play at once. Small on purpose: the UI is one
-## player clicking, and anything that needs more than this is a bug.
-@export_range(2, 32, 1) var budget_ui_voices: int = 8
+## How many FLAT sounds may play at once, the interface and the match events
+## together - they share one pool, see AudioHub._claim_flat_player().
+##
+## Small on purpose: flat sounds are one player clicking and a handful of match
+## events a minute, so anything needing more than this is asking faster than a
+## person can act.
+@export_range(2, 32, 1) var budget_flat_voices: int = 8
 ## The shortest gap between two plays of THE SAME sound, in seconds.
 ##
 ## The dedupe that makes a maze survivable. Forty towers of one type firing on

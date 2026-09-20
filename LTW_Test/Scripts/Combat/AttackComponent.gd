@@ -648,6 +648,19 @@ func _fire(attack: AttackStats, target: Unit, point: Vector3) -> void:
 	var ratio: float = _unit.attack_damage_ratio()
 	if !is_equal_approx(ratio, 1.0):
 		rolled = maxi(1, int(round(float(rolled) * maxf(0.0, ratio))))
+	# PRESENTATION, and at the MUZZLE rather than at the unit: a shot is heard
+	# from where it leaves, which for a tower with a barrel is not where its
+	# feet are. Range is still measured from the unit - see _origin() - and
+	# these two deliberately disagree.
+	#
+	# Every client simulates every lane under lockstep, so this is asked once
+	# per firing tower in the whole match. What stops that being a thousand
+	# sounds a second is entirely AudioHub's: the empty path, the distance and
+	# the same-sound gap are all checked before a voice is spent. Nothing here
+	# may check them for itself - a tower that decided whether it was audible
+	# would be reading the camera from inside the simulation.
+	AudioHub.play_at(attack.fire_sound_path, muzzle_position())
+
 	_send(attack, _new_hit(attack, rolled, true), target, point)
 
 	for extra: Unit in _extra_targets(attack, target):

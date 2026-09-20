@@ -17,6 +17,7 @@
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
+impact_sound_path = "res://Audio/Generated/Impacts/impact_stone.wav"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SelfSplashEffect")

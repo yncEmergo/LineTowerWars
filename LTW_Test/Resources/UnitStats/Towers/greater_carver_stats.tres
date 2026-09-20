@@ -17,6 +17,7 @@
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
 impact_scene_path = "res://Scenes/Effects/blood_spray.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_flesh.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")

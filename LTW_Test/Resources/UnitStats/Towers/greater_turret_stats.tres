@@ -19,6 +19,7 @@ projectile_scene_path = "res://Scenes/Effects/missile.tscn"
 speed = 13
 arc_height = 0.3
 impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/explosion.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -28,6 +29,7 @@ damage_type = 4
 attacks_per_second = 1.25
 attack_range = 7.75
 target_types = 2
+fire_sound_path = "res://Audio/Generated/Towers/cannon_fire.wav"
 delivery = SubResource("Delivery")
 
 [resource]

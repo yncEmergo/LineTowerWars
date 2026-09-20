@@ -248,12 +248,31 @@ def build_place(rng):
 def build_refused(rng):
     """The "no". Bitcrushed on purpose - it is the one sound in the set that is
     allowed to be artificial, because it is the interface talking rather than
-    the world, and a player should never mistake it for something in the maze."""
+    the world, and a player should never mistake it for something in the maze.
+
+    RENDERED QUIET, and it is the only sound here that asks for that. A
+    bitcrushed square wave is the case peak normalisation gets most wrong: it
+    is dense right across the band this low-passes to, so at the shared ceiling
+    it measured 10 dB hotter than the impacts and the arrow release and was
+    reported as far too loud. It is also FLAT - the interface talking, so no
+    distance attenuation ever pulls it down the way a world sound is pulled -
+    which compounds the same gap a second time.
+
+    The number is a peak, so it scales the whole sound: 0.35 is 8 dB under the
+    ceiling, which lands it just below gold_gain and creep_death rather than
+    among the loudest things in the game. Turn it further down by lowering this
+    and re-running; nothing else has to change.
+    """
     tone = dsp.osc("square", dsp.sweep(230.0, 150.0, 0.16), 0.16)
     tone = dsp.bitcrush(tone, bits=4, hold=3)
     tone = dsp.low_pass(tone, 1700.0)
     tone = dsp.apply_env(tone, dsp.env_decay(0.16, decay=7.0, attack=0.004))
-    return dsp.finish(dsp.gain(tone, 0.7))
+    # **`peak` IS THE ONLY LEVEL KNOB THAT SURVIVES.** This used to end with
+    # `dsp.finish(dsp.gain(tone, 0.7))`, which did exactly nothing: finish()
+    # normalises to its ceiling afterwards, so any gain applied before it is
+    # scaled straight back out. A gain here is silently discarded; a peak here
+    # is the answer.
+    return dsp.finish(tone, peak=0.35)
 
 
 def life_lost(rng):

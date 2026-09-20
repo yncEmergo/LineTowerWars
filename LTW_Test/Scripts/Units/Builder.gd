@@ -53,6 +53,7 @@ func order_build(tower_stats: BuildingStats, world_target: Vector3) -> void:
 	var cell: Vector2i = area.snap_footprint(world_target, footprint)
 	if !area.can_place(cell, footprint, tower_stats.blocks_movement):
 		Log.warn("Tower cannot be placed there", {"cell": cell})
+		MatchAudio.build_denied(owner_player_id)
 		return
 
 	# Gold is deliberately NOT checked here. It is taken when the tower
@@ -123,8 +124,14 @@ func _start_pending_build() -> void:
 		return
 
 	# Another tower may have landed here while the builder walked over.
+	# The three refusals below are the whole reason build_denied exists: each
+	# of them happens SECONDS after the press, while the player is already
+	# doing something else, and each leaves nothing on the field to notice. A
+	# line in a log is not feedback. Flat rather than played here, because
+	# there is no tower to play it at - see MatchAudio.build_denied.
 	if !area.can_place(cell, footprint, tower_stats.blocks_movement):
 		Log.warn("Build spot was taken on the way, order dropped", {"cell": cell})
+		MatchAudio.build_denied(owner_player_id)
 		return
 
 	# Loaded here rather than when the order was given, so a walk that ends in
@@ -134,6 +141,7 @@ func _start_pending_build() -> void:
 	if scene == null:
 		Log.err("Tower stats name no loadable prefab, order dropped",
 			tower_stats.display_name)
+		MatchAudio.build_denied(owner_player_id)
 		return
 
 	# Gold is taken here rather than when the order was given, so a walk that
@@ -142,6 +150,7 @@ func _start_pending_build() -> void:
 	var state: PlayerState = _owner_state()
 	if state != null && !state.spend(cost):
 		Log.warn("Not enough gold on arrival, order dropped", {"cost": cost})
+		MatchAudio.build_denied(owner_player_id)
 		return
 
 	var building: Building = scene.instantiate() as Building
@@ -154,6 +163,11 @@ func _start_pending_build() -> void:
 	# Parented to the area so a player's towers live and die with it.
 	area.add_child(building)
 	building.place(owner_player_id, area, cell, cost)
+
+	# Presentation, in the WORLD and not filtered to the local player: every
+	# client places every player's towers under lockstep, and which of them
+	# anybody hears is the distance gate's answer rather than this line's.
+	MatchAudio.tower_placed(building.global_position)
 
 	# Gold is on the field from this moment, so the technology choice behind it
 	# is committed too and can no longer be taken back (unit_data.md 2.2's undo

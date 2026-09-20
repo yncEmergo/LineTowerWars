@@ -110,6 +110,25 @@ extends MobileUnitStats
 ## reach it. Ignored by anything that does not fly.
 @export var fly_height: float = 1.2
 
+@export_group("Sound")
+## WORLD. Played where this creep falls, or empty to take the roster default
+## off AudioConfig.creep_death_path.
+##
+## By PATH rather than as a stream, the same rule and the same reason a .tres
+## names a scene by path: an AudioStream held as an ext_resource would make
+## every sound a hard load-time dependency of the stats file, so reading a
+## creep's gold cost would pull its audio into memory. AudioHub owns the cache
+## and the loading, and ContentWarmer finds this by reflecting over the folder
+## - so it is warmed on the load screen without anything here saying so.
+##
+## Here rather than only on AudioConfig because a stats resource is the
+## authority on the thing it describes, and the roster will not share one death
+## sound forever. Empty is the ordinary case today.
+@export_file("*.wav", "*.ogg") var death_sound_path: String = ""
+## WORLD. Played where a freshly SENT creep arrives, on the same terms. A
+## recycled creep walking on into the next maze is not a spawn.
+@export_file("*.wav", "*.ogg") var spawn_sound_path: String = ""
+
 
 ## Reserve this creep starts a match with, resolved from initial_stock.
 ##

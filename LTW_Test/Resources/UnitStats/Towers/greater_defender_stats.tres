@@ -21,6 +21,7 @@ script = ExtResource("4_ProjectileDelivery")
 projectile_scene_path = "res://Scenes/Effects/magic_bolt.tscn"
 speed = 10
 impact_scene_path = "res://Scenes/Effects/arcane_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_armor.wav"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SplashEffect")
@@ -35,6 +36,7 @@ is_aoe_damage = true
 attacks_per_second = 0.833
 attack_range = 7
 target_types = 3
+fire_sound_path = "res://Audio/Generated/Towers/magic_cast.wav"
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
 

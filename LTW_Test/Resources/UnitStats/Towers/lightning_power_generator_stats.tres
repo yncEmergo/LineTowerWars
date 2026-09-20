@@ -20,6 +20,7 @@
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
 impact_scene_path = "res://Scenes/Effects/spark_burst.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_armor.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -29,6 +30,7 @@ damage_type = 1
 attacks_per_second = 2
 attack_range = 1.5
 target_types = 3
+fire_sound_path = "res://Audio/Generated/Towers/magic_cast.wav"
 delivery = SubResource("Delivery")
 
 [resource]

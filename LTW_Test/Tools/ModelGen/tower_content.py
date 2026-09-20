@@ -1,4 +1,5 @@
 import io, os
+import audio as ta
 import roster as td
 import style as ts
 from tscn import Scene, t3, c, num
@@ -121,6 +122,13 @@ def gen_stats(row, heights):
         delivery_lines = ['script = ExtResource("%s")' % delivery_script]
     if impact:
         delivery_lines.append('impact_scene_path = "%s"' % impact)
+    # The ARRIVAL, which belongs to the delivery rather than to the attack: what
+    # a shot sounds like landing is a property of how it got there. Independent
+    # of the visual above - the archer branches have no impact scene and are
+    # still audible. See Tools/ModelGen/audio.py.
+    impact_sound = ta.tower_impact(branch)
+    if impact_sound:
+        delivery_lines.append('impact_sound_path = "%s"' % impact_sound)
     s.sub("Resource", "Delivery", delivery_lines)
 
     # --- effects
@@ -155,6 +163,11 @@ def gen_stats(row, heights):
         attack_lines.append("windup_seconds = %s" % num(windup))
     attack_lines.append("attack_range = %s" % num(td.cells(rng)))
     attack_lines.append("target_types = %d" % targets)
+    # The RELEASE, played at the muzzle. Empty for the whole cutter line, which
+    # launches nothing and is heard on the way in instead.
+    fire_sound = ta.tower_fire(branch)
+    if fire_sound:
+        attack_lines.append('fire_sound_path = "%s"' % fire_sound)
     attack_lines.append('delivery = SubResource("Delivery")')
     if effect_names:
         attack_lines.append("effects = Array[ExtResource(\"%s\")]([%s])" % (

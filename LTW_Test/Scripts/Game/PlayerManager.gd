@@ -615,3 +615,6 @@ func _pay_all() -> void:
 		var state: PlayerState = _states[player_id]
 		state.pay_income()
 	income_paid.emit()
+	# Presentation, and once for the whole match rather than once per player:
+	# everybody is paid on this tick and only one of them is sitting here.
+	MatchAudio.income_paid()

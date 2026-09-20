@@ -24,6 +24,7 @@ projectile_scene_path = "res://Scenes/Effects/meteor.tscn"
 speed = 12.8
 sky_launch_offset = Vector3(-9, 16, 0)
 impact_scene_path = "res://Scenes/Effects/flame_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_flesh.wav"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("5_SplashEffect")

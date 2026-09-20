@@ -30,6 +30,7 @@ written without one and picks it up on the next run. Bake, then run again.
 import io
 import os
 
+import audio as ta
 import element_abilities as ea
 import element_roster as er
 import roster as td
@@ -459,7 +460,8 @@ def gen_stats(row, heights):
     ability_script = s.ext("Script", S_UNIT_ABILITY)
     attack_script = s.ext("Script", S_ATTACK_STATS)
 
-    _delivery(s, shape, kind, projectile, speed, arc, impact)
+    _delivery(s, shape, kind, projectile, speed, arc, impact,
+              ta.element_impact(row["element"], shape))
     effect_script, effects = _effects(s, row)
     _attack(s, row, attack_script, effect_script, effects)
 
@@ -509,7 +511,7 @@ def er_price(row):
     return ts.ELEMENT_PRICE_TIERS[row["ti"]]
 
 
-def _delivery(s, shape, kind, projectile, speed, arc, impact):
+def _delivery(s, shape, kind, projectile, speed, arc, impact, impact_sound):
     if kind == "pierce":
         travel, trailing = er.PIERCE[shape]
         script = s.ext("Script", S_PIERCE_DELIVERY)
@@ -534,6 +536,11 @@ def _delivery(s, shape, kind, projectile, speed, arc, impact):
         lines = ['script = ExtResource("%s")' % script]
     if impact:
         lines.append('impact_scene_path = "%s"' % impact)
+    # The ARRIVAL. Two independent answers, either of which may be empty: a
+    # tower can land a hit with nothing to draw and a flash can be silent. See
+    # Tools/ModelGen/audio.py for which element sounds like what.
+    if impact_sound:
+        lines.append('impact_sound_path = "%s"' % impact_sound)
     s.sub("Resource", "Delivery", lines)
 
 
@@ -592,6 +599,11 @@ def _attack(s, row, attack_script, effect_script, effects):
         lines.append("windup_seconds = %s" % num(windup))
     lines.append("attack_range = %s" % num(td.cells(row["range"])))
     lines.append("target_types = %d" % row["targets"])
+    # The RELEASE, played at the muzzle. Empty for the Moonbeam, whose shot is
+    # called down out of the sky rather than fired out of the tower.
+    fire_sound = ta.element_fire(row["element"], row["shape"])
+    if fire_sound:
+        lines.append('fire_sound_path = "%s"' % fire_sound)
     lines.append('delivery = SubResource("Delivery")')
     if effect_script is not None:
         lines.append('effects = Array[ExtResource("%s")]([%s])' % (

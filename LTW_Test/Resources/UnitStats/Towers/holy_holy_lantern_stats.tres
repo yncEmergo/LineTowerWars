@@ -22,6 +22,7 @@ script = ExtResource("4_ProjectileDelivery")
 projectile_scene_path = "res://Scenes/Effects/holy_mote.tscn"
 speed = 14
 impact_scene_path = "res://Scenes/Effects/holy_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/impact_armor.wav"
 
 [sub_resource type="Resource" id="Attack"]
 script = ExtResource("3_AttackStats")
@@ -31,6 +32,7 @@ damage_type = 3
 attacks_per_second = 0.556
 attack_range = 6.75
 target_types = 3
+fire_sound_path = "res://Audio/Generated/Towers/magic_cast.wav"
 delivery = SubResource("Delivery")
 
 [resource]

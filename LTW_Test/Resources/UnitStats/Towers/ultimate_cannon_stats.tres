@@ -20,6 +20,7 @@ projectile_scene_path = "res://Scenes/Effects/mortar_shell.tscn"
 speed = 6
 arc_height = 1
 impact_scene_path = "res://Scenes/Effects/blast_impact.tscn"
+impact_sound_path = "res://Audio/Generated/Impacts/explosion.wav"
 
 [sub_resource type="Resource" id="Splash"]
 script = ExtResource("6_SplashEffect")
@@ -34,6 +35,7 @@ is_aoe_damage = true
 attacks_per_second = 0.5
 attack_range = 4.75
 target_types = 1
+fire_sound_path = "res://Audio/Generated/Towers/cannon_fire.wav"
 delivery = SubResource("Delivery")
 effects = Array[ExtResource("5_AttackEffect")]([SubResource("Splash")])
 
