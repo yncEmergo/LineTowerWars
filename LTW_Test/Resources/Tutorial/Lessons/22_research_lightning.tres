@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TutorialResearchStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialResearchStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "An Ultimate needs four technologies: its own Basic and path, and one other element's Basic and path. The Firelord's partner is Lightning."
+objective = "Research Lightning"
+delay_seconds = 1.0
+holds_clock = true
+holds_rivals = true
+restricts_actions = true
+tech_ids = Array[int]([13])

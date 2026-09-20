@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TutorialOwnStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOwnStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_fire_greater_firelord_to_fire_ultimate_firelord_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "Four technologies owned, and the top of the branch is yours."
+objective = "Upgrade to an Ultimate Firelord"
+delay_seconds = 1.0
+holds_clock = true
+holds_rivals = true
+grant_gold = 30000
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+arrows_on_tower_paths = Array[String](["res://Resources/UnitStats/Towers/fire_greater_firelord_stats.tres"])
+tower_path = "res://Resources/UnitStats/Towers/fire_ultimate_firelord_stats.tres"
+count = 1

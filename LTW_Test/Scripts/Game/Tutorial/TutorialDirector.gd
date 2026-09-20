@@ -101,6 +101,9 @@ var _reach_cache: Dictionary = {}
 ## The moment on screen, and the creep it is about. See TutorialMoment.
 var _moment: TutorialMoment = null
 var _moment_subject: Creep = null
+## Whether the creep the moment on screen is about belongs to somebody ELSE,
+## which decides which of its two bodies is read. See TutorialMoment.
+var _moment_incoming: bool = false
 ## Moments that have fired, as keys. Each fires once.
 var _moments_done: Dictionary = {}
 ## Moment -> simulation seconds since its creep was first seen, for one that
@@ -457,6 +460,7 @@ func _open(index: int) -> void:
 	# After the grants, so a lesson that hands over gold does it before the
 	# world stops rather than on the frame it starts again.
 	_hold(_step.pauses_world)
+	_hold_rivals(_step.holds_rivals)
 	var session: MatchSession = _session
 	if session != null:
 		session.hold_clock(HOLD_REASON, _step.holds_clock)
@@ -509,6 +513,7 @@ func _finish() -> void:
 	_step = null
 	set_physics_process(false)
 	_hold(false)
+	_hold_rivals(false)
 	var session: MatchSession = _session
 	if session != null:
 		session.hold_clock(HOLD_REASON, false)
@@ -564,7 +569,7 @@ func _apply_grants(step: TutorialStep) -> void:
 	_draw_blueprint(step.blueprint())
 	_set_stock(step)
 	if step.wakes_rival != TutorialStep.Rival.NONE:
-		_wake(step.wakes_rival)
+		_wake(step.wakes_rival, step.rival_income_share)
 		var woken: PlayerState = _rival_state(step.wakes_rival)
 		if woken != null && step.grant_rival_gold > 0:
 			woken.gain(step.grant_rival_gold)
@@ -585,9 +590,14 @@ func _apply_limits(step: TutorialStep) -> void:
 	limits.max_upgrade_gold = step.max_upgrade_gold
 	limits.forbidden.append_array(script_resource.forbidden_abilities)
 	limits.forbidden.append_array(step.forbids)
-	limits.research_techs.append_array(step.research_whitelist())
+	limits.research_techs.append_array(step.tech_ids)
 	if step.restricts_actions:
 		limits.restricts_abilities = true
+		# The same whitelist for the Research Center, and on the same terms: a
+		# task that names no technology allows none, so a rung of an upgrade
+		# chain cannot be paid for with a free technology spent on something
+		# else entirely.
+		limits.restricts_research = true
 		limits.abilities.append_array(script_resource.always_allowed)
 		limits.abilities.append_array(step.allowed_abilities)
 		var plan: TowerLayout = step.blueprint()
@@ -606,6 +616,11 @@ func _apply_unlock_clock(step: TutorialStep) -> void:
 	var session: MatchSession = _session
 	if session == null:
 		return
+	# The tier first and the extra time on top of it, so a lesson can say "every
+	# creep below tier three, and two minutes more".
+	if step.unlocks_to_tier > 0:
+		session.lead_unlocks(maxf(0.0,
+			_last_unlock_below(step.unlocks_to_tier) - session.unlock_elapsed_seconds()))
 	if step.unlocks_ahead_seconds > 0.0:
 		session.lead_unlocks(step.unlocks_ahead_seconds)
 	if step.holds_back_tier == 0:
@@ -674,6 +689,12 @@ func current_moment() -> TutorialMoment:
 	return _moment
 
 
+## Whether the moment on screen was set off by somebody ELSE's creep, which is
+## what picks between its two bodies. See TutorialMoment.incoming_body.
+func moment_is_incoming() -> bool:
+	return _moment_incoming
+
+
 ## Where the moment on screen is, for the spotlight, or Vector3.INF.
 func moment_focus() -> Vector3:
 	if _moment == null || _moment_subject == null || !is_instance_valid(_moment_subject):
@@ -720,28 +741,73 @@ func _watch_moments(delta: float) -> void:
 			return
 
 
-## The player's creep a moment is about, or null. For a leak, the one furthest
-## down the lane.
+## The creep a moment is about, or null. For a leak, the one furthest down the
+## lane it is walking.
+##
+## **BOTH DIRECTIONS**, which is the whole of what these moments watch: the
+## player's own creeps walking somebody else's lane, and somebody else's creeps
+## walking theirs. A player meets flyers for the first time whichever way they
+## are pointing, and the one coming at their own maze is the one they most need
+## telling about.
+##
+## A creep in its OWN owner's lane is neither and is skipped. That is a creep
+## recycled by a leak rather than one that was sent, and stopping the world on
+## it would be announcing a thing the player has already been shown.
+##
+## `_moment_incoming` is set as a side effect, because which side won is only
+## known here and the wording downstream depends on it.
 func _find_subject(moment: TutorialMoment) -> Creep:
 	var manager: PlayerManager = References.player_manager
 	if manager == null:
 		return null
 	var mine: int = manager.local_player_id()
-	var best: Creep = null
-	var deepest: float = -INF
+	# The two sides are kept apart rather than ranked against each other,
+	# because depth means nothing across lanes - a creep is deep in the lane it
+	# is walking, and comparing that with one walking the other way answers
+	# nothing. Deepest within a side, then the player's own side wins.
+	var best_mine: Creep = null
+	var deepest_mine: float = -INF
+	var best_theirs: Creep = null
+	var deepest_theirs: float = -INF
+
 	for area: PlayerArea in manager.areas():
-		if area == null || area.player_id == mine:
+		if area == null:
 			continue
 		for creep: Creep in area.creeps():
 			if creep == null || !is_instance_valid(creep) || !creep.is_alive():
 				continue
-			if creep.owner_player_id != mine || !moment.matches(creep, area):
+			# **A CREEP IS ONLY INTERESTING WHERE IT DOES NOT BELONG**: one of
+			# mine walking their lane, or one of theirs walking mine. A creep
+			# in the lane of whoever sent it is a leak recycling it rather than
+			# a creep that was just sent, and the player has been shown that.
+			#
+			# Stated against the LANE'S owner and not against who the local
+			# player is, because the local player has nothing to do with it -
+			# and asking it the other way round is how this shipped inverted
+			# once, skipping the only two cases that can fire and killing every
+			# moment in the tutorial.
+			if creep.owner_player_id == area.player_id:
 				continue
+			if !moment.matches(creep, area):
+				continue
+
+			var sent_by_me: bool = creep.owner_player_id == mine
+
 			var depth: float = area.to_local(creep.global_position).z
-			if depth > deepest:
-				deepest = depth
-				best = creep
-	return best
+			if sent_by_me:
+				if depth > deepest_mine:
+					deepest_mine = depth
+					best_mine = creep
+			elif depth > deepest_theirs:
+				deepest_theirs = depth
+				best_theirs = creep
+
+	# THE PLAYER'S OWN WINS A TIE. A moment that could fire from either side on
+	# the same tick fires on the creep whose body was authored first, so the
+	# fallback wording is only ever reached when there is nothing of the
+	# player's own to talk about.
+	_moment_incoming = best_mine == null && best_theirs != null
+	return best_mine if best_mine != null else best_theirs
 
 
 ## Stops the world on one moment: held, the camera on the creep, and the panel
@@ -775,7 +841,7 @@ func _set_stock(step: TutorialStep) -> void:
 
 ## Brings an opponent into the match properly: into the ring, onto an income
 ## that matches the player's, and playing its real profile from here on.
-func _wake(rival: TutorialStep.Rival) -> void:
+func _wake(rival: TutorialStep.Rival, income_share: float = -1.0) -> void:
 	var slot: int = TutorialSetup.slot_for(rival)
 	var state: PlayerState = _rival_state(rival)
 	var player: PlayerState = _local_state()
@@ -785,7 +851,8 @@ func _wake(rival: TutorialStep.Rival) -> void:
 
 	state.standby = false
 	if player != null:
-		var matched: int = int(round(float(player.income) * script_resource.rival_income_share))
+		var share: float = income_share if income_share >= 0.0 				else script_resource.rival_income_share
+		var matched: int = int(round(float(player.income) * share))
 		if matched > state.income:
 			state.add_income(matched - state.income)
 
@@ -877,6 +944,26 @@ func _hold(held: bool) -> void:
 	var session: MatchSession = _session
 	if session != null:
 		session.hold(HOLD_REASON, held)
+
+
+## Stops both opponents playing while a lesson asks for it, or lets them go.
+##
+## The THIRD thing a lesson can hold, and the one the other two cannot do: an
+## opponent builds and upgrades off gold it already has, so a held clock does
+## nothing to it and a held world stops the player too. A lesson the student
+## takes their own time over - reading, or climbing an upgrade chain - would
+## otherwise cost them an enemy maze grown while they learned.
+##
+## Both of them, whoever is awake. There is no lesson that wants one held and
+## the other playing, and naming one would be a knob with a single setting.
+func _hold_rivals(held: bool) -> void:
+	var ai: AiDirector = References.ai_director
+	if ai == null:
+		return
+	for rival: TutorialStep.Rival in [TutorialStep.Rival.FIRST, TutorialStep.Rival.SECOND]:
+		var brain: AiPlayer = ai.brain_for(TutorialSetup.slot_for(rival))
+		if brain != null:
+			brain.hold_thinking(held)
 
 
 func _local_state() -> PlayerState:
@@ -973,3 +1060,157 @@ func _spawn_creeps(stats: CreepStats, count: int, into: PlayerArea, sender: int,
 			stats.body_radius, MatchSession.match_rng()
 		))
 		into_list.append(creep)
+
+
+# --- DEV ONLY: skipping the early lessons ---------------------------------
+#
+# **SCAFFOLDING, and not part of the tutorial a player will be given.** It is
+# here so the later lessons can be played without playing the first hour of
+# them every time, which is the whole cost of iterating on lesson six. It goes
+# out with the review rounds - deleting this block and nothing else removes it.
+#
+# On the CHEAT switch rather than on a constant of its own, so it is already
+# off wherever the numpad cheats are (GameConfig.cheats_enabled) and there is
+# one thing to turn off rather than two. See CheatController for the numpad
+# keys it sits next to and for why they are matched physically.
+
+## Numpad 6: skips the lesson on screen, whole, however many tasks it has.
+const DEV_SKIP_LESSON_KEY: Key = KEY_KP_6
+## Numpad 7: presses the key above until the technology lesson is up.
+const DEV_SKIP_TO_TECH_KEY: Key = KEY_KP_7
+## What one press may skip past, so a bug in the loop above cannot hang the
+## game looking for a lesson that is not there.
+const DEV_SKIP_LIMIT: int = 100
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if !_running || !MatchSession.cheats_permitted():
+		return
+	var key: InputEventKey = event as InputEventKey
+	if key == null || !key.pressed || key.echo:
+		return
+	match key.physical_keycode:
+		DEV_SKIP_LESSON_KEY:
+			dev_skip_lesson()
+		DEV_SKIP_TO_TECH_KEY:
+			dev_skip_to_technology()
+		_:
+			return
+	get_viewport().set_input_as_handled()
+
+
+## Leaves the lesson on screen behind as though it had been played: everything
+## its tasks would have handed over is handed over, the towers they would have
+## had the player build are standing, and an opponent they would have beaten is
+## beaten.
+##
+## **Settling what a task LEFT BEHIND is what stops a skip bricking the match**,
+## and each of the three is read off the tasks themselves rather than written
+## down here, so a lesson re-ordered or rewritten needs nothing changing:
+##
+##   the GRANTS    _apply_grants, the same call opening a task makes, so the
+##                 gold, the income, the unlock lead and the research being
+##                 opened all land exactly as they would have.
+##   the TOWERS    a task's own blueprint, built into the player's zone. That
+##                 is the maze the lesson was asking for, so a skipped maze
+##                 lesson leaves the maze it taught.
+##   the OPPONENT  a task that waits for a rival to be beaten takes every life
+##                 off it, which is what beating it does - and the ring then
+##                 moves the player on to the next one. Skipping it without
+##                 that leaves the student sending into a lane they were meant
+##                 to be finished with.
+func dev_skip_lesson() -> void:
+	if !_running || script_resource == null:
+		return
+	var last: int = script_resource.lesson_range(_index).y
+	for at: int in range(_index, last + 1):
+		var step: TutorialStep = script_resource.step_at(at)
+		if step == null:
+			continue
+		# The one on screen has already had its grants; the rest have not.
+		if at > _index:
+			_apply_grants(step)
+		_dev_settle(step)
+	_dev_catch_up_rivals()
+	Log.info("Tutorial lesson skipped", {"through": last + 1})
+	_open(last + 1)
+
+
+## Skips whole lessons until the one that opens the Research Center is up.
+##
+## Found by asking the steps which LESSON does that rather than by counting to
+## six, so re-ordering the tutorial cannot send it to the wrong one. The lesson
+## rather than the step, because the task that opens the Center is not the
+## first of its lesson and stopping on the step would skip everything before
+## it - which is the lesson this is meant to arrive at.
+func dev_skip_to_technology() -> void:
+	var guard: int = 0
+	while _running && guard < DEV_SKIP_LIMIT && !_dev_lesson_opens_research():
+		dev_skip_lesson()
+		guard += 1
+
+
+## Whether any task of the lesson on screen opens the Research Center.
+func _dev_lesson_opens_research() -> bool:
+	if script_resource == null:
+		return false
+	var bounds: Vector2i = script_resource.lesson_range(_index)
+	for at: int in range(bounds.x, bounds.y + 1):
+		var step: TutorialStep = script_resource.step_at(at)
+		if step != null && step.unlocks_research:
+			return true
+	return false
+
+
+## Puts up the maze an opponent would have spent the skipped lessons building,
+## and takes what it cost out of its gold.
+##
+## **The one thing a skip cannot fast-forward is an opponent's own play**, and
+## the second one spends the whole first half of the tutorial building - so a
+## student dropped into the last lesson by a skip meets an empty lane and a
+## rival sitting on the gold it never spent. Its target maze is authored
+## (AiProfile.maze_layout_path) and is nearly exactly what it reaches on its
+## own, so building that is the closest honest board.
+##
+## An opponent with no layout - the first one builds a plain zigzag - is left
+## alone, which is what makes this one call rather than a list of rivals.
+func _dev_catch_up_rivals() -> void:
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return
+	for rival: TutorialStep.Rival in [TutorialStep.Rival.FIRST, TutorialStep.Rival.SECOND]:
+		var state: PlayerState = _rival_state(rival)
+		var profile: AiProfile = script_resource.rival_profile(rival)
+		if state == null || state.is_eliminated() || profile == null:
+			continue
+		# An empty path is an opponent with no authored maze, not a mistake.
+		if profile.maze_layout_path.is_empty():
+			continue
+		var plan: TowerLayout = TowerLayout.load_file(profile.maze_layout_path)
+		var area: PlayerArea = manager.area_for(TutorialSetup.slot_for(rival))
+		if plan == null || area == null:
+			continue
+		var before: int = manager.value_for(area.player_id)
+		var placed: int = plan.restore(area)
+		state.spend(manager.value_for(area.player_id) - before)
+		Log.info("Tutorial skip built an opponent's maze", {
+			"slot": area.player_id, "towers": placed, "gold_left": state.gold,
+		})
+
+
+## What one skipped task leaves behind. See dev_skip_lesson.
+func _dev_settle(step: TutorialStep) -> void:
+	var area: PlayerArea = _local_area()
+	var plan: TowerLayout = step.blueprint()
+	if plan != null && area != null:
+		Log.info("Tutorial skip built a lesson's plan", {"towers": plan.restore(area)})
+
+	var beat: TutorialBeatRivalStep = step as TutorialBeatRivalStep
+	if beat == null:
+		return
+	var player: PlayerState = _local_state()
+	var rival: PlayerState = _rival_state(beat.rival)
+	if player == null || rival == null || rival.is_eliminated():
+		return
+	player.steal_life_from(rival, rival.lives)
+	Log.info("Tutorial skip beat an opponent", {"rival": TutorialStep.Rival.keys()[beat.rival]})

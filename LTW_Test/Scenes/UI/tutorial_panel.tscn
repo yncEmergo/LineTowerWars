@@ -3,6 +3,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/TutorialPanel.gd" id="1_tutorial_panel"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tutorial_task_row.tscn" id="2_task_row"]
 [ext_resource type="Script" path="res://Scripts/Components/ScaleAnimation2D.gd" id="3_scale_anim"]
+[ext_resource type="Script" path="res://Scripts/Components/FadeAnimation2D.gd" id="4_fade_anim"]
+[ext_resource type="Script" path="res://Scripts/Components/MoveAnimation2D.gd" id="5_move_anim"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_board"]
 content_margin_left = 22.0
@@ -20,7 +22,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_body_label", "_tasks_heading", "_task_list", "_continue_button")]
+[node name="TutorialPanel" type="Control" node_paths=PackedStringArray("_board", "_pop", "_progress_label", "_title_label", "_step_block", "_block_fade", "_block_move", "_block_scale", "_body_label", "_task_row", "_continue_button", "_footer")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -34,11 +36,14 @@ _board = NodePath("Board")
 _pop = NodePath("Board/PopAnimation")
 _progress_label = NodePath("Board/Column/Header/ProgressLabel")
 _title_label = NodePath("Board/Column/Header/TitleLabel")
-_body_label = NodePath("Board/Column/BodyLabel")
-_tasks_heading = NodePath("Board/Column/TasksHeading")
-_task_list = NodePath("Board/Column/TaskList")
-_task_row_scene = ExtResource("2_task_row")
+_step_block = NodePath("Board/Column/StepBlock")
+_block_fade = NodePath("Board/Column/StepBlock/BlockFade")
+_block_move = NodePath("Board/Column/StepBlock/BlockMove")
+_block_scale = NodePath("Board/Column/StepBlock/BlockScale")
+_body_label = NodePath("Board/Column/StepBlock/BodyLabel")
+_task_row = NodePath("Board/Column/StepBlock/TutorialTaskRow")
 _continue_button = NodePath("Board/Column/Footer/ContinueButton")
+_footer = NodePath("Board/Column/Footer")
 
 [node name="Board" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -51,7 +56,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_board")
 
 [node name="Column" type="VBoxContainer" parent="Board"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="Header" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2
@@ -73,25 +78,30 @@ theme_override_font_sizes/font_size = 12
 text = ""
 vertical_alignment = 1
 
-[node name="BodyLabel" type="Label" parent="Board/Column"]
+[node name="StepBlock" type="VBoxContainer" parent="Board/Column"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
+theme_override_constants/separation = 10
+
+[node name="BodyLabel" type="Label" parent="Board/Column/StepBlock"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
 theme_override_font_sizes/font_size = 12
 text = ""
 autowrap_mode = 3
 
-[node name="TasksHeading" type="Label" parent="Board/Column"]
+[node name="TutorialTaskRow" parent="Board/Column/StepBlock" instance=ExtResource("2_task_row")]
 layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
-theme_override_font_sizes/font_size = 13
-text = "Tasks"
 
-[node name="TaskList" type="VBoxContainer" parent="Board/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
+[node name="BlockFade" type="Node" parent="Board/Column/StepBlock"]
+script = ExtResource("4_fade_anim")
+
+[node name="BlockMove" type="Node" parent="Board/Column/StepBlock"]
+script = ExtResource("5_move_anim")
+
+[node name="BlockScale" type="Node" parent="Board/Column/StepBlock"]
+script = ExtResource("3_scale_anim")
 
 [node name="Footer" type="HBoxContainer" parent="Board/Column"]
 layout_mode = 2

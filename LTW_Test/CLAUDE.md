@@ -572,7 +572,9 @@
     - the scenarios worth re-running, all of which it can now drive: a plain 1v1,
       a peer hard-killed mid-match, a THIRD peer connecting mid-match (the one no
       obvious topology contains), a deliberately planted desync, a peer given a
-      900 ms hitch, a relay-side player drop, and injected seal loss. Numbers for
+      900 ms hitch, a relay-side player drop, injected seal loss, and a match
+      PAUSED and unpaused mid-run (`--pause <s> --pause-hold <s>`, whose
+      `pause_turn` and `resume_turn` must MATCH between the two peers). Numbers for
       each in Docs/Findings/2026-09-09-sealed-stream-on-two-machines.md and
       2026-09-08-sealed-stream-cutover.md
     - **the harness reports what was ACTUALLY exercised, and that is the point.**

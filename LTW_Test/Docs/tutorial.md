@@ -6,9 +6,9 @@ re-deriving any of it. It does NOT describe the lessons one by one: their order,
 and limits are ordinary `.tres` files under `Resources/Tutorial/` and change round to round.
 Nor does it carry rules of the game, which are `game_rules.md`'s.
 
-**Status, 2026-09-18: complete from the first tower to the last opponent, and being reviewed
-with the project owner.** Every part is a first version; nothing has been tried on a real new
-player yet.
+**Status, 2026-09-20: complete from the first tower to the last opponent, and being reviewed
+with the project owner.** Lesson six was rebuilt across review rounds two and three, and the
+lesson board with it - see section 12. Nothing has been tried on a real new player yet.
 
 ---
 
@@ -56,7 +56,9 @@ These are the project owner's, and every lesson is written against them.
 - flyers and attackers, the first time the player sends one - whenever that is
 - technology: every element's Basic and two paths, and the four technologies an Ultimate
   needs; the free allowance spent on one
-- the Elemental Core and how it becomes an element's tower
+- the Elemental Core, and one Ultimate built A RUNG AT A TIME: the Research Center opened,
+  then a free technology and then the tower it just unlocked, over and over to the top of the
+  branch. Each is its own task, so what a technology BUYS is done rather than read
 - beating a defending opponent, then an attacking one with a proper maze
 
 **Not taught**, deliberately:
@@ -96,9 +98,12 @@ they stack:
   while it needs selecting; over every open blueprint cell, but only while the task's tower is
   IN HAND, so they never compete with the border; over every tower a task wants upgraded, each
   gone the moment its upgrade starts. They all bob in step.
-- **Research by name** (`TutorialResearchStep.tech_ids`): only the named technologies can be
+- **Research by name** (`TutorialStep.tech_ids`): only the named technologies can be
   researched, every other square is dimmed, and the Ultimate shortcuts are refused, so the
-  player ends up with exactly the Ultimate the rest of the tutorial is written around.
+  player ends up with exactly the Ultimate the rest of the tutorial is written around. It is
+  on the STEP rather than on a research-only step, because a technology and the tower it
+  unlocks are one task: the border walks from the Research Center button to the square to
+  press, and then to the upgrade on the tower's own card.
 - **The camera held** (`pinned_camera`): pinned where the task happens when it happens somewhere
   the player would not look - the first send appears in another player's lane - and released
   the moment the task is done. Where the player only needs pointing somewhere, the camera
@@ -107,10 +112,22 @@ they stack:
   it arrives.
 - **Nothing covers the thing named.** The lesson panel steps to the right of the Research
   Center while it is open, and aside entirely for an explanation or a moment.
-- **The task list**: every task of the lesson as a row with a tickbox, the current one lit,
-  those to come faded so the plan is visible, the count on the same line in brackets. A done
-  task gets a green tick, and there is a beat (`delay_seconds`) before the next opens so the
-  thing just done can be seen to land. A new lesson pops the board.
+- **The board, one task at a time.** What is drawn is the current task and nothing else: a
+  line, a tickbox, and the sentence belonging to that rung. How far through the lesson the
+  player is goes in the header as a count, because a lesson can be sixteen rungs and sixteen
+  rows is a wall of text with the one line that matters hidden in it.
+  - **finishing a task is SHOWN.** The tick pops in and the line turns green where it stands,
+    and only then does the block slide out and the next one slide in. A task that vanished
+    the moment it was done left the player unsure whether what they pressed counted, and
+    `delay_seconds` is the beat that gives it room.
+  - **a task COUNTING is not a task changing.** A counted objective writes its own progress
+    into its text - "Kill the Skeletons (12/45)" - so the words are not an identity, and
+    comparing them made every kill read as a brand new task and slide the block out and back
+    in for it. What identifies the task is the STEP it belongs to, since a step carries
+    exactly one. The count is rewritten where it stands and nothing moves; only finishing
+    animates.
+  - a new LESSON still pops the whole board. See `TutorialPanel`, and `Docs/ui.md` section 2
+    for the animator components it is built from.
 
 **Explaining** is separate from telegraphing and used as little as possible:
 
@@ -119,10 +136,20 @@ they stack:
   HUD element frames it with the border and a short caption and dims everything else; a page
   about nothing on screen dims the lot. The lesson panel steps aside.
 - **A moment** (`TutorialMoment`) is an explanation the player TRIGGERS, the first time it
-  happens and whichever lesson is up: their creeps about to leak, their first flyer, their first
+  happens and whichever lesson is up: a creep about to leak, the first flyer, the first
   attacker. The world is held, the camera is pinned just down the lane from the creep so it sits
   clear of the panel, the spotlight dims everything but it, and the same centred panel says what
-  it is. A player who never sends a flyer is never told about flyers.
+  it is. A player who never meets a flyer is never told about flyers.
+  - **Either side of the lane sets one off, whichever gets there first** - the player's own
+    creeps walking the opponent's lane, or the opponent's walking theirs. Meeting the thing is
+    what the moment is for, and the first flyer a player sees is as likely to be one sailing
+    over their own maze as one they sent. A creep walking the lane of whoever sent it is
+    neither: that is a leak recycling it, which the player has already been shown.
+  - Two of the three then read differently depending on which way the creep was going, so a
+    moment carries an `incoming_body` beside its `body` and falls back to `body` when the words
+    hold either way. What a flyer IS does not change direction; "select them to give them
+    orders" is wrong in front of somebody else's attacker, and a leak that wins the player a
+    life is the exact opposite of one that costs them. The player's own side wins a tie.
 
 **Where it deliberately does NOT telegraph** - the OPEN tasks, fighting an opponent and building
 one's own maze:
@@ -137,17 +164,25 @@ one's own maze:
 
 ## 4. Time
 
-**Two things can be held, and the tutorial nearly always wants the smaller one.**
+**Three things can be held, and the tutorial nearly always wants the smallest one.**
 
 - **The CLOCK** (`holds_clock`, `MatchSession.hold_clock`): income payouts, creep unlocks,
   reserves refilling and Sudden Death stand still; units walk, towers go up, creeps die. It is
   what makes a task untimed. Telegraphed subjects hold it, so a payout never lands in the middle
   of one.
+- **The OPPONENTS** (`holds_rivals`, `AiPlayer.hold_thinking`): neither of them plays - no
+  building, no upgrading, no sending - while the rest of the match goes on. Neither of the
+  other two does anything to an opponent: it builds off gold it already has, so a held clock
+  leaves it free, and a held world stops the student too. It is what stops a lesson somebody
+  takes their time over costing them an enemy maze grown while they learned.
 - **The WORLD** (`pauses_world`, `MatchSession.hold`): everything stops and only the tutorial's
-  panels answer. For explanations and moments only.
+  panels answer. For moments, and for an explanation with anything moving behind it - an
+  explanation may hold the clock instead where nothing is (`TutorialExplainStep`).
 
-They are one freeze with two ways in, so overlapping them gives the clock back one gap rather
-than two. A reserve refills on the tick, so it asks `is_clock_held()` for itself.
+The clock and the world are one freeze with two ways in, so overlapping them gives the clock
+back one gap rather than two. A reserve refills on the tick, so it asks `is_clock_held()` for
+itself. The opponents are held separately, on the brains themselves, and their own beats stand
+still with them so a released one carries on rather than firing everything it was owed.
 
 **The creep roster has a clock of its own** (`MatchSession.unlock_elapsed_seconds`): the match
 clock moved AHEAD by any lead (`unlocks_ahead_seconds`) and STOPPED at any ceiling
@@ -205,6 +240,12 @@ controller will not arm or send it (`CommandController`), the order road refuses
 (`CommandService`, which holds whatever the others missed), the area refuses the cell
 (`PlayerArea.can_place`), and the Research Center neither opens nor accepts what it should not.
 
+**The Research Center has a whitelist of its own on the same terms**, and it has to: once the
+lesson has opened it, it stays open behind every rung that follows, and a free technology spent
+on an element the lesson is not teaching is gold the next rung cannot find. So a restricted task
+allows exactly the technologies it names and, naming none, allows none
+(`ActionLimits.restricts_research`).
+
 On top of any lesson's own, the script's FORBIDDEN list is refused throughout, restricted lesson
 or not. The director builds fresh limits every lesson, so nothing one allowed outlives it, and
 leaves the player with none that allow anything once the tutorial is over.
@@ -223,8 +264,10 @@ leaves the player with none that allow anything once the tutorial is over.
 | `Scripts/Game/Tutorial/TutorialMoment.gd` | A first-time event worth stopping for. |
 | `Scripts/Game/Tutorial/TutorialGuide.gd` | Which unit a task walks the player to, and whether it is selected. |
 | `Scripts/Game/Tutorial/TutorialWorldArrows.gd` | The arrows in the world. |
+| `Scripts/Game/Ai/AiPlayer.gd` | `hold_thinking`, which is how a lesson stops an opponent. |
 | `Scripts/Game/ActionLimits.gd` | What one player may do when that is less than the rules allow. |
-| `Scripts/UI/TutorialPanel.gd` | The lesson and its task list. |
+| `Scripts/UI/TutorialPanel.gd` | The lesson, and the one task on screen. |
+| `Scripts/UI/TutorialTaskRow.gd` | That task: its line, its tickbox, and the tick going in. |
 | `Scripts/UI/TutorialPointer.gd` | The golden border, its caption, and the dim around it. |
 | `Scripts/UI/TutorialInfoPanel.gd` | Explanations and moments, in the middle of the screen. |
 | `Scripts/UI/TutorialSpotlight.gd` | The dim around one thing in the world. |
@@ -255,11 +298,14 @@ message.
 - **Untested with a real new player.** Pacing, wording and both opponents' strength are guesses
 - **The first opponent falls quickly** once the player is set free, and the second is hard for a
   player who does not change what they send. Neither has been tuned
-- **An open task can be wasted.** Building one's own maze is open and holds the clock, so a
-  player who spends the handed-over gold on the wrong branch has only what selling returns
 - **No way back in.** Leaving part way starts again from the first lesson
 - **It does not react to mistakes.** A player who runs out of lives is offered a retry and
   nothing more
+- **An Ultimate's CROSS requirement is not enforced by the upgrade itself.** The ability that
+  raises a Greater Firelord to the Ultimate asks only for the Firelord path, not for the two
+  technologies of the other element `game_rules.md` says an Ultimate needs - so the lesson
+  waits on the technologies as well as on the tower rather than on the tower alone. A rule
+  written down and half built, not a tutorial problem
 
 ## 11. Testing it
 
@@ -279,6 +325,24 @@ It is scaffolding under `Scripts/Dev`, kept while the tutorial is iterated.
 Run WINDOWED with `-- shots` it saves screenshots to `user://tutorial_shots/` at the moments
 worth looking at - the only way to see where something DRAWS, since headless draws nothing.
 
+`-- skip` takes the DEV LESSON SKIP first and plays from the technology lesson, which is both a
+check of the skip and a run of the last two lessons without the first hour in front of them.
+
+**The DEV lesson skip is scaffolding too, and it is in `TutorialDirector` rather than here**
+because it has to answer a key press in a real run. `DEV_SKIP_LESSON_KEY` leaves the lesson on
+screen behind as though it had been played; `DEV_SKIP_TO_TECH_KEY` presses that until the
+technology lesson is up, found by asking which step opens the Research Center rather than by
+counting lessons. Both are on the numpad beside the cheats and on
+`GameConfig.cheats_enabled` with them, so the skip is already off wherever they are, and it
+goes out with the review rounds - the block at the end of that file is the whole of it.
+
+What it settles is read off the skipped tasks rather than written down, so a lesson re-ordered
+or rewritten needs nothing changed: every task's grants are applied, every task's blueprint is
+built into the player's zone, an opponent a task waited to see beaten has every life taken off
+it, and any opponent with an authored maze has it built and paid for. What it cannot reproduce
+is a played match's INCOME, which comes from sending: a skipped run arrives on the base income
+rather than on what twenty minutes of sending would have earned.
+
 **Print which lesson was reached and what was checked, not whether there were errors.** A
 tutorial that stalls part way and one that runs to the end look the same in a quiet log.
 
@@ -290,13 +354,34 @@ actually looked at) and committed. Keep to that, and keep the principles in sect
 notes so far have been about them: shorter words, less stopping, a border on the button rather
 than anything beside it, nothing shown before it is needed.
 
-**Open with the owner as of 2026-09-18**, nothing of lessons six and seven tested by them yet:
+**Round two, 2026-09-20, lesson six rebuilt.** The owner's notes and what they became:
 
-- how strong both opponents should be - the first falls fast, the second is hard for a player
-  who does not adapt (section 10)
+- the lesson no longer stops the match for the player. It holds the CLOCK and both OPPONENTS
+  and nothing else, so the world moves and a student who takes twenty minutes over it meets
+  exactly the Veteran a quick one does
+- a task allows only its own rung, so nothing else can be upgraded, nothing can be sold, no
+  upgrade can be called off and nothing can be researched off the list - the four ways a
+  player could spend their way out of the lesson and be stuck in it
+- no gold figures in the words. The lesson hands over what each rung costs
+- the open "rebuild your maze" task is gone. Lesson seven is where the player is free, and
+  they arrive at it with gold left over to build with
+
+**Round three, 2026-09-20, one rung one task.** Round two had merged a technology and the
+tower it pays for into a single task; that is undone, and the lesson is longer and flatter:
+
+- the three explanation pages that opened it are GONE. Nothing in lesson six stops the world
+  or asks to be read before it can be acted on
+- every rung is its own task - open the Research Center, research one technology, press one
+  upgrade - and the board shows one at a time, so the length costs the player nothing
+- lesson seven starts both survivors on the same income and opens the creep roster to the
+  same tier for both, so the last fight begins level
+
+**Still open with the owner:**
+
+- how strong both opponents should be - the first falls fast, and the second now banks an
+  income it cannot spend, since what paces its sending is a beat rather than gold (section 10)
 - whether the payout the income lesson waits on should only be brought forward for that task,
   as it is, or the whole tutorial's payout beat shortened
-- whether the open maze-building task needs a guard against spending the gold on the wrong
-  branch while the clock is held
+- how much gold lesson six should leave over for the maze the player builds in lesson seven
 - "a 10k Glyph tower" was read as the Greater Annihilation Glyph, and the second opponent's
-  elemental Ultimate as the Annihilation Glyph's own
+  elemental Ultimate as the Annihilation Glyph's own end

@@ -20,7 +20,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="GameMenu" type="Control" node_paths=PackedStringArray("_resume_button", "_options_button", "_leave_button", "_quit_button", "_options_menu")]
+[node name="GameMenu" type="Control" node_paths=PackedStringArray("_resume_button", "_pause_button", "_options_button", "_leave_button", "_quit_button", "_options_menu")]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -32,6 +32,7 @@ theme = ExtResource("2_menu_theme")
 focus_behavior_recursive = 1
 script = ExtResource("1_game_menu")
 _resume_button = NodePath("Center/Panel/Column/ResumeButton")
+_pause_button = NodePath("Center/Panel/Column/PauseButton")
 _options_button = NodePath("Center/Panel/Column/OptionsButton")
 _leave_button = NodePath("Center/Panel/Column/LeaveButton")
 _quit_button = NodePath("Center/Panel/Column/QuitButton")
@@ -79,6 +80,11 @@ mouse_filter = 2
 [node name="ResumeButton" type="Button" parent="Center/Panel/Column"]
 layout_mode = 2
 text = "Resume"
+
+[node name="PauseButton" type="Button" parent="Center/Panel/Column"]
+visible = false
+layout_mode = 2
+text = "Pause"
 
 [node name="OptionsButton" type="Button" parent="Center/Panel/Column"]
 layout_mode = 2

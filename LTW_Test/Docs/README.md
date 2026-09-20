@@ -18,7 +18,8 @@ Each file is the authority on its own subject. Where two disagree, the more spec
 | [tutorial.md](tutorial.md) | **The teaching match.** Its principles, what it teaches and deliberately does not, every method it telegraphs and explains with and where it deliberately does not, the opponents, how it ends, how to change it, and where the review stands. Describes no individual lesson and carries no lesson wording. |
 | [multiplayer.md](multiplayer.md) | **The networked build.** What it is, where each part lives, the decisions behind it, the costs deliberately not paid yet, and the little that is still open. |
 | [netcode-rework.md](netcode-rework.md) | **The next big netcode job, in full.** Why one lagging player currently freezes everybody, what shipping games do instead, exactly which lines are wrong, the design, and a phase-by-phase plan. Written to be executed by somebody with no prior context. Delete it when the phases have landed and `multiplayer.md` carries what they built. |
-| [audio.md](audio.md) | **The audio build.** The bus layout and the settings seam, AudioHub and the voice budget, how every button gets its sound without being authored, and where a sound is named. Architecture only; the levels and caps live in `audio_config.tres`. |
+| [ui.md](ui.md) | **The interface.** What is drawn in front of what: the one layering mechanism, why `z_index` is banned for it, the HUD's bands and where a new panel goes in them. Written to grow - other UI patterns get their own section here. Keyboard focus is the exception and lives in `Scripts/UI/FocusPolicy.gd`. |
+| [audio.md](audio.md) | **The audio build.** The bus layout and the settings seam, AudioHub and the voice budget, the line between a sound in the WORLD and one that is not, how every button gets its sound without being authored, where a sound is named, and what is wired today. Architecture only; the levels and caps live in `audio_config.tres`. |
 | [building.md](building.md) | **Making a build.** How a playable client is exported and handed to a tester: the export templates a machine needs first, the one command, what the preset leaves out and why, and the rule that the server is deployed from the same commit. Procedure only. |
 | [server.md](server.md) | **Server controls.** How to start, stop and aim the dedicated server, and how two PCs in different places reach each other to test. Controls only, never architecture — that is `multiplayer.md`. |
 | [Findings/](Findings/) | **Investigations.** Something that was measured, dug into or ruled out, written up and dated. |
@@ -41,6 +42,8 @@ Ask what kind of thing it is, in this order:
    lesson or the VALUE of an AI knob: those live in the `.tres` files they are authored in.
 4. **A control the server gained or lost** → into `server.md`, and keep it current.
    **A step in exporting or handing out a build** → into `building.md`, on the same terms.
+   **A pattern the interface is built to** - layering, layout, how a screen is opened →
+   into `ui.md`, as its own numbered section. Not the WORDING on a panel and not a hotkey.
 5. **A convention, or a trap the engine set that cost a debugging session** → into `../CLAUDE.md`.
 6. **A step in authoring or changing content** — which file to edit, what is generated,
    what checks it → into `content.md`. Not a new file, and not a rule: anything about what

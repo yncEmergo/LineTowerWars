@@ -48,7 +48,10 @@ func _refresh() -> void:
 		return
 	var moment: TutorialMoment = director.current_moment()
 	if moment != null:
-		_show_words(moment.title, moment.body, "")
+		# Which side set it off decides the wording, because two of the three
+		# are about what the player can do and read backwards in front of
+		# somebody else's creep. See TutorialMoment.incoming_body.
+		_show_words(moment.title, moment.body_for(director.moment_is_incoming()), "")
 		return
 	var page: TutorialPage = director.current_page()
 	if page == null:

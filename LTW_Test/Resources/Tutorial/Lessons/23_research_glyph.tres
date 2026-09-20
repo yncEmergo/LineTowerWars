@@ -5,9 +5,10 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "The Firelord's own element: Fire's Basic, then its second path."
-objective = "Research Fire Basic and Fire (2)"
-delay_seconds = 0.5
+body = "Lightning's first path is the last of the four - and it opens a branch of its own, which you will want afterwards."
+objective = "Research the Annihilation Glyph path"
+delay_seconds = 1.0
 holds_clock = true
+holds_rivals = true
 restricts_actions = true
-tech_ids = Array[int]([1, 3])
+tech_ids = Array[int]([14])

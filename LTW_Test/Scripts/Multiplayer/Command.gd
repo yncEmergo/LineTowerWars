@@ -93,6 +93,21 @@ enum PlayerAction {
 	## sender's own slot over the field, so the worst it can do is erase its own
 	## maze - which is a slow way of doing what leaving already does.
 	PLAYER_LEFT,
+	## Hold the whole world still, for everybody, from this turn on.
+	##
+	## **A pause is a player order like any other, and it has to be**: it must
+	## land on ONE agreed turn. A broadcast rpc would arrive on a different tick
+	## on each peer, and since a hold stops the match clock, two peers holding
+	## on different turns would have two different clocks - a desync with no
+	## other symptom. See MatchPause.
+	PAUSE_MATCH,
+	## Start the countdown back to a moving world. Anybody in the match may send
+	## it, including somebody who did not press Pause.
+	##
+	## **One of the two orders a paused match still accepts**, on the same
+	## grounds as PICK_DRAFT_TECH: it is the order the pause exists to be ended
+	## by, so a road that refused it would never carry the way out.
+	RESUME_MATCH,
 }
 
 ## Which values of PlayerAction the SERVER may issue and a player may not.

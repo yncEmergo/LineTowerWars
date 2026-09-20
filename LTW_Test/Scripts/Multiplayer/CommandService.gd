@@ -336,10 +336,11 @@ func _validate_and_apply(command: Command) -> void:
 		_apply_player_order(command)
 		return
 
-	# Nothing may be ordered of a UNIT while the world is held still for the
-	# draft. A legitimate client cannot press anything - its whole HUD is
-	# paused - so this only ever answers one that was modified.
-	if _is_opening():
+	# Nothing may be ordered of a UNIT while the world is held still - for the
+	# draft, or because somebody pressed Pause. A legitimate client cannot press
+	# anything, its whole HUD is paused, so this only ever answers one that was
+	# modified.
+	if _is_opening() || _is_paused():
 		_reject(command, "the match is paused")
 		return
 
@@ -544,7 +545,21 @@ func _apply_player_order(command: Command) -> void:
 		_reject(command, "the opening is not finished")
 		return
 
+	# **A PAUSE is refused while the opening is running and accepted at any
+	# other moment, including while the match is already paused.** It is checked
+	# after the gate above and before the one below for exactly that reason: the
+	# opening outranks it, and a pause does not outrank itself.
+	if _is_paused() && !_is_pause_order(command):
+		_reject(command, "the match is paused")
+		return
+
 	match command.player_action:
+		Command.PlayerAction.PAUSE_MATCH:
+			_apply_pause(command, true)
+			return
+		Command.PlayerAction.RESUME_MATCH:
+			_apply_pause(command, false)
+			return
 		Command.PlayerAction.PICK_DRAFT_TECH:
 			_apply_draft_pick(command)
 			return
@@ -578,6 +593,10 @@ func _apply_player_order(command: Command) -> void:
 			if !ActionLimits.permits_research_shortcuts(command.player_slot):
 				_reject(command, "the Ultimate shortcuts are not open to this player yet")
 				return
+		Command.PlayerAction.UNDO_RESEARCH:
+			if !ActionLimits.permits_research_undo(command.player_slot):
+				_reject(command, "this player may not take a technology back yet")
+				return
 
 	var tech: TechManager = References.tech_manager
 	if tech == null:
@@ -609,6 +628,44 @@ func _apply_draft_pick(command: Command) -> void:
 		command_applied.emit(command)
 	else:
 		_reject(command, reason)
+
+
+## One player pausing the match or asking for it back, applied on the turn every
+## peer runs it on - which is what makes a pause an order rather than a message.
+## Every rule of it is MatchPause's, in the same way a draft pick's are
+## StartingTech's.
+func _apply_pause(command: Command, wanted: bool) -> void:
+	var pause: MatchPause = References.match_pause
+	if pause == null:
+		_reject(command, "this scene has no MatchPause")
+		return
+
+	var reason: String = ""
+	if wanted:
+		reason = pause.pause(command.player_slot)
+	else:
+		reason = pause.resume(command.player_slot)
+	if reason.is_empty():
+		command_applied.emit(command)
+	else:
+		_reject(command, reason)
+
+
+## Whether the world is being held still because somebody pressed Pause. Asked
+## on the same terms as _is_opening, and separately from it, because the two
+## hold for different reasons and accept different orders.
+func _is_paused() -> bool:
+	var pause: MatchPause = References.match_pause
+	return pause != null && pause.is_holding()
+
+
+## Whether this order is one of the two a paused match still accepts. Pausing
+## an already-paused match is how a resume countdown is cancelled, so both of
+## them come through rather than the resume alone.
+func _is_pause_order(command: Command) -> bool:
+	var action: Command.PlayerAction = command.player_action
+	return action == Command.PlayerAction.PAUSE_MATCH \
+		|| action == Command.PlayerAction.RESUME_MATCH
 
 
 ## Whether the match is being held still for its OPENING - a draft waiting on

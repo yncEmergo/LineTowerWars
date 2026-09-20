@@ -23,13 +23,23 @@
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/11_income_explained.tres" id="s10_11_income_explained"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/12_payout.tres" id="s11_12_payout"]
 [ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/13_beat_rookie.tres" id="s12_13_beat_rookie"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_technology.tres" id="s13_14_technology"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_research_fire.tres" id="s14_15_research_fire"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/16_research_lightning.tres" id="s15_16_research_lightning"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/17_elemental_core.tres" id="s16_17_elemental_core"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/18_fire_pit.tres" id="s17_18_fire_pit"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/19_your_maze.tres" id="s18_19_your_maze"]
-[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/20_beat_veteran.tres" id="s19_20_beat_veteran"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/14_elemental_core.tres" id="s13_14_elemental_core"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/15_open_research.tres" id="s14_15_open_research"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/16_research_fire.tres" id="s15_16_research_fire"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/17_fire_pit.tres" id="s16_17_fire_pit"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/18_magma_well.tres" id="s17_18_magma_well"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/19_research_firelord.tres" id="s18_19_research_firelord"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/20_lesser_firelord.tres" id="s19_20_lesser_firelord"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/21_greater_firelord.tres" id="s20_21_greater_firelord"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/22_research_lightning.tres" id="s21_22_research_lightning"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/23_research_glyph.tres" id="s22_23_research_glyph"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/24_ultimate_firelord.tres" id="s23_24_ultimate_firelord"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/25_second_core.tres" id="s24_25_second_core"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/26_shock_particle.tres" id="s25_26_shock_particle"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/27_power_generator.tres" id="s26_27_power_generator"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/28_lesser_glyph.tres" id="s27_28_lesser_glyph"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/29_greater_glyph.tres" id="s28_29_greater_glyph"]
+[ext_resource type="Resource" path="res://Resources/Tutorial/Lessons/30_beat_veteran.tres" id="s29_30_beat_veteran"]
 [ext_resource type="Script" path="res://Scripts/Game/Tutorial/TutorialMoment.gd" id="4_moment"]
 
 [sub_resource type="Resource" id="Moment_leak"]
@@ -37,6 +47,7 @@ script = ExtResource("4_moment")
 trigger = 0
 title = "Life stealing"
 body = "These creeps are past the Rookie's towers. Each one that reaches the end steals one of the Rookie's lives for you."
+incoming_body = "These creeps are past your towers. Each one that reaches the end steals one of your lives and gives it to your opponent."
 leak_row = 20
 
 [sub_resource type="Resource" id="Moment_flyer"]
@@ -51,6 +62,7 @@ script = ExtResource("4_moment")
 trigger = 2
 title = "Attackers"
 body = "Attackers fight the towers in their way. Select them to give them orders, like your builder."
+incoming_body = "Attackers fight the towers in their way. These are chewing through your maze, and your towers have to kill them before they open a path."
 delay_seconds = 2.0
 
 [resource]
@@ -66,4 +78,4 @@ player_lives = 30
 always_allowed = Array[ExtResource("3_ability")]([ExtResource("a0_always"), ExtResource("a1_always"), ExtResource("a2_always")])
 moments = Array[ExtResource("4_moment")]([SubResource("Moment_leak"), SubResource("Moment_flyer"), SubResource("Moment_attacker")])
 forbidden_abilities = Array[ExtResource("3_ability")]([ExtResource("f0_forbidden"), ExtResource("f1_forbidden"), ExtResource("f2_forbidden"), ExtResource("f3_forbidden")])
-steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie"), ExtResource("s13_14_technology"), ExtResource("s14_15_research_fire"), ExtResource("s15_16_research_lightning"), ExtResource("s16_17_elemental_core"), ExtResource("s17_18_fire_pit"), ExtResource("s18_19_your_maze"), ExtResource("s19_20_beat_veteran")])
+steps = Array[ExtResource("2_step")]([ExtResource("s0_01_builder"), ExtResource("s1_02_move"), ExtResource("s2_03_first_towers"), ExtResource("s3_04_first_waves"), ExtResource("s4_05_row_cutters"), ExtResource("s5_06_row_archers"), ExtResource("s6_07_upgrade_archers"), ExtResource("s7_08_cannons"), ExtResource("s8_09_skeleton_wave"), ExtResource("s9_10_send_sheep"), ExtResource("s10_11_income_explained"), ExtResource("s11_12_payout"), ExtResource("s12_13_beat_rookie"), ExtResource("s13_14_elemental_core"), ExtResource("s14_15_open_research"), ExtResource("s15_16_research_fire"), ExtResource("s16_17_fire_pit"), ExtResource("s17_18_magma_well"), ExtResource("s18_19_research_firelord"), ExtResource("s19_20_lesser_firelord"), ExtResource("s20_21_greater_firelord"), ExtResource("s21_22_research_lightning"), ExtResource("s22_23_research_glyph"), ExtResource("s23_24_ultimate_firelord"), ExtResource("s24_25_second_core"), ExtResource("s25_26_shock_particle"), ExtResource("s26_27_power_generator"), ExtResource("s27_28_lesser_glyph"), ExtResource("s28_29_greater_glyph"), ExtResource("s29_30_beat_veteran")])

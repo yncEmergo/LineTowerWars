@@ -21,10 +21,38 @@ const FIRST_SENDER_BUTTON_KEY: StringName = &"send_tier_1"
 
 ## Whether the lesson on screen still wants a unit selected that is not. False
 ## for a lesson that names no unit.
+##
+## **A task that both builds and upgrades stops guiding to the builder the
+## moment there is something to upgrade.** One task can be "build a Core and
+## raise it to a Greater Annihilation Glyph", and the builder is the answer for
+## exactly the first press of that: afterwards the player wants the tower
+## selected, and an arrow calling them back to the builder between every rung
+## is pointing at the wrong thing. The towers a task puts arrows over are what
+## it is working ON, so one of them standing is the handover.
 static func needs_selecting(step: TutorialStep) -> bool:
 	if step == null || step.guide_unit == TutorialStep.Select.NONE:
 		return false
+	if _has_arrow_tower(step):
+		return false
 	return !is_selected(step.guide_unit)
+
+
+## Whether the player owns a tower of any type this task points arrows at.
+static func _has_arrow_tower(step: TutorialStep) -> bool:
+	var wanted: Array[BuildingStats] = step.arrow_towers()
+	if wanted.is_empty():
+		return false
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return false
+	var area: PlayerArea = manager.area_for(manager.local_player_id())
+	if area == null:
+		return false
+	for child in area.get_children():
+		var building: Building = child as Building
+		if building != null && building.stats in wanted:
+			return true
+	return false
 
 
 ## Whether a guide unit is in the player's selection right now.

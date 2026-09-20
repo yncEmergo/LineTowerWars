@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="TutorialOwnStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOwnStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_elemental_core_to_fire_fire_pit_ability.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "A Core becomes any element whose Basic technology you own."
+objective = "Turn the Core into a Fire Pit"
+delay_seconds = 1.0
+holds_clock = true
+holds_rivals = true
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0")])
+arrows_on_tower_paths = Array[String](["res://Resources/UnitStats/Towers/elemental_core_stats.tres"])
+tower_path = "res://Resources/UnitStats/Towers/fire_fire_pit_stats.tres"
+count = 1

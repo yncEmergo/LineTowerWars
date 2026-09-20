@@ -26,7 +26,9 @@ extends RefCounted
 ##   the AREA            PlayerArea.can_place refuses a cell outside the set, so
 ##                       the ghost turns red there exactly as it does over a
 ##                       tower
-##   the RESEARCH CENTER does not open, and a research order is refused
+##   the RESEARCH CENTER does not open, and a research order is refused - which
+##                       is a whitelist of its own, so a lesson can have it open
+##                       and still allow nothing in it. See restricts_research
 ##
 ## A WHITELIST rather than a list of what is forbidden, because a lesson knows
 ## the few things it wants and cannot know every button the roster will ever
@@ -62,9 +64,20 @@ var forbidden: Array[UnitAbility] = []
 var build_cells: Dictionary = {}
 ## Whether the Research Center may be used.
 var research: bool = true
-## The only technologies that may be researched, by tech_id, or empty for any.
-## While it names any, the Ultimate shortcuts - one press buying a whole set,
-## or a random one - are refused too, since they would buy what is not on it.
+## Whether the list below is the whole of what may be BOUGHT in it, the way
+## restricts_abilities is for the command card.
+##
+## **An empty list then means NOTHING, not anything**, and that is the point of
+## the flag: a telegraphed lesson that is about an upgrade rather than about a
+## technology still has the Research Center open behind it, and a player who
+## spends a free technology on an element the lesson is not teaching cannot pay
+## for the one it is. Without this there is no way to say "open, but not now".
+var restricts_research: bool = false
+## The only technologies that may be researched, by tech_id. While the flag
+## above is on, this is the whole of what may be bought; with it off, an empty
+## list means any. The Ultimate shortcuts - one press buying a whole set, or a
+## random one - are refused whenever it restricts, since they would buy what is
+## not on it.
 var research_techs: Array[int] = []
 ## The dearest tower upgrade that may be started, in gold, or below zero for
 ## any. Checked whether or not the list above restricts, so a lesson that
@@ -140,10 +153,27 @@ static func permits_research_tech(player_id: int, tech_id: int) -> bool:
 	var limits: ActionLimits = of(player_id)
 	if limits == null:
 		return true
-	return limits.research && (limits.research_techs.is_empty() || tech_id in limits.research_techs)
+	if !limits.research:
+		return false
+	if !limits.restricts_research:
+		return true
+	return tech_id in limits.research_techs
 
 
 ## Whether a player may use the Ultimate shortcuts, which buy a set in one press.
 static func permits_research_shortcuts(player_id: int) -> bool:
 	var limits: ActionLimits = of(player_id)
-	return limits == null || (limits.research && limits.research_techs.is_empty())
+	return limits == null || (limits.research && !limits.restricts_research)
+
+
+## Whether a player may take a research press BACK.
+##
+## Refused on exactly the terms the shortcuts are, and for a sharper reason: a
+## telegraphed lesson hands over the technology its next task needs, and the
+## undo window outlives the task that bought it. A player who presses Undo a
+## second after the tick lands has given back the one thing the upgrade they
+## are now being asked for is gated on, and nothing in the lesson can give it
+## to them again.
+static func permits_research_undo(player_id: int) -> bool:
+	var limits: ActionLimits = of(player_id)
+	return limits == null || (limits.research && !limits.restricts_research)

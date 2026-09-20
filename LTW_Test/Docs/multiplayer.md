@@ -87,6 +87,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D39 | **The match clock is the turn stream under lockstep, not this machine's physics frames.** | 2026-09-08 | `tick()` is hashed into every checksum through `elapsed_seconds()`, and it agreed between peers only BY CONSTRUCTION - every peer holds for the same turns today. The netcode rework stops that being true, so the derivation had to become an identity before anything else was safe. Off lockstep - single player, the replication path, both benches - there is no turn stream at all, so the physics-frame clock stays. See `netcode-rework.md` phase 1. |
 | D40 | **The relay SEALS one authoritative turn per tick, and a peer waits only for the relay.** | 2026-09-09 | Clients send orders bare at press time with no turn number; the relay stamps the slot, sorts by `(slot, seq)` and broadcasts one turn per tick to everybody including the authors. **No other player ever appears in a peer's wait condition**, so a machine that hitches pays for its own hitch alone. Measured between two physical machines: a peer hitching repeatedly cost the other 5.8 s of frozen world before and 1.15 s after. A peer that falls behind repays it by running its engine fast until the debt is gone; a lost seal is repaired from an unreliable echo, and one the echo no longer carries is asked for again by number (2026-09-10, after playtest 7 lost a player to a reliable channel that stopped); a peer that cannot recover is told why. There is no flag - `protocol_version` 3 refuses a build that straddles the deletion. See `netcode-rework.md` §5 and 13.4b. |
 | D41 | **A player may vanish for the relay's silence timeout before losing the match, and nothing closes their link sooner.** | 2026-09-15 | User's call after playtest 7. The allowance is `silent_timeout_seconds`, and ENet's own timeout is stretched past it for the match (`MatchStart._stretch_link_timeouts`), because its default closes a quiet link first and a closed link is final (D13). Under the sealed stream nobody waits for the missing player, so the allowance costs the others only a lane that stays standing. |
+| D43 | **A PAUSE is a player order, not a message**, and a resume is a countdown every peer runs. | 2026-09-20 | User's call. Offline the in-match menu simply holds the world while it is open; online it carries a Pause button that anybody may press and anybody may undo. It has to ride the turn stream rather than a broadcast rpc for the same reason D42's countdown does: a hold stops the match clock, so two peers that began holding on different turns would have two different clocks - hashed into every checksum, and therefore a desync with no other symptom. `MatchPause`, a node in both match scenes beside `StartingTech`. No allowance and no cooldown while the game is in testing. The length is `GameConfig.resume_countdown_seconds`; the rule is in `game_rules.md`. |
 | D42 | **A match opens with a GRACE PERIOD: the world held still for a few seconds before anything can happen.** | 2026-09-15 | User's call after playtest 7's laggy openings. The first phase of `StartingTech`'s opening, counted in simulation ticks by the turn stream so every peer releases on the same turn, and ahead of any technology draft or reveal. A tutorial skips it. The length is `GameConfig.start_grace_seconds`; the rule is in `game_rules.md`. |
 | D32 | ~~**The input delay is MEASURED from the live connection**, never authored.~~ **SUPERSEDED by D40 on 2026-09-09.** No client names a turn any more, so there is no per-peer booking to measure: the relay decides which turn an order lands in from when it arrives, and `delay_turns` / `_wire_budget_ms` / `announce_one_way` are deleted. What a peer chooses locally now is its PLAYBACK buffer, which costs only its owner. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Also the only way to use more than one CPU core — see §11.3. |
@@ -1354,6 +1355,28 @@ knowing how:
     that matters - see `netcode-rework.md` for why the derivation had to change.
 - A player who drops during the draft stops being waited for (D13), so one crashed client
   cannot hold everybody else for the rest of the match.
+
+**The PAUSE is the same machinery reached by a different road** (D43), and the two differ in
+exactly one place worth knowing:
+
+- `MatchPause` is a node in both match scenes next to `StartingTech`, reached through
+  `References`, and NOT an autoload for the same reason `StartingTech` is not one: a pause
+  press is an ordinary player order, so it receives no rpc of its own - it travels through
+  `Commands` and is applied where every other order is.
+- **Nothing is rolled and nothing is told.** A draft has an answer the authority owns; a
+  pause has only a decision, which arrives in the turn every peer applies. So there is no
+  snapshot key, and the replication path deliberately cannot pause at all - a client there
+  simulates nothing, so it would have to be told, and that path exists only to compare load.
+  `MatchPause.can_pause` says no and no button is offered.
+- **A paused match accepts exactly two orders**, on the same terms the draft accepts one: a
+  resume, and another pause - which is how a resume countdown is called off. Everything else
+  is refused with "the match is paused" by `CommandService`, and a legitimate client cannot
+  press any of it anyway, because its HUD is paused with the world.
+- `StallInput` already had the right rule and needed no change: it wakes the order UI only
+  when `lockstep` is the SINGLE holder, so a stall during a pause stays mute.
+- Proven between two headless peers with `LockstepProbe --pause`: both peers report the same
+  turn for the stop and the same turn for the start, with no desync, and orders pressed
+  through the hold are refused identically on both.
 
 ---
 

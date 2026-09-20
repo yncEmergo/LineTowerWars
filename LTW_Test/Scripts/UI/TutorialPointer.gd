@@ -165,13 +165,14 @@ func _resolve() -> Control:
 		return _control_for(TutorialGuide.button_key(step.guide_unit))
 
 	# A named technology: the button that opens the Research Center until it is
-	# open, then the square to press.
-	var research: TutorialResearchStep = step as TutorialResearchStep
-	if research != null && research.next_tech(director) != 0:
+	# open, then the square to press. Before the command card, because a task
+	# that names both is researched first and built afterwards.
+	var tech: int = step.next_tech(director)
+	if tech != 0:
 		var center: ResearchCenter = References.research_center
 		if center == null || !center.is_open():
 			return _control_for(&"research_button")
-		return center.slot_for_tech(research.next_tech(director))
+		return center.slot_for_tech(tech)
 
 	if !step.guide_abilities.is_empty():
 		var controller: CommandController = References.command_controller

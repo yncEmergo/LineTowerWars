@@ -51,6 +51,23 @@ described here is implemented and working. Values marked TBD are not decided yet
 - Then the opening phase (under Sending creeps) and the technology opening (under
   Match settings) run as they always have
 
+# Pausing a match
+- **A match can be stopped and started again, and how depends on who is playing.**
+  A pause holds the world exactly as the grace period does: nothing moves, no
+  order is accepted, and no clock runs. BUILT
+- SINGLE PLAYER: opening the in-match menu pauses, closing it resumes. There is
+  nobody to agree with, so nothing is asked and nothing is sent
+- MULTIPLAYER: the menu carries a PAUSE button, and pressing it pauses the match
+  for everybody. Anybody in the match may then press UNPAUSE - including somebody
+  who did not pause - and the world comes back after a countdown everybody
+  watches, in the way a match opens on one
+  - pausing again during that countdown calls it off and the match stays paused
+  - **there is no allowance and no cooldown yet**: any player may pause as often
+    as they like. Deliberate while the game is being tested, and the first thing
+    to revisit afterwards
+  - a match cannot be paused while its opening is still running
+  - the countdown's length is `resume_countdown_seconds` on the game config
+
 # Send topology
 - Players are arranged in a fixed ring
 - Every player sends creeps to their right neighbor and receives from their left neighbor

@@ -87,6 +87,9 @@ var _budget_cells: Dictionary = {}
 ## Gold spent on sends since the last income payout. See
 ## AiProfile.max_send_gold_per_payout.
 var _sent_since_payout: int = 0
+## Whether this brain has been told to stop playing for a while. See
+## hold_thinking.
+var _held: bool = false
 ## Whether the free research has been spent. A latch rather than a reading of
 ## what is owned, because the order takes a tick to land and a second press in
 ## the meantime would be refused with a line in the log every beat.
@@ -160,6 +163,17 @@ func change_profile(next_profile: AiProfile) -> void:
 	begin(_slot, next_profile)
 
 
+## Stops this brain playing, or lets it go: no pass is taken at all while it is
+## held, so nothing is built, upgraded, researched or sent.
+##
+## **The tutorial's, and the brain's own clocks stand still with it.** The hold
+## is taken before they are banked, so an opponent held while somebody reads
+## three pages comes back on the beat it left on rather than firing every rule
+## it would have been owed. See TutorialStep.holds_rivals.
+func hold_thinking(held: bool) -> void:
+	_held = held
+
+
 ## The player this brain is playing for, for a name or a log line.
 func slot() -> int:
 	return _slot
@@ -176,7 +190,7 @@ func _physics_process(_engine_delta: float) -> void:
 	# AI today plays offline, where this is always true - the guard is here
 	# because it is the rule, and because the day an AI plays a networked match
 	# this is the line that stops two machines ordering the same tower twice.
-	if !MatchSession.is_authority() || _profile == null:
+	if !MatchSession.is_authority() || _profile == null || _held:
 		return
 	# **The SIMULATION's second, never the engine's.** The parameter is the real
 	# time this frame took, which is what must not reach gameplay once a servo

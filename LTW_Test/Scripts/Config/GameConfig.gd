@@ -401,6 +401,15 @@ extends Resource
 ## once this is over, and a tutorial skips it. Measured in SIMULATION seconds and
 ## counted by the turn stream, like the draft. See StartingTech. 0 removes it.
 @export var start_grace_seconds: float = 5.0
+## Seconds counted down after somebody presses Unpause, before the world moves
+## again.
+##
+## The other end of the PAUSE a networked match can be put into. A resume is
+## never instant: everybody gets the same few seconds to put their hand back on
+## the mouse, exactly as the grace period gives them a few before the match
+## opens. Measured in SIMULATION seconds and counted by the turn stream, so
+## every peer releases on the same turn - see MatchPause. 0 resumes at once.
+@export var resume_countdown_seconds: float = 5.0
 ## Seconds of preparation before the match's timings start counting.
 ##
 ## THE OPENING. The source game starts its clock at -0:20 and the first Sheep

@@ -7,11 +7,12 @@
 
 [resource]
 script = ExtResource("1_step")
-continues_lesson = true
-body = "Every elemental tower starts as an Elemental Core. Put one anywhere in your maze."
+title = "Technology"
+body = "Elemental towers are what win matches, and every one of them starts as an Elemental Core. Put one anywhere in your maze."
 objective = "Build an Elemental Core"
-delay_seconds = 0.8
+delay_seconds = 1.0
 holds_clock = true
+holds_rivals = true
 grant_gold = 200
 restricts_actions = true
 allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])

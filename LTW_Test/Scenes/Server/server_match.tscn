@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://Scripts/Game/MatchSession.gd" id="4_session"]
 [ext_resource type="Script" path="res://Scripts/Tech/TechManager.gd" id="10_tech"]
 [ext_resource type="Script" path="res://Scripts/Tech/StartingTech.gd" id="11_starting_tech"]
+[ext_resource type="Script" path="res://Scripts/Game/MatchPause.gd" id="15_match_pause"]
 [ext_resource type="Script" path="res://Scripts/Game/MatchStats.gd" id="12_match_stats"]
 [ext_resource type="Script" path="res://Scripts/Game/Ai/AiDirector.gd" id="13_ai_director"]
 [ext_resource type="Resource" path="res://Resources/Config/ai_config.tres" id="14_ai_config"]
@@ -41,19 +42,23 @@ script = ExtResource("10_tech")
 [node name="StartingTech" type="Node" parent="."]
 script = ExtResource("11_starting_tech")
 
+[node name="MatchPause" type="Node" parent="."]
+script = ExtResource("15_match_pause")
+
 [node name="MatchStats" type="Node" parent="."]
 script = ExtResource("12_match_stats")
 
 [node name="AiDirector" type="Node" parent="."]
 script = ExtResource("13_ai_director")
 
-[node name="References" type="Node" parent="." node_paths=PackedStringArray("_units_root", "_player_manager", "_match_session", "_tech_manager", "_starting_tech", "_match_stats", "_ai_director", "_projectiles_root")]
+[node name="References" type="Node" parent="." node_paths=PackedStringArray("_units_root", "_player_manager", "_match_session", "_tech_manager", "_starting_tech", "_match_pause", "_match_stats", "_ai_director", "_projectiles_root")]
 script = ExtResource("2_references")
 _units_root = NodePath("../Units")
 _player_manager = NodePath("../PlayerManager")
 _match_session = NodePath("../MatchSession")
 _tech_manager = NodePath("../TechManager")
 _starting_tech = NodePath("../StartingTech")
+_match_pause = NodePath("../MatchPause")
 _match_stats = NodePath("../MatchStats")
 _ai_director = NodePath("../AiDirector")
 _projectiles_root = NodePath("../Projectiles")

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TutorialOpenResearchStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOpenResearchStep.gd" id="1_step"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "Technologies unlock the elemental towers. You start with four free ones."
+objective = "Open the Research Center"
+delay_seconds = 1.0
+holds_clock = true
+holds_rivals = true
+unlocks_research = true
+restricts_actions = true
+highlight_key = &"research_button"

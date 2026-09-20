@@ -1,21 +1,20 @@
 class_name TutorialResearchStep
 extends TutorialStep
 
-## Finished once the player has researched something - any technologies up to a
-## number, or exactly the ones the lesson names.
+## Finished once the player owns every technology this task NAMES, and nothing
+## else has to happen.
 ##
-## NAMED is the telegraphed form: only those technologies can be researched
-## while the lesson is up, every other square in the Research Center is dimmed,
-## and the border walks the player from the button that opens it to the next
-## square to press. It is how the tutorial makes sure the player ends up with
-## the Ultimate the rest of it is written around.
-
-@export_group("Objective")
-## The technologies to research, by tech_id - the only ones that can be. Empty
-## for any technologies at all, counted up to `technologies`.
-@export var tech_ids: Array[int] = []
-## How many technologies have to be owned, when tech_ids is empty.
-@export var technologies: int = 1
+## The technologies are `TutorialStep.tech_ids`, which is also the only list the
+## Research Center will accept while the task is up - so what the border points
+## at and what the task waits for are one list and cannot drift apart. Every
+## other square is dimmed, and the Ultimate shortcuts are refused, which is how
+## the tutorial makes sure the player ends up with the Ultimate the rest of it
+## is written around.
+##
+## ONE technology per task, in practice. A free technology and the tower it
+## unlocks were one task for a while and it read as two things stacked in one
+## line; the tower it pays for is the task after it, and each is a tick of its
+## own. See TutorialOwnStep for those.
 
 
 func is_complete(director: TutorialDirector) -> bool:
@@ -24,25 +23,12 @@ func is_complete(director: TutorialDirector) -> bool:
 
 
 func progress(director: TutorialDirector) -> Vector2i:
-	if director == null:
-		return Vector2i.ZERO
+	return Vector2i(techs_owned(director), tech_ids.size())
+
+
+func validate() -> bool:
+	var complete: bool = super()
 	if tech_ids.is_empty():
-		return Vector2i(director.technologies_owned(), maxi(1, technologies))
-	var owned: int = 0
-	for id in tech_ids:
-		if director.owns_tech(id):
-			owned += 1
-	return Vector2i(owned, tech_ids.size())
-
-
-## The next named technology still to research, or 0 - which square the border
-## goes to.
-func next_tech(director: TutorialDirector) -> int:
-	for id in tech_ids:
-		if director != null && !director.owns_tech(id):
-			return id
-	return 0
-
-
-func research_whitelist() -> Array[int]:
-	return tech_ids
+		Log.err("A research task names no technology, nothing would finish it", resource_path)
+		complete = false
+	return complete

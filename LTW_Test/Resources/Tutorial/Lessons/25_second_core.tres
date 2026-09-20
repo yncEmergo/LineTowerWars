@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TutorialOwnStep" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Game/Tutorial/Steps/TutorialOwnStep.gd" id="1_step"]
+[ext_resource type="Script" path="res://Scripts/Abilities/UnitAbility.gd" id="2_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/build_menu_ability.tres" id="a0"]
+[ext_resource type="Resource" path="res://Resources/Abilities/Towers/build_elemental_core_ability.tres" id="a1"]
+
+[resource]
+script = ExtResource("1_step")
+continues_lesson = true
+body = "Now the branch those Lightning technologies opened. It starts where the first one did."
+objective = "Build a second Elemental Core"
+delay_seconds = 1.0
+holds_clock = true
+holds_rivals = true
+grant_gold = 200
+restricts_actions = true
+allowed_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
+guide_unit = 1
+guide_abilities = Array[ExtResource("2_ability")]([ExtResource("a0"), ExtResource("a1")])
+tower_path = "res://Resources/UnitStats/Towers/elemental_core_stats.tres"
+count = 1

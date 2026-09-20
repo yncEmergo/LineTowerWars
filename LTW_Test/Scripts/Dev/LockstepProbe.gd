@@ -58,6 +58,16 @@ var _hitches: int = 0
 var _drops: int = 0
 var _spoofs: int = 0
 var _driven_after_giveup: int = 0
+## The PAUSE scenario's readings. The turn each peer saw the world stop on and
+## the turn it saw it move again, which is the whole test: two peers reporting
+## the same pair agree, and two reporting different ones have desynced their
+## clocks whether or not a checksum has noticed yet.
+var _pause_turn: int = -1
+var _resume_turn: int = -1
+var _pauses: int = 0
+var _was_paused: bool = false
+var _paused_asked: bool = false
+var _resume_asked: bool = false
 
 
 func _ready() -> void:
@@ -182,6 +192,9 @@ func _on_turn_ready(turn: int, commands: Array) -> void:
 	_turns += 1
 	_last_turn = turn
 	_orders += commands.size()
+	# On the turn boundary rather than on a frame, so the numbers two peers
+	# report can be compared at all. See _watch_pause.
+	_watch_pause(turn)
 
 
 func _on_turn_stalled(turn: int, missing: PackedInt32Array) -> void:
@@ -278,7 +291,13 @@ func _process(delta: float) -> void:
 	# `--drive-while-wedged` keeps pressing through a wedge, which is how the
 	# 2026-09-10 give-up fix is exercised: a peer that has given up must not be
 	# able to put another order on the wire however hard its player presses.
-	if !_wedged || "--drive-while-wedged" in OS.get_cmdline_user_args():
+	_maybe_pause()
+	# A paused world refuses every order but the pause pair, so driving through
+	# one would only fill the log with refusals - and would test nothing the
+	# gate in CommandService does not already answer.
+	var drive_paused: bool = "--drive-while-paused" in OS.get_cmdline_user_args()
+	var may_drive: bool = !_wedged || "--drive-while-wedged" in OS.get_cmdline_user_args()
+	if (!_is_paused() || drive_paused) && may_drive:
 		_drive()
 	_maybe_corrupt()
 	_maybe_wedge()
@@ -286,6 +305,57 @@ func _process(delta: float) -> void:
 
 	if _elapsed >= _play_seconds():
 		_finish()
+
+
+## DELIBERATELY pauses the match, on --pause <seconds>, and asks for it back
+## `--pause-hold` seconds later. Run on the HOST only by default, so the peer
+## that did not press anything is the one whose readings matter.
+##
+## **The positive control is `pause_turn` and `resume_turn` in the result line.**
+## A run that reports -1 for either never reached the code under test, and two
+## peers reporting different numbers have taken the pause on different turns -
+## which is the one failure this whole design exists to prevent, and which a
+## checksum alone would only catch later and blame on something else.
+func _maybe_pause() -> void:
+	var at: float = float(_int_argument("--pause", -1))
+	if at < 0.0 || _role == "join":
+		return
+
+	if !_paused_asked && _elapsed >= at:
+		_paused_asked = true
+		Log.warn("PROBE pressing Pause")
+		Commands.submit_player_action(Command.PlayerAction.PAUSE_MATCH)
+		return
+
+	var hold: float = float(_int_argument("--pause-hold", 4))
+	if _paused_asked && !_resume_asked && _elapsed >= at + hold:
+		_resume_asked = true
+		Log.warn("PROBE pressing Unpause")
+		Commands.submit_player_action(Command.PlayerAction.RESUME_MATCH)
+
+
+func _is_paused() -> bool:
+	var pause: MatchPause = References.match_pause
+	return pause != null && pause.is_holding()
+
+
+## Watches the world stop and start from OUTSIDE the class that stops it, on the
+## turn boundary rather than on a frame, so the numbers two peers report are
+## comparable at all.
+func _watch_pause(turn: int) -> void:
+	var now: bool = _is_paused()
+	if now == _was_paused:
+		return
+	_was_paused = now
+	if now:
+		_pauses += 1
+		if _pause_turn < 0:
+			_pause_turn = turn
+		Log.warn("PROBE saw the world stop", {"turn": turn})
+		return
+	if _resume_turn < 0:
+		_resume_turn = turn
+	Log.warn("PROBE saw the world move again", {"turn": turn})
 
 
 ## The test-only fault injectors, from the command line, on THIS process only:
@@ -442,6 +512,11 @@ func _finish() -> void:
 		"drops_seen": _drops,
 		"spoofs_sent": _spoofs,
 		"driven_after_giveup": _driven_after_giveup,
+		# The pause scenario. -1 means it never happened here; two peers must
+		# report the same pair. See _maybe_pause.
+		"pauses_seen": _pauses,
+		"pause_turn": _pause_turn,
+		"resume_turn": _resume_turn,
 		"gave_up": Lockstep.has_given_up(),
 		"lag_s": snappedf(Lockstep.sealed_lag_seconds(), 0.1),
 		# **The positive control for the whole phase.** A run where `sealed` is

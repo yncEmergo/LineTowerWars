@@ -10,8 +10,15 @@ extends TutorialStep
 ## wherever there is something to DO, so reach for this last and keep it to a
 ## handful of pages.
 ##
-## Finished once every page has been read. It holds the world by its nature,
-## so validate() refuses one that does not.
+## Finished once every page has been read, and it must stop what the match does
+## to the player while they read - either the WORLD or the CLOCK. validate()
+## refuses one that holds neither.
+##
+## The world is the usual answer and the safe one: nothing moves, so nothing
+## can happen behind the page. The clock alone is for a lesson where nothing is
+## moving anyway - no creeps in the lane, the opponents held (holds_rivals) -
+## and where stopping the world would only make the game feel frozen while
+## somebody reads three short pages.
 
 @export_group("Pages")
 @export var pages: Array[TutorialPage] = []
@@ -36,8 +43,8 @@ func validate() -> bool:
 	for page: TutorialPage in pages:
 		if page == null || !page.validate(resource_path):
 			complete = false
-	if !pauses_world:
-		Log.err("An explanation does not hold the world, the match would run on under it",
-			resource_path)
+	if !pauses_world && !holds_clock:
+		Log.err("An explanation holds neither the world nor the clock, the match would run "
+			+ "on under it", resource_path)
 		complete = false
 	return complete

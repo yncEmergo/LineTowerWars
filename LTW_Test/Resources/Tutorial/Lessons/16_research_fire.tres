@@ -5,9 +5,10 @@
 [resource]
 script = ExtResource("1_step")
 continues_lesson = true
-body = "Its partner element: Lightning's Basic and first path - which also opens the Annihilation Glyph, up to 10,000g."
-objective = "Research Lightning Basic and Lightning (1)"
-delay_seconds = 0.5
+body = "Each element has a Basic technology that opens it, and two paths that each open one branch of its towers."
+objective = "Research Fire"
+delay_seconds = 1.0
 holds_clock = true
+holds_rivals = true
 restricts_actions = true
-tech_ids = Array[int]([13, 14])
+tech_ids = Array[int]([1])

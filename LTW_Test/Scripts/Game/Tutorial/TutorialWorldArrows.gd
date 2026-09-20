@@ -89,15 +89,15 @@ func _points() -> Array[Vector3]:
 	# only compete with the border on the button to press.
 	if step.arrows_on_blueprint && _placing_lesson_tower(step):
 		points.append_array(_open_cells(step.blueprint()))
-	points.append_array(_towers_of(step.arrow_tower()))
+	points.append_array(_towers_of(step.arrow_towers()))
 	return points
 
 
-## The world point over every tower of the player's of exactly this type.
-func _towers_of(stats: BuildingStats) -> Array[Vector3]:
+## The world point over every tower of the player's of exactly these types.
+func _towers_of(wanted: Array[BuildingStats]) -> Array[Vector3]:
 	var points: Array[Vector3] = []
 	var manager: PlayerManager = References.player_manager
-	if stats == null || manager == null:
+	if wanted.is_empty() || manager == null:
 		return points
 	var area: PlayerArea = manager.area_for(manager.local_player_id())
 	if area == null:
@@ -105,7 +105,7 @@ func _towers_of(stats: BuildingStats) -> Array[Vector3]:
 	for child in area.get_children():
 		var building: Building = child as Building
 		# Gone the moment its upgrade starts: the tower has been dealt with.
-		if building != null && building.stats == stats && !building.is_upgrading():
+		if building != null && building.stats in wanted && !building.is_upgrading():
 			points.append(building.global_position + Vector3.UP * ABOVE_TOWER)
 	return points
 

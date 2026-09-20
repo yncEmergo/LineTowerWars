@@ -15,6 +15,13 @@ extends Control
 ## still order units in a desynced match is being lied to, and the orders would
 ## be refused or, worse, applied to a world nobody else can see.
 ##
+## It draws above the HUD and above the game menu because it is LAST IN THE
+## HUD'S TREE, in the SYSTEM band - not because it sets a z_index. It used to
+## set one, which bought the drawing and not the clicking: Godot picks the
+## Control under the mouse in reverse TREE order and never consults z_index, so
+## a notice raised that way was covered by nothing and still lost every click to
+## whatever sat later in the tree. See `Docs/ui.md`.
+##
 ## Raised by `MatchStart.desync_detected` and by nothing else. See
 ## `MatchStartService.receive_desync`, which is where the server tells this
 ## machine that its world is wrong.
@@ -26,9 +33,6 @@ extends Control
 
 func _ready() -> void:
 	hide()
-	# Above the HUD and above the game menu, since neither is reachable once
-	# this is up and both would draw over it otherwise.
-	z_index = 100
 
 	if _menu_button != null:
 		_menu_button.pressed.connect(_on_menu_pressed)

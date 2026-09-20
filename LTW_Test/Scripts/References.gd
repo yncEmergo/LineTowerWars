@@ -40,6 +40,10 @@ extends Node
 ## same reason TechManager is: the server runs it and a client is told about
 ## it in the snapshot.
 @export var _starting_tech: StartingTech
+## The pause a networked match can be put into, and the countdown back out of
+## it. Wired by both match scenes for the same reason StartingTech is, and it
+## holds the world on exactly the same terms.
+@export var _match_pause: MatchPause
 ## What HAPPENED in this match, counted for the end screen: gold, sends, kills,
 ## leaks and where everybody finished. Wired by both match scenes - a dedicated
 ## server counts a match nobody there will read, which costs a handful of
@@ -196,6 +200,12 @@ static var starting_tech: StartingTech:
 		if instance == null:
 			return null
 		return instance._starting_tech
+
+static var match_pause: MatchPause:
+	get:
+		if instance == null:
+			return null
+		return instance._match_pause
 
 static var tutorial_director: TutorialDirector:
 	get:

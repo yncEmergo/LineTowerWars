@@ -115,6 +115,18 @@ enum Select {
 ## moves on without them - the clock only runs again once a lesson that lets it
 ## go opens. See MatchSession.hold_clock.
 @export var holds_clock: bool = false
+## Whether the OPPONENTS stop playing while this step is open: no building, no
+## upgrading, no sending, whoever is awake.
+##
+## The third thing that can be held, and the smallest. A lesson the player
+## takes their own time over - reading three pages about technology, climbing
+## an upgrade chain - is a lesson an opponent would spend growing its maze,
+## so a slow student meets a stronger enemy than a quick one. Holding the
+## clock does not stop that: an opponent builds off gold it already has.
+##
+## Released by the next step that does not ask for it, like everything else a
+## step holds. See TutorialDirector._hold_rivals.
+@export var holds_rivals: bool = false
 
 ## Where a lesson holds the camera while it is open. See pinned_camera.
 enum CameraPin {
@@ -175,7 +187,20 @@ enum CameraPin {
 ## Seconds the creep roster is moved AHEAD when this step opens: creeps unlock as
 ## if that much more of the match had been played. Income is untouched. See
 ## MatchSession.unlock_elapsed_seconds.
+##
+## **A LEAD, not a destination**, which is the trap: 120 here moves the roster
+## on by two minutes from wherever it stands, and two minutes into a match that
+## is nowhere near a tier the lesson wants open. Use unlocks_to_tier to name the
+## tier and this to add time on top of it.
 @export var unlocks_ahead_seconds: float = 0.0
+## A send tier the creep roster is moved forward TO when this step opens: the
+## clock jumps to the moment the last creep BELOW this tier opens, so everything
+## under it is available at once. 0 for a step that moves it nowhere.
+##
+## The destination half of the pair above, and what a lesson actually means when
+## it says a tier is open. Income is untouched either way - a roster moved
+## forward is not a match that was played.
+@export var unlocks_to_tier: int = 0
 ## A send tier the unlock clock is stopped short of from this step on: it runs
 ## until the last creep BELOW this tier is open, and stands there. 0 lets it run
 ## again, and below zero leaves whatever an earlier step set.
@@ -191,6 +216,15 @@ enum CameraPin {
 ## start for one that has only sparred, so its maze is worth playing against
 ## from the first minute rather than the tenth.
 @export var grant_rival_gold: int = 0
+## The share of the PLAYER's income the opponent this step wakes is put on, or
+## below zero to use the script's own figure.
+##
+## **Per step because the two fights are not the same fight.** Matching the
+## player is fair against an opponent whose maze the player can out-build; it
+## is not fair against one holding an endgame maze the player has three towers
+## against, where an income both sides get only buys the better maze more
+## creeps to kill. See TutorialScript.rival_income_share.
+@export var rival_income_share: float = -1.0
 ## Whether the Research Center opens with this step, and stays open for the rest
 ## of the tutorial. Until one step says so it is shut, so technology arrives
 ## when the lesson about it does rather than whenever a player finds the button.
@@ -220,6 +254,18 @@ enum CameraPin {
 ## list, whether or not it restricts - an open lesson that lets the player do
 ## anything but build basic towers. See ActionLimits.forbidden.
 @export var forbids: Array[UnitAbility] = []
+## The only technologies the player may research while this step is up, by
+## tech_id, and the ones it is waiting to see bought. Empty for a step that is
+## not about technology at all, which leaves research alone.
+##
+## **The whitelist and the objective are one list on purpose.** A lesson that
+## says "research Fire, then raise the Core to a Magma Well" is one task with
+## two halves, and naming the technologies twice - once as what may be pressed,
+## once as what has to be owned - is two places for them to disagree. Every
+## other square in the Research Center is dimmed while it names any, and the
+## Ultimate shortcuts are refused, so the player ends up with exactly the
+## Ultimate the rest of the tutorial is written around.
+@export var tech_ids: Array[int] = []
 ## The dearest tower upgrade the player may start while this step is up, in
 ## gold, or below zero for any. Holds whether or not the step restricts, so a
 ## lesson that sets the player free can still keep the top of the tree back.
@@ -270,10 +316,15 @@ enum Spotlight {
 ## Whether an arrow hovers over every cell of the lesson's blueprint still to
 ## build on, disappearing as each is filled.
 @export var arrows_on_blueprint: bool = false
-## A tower type, as a res:// path to its BuildingStats: an arrow hovers over
-## every tower of the player's of exactly that type - the Lesser Archers a
+## Tower types, as res:// paths to their BuildingStats: an arrow hovers over
+## every tower of the player's of exactly those types - the Lesser Archers a
 ## lesson wants upgraded. Empty for none.
-@export_file("*.tres") var arrows_on_towers_path: String = ""
+##
+## A LIST rather than one type, because a task is a rung of an upgrade chain
+## rather than a tower: "raise the Core to a Magma Well" wants the arrow over
+## the Core, then over the Fire Pit it becomes, and both of those are the same
+## task pointing at the same tower one press later.
+@export_file("*.tres") var arrows_on_tower_paths: Array[String] = []
 ## Somewhere the camera GLIDES to when this step opens, and leaves the player
 ## free to pan away from. For a task whose subject is off screen - the player's
 ## own lane, after a lesson spent looking at an opponent's.
@@ -357,11 +408,26 @@ func blueprint_built() -> int:
 	return count
 
 
-## The only technologies the player may research while this step is up, by
-## tech_id, or empty for any. See TutorialResearchStep, the one that names them.
-func research_whitelist() -> Array[int]:
-	var none: Array[int] = []
-	return none
+## The next technology this step names that the player does not own yet, or 0
+## once they own the lot - which square the border goes to.
+func next_tech(director: TutorialDirector) -> int:
+	if director == null:
+		return 0
+	for id: int in tech_ids:
+		if !director.owns_tech(id):
+			return id
+	return 0
+
+
+## How many of the technologies this step names are owned.
+func techs_owned(director: TutorialDirector) -> int:
+	if director == null:
+		return 0
+	var owned: int = 0
+	for id: int in tech_ids:
+		if director.owns_tech(id):
+			owned += 1
+	return owned
 
 
 ## What a step DOES when it opens, beyond the grants above. Nothing for most of
@@ -381,7 +447,9 @@ func validate() -> bool:
 	# The editor does not rewrite a path string when a .tres moves, so a renamed
 	# blueprint would leave a lesson quietly pointing at nothing - which reads as
 	# a lesson that forgot to say where.
-	for path: String in [blueprint_path, stock_creep_path, arrows_on_towers_path]:
+	var named: Array[String] = [blueprint_path, stock_creep_path]
+	named.append_array(arrows_on_tower_paths)
+	for path: String in named:
 		if !path.is_empty() && !ResourceLoader.exists(path):
 			Log.err("Tutorial step names a resource that does not resolve", {
 				"step": title,
@@ -411,11 +479,16 @@ func stock_creep() -> CreepStats:
 	return _load_creep(stock_creep_path)
 
 
-## The tower type arrows hover over, or null.
-func arrow_tower() -> BuildingStats:
-	if arrows_on_towers_path.is_empty() || !ResourceLoader.exists(arrows_on_towers_path):
-		return null
-	return ResourceLoader.load(arrows_on_towers_path, "") as BuildingStats
+## The tower types arrows hover over, in the order they were authored.
+func arrow_towers() -> Array[BuildingStats]:
+	var wanted: Array[BuildingStats] = []
+	for path: String in arrows_on_tower_paths:
+		if path.is_empty() || !ResourceLoader.exists(path):
+			continue
+		var stats: BuildingStats = ResourceLoader.load(path, "") as BuildingStats
+		if stats != null:
+			wanted.append(stats)
+	return wanted
 
 
 ## The plan this lesson puts on the ground, or null for one that puts none.

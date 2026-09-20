@@ -2,21 +2,23 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/TutorialTaskRow.gd" id="1_row"]
 [ext_resource type="Script" path="res://Scripts/UI/TutorialTickBox.gd" id="2_tick"]
+[ext_resource type="Script" path="res://Scripts/Components/ScaleAnimation2D.gd" id="3_scale_anim"]
 
-[node name="TutorialTaskRow" type="HBoxContainer" node_paths=PackedStringArray("_label", "_tick")]
+[node name="TutorialTaskRow" type="HBoxContainer" node_paths=PackedStringArray("_label", "_tick", "_tick_pop")]
 mouse_filter = 2
 focus_behavior_recursive = 1
 theme_override_constants/separation = 12
 script = ExtResource("1_row")
 _label = NodePath("TaskLabel")
 _tick = NodePath("TickBox")
+_tick_pop = NodePath("TickBox/TickPop")
 
 [node name="TaskLabel" type="Label" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.55, 0.85, 0.6, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.86, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 13
 text = ""
 autowrap_mode = 3
 
@@ -26,3 +28,6 @@ layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("2_tick")
+
+[node name="TickPop" type="Node" parent="TickBox"]
+script = ExtResource("3_scale_anim")

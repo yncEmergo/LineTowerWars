@@ -426,7 +426,7 @@ func _refresh_buttons() -> void:
 	if _undo_button == null:
 		return
 	var ticks: int = manager.undo_ticks_left(_player_id)
-	_undo_button.disabled = ticks <= 0
+	_undo_button.disabled = ticks <= 0 || !ActionLimits.permits_research_undo(_player_id)
 	if ticks <= 0:
 		_undo_button.text = "Undo"
 	else:

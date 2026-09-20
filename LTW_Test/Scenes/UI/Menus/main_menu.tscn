@@ -90,12 +90,10 @@ layout_mode = 2
 text = "Test Scene"
 
 [node name="TutorialButton" type="Button" parent="Layout/Buttons" unique_id=2133895036]
-visible = false
 layout_mode = 2
 text = "Tutorial"
 
 [node name="SingleplayerButton" type="Button" parent="Layout/Buttons" unique_id=2000620577]
-visible = false
 layout_mode = 2
 text = "Single Player"
 

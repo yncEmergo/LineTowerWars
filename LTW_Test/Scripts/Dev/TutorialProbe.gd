@@ -8,11 +8,15 @@ extends Node
 ##
 ##   godot --path . --headless res://Scenes/Dev/tutorial_probe.tscn
 ##
-## It dispatches on each lesson's FILE name in _play(), so re-ordering lessons
-## costs nothing, and a lesson added or renamed needs a line there.
+## It dispatches on a lesson's FILE name in _play() where the lesson needs its
+## own hand, and on the step's CLASS for lesson six, whose rungs differ only in
+## what they are authored with - so a rung added or re-ordered needs no line
+## here, and a lesson renamed elsewhere does.
 ##
 ##   -- lose    run out of lives in the Rookie lesson and check the defeat screen
 ##   -- shots   run windowed and save screenshots to user://tutorial_shots/
+##   -- skip    take the DEV lesson skip to the technology lesson first, which
+##              is both a check of the skip and a two minute run of lesson six
 
 const MATCH_SCENE: String = "res://Scenes/Main.tscn"
 const ARCHER: String = "res://Resources/UnitStats/Towers/lesser_archer_stats.tres"
@@ -20,9 +24,13 @@ const CORE: String = "res://Resources/UnitStats/Towers/elemental_core_stats.tres
 const SHEEP: String = "res://Resources/UnitStats/Creeps/sheep_stats.tres"
 const KNIGHT: String = "res://Resources/UnitStats/Creeps/knight_stats.tres"
 const BUILD_MENU: String = "res://Resources/Abilities/build_menu_ability.tres"
+const SENTRY_ABILITY: String = "res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres"
+## Ice's Basic: on no lesson's list, and gated on nothing, so a refusal of it is
+## a refusal by the list rather than by a missing prerequisite.
+const OFF_LIST_TECH: int = 7
 const SHOW_BLUEPRINTS: String = "res://Resources/Abilities/Blueprints/show_blueprints_ability.tres"
 const SPEED: int = 200
-const GIVE_UP_TICKS: int = 20 * 60 * 14
+const GIVE_UP_TICKS: int = 20 * 60 * 20
 
 @export var _ai_config: AiConfig
 @export var _game_config: GameConfig
@@ -43,9 +51,17 @@ var _shots: bool = false
 ## `-- lose`: run out of lives in the Rookie lesson and check the defeat screen
 ## instead of playing to the end.
 var _lose: bool = false
+## `-- skip`: start at the technology lesson through the DEV skip, and check
+## what it left behind - see TutorialDirector.dev_skip_lesson.
+var _skip: bool = false
+var _skipped: bool = false
 var _shot_name: String = ""
 var _shot_frames: int = 0
 var _shots_taken: Dictionary = {}
+## What the Veteran's maze was worth when the technology lesson opened, so the
+## lesson holding it (TutorialStep.holds_rivals) can be checked rather than
+## trusted: a held opponent builds nothing, so the number must not move.
+var _vet_value_held: int = -1
 ## Moment title -> the tick it fired on, and ticks spent on the one up now.
 var _moments_seen: Dictionary = {}
 var _moment_ticks: int = 0
@@ -55,6 +71,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_shots = "shots" in OS.get_cmdline_user_args()
 	_lose = "lose" in OS.get_cmdline_user_args()
+	_skip = "skip" in OS.get_cmdline_user_args()
 	var setup: MatchSetup = TutorialSetup.create(_game_config, _ai_config)
 	MenuNavigation.pending_match = setup
 	# Real time when shooting, so a shot lands inside a moment as short as the
@@ -100,6 +117,10 @@ func _physics_process(_delta: float) -> void:
 			_finish()
 		return
 
+	if _skip && !_skipped:
+		_take_the_skip(director)
+		return
+
 	if director.current_moment() != null:
 		_read_moment(director)
 		return
@@ -136,6 +157,42 @@ func _physics_process(_delta: float) -> void:
 	_play(director)
 
 
+## Takes the DEV skip to the technology lesson and checks what it left behind:
+## the maze the skipped lessons taught standing in the player's zone, and the
+## opponent they were meant to beat beaten, so the send ring has moved on.
+##
+## Both of those are what would BRICK a skip if it left them out - a student
+## dropped into lesson six with an empty lane, or still sending into a Rookie
+## they finished with two lessons ago.
+func _take_the_skip(director: TutorialDirector) -> void:
+	_skipped = true
+	var before: int = director.step_index()
+	# The director's own call, which is what the key press runs - so what is
+	# checked below is the skip a human takes rather than a copy of it.
+	director.dev_skip_to_technology()
+	_check(director.is_running(), "skip: the tutorial is still running")
+	_check(director.step_index() > before, "skip: it moved on (%d -> %d)" % [
+		before, director.step_index()])
+	_check(director.current_step().title == "Technology",
+		"skip: it stopped on the technology lesson (%s)" % director.current_step().title)
+	var area: PlayerArea = References.player_manager.area_for(1)
+	var towers: int = 0
+	for child in area.get_children():
+		if child is Building:
+			towers += 1
+	_check(towers > 0, "skip: the taught maze is standing (%d towers)" % towers)
+	var rookie: PlayerState = References.player_manager.state_for(TutorialSetup.FIRST_RIVAL_SLOT)
+	_check(rookie.is_eliminated(), "skip: the Rookie is beaten (%d lives)" % rookie.lives)
+	# Still on standby, exactly as it is at this point in a played run: the
+	# lesson that wakes it is the one that puts it in the send ring.
+	var vet: PlayerState = References.player_manager.state_for(TutorialSetup.SECOND_RIVAL_SLOT)
+	_check(vet.standby, "skip: the Veteran is still waiting outside the ring")
+	var value: int = References.player_manager.value_for(TutorialSetup.SECOND_RIVAL_SLOT)
+	_check(value > 0, "skip: the Veteran's maze is standing (%d)" % value)
+	_note("skip: %s, %d towers, gold %d, income %d; Veteran maze %d, gold %d" % [
+		director.current_step().title, towers, _me().gold, _me().income, value, vet.gold])
+
+
 ## Asks for a screenshot, once per name. Answers whether the probe should wait
 ## for it this tick.
 func _shoot(shot: String) -> bool:
@@ -160,10 +217,16 @@ func _process(_delta: float) -> void:
 	_shot_name = ""
 
 
-## Keyed by the lesson FILE rather than by its number, so steps can be added or
-## taken out of the script without renumbering this.
+## Keyed by the lesson FILE for the lessons that each need their own hand, and
+## by the step's CLASS for lesson six, whose sixteen rungs differ only in what
+## they are authored with.
+##
+## The class arm is what keeps a rung added or re-ordered free: what a rung
+## needs pressing is on the step - which technologies, which upgrade, which
+## tower it waits for - so one handler per KIND answers all of them.
 func _play(director: TutorialDirector) -> void:
-	match director.current_step().resource_path.get_file().get_basename():
+	var step: TutorialStep = director.current_step()
+	match step.resource_path.get_file().get_basename():
 		"01_builder":
 			_play_select_builder()
 		"02_move":
@@ -182,18 +245,28 @@ func _play(director: TutorialDirector) -> void:
 			_play_payout()
 		"13_beat_rookie":
 			_play_rookie()
-		"14_technology":
-			_play_explain()
-		"15_research_fire", "16_research_lightning":
-			_play_research(director)
-		"17_elemental_core":
-			_play_core()
-		"18_fire_pit":
-			_play_fire_pit()
-		"19_your_maze":
-			_play_your_maze()
-		"20_beat_veteran":
+		"30_beat_veteran":
 			_play_veteran()
+		_:
+			_play_rung(director, step)
+
+
+## One RUNG of lesson six, by what kind of step it is.
+func _play_rung(director: TutorialDirector, step: TutorialStep) -> void:
+	if !_acted.has("held"):
+		_acted["held"] = true
+		var file: String = step.resource_path.get_file().get_basename()
+		_check(_session().is_clock_held(), "%s: the clock is held" % file)
+		_check(!_session().is_paused(), "%s: the world runs" % file)
+		_note("%s: gold %d to start it" % [file, _me().gold])
+	if step is TutorialOpenResearchStep:
+		_play_open_research(step)
+	elif step is TutorialResearchStep:
+		_play_research(director, step)
+	elif step is TutorialOwnStep:
+		_play_own(director, step)
+	else:
+		_fail("no probe hand for %s" % step.resource_path.get_file())
 
 
 ## The move lesson: check where the highlight is, then walk the builder a few
@@ -266,13 +339,23 @@ func _play_upgrade_task(director: TutorialDirector) -> void:
 func _on_lesson_opened() -> void:
 	var rookie: MatchStatLine = References.match_stats.line_for(TutorialSetup.FIRST_RIVAL_SLOT)
 	var vet: MatchStatLine = References.match_stats.line_for(TutorialSetup.SECOND_RIVAL_SLOT)
-	if _lesson <= 13:
+	if _lesson <= 14:
 		_check(rookie.sends == 0, "lesson %d: the Rookie has sent nothing yet" % _lesson)
 		_check(vet.sends == 0, "lesson %d: the Veteran has sent nothing yet" % _lesson)
 		_check(!ActionLimits.permits_research(1), "lesson %d: research still shut" % _lesson)
 	var builder: Builder = _builder()
 	var show: UnitAbility = load(SHOW_BLUEPRINTS) as UnitAbility
 	_check(!ActionLimits.permits(show, builder), "lesson %d: blueprint screen forbidden" % _lesson)
+	# Lesson six holds both opponents while it is taught, so the Veteran's maze
+	# must be worth exactly what it was worth when the lesson opened.
+	var value: int = References.player_manager.value_for(TutorialSetup.SECOND_RIVAL_SLOT)
+	if _lesson == 14:
+		_vet_value_held = value
+		_note("lesson 14: the Veteran's maze is worth %d and is now held" % value)
+	elif _lesson > 14 && _lesson < 30 && _vet_value_held >= 0:
+		_check(value == _vet_value_held,
+			"lesson %d: the held Veteran has built nothing (%d, was %d)" % [
+				_lesson, value, _vet_value_held])
 
 
 func _play_select_builder() -> void:
@@ -449,7 +532,9 @@ func _play_explain() -> void:
 		&"income_timer": "Timer", &"research_button": "ResearchButton", &"": "<none>"}
 	_check(_pointer_target_name() == String(wanted.get(page.highlight_key, "?")),
 		"explain page %d: border on %s (%s)" % [at + 1, page.highlight_key, _pointer_target_name()])
-	_check(_session().is_paused(), "explain page %d: the world is held" % (at + 1))
+	# One or the other, whichever the lesson asked for - see TutorialExplainStep.
+	_check(_session().is_paused() || _session().is_clock_held(),
+		"explain page %d: the match is held" % (at + 1))
 	var info: Control = get_tree().root.find_child("TutorialInfoPanel", true, false) as Control
 	var panel: Control = get_tree().root.find_child("TutorialPanel", true, false) as Control
 	_check(info != null && info.visible, "explain page %d: the info panel is up" % (at + 1))
@@ -601,119 +686,203 @@ func _play_upgrade() -> void:
 			return
 
 
-## A named research task: the border walks from the Research Center button to
-## the square, nothing off the list can be researched, and then the list is.
-func _play_research(director: TutorialDirector) -> void:
-	var step: TutorialResearchStep = director.current_step() as TutorialResearchStep
+## The task that opens the Research Center: the border is on its button, it is
+## shut until this task, and pressing it is the whole of it.
+func _play_open_research(step: TutorialStep) -> void:
+	# NOT "opened", which _physics_process already keeps for itself - a key
+	# collision there had this task return before it pressed anything, and the
+	# run simply stopped on a task that could never finish.
+	if _acted.has("pressed_research"):
+		return
+	var file: String = step.resource_path.get_file().get_basename()
 	var center: ResearchCenter = References.research_center
-	if !_acted.has("closed"):
-		_acted["closed"] = true
-		center.close()
+	if !_acted.has("checked_shut"):
+		_acted["checked_shut"] = true
+		_check(!center.is_open(), "%s: the Research Center starts shut" % file)
+		_check(ActionLimits.permits_research(1), "%s: and this task may open it" % file)
 		_check(_pointer_target_name() == "ResearchButton",
-			"%s: border on the Research Center button while it is shut (%s)" % [
-				step.resource_path.get_file(), _pointer_target_name()])
-		_check(_session().is_clock_held(), "%s: the clock is held" % step.resource_path.get_file())
-		center.open()
+			"%s: border on the Research Center button (%s)" % [file, _pointer_target_name()])
+	# The SHOT before the latch, not after it: a latch set first and then
+	# returned from leaves the press undone for ever, which is a stall that
+	# only happens in the windowed run.
+	if _shoot("l%d_%s" % [_lesson, file]):
 		return
-	if !_acted.has("open"):
-		if _shoot("l%d_research_%d" % [_lesson, step.next_tech(director)]):
+	_acted["pressed_research"] = true
+	center.open()
+
+
+## A research task: the border walks to the square to press, nothing off the
+## list can be bought, and then the one it names is.
+func _play_research(director: TutorialDirector, step: TutorialStep) -> void:
+	var file: String = step.resource_path.get_file().get_basename()
+	if !_acted.has("tried_off_list"):
+		if _shoot("l%d_%s" % [_lesson, file]):
 			return
-		_acted["open"] = true
-		_check(_pointer_target_name() == "TechSlot%d" % _session().techs().tech_for(step.next_tech(director)).slot,
-			"%s: border on the square to press (%s)" % [step.resource_path.get_file(), _pointer_target_name()])
-		# Off the list: the Moonbeam path, and a whole Ultimate in one press.
-		var before: int = director.technologies_owned()
-		Commands.submit_player_action(Command.PlayerAction.RESEARCH, 2)
+		_acted["tried_off_list"] = true
+		var slot: int = _session().techs().tech_for(step.next_tech(director)).slot
+		_check(_pointer_target_name() == "TechSlot%d" % slot,
+			"%s: border on the square to press (%s)" % [file, _pointer_target_name()])
+		# A BASIC of an element no lesson names, so it is refused for being off
+		# the list rather than for wanting something first - and a whole
+		# Ultimate in one press, which the list refuses outright.
+		Commands.submit_player_action(Command.PlayerAction.RESEARCH, OFF_LIST_TECH)
 		Commands.submit_player_action(Command.PlayerAction.RANDOM_ULTIMATE)
-		_acted["before"] = before
 		return
-	if !_acted.has("refused"):
-		_acted["refused"] = true
-		_check(director.technologies_owned() == int(_acted["before"]),
-			"%s: nothing off the list was researched" % step.resource_path.get_file())
-	if _lesson_ticks % 20 == 0 && step.next_tech(director) != 0:
+	if !_acted.has("off_list_refused"):
+		_acted["off_list_refused"] = true
+		_check(!director.owns_tech(OFF_LIST_TECH),
+			"%s: the technology off the list was refused" % file)
+	if _lesson_ticks % 20 == 0:
 		Commands.submit_player_action(Command.PlayerAction.RESEARCH, step.next_tech(director))
 
 
-func _play_core() -> void:
-	var builder: Builder = _builder()
+## A build or upgrade task: prove what it must refuse - including the Research
+## Center, which is open by now and must still buy nothing - then press the one
+## thing it allows.
+func _play_own(director: TutorialDirector, step: TutorialStep) -> void:
+	var file: String = step.resource_path.get_file().get_basename()
+	if !_acted.has("research_shut") && director.technologies_owned() > 0:
+		_acted["research_shut"] = true
+		_check(!ActionLimits.permits_research_tech(1, OFF_LIST_TECH),
+			"%s: an open Research Center still buys nothing" % file)
+		# And gives nothing back. The window is quoted in the message, because
+		# an Undo refused for having run out of time proves nothing about the
+		# rule under test.
+		var window: int = References.tech_manager.undo_ticks_left(1)
+		_check(!ActionLimits.permits_research_undo(1),
+			"%s: nor takes one back, with %d ticks of window left" % [file, window])
+		_acted["techs_before"] = director.technologies_owned()
+		Commands.submit_player_action(Command.PlayerAction.UNDO_RESEARCH)
+		return
+	if _acted.has("techs_before") && !_acted.has("undo_checked"):
+		_acted["undo_checked"] = true
+		_check(director.technologies_owned() == int(_acted["techs_before"]),
+			"%s: the Undo was refused (%d technologies, was %d)" % [
+				file, director.technologies_owned(), int(_acted["techs_before"])])
+	if !_refusals(step, file):
+		return
+	_climb(step, file)
+
+
+## The tower half: build what the task allows building if it allows any, then
+## press the one upgrade it allows.
+func _climb(step: TutorialStep, file: String) -> void:
 	var area: PlayerArea = References.player_manager.area_for(1)
-	if !_acted.has("core"):
-		_acted["core"] = true
-		References.research_center.close()
-		var sentry: UnitAbility = load("res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres") as UnitAbility
-		_check(!ActionLimits.permits(sentry, builder), "core: a basic tower cannot be built")
+	if !_acted.has("built") && _wants_building(step, area):
+		_acted["built"] = true
+		var builder: Builder = _builder()
+		var sentry: UnitAbility = load(SENTRY_ABILITY) as UnitAbility
+		_check(!ActionLimits.permits(sentry, builder), "%s: a basic tower cannot be built" % file)
 		var core: BuildTowerAbility = AiHand.build_ability(builder, load(CORE) as BuildingStats)
-		_check(ActionLimits.permits(core, builder), "core: the Elemental Core can")
-		AiHand.order_build(1, builder, core, area.footprint_world_center(Vector2i(0, 40), Vector2i(2, 2)), false)
-
-
-func _play_fire_pit() -> void:
-	var area: PlayerArea = References.player_manager.area_for(1)
-	if _acted.has("morphed"):
-		return
-	var core: Building = null
-	for child in area.get_children():
-		var tower: Building = child as Building
-		if tower != null && tower.stats != null && tower.stats.resource_path == CORE && !tower.is_under_construction():
-			core = tower
-	if core == null:
-		return
-	if !_acted.has("selected"):
-		_acted["selected"] = true
-		_check(_world_arrows() == 1, "fire pit: an arrow over the Core (%d)" % _world_arrows())
-		References.selection_controller.select_single(core)
-		return
-	if _shoot("l%d_fire_pit" % _lesson):
-		return
-	_acted["morphed"] = true
-	_check(_pointer_target_name().begins_with("CommandSlot"),
-		"fire pit: border on the morph square (%s)" % _pointer_target_name())
-	var shock: UnitAbility = load("res://Resources/Abilities/Towers/upgrade_elemental_core_to_lightning_shock_particle_ability.tres") as UnitAbility
-	_check(!ActionLimits.permits(shock, core), "fire pit: no other element's morph")
-	AiHand.order_upgrade(1, core, AiHand.upgrade_toward(core, 65))
-
-
-## The open task: raise the Fire Pit to an Ultimate Firelord, build a second
-## Core and raise it to a Greater Annihilation Glyph - one rung at a time, as
-## each finishes.
-func _play_your_maze() -> void:
-	var builder: Builder = _builder()
-	var area: PlayerArea = References.player_manager.area_for(1)
-	if !_acted.has("checked"):
-		_acted["checked"] = true
-		var sentry: UnitAbility = load("res://Resources/Abilities/Towers/build_lesser_sentry_ability.tres") as UnitAbility
-		_check(!ActionLimits.permits(sentry, builder), "your maze: basic towers still cannot be built")
-		_check(!_me().limits.restricts_abilities, "your maze: everything else is open")
-		_check(_session().is_clock_held(), "your maze: no income while it is built")
-		_note("your maze: gold %d" % _me().gold)
-		var core: BuildTowerAbility = AiHand.build_ability(builder, load(CORE) as BuildingStats)
-		AiHand.order_build(1, builder, core, area.footprint_world_center(Vector2i(4, 40), Vector2i(2, 2)), false)
-		_acted["started"] = _lesson_ticks
+		_check(ActionLimits.permits(core, builder), "%s: the Elemental Core can" % file)
+		AiHand.order_build(1, builder, core, area.footprint_world_center(
+			_acted_cell(), Vector2i(2, 2)), false)
 		return
 	if _lesson_ticks % 20 != 0:
 		return
 	for child in area.get_children():
 		var tower: Building = child as Building
-		if tower == null || tower.stats == null || tower.is_under_construction() || tower.is_upgrading():
+		if tower == null || tower.is_under_construction() || tower.is_upgrading():
 			continue
-		var target: int = 0
-		# The Fire Pit is already on its way; any Core is the Glyph.
-		if tower.stats.resource_path == CORE || AiHand.branch_reaches(tower.stats as BuildingStats, 84, {}):
-			target = 84
-		elif AiHand.branch_reaches(tower.stats as BuildingStats, 72, {}):
-			target = 72
-		if target == 0 || tower.stats.unit_type_id == target:
-			continue
-		var up: UpgradeTowerAbility = AiHand.upgrade_toward(tower, target)
-		if up != null && up.can_execute(tower):
+		for entry in step.allowed_abilities:
+			var up: UpgradeTowerAbility = entry as UpgradeTowerAbility
+			if up == null || !(up in tower.current_abilities()) || !up.can_execute(tower):
+				continue
+			if !_acted.has("pointed"):
+				_acted["pointed"] = true
+				_check(_world_arrows() >= 1, "%s: an arrow over the tower to work on (%d)" % [
+					file, _world_arrows()])
+				References.selection_controller.select_single(tower)
+				return
+			if !_acted.has("bordered"):
+				# Shot first, so the check below still runs in a windowed run -
+				# see the note in _play_open_research.
+				if _shoot("l%d_%s" % [_lesson, file]):
+					return
+				_acted["bordered"] = true
+				_check(_pointer_target_name().begins_with("CommandSlot"),
+					"%s: border on the upgrade square (%s)" % [file, _pointer_target_name()])
 			AiHand.order_upgrade(1, tower, up)
-	if _lesson_ticks % 400 == 0:
-		_note("your maze t=%ds: gold %d, %s" % [_lesson_ticks / 20, _me().gold, _census(area)])
+			return
+
+
+## Where the probe puts a Core. The two Cores of lesson six go in different
+## cells, and nothing in the lesson says where - the player picks.
+func _acted_cell() -> Vector2i:
+	var area: PlayerArea = References.player_manager.area_for(1)
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower != null && tower.cell == Vector2i(0, 40):
+			return Vector2i(4, 40)
+	return Vector2i(0, 40)
+
+
+## Everything on the player's cards this task does NOT allow, tried for real:
+## every upgrade of another branch, and every Sell. Answers whether the task
+## may move on - it waits a beat so a refused order has had its chance to spend
+## gold it should not have.
+func _refusals(step: TutorialStep, file: String) -> bool:
+	var area: PlayerArea = References.player_manager.area_for(1)
+	if !_acted.has("tried_refused"):
+		_acted["tried_refused"] = true
+		_acted["gold_before"] = _me().gold
+		var tried: int = 0
+		# One of each, rather than one per tower: the answer is the same for
+		# every Lesser Sentry in the maze and forty copies of it buries the
+		# rest of the run.
+		var seen: Dictionary = {}
 		for child in area.get_children():
-			var t: Building = child as Building
-			if t != null && t.stats != null && t.stats.gold_cost >= 1000:
-				_note("   %s path=%s upgrading=%s" % [t.stats.display_name, t.stats.resource_path, t.is_upgrading()])
+			var tower: Building = child as Building
+			if tower == null || tower.stats == null:
+				continue
+			for entry in tower.current_abilities():
+				var other: UnitAbility = entry as UnitAbility
+				if other == null || other in step.allowed_abilities:
+					continue
+				if !(other is UpgradeTowerAbility || other is SellAbility):
+					continue
+				var key: Array = [other.ability_id, tower.stats.unit_type_id]
+				if seen.has(key):
+					continue
+				seen[key] = true
+				_check(!ActionLimits.permits(other, tower), "%s: %s refused on a %s" % [
+					file, other.display_name, tower.stats.display_name])
+				tried += 1
+				var up: UpgradeTowerAbility = other as UpgradeTowerAbility
+				if up != null:
+					AiHand.order_upgrade(1, tower, up)
+		# The rule CLAUDE.md states: a refusal proves nothing unless something
+		# was actually refused.
+		_check(tried > 0, "%s: %d orders off the list were actually tried" % [file, tried])
+		return false
+	if !_acted.has("refused_cost_nothing"):
+		_acted["refused_cost_nothing"] = true
+		_check(_me().gold == int(_acted["gold_before"]),
+			"%s: the refused orders cost nothing (%d -> %d)" % [
+				file, int(_acted["gold_before"]), _me().gold])
+	return true
+
+
+## Whether this task still wants something BUILT before anything can be
+## upgraded: it allows a build, and none of the towers it points arrows at is
+## standing yet.
+func _wants_building(step: TutorialStep, area: PlayerArea) -> bool:
+	var builds: bool = false
+	for entry in step.allowed_abilities:
+		if entry is BuildTowerAbility:
+			builds = true
+	if !builds:
+		return false
+	var wanted: Array[BuildingStats] = step.arrow_towers()
+	if wanted.is_empty():
+		# A task that builds and points at nothing is done the moment the tower
+		# is up - the two Core tasks. One build, once.
+		return !_acted.has("built")
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower != null && tower.stats in wanted:
+			return false
+	return true
 
 
 ## The last lesson, played by sending the dearest thing the gold covers. Notes
@@ -733,6 +902,7 @@ func _play_veteran() -> void:
 			"veteran: nothing but the script's own list is forbidden")
 		_note("veteran woken: gold %d, income %d, maze value %d" % [
 			vet.gold, vet.income, References.player_manager.value_for(slot)])
+		_check_roster_open(2)
 	if _lesson_ticks % 100 == 0:
 		var sender: SendBuilding = _sender(1)
 		var best: SendCreepAbility = null
@@ -750,17 +920,62 @@ func _play_veteran() -> void:
 		if creep.owner_player_id == slot && (creep.stats as CreepStats).is_attacker && !_acted.has("attacker"):
 			_acted["attacker"] = true
 			_fail("veteran: sent an attacker (%s)" % creep.stats.display_name)
+	# **The probe plays this fight BADLY on purpose** - it sends the dearest
+	# creep it can on a beat and never touches its maze - so it losing says
+	# nothing about the lesson. Its lives are stolen back off the Veteran, which
+	# conserves the pool, and what was taken is noted instead: that number is the
+	# reading worth having about how hard the Veteran hits.
+	var script_res: TutorialScript = References.tutorial_director.script_resource
+	if _me().lives < script_res.player_lives && !vet.is_eliminated():
+		var back: int = script_res.player_lives - _me().lives
+		_acted["taken"] = int(_acted.get("taken", 0)) + back
+		_me().steal_life_from(vet, back)
 	if _lesson_ticks % 1200 == 0:
 		var value: int = References.player_manager.value_for(slot)
 		_note("veteran t=%ds: their lives %d, my lives %d, their gold %d income %d, maze value %d" % [
 			_lesson_ticks / 20, vet.lives, _me().lives, vet.gold, vet.income, value])
 		_note("  veteran towers: %s" % _census(area))
+		var sent: MatchStatLine = References.match_stats.line_for(slot)
+		var mine: PlayerArea = References.player_manager.area_for(1)
+		_note("  veteran sends: %d, creeps in my lane: %d, lives it has taken: %d" % [
+			sent.sends, mine.creeps().size(), int(_acted.get("taken", 0))])
 		_check(value <= 100000, "veteran t=%ds: maze value within 100k (%d)" % [_lesson_ticks / 20, value])
 		_check(vet.tech.has(14), "veteran: owns the Annihilation Glyph path")
 	if _lesson_ticks == 20 * 60 * 4:
 		_note("veteran: still standing after four minutes, ended by the probe")
 		vet.lives = 0
 		vet.lives_changed.emit(0)
+
+
+## Every creep of a tier ACTUALLY open on the player's senders, rather than the
+## knob that was meant to open them.
+##
+## The knob lied once: unlocks_ahead_seconds is a LEAD rather than a
+## destination, so a lesson asking for two minutes got two minutes and not the
+## tier it wanted. Reading the roster is the only thing that would have caught
+## it, which is CLAUDE.md's rule about checking the positive control reached
+## through a tuning value.
+func _check_roster_open(tier: int) -> void:
+	var area: PlayerArea = References.player_manager.area_for(1)
+	var config: GameConfig = References.game_config
+	var open: int = 0
+	var shut: Array[String] = []
+	for sender in area.send_buildings():
+		if sender.is_sudden_death_tier || sender.send_tier != tier:
+			continue
+		for entry: Variant in sender.current_abilities():
+			var send: SendCreepAbility = entry as SendCreepAbility
+			if send == null || send.creep_stats == null:
+				continue
+			var at: float = config.unlock_clock(send.creep_stats.unlock_seconds)
+			if _session().unlock_elapsed_seconds() >= at:
+				open += 1
+			else:
+				shut.append(send.creep_stats.display_name)
+	_check(open > 0 && shut.is_empty(), "veteran: tier %d open (%d creeps, shut: %s)" % [
+		tier, open, "none" if shut.is_empty() else ", ".join(shut)])
+	_note("  unlock clock %.0f, match clock %.0f" % [
+		_session().unlock_elapsed_seconds(), _session().elapsed_seconds()])
 
 
 func _census(area: PlayerArea) -> String:
