@@ -35,6 +35,12 @@ signal closed
 @export var _tab_row: BoxContainer
 ## The pages, in tab order. Exactly one is visible at a time.
 @export var _page_stack: Container
+## The scroll the pages sit in. A page is taller than the screen on a small
+## window - the Hotkeys one is taller than most screens - and without this the
+## column simply grows past the bottom, taking the Back button with it. Held
+## only so a tab change starts at the top of its page rather than wherever the
+## last one was left.
+@export var _page_scroll: ScrollContainer
 ## Windowed / Windowed Fullscreen / Fullscreen, in UserSettings.WindowMode order.
 @export var _window_mode_row: BoxContainer
 ## Turns the sun's shadows off outright, for a machine that cannot afford them
@@ -48,6 +54,11 @@ signal closed
 ## Panning the camera by pushing the cursor against a screen edge. How wide
 ## that strip is stays authored on CameraConfig; only the switch is here.
 @export var _edge_panning_button: BaseButton
+## The six VolumeRow prefabs, one per channel, authored in the scene in
+## UserSettings.AudioChannel order. Held only so they can be pulled back into
+## step in _sync_from_settings: each row applies its own change as it is
+## dragged, so nothing here ever writes one.
+@export var _volume_list: Container
 ## Silences everything at once, independently of the six levels.
 @export var _mute_button: BaseButton
 ## European / American, in UserSettings.KeyboardLayout order.
@@ -146,8 +157,25 @@ func _sync_from_settings() -> void:
 	_press_in_row(_keyboard_layout_row, int(UserSettings.keyboard_layout))
 	if _mute_button != null:
 		_mute_button.set_pressed_no_signal(UserSettings.audio_muted)
+	_refresh_volume_rows()
 	_refresh_hotkey_rows()
 	_say("")
+
+
+## Pulls every slider back onto what is stored.
+##
+## Needed only because this screen is PREWARMED and reused: the rows read the
+## settings once in their own _ready and would otherwise still be showing what
+## was stored the first time the screen was built, if anything else ever changes
+## a level. Nothing does today, which is exactly why it is worth costing one
+## loop now rather than being a silent wrong number later.
+func _refresh_volume_rows() -> void:
+	if _volume_list == null:
+		return
+	for child: Node in _volume_list.get_children():
+		var row: VolumeRow = child as VolumeRow
+		if row != null:
+			row.refresh()
 
 
 ## Every button in the row is unpressed by hand before the chosen one is
@@ -199,6 +227,9 @@ func _select_page(index: int) -> void:
 		var page: CanvasItem = pages[page_index] as CanvasItem
 		if page != null:
 			page.visible = page_index == index
+
+	if _page_scroll != null:
+		_page_scroll.scroll_vertical = 0
 
 
 func _on_window_mode_pressed(index: int) -> void:
