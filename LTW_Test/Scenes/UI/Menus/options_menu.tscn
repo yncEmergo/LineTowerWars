@@ -32,6 +32,7 @@ corner_radius_bottom_left = 5
 
 [node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_page_scroll", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_edge_panning_button", "_volume_list", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
 visible = false
+process_mode = 3
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

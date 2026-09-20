@@ -199,7 +199,24 @@ static func play_event(path: String, min_gap_seconds: float = -1.0) -> void:
 	_play_flat(path, BUS_SFX, min_gap_seconds)
 
 
-## The body of both of the above. A flat voice on the named bus.
+## A sample of what one CHANNEL sounds like, played on that channel's own bus.
+##
+## The options screen and nothing else. It exists because four of the six
+## sliders move a bus that nothing in a menu ever plays through - SFX, Music,
+## Speech and Atmo are all silent there - so without it two thirds of the audio
+## options are indistinguishable from broken, whatever they are actually doing
+## to the mixer. A slider a player cannot hear is a slider that does not work,
+## however correct the number underneath it is.
+##
+## Takes the bus by NAME rather than the intent the other three are named for,
+## because the intent here IS the bus: the caller is asking to hear that
+## channel, not to play a sound that happens to live on it.
+static func play_preview(path: String, bus: StringName,
+		min_gap_seconds: float = -1.0) -> void:
+	_play_flat(path, bus, min_gap_seconds)
+
+
+## The body of the three above. A flat voice on the named bus.
 static func _play_flat(path: String, bus: StringName, min_gap_seconds: float) -> void:
 	if instance == null || instance._silent || path.is_empty():
 		return

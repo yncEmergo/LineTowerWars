@@ -21,6 +21,11 @@ extends HBoxContainer
 ## The row's NAME is not authored here. It is read off UserSettings from the
 ## channel, so renaming a channel has one place to happen rather than six.
 
+## Shortest gap between two previews while a slider is being dragged. Long
+## enough to read as a tick per step rather than a tone, short enough that a
+## slow drag is never silent.
+const PREVIEW_GAP_SECONDS: float = 0.09
+
 @export_group("References")
 @export var _name_label: Label
 @export var _slider: HSlider
@@ -62,6 +67,34 @@ func _on_slider_changed(value: float) -> void:
 	if _syncing:
 		return
 	UserSettings.set_volume(channel, value)
+	_preview()
+
+
+## Plays a short sound on THIS row's own bus, so the player hears what they
+## just set while they are still setting it.
+##
+## **Four of the six channels are otherwise silent on this screen.** SFX, Music,
+## Speech and Atmo have nothing playing through them in a menu, so moving those
+## sliders changes a number, writes a file, moves the bus - and produces no
+## evidence whatsoever that any of it happened. That is indistinguishable from
+## a broken slider, and it is what "the audio options do nothing" turned out to
+## describe.
+##
+## MASTER and UI are the two that already had feedback, because the click of
+## the button that opened the screen goes through them. They get the preview
+## too rather than being special-cased: one rule is easier to trust than two,
+## and hearing the same sound on every row is what makes the six comparable.
+##
+## Rate limited, because a drag emits value_changed on every frame it moves.
+## The gap is AudioHub's own same-sound gap, which turns a drag into a tick
+## rather than a tearing noise - and it is keyed by PATH, so dragging one
+## slider cannot machine-gun another row's preview either.
+func _preview() -> void:
+	var config: AudioConfig = References.audio_config
+	if config == null:
+		return
+	var bus: StringName = UserSettings.AUDIO_BUS_NAMES[int(channel)]
+	AudioHub.play_preview(config.ui_click_path, bus, PREVIEW_GAP_SECONDS)
 
 
 func _update_value_label(value: float) -> void:

@@ -41,6 +41,35 @@ Mute is the Master bus's own flag, not a volume of zero. Zeroing would work and
 would then have thrown the player's levels away, since unmuting has to put them
 back and the only copy is the one being overwritten.
 
+### 1.1 The options screen
+
+Six `VolumeRow` prefabs and a mute toggle. Each row applies as it moves - the
+setter pushes the level onto the bus and writes `user://settings.cfg` in the
+same call - so there is no Apply button and nothing to roll back.
+
+**The screen is `PROCESS_MODE_ALWAYS`, and that is load-bearing rather than
+tidy.** A Control that inherits its process mode stops receiving GUI input
+entirely while `get_tree().paused` is true, and a match pauses the whole tree -
+the draft, a lockstep stall, `MatchPause`. So opened over a paused world the
+screen was input-dead: the sliders would not move and the mute toggle would not
+toggle, with nothing on screen to say why and every other part of it looking
+perfectly healthy. It only worked in a match at all by INHERITING the mode from
+`GameMenu`, which match_hud.tscn happens to set - a coupling nobody wrote down
+and which the main menu's copy of the same screen did not have. A settings
+screen has to work whenever it is visible, so it now says so itself.
+
+**Every row plays a short sound on its OWN bus as it moves.** Four of the six
+channels - SFX, Music, Speech, Atmo - have nothing playing through them in a
+menu, so without it two thirds of the audio options change a number, write a
+file, move a bus and produce no evidence whatsoever that any of it happened.
+That is indistinguishable from a broken slider. `AudioHub.play_preview()` is
+the one call that takes a bus by name rather than by intent, because here the
+intent IS the bus.
+
+Mute has no preview and wants none: silence is the feedback, and the button's
+own click is suppressed by the mute it just applied - `toggled` fires before
+`pressed`, so muting is silent and unmuting clicks.
+
 ## 2. AudioHub
 
 `Scripts/Audio/AudioHub.gd`. The one thing in the project that plays a sound.
@@ -363,6 +392,11 @@ printing a sound's name is that proof; an absence of errors is not.
   player eliminated, victory and defeat. Adding one is a sound in SfxGen's
   roster, a path in `audio_config.tres` and a call - the first two of the five
   already have somewhere obvious to be called from.
+- **Nothing reads the Speech or Atmo buses.** Both have a slider, both are
+  applied, and no sound in the game is routed to either - so those two rows
+  move a real bus that nothing plays through. They exist for the roster that
+  will use them; until then the preview is the only thing either one ever
+  makes audible.
 - **The voice budget is unmeasured.** The caps in `audio_config.tres` are
   starting guesses and `Scenes/Tools/perf_bench.tscn` is where they should be
   checked, against a full maze rather than against a probe.
