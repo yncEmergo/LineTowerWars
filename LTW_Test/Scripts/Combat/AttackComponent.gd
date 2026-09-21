@@ -80,8 +80,7 @@ var _target: Unit
 ## Kept apart from _target on purpose: once an attack starts, the tower has
 ## picked what it is hitting and must not be retargeted mid-swing, or an
 ## animation would play at one creep and land on another. The point is
-## remembered too, so a creep that dies during the windup still gets swung at -
-## the same rule a projectile already follows when its target dies mid flight.
+## remembered too, so a creep that dies during the windup still gets swung at.
 var _windup_left: float = 0.0
 var _windup_target: Unit = null
 var _windup_point: Vector3 = Vector3.ZERO
@@ -598,8 +597,8 @@ func _cancel_windup() -> void:
 ## Releases the damage of a committed attack.
 ##
 ## A creep that died during the windup leaves the swing to land where it stood,
-## so a splash still catches the crowd around it - the same rule a projectile
-## already follows when its target dies mid flight.
+## so a splash still catches the crowd around it. A projectile does NOT do this:
+## one whose target dies mid flight simply vanishes, see Projectile.
 ##
 ## **The cooldown is charged HERE, and only for a blow that went through.** One
 ## whose target is gone and which carries no effect to land on the ground hits

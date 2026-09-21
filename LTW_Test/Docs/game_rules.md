@@ -1427,9 +1427,9 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     and cannot be retargeted mid-swing, or the animation would play at one
     creep and land on another
   - a creep that dies during the windup does not waste the swing: it lands
-    where that creep stood, so a splash still catches the crowd around it. The
-    same rule a projectile already follows when its target dies mid flight.
-    With no splash or other effect to land it hits nothing, and charges no
+    where that creep stood, so a splash still catches the crowd around it.
+    A projectile is different: one whose target dies mid flight vanishes at
+    once and lands nothing, splash included. With no splash or other effect to land it hits nothing, and charges no
     cooldown
   - a tower that stops being able to attack mid-swing - one that starts
     upgrading - drops the swing, which charges no cooldown

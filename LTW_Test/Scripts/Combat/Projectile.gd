@@ -10,9 +10,8 @@ extends VisualEffect3D
 ## _physics_process already does by way of having no delivery to fly for.
 ##
 ## Homes on its target, so a creep cannot outwalk a shot already aimed at it.
-## When the target dies mid flight the projectile keeps going to where it last
-## was and lands there anyway, which is what lets a cannon orb still splash
-## the crowd its primary target was standing in.
+## When the target dies mid flight the projectile vanishes on the spot: it
+## lands nothing, splashes nothing and spawns no impact.
 ##
 ## Lives under the shared effects root rather than under the tower, so a tower
 ## sold while its shot is in the air does not delete that shot. Nothing here
@@ -43,8 +42,7 @@ const ARC_FLOOR: float = 0.15
 var _delivery: ProjectileDelivery
 var _hit: AttackHit
 var _target: Unit
-## Where the projectile is flying, refreshed while the target is alive and then
-## frozen at its last known position.
+## Where the projectile is flying, refreshed every tick from the live target.
 var _goal: Vector3 = Vector3.ZERO
 var _launch_point: Vector3 = Vector3.ZERO
 ## Flat distance at launch, which the arc and the climb are measured against.
@@ -92,6 +90,9 @@ func _physics_process(_engine_delta: float) -> void:
 		_land()
 		return
 
+	if !_target_alive():
+		queue_free()
+		return
 	_refresh_goal()
 
 	var step: float = _delivery.speed * delta
@@ -170,11 +171,15 @@ func _flat_distance_to_goal() -> float:
 	return Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length()
 
 
-## Keeps aiming at the live target, and holds the last known point once it is
-## gone so the shot still lands somewhere sensible.
+## Whether the target is still there to be hit. A dead unit is freed at the end
+## of the frame, so health is checked too for the tick in between.
+func _target_alive() -> bool:
+	return _target != null && is_instance_valid(_target) && _target.is_alive()
+
+
+## Keeps aiming at the live target.
 func _refresh_goal() -> void:
-	if _target == null || !is_instance_valid(_target):
-		_target = null
+	if !_target_alive():
 		return
 	_goal = _target.global_position + Vector3(0.0, TARGET_HEIGHT, 0.0)
 
