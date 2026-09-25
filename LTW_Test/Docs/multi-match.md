@@ -231,15 +231,30 @@ result (`CLAUDE.md`).
 - Left: running `-InstallShutdown` once, right after the deploy that brings the code for it,
   and handing out the client build that carries the fixes.
 
-**P1: spikes, all small and all thrown away.**
-- `SceneMultiplayer` authentication carrying a token, with the D29/D31 handshake after it:
-  - **prove** a peer with a wrong token can call no rpc;
-  - **prove** a peer with the right one ends up on the right seat.
-- A Godot server spawning a Godot server:
-  - **prove** READY and exit are seen on Windows;
-  - have the owner run the Linux half on the box.
-- The port test from testers' networks (owner). The steps are in the session that produced this
-  plan and will move into `server.md`.
+**P1: spikes, all small and all thrown away.** Two of the three were run on 2026-09-25, on the dev
+PC; numbers are in the Findings.
+- **`SceneMultiplayer` authentication carrying a token: DONE, it holds.**
+  - Both ends set `auth_callback`. The client answers `peer_authenticating` with `send_auth`
+    then `complete_auth`, and the server calls `complete_auth` only for the right token.
+  - A right token was admitted, and its rpc RAN.
+  - A wrong token was hung up on at once.
+  - A peer that never authenticated was dropped at `auth_timeout`. Its rpc call "succeeded"
+    locally and NEVER ran on the server.
+  - A right token sent after the timeout was refused.
+  - **Improvement for P2:** carry the protocol version and the rpc hash (D29/D31) in the same
+    auth message, so the match process has ONE gate rather than two.
+  - Still to prove in P2: a peer with the right token ends up on the right SEAT.
+- **A Godot process spawning a Godot process: Windows half DONE.**
+  - `OS.create_process` launched the child from a headless parent.
+  - Its READY file was seen, and its exit and exit code were read through
+    `is_process_running` / `get_process_exit_code`. Nothing was left running.
+  - The Linux half (fork, and the systemd cgroup) is the owner's to run on the box.
+- **The port test from testers' networks: owner, not run yet.**
+  - The box's only firewall is ufw (no Hetzner firewall), so opening a test port is one
+    `ufw allow <port>/udp`.
+  - A second server for the test can run as a transient unit:
+    `systemd-run --unit=ltw-porttest --uid=ltw --gid=ltw /opt/godot/godot --headless --path /srv/ltw/LTW_Test -- --server --port <port>`.
+  - Testers start the game with `-- --port <port>`.
 
 **P2: the match-process role.**
 - `Boot` and `BootConfig` gain `--match-server`.

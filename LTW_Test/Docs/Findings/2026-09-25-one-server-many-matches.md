@@ -242,6 +242,30 @@ what its status line said:
 | Relay closed cleanly with no notice (`--quit-after`) | Told within milliseconds; browser with the same sentence; no units left, so no private game |
 | Plain 1v1, for regressions | 526 turns, 0 desyncs |
 
+### Two spikes for B, the same evening
+
+These were throwaway projects in the session scratchpad, on the dev PC. `multi-match.md` P1 has
+what they mean for the plan.
+
+**`SceneMultiplayer` authentication carrying a seat token.** One server with `auth_timeout` 3 s,
+and four clients:
+
+| Client | Server | Its rpc |
+| --- | --- | --- |
+| right token | admitted (`peer_connected` only after `complete_auth`) | ran |
+| wrong token | hung up at once | never ran |
+| never authenticates | dropped at the timeout | never ran - though `rpc_id` returned OK on the client |
+| right token, after the timeout | dropped; the late `send_auth` returned an error | never ran |
+
+**A Godot process launching a Godot process.** A headless "lobby" started a headless "match"
+with `OS.create_process`:
+- the match's READY file appeared after 111 ms;
+- its exit, with its exit code of 7, was read 2.2 s after launch;
+- nothing was left running afterwards.
+
+The 111 ms is a two-script project. The real server boots in about 1.6 s here, and the box will
+be slower.
+
 ## Still open
 
 - **The service file.** Now prepared as `deploy_server.ps1 -InstallShutdown`: a drop-in that
