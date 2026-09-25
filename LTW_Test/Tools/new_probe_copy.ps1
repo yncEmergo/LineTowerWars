@@ -12,6 +12,13 @@
 #   does not care.
 # - A pure HEAD copy also stands in for a tester's build ("the old build").
 #
+# What it does NOT isolate you from: the other session's COMMITS. It archives
+# HEAD, and concurrent sessions here share one working tree and one .git - so a
+# copy is always current HEAD plus the files you name, and there is no way to ask
+# it for an earlier commit. That is the right shape while your own edits are
+# uncommitted; it is worth knowing because a verification run before somebody
+# else's commit has tested code that is no longer HEAD.
+#
 # What it does: git archive of HEAD, the -Files overlaid from the working tree, a
 # copy of .godot (so the import is quick), the override.cfg, then a headless
 # --import. It refuses a name that already exists rather than deleting anything.
