@@ -382,6 +382,15 @@ func _touch_heartbeat(delta: float) -> void:
 	if _heartbeat_clock < maxf(0.5, config.match_heartbeat_seconds):
 		return
 	_heartbeat_clock = 0.0
+	# **Just touched.** Truncation does not matter, because the lobby reads the
+	# file's MODIFICATION TIME and never its contents - the file being written at
+	# all is the whole signal.
+	#
+	# It was briefly written whole and renamed into place, like the other handoff
+	# files, and that was WORSE: a rename has to remove the target first, so
+	# there is a window with no file there at all, and a lobby polling into it
+	# killed a healthy match for being wedged. A truncated file still has a
+	# modification time; a missing one does not.
 	var file: FileAccess = FileAccess.open(_run_base + ".heartbeat", FileAccess.WRITE)
 	if file != null:
 		file.store_string(str(Time.get_unix_time_from_system()))

@@ -1176,6 +1176,20 @@ func _advance_candidate() -> void:
 ## now = false on purpose: anything already queued for that peer - the refusal
 ## just sent, in particular - still goes out before the socket closes. Dropping
 ## it immediately would refuse the build without ever saying so.
+## Closes one connection from the server end, politely.
+##
+## `peer_disconnect_later` rather than a plain disconnect: ENet completes it only
+## once everything already sent has been acknowledged, so anything written to
+## that peer in the same breath still arrives. The lobby uses it on a connection
+## it handed to a match and that never went.
+func close_link(id: int) -> void:
+	if _peer == null:
+		return
+	var link: ENetPacketPeer = _peer.get_peer(id)
+	if link != null:
+		link.peer_disconnect_later()
+
+
 func _disconnect_peer(id: int) -> void:
 	if _peer == null:
 		return

@@ -54,6 +54,22 @@ const ID_PREFIX: String = "lobby-"
 ## endpoint returns BEFORE it logs, which is also what stops a stranger making a
 ## match process write a line per packet.
 var _is_match_process: bool = false
+## **The match-process supervisor, or null when the handoff is off** (D44).
+##
+## Created only when `NetworkConfig.match_processes_on()` says so, which is what
+## keeps `main` on today's in-process path until the release: with it null every
+## branch below falls through to `MatchStart.begin`, exactly as before.
+var _supervisor: MatchSupervisor = null
+## lobby id -> the setup and tokens its countdown froze (D24), held until the
+## child is READY and the players can be told. **The tokens live HERE and in the
+## match file, and nowhere else**: never on a MatchPlayer, a MatchSetup or a
+## LobbyInfo, because each of those is serialised whole to every player or to
+## every browser.
+var _pending_starts: Dictionary = {}
+## peer id -> true for a connection that has been handed to a match process.
+## Its lobby requests are refused: it is on its way out, and a client that does
+## not go is closed by the lobby itself when the load window ends.
+var _handed_off: Dictionary = {}
 var _lobbies: Dictionary = {}
 ## peer id -> lobby id, so a leaving peer can be found without scanning.
 var _lobby_of_peer: Dictionary = {}
@@ -89,6 +105,7 @@ func _ready() -> void:
 	_is_match_process = boot != null && boot.is_match_server()
 	if _is_match_process:
 		Log.info("Lobby endpoints are inert in a match process")
+	_arm_supervisor()
 	# Only ever running while a countdown is, which on a client is never.
 	set_process(false)
 	MatchStart.match_abandoned.connect(_on_match_abandoned)
@@ -240,6 +257,11 @@ func request_create(lobby_name: String, _max_players: int) -> void:
 	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
+	# A connection that has been handed to a match process is on its way out and
+	# may not open anything here. Every other request already refuses it, because
+	# it is no longer a member of any lobby - this is the one that would not.
+	if _handed_off.has(peer_id):
+		return
 
 	if _lobby_of_peer.has(peer_id):
 		_refuse(peer_id, "You are already in a lobby.")
@@ -413,7 +435,7 @@ func request_start() -> void:
 	if lobby.player_count() < needed:
 		_refuse(peer_id, "%d players are needed to start." % needed)
 		return
-	var refusal: String = _start_refusal()
+	var refusal: String = _start_refusal(peer_id)
 	if !refusal.is_empty():
 		_refuse(peer_id, refusal)
 		return
@@ -423,9 +445,13 @@ func request_start() -> void:
 
 ## Why this SERVER cannot start another match right now, or empty if it can.
 ## Nothing about the lobby asking - only about the process it would run in.
-func _start_refusal() -> String:
+func _start_refusal(peer_id: int = 0) -> String:
 	if Net.is_shutting_down():
 		return NetworkService.SHUTDOWN_REASON
+	# With the handoff on, a match costs a PROCESS rather than this one, so what
+	# limits it is the cap, the port pool and the per-source limit (D44).
+	if _supervisor != null:
+		return _supervisor.refusal(_host_address_of(peer_id))
 	# D19: one process runs the lobby and the matches, so it can run one match.
 	# Splitting them is an address change (D16), and until then this is a
 	# sentence rather than a second match quietly overwriting the first.
@@ -486,13 +512,38 @@ func request_cancel_start() -> void:
 ##
 ## Only ever running while at least one lobby is counting down.
 func _process(delta: float) -> void:
+	_close_stale_handoffs(delta)
 	if _countdowns.is_empty():
-		set_process(false)
+		# **A pending start outlives its countdown.** With the handoff on, zero
+		# may arrive before the child is READY, and the room sits on "Starting
+		# the match..." until it is - so this cannot switch itself off merely
+		# because no number is being counted down any more.
+		if _pending_starts.is_empty() && _handed_off.is_empty():
+			set_process(false)
 		return
 	# Over a copy of the keys: firing or cancelling erases from the dictionary
 	# we would otherwise be iterating.
 	for lobby_id in _countdowns.keys():
 		_advance_countdown(str(lobby_id), delta)
+
+
+## Closes a handed-off connection whose client never hung up.
+##
+## The client hangs up to move, and this is for one that does not: a connection
+## left open would keep a peer slot and go on being announced in the browser's
+## population for the rest of the match. Counted from the ANNOUNCE, like D15's
+## own clock, so it never fires before the player has had their whole load
+## window to get in.
+func _close_stale_handoffs(delta: float) -> void:
+	for peer_id: int in _handed_off.keys():
+		var left: float = float(_handed_off[peer_id]) - delta
+		if left > 0.0:
+			_handed_off[peer_id] = left
+			continue
+		_handed_off.erase(peer_id)
+		if peer_id in multiplayer.get_peers():
+			Log.info("Closing a connection that was handed to a match", peer_id)
+			Net.close_link(peer_id)
 
 
 func _begin_countdown(lobby: LobbyInfo) -> void:
@@ -502,6 +553,12 @@ func _begin_countdown(lobby: LobbyInfo) -> void:
 	_announced[lobby.lobby_id] = -1
 	set_process(true)
 	Log.info("Start countdown", {"lobby": lobby.lobby_id, "seconds": seconds})
+
+	# **The match process boots while the countdown runs** (D44). D24 has just
+	# frozen the roster, the seats, the colours and the settings, so the setup is
+	# final now - and a boot that costs whole CPU-seconds hides inside a
+	# countdown a player is already watching.
+	_spawn_for(lobby)
 
 	# The roster screen learns the lobby is locked, the browser learns the row
 	# now reads "Starting...", and the room gets its first number this frame
@@ -548,6 +605,27 @@ func _fire_countdown(lobby: LobbyInfo) -> void:
 		_broadcast_list()
 		return
 
+	# **With the handoff on, the child has been booting since the countdown
+	# began** and the setup was frozen then (D24). The announce waits for its
+	# READY, which may be after zero - the room keeps reading "Starting the
+	# match..." until then, with the host's button still offering Cancel.
+	if _supervisor != null:
+		if !_pending_starts.has(lobby.lobby_id):
+			_announce_countdown_cancelled(lobby, "The match could not be started.")
+			_push_lobby(lobby)
+			_broadcast_list()
+			return
+		var pending: Dictionary = _pending_starts[lobby.lobby_id]
+		if !bool(pending.get("ready", false)):
+			Log.info("Countdown reached zero, waiting for the match process", {
+				"lobby": lobby.lobby_id,
+			})
+			lobby.is_starting = true
+			_push_lobby(lobby)
+			return
+		_hand_off(lobby)
+		return
+
 	var setup: MatchSetup = lobby.to_match_setup(_next_match_id(), randi())
 	lobby.is_in_progress = true
 	_lobby_of_match[setup.match_id] = lobby.lobby_id
@@ -567,9 +645,14 @@ func _fire_countdown(lobby: LobbyInfo) -> void:
 ## not a state to recover from - it never happened, and the host may press
 ## Start again immediately.
 func _cancel_countdown(lobby: LobbyInfo, reason: String) -> void:
-	if !_countdowns.has(lobby.lobby_id):
+	# **The whole spawn window counts as the countdown** (D24), which includes
+	# the part after zero where the room is waiting for a child to be ready. So a
+	# cancel is possible for longer than it used to be, and it has a child to
+	# take with it.
+	if !_countdowns.has(lobby.lobby_id) && !_pending_starts.has(lobby.lobby_id):
 		return
 	_clear_countdown(lobby)
+	_abandon_start(lobby.lobby_id, reason)
 	Log.info("Start countdown cancelled", {"lobby": lobby.lobby_id, "reason": reason})
 
 	_announce_countdown_cancelled(lobby, reason)
@@ -606,6 +689,176 @@ func _announce_countdown_cancelled(lobby: LobbyInfo, reason: String) -> void:
 ## summary line, and nothing said which boot a line belonged to. The boot's own
 ## clock, in hex, is the part that tells them apart; the counter still orders the
 ## matches within one run.
+# --- the handoff to a match process (D44) ----------------------------------
+
+## Creates the supervisor, but only when this process actually hands matches off.
+##
+## **Its absence IS the switch.** Everything above asks whether `_supervisor` is
+## null rather than asking the config again, so there is exactly one place the
+## decision is made and no way for two branches to disagree about it.
+func _arm_supervisor() -> void:
+	if _is_match_process || !multiplayer.is_server():
+		return
+	var config: NetworkConfig = References.network_config
+	if config == null:
+		return
+	if !config.match_processes_on():
+		Log.info("Match processes are OFF, this server runs one match itself (D19)")
+		return
+	_supervisor = MatchSupervisor.new()
+	_supervisor.name = "MatchSupervisor"
+	add_child(_supervisor)
+	_supervisor.child_ready.connect(_on_child_ready)
+	_supervisor.child_failed.connect(_on_child_failed)
+	Log.info("Match processes are ON, each match gets a process of its own (D44)")
+
+
+## Freezes the setup, mints a token per human seat, and asks for a child.
+##
+## The tokens are at least sixteen bytes from `Crypto.generate_random_bytes` and
+## live in `_pending_starts` and in the match file. **They are never a field of
+## `MatchPlayer`, `MatchSetup` or `LobbyInfo`**, each of which is serialised whole
+## to every player or to every browser - a token in one of those would be handed
+## to the people it exists to keep out.
+func _spawn_for(lobby: LobbyInfo) -> void:
+	if _supervisor == null:
+		return
+	var setup: MatchSetup = lobby.to_match_setup(_next_match_id(), randi())
+	var tokens: Dictionary = {}
+	var crypto: Crypto = Crypto.new()
+	for player: MatchPlayer in setup.players:
+		# An AI seat gets no token and is never waited for: nothing dials for it.
+		if player != null && !player.is_ai() && player.slot > 0:
+			tokens[player.slot] = crypto.generate_random_bytes(MatchHandoff.TOKEN_BYTES)
+
+	_lobby_of_match[setup.match_id] = lobby.lobby_id
+	_pending_starts[lobby.lobby_id] = {
+		"setup": setup, "tokens": tokens, "ready": false, "port": 0,
+	}
+	if !_supervisor.begin_start(lobby.lobby_id, setup, tokens, _host_address_of(lobby.host_id)):
+		_pending_starts.erase(lobby.lobby_id)
+		_lobby_of_match.erase(setup.match_id)
+
+
+## The child is listening. If the countdown has already run out, the players can
+## be told now; otherwise the announce waits for zero.
+func _on_child_ready(lobby_id: String, _match_id: String, port: int) -> void:
+	if !_pending_starts.has(lobby_id):
+		return
+	var pending: Dictionary = _pending_starts[lobby_id]
+	pending["ready"] = true
+	pending["port"] = port
+	var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo
+	if lobby == null:
+		# The lobby went away while its child was booting. Nobody to tell.
+		_abandon_start(lobby_id, "")
+		return
+	if !_countdowns.has(lobby_id):
+		_hand_off(lobby)
+
+
+func _on_child_failed(lobby_id: String, reason: String) -> void:
+	var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo
+	_pending_starts.erase(lobby_id)
+	if lobby == null:
+		return
+	_clear_countdown(lobby)
+	lobby.is_in_progress = false
+	_announce_countdown_cancelled(lobby, reason)
+	_push_lobby(lobby)
+	_broadcast_list()
+
+
+## **The announce, and the moment this lobby stops existing.**
+##
+## Each player is told the match PORT and their own token, and nobody else's.
+## Then the lobby is erased silently - no `receive_closed`, because every member
+## is being handed to a match rather than thrown out of a room, and a closure
+## notice would arrive on a connection they are about to drop anyway.
+func _hand_off(lobby: LobbyInfo) -> void:
+	var pending: Dictionary = _pending_starts.get(lobby.lobby_id, {})
+	var setup: MatchSetup = pending.get("setup")
+	var tokens: Dictionary = pending.get("tokens", {})
+	var port: int = int(pending.get("port", 0))
+	if setup == null || port <= 0:
+		return
+
+	_clear_countdown(lobby)
+	lobby.is_in_progress = true
+	Log.info("Handing a match over", {
+		"lobby": lobby.lobby_id, "match": setup.match_id, "port": port,
+		"players": setup.player_count(),
+	})
+	for player: MatchPlayer in setup.players:
+		if player == null || player.network_id == 0:
+			continue
+		# The one field that differs per machine is which slot it plays, so the
+		# payload is built per peer rather than broadcast - the same shape
+		# `MatchStart._payload_for` uses on the in-process path.
+		var payload: Dictionary = setup.to_dict()
+		payload["local_slot"] = player.slot
+		# **Added after the payload is built, for this peer only.** A token that
+		# went into the setup itself would be broadcast to everybody in it.
+		payload["match_port"] = port
+		payload["match_token"] = MatchHandoff.token_to_hex(tokens.get(player.slot, PackedByteArray()))
+		MatchStart.receive_match_starting.rpc_id(player.network_id, payload)
+		# Its requests are refused from here: this connection is on its way out,
+		# and a lobby it has been handed out of must not act on it.
+		_handed_off[player.network_id] = _load_window()
+
+	set_process(true)
+	_supervisor.mark_announced(setup.match_id)
+	_pending_starts.erase(lobby.lobby_id)
+	# **A started match's lobby DISAPPEARS** (D44, the owner's call). It is gone
+	# from the browser and from every member's own entry, and no notice is sent.
+	_erase_lobby_silently(lobby)
+
+
+## Takes a start away without telling anybody: either nobody has been told yet,
+## or the people who were told are no longer this process's business.
+func _abandon_start(lobby_id: String, reason: String) -> void:
+	if _supervisor == null:
+		return
+	if _pending_starts.has(lobby_id):
+		var pending: Dictionary = _pending_starts[lobby_id]
+		var setup: MatchSetup = pending.get("setup")
+		if setup != null:
+			_lobby_of_match.erase(setup.match_id)
+		_pending_starts.erase(lobby_id)
+	_supervisor.cancel_start(lobby_id, reason)
+
+
+## Removes a lobby from the list and from its members, with no notice at all.
+func _erase_lobby_silently(lobby: LobbyInfo) -> void:
+	for player: MatchPlayer in lobby.members:
+		if player != null:
+			_lobby_of_peer.erase(player.network_id)
+	_lobbies.erase(lobby.lobby_id)
+	_broadcast_list()
+
+
+## The address a peer reached this server from, for the per-source limit. Empty
+## when the transport cannot say, which counts as no limit rather than as a
+## refusal - a limit that cannot be measured must not lock people out.
+func _host_address_of(peer_id: int) -> String:
+	if peer_id <= 0:
+		return ""
+	var enet: ENetMultiplayerPeer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if enet == null:
+		return ""
+	var link: ENetPacketPeer = enet.get_peer(peer_id)
+	if link == null:
+		return ""
+	return str(link.get_remote_address())
+
+
+## How long a handed-off connection is left open before the lobby closes it
+## itself. D15's window, counted from the announce.
+func _load_window() -> float:
+	var config: MenuConfig = References.menu_config
+	return 60.0 if config == null else maxf(5.0, config.load_timeout_seconds)
+
+
 func _next_match_id() -> String:
 	if _boot_stamp.is_empty():
 		_boot_stamp = "%x" % int(Time.get_unix_time_from_system())
@@ -662,6 +915,8 @@ func _on_peer_left(peer_id: int) -> void:
 	if !_serving():
 		return
 	_names_of_peer.erase(peer_id)
+	# It went, which is what a handed-off client is supposed to do.
+	_handed_off.erase(peer_id)
 	# While shutting down, every connection is closing at once. Reshuffling the
 	# lobbies as each one goes would only send the rest a stream of lobby changes
 	# over links that are themselves on the way out.
@@ -676,6 +931,11 @@ func _on_peer_left(peer_id: int) -> void:
 func _on_shutdown_started(reason: String) -> void:
 	if !_serving():
 		return
+	# **At the START of the notice phase** (D45), so the children's notices and
+	# closes run alongside the lobby's own rather than after them - which is what
+	# the unit's stop timeout is sized against.
+	if _supervisor != null:
+		_supervisor.begin_shutdown_of_all()
 	for lobby_id: Variant in _countdowns.keys():
 		var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo
 		if lobby != null:

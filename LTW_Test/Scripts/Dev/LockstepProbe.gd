@@ -258,8 +258,18 @@ func _on_refused(reason: String) -> void:
 ## Read off the roster rather than taken from a signal, because the go signal has
 ## no client-side signal of its own: it opens the match scene and that is all.
 func _note_go_roster() -> void:
+	if _go_network_id != 0:
+		return
+	# **Only once the GO SIGNAL has landed**, and the world existing is how a
+	# client knows: `MatchSession` is built from the go payload and from nothing
+	# else. Read any earlier this picked up the ANNOUNCED setup, which on the
+	# handoff path still carries the LOBBY-era ids - so the control compared a
+	# lobby id against a match id, found them different, and would have reported
+	# a re-key that had not happened as cheerfully as one that had.
+	if References.match_session == null:
+		return
 	var setup: MatchSetup = MatchStart.setup()
-	if setup == null || _go_network_id != 0:
+	if setup == null:
 		return
 	var mine: MatchPlayer = setup.player_for(setup.local_slot)
 	if mine != null:
@@ -303,11 +313,15 @@ func _on_readiness_changed(ready_ids: PackedInt32Array) -> void:
 	# wrong one does not fail loudly: it simply never matches, and `self_ready`
 	# reads false for a probe the server counted perfectly well - a positive
 	# control that quietly reports the opposite of the truth.
+	# **Checked as BOTH**, and deliberately: a peer id is a large number Godot
+	# chose at random and a slot is 1 to 12, so the two cannot be mistaken for
+	# one another in practice - while asking only about the one this role
+	# "should" get is how `self_ready` came to read false for a probe the server
+	# had counted perfectly well, on the very run where the handoff was what was
+	# being tested.
 	var setup: MatchSetup = MatchStart.setup()
-	var mine: int = multiplayer.get_unique_id()
-	if _role == "match":
-		mine = 0 if setup == null else setup.local_slot
-	if mine == 0 || !(mine in ready_ids):
+	var slot: int = 0 if setup == null else setup.local_slot
+	if !(multiplayer.get_unique_id() in ready_ids) && !(slot > 0 && slot in ready_ids):
 		return
 	_self_ready = true
 	Log.warn("PROBE counted ready by the server")
@@ -613,6 +627,7 @@ func _process(delta: float) -> void:
 	# `--drive-while-wedged` keeps pressing through a wedge, which is how the
 	# 2026-09-10 give-up fix is exercised: a peer that has given up must not be
 	# able to put another order on the wire however hard its player presses.
+	_note_go_roster()
 	_maybe_pause()
 	# A paused world refuses every order but the pause pair, so driving through
 	# one would only fill the log with refusals - and would test nothing the

@@ -41,6 +41,7 @@ param(
     [int] $KillJoinAfter = 0,        # seconds after the join client says "PROBE playing"; 0 = never
     [int] $ShutdownAfter = 0,        # seconds after "PROBE playing" to ask the relay to shut down
     [switch] $SecondMatch,           # after the first match ends, play a second on the SAME relay
+    [switch] $MatchProcesses,        # D44: the relay hands each match to a process of its own
     [int] $KillRelayAfter = 0,       # seconds after "PROBE playing" to hard-kill the RELAY
     [int] $RelayQuitAfter = 0,       # engine --quit-after frames: the relay quits with no notice
     [string] $OutRoot = "",
@@ -109,6 +110,7 @@ try {
     $relayArgs = @('--path', '.', '--headless')
     if ($RelayQuitAfter -gt 0) { $relayArgs += @('--quit-after', "$RelayQuitAfter") }
     $relayArgs += @('--', '--server', '--port', "$Port")
+    if ($MatchProcesses) { $relayArgs += '--match-processes' }
     if ($ShutdownAfter -gt 0) { $relayArgs += @('--shutdown-file', $flag) }
     $relay = Launch "relay" $ServerDir $relayArgs
     $started += $relay.proc
@@ -218,7 +220,7 @@ foreach ($label in @('host', 'join', 'join_b', 'join_c', 'browse', 'spoof', 'hos
     foreach ($line in $res) { $summary += "[$label] $($line.Trim())" }
 }
 $relayText = Read-Shared (Join-Path $dir "relay.out.txt")
-$keys = 'Initial world|Sealed stream opened|Player dropped|Relay match summary|diverged|disagree|gone silent|went quiet|refused|Refusing|SCRIPT ERROR|ERROR:|Match over|Back from a match|Match start|Relay match ready|Shut|shutdown|Editor helper|Match announced|Client loaded|Client unloaded|Not enough players|never loaded|Match abandoned'
+$keys = 'Initial world|Sealed stream opened|Player dropped|Relay match summary|diverged|disagree|gone silent|went quiet|refused|Refusing|SCRIPT ERROR|ERROR:|Match over|Back from a match|Match start|Relay match ready|Shut|shutdown|Editor helper|Match announced|Client loaded|Client unloaded|Not enough players|never loaded|Match abandoned|Match processes are|Match process spawned|Match process is ready|Handing a match over|Matches running|Match result|Seat claimed|Match under way|server is full'
 foreach ($line in ($relayText -split "`n")) {
     if ($line -match $keys) { $summary += "[relay] $($line.Trim())" }
 }
