@@ -10,6 +10,11 @@
 #   .\Tools\run_lockstep_probe.ps1 -Copy fix -Name old-server -ServerDir <an older copy>
 #   python Tools\probe_table.py $env:TEMP\ltw_probe\runs
 #
+# The LOADING GATE needs four players, so -Joins 3 with a flag each:
+#   .\Tools\run_lockstep_probe.ps1 -Copy fix -Name gate -Joins 3 `
+#       -HostArgs '--players','4' -JoinArgs '--quit-after-ready' `
+#       -Join2Args '--quit-before-ready' -Join3Args '--ready-delay','25'
+#
 # Probe flags for one side go through -HostArgs / -JoinArgs, e.g.
 # -JoinArgs '--hitch','900'. LockstepProbe.gd lists them all.
 #
@@ -28,6 +33,9 @@ param(
     [int] $Play = 30,
     [string[]] $HostArgs = @(),
     [string[]] $JoinArgs = @(),
+    [int] $Joins = 1,                # how many JOIN clients: 3 makes a four-player load
+    [string[]] $Join2Args = @(),     # the second join's flags, when -Joins is 2 or more
+    [string[]] $Join3Args = @(),     # the third's
     [string] $Third = "",            # "browse" or "spoof": a third peer, connected mid-match
     [int] $ThirdDelay = 22,          # seconds after the join client starts
     [int] $KillJoinAfter = 0,        # seconds after the join client says "PROBE playing"; 0 = never
@@ -94,7 +102,7 @@ function WaitFor([string] $file, [string] $needle, [int] $ms) {
 }
 
 $started = @()
-$summary = @("SCENARIO $Name  port=$Port play=$Play host=[$($HostArgs -join ' ')] join=[$($JoinArgs -join ' ')] third=$Third kill_join_after=$KillJoinAfter")
+$summary = @("SCENARIO $Name  port=$Port play=$Play joins=$Joins host=[$($HostArgs -join ' ')] join=[$($JoinArgs -join ' ')] join_b=[$($Join2Args -join ' ')] join_c=[$($Join3Args -join ' ')] third=$Third kill_join_after=$KillJoinAfter")
 try {
     $flag = Join-Path $dir "shutdown.flag"
     Remove-Item $flag -ErrorAction SilentlyContinue
@@ -113,6 +121,24 @@ try {
     $joinP = Launch "join" $ClientDir ($common + @('--probe', 'join') + $JoinArgs)
     $started += $joinP.proc
     $clients = @($hostP, $joinP)
+
+    # More joins, for the loading gate: it needs four players to tell "waited
+    # for the slow one" apart from "started on a count that happened to match".
+    # **The count goes in the summary** because a run that quietly launched two
+    # clients and a run that launched four read identically afterwards.
+    for ($i = 2; $i -le $Joins; $i++) {
+        Start-Sleep -Milliseconds 400
+        $label = "join_" + [char]([int][char]'a' + $i - 1)
+        # Named one at a time rather than indexed out of an array of arrays,
+        # which PowerShell 5.1 flattens the moment one of them is empty.
+        $extra = @()
+        if ($i -eq 2) { $extra = $Join2Args }
+        if ($i -eq 3) { $extra = $Join3Args }
+        $p = Launch $label $ClientDir ($common + @('--probe', 'join') + $extra)
+        $started += $p.proc
+        $clients += $p
+    }
+    $summary += "CLIENTS LAUNCHED: 1 host + $Joins join = $(1 + $Joins)"
 
     $thirdLaunched = $false
     $killed = $false
@@ -183,7 +209,7 @@ try {
 }
 
 # Results: every PROBE RESULT line, and the relay lines that say what happened.
-foreach ($label in @('host', 'join', 'browse', 'spoof', 'host2', 'join2')) {
+foreach ($label in @('host', 'join', 'join_b', 'join_c', 'browse', 'spoof', 'host2', 'join2')) {
     $f = Join-Path $dir "$label.out.txt"
     if (-not (Test-Path $f)) { continue }
     $text = Read-Shared $f
@@ -192,7 +218,7 @@ foreach ($label in @('host', 'join', 'browse', 'spoof', 'host2', 'join2')) {
     foreach ($line in $res) { $summary += "[$label] $($line.Trim())" }
 }
 $relayText = Read-Shared (Join-Path $dir "relay.out.txt")
-$keys = 'Initial world|Sealed stream opened|Player dropped|Relay match summary|diverged|disagree|gone silent|went quiet|refused|Refusing|SCRIPT ERROR|ERROR:|Match over|Back from a match|Match start|Relay match ready|Shut|shutdown|Editor helper'
+$keys = 'Initial world|Sealed stream opened|Player dropped|Relay match summary|diverged|disagree|gone silent|went quiet|refused|Refusing|SCRIPT ERROR|ERROR:|Match over|Back from a match|Match start|Relay match ready|Shut|shutdown|Editor helper|Match announced|Client loaded|Client unloaded|Not enough players|never loaded|Match abandoned'
 foreach ($line in ($relayText -split "`n")) {
     if ($line -match $keys) { $summary += "[relay] $($line.Trim())" }
 }

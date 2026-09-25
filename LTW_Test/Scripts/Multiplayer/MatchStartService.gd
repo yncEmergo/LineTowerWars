@@ -384,8 +384,8 @@ func _process(delta: float) -> void:
 		set_process(_grace.is_empty() == false)
 		return
 
-	if _ready_ids.size() >= _expected.size():
-		_start_match(_setup)
+	if _everyone_ready():
+		_start_from_ready()
 		return
 
 	_elapsed += delta
@@ -395,13 +395,39 @@ func _process(delta: float) -> void:
 	# D15. A client that has not answered in a minute has not been slow, it has
 	# crashed - the scene is a second or two of loading. Everyone else has
 	# waited long enough.
-	if _ready_ids.size() < _min_players:
-		_abort("Not enough players finished loading.")
-		return
 	Log.warn("Starting without players who never loaded", {
 		"match": _setup.match_id,
 		"missing": _expected.size() - _ready_ids.size(),
 	})
+	_start_from_ready()
+
+
+## Whether everybody this match is still waiting for has reported in.
+##
+## **A comparison of SIZES is not this question.** `_drop_peer` prunes
+## `_expected` and leaves `_ready_ids` alone, so a player who reported ready
+## and then went away made the two counts meet while somebody else was still
+## loading - and the match started without them. Asking about the peers
+## themselves cannot be fooled that way.
+func _everyone_ready() -> bool:
+	for peer_id: int in _expected:
+		if !_ready_ids.has(peer_id):
+			return false
+	return true
+
+
+## The one road to a start, from either side of the gate.
+##
+## **Both roads come here, and that is the whole point.** The early one used to
+## start `_setup` WHOLE and check nothing: a player who reported ready and then
+## dropped was still in the roster it handed to the world, which breaks D15's
+## "no area spawns for them", and a single survivor was still a match, which
+## breaks D15's `min_players`. Only the timeout road ever checked. Now every
+## start is the ready seats renumbered, and every start is checked.
+func _start_from_ready() -> void:
+	if _ready_ids.size() < _min_players:
+		_abort("Not enough players finished loading.")
+		return
 	_start_match(_roster_of_ready())
 
 
@@ -451,8 +477,12 @@ func _start_match(final_setup: MatchSetup) -> void:
 	# Anybody announced to but not started is being left behind (D15). Told so
 	# rather than left watching a loading bar that will never finish - a client
 	# that hung long enough to be dropped may well come back.
-	for peer_id in _expected:
-		if !started.has(peer_id):
+	#
+	# Only the ones still CONNECTED, though: most of what this loop now catches
+	# is a peer inside D26's hold, whose socket has already gone.
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for peer_id: int in _expected:
+		if !started.has(peer_id) && peer_id in live:
 			receive_match_cancelled.rpc_id(peer_id, "You did not finish loading in time.")
 	_expected = started
 	_stretch_link_timeouts(started)
@@ -486,8 +516,12 @@ func _abort(reason: String) -> void:
 		"match": _setup.match_id,
 		"reason": reason,
 	})
-	for peer_id in _expected:
-		receive_match_cancelled.rpc_id(peer_id, reason)
+	# Still-connected peers only, for the same reason `_start_match`'s notice
+	# checks: an aborted gate is full of peers inside D26's hold.
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for peer_id: int in _expected:
+		if peer_id in live:
+			receive_match_cancelled.rpc_id(peer_id, reason)
 	_finish_match()
 
 
@@ -561,6 +595,14 @@ func _on_peer_left(peer_id: int) -> void:
 	# closing - and both describe one player leaving once.
 	if !_expected.has(peer_id):
 		return
+
+	# **Readiness dies at the DISCONNECT, not at the drop.** The drop comes only
+	# after D26's hold, and a player who reported ready and then vanished is not
+	# going to play: leaving the flag set for the length of the hold is what let
+	# the gate through with them still in the go roster. Clearing it here keeps
+	# them EXPECTED and not ready, so the start waits the hold out and then
+	# starts without them - which is D15's answer, arrived at honestly.
+	_clear_readiness(peer_id)
 
 	# A peer that ANNOUNCED it was leaving is already gone as far as the match
 	# is concerned; one that simply went quiet gets the hold (D13, 14.1).
@@ -660,6 +702,14 @@ func _drop_peer(peer_id: int, reason: String) -> void:
 		# Already dropped; a leave announcement followed by the disconnect
 		# itself arrives as two events about one player.
 		return
+
+	# The OTHER door into the gate's bug, and the reason this is here as well as
+	# in `_on_peer_left`: `report_leaving` and `drop_silent_peer` come straight
+	# here, so a player who reported ready and then announced they were leaving
+	# would be pruned from `_expected` and left in `_ready_ids` - which is
+	# exactly the pair `_roster_of_ready` reads to build the go roster.
+	# A no-op once the match is running, when readiness means nothing.
+	_clear_readiness(peer_id)
 	_expected = still_here
 
 	var slot: int = _slot_of(peer_id)
@@ -730,9 +780,36 @@ func _payload_for(source: MatchSetup, peer_id: int) -> Dictionary:
 	return payload
 
 
+## Takes back a player's readiness and says so, while the gate is still waiting.
+##
+## Silent outside the gate, and silent for a player who never reported: both
+## would only redraw a loading screen nobody is looking at.
+func _clear_readiness(peer_id: int) -> void:
+	if !_waiting:
+		return
+	var kept: PackedInt32Array = PackedInt32Array()
+	for id: int in _ready_ids:
+		if id != peer_id:
+			kept.append(id)
+	if kept.size() == _ready_ids.size():
+		return
+	_ready_ids = kept
+	Log.info("Client unloaded", {
+		"peer": peer_id,
+		"ready": _ready_ids.size(),
+		"of": _expected.size(),
+	})
+	_broadcast_readiness()
+
+
+## **Only to peers still on the end of a socket.** A peer inside D26's hold is
+## still EXPECTED - that is what the hold means - so this list now outlives the
+## connections in it, and `rpc_id` on a departed peer costs a backtrace each.
 func _broadcast_readiness() -> void:
-	for peer_id in _expected:
-		receive_readiness.rpc_id(peer_id, _ready_ids)
+	var live: PackedInt32Array = multiplayer.get_peers()
+	for peer_id: int in _expected:
+		if peer_id in live:
+			receive_readiness.rpc_id(peer_id, _ready_ids)
 
 
 ## Read once, while the server's entry scene is still the current one: after

@@ -22,6 +22,13 @@ extends Node
 ##   ORDERS APPLIED   an order given on one machine takes effect on both
 ##   NO DESYNC        the per-turn checksums agree for the whole run
 ##
+## It also drives the LOADING GATE, which needs more than two machines:
+##
+##     --players <n>         the host waits for n members before pressing Start
+##     --quit-before-ready   die with no goodbye, before reporting loaded
+##     --quit-after-ready    die with no goodbye, once the server has counted us
+##     --ready-delay <s>     report loaded s seconds late, without going quiet
+##
 ## Does NOTHING when --probe is absent, so the editor, the server and every
 ## other run are unaffected by its presence.
 
@@ -69,6 +76,15 @@ var _pauses: int = 0
 var _was_paused: bool = false
 var _paused_asked: bool = false
 var _resume_asked: bool = false
+## The LOADING GATE scenario's readings. Whether the server ever counted this
+## machine as loaded, and whether a held-back report was finally made - the two
+## positive controls for a run that is about to kill peers around the gate and
+## claim the survivors were handled correctly.
+var _self_ready: bool = false
+var _reported_late: bool = false
+var _quit_fired: bool = false
+var _real_match_id: String = ""
+var _ready_delay_left: float = -1.0
 
 
 func _ready() -> void:
@@ -94,6 +110,7 @@ func _ready() -> void:
 	Lobby.current_lobby_changed.connect(_on_lobby_changed)
 	Lobby.request_refused.connect(_on_refused)
 	MatchStart.match_starting.connect(_on_match_starting)
+	MatchStart.readiness_changed.connect(_on_readiness_changed)
 
 	Net.connected_to_server.connect(_on_connected)
 	Net.connection_failed.connect(_on_connect_failed)
@@ -128,9 +145,16 @@ func _on_connected() -> void:
 	# because a lobby that does not exist yet cannot be joined and the two
 	# processes are started a second apart at best.
 	if _role == "host":
-		Lobby.create("Probe match", 2)
+		Lobby.create("Probe match", _players_wanted())
 	else:
 		Lobby.lobby_list_changed.connect(_on_lobby_list)
+
+
+## How many members the HOST waits for before pressing Start, from `--players`.
+## Two is what every scenario before the loading-gate proof needed, and it is
+## also the smallest a match may be (`min_players`).
+func _players_wanted() -> int:
+	return maxi(2, _int_argument("--players", 2))
 
 
 func _on_connect_failed(_result: NetworkService.Result) -> void:
@@ -181,7 +205,7 @@ func _on_lobby_changed(lobby: LobbyInfo) -> void:
 		Lobby.set_seat_state(close_seat, LobbyInfo.SeatState.CLOSED)
 	# Only the host may start, and only once the second player is really in -
 	# the server refuses a one player match, which is the rule doing its job.
-	if Lobby.is_host() && !_requested && lobby.player_count() >= 2:
+	if Lobby.is_host() && !_requested && lobby.player_count() >= _players_wanted():
 		_requested = true
 		Log.warn("PROBE starting the match")
 		Lobby.start()
@@ -191,9 +215,82 @@ func _on_refused(reason: String) -> void:
 	Log.err("PROBE refused: " + reason)
 
 
-func _on_match_starting(_setup: MatchSetup) -> void:
+func _on_match_starting(setup: MatchSetup) -> void:
 	Log.warn("PROBE match starting")
 	_in_match = true
+
+	# **Out with no goodbye, BEFORE this machine has reported loaded.** The gate
+	# must keep waiting for it through D26's hold, then start without it and
+	# spawn it no area (D15).
+	if "--quit-before-ready" in OS.get_cmdline_user_args():
+		_hard_exit("before reporting ready")
+		return
+
+	var delay: float = float(_int_argument("--ready-delay", 0))
+	if delay > 0.0 && setup != null:
+		_real_match_id = setup.match_id
+		# See _advance_ready_delay. Blanking the id here, before MatchLoading
+		# exists, is what makes its automatic report a no-op on the server.
+		setup.match_id = "probe-not-loaded-yet"
+		_ready_delay_left = delay
+		Log.warn("PROBE holding its readiness back", {"seconds": delay})
+
+
+## The server's own record of who has loaded, echoed to every client. A probe
+## watching for ITSELF in it knows its report actually arrived, which is a far
+## better moment to die at than "we sent one and hoped".
+func _on_readiness_changed(ready_ids: PackedInt32Array) -> void:
+	if _self_ready || !(multiplayer.get_unique_id() in ready_ids):
+		return
+	_self_ready = true
+	Log.warn("PROBE counted ready by the server")
+	# **Out with no goodbye, AFTER being counted.** This is the half of the
+	# loading-gate bug that reads as a pass: the server had a ready flag for a
+	# machine that no longer exists, and the count let the start through while
+	# somebody else was still loading.
+	if "--quit-after-ready" in OS.get_cmdline_user_args():
+		_hard_exit("after being counted ready")
+
+
+## Dies the way a crash does, with nothing said on the wire, so the server
+## learns of it from ENet rather than from `report_leaving`. `get_tree().quit()`
+## takes the polite road through `Net`, which is a different test entirely.
+func _hard_exit(why: String) -> void:
+	if _quit_fired:
+		return
+	_quit_fired = true
+	Log.warn("PROBE hard-exiting", {"why": why, "role": _role})
+	OS.kill(OS.get_process_id())
+
+
+## `--ready-delay <s>`: report loaded that many seconds late, WITHOUT going
+## quiet.
+##
+## MatchLoading reports the moment its warm-up finishes and a probe cannot stop
+## it, so the setup's match id is blanked first: `report_ready` is refused on
+## the server for an id that is not the match's. The id goes back, with a report
+## of our own, once the delay has run. The go signal rebuilds the whole setup
+## from its payload, so none of this survives into the match.
+##
+## **Blocking the main thread instead would be a different test.** A peer that
+## stops polling stops answering ENet too, so it reads as a SILENT player and
+## gets D26's hold - where what is wanted here is a player who is merely still
+## LOADING, and whom the gate has to keep waiting for.
+func _advance_ready_delay(delta: float) -> void:
+	if _ready_delay_left <= 0.0 || _reported_late:
+		return
+	_ready_delay_left -= delta
+	if _ready_delay_left > 0.0:
+		return
+	var setup: MatchSetup = MatchStart.setup()
+	if setup == null:
+		Log.err("PROBE had no setup left to report its late load against")
+		_ready_delay_left = -1.0
+		return
+	_reported_late = true
+	setup.match_id = _real_match_id
+	MatchStart.report_loaded()
+	Log.warn("PROBE reporting loaded late", {"match": _real_match_id})
 
 
 # --- watching it ------------------------------------------------------------
@@ -245,6 +342,10 @@ func _process(delta: float) -> void:
 		return
 
 	_apply_faults()
+	# Before every early return below: a held-back report is owed whatever else
+	# this role is doing, and the roles that hold one back are the ones that
+	# otherwise have nothing to do while they wait.
+	_advance_ready_delay(delta)
 
 	if !_dialled:
 		if References.network_config == null:
@@ -527,6 +628,13 @@ func _finish() -> void:
 		"pauses_seen": _pauses,
 		"pause_turn": _pause_turn,
 		"resume_turn": _resume_turn,
+		# **The loading gate's positive controls.** `self_ready` false in a run
+		# that was supposed to load means the gate was never reached, and
+		# `reported_late` false on a `--ready-delay` probe means the delay was
+		# never paid back - either way the run proves nothing about the gate,
+		# however clean the rest of the line looks.
+		"self_ready": _self_ready,
+		"reported_late": _reported_late,
 		"gave_up": Lockstep.has_given_up(),
 		"lag_s": snappedf(Lockstep.sealed_lag_seconds(), 0.1),
 		# **The positive control for the whole phase.** A run where `sealed` is

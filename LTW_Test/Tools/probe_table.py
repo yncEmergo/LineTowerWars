@@ -11,9 +11,10 @@ import sys
 ROOT = sys.argv[1]
 FIELDS = ["turns_run", "orders_applied", "stalls", "stalled_s", "desyncs", "drops_seen",
           "pause_turn", "resume_turn", "gave_up", "sealed_held", "echo", "repair", "units",
-          "hitches", "spoofs_sent"]
+          "hitches", "spoofs_sent", "self_ready", "reported_late"]
 RELAY_KEYS = ["Initial world agrees", "Initial world DIFFERS", "Sealed stream opened",
-              "gone silent", "Player dropped", "diverged", "disagree", "SCRIPT ERROR", "ERROR:"]
+              "gone silent", "Player dropped", "diverged", "disagree", "SCRIPT ERROR", "ERROR:",
+              "Client loaded", "Client unloaded", "Match start", "Not enough players"]
 
 
 def field(line, name):
@@ -29,7 +30,7 @@ for scenario in sorted(os.listdir(ROOT)):
         lines = [l.rstrip("\n") for l in f]
     print("=== %s   %s" % (scenario, lines[0].split("  ", 1)[1] if lines else ""))
     for line in lines:
-        if "HARD-KILLED" in line:
+        if "HARD-KILLED" in line or line.startswith("CLIENTS LAUNCHED"):
             print("   " + line)
         m = re.match(r"\[(\w+)\].*PROBE RESULT", line)
         if m:

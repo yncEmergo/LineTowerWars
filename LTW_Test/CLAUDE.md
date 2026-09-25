@@ -600,10 +600,19 @@
       `pause_turn` and `resume_turn` must MATCH between the two peers). Numbers for
       each in Docs/Findings/2026-09-09-sealed-stream-on-two-machines.md and
       2026-09-08-sealed-stream-cutover.md
+    - and the LOADING GATE, which needs FOUR players and so needs the runner's
+      `-Joins <n>` with `-Join2Args`/`-Join3Args`: `--players <n>` makes the host
+      wait for that many members, `--quit-after-ready` and `--quit-before-ready`
+      are hard exits either side of the report, and `--ready-delay <s>` holds a
+      report back WITHOUT going quiet - a blocked main thread stops answering
+      ENet, so it reads as a SILENT player and gets the hold rather than as one
+      still loading, which is a different test. Numbers in
+      Docs/Findings/2026-09-25-one-server-many-matches.md
     - **the harness reports what was ACTUALLY exercised, and that is the point.**
-      `drops_seen`, `echo`, `sealed_held` and the bench's nodes-disabled column
-      all exist because a run that never reached the code under test looks
-      exactly like one that passed
+      `drops_seen`, `echo`, `sealed_held`, `self_ready`, `reported_late`, the
+      runner's `CLIENTS LAUNCHED` line and the bench's nodes-disabled column all
+      exist because a run that never reached the code under test looks exactly
+      like one that passed
   - **Scripts/Dev/FormationProbe.gd EXISTS and is kept**, with
     Scenes/Dev/formation_probe.tscn, which is the one thing in Scenes/Dev that
     does not get deleted. It boots a real server match, spawns real attacker

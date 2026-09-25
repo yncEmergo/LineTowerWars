@@ -359,6 +359,52 @@ the plan.
   and `ExecStart=`.
 - `NoNewPrivileges` does not block a D-Bus call that polkit checks.
 
+## The loading gate, fixed and measured the same day
+
+The review's live bug: `MatchStart`'s gate compared the SIZE of `_ready_ids` with the size of
+`_expected`, and `_drop_peer` pruned only the second of them. So a player who reported ready and
+then vanished left a flag behind that made the two numbers meet.
+
+Measured on this Windows dev PC with `run_lockstep_probe.ps1`, four clients on loopback: a host
+waiting for four members, one join that hard-exits once the server's readiness echo names it, one
+that hard-exits before reporting at all, and one that holds its report back for 30 seconds without
+going quiet. The hold is 10 s and the load timeout 60 s, so 30 s sits clear of both.
+
+| | Before | After |
+| --- | --- | --- |
+| Match announced | 4 players | 4 players |
+| `Client loaded` before the start | 2 of 4 | 2 of 4, then `Client unloaded`, then 1 more at 2 of 2 |
+| Readiness taken back at the disconnect | no line | `Client unloaded`, at the disconnect |
+| `Match start` | **4 players**, before the slow loader reported | **2 players**, after it reported |
+| Sealed stream opened with | 4 peers, 2 of them dead | 2 peers, both alive |
+| Host's stall waiting for the dead | 9.83 s | 0.06 s |
+| Host's `drops_seen` | 2, mid-match | 0 |
+| The slow loader's `self_ready` | false - it played anyway | true |
+
+The relay then had to give up on the two dead players a second time, from inside the match
+("Player has gone silent" at relay turns 0 and 1), because they had been started into it.
+
+Three players of the same shape, which leaves one live player against a `min_players` of 2:
+
+| | Before | After |
+| --- | --- | --- |
+| Outcome | a 3-player match, 210 turns, one live player | `Match abandoned before it started` |
+| The host ended on | `Main` | `LobbyRoom`, status "Not enough players finished loading." |
+
+Regressions on the fixed copy: a plain 1v1 ran 540 turns with 0 desyncs and both peers agreeing,
+and a mid-match hard kill still dropped the peer and reached the survivor (`drops_seen` 1).
+
+**What the harness gained, and why each piece is a positive control:**
+- `--quit-after-ready` waits to see its OWN id in the server's readiness echo before dying, so it
+  dies at a moment the server has recorded rather than one the client merely sent.
+- `--ready-delay <s>` blanks the setup's match id so `MatchLoading`'s automatic report is refused,
+  then restores it and reports. **Blocking the main thread instead measures something else
+  entirely**: a peer that stops polling stops answering ENet, so it reads as a silent player and
+  gets the hold, not as a player who is still loading.
+- `self_ready` and `reported_late` in the probe's result line, and `CLIENTS LAUNCHED` in the
+  runner's summary. A run that quietly started two clients and one that started four read
+  identically without it.
+
 ## Still open
 
 - **The service file.** Now prepared as `deploy_server.ps1 -InstallShutdown`: a drop-in that

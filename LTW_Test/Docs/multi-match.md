@@ -46,6 +46,8 @@ over: Claude's memory and scratch files stay on the machine that wrote them.
 - P0: the server fixes, the client fixes and the deploy script's new controls.
 - P1: the authentication spike, and the Windows half of the spawn spike.
 - The review, and this rewrite of the plan around it.
+- **P0's live bug: the loading gate.** Fixed, and proven with a four-player probe run against a
+  positive control on the code before it.
 - **The check pass on that rewrite is folded in and its file deleted.** Three readers
   (completeness, correctness, the implementer) went over the rewrite; what they found is in the
   sections below rather than in a list of its own. The shape did not change. What did:
@@ -69,10 +71,8 @@ consequences:
 So do not deploy before P5's window (§7), unless the owner asks for it.
 
 **Next, in order:**
-1. **The live bug in P0** (the loading gate counts heads). It is small, and independent of D44.
-   Its proof needs new probe flags and a count of join clients in the runner; P0 lists them.
-2. **P2**, behind the switch that keeps the handoff off on `main` (§7). It starts with that switch.
-3. P3 (gated on the owner's port test), then P4, then P5 (gated on the Linux spawn half), which is
+1. **P2**, behind the switch that keeps the handoff off on `main` (§7). It starts with that switch.
+2. P3 (gated on the owner's port test), then P4, then P5 (gated on the Linux spawn half), which is
    the release.
 
 **The owner still owes:**
@@ -919,32 +919,46 @@ deploy by another session.
   many matches a restart is about to cancel, read from the journal, and it can install the D45
   drop-in (`-InstallShutdown`).
 - Also done: the two client fixes in §6.
-- **One more live bug, found by the review. Fix it before P2; it does not depend on D44.**
-  MatchStart's loading gate counts heads.
-  - `_drop_peer` removes the dropped player from `_expected` but not from `_ready_ids`. So a player
-    who reports ready and then drops lets the count pass while another player is still loading.
-  - `_start_match(_setup)` then starts the FULL setup. That includes the dropped player, and also
+- **One more live bug, found by the review. FIXED and proven 2026-09-25**; the numbers are in the
+  Findings. It did not depend on D44.
+  MatchStart's loading gate counted heads.
+  - `_drop_peer` removed the dropped player from `_expected` but not from `_ready_ids`. So a player
+    who reported ready and then dropped let the count pass while another player was still loading.
+  - `_start_match(_setup)` then started the FULL setup. That included the dropped player, and also
     a player dropped before reporting ready, which breaks D15's "no area spawns for them".
-  - Fix, on today's in-process path:
+  - The fix, on today's in-process path:
     - while the gate waits, a DISCONNECT (`_on_peer_left`) removes that player from `_ready_ids`
       at once and broadcasts readiness again. This happens at the disconnect, not only at the
       drop after D26's hold. A player inside the hold still counts as expected and not ready, so
       the start waits out the hold;
-    - the gate is "every peer in `_expected` is in `_ready_ids`", never a count;
-    - the go roster is always `_roster_of_ready()`, on both paths. On both paths, a go roster
-      below `min_players` aborts with D15's sentence. Today only the timeout path checks it;
-    - "You did not finish loading in time." goes only to peers still connected.
-  - Prove it with LockstepProbe in a FOUR-player load. The probe and the runner gain:
+    - `_drop_peer` clears it too, because `report_leaving` and `drop_silent_peer` reach it without
+      passing through `_on_peer_left` at all;
+    - the gate is `_everyone_ready()` - every peer in `_expected` is in `_ready_ids` - never a
+      count;
+    - both roads go through `_start_from_ready()`, so the go roster is always `_roster_of_ready()`
+      and is always checked against `min_players`, aborting with D15's sentence below it. Only the
+      timeout road checked before;
+    - the notices that walk `_expected` - "You did not finish loading in time.", `_abort`'s
+      sentence and `_broadcast_readiness` - go only to peers still connected. That list now
+      outlives the connections in it, because a peer inside D26's hold stays in it.
+  - **The probe and the runner gained what the proof needed**, and keep it:
     - `--players <n>`, so the host starts at n members;
-    - `--quit-after-ready` and `--quit-before-ready`, each a hard exit with no goodbye;
-    - `--ready-delay <s>`, longer than ENet's detection plus D26's hold;
-    - a count of join clients in `run_lockstep_probe.ps1`.
+    - `--quit-after-ready` and `--quit-before-ready`, each a hard exit with no goodbye. The first
+      waits to see ITSELF in the server's readiness echo, so it dies at a moment the server has
+      actually recorded rather than one it merely sent;
+    - `--ready-delay <s>`, which holds the report back WITHOUT going quiet - a blocked main thread
+      would read as a silent player and get D26's hold instead of being counted as still loading;
+    - `-Joins <n>` with `-Join2Args` / `-Join3Args` in `run_lockstep_probe.ps1`, and a
+      `CLIENTS LAUNCHED` line, because a run that quietly started two clients and one that started
+      four read identically afterwards.
   - The run: one probe quits after reporting ready, one quits before, and one delays. The go
-    roster must hold exactly the host and the delayed probe, and the relay's "Match start" line
-    must come after the delayed probe has loaded.
-  - **Positive control:** the same run on the parent commit starts early, with all four players
-    in the go roster.
-  - A three-player run of the same shape must end in D15's abort, never in a start.
+    roster held exactly the host and the delayed probe, and the relay's "Match start" line came
+    after the delayed probe's "Client loaded".
+  - **Positive control: the same run on the code before the fix started early, with all four
+    players in the go roster** - two of whom the relay then had to give up on all over again,
+    inside the match.
+  - A three-player run of the same shape ended in D15's abort, and the same run before the fix
+    started a three-player match with one live player in it.
 - Left:
   - running `-InstallShutdown` once, right after the next deploy, which brings the code for it
     (`server.md`). Until then a restart freezes a running match. P5 re-runs it for its new lines;
