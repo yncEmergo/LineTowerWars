@@ -226,7 +226,14 @@ func validate(seen: Dictionary) -> bool:
 		if ability != null && !ability.validate(seen):
 			complete = false
 
-	return complete
+	return _validate_cards() && complete
+
+
+## Every card this unit can show, held to the layout rules of Docs/hotkeys.md 2
+## - see CardLayout. Subclasses with cards of their own add them by overriding
+## this, the same way _validate_paths works and for the same reason.
+func _validate_cards() -> bool:
+	return CardLayout.validate(abilities, display_name)
 
 
 ## The scene paths this stats resource declares itself. Subclasses that add

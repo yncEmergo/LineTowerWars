@@ -6,8 +6,14 @@ extends Control
 ##
 ## Laid out exactly like a command card and for the same reasons - a grid of
 ## squares, the key read off the POSITION, the letter drawn in the corner - but
-## deeper than a card can be, so its bottom rows are the same letters with
-## Shift held. ControlsConfig owns both shapes and both sets of letters.
+## deeper than a card can be, so its bottom rows are the same keys with Shift
+## held. ControlsConfig owns both shapes and both sets of keys.
+##
+## **It counts as the SELECTION.** Opening it clears whatever was selected, and
+## selecting anything closes it; closing it any other way puts the old selection
+## back. So the card and this grid are never both live, and while it is open it
+## owns every key its grid covers - including keys that mean something
+## everywhere else, like the builder's. Docs/hotkeys.md 4.
 ##
 ## **It gives no orders of its own.** A press goes to `Commands`, the one road
 ## every player order takes, and comes back as world state like anything else.
@@ -53,6 +59,10 @@ const FALLBACK_ROWS: int = 5
 ## where the grid's shape is a property of the KEYBOARD, which ControlsConfig
 ## owns and a player can change.
 @export var _ultimate_button_scene: PackedScene
+## Closes the screen, in its top right corner. Needed because the key that
+## opens it cannot close it: while the screen is up that key is one of its
+## squares.
+@export var _close_button: BaseButton
 
 var _slots: Array[TechSlot] = []
 var _ultimate_buttons: Array[UltimateButton] = []
@@ -60,10 +70,21 @@ var _built: bool = false
 ## Whose screen this is. Fixed for the life of the match: a player never looks
 ## at somebody else's research.
 var _player_id: int = 0
+## What was selected when the screen opened, to be put back when it closes
+## without anything else having been selected. Kept in step with towers that
+## finish an upgrade meanwhile, which are new nodes - see _on_unit_replaced.
+var _selection_before: Array = []
+## True while this screen is clearing the selection itself, so it does not take
+## its own clearing for the player selecting something and close again.
+var _clearing_selection: bool = false
 
 var _controls: ControlsConfig:
 	get:
 		return References.controls_config
+
+var _selection: SelectionController:
+	get:
+		return References.selection_controller
 
 var _manager: TechManager:
 	get:
@@ -86,16 +107,28 @@ func _ready() -> void:
 		_random_button.pressed.connect(_on_random_pressed)
 	if _undo_button != null:
 		_undo_button.pressed.connect(_on_undo_pressed)
+	if _close_button != null:
+		_close_button.pressed.connect(close)
+
+	var selection: SelectionController = _selection
+	if selection != null:
+		selection.selection_changed.connect(_on_selection_changed)
+	var session: MatchSession = References.match_session
+	if session != null:
+		session.unit_replaced.connect(_on_unit_replaced)
 
 
 ## Re-reads every key this screen draws, because the player changed one in the
-## options screen. Its own button, and each square's letter - which follows the
-## keyboard layout and is otherwise written once when the grid is built.
+## options screen. Each square's letter is otherwise written once when the grid
+## is built.
 func refresh_hotkeys() -> void:
 	if _built:
 		_fill_slots()
 
 
+## Opens the screen, which becomes the SELECTION: whatever was selected is
+## remembered and let go, so the card empties and an order being aimed is called
+## off, the same as selecting anything else does.
 func open() -> void:
 	if _panel == null || _panel.visible:
 		return
@@ -105,6 +138,7 @@ func open() -> void:
 	if players != null && !ActionLimits.permits_research(players.local_player_id()):
 		return
 	_build()
+	_take_selection()
 	_panel.show()
 	# This node's own processing is the two buttons at the foot. Each square
 	# looks after itself and stops the moment it is off screen, so a closed
@@ -113,14 +147,21 @@ func open() -> void:
 	_refresh_buttons()
 
 
+## Closes the screen and puts back what was selected when it opened - minus
+## anything that has died since - so a look at research does not cost the
+## player their builder. Escape, the close button and the action bar square all
+## come here.
 func close() -> void:
-	if _panel == null || !_panel.visible:
+	if !_hide_panel():
 		return
-	_panel.hide()
-	set_process(false)
-	# The mouse never leaves a square that is taken out from under it, so the
-	# frames it lit would otherwise still be there on the next open.
-	_highlight_none()
+	var selection: SelectionController = _selection
+	var back: Array = []
+	for unit in _selection_before:
+		if is_instance_valid(unit) && (unit as Node).is_inside_tree():
+			back.append(unit)
+	_selection_before = []
+	if selection != null && !back.is_empty():
+		selection.select_units(back)
 
 
 func toggle() -> void:
@@ -156,63 +197,89 @@ func slot_for_tech(tech_id: int) -> Control:
 ## Control that could take a press for itself, so an open screen has to see the
 ## key before the world does.
 ##
-## The COMMAND CARD OUTRANKS IT, always. Whatever the selected unit answers to
-## the unit keeps, this screen's own key included, and only what the card
-## leaves alone reaches a square here. It was first written to spare the
-## builder alone - a player researches with one selected, and taking its card
-## away would make building and researching mutually exclusive - but the same
-## is true of every unit: a letter that upgrades a tower or sends a creep must
-## not quietly mean something else because a screen was left open.
+## **While it is open it owns every key its grid covers**, and ahead of every
+## key that means something everywhere else - its own key and the builder's
+## included, which press the square under them. Nothing competes with the card,
+## because the card is empty: the screen is the selection. Keys its grid does
+## not cover keep their meaning, so a control group still recalls, and in doing
+## so closes the screen. Docs/hotkeys.md 4.
 ##
-## Nothing is consumed while the screen is closed and no key is claimed, and a
-## key that lands on no square is left alone, so the rest of the game's keys
-## are untouched either way.
+## While it is closed the only key it answers is the one that opens it.
 func _input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	if key == null || !key.pressed || key.echo:
 		return
 
-	if is_open() && key.keycode == KEY_ESCAPE:
+	var config: ControlsConfig = _controls
+	var physical: Key = KeyPosition.of_press(key)
+	if !is_open():
+		if config != null && !key.ctrl_pressed && !key.alt_pressed \
+				&& config.is_research_toggle_key(physical):
+			open()
+			get_viewport().set_input_as_handled()
+		return
+
+	if key.keycode == KEY_ESCAPE:
 		close()
 		get_viewport().set_input_as_handled()
 		return
 
-	var config: ControlsConfig = _controls
-	if config == null || _card_answers(key):
+	if config == null:
+		return
+	var index: int = config.research_slot_for_key(physical, key.shift_pressed)
+	if index < 0:
 		return
 
-	if config.is_research_toggle_key(key.keycode, key.shift_pressed):
-		toggle()
-		get_viewport().set_input_as_handled()
-		return
-
-	if !is_open():
-		return
-
-	var index: int = config.research_slot_for_key(key.keycode, key.shift_pressed)
-	if index < 0 || index >= _slots.size() || _slots[index].tech == null:
-		return
-
-	_on_tech_activated(_slots[index].tech)
+	# A key the grid covers is the grid's even on a square with nothing on it,
+	# rather than falling through to whatever it means with the screen shut.
 	get_viewport().set_input_as_handled()
+	if index < _slots.size() && _slots[index].tech != null:
+		_on_tech_activated(_slots[index].tech)
 
 
-## Whether the selected unit's command card would answer this press, in which
-## case the press belongs to that unit and not to this screen.
-##
-## Only unmodified letters: the card ignores Shift, so the shifted rows down
-## here are letters no card can ever claim and stay reachable whatever is
-## selected. A square the card leaves empty is not claimed either, which is the
-## same rule the card itself follows - so with nothing selected at all, every
-## letter is this screen's.
-func _card_answers(key: InputEventKey) -> bool:
-	if key.shift_pressed:
+## Remembers the selection and lets it go, as opening the screen does. Guarded,
+## so the screen does not mistake its own clearing for the player selecting
+## something and close again.
+func _take_selection() -> void:
+	var selection: SelectionController = _selection
+	if selection == null:
+		return
+	_selection_before = selection.get_selection().duplicate()
+	_clearing_selection = true
+	selection.clear_selection()
+	_clearing_selection = false
+
+
+## Hides the screen, and answers whether it was open to hide.
+func _hide_panel() -> bool:
+	if _panel == null || !_panel.visible:
 		return false
+	_panel.hide()
+	set_process(false)
+	# The mouse never leaves a square that is taken out from under it, so the
+	# frames it lit would otherwise still be there on the next open.
+	_highlight_none()
+	return true
 
-	var panel: UnitPanel = References.unit_panel
-	if panel == null:
-		return false
-	return panel.claims_key(key.keycode)
+
+## Selecting anything while the screen is open replaces it, the way selecting
+## anything replaces a unit: a click on a unit or on empty ground, a box, a
+## control group, a send square, the builder square. Nothing is put back - the
+## player has just said what they want selected instead.
+func _on_selection_changed(_units: Array) -> void:
+	if _clearing_selection || !is_open():
+		return
+	_selection_before = []
+	_hide_panel()
+
+
+## A tower that finishes an upgrade while the screen is open is a new node, and
+## the one remembered would be freed a moment later. Follow it across, the way
+## the selection and the control groups already do.
+func _on_unit_replaced(old_unit: Unit, new_unit: Unit) -> void:
+	var at: int = _selection_before.find(old_unit)
+	if at >= 0:
+		_selection_before[at] = new_unit
 
 
 ## The two buttons at the foot move on their own - the undo window runs out on
@@ -340,7 +407,7 @@ func _fill_slots() -> void:
 
 		var hotkey: String = ""
 		if config != null:
-			hotkey = config.research_hotkey_label_for_slot(tech.slot)
+			hotkey = config.research_label_for_slot(tech.slot)
 		_slots[tech.slot].set_tech(tech, _player_id, hotkey)
 
 

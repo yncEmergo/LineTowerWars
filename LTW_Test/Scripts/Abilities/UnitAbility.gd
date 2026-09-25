@@ -38,8 +38,9 @@ enum Targeting {
 	UNIT_OR_GROUND,
 }
 
-## Given to slot to mean "wherever there is room", see below.
-const AUTO_SLOT: int = -1
+## What slot holds until somebody authors a square, which the boot refuses on
+## any ability a card shows - see CardLayout.
+const NO_SLOT: int = -1
 
 @export_group("Identity")
 ## The number a network command names this ability by. Must be unique across
@@ -61,25 +62,22 @@ const AUTO_SLOT: int = -1
 
 @export_group("Input")
 @export var targeting: Targeting = Targeting.IMMEDIATE
-## Which square of the command card this claims, counting from 0 at the top
+## Which square of the command card this sits on, counting from 0 at the top
 ## left and running left to right, then down.
 ##
-## The slot is the whole of the hotkey question. The card is a grid and the key
-## is read off the POSITION, WC3 grid style, so an ability names where it sits
-## and never which key it answers to. That also keeps the key stable when the
-## grid is relaid out or a row of letters is swapped for another layout.
+## The square is the whole of the hotkey question. The card is a grid and the
+## key is read off the POSITION, WC3 grid style, so an ability names where it
+## sits and never which key it answers to. Every ability names one, passives
+## included - a passive draws no key but still owns its square, and where to
+## read a unit's rule is learned once because it never moves.
 ##
-## AUTO_SLOT drops it into the first free square instead, which is what an
-## entry with no key worth pressing wants - a passive is only ever read.
-## Two abilities on the same card claiming the same slot is an authoring
-## mistake: the panel reports it and moves the loser somewhere free.
-##
-## An ability that has taken a key of its OWN still names a square here, since
-## it still has to be drawn somewhere - but the letter on that square is no
-## longer what presses it. See hotkey_action and slot_override below.
-@export var slot: int = AUTO_SLOT
-## A key of this ability's OWN, off the grid, instead of the letter its square
-## would give it.
+## There is no automatic placement and nothing is ever pushed along to make
+## room: an ability with no square, or two on one card sharing one, refuses to
+## boot. Which kind of ability goes where is Docs/hotkeys.md 2, and the parts of
+## it that are rules rather than habits are checked by CardLayout.
+@export var slot: int = NO_SLOT
+## A command this ability answers to, which the player may give a key of its
+## OWN instead of this square's.
 ##
 ## The rare exception to everything the slot comment above says, and it stays
 ## rare on purpose: it is for the handful of commands that mean the same thing
@@ -87,26 +85,11 @@ const AUTO_SLOT: int = -1
 ## by position. Everything else is a square and nothing but a square - there
 ## are hundreds of abilities and twelve squares, which is why the grid exists.
 ##
-## Null leaves the ability on the grid. The action itself is shared, so several
-## abilities may name one and answer to one key - see HotkeyAction.
+## The ability keeps its square whatever the command is bound to: binding moves
+## the KEY, never the button. Null leaves the ability on its square's key. The
+## action itself is shared, so several abilities may name one and answer to one
+## key - see HotkeyAction.
 @export var hotkey_action: HotkeyAction
-## Square this ability takes AHEAD of anything else that wants it, or AUTO_SLOT
-## to claim its slot the ordinary way.
-##
-## The companion to hotkey_action, and only useful with one. An ability whose
-## key no longer comes from its position can be put anywhere on the card
-## without its key moving - but the square it wants is usually a square the
-## grid has already promised to somebody, so wanting it is not enough. This is
-## how it TAKES one: whatever claimed the same square is moved to the next free
-## one, wrapping round the card, and a card with nowhere left to move it to is
-## reported as the authoring mistake it is.
-##
-## The pushed ability KEEPS ITS KEY, because a key belongs to the square an
-## ability CLAIMED rather than to the square it sits on - see
-## UnitPanel._letter_for. Nothing else on the card moves either: only the one
-## ability that wanted this square is displaced, and only if it wanted it.
-## Spending a square this way costs the card a square, never a key.
-@export var slot_override: int = AUTO_SLOT
 ## Whether holding the slot's key fires the ability over and over, ramping up
 ## to a capped rate. Off by default and deliberately opt-in: repeating Sell or
 ## Cancel by leaning on a key would be a disaster, while repeating a send is
@@ -191,32 +174,6 @@ func is_task_complete(_unit: Unit, _target: AbilityTarget) -> bool:
 ## has to notice the moment something wanders into reach.
 func advance_task(_unit: Unit, _target: AbilityTarget, _delta: float) -> void:
 	pass
-
-
-## The square this ability wants, however it asked for one. Asked by the panel
-## rather than reading either export, so there is one answer to the question.
-func card_slot() -> int:
-	if slot_override == AUTO_SLOT:
-		return slot
-	return slot_override
-
-
-## Whether that square is a claim the rest of the card has to give way to.
-func claims_slot_first() -> bool:
-	return slot_override != AUTO_SLOT
-
-
-## The key this ability answers to instead of a grid letter, drawn on its slot
-## and in its tooltip. Empty when the grid decides, which is nearly always.
-##
-## Empty is also what an ability with an action bound to NOTHING answers -
-## shipped unbound, or cleared by the player - and that is the same answer on
-## purpose: with no key of its own it is back on the grid like everything else,
-## and one empty string is what every caller has to handle either way.
-func custom_hotkey_label() -> String:
-	if hotkey_action == null:
-		return ""
-	return hotkey_action.label()
 
 
 ## Abilities that a SUBMENU ability puts on the card. Empty for everything else.
@@ -395,15 +352,22 @@ func tooltip_text(hotkey_label: String = "") -> String:
 ## pruning the ext_resource lines with it. So a menu losing its contents is a
 ## real thing that happens to a file nobody edited, and it has to be loud at
 ## boot rather than a card square that quietly stopped working. See CLAUDE.md.
+##
+## And the card a menu opens is a card like any other, so it is held to the
+## same layout rules - see CardLayout - plus one: its Cancel square stays free
+## for the Cancel the panel puts there to back out of it.
 func validate(_seen: Dictionary) -> bool:
-	if targeting != Targeting.SUBMENU || !submenu_abilities().is_empty():
+	if targeting != Targeting.SUBMENU:
 		return true
 
-	Log.err("Submenu ability has no entries, its card would open empty", {
-		"ability": display_name,
-		"id": ability_id,
-	})
-	return false
+	if submenu_abilities().is_empty():
+		Log.err("Submenu ability has no entries, its card would open empty", {
+			"ability": display_name,
+			"id": ability_id,
+		})
+		return false
+
+	return CardLayout.validate(submenu_abilities(), display_name, true)
 
 
 ## Whether this ability changes only what THIS machine sees, and so must never

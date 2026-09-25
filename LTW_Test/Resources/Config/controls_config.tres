@@ -13,10 +13,13 @@
 script = ExtResource("1_controls")
 subgroup_cycle_action = ExtResource("7_subgroup")
 builder_select_action = ExtResource("8_builder")
-command_hotkey_rows = null
+command_key_rows = PackedStringArray("qwer", "asdf", "zxcv")
+passive_squares = PackedInt32Array(7, 6, 5)
+trait_squares = PackedInt32Array(8, 9, 10)
 hotkey_actions = Array[ExtResource("2_HotkeyAction")]([ExtResource("3_sell"), ExtResource("4_build"), ExtResource("5_cancel"), ExtResource("6_research"), ExtResource("7_subgroup"), ExtResource("8_builder")])
+cancel_action = ExtResource("5_cancel")
 research_toggle_action = ExtResource("6_research")
-research_hotkey_rows = null
+research_key_rows = PackedStringArray("qwerty", "asdfgh", "zxcvbn", "qwerty", "asdfgh")
 hold_repeat_delay = 0.1
 hold_repeat_start_interval = 0.2
 hold_repeat_min_interval = 0.05

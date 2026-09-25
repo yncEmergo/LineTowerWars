@@ -14,11 +14,12 @@ extends HBoxContainer
 ## answers it, because taking a key means taking it off whoever had it, and
 ## only the screen can see the other rows.
 
-## The row wants this key. Refusing it, and clearing whoever else held it, is
-## the screen's job.
+## The row wants this key, as a key POSITION - see KeyPosition. Refusing it,
+## and taking it off whoever else held it, is the screen's job.
 signal key_chosen(action: HotkeyAction, key: Key)
-## The row wants no key at all, leaving its ability on the grid square it sits
-## in. Backspace and Delete, the way every hotkey menu spells it.
+## The row wants no key at all. Backspace and Delete, the way every hotkey menu
+## spells it. The command is then UNBOUND, and says so in red - a command on the
+## card does not fall back to its square. See HotkeyAction.current_key.
 signal key_cleared(action: HotkeyAction)
 
 ## Drawn while the row is waiting for a press, so it is obvious which of them
@@ -35,6 +36,10 @@ const UNBOUND_TEXT: String = "-"
 
 var _action: HotkeyAction = null
 var _listening: bool = false
+
+var _controls: ControlsConfig:
+	get:
+		return References.controls_config
 
 
 func _ready() -> void:
@@ -66,7 +71,7 @@ func refresh() -> void:
 		return
 
 	_key_button.disabled = false
-	var key: String = _action.label()
+	var key: String = _action.label(_controls)
 	_key_button.text = UNBOUND_TEXT if key.is_empty() else key
 
 
@@ -110,7 +115,7 @@ func _input(event: InputEvent) -> void:
 	if code == KEY_BACKSPACE || code == KEY_DELETE:
 		key_cleared.emit(_action)
 		return
-	key_chosen.emit(_action, code)
+	key_chosen.emit(_action, KeyPosition.of_press(key))
 
 
 func _stop_listening() -> void:

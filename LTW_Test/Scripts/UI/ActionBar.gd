@@ -53,10 +53,8 @@ func _ready() -> void:
 	add_to_group(HotkeyAction.READERS_GROUP)
 	if _builder_button != null:
 		_builder_button.pressed.connect(_on_builder_pressed)
-		_builder_button.tooltip_text = "Select your builder"
 	if _research_button != null:
 		_research_button.pressed.connect(_on_research_pressed)
-		_research_button.tooltip_text = "Research Center"
 
 	var selection: SelectionController = _selection
 	if selection != null:
@@ -68,16 +66,25 @@ func _ready() -> void:
 	_bind()
 
 
-## Re-reads the letters drawn on both squares, because the player rebound one
-## in the options screen.
+## Re-reads the key each square draws in its corner and names in its tooltip,
+## because the player rebound one in the options screen. A command left without
+## a key draws none, and its tooltip says only what it does.
 func refresh_hotkeys() -> void:
 	var config: ControlsConfig = _controls
 	if config == null:
 		return
-	if _builder_button != null:
-		_builder_button.show_hotkey(config.builder_select_label())
-	if _research_button != null:
-		_research_button.show_hotkey(config.research_toggle_label())
+	_label_square(_builder_button, config.builder_select_action, "Select Builder", config)
+	_label_square(_research_button, config.research_toggle_action, "Research Center",
+		config)
+
+
+func _label_square(button: HudActionButton, action: HotkeyAction, what: String,
+		config: ControlsConfig) -> void:
+	if button == null:
+		return
+	var key: String = "" if action == null else action.label(config)
+	button.show_hotkey(key)
+	button.tooltip_text = what if key.is_empty() else "%s (%s)" % [what, key]
 
 
 ## The Research Center opens and closes from three places - this square, its own
@@ -153,25 +160,19 @@ func _on_builder_pressed() -> void:
 		camera.center_on(_builder.global_position)
 
 
-## The builder's key does what its square does, on every selection EXCEPT one
-## whose command card answers the same letter - the card outranks it, which is
-## what lets it sit on a grid letter at all. See HotkeyAction.yields_to_card.
+## The builder's key does what its square does, whatever is selected. It is a
+## key of its own and never a square's, so no card can want it - the one screen
+## that does is the open Research Center, whose grid sees every key first and
+## keeps the ones it covers. Docs/hotkeys.md 6.
 ##
-## Unhandled, so a LineEdit being typed into keeps its letters, and the card is
-## ASKED rather than left to consume the press first: the order two
-## _unhandled_key_input handlers run in is tree order, and nothing here should
-## depend on that.
+## Unhandled, so a LineEdit being typed into keeps its letters.
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	if key == null || !key.pressed || key.echo || key.ctrl_pressed || key.alt_pressed:
 		return
 
 	var config: ControlsConfig = _controls
-	if config == null || !config.is_builder_select_key(key.keycode):
-		return
-
-	var panel: UnitPanel = References.unit_panel
-	if panel != null && panel.claims_key(key.keycode):
+	if config == null || !config.is_builder_select_key(KeyPosition.of_press(key)):
 		return
 
 	if _builder == null || !is_instance_valid(_builder):

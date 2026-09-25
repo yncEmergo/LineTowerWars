@@ -277,6 +277,24 @@ func select_single(unit: Node) -> void:
 	_set_selection([unit])
 
 
+## Selects exactly these units, as they are. For putting back a selection that
+## was set aside - the Research Center hands back what was selected when it
+## opened - so no sweep and no narrowing: what was selected before is what the
+## player gets back. Anything freed since is skipped.
+func select_units(units: Array) -> void:
+	var alive: Array = []
+	for unit in units:
+		if unit != null && is_instance_valid(unit):
+			alive.append(unit)
+	_set_selection(alive)
+
+
+## Lets go of everything, as a click on empty ground does. The Research Center
+## does this when it opens, because it becomes the selection itself.
+func clear_selection() -> void:
+	_set_selection([])
+
+
 ## One unit became another - a tower finished an upgrade - so everything
 ## holding the old one swaps to the new one in place.
 ##
@@ -667,7 +685,8 @@ func _handle_selection_key(key: InputEventKey) -> bool:
 ## and cycling underneath would quietly rewrite the set of units the player is
 ## part-way through aiming an order at.
 func _handle_subgroup_key(key: InputEventKey) -> bool:
-	if _controls_config == null || !_controls_config.is_subgroup_cycle_key(key.keycode):
+	if _controls_config == null \
+			|| !_controls_config.is_subgroup_cycle_key(KeyPosition.of_press(key)):
 		return false
 	if _command_controller != null && _command_controller.is_armed():
 		return false
@@ -690,7 +709,7 @@ func _handle_control_group_key(key: InputEventKey) -> bool:
 	if _controls_config == null:
 		return false
 
-	var index: int = _controls_config.control_group_for_key(key.keycode)
+	var index: int = _controls_config.control_group_for_key(KeyPosition.of_press(key))
 	if index <= 0:
 		return false
 
@@ -713,10 +732,16 @@ func _handle_control_group_button(button: InputEventMouseButton) -> bool:
 
 
 ## What a press on a group means, whichever button carried it.
+##
+## Assigning NOTHING does nothing, rather than emptying the group: a habitual
+## Ctrl press with nothing selected - which the open Research Center makes a
+## press away, since it clears the selection - must not cost the player a group.
 func _press_control_group(index: int) -> void:
 	# Live keyboard state rather than the event's own modifier flag, so this
 	# behaves the same for physical input and for injected events.
 	if Input.is_key_pressed(KEY_CTRL):
+		if _selected.is_empty():
+			return
 		_control_groups.assign(index, _selected)
 		Log.info("Control group assigned", {"group": index, "units": _selected.size()})
 		return

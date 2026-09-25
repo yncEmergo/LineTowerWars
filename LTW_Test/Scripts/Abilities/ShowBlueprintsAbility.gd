@@ -87,6 +87,10 @@ func validate(seen: Dictionary) -> bool:
 		Log.err("Blueprints ability has no slots, its card would open empty",
 			{"id": ability_id})
 		complete = false
+	else:
+		# The list is a menu the panel backs out of like any other, so it is
+		# held to the rules a SUBMENU's card is. See UnitAbility.validate.
+		complete = CardLayout.validate(slots, display_name, true) && complete
 
 	for entry in slots:
 		var ability: UnitAbility = entry as UnitAbility

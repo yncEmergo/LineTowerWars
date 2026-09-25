@@ -6,3 +6,4 @@
 script = ExtResource("1_HotkeyAction")
 action_id = "sell"
 display_name = "Sell"
+card_square = 5

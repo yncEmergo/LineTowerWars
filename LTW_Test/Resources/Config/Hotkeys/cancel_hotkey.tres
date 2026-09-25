@@ -6,3 +6,4 @@
 script = ExtResource("1_HotkeyAction")
 action_id = "cancel"
 display_name = "Cancel"
+card_square = 10

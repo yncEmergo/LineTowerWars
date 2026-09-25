@@ -103,14 +103,15 @@ const DEBUFF_COLOR: Color = Color(0.90, 0.36, 0.34)
 @export var _cancel_ability: UnitAbility
 
 var _slots: Array[CommandSlot] = []
-## The key each square is currently drawing, in square order.
+## The key POSITION each square answers to right now, in square order, as ints
+## - KEY_NONE for a square that answers to nothing.
 ##
-## Kept because it is also the answer to "what does this press do": the letters
-## are handed out down the card rather than nailed to a square number, so the
-## square a key lands on cannot be worked out from the key alone. What is drawn
-## and what is pressed are then the same array, which is the only way they can
-## be trusted not to disagree.
-var _slot_letters: PackedStringArray = PackedStringArray()
+## Usually the square's own key, but not always: a command with a key of its
+## own answers to that key on whatever square it sits, and an unbound one
+## answers to none. So this is also the answer to "what does this press do",
+## and the letters drawn are made from the same array - the only way what is
+## drawn and what is pressed can be trusted never to disagree.
+var _slot_keys: Array[int] = []
 var _tiles: Array[UnitTile] = []
 ## Ability whose hotkey is currently held down, for repeat firing.
 var _held_ability: UnitAbility = null
@@ -332,7 +333,7 @@ func show_unit(unit: Variant) -> void:
 	if _status_bar != null:
 		_status_bar.show_unit(_unit)
 
-	_card_stack = [_commandable_abilities(_unit)]
+	_card_stack = [_card_of(_unit)]
 	_refresh_slots()
 	_show_portrait(_unit)
 	visible = true
@@ -681,16 +682,27 @@ func _fill_selection_grid(units: Array, highlighted: Array) -> void:
 ##
 ## Abilities are shared resources, so identical units reference the very same
 ## .tres and compare equal without needing an id.
-## The card for one unit, which is EMPTY for anything the local player does not
-## own. An opponent's unit can still be clicked and inspected - reading their
-## build is part of the game and the rest of the panel still fills in - but a
-## square offering an order the server is bound to refuse is a button that
-## cannot work. CommandController refuses the order too; this is what stops it
-## being offered.
-func _commandable_abilities(unit: Unit) -> Array:
-	if unit == null || !is_instance_valid(unit) || !unit.is_owned_by_local_player():
+## The card for one unit. For anything the local player does not own, only its
+## PASSIVES and traits, on their own squares.
+##
+## An opponent's unit can be clicked and inspected - reading their build, and
+## the creep walking at you, is part of the game - so what a unit IS stays on
+## the card: its named ability, its auras, whether it flies. What goes is every
+## square that would be an order the server is bound to refuse, which is a
+## button that cannot work. CommandController refuses the order too; this is
+## what stops it being offered. Docs/hotkeys.md 2.7.
+func _card_of(unit: Unit) -> Array:
+	if unit == null || !is_instance_valid(unit):
 		return []
-	return unit.current_abilities()
+	if unit.is_owned_by_local_player():
+		return unit.current_abilities()
+
+	var readable: Array = []
+	for entry in unit.current_abilities():
+		var ability: UnitAbility = entry as UnitAbility
+		if ability != null && ability.targeting == UnitAbility.Targeting.PASSIVE:
+			readable.append(ability)
+	return readable
 
 
 ## Whose abilities the card describes: the active subgroup when there is one,
@@ -710,14 +722,14 @@ func _shared_abilities(units: Array) -> Array:
 		return []
 
 	var shared: Array = []
-	for ability in _commandable_abilities(first):
+	for ability in _card_of(first):
 		var in_every: bool = true
 		for other in units:
 			var typed: Unit = other as Unit
 			# A unit part-way through being freed is not part of the answer.
 			if typed == null || !is_instance_valid(typed) || typed == first:
 				continue
-			if !_commandable_abilities(typed).has(ability):
+			if !_card_of(typed).has(ability):
 				in_every = false
 				break
 		if in_every:
@@ -791,7 +803,7 @@ func _on_unit_abilities_changed() -> void:
 	# recomputes what everyone still shares, because one unit changing state
 	# can remove an ability from the whole card.
 	if _group.is_empty():
-		_card_stack = [_commandable_abilities(_unit)]
+		_card_stack = [_card_of(_unit)]
 	else:
 		_card_stack = [_shared_abilities(_card_units())]
 	_refresh_slots()
@@ -837,16 +849,6 @@ func command_slot_for(wanted: Array[UnitAbility]) -> Control:
 	return null
 
 
-## Whether the card on screen would answer this key: the square it names holds
-## an ability that can actually be pressed.
-##
-## Asked by the Research Center, which is open ON TOP of the card and sees the
-## key first. It is the same question _unhandled_key_input asks itself, put
-## where somebody else can ask it.
-func claims_key(key: Key) -> bool:
-	return _ability_for_key(key) != null
-
-
 ## Backs out of one thing.
 ##
 ## The armed ability first, then the submenu. Both can be true at once - a
@@ -864,17 +866,18 @@ func _cancel_current() -> void:
 
 ## Puts Cancel on the card whenever there is something to back out of.
 ##
-## Placed AFTER the card rather than as part of it, so it cannot be pushed out
-## of its square by a busy submenu and its key never moves. Left off entirely
-## when there is nothing to cancel, rather than shown greyed out - a card that
-## always carries a dead button teaches a player to ignore that square.
+## Placed AFTER the card rather than as part of it, on the square every Cancel
+## in the game sits on - which every menu keeps free for it, see CardLayout.
+## Left off entirely when there is nothing to cancel, rather than shown greyed
+## out - a card that always carries a dead button teaches a player to ignore
+## that square.
 func _place_cancel(placed: Array) -> void:
 	if _cancel_ability == null:
 		return
 	if !_armed && !is_in_submenu():
 		return
 
-	var slot: int = _cancel_ability.card_slot()
+	var slot: int = _cancel_ability.slot
 	if slot < 0 || slot >= placed.size():
 		slot = placed.size() - 1
 	placed[slot] = _cancel_ability
@@ -886,12 +889,8 @@ func _current_card() -> Array:
 	return _card_stack.back()
 
 
-## Lays a card out across the grid and fills every square from it.
-##
-## An ability that claimed a slot gets that slot, so a tower's Sell stays at
-## the bottom right whatever else is on the card and its key never moves.
-## Everything left over falls into the first free square, which is what a
-## passive with no key worth pressing wants.
+## Lays the card on screen out across the grid and fills every square from it,
+## with the key each square answers to and the letter it draws for it.
 func _refresh_slots() -> void:
 	# An armed ability owns the next click, so everything else comes off the
 	# card rather than offering buttons that would fight it. The grid keeps its
@@ -902,167 +901,55 @@ func _refresh_slots() -> void:
 	placed.resize(_slots.size())
 	_place_cancel(placed)
 
-	_slot_letters = _letters_for(placed)
+	_slot_keys.resize(_slots.size())
 	for index in range(_slots.size()):
-		_slots[index].set_ability(placed[index] as UnitAbility, _unit,
-			_slot_letters[index])
+		var ability: UnitAbility = placed[index] as UnitAbility
+		var key: Key = _key_for(ability, index)
+		_slot_keys[index] = key
+		_slots[index].set_ability(ability, _unit, KeyPosition.printed_label(key))
 
 ## One entry per square, null where the card leaves a gap.
 ##
-## Three kinds of claim, settled in that order:
-##   1. a square claimed AHEAD of the grid, by an ability that answers to a key
-##      of its own and so has to be somewhere fixed - Sell. It wins
-##   2. an ordinary square, which is the whole rest of the card
-##   3. no square at all, which falls into the first gap left over
-##
-## The grid is walked in SQUARE ORDER rather than in card order, and that is
-## what makes a push read properly: an ability that finds its square taken
-## takes the next one along, and the ability that wanted THAT one slides along
-## in turn. So a card with one square spent shifts by one from there and stops,
-## rather than the displaced ability leaping over its neighbours to the first
-## hole it can find. An ability keeps its own key throughout - see
-## _letter_for, which reads the square an ability CLAIMED, not the one it
-## ended up on.
-##
-## Two ORDINARY abilities colliding is still an authoring mistake and still
-## says so: nothing took that square from either of them, they were both
-## authored onto it.
+## Every ability names its own square and gets it. There is no placing to do
+## and nothing is ever moved along to make room, so a key is always the key of
+## the square an ability was authored onto. A card that asks for the impossible
+## - a square it does not have, or one square twice - was refused at boot by
+## CardLayout, so reaching here with one is content that skipped the check, and
+## it is said rather than papered over.
 func _place_card(card: Array) -> Array:
 	var placed: Array = []
 	placed.resize(_slots.size())
 
-	var abilities: Array = _abilities_of(card)
-	var floating: Array = []
+	for entry in card:
+		var ability: UnitAbility = entry as UnitAbility
+		if ability == null:
+			continue
+		if ability.slot < 0 || ability.slot >= placed.size() || placed[ability.slot] != null:
+			Log.err("An ability has no free square of its own on this card", {
+				"ability": ability.display_name,
+				"square": ability.slot,
+			})
+			continue
+		placed[ability.slot] = ability
 
-	for ability: UnitAbility in abilities:
-		if ability.claims_slot_first():
-			_claim_square(placed, ability)
-
-	for wanted: int in range(placed.size()):
-		for ability: UnitAbility in abilities:
-			if !ability.claims_slot_first() && ability.card_slot() == wanted:
-				_claim_square(placed, ability)
-
-	for ability: UnitAbility in abilities:
-		var wanted: int = ability.card_slot()
-		if !ability.claims_slot_first() && (wanted < 0 || wanted >= placed.size()):
-			floating.append(ability)
-
-	_fill_free_slots(placed, floating)
 	return placed
 
 
-## Everything on a card that is really an ability, so the passes below can walk
-## the same list three times without checking for nulls each time.
-func _abilities_of(card: Array) -> Array:
-	var abilities: Array = []
-	for entry in card:
-		var ability: UnitAbility = entry as UnitAbility
-		if ability != null:
-			abilities.append(ability)
-	return abilities
-
-
-## Puts one ability on the square it asked for, or on the next free one along.
+## The key position ONE square answers to: the square's own key, unless what
+## sits on it is a command with a key of its own - then that command's key, or
+## none at all while the player has left it unbound. An empty square keeps its
+## own key, which then simply presses nothing.
 ##
-## Counting ON from the square it wanted rather than from the top of the card,
-## and wrapping round the end, so an ability pushed out of the bottom row lands
-## beside where it used to be instead of in the top left. A card with nowhere
-## left to put it is reported: the ability is off the card, which is the one
-## outcome a player would experience as a missing button.
-func _claim_square(placed: Array, ability: UnitAbility) -> void:
-	var count: int = placed.size()
-	if count > 0:
-		var wanted: int = clampi(ability.card_slot(), 0, count - 1)
-		_report_double_claim(placed[wanted] as UnitAbility, ability, wanted)
-
-		for step in range(count):
-			var index: int = (wanted + step) % count
-			if placed[index] == null:
-				placed[index] = ability
-				return
-
-	Log.err("Card has no free square left for an ability", {
-		"ability": ability.display_name,
-		"slot": ability.card_slot(),
-	})
-
-
-## Giving way to a priority claim is the feature working, and silent. Two
-## abilities that both asked for a square the ordinary way is somebody
-## authoring the same number twice, and only that is worth a line in the log.
-func _report_double_claim(sitting: UnitAbility, ability: UnitAbility, slot: int) -> void:
-	if sitting == null || sitting.claims_slot_first() || ability.claims_slot_first():
-		return
-	Log.err("Two abilities on one card claim the same slot", {
-		"slot": slot,
-		"kept": sitting.display_name,
-		"moved": ability.display_name,
-	})
-
-
-## Drops everything that named no square at all into the gaps left over, from
-## the top of the card. An ability that named a taken one was moved already, by
-## _push_to_free_slot, which starts from the square it wanted instead.
-##
-## Anything that still does not fit is reported rather than silently vanishing
-## off the card.
-func _fill_free_slots(placed: Array, floating: Array) -> void:
-	var next: int = 0
-	for ability in floating:
-		while next < placed.size() && placed[next] != null:
-			next += 1
-		if next >= placed.size():
-			Log.warn("Card has more abilities than the grid has squares", {
-				"ability": ability.display_name,
-				"slots": placed.size(),
-			})
-			return
-		placed[next] = ability
-
-
-## The Nth letter of the grid. Empty when no controls config is wired, which
-## leaves the card usable by mouse and simply unbound.
-func _grid_letter(index: int) -> String:
+## KEY_NONE when no controls config is wired, which leaves the card usable by
+## mouse and simply unbound.
+func _key_for(ability: UnitAbility, square: int) -> Key:
 	var config: ControlsConfig = _controls_config
 	if config == null:
-		return ""
-	return config.grid_letter(index)
+		return KEY_NONE
+	if ability != null && ability.hotkey_action != null:
+		return ability.hotkey_action.current_key(config)
+	return config.grid_key(square)
 
-
-## The key each square draws, in square order.
-func _letters_for(placed: Array) -> PackedStringArray:
-	var letters: PackedStringArray = PackedStringArray()
-	letters.resize(placed.size())
-	for index in range(placed.size()):
-		letters[index] = _letter_for(placed[index] as UnitAbility, index)
-	return letters
-
-
-## The key ONE square draws, which is the ability's rather than the square's.
-##
-## An ability's key comes from the square it CLAIMED, and it keeps that key
-## wherever it ends up sitting. So a command pushed one along by Sell answers
-## to the same letter it always has, and every ability that was not pushed is
-## left exactly where it was rather than being shuffled to make room. That is
-## the whole trade: a card spends a SQUARE on a command with its own key, never
-## a key.
-##
-## The two fallbacks are the square's own letter, for the same reason: an empty
-## square and an ability that claimed no square at all have no letter of their
-## own to carry, so they take the one they are standing on.
-func _letter_for(ability: UnitAbility, square: int) -> String:
-	if ability == null:
-		return _grid_letter(square)
-
-	var own: String = ability.custom_hotkey_label()
-	if !own.is_empty():
-		return own
-
-	var claimed: int = ability.card_slot()
-	if claimed < 0 || claimed >= _slots.size():
-		return _grid_letter(square)
-	return _grid_letter(claimed)
 
 func _on_ability_activated(ability: UnitAbility) -> void:
 	if ability == null:
@@ -1109,14 +996,9 @@ func _on_command_ended() -> void:
 ## Ability hotkeys only fire for the card currently on screen, so the same key
 ## can mean different things on different units, as in WC3.
 ##
-## The key is resolved to a SQUARE and the square's ability is what runs. So
-## the letters are a property of the grid rather than of any ability, and a
-## card that leaves a square empty leaves its key alone - which is what keeps
-## the rest of the game's keys usable while a unit is selected.
-##
-## Keycodes rather than physical keycodes on purpose: a keycode already follows
-## the player's keyboard layout, so the key printed Y on a German board reports
-## KEY_Y and lands in the bottom left where the card draws it.
+## The key is resolved to a SQUARE and the square's ability is what runs. Keys
+## are POSITIONS, see KeyPosition: the bottom left key presses the bottom left
+## square on every keyboard layout, whatever it prints.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if !visible:
 		return
@@ -1125,48 +1007,41 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if key == null || key.echo:
 		return
 
+	var physical: Key = KeyPosition.of_press(key)
 	if !key.pressed:
 		# Releasing the held key ends the repeat. The OS repeat is ignored
 		# above, because its rate is a desktop setting rather than ours.
-		if key.keycode == _held_key:
+		if physical == _held_key:
 			_release_hold()
 		return
 
-	var ability: UnitAbility = _ability_for_key(key.keycode)
+	var ability: UnitAbility = _ability_for_key(physical)
 	if ability == null:
 		return
 
 	_on_ability_activated(ability)
 	if ability.repeat_on_hold:
-		_begin_hold(ability, key.keycode)
+		_begin_hold(ability, physical)
 	get_viewport().set_input_as_handled()
 
 
 ## The ability a key press lands on, or null for a key this card does not
 ## answer. An empty square, and a passive that cannot be pressed, both give
-## null rather than swallowing the key.
-func _ability_for_key(key: Key) -> UnitAbility:
-	if !visible:
+## null: the key does nothing, since nothing else in the game answers a key the
+## card owns.
+func _ability_for_key(physical: Key) -> UnitAbility:
+	if !visible || physical == KEY_NONE:
 		return null
 
-	# Answered off what the card is DRAWING rather than off the config, because
-	# an ability carries its key to whatever square it ends up on - so the
-	# square a press lands on is not the square its number names. Reading the
-	# same array the slots were filled from is also what stops the two ever
-	# disagreeing: a key that works is a key a player can see.
-	if key == KEY_NONE:
-		return null
-
-	for index in range(mini(_slots.size(), _slot_letters.size())):
-		var letter: String = _slot_letters[index]
-		if letter.is_empty():
-			continue
-		if OS.find_keycode_from_string(letter.to_upper()) != key:
+	# Answered off the keys the squares were FILLED with rather than off the
+	# config, because a command with a key of its own answers to that key on
+	# whatever square it sits. Reading the same array the slots were drawn from
+	# is also what stops the two ever disagreeing: a key that works is a key a
+	# player can see.
+	for index in range(mini(_slots.size(), _slot_keys.size())):
+		if _slot_keys[index] != physical:
 			continue
 
-		# The square answers, whatever is on it. An empty one and a passive
-		# both leave the key alone rather than letting it fall through to
-		# another square that happens to draw the same letter.
 		var ability: UnitAbility = _slots[index].ability
 		if ability == null || ability.targeting == UnitAbility.Targeting.PASSIVE:
 			return null
@@ -1217,7 +1092,7 @@ func _process(delta: float) -> void:
 
 	# Live key state as well as the release event, because a key released while
 	# another window had focus never reaches _unhandled_key_input.
-	if _held_key != KEY_NONE && !Input.is_key_pressed(_held_key):
+	if _held_key != KEY_NONE && !KeyPosition.is_down(_held_key):
 		_release_hold()
 		return
 

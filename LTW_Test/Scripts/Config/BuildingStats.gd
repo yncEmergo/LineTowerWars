@@ -106,6 +106,19 @@ func model_scene() -> PackedScene:
 	return _cached_model
 
 
+## Adds the three cards a building swaps down to - see card_abilities - to the
+## one the base class already checks.
+func _validate_cards() -> bool:
+	var complete: bool = super()
+	complete = CardLayout.validate(construction_abilities,
+		"%s, while building" % display_name) && complete
+	complete = CardLayout.validate(selling_abilities,
+		"%s, while selling" % display_name) && complete
+	complete = CardLayout.validate(upgrading_abilities,
+		"%s, while upgrading" % display_name) && complete
+	return complete
+
+
 ## Adds the model path to the ones the base class already checks.
 func _validate_paths() -> bool:
 	var complete: bool = super()

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dmv4hukcs3knd" path="res://Scripts/UI/ResearchCenter.gd" id="1_research"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/tech_slot.tscn" id="2_tech_slot"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/ultimate_button.tscn" id="3_ultimate_button"]
+[ext_resource type="Texture2D" path="res://2DArt/UI/Icons/ability_cancel.png" id="4_close_icon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 10.0
@@ -20,7 +21,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="ResearchCenter" type="Control" unique_id=888755325 node_paths=PackedStringArray("_panel", "_grid", "_random_button", "_undo_button", "_ultimates_toggle", "_ultimates_grid")]
+[node name="ResearchCenter" type="Control" unique_id=888755325 node_paths=PackedStringArray("_panel", "_grid", "_random_button", "_undo_button", "_ultimates_toggle", "_ultimates_grid", "_close_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,6 +39,7 @@ _ultimates_toggle = NodePath("Panel/Column/UltimatesToggle")
 _ultimates_grid = NodePath("Panel/Column/UltimatesGrid")
 _tech_slot_scene = ExtResource("2_tech_slot")
 _ultimate_button_scene = ExtResource("3_ultimate_button")
+_close_button = NodePath("Panel/CloseButton")
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=1193153839]
 layout_mode = 1
@@ -184,3 +186,14 @@ size_flags_horizontal = 4
 theme_override_constants/h_separation = 3
 theme_override_constants/v_separation = 3
 columns = 4
+
+[node name="CloseButton" type="Button" parent="Panel"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+tooltip_text = "Close (Escape)"
+icon = ExtResource("4_close_icon")
+flat = true
+icon_alignment = 1
+expand_icon = true

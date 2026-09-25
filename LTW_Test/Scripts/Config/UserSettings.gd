@@ -35,10 +35,19 @@ const SECTION_AUDIO: String = "audio"
 const SECTION_GAMEPLAY: String = "gameplay"
 const SECTION_HOTKEYS: String = "hotkeys"
 
-## The one key in the hotkeys section that is NOT a binding, so reading the
-## bindings back can skip it rather than inventing an action called
-## "keyboard_layout".
-const KEYBOARD_LAYOUT_KEY: String = "keyboard_layout"
+## Written into the hotkeys section beside the bindings, saying they are key
+## POSITIONS - see KeyPosition. A file without it is from before that, when a
+## binding named whatever the key typed, and is converted as it is read.
+const POSITIONS_MARKER: String = "_positions"
+## What the keyboard layout setting was saved under before keys were positions
+## and the setting went away. Read past, and gone from the next save.
+const OLD_KEYBOARD_LAYOUT_KEY: String = "keyboard_layout"
+## The commands that lived on a card square before a binding could leave one
+## with no key. An empty binding for one of these used to mean "back on its
+## square", which is now simply its default - so an old file's empty entry for
+## one is dropped rather than read as "unbound". Only ever read by the
+## conversion; UserSettings otherwise knows nothing about any command.
+const OLD_SQUARE_COMMANDS: Array[String] = ["sell", "build", "cancel"]
 
 ## Settings-file key per channel, in AudioChannel order. Spelled out rather than
 ## derived from the enum name so renaming a channel never orphans what a player
@@ -109,22 +118,6 @@ enum HealthBarDisplay {
 	NEVER = 2,
 }
 
-## Which letters the two grids draw on their bottom row. Pinned for the same
-## reason as the enums above.
-##
-## The rows themselves are authored EUROPEAN on ControlsConfig and this swaps Y
-## and Z out of them, which is the whole difference between the two boards for
-## a game whose keys are letters. Godot reports a keycode that already follows
-## the player's own layout, so the key printed Y answers KEY_Y on either board -
-## what changes is which of the two letters sits where the bottom left of the
-## command card wants it.
-enum KeyboardLayout {
-	## QWERTZ. Y is the bottom left letter key.
-	EUROPEAN = 0,
-	## QWERTY. Z is.
-	AMERICAN = 1,
-}
-
 ## The mixer channels the options screen offers. Pinned for the same reason.
 ##
 ## There is no AudioServer bus behind any of them yet - see set_volume().
@@ -137,13 +130,8 @@ enum AudioChannel {
 	ATMO = 5,
 }
 
-## What each layout is called on screen, in KeyboardLayout order. Here rather
-## than typed into the scene, for the same reason AUDIO_NAMES is.
-const KEYBOARD_LAYOUT_NAMES: Array[String] = ["European", "American"]
-
 const DEFAULT_WINDOW_MODE: WindowMode = WindowMode.WINDOWED
 const DEFAULT_HEALTH_BAR_DISPLAY: HealthBarDisplay = HealthBarDisplay.ALWAYS
-const DEFAULT_KEYBOARD_LAYOUT: KeyboardLayout = KeyboardLayout.EUROPEAN
 
 ## What this player calls themselves in multiplayer, or empty when they have
 ## never chosen. EMPTY IS MEANINGFUL: it is what makes the lobby browser ask,
@@ -163,19 +151,19 @@ static var edge_panning: bool = DEFAULT_EDGE_PANNING
 ## whenever there is nothing to say.
 static var show_control_groups: bool = DEFAULT_SHOW_CONTROL_GROUPS
 static var audio_muted: bool = DEFAULT_AUDIO_MUTED
-static var keyboard_layout: KeyboardLayout = DEFAULT_KEYBOARD_LAYOUT
 
 ## Linear 0-1 per channel, indexed by AudioChannel. Read through volume().
 static var _volumes: PackedFloat32Array = PackedFloat32Array()
 
-## What the player bound each rebindable action to, by HotkeyAction.action_id.
+## What the player bound each rebindable action to, by HotkeyAction.action_id,
+## as a key POSITION's stored name - see KeyPosition.
 ##
 ## An action is in here ONLY once the player has touched it, which is what
 ## separates the two answers that look alike: no entry means "whatever the
 ## action was authored with", while an entry holding an empty string means the
-## player deliberately took its key away. Read through hotkey_override(), which
-## keeps that distinction, and reset by REMOVING the entry rather than by
-## writing the default into it.
+## action has no key - taken away, or given to another command. Read through
+## hotkey_override(), which keeps that distinction, and reset by REMOVING the
+## entry rather than by writing the default into it.
 static var _hotkeys: Dictionary = {}
 
 
@@ -220,8 +208,6 @@ static func load_from_disk() -> void:
 			DEFAULT_VOLUME))
 		_volumes[channel] = clampf(raw, 0.0, 1.0)
 
-	keyboard_layout = _read_enum(file, SECTION_HOTKEYS, KEYBOARD_LAYOUT_KEY,
-		DEFAULT_KEYBOARD_LAYOUT, KeyboardLayout.size()) as KeyboardLayout
 	_read_hotkeys(file)
 
 
@@ -236,10 +222,30 @@ static func _read_hotkeys(file: ConfigFile) -> void:
 	if !file.has_section(SECTION_HOTKEYS):
 		return
 
+	var positions: bool = file.has_section_key(SECTION_HOTKEYS, POSITIONS_MARKER)
 	for action_id: String in file.get_section_keys(SECTION_HOTKEYS):
-		if action_id == KEYBOARD_LAYOUT_KEY:
+		if action_id == POSITIONS_MARKER || action_id == OLD_KEYBOARD_LAYOUT_KEY:
 			continue
-		_hotkeys[action_id] = str(file.get_value(SECTION_HOTKEYS, action_id, ""))
+		var stored: String = str(file.get_value(SECTION_HOTKEYS, action_id, ""))
+		if positions:
+			_hotkeys[action_id] = stored
+		else:
+			_read_old_binding(action_id, stored)
+
+
+## One binding from a file written before keys were positions, when it named
+## whatever the key TYPED. It becomes the position of the key that types that
+## on this machine - the German Y becomes the bottom left key - and goes back
+## out in the new form on the next save.
+static func _read_old_binding(action_id: String, stored: String) -> void:
+	if stored.is_empty():
+		# Empty used to put a command on the card back on its square, which is
+		# now its default rather than "no key".
+		if !OLD_SQUARE_COMMANDS.has(action_id):
+			_hotkeys[action_id] = ""
+		return
+	var typed: Key = OS.find_keycode_from_string(stored.to_upper()) as Key
+	_hotkeys[action_id] = KeyPosition.to_stored(KeyPosition.from_layout_key(typed))
 
 
 ## Writes every value out. Called by each setter rather than by a save button:
@@ -256,7 +262,7 @@ static func save_to_disk() -> void:
 	file.set_value(SECTION_AUDIO, "muted", audio_muted)
 	for channel: int in range(AUDIO_KEYS.size()):
 		file.set_value(SECTION_AUDIO, AUDIO_KEYS[channel], _volumes[channel])
-	file.set_value(SECTION_HOTKEYS, KEYBOARD_LAYOUT_KEY, int(keyboard_layout))
+	file.set_value(SECTION_HOTKEYS, POSITIONS_MARKER, true)
 	for action_id: String in _hotkeys:
 		file.set_value(SECTION_HOTKEYS, action_id, str(_hotkeys[action_id]))
 
@@ -444,24 +450,6 @@ static func _apply_volume(channel: AudioChannel) -> void:
 
 	# linear_to_db(0) is -inf, which Godot accepts and which reads as silence.
 	AudioServer.set_bus_volume_db(index, linear_to_db(volume(channel)))
-
-
-## Which board the two grids read their bottom row off. Live only in the sense
-## that ControlsConfig asks every time it looks a letter up, so nothing already
-## drawn has to be told - the next refresh of a card carries the new letters.
-static func set_keyboard_layout(layout: KeyboardLayout) -> void:
-	if layout == keyboard_layout:
-		return
-	keyboard_layout = layout
-	save_to_disk()
-
-
-## What a layout is called on screen.
-static func keyboard_layout_name(layout: KeyboardLayout) -> String:
-	var index: int = int(layout)
-	if index < 0 || index >= KEYBOARD_LAYOUT_NAMES.size():
-		return "Layout %d" % index
-	return KEYBOARD_LAYOUT_NAMES[index]
 
 
 ## Whether the player has bound this action themselves. False leaves the

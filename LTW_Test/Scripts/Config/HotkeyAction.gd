@@ -1,25 +1,30 @@
 class_name HotkeyAction
 extends Resource
 
-## One command that answers to a key of its OWN rather than to the grid, and
-## that the player may rebind.
+## One command the player may give a key of their own. Docs/hotkeys.md 3.
 ##
 ## The command card is a GRID: an ability's key is read off the square it sits
 ## in, so nothing on a card names a key and the whole layout is learned once.
 ## This is the deliberate exception, and it is a small one. It exists for the
 ## handful of commands that mean the same thing on every card - Sell, Build,
 ## Cancel - which a player reaches for by NAME rather than by position, and for
-## the one screen that is not a card at all. Rebinding every ability in the game
+## the commands that are on no card at all. Rebinding every ability in the game
 ## is not on offer and never will be: there are hundreds of them and twelve
 ## squares, which is the whole reason the grid exists.
 ##
+## Two kinds, told apart by card_square:
+##   - a command ON THE CARD keeps its square whatever it is bound to, and out
+##     of the box answers to that square's key. Binding it moves its KEY only
+##   - a command on NO card answers to default_key out of the box
+##
 ## An action is SHARED, exactly as an ability is: several abilities may answer
-## to one of these, which is how the three Cancels are one line in the options
-## screen and one key to learn rather than three.
+## to one of these, which is how the four Cancels are one line in the options
+## screen and one key to learn rather than four.
 ##
 ## It holds no state of its own, for the same reason an ability holds none: one
 ## .tres is one object for the whole game. What the player chose lives in
-## UserSettings under action_id and is read back through current_key().
+## UserSettings under action_id, and every key here is a key POSITION - see
+## KeyPosition.
 
 ## Scene tree group every node that DRAWS or ANSWERS a hotkey joins, so the
 ## options screen can tell all of them at once that one moved.
@@ -28,6 +33,9 @@ extends Resource
 ## all: nothing here is a node and nothing routes to it. It is the same shape
 ## the health bar setting already uses to reach the bars standing in the world.
 const READERS_GROUP: String = "hotkey_readers"
+
+## Given to card_square for a command that is on no card.
+const NOT_ON_CARD: int = -1
 
 @export_group("Identity")
 ## The name this action is saved under in the settings file.
@@ -44,64 +52,72 @@ const READERS_GROUP: String = "hotkey_readers"
 @export var display_name: String = "Action"
 
 @export_group("Input")
-## The key it answers to out of the box, written the way Godot spells a
-## keycode: "T", "F5", "Space". Empty starts the action unbound, which for an
-## ability means it stays on the grid square it sits in.
+## The key a command on NO card answers to out of the box, as a key POSITION
+## named the way Godot names a physical key: "G", "Tab", "B". See KeyPosition.
 ##
-## May never be a key the command card grid already carries - see
-## ControlsConfig.is_key_reserved, which refuses one at boot as well as
-## refusing the player one in the options screen. A key that meant two things
-## at once would mean the grid stopped being learnable.
+## Empty for a command on the card, which answers to its square instead, and
+## never a key the game already answers - ControlsConfig refuses both at boot.
 @export var default_key: String = ""
-## Whether this action only ever answers a press the selected unit's command
-## card leaves alone, and so MAY sit on a grid letter.
+## The square every ability answering to this command sits on, or NOT_ON_CARD.
 ##
-## The one honest exception to the rule above. A key that yields to the card
-## never means two things at once: with a unit whose square carries the letter
-## selected, the square has it, and otherwise nothing else could. Selecting the
-## builder is the worked example - a player wants it under the hand, on the
-## grid, and every card that does not use that square leaves it free.
-##
-## Whoever ANSWERS the action is what makes this true, by asking
-## UnitPanel.claims_key first. Setting it on an action whose reader does not ask
-## is how one key comes to mean two commands.
-@export var yields_to_card: bool = false
+## The square is what a command on the card answers to until the player binds
+## another key, and it is a RULE as well as a default: CardLayout refuses an
+## ability naming this action on any other square, so "Sell is on S on every
+## card" is a check the build runs rather than a thing the files happen to
+## agree on.
+@export var card_square: int = NOT_ON_CARD
 
 
-## The key this action answers to right now: what the player bound, or the
-## authored default when they have not bound anything.
+## Whether this command sits on the card, and so keeps a square whatever key it
+## answers to.
+func is_on_card() -> bool:
+	return card_square >= 0
+
+
+## The key this command answers to right now, as a position: what the player
+## bound, or what it has out of the box when they have not bound anything.
 ##
-## Empty means NO KEY, which is a real answer rather than a missing one - both
-## an action that ships unbound and one the player deliberately cleared.
-func current_key() -> String:
+## KEY_NONE is a real answer rather than a missing one: an UNBOUND command. The
+## player took its key away, or gave it to another command, and a command on
+## the card does NOT fall back to its square when that happens - a player who
+## moved Sell off S so as to stop selling by accident must not quietly get S
+## back. The options screen says so in red instead.
+func current_key(config: ControlsConfig) -> Key:
 	if UserSettings.has_hotkey_override(action_id):
-		return UserSettings.hotkey_override(action_id)
-	return default_key
+		return KeyPosition.from_stored(UserSettings.hotkey_override(action_id))
+	return default_key_for(config)
 
 
-## The same answer as a keycode, or KEY_NONE for an action with no key. Asked
-## by everything that compares a press, so the string is parsed in one place.
-func current_keycode() -> Key:
-	var key: String = current_key()
-	if key.is_empty():
+## What this command answers to out of the box: its square's key for one on the
+## card, default_key for one on no card. KEY_NONE without a config, which is
+## a stripped-down test scene with no grid to read a square off.
+func default_key_for(config: ControlsConfig) -> Key:
+	if !is_on_card():
+		return KeyPosition.from_stored(default_key)
+	if config == null:
 		return KEY_NONE
-	return OS.find_keycode_from_string(key.to_upper()) as Key
+	return config.grid_key(card_square)
 
 
-## Whether a press is this action's key. False for an unbound action, which is
-## what stops a stray KEY_NONE from matching everything that is not a key.
-func matches(key: Key) -> bool:
-	if key == KEY_NONE:
+## Whether a press is this command's key. False for an unbound command, which
+## is what stops a stray KEY_NONE from matching everything that is not a key.
+func matches(config: ControlsConfig, physical: Key) -> bool:
+	if physical == KEY_NONE:
 		return false
-	return current_keycode() == key
+	return current_key(config) == physical
 
 
-## What a slot, a button or a tooltip draws for this action. Upper case, so it
-## reads the same as a grid letter beside it.
-func label() -> String:
-	return current_key().to_upper()
+## What a square, a button or a tooltip draws for this command: the letter the
+## player's own keyboard prints on its key. Empty for an unbound command.
+func label(config: ControlsConfig) -> String:
+	return KeyPosition.printed_label(current_key(config))
 
 
-## Whether the player has moved this off its authored default.
+## Whether this command has no key at all right now.
+func is_unbound(config: ControlsConfig) -> bool:
+	return current_key(config) == KEY_NONE
+
+
+## Whether the player has moved this off what it had out of the box.
 func is_customised() -> bool:
 	return UserSettings.has_hotkey_override(action_id)

@@ -28,9 +28,7 @@ corner_radius_bottom_left = 5
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_health_bars"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_keyboard_layout"]
-
-[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_page_scroll", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_edge_panning_button", "_volume_list", "_mute_button", "_keyboard_layout_row", "_hotkey_list", "_hotkey_message", "_reset_hotkeys_button", "_back_button")]
+[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_page_scroll", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_edge_panning_button", "_volume_list", "_mute_button", "_hotkey_list", "_hotkey_message", "_unbound_label", "_reset_hotkeys_button", "_back_button")]
 visible = false
 process_mode = 3
 layout_mode = 3
@@ -52,10 +50,10 @@ _control_groups_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/Game
 _edge_panning_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/GameplayPage/EdgePanningSetting/EdgePanningButton")
 _volume_list = NodePath("Layout/Column/PageStack/PageScroll/Pages/AudioPage/VolumeList")
 _mute_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/AudioPage/MuteSetting/MuteButton")
-_keyboard_layout_row = NodePath("Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/KeyboardLayoutSetting/Choices")
 _hotkey_list = NodePath("Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/HotkeyList")
 _hotkey_row_scene = ExtResource("4_hotkey_row")
 _hotkey_message = NodePath("Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/MessageLabel")
+_unbound_label = NodePath("Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/UnboundLabel")
 _reset_hotkeys_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/ResetRow/ResetButton")
 _back_button = NodePath("Layout/Column/Footer/BackButton")
 
@@ -373,42 +371,6 @@ theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
 theme_override_font_sizes/font_size = 16
 text = "Hotkeys"
 
-[node name="KeyboardLayoutSetting" type="HBoxContainer" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage" unique_id=1171557443]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Label" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/KeyboardLayoutSetting" unique_id=2025704977]
-custom_minimum_size = Vector2(182, 0)
-layout_mode = 2
-text = "Keyboard Layout"
-
-[node name="Choices" type="HBoxContainer" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/KeyboardLayoutSetting" unique_id=1704544871]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="EuropeanButton" type="Button" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/KeyboardLayoutSetting/Choices" unique_id=307082461]
-custom_minimum_size = Vector2(126, 0)
-layout_mode = 2
-toggle_mode = true
-button_pressed = true
-button_group = SubResource("ButtonGroup_keyboard_layout")
-text = "European"
-
-[node name="AmericanButton" type="Button" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage/KeyboardLayoutSetting/Choices" unique_id=26383066]
-custom_minimum_size = Vector2(126, 0)
-layout_mode = 2
-toggle_mode = true
-button_group = SubResource("ButtonGroup_keyboard_layout")
-text = "American"
-
-[node name="LayoutHintLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage" unique_id=643363867]
-custom_minimum_size = Vector2(532, 0)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
-theme_override_font_sizes/font_size = 10
-text = "Swaps Y and Z on the bottom row of the command card and the Research Center. Everything else is in the same place on both boards."
-autowrap_mode = 3
-
 [node name="CommandsLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage" unique_id=775321135]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
@@ -418,6 +380,14 @@ text = "Commands"
 [node name="HotkeyList" type="VBoxContainer" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage" unique_id=872416366]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="UnboundLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage"]
+visible = false
+custom_minimum_size = Vector2(532, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.36, 0.34, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
 
 [node name="MessageLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/HotkeysPage" unique_id=1521462578]
 custom_minimum_size = Vector2(532, 0)
@@ -439,7 +409,7 @@ custom_minimum_size = Vector2(532, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 10
-text = "Every other ability reads its key off the SQUARE it sits on, which is why only these few are here. Click a key to change it, then press the one you want - Escape keeps the old one, Delete leaves the command without a key. The command card's own letters are not on offer."
+text = "Every other ability reads its key off the SQUARE it sits on, which is why only these few are here. Click a key to change it, then press the one you want - Escape keeps the old one, Delete leaves the command without a key, and a command's own square puts it back there. The command card's other keys are not on offer."
 autowrap_mode = 3
 
 [node name="Footer" type="HBoxContainer" parent="Layout/Column" unique_id=240664108]

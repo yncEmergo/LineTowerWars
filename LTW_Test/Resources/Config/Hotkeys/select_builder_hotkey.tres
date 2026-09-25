@@ -6,5 +6,4 @@
 script = ExtResource("1_HotkeyAction")
 action_id = "select_builder"
 display_name = "Select Builder"
-default_key = "R"
-yields_to_card = true
+default_key = "B"

@@ -1,15 +1,52 @@
 class_name ControlsConfig
 extends Resource
 
-## Input timings, the command card layout and control group setup.
+## Input timings, the two key grids, the fixed keys and control group setup.
 ##
 ## Separate from GameConfig because none of this is a rule of the game - it is
-## how the player drives it, and it will grow as hotkeys and rebinding arrive.
+## how the player drives it. Docs/hotkeys.md is the whole model; this is where
+## it is authored and asked.
+##
+## **Every key here is a POSITION, never a letter.** A grid is a shape the hand
+## learns, so a square is the key in one place on the keyboard, named the way
+## Godot names a physical key - the US QWERTY key in that place. The bottom left
+## of the card is "z" here on every board, and draws whatever the player's own
+## keyboard prints there: Y on a German one. See KeyPosition.
 
 ## Keys that are only ever held WITH another one, so binding a command to one
 ## alone would give it a key that never arrives on its own.
 const MODIFIER_KEYS: Array[int] = [
 	KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META, KEY_CAPSLOCK,
+]
+
+## The keys the game answers wherever the player is, beyond the grid, the
+## camera and the control groups, and why each is refused for binding. Together
+## with those three this IS the fixed-key table of Docs/hotkeys.md 5:
+## fixed_key_reason asks all of them, and both the Hotkeys page and the boot
+## check ask it, so no key can be answered somewhere and forgotten here.
+const FIXED_KEYS: Dictionary = {
+	KEY_ESCAPE: "Escape backs out of whatever is open.",
+	KEY_F10: "F10 opens the game menu.",
+	KEY_BACKSPACE: "Backspace takes a command's key away on this page.",
+	KEY_DELETE: "Delete takes a command's key away on this page.",
+	KEY_KP_0: "The numpad digits are developer keys.",
+	KEY_KP_1: "The numpad digits are developer keys.",
+	KEY_KP_2: "The numpad digits are developer keys.",
+	KEY_KP_3: "The numpad digits are developer keys.",
+	KEY_KP_4: "The numpad digits are developer keys.",
+	KEY_KP_5: "The numpad digits are developer keys.",
+	KEY_KP_6: "The numpad digits are developer keys.",
+	KEY_KP_7: "The numpad digits are developer keys.",
+	KEY_KP_8: "The numpad digits are developer keys.",
+	KEY_KP_9: "The numpad digits are developer keys.",
+}
+
+## The camera's pan actions. Their keys are read out of the InputMap rather than
+## typed here a second time, so a key moved there is refused here without
+## anybody having to remember to.
+const CAMERA_ACTIONS: Array[StringName] = [
+	RTSCamera.ACTION_PAN_LEFT, RTSCamera.ACTION_PAN_RIGHT,
+	RTSCamera.ACTION_PAN_UP, RTSCamera.ACTION_PAN_DOWN,
 ]
 
 ## The mouse buttons that can carry a control group, in the order they are
@@ -33,52 +70,49 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 ## What steps through the subgroups of a selection holding more than one kind
 ## of unit, and back to the whole selection. Held with SHIFT it steps back.
 ##
-## A rebindable action rather than a command card square, because it is not an
-## ability and sits on no card - the same reason the Research Center's toggle
-## is one. Nothing NAMES this action the way an ability names its own
-## hotkey_action, so the reader has to be able to find it: hence the export.
+## A command with a key of its own rather than a command card square, because it
+## is not an ability and sits on no card. Nothing NAMES this action the way an
+## ability names its own hotkey_action, so the reader has to be able to find it:
+## hence the export.
 ##
 ## Belongs in hotkey_actions as well, which is what puts it in the options
 ## screen beside the others. Null, or an action with no key, leaves subgroups
 ## unreachable and everything else working.
 @export var subgroup_cycle_action: HotkeyAction
-## What selects the local player's builder, and the letter its square in the
+## What selects the local player's builder, and the key its square in the
 ## action bar draws.
 ##
-## Yields to the selected unit's command card, exactly as the Research Center's
-## toggle does, so it may take a grid letter: a unit whose card uses the letter
-## keeps it, and every other selection - nothing at all included - hands the
-## press to this. See HotkeyAction.yields_to_card.
+## Off the grid like every command with a key of its own, so it means the same
+## thing whatever is selected. The one place it does not is the open Research
+## Center, whose grid wins every key it covers - Docs/hotkeys.md 4.
 ##
 ## Belongs in hotkey_actions as well, for the options screen. Null, or an
 ## action with no key, leaves the builder reachable by its square alone.
 @export var builder_select_action: HotkeyAction
 
 @export_group("Command card")
-## Shape of the command card grid, in slots.
+## Shape of the command card grid, in squares.
 @export var command_columns: int = 4
 @export var command_rows: int = 3
-## Grid hotkeys, one row of letters per row of the card, left to right.
+## The keys of the grid, one row of key POSITIONS per row of the card, left to
+## right, named as Godot names a physical key. So the bottom row reads "zxcv"
+## here and draws Y X C V on a German board.
 ##
-## The card is a grid and the key is read straight off the POSITION, WC3 grid
-## style, so an ability never names a key of its own - it names the slot it
-## sits in and the key follows from that. Learn the shape once and it holds for
-## every unit in the game.
+## The card is a grid and a square's key is read straight off its POSITION, WC3
+## grid style, so an ability never names a key of its own - it names the square
+## it sits in and the key follows from that. Learn the shape once and it holds
+## for every unit in the game.
 ##
-## Letters, not keycodes, because a keycode in Godot already follows the
-## player's keyboard layout: on a German board the key printed Y reports KEY_Y,
-## which is exactly what the bottom left of the card should be. These rows are
-## authored EUROPEAN and an American board wants Y and Z swapped out of them,
-## which is UserSettings.keyboard_layout and happens in _letter_at rather than
-## in a second copy of the rows.
-##
-## Three straight rows of the keyboard and nothing else. A square that wants a
-## key the grid cannot give it - Sell, which is the same command on every card
-## a player ever opens - takes a key of its OWN instead, off the grid entirely:
-## see HotkeyAction and UnitAbility.hotkey_action.
-@export var command_hotkey_rows: PackedStringArray = PackedStringArray([
-	"qwer", "asdf", "yxcv",
-])
+## Empty in the script on purpose: the .tres is the authority, and a default
+## matching it would be stripped from it on the editor's next save.
+@export var command_key_rows: PackedStringArray = PackedStringArray()
+## The squares a PASSIVE may take, in the order a card fills them. CardLayout
+## refuses one anywhere else, which is what keeps where to read a unit's rule in
+## one place across every tower and every creep. Docs/hotkeys.md 2.
+@export var passive_squares: PackedInt32Array = PackedInt32Array()
+## The squares a TRAIT may take - the facts a creep's stats own, drawn on its
+## card so they can be read. The bottom row. See TraitPassive.
+@export var trait_squares: PackedInt32Array = PackedInt32Array()
 
 @export_group("Rebindable keys")
 ## Every command that answers to a key of its own rather than to a square, in
@@ -87,18 +121,20 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 ## THE LIST IS THE FEATURE. The card is a grid precisely so that hundreds of
 ## abilities need no keys of their own, and this is the short, authored set of
 ## exceptions - the commands that mean the same thing on every card, plus the
-## one screen that is not a card. An ability joins it by naming one of these in
-## its own hotkey_action, and several abilities may name the same one.
+## ones that are on no card. An ability joins it by naming one of these in its
+## own hotkey_action, and several abilities may name the same one.
 @export var hotkey_actions: Array[HotkeyAction] = []
+## What every Cancel answers to. Named here because its SQUARE is a rule of its
+## own: the panel puts Cancel there on every menu a card opens, so CardLayout
+## keeps that square free on all of them.
+@export var cancel_action: HotkeyAction
 
 @export_group("Research Center")
-## What opens and closes the screen, and the letter its button draws.
+## What opens the screen, and the key its button draws.
 ##
-## A rebindable action rather than a square, because the screen is not a unit
-## and has no card to sit on. It also has the weakest claim on its letter: the
-## selected unit's command card answers first and this takes only what the card
-## leaves alone, so a tower whose square carries this letter keeps it. Null, or
-## an action with no key, for a screen reachable by its button alone.
+## Only OPENS it. While the screen is up its grid wins every key it covers, and
+## this key is one of them - so it is closed by Escape, by its own close button,
+## by its square on the action bar, or by selecting something. Docs/hotkeys.md 4.
 ##
 ## Belongs in hotkey_actions as well, which is what puts it in the options
 ## screen beside the others; this export is how the screen itself finds it.
@@ -107,18 +143,13 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 ## half of the grid, and three technologies across for each of them.
 @export var research_columns: int = 6
 @export var research_rows: int = 5
-## Grid hotkeys, one row of letters per row of the grid, left to right. Same
-## rule as the command card: the key belongs to the SQUARE, so a technology
-## names where it sits and never which key it answers to.
+## Its keys, one row of key POSITIONS per row of the grid, named as the command
+## card's are. Same rule as the card: the key belongs to the SQUARE, so a
+## technology names where it sits and never which key it answers to.
 ##
-## The third row is the German "yxcvbn" for the same reason the command card's
-## is - a keycode already follows the player's layout, so the key printed Y
-## reports KEY_Y. An American layout wants "zxcvbn", and that swap belongs in a
-## settings menu once one exists.
-@export var research_hotkey_rows: PackedStringArray = PackedStringArray([
-	"qwerty", "asdfgh", "yxcvbn", "qwerty", "asdfgh",
-])
-## First row whose letters are pressed with SHIFT held, drawn as "S+Q".
+## Empty in the script for the reason command_key_rows is.
+@export var research_key_rows: PackedStringArray = PackedStringArray()
+## First row whose keys are pressed with SHIFT held, drawn as "S+Q".
 ##
 ## The grid is deeper than a keyboard has comfortable rows, so the bottom rows
 ## repeat the top ones with a modifier rather than reaching for keys nobody can
@@ -151,141 +182,92 @@ const MOUSE_GROUP_LABELS: Array[String] = ["M4", "M5"]
 @export var hold_repeat_ramp_seconds: float = 1.5
 
 
-## Slots one command card holds.
+## Squares one command card holds.
 func command_slot_count() -> int:
 	return maxi(0, command_columns) * maxi(0, command_rows)
 
 
-## The Nth letter of the grid, counting from 0 at the top left and running left
-## to right, then down. "Q" for the first.
+## The key POSITION of one square of the card, counting from 0 at the top left
+## and running left to right, then down. KEY_NONE past the authored rows, which
+## leaves a square usable by mouse and simply unbound.
+func grid_key(square: int) -> Key:
+	return _key_at(command_key_rows, command_columns, square)
+
+
+## Which square of the card a key position is, or -1 for a key the grid does
+## not carry.
+func grid_square_for_key(physical: Key) -> int:
+	if physical == KEY_NONE:
+		return -1
+	for square: int in range(command_slot_count()):
+		if grid_key(square) == physical:
+			return square
+	return -1
+
+
+## What one square of the card draws in its corner: the letter the player's own
+## keyboard prints on that square's key.
 ##
-## The letter one square of the GRID carries, which is not always the letter
-## the card draws on that square: an ability keeps the key of the square it
-## claimed even when it has to sit on another one. What a given square of a
-## given card draws is that card's answer, because only the card knows what is
-## on it - see UnitPanel._letter_for.
+## The square's OWN key. What a given square of a given card draws can differ -
+## a command bound to a key of its own draws that one - which is the card's
+## answer, because only the card knows what is on it. See UnitPanel.
+func grid_label(square: int) -> String:
+	return KeyPosition.printed_label(grid_key(square))
+
+
+## Whether a press is the key that opens the Research Center. Whether the
+## screen is already open, in which case its grid has the key, is the screen's
+## own question.
+func is_research_toggle_key(physical: Key) -> bool:
+	return research_toggle_action != null && research_toggle_action.matches(self, physical)
+
+
+## Whether a press is the key that steps the subgroup of a selection on. Shift
+## only picks the direction, so it is not part of the question.
+func is_subgroup_cycle_key(physical: Key) -> bool:
+	return subgroup_cycle_action != null && subgroup_cycle_action.matches(self, physical)
+
+
+## Whether a press is the key that selects the builder.
+func is_builder_select_key(physical: Key) -> bool:
+	return builder_select_action != null && builder_select_action.matches(self, physical)
+
+
+## Why a key can never be given to a command, or empty when it can.
 ##
-## Empty when the rows do not reach that far, which leaves a square usable by
-## mouse and simply unbound.
-func grid_letter(index: int) -> String:
-	return _letter_at(command_hotkey_rows, command_columns, index)
-
-
-## Whether a press is the key that opens and closes the Research Center.
-##
-## Shift is part of the answer, exactly as it is for a square: the shifted
-## letters belong to the grid's bottom rows, so Shift and this letter is a
-## technology rather than the screen shutting under the player's hands.
-##
-## Asked rather than answered with a keycode, so the empty letter - no key at
-## all - is handled here rather than in every caller.
-func is_research_toggle_key(key: Key, shift_held: bool) -> bool:
-	if shift_held || research_toggle_action == null:
-		return false
-	return research_toggle_action.matches(key)
-
-
-## Whether a press is the key that steps the subgroup of a selection on.
-##
-## Shift is NOT part of the answer, unlike the Research Center's toggle: there
-## it picks between a screen and a technology and so changes which command was
-## meant, while here it only picks the direction. So one key, asked once.
-func is_subgroup_cycle_key(key: Key) -> bool:
-	if subgroup_cycle_action == null:
-		return false
-	return subgroup_cycle_action.matches(key)
-
-
-## Whether a press is the key that selects the builder. Whether the command
-## card claims it first is the caller's question, because only the HUD can
-## see the card.
-func is_builder_select_key(key: Key) -> bool:
-	if builder_select_action == null:
-		return false
-	return builder_select_action.matches(key)
-
-
-## The letter the Research Center's own button draws, which is whatever its
-## action currently answers to. Empty for a screen with no key at all.
-func research_toggle_label() -> String:
-	if research_toggle_action == null:
-		return ""
-	return research_toggle_action.label()
-
-
-## The letter the builder's square in the action bar draws. Empty for none.
-func builder_select_label() -> String:
-	if builder_select_action == null:
-		return ""
-	return builder_select_action.label()
-
-
-## Whether a key is already spoken for by the game itself, and so can never be
-## handed to a rebindable action.
-##
-## Everything it refuses is a key a player must not be ABLE to take, rather
-## than one it would merely be odd to take. See reserved_key_reason.
-func is_key_reserved(key: Key) -> bool:
-	return !reserved_key_reason(key).is_empty()
-
-
-## The same question answered in words, so the options screen can say why it
-## refused rather than only that it did. Empty means the key is free.
-##
-## The command card's letters are refused in BOTH layouts rather than only in
-## the one in use, so switching board later can never turn a binding a player
-## already made into a key that means two things at once. The rest are the keys
-## the game answers wherever you are: the control groups, the two that back out
-## and open the menu, and a bare modifier, which is not a key anything could
-## answer to on its own.
-##
-## Naming the action being bound lets one that yields to the card through the
-## grid check - see HotkeyAction.yields_to_card. Everything else still holds.
-func reserved_key_reason(key: Key, for_action: HotkeyAction = null) -> String:
-	if key == KEY_NONE:
+## Every key refused here is one a player must not be ABLE to take, rather than
+## one it would merely be odd to take: a key the game already answers wherever
+## the player is, so binding it would make one press mean two things. The grid
+## keys first among them - no command may borrow a square's key, which is what
+## keeps the grid learnable. The one exception, a command on the card being put
+## back on its OWN square, is the caller's to allow, since only it knows which
+## command is being bound. See Docs/hotkeys.md 5.
+func fixed_key_reason(physical: Key) -> String:
+	if physical == KEY_NONE:
 		return "That is not a key."
-	if key == KEY_ESCAPE:
-		return "Escape backs out of whatever is open."
-	if key == KEY_F10:
-		return "F10 opens the game menu."
-	if key in MODIFIER_KEYS:
+	if int(physical) in MODIFIER_KEYS:
 		return "A modifier on its own is not a key."
-	var yields: bool = for_action != null && for_action.yields_to_card
-	if !yields && _is_grid_key(key):
-		return "%s is a command card square." % OS.get_keycode_string(key)
-	if control_group_for_key(key) > 0:
-		return "%s selects a control group." % OS.get_keycode_string(key)
-	return ""
+	if FIXED_KEYS.has(int(physical)):
+		return str(FIXED_KEYS[int(physical)])
+	return _answered_key_reason(physical)
 
 
-## Which rebindable action currently answers to a key, or null when none does.
+## Which command currently answers to a key, or null when none does.
 ##
-## Asked by the options screen before it binds anything, so taking a key gives
-## it up wherever it was - which is how every hotkey menu behaves, and the only
-## way one key can be trusted to mean one command.
-func action_holding_key(key: Key, ignore: HotkeyAction = null) -> HotkeyAction:
-	if key == KEY_NONE:
+## Asked by the options screen before it binds anything, so taking a key takes
+## it off whichever command had it - which is how every hotkey menu behaves,
+## and the only way one key can be trusted to mean one command.
+func action_holding_key(physical: Key, ignore: HotkeyAction = null) -> HotkeyAction:
+	if physical == KEY_NONE:
 		return null
 
 	for action: HotkeyAction in hotkey_actions:
 		if action == null || action == ignore:
 			continue
-		if action.matches(key):
+		if action.matches(self, physical):
 			return action
 
 	return null
-
-
-## Whether a key lands on a command card square in EITHER layout.
-func _is_grid_key(key: Key) -> bool:
-	for row: String in command_hotkey_rows:
-		for column: int in range(row.length()):
-			var letter: String = row[column].to_upper()
-			if OS.find_keycode_from_string(letter) == key:
-				return true
-			if OS.find_keycode_from_string(_swapped_letter(letter)) == key:
-				return true
-	return false
 
 
 ## How many control groups there are altogether: the numbered ones, and the
@@ -301,12 +283,14 @@ func control_group_total() -> int:
 	return total
 
 
-## Which group a key recalls, or 0 for a key that is not one of them. The
-## numbered groups run from 1, so the count is how far along the row they reach.
-func control_group_for_key(key: Key) -> int:
+## Which group a key position recalls, or 0 for a key that is not one of them.
+## The numbered groups run from 1, so the count is how far along the row they
+## reach. Positions like every other key, so the digit row works on a board
+## that types something else on it without Shift.
+func control_group_for_key(physical: Key) -> int:
 	if control_group_count <= 0:
 		return 0
-	var index: int = int(key) - int(KEY_1) + 1
+	var index: int = int(physical) - int(KEY_1) + 1
 	if index < 1 || index > mini(control_group_count, 9):
 		return 0
 	return index
@@ -328,7 +312,7 @@ func control_group_for_button(button: MouseButton) -> int:
 func control_group_label(index: int) -> String:
 	var numbered: int = maxi(0, control_group_count)
 	if index >= 1 && index <= numbered:
-		return OS.get_keycode_string((int(KEY_1) + index - 1) as Key)
+		return KeyPosition.printed_label((int(KEY_1) + index - 1) as Key)
 
 	var at: int = index - numbered - 1
 	if control_group_mouse_buttons && at >= 0 && at < MOUSE_GROUP_LABELS.size():
@@ -343,15 +327,16 @@ func research_slot_count() -> int:
 
 
 ## What a Research Center square draws and answers to, modifier included:
-## "Q" for the top left, "S+Q" once the rows run out of unmodified letters.
-func research_hotkey_label_for_slot(slot: int) -> String:
-	var letter: String = _letter_at(research_hotkey_rows, research_columns, slot)
-	if letter.is_empty() || !research_needs_shift(slot):
-		return letter
-	return "S+%s" % letter
+## "Q" for the top left, "S+Q" once the rows run out of unmodified keys.
+func research_label_for_slot(slot: int) -> String:
+	var label: String = KeyPosition.printed_label(
+		_key_at(research_key_rows, research_columns, slot))
+	if label.is_empty() || !research_needs_shift(slot):
+		return label
+	return "S+%s" % label
 
 
-## Whether a square's letter is pressed with Shift held.
+## Whether a square's key is pressed with Shift held.
 func research_needs_shift(slot: int) -> bool:
 	if slot < 0 || research_columns <= 0:
 		return false
@@ -361,36 +346,31 @@ func research_needs_shift(slot: int) -> bool:
 	return row >= research_shift_from_row
 
 
-## Which Research Center square a key press lands on, or -1 for a key that is
-## not one of its hotkeys.
+## Which Research Center square a key position lands on, or -1 for a key that
+## is not one of its keys.
 ##
 ## The modifier is part of the answer rather than checked by the caller,
-## because the same letter means two different squares with and without it -
+## because the same key means two different squares with and without it -
 ## which is the whole reason the bottom rows can exist at all.
-func research_slot_for_key(key: Key, shift_held: bool) -> int:
-	if key == KEY_NONE:
+func research_slot_for_key(physical: Key, shift_held: bool) -> int:
+	if physical == KEY_NONE:
 		return -1
 
 	for slot in range(research_slot_count()):
 		if research_needs_shift(slot) != shift_held:
 			continue
-		var letter: String = _letter_at(research_hotkey_rows, research_columns, slot)
-		if !letter.is_empty() && OS.find_keycode_from_string(letter) == key:
+		if _key_at(research_key_rows, research_columns, slot) == physical:
 			return slot
 
 	return -1
 
 
-## The letter one square of a grid carries, from the rows of letters that grid
-## was given. Shared by the command card and the Research Center, which lay
-## their keys out by exactly the same rule.
-##
-## The player's board is applied HERE, once, so every reader of a square -
-## the letter a slot draws, the key a press lands on, both grids - follows it
-## without knowing it exists.
-func _letter_at(rows: PackedStringArray, columns: int, slot: int) -> String:
+## The key position of one square of a grid, from the rows of positions that
+## grid was given. Shared by the command card and the Research Center, which
+## lay their keys out by exactly the same rule.
+func _key_at(rows: PackedStringArray, columns: int, slot: int) -> Key:
 	if slot < 0 || columns <= 0:
-		return ""
+		return KEY_NONE
 
 	# Integer division is the point: the quotient is the row, the remainder the
 	# column.
@@ -398,151 +378,197 @@ func _letter_at(rows: PackedStringArray, columns: int, slot: int) -> String:
 	var row: int = slot / columns
 	var column: int = slot % columns
 	if row >= rows.size():
+		return KEY_NONE
+
+	var keys: String = rows[row]
+	if column >= keys.length():
+		return KEY_NONE
+	return KeyPosition.from_stored(keys[column])
+
+
+## The fixed keys a SYSTEM answers rather than the table: a square of the grid,
+## a control group, the camera. Empty for a key none of them answers.
+func _answered_key_reason(physical: Key) -> String:
+	var what: String = ""
+	if grid_square_for_key(physical) >= 0:
+		what = "is a command card square"
+	elif control_group_for_key(physical) > 0:
+		what = "selects a control group"
+	elif _is_camera_key(physical):
+		what = "pans the camera"
+	if what.is_empty():
 		return ""
-
-	var letters: String = rows[row]
-	if column >= letters.length():
-		return ""
-	return _layout_letter(letters[column].to_upper())
+	return "%s %s." % [KeyPosition.printed_label(physical), what]
 
 
-## One authored letter as the player's board actually prints it. Y and Z trade
-## places on an American board and nothing else moves, which is why this is a
-## swap of two letters rather than a second set of rows to keep in step.
-func _layout_letter(letter: String) -> String:
-	if UserSettings.keyboard_layout != UserSettings.KeyboardLayout.AMERICAN:
-		return letter
-	return _swapped_letter(letter)
-
-
-## The letter that trades places with this one between the two boards, or the
-## letter itself when it does not move.
-func _swapped_letter(letter: String) -> String:
-	match letter:
-		"Y":
-			return "Z"
-		"Z":
-			return "Y"
-		_:
-			return letter
-
-
-## Logs every row that cannot fill the card's width, and answers whether the
-## layout is complete. Meant for one call at boot, the same way the damage
-## table is checked.
-func validate() -> bool:
-	var complete: bool = true
-
-	if command_hotkey_rows.size() < command_rows:
-		Log.err("Command card has more rows than there are hotkey rows", {
-			"rows": command_rows,
-			"hotkey_rows": command_hotkey_rows.size(),
-		})
-		complete = false
-
-	for index in range(command_hotkey_rows.size()):
-		if command_hotkey_rows[index].length() >= command_columns:
+## Whether a key is one the camera pans on, read out of the InputMap.
+func _is_camera_key(physical: Key) -> bool:
+	for action: StringName in CAMERA_ACTIONS:
+		if !InputMap.has_action(action):
 			continue
-		Log.err("Command card hotkey row is too short for the grid", {
-			"row": index,
-			"letters": command_hotkey_rows[index].length(),
-			"columns": command_columns,
+		for event: InputEvent in InputMap.action_get_events(action):
+			var key: InputEventKey = event as InputEventKey
+			if key != null && (key.physical_keycode == physical || key.keycode == physical):
+				return true
+	return false
+
+
+## Logs everything about the two grids and the commands that would leave a key
+## unreachable or meaning two things, and answers whether the layout is
+## complete. Meant for one call at boot, the same way the damage table is
+## checked.
+func validate() -> bool:
+	var complete: bool = _validate_grid(command_key_rows, command_columns, command_rows,
+		command_rows, "Command card")
+	complete = _validate_grid(research_key_rows, research_columns, research_rows,
+		research_shift_from_row, "Research Center") && complete
+	complete = _validate_squares(passive_squares, "passive") && complete
+	complete = _validate_squares(trait_squares, "trait") && complete
+	return _validate_hotkey_actions() && complete
+
+
+## One grid: a row of keys for every row of squares, each long enough, each key
+## a real one, and no key twice on one layer - a layer being the rows pressed
+## alone, or the rows pressed with Shift. A key on two squares of a layer would
+## draw on both and press only the first.
+func _validate_grid(rows: PackedStringArray, columns: int, row_count: int,
+		shift_from_row: int, what: String) -> bool:
+	var complete: bool = true
+	if rows.size() < row_count:
+		Log.err("A key grid has more rows than there are rows of keys", {
+			"grid": what,
+			"rows": row_count,
+			"key_rows": rows.size(),
 		})
 		complete = false
 
-	return _validate_hotkey_actions() && _validate_research() && complete
+	var seen: Dictionary = {}
+	for row: int in range(mini(rows.size(), row_count)):
+		if rows[row].length() < columns:
+			Log.err("A row of keys is too short for its grid", {
+				"grid": what,
+				"row": row,
+				"keys": rows[row].length(),
+				"columns": columns,
+			})
+			complete = false
+		for column: int in range(mini(rows[row].length(), columns)):
+			var key: Key = KeyPosition.from_stored(rows[row][column])
+			var layer_key: String = "%s:%d" % [row >= shift_from_row, key]
+			if key == KEY_NONE || seen.has(layer_key):
+				Log.err("A key grid names a key that is not one, or one key twice", {
+					"grid": what,
+					"row": row,
+					"column": column,
+					"key": rows[row][column],
+				})
+				complete = false
+			seen[layer_key] = true
+
+	return complete
 
 
-## The rebindable actions: that each has an id of its own, and that no default
-## key was authored onto something the game already answers.
+func _validate_squares(squares: PackedInt32Array, what: String) -> bool:
+	if squares.is_empty():
+		Log.err("The command card names no squares for a kind of passive", what)
+		return false
+	for square: int in squares:
+		if square < 0 || square >= command_slot_count():
+			Log.err("A passive square is off the command card", {"kind": what, "square": square})
+			return false
+	return true
+
+
+## The commands with a key of their own: an id each, a square on the card for
+## the ones that sit on it, and no default key the game already answers.
 ##
-## Both are boot-time mistakes rather than runtime ones - a duplicate id means
-## two commands sharing one line of the settings file, and a default on a grid
-## letter means a key that does two things for every player who never opens the
+## All boot-time mistakes rather than runtime ones - a duplicate id means two
+## commands sharing one line of the settings file, and a default on a fixed key
+## means a key that does two things for every player who never opens the
 ## options screen.
 func _validate_hotkey_actions() -> bool:
 	var complete: bool = true
-	var seen: Dictionary = {}
+	var ids: Dictionary = {}
+	var defaults: Dictionary = {}
 
 	for action: HotkeyAction in hotkey_actions:
 		if action == null:
 			Log.err("Controls config lists an empty hotkey action")
 			complete = false
 			continue
-		complete = _validate_one_action(action, seen) && complete
+		complete = _validate_one_action(action, ids, defaults) && complete
 
-	if research_toggle_action != null && !hotkey_actions.has(research_toggle_action):
-		Log.warn("Research Center toggle is not in hotkey_actions, so it cannot be rebound", {
-			"action": research_toggle_action.action_id,
-		})
+	for named: HotkeyAction in [research_toggle_action, subgroup_cycle_action,
+			builder_select_action, cancel_action]:
+		if named != null && !hotkey_actions.has(named):
+			Log.warn("A named command is not in hotkey_actions, so it cannot be rebound", {
+				"action": named.action_id,
+			})
 
-	if subgroup_cycle_action != null && !hotkey_actions.has(subgroup_cycle_action):
-		Log.warn("Subgroup cycle is not in hotkey_actions, so it cannot be rebound", {
-			"action": subgroup_cycle_action.action_id,
-		})
-
-	if builder_select_action != null && !hotkey_actions.has(builder_select_action):
-		Log.warn("Builder select is not in hotkey_actions, so it cannot be rebound", {
-			"action": builder_select_action.action_id,
-		})
+	if cancel_action == null || !cancel_action.is_on_card():
+		Log.err("Controls config names no Cancel on the card, menus have nowhere to put one")
+		complete = false
 
 	return complete
 
 
-func _validate_one_action(action: HotkeyAction, seen: Dictionary) -> bool:
+func _validate_one_action(action: HotkeyAction, ids: Dictionary,
+		defaults: Dictionary) -> bool:
 	if action.action_id.is_empty():
 		Log.err("Hotkey action has no action_id, nothing can save it", action.display_name)
 		return false
-
-	if seen.has(action.action_id):
+	if ids.has(action.action_id):
 		Log.err("Two hotkey actions claim the same action_id", action.action_id)
 		return false
-	seen[action.action_id] = true
+	ids[action.action_id] = true
 
+	var complete: bool = _validate_card_square(action) if action.is_on_card() \
+		else _validate_default_key(action)
+	return _claim_default(action, defaults) && complete
+
+
+## A command on the card: its square is on the card. Its default_key goes
+## unread, since the square is what it answers to out of the box.
+func _validate_card_square(action: HotkeyAction) -> bool:
+	if !action.default_key.is_empty():
+		Log.warn("A command on the card answers to its square, its default_key is unused",
+			action.action_id)
+	if action.card_square < command_slot_count():
+		return true
+	Log.err("A command's square is off the command card", {
+		"action": action.action_id,
+		"square": action.card_square,
+	})
+	return false
+
+
+## A command on no card: its default is a real key, and not one the game
+## already answers wherever the player is. None at all is allowed.
+func _validate_default_key(action: HotkeyAction) -> bool:
 	if action.default_key.is_empty():
 		return true
+	var reason: String = fixed_key_reason(action.default_key_for(self))
+	if reason.is_empty():
+		return true
+	Log.err("Hotkey action has a default key it cannot be given", {
+		"action": action.action_id,
+		"key": action.default_key,
+		"reason": reason,
+	})
+	return false
 
-	var key: Key = OS.find_keycode_from_string(action.default_key.to_upper()) as Key
+
+## Two commands shipping on one key would leave one of them dead for every
+## player who never opens the options screen.
+func _claim_default(action: HotkeyAction, defaults: Dictionary) -> bool:
+	var key: int = int(action.default_key_for(self))
 	if key == KEY_NONE:
-		Log.err("Hotkey action has a default key that is not a key", {
-			"action": action.action_id,
-			"key": action.default_key,
+		return true
+	if defaults.has(key):
+		Log.err("Two commands ship on the same key", {
+			"key": KeyPosition.to_stored(key as Key),
+			"actions": [defaults[key], action.action_id],
 		})
 		return false
-
-	var reason: String = reserved_key_reason(key, action)
-	if !reason.is_empty():
-		Log.err("Hotkey action has a default key the game already answers", {
-			"action": action.action_id,
-			"key": action.default_key,
-			"reason": reason,
-		})
-		return false
-
+	defaults[key] = action.action_id
 	return true
-
-
-## The same two checks over the Research Center grid, which is laid out by the
-## same rule and can be short in the same two ways. Its toggle key is an action
-## like any other and is checked with them.
-func _validate_research() -> bool:
-	var complete: bool = true
-
-	if research_hotkey_rows.size() < research_rows:
-		Log.err("Research Center has more rows than there are hotkey rows", {
-			"rows": research_rows,
-			"hotkey_rows": research_hotkey_rows.size(),
-		})
-		complete = false
-
-	for index in range(research_hotkey_rows.size()):
-		if research_hotkey_rows[index].length() >= research_columns:
-			continue
-		Log.err("Research Center hotkey row is too short for the grid", {
-			"row": index,
-			"letters": research_hotkey_rows[index].length(),
-			"columns": research_columns,
-		})
-		complete = false
-
-	return complete

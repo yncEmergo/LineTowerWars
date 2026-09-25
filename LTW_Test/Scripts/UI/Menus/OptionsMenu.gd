@@ -61,8 +61,6 @@ signal closed
 @export var _volume_list: Container
 ## Silences everything at once, independently of the six levels.
 @export var _mute_button: BaseButton
-## European / American, in UserSettings.KeyboardLayout order.
-@export var _keyboard_layout_row: BoxContainer
 ## Parent for one HotkeyRow per rebindable action. Filled at runtime, because
 ## which commands are rebindable is authored on ControlsConfig and this screen
 ## should not hold a second copy of that list.
@@ -72,6 +70,11 @@ signal closed
 ## exists: a key the game already answers has to be turned down, and a button
 ## that simply does not change is indistinguishable from a broken one.
 @export var _hotkey_message: Label
+## One red line for every command that has no key at all, for as long as that
+## stays true. Separate from the message above, which only says what the last
+## press did: a command left unbound by taking its key for another is easy to
+## miss in a one-line reply, and it is a key the player can no longer press.
+@export var _unbound_label: Label
 ## Forgets every binding the player made, everywhere on this page.
 @export var _reset_hotkeys_button: Button
 @export var _back_button: Button
@@ -89,7 +92,6 @@ func _ready() -> void:
 	_connect_row(_tab_row, _on_tab_pressed)
 	_connect_row(_window_mode_row, _on_window_mode_pressed)
 	_connect_row(_health_bar_row, _on_health_bar_pressed)
-	_connect_row(_keyboard_layout_row, _on_keyboard_layout_pressed)
 
 	if _shadows_button != null:
 		_shadows_button.toggled.connect(_on_shadows_toggled)
@@ -154,7 +156,6 @@ func _sync_from_settings() -> void:
 		_control_groups_button.set_pressed_no_signal(UserSettings.show_control_groups)
 	if _edge_panning_button != null:
 		_edge_panning_button.set_pressed_no_signal(UserSettings.edge_panning)
-	_press_in_row(_keyboard_layout_row, int(UserSettings.keyboard_layout))
 	if _mute_button != null:
 		_mute_button.set_pressed_no_signal(UserSettings.audio_muted)
 	_refresh_volume_rows()
@@ -270,14 +271,6 @@ func _on_mute_toggled(pressed: bool) -> void:
 	UserSettings.set_audio_muted(pressed)
 
 
-## Which board the two grids read their bottom row off. Y and Z trade places
-## and nothing else moves, so every letter already on screen has to be redrawn
-## and no other setting has to be touched.
-func _on_keyboard_layout_pressed(index: int) -> void:
-	UserSettings.set_keyboard_layout(index as UserSettings.KeyboardLayout)
-	_announce_hotkeys_changed()
-
-
 # --- hotkeys ---------------------------------------------------------------
 
 ## One row per rebindable action, in the order ControlsConfig lists them.
@@ -308,38 +301,46 @@ func _build_hotkey_rows() -> void:
 		_hotkey_rows.append(row)
 
 
-## A row asked for a key.
+## A row asked for a key, as a key position. Docs/hotkeys.md 3.
 ##
-## Two things can stop it: a key the game already answers wherever you are,
-## which is refused outright, and a key another action holds, which is taken
-## off that action rather than shared. One key means one command - a hotkey
-## menu that let two of them agree would only be lying about what a press does.
+## A key the game already answers wherever the player is - a square of the
+## grid, a control group, the camera - is refused outright, with the reason.
+## The one grid key a row takes is its command's OWN square, which puts it back
+## there. And a key another command holds is TAKEN off that command rather than
+## shared, leaving it unbound: one key means one command, and a hotkey menu that
+## let two of them agree would only be lying about what a press does.
 func _on_key_chosen(action: HotkeyAction, key: Key) -> void:
 	var config: ControlsConfig = _controls
 	if config == null || action == null:
 		return
 
-	var reason: String = config.reserved_key_reason(key, action)
-	if !reason.is_empty():
-		_say(reason)
-		_refresh_hotkey_rows()
-		return
+	var back_to_default: bool = key == action.default_key_for(config)
+	if !back_to_default:
+		var reason: String = config.fixed_key_reason(key)
+		if !reason.is_empty():
+			_say(reason)
+			_refresh_hotkey_rows()
+			return
 
-	var pressed: String = OS.get_keycode_string(key)
+	var label: String = KeyPosition.printed_label(key)
 	var held_by: HotkeyAction = config.action_holding_key(key, action)
-	UserSettings.set_hotkey_override(action.action_id, pressed)
+	if back_to_default:
+		UserSettings.clear_hotkey_override(action.action_id)
+	else:
+		UserSettings.set_hotkey_override(action.action_id, KeyPosition.to_stored(key))
 	if held_by == null:
-		_say("%s is now %s." % [action.display_name, pressed])
+		_say("%s is now %s." % [action.display_name, label])
 	else:
 		UserSettings.set_hotkey_override(held_by.action_id, "")
-		_say("%s is now %s, and %s has no key." % [
-			action.display_name, pressed, held_by.display_name,
+		_say("%s is now %s, which it took from %s." % [
+			action.display_name, label, held_by.display_name,
 		])
 	_announce_hotkeys_changed()
 
 
-## A row asked for NO key. An ability with none falls back to the square it
-## sits in, which is where every other ability in the game already lives.
+## A row asked for NO key. The command is then unbound - one on the card does
+## not fall back to its square - and the red line below the list says so until
+## it has a key again.
 func _on_key_cleared(action: HotkeyAction) -> void:
 	if action == null:
 		return
@@ -365,10 +366,27 @@ func _announce_hotkeys_changed() -> void:
 
 
 ## Every row, not only the one that changed: taking a key gives it up wherever
-## it was, so a rebind can move two rows at once.
+## it was, so a rebind can move two rows at once. The red lines follow them.
 func _refresh_hotkey_rows() -> void:
 	for row: HotkeyRow in _hotkey_rows:
 		row.refresh()
+	_refresh_unbound_warning()
+
+
+## One line per command with no key at all. Hidden when every command has one,
+## which is the ordinary case, so the space is not reserved for a warning that
+## is almost never there.
+func _refresh_unbound_warning() -> void:
+	var config: ControlsConfig = _controls
+	if _unbound_label == null || config == null:
+		return
+
+	var lines: PackedStringArray = PackedStringArray()
+	for action: HotkeyAction in config.hotkey_actions:
+		if action != null && action.is_unbound(config):
+			lines.append("%s is unbound!" % action.display_name)
+	_unbound_label.text = "\n".join(lines)
+	_unbound_label.visible = !lines.is_empty()
 
 
 func _say(text: String) -> void:
