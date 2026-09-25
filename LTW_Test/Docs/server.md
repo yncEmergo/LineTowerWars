@@ -301,6 +301,13 @@ all — no port forward, no router login, no public address of its own.
 | Ask what it is running | `.\Tools\deploy_server.ps1 -Check` |
 | Watch its log | `.\Tools\deploy_server.ps1 -Log` |
 | Restart without pulling | `.\Tools\deploy_server.ps1 -Restart` |
+| Read how the box is set up - service file, systemd settings, firewall, machine - into a file, changing nothing | `.\Tools\deploy_server.ps1 -Facts` |
+| Install the clean shutdown, ONCE, right after the deploy that brings the code for it | `.\Tools\deploy_server.ps1 -InstallShutdown` |
+
+Before any restart the script says how many matches are running, read from the server's own
+journal. It informs and never refuses (D45). A deploy with nothing new to deploy no longer
+restarts the server at all, since a restart now cancels whatever is being played; `-Restart`
+is there when a restart really is wanted.
 
 Its address is in `network_config.tres` with every other candidate, and is the deploy script's
 own default — this document does not repeat it, for the same reason it does not repeat the
@@ -331,17 +338,31 @@ A fresh checkout has no imported-asset cache, so the deploy re-runs `--import` b
 restarting. Skipping that is the `Identifier ... not declared` failure `CLAUDE.md` warns about,
 which on a server reads as the service crash-looping.
 
-**A stop or restart is meant to CANCEL running matches and tell the players (D45)**, and the
-server half of that is built: started with `--shutdown-file <path>`, it watches for that file,
-and when the file appears it cancels every match with the reason, gives the players a few
-seconds to read it, closes each connection cleanly and quits. **The service file does not ask
-for it yet** - it needs `--shutdown-file` on its command line and an `ExecStop=` that creates
-the file and waits for the process to exit. That edit is made by hand on the box, once, and
-the exact lines are written here when it has been.
+**A stop or restart CANCELS running matches and tells the players (D45)** - once the clean
+shutdown is installed. Started with `--shutdown-file <path>`, the server watches for that file,
+and when it appears it cancels every match with the reason, gives the players a few seconds to
+read it, closes each connection cleanly and quits. What makes systemd use it is a DROP-IN, a
+small file next to the unit rather than an edit of it:
+`/etc/systemd/system/ltw-server.service.d/clean-shutdown.conf`. It gives the service a runtime
+directory for the file, starts the server watching it, and makes every stop create it and wait
+for the process to leave on its own. `deploy_server.ps1` holds the drop-in's exact text and is
+the authority on it.
 
-**Until then, never stop it while somebody is playing.** Godot on Linux runs no code on SIGTERM,
-so a stop kills the relay mid-sentence and every client of a running match FREEZES on "Waiting
-for the server" for good - measured, not assumed; `Findings/2026-09-25-one-server-many-matches.md`.
+- **Installing it** is `-InstallShutdown`, once, and the ORDER matters: deploy the code that
+  understands the file FIRST, then install. The other way round, the running server never looks
+  at the file, and every stop waits out the timeout and then kills it anyway. Installing stops
+  the server for a moment, so do it when nobody is playing; the script refuses to call it
+  installed until the server's own boot line says it is watching the file.
+- **Undoing it** is deleting that one file, then `systemctl daemon-reload` and a restart.
+- **The drop-in repeats the unit's start command**, with the file added, because systemd can
+  only replace a start command whole. So an edit to `ExecStart` in the unit itself has to be
+  made in the drop-in as well, or the drop-in quietly wins.
+
+**Until it is installed, never stop it while somebody is playing.** Godot on Linux runs no code on SIGTERM,
+so a stop kills the relay mid-sentence. A client from a build without the lost-server handling
+then FREEZES on "Waiting for the server" for good; a newer one waits out the link timeout and
+then ends the match with a sentence - measured, not assumed;
+`Findings/2026-09-25-one-server-many-matches.md`.
 (The "private game" this paragraph used to describe is what a clean close WITHOUT a notice
 does, which nothing here does any more.) `-Check` and `-Log` are safe; check for connected
 peers, or ask, before stopping anything.

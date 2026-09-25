@@ -46,6 +46,11 @@ var _lobby: LobbyInfo = null
 ## number is the SERVER's (D24) - this only displays what it was last told, so
 ## nothing here counts on its own.
 var _countdown: int = -1
+## Why we came back to this room, when a match sent us here - a start that fell
+## through, or a match cancelled because the server is restarting. Kept so that
+## losing the connection a moment later can pass on WHY it was lost, rather than
+## only that it was. See _on_lobby_closed.
+var _arrival_notice: String = ""
 
 var _config: MenuConfig:
 	get:
@@ -77,6 +82,7 @@ func _ready() -> void:
 	# show_lobby, which writes the ordinary status line over it.
 	var notice: String = MenuNavigation.take_pending_notice()
 	if !notice.is_empty():
+		_arrival_notice = notice
 		_set_status(notice)
 
 
@@ -127,6 +133,17 @@ func _on_current_lobby_changed(lobby: LobbyInfo) -> void:
 
 func _on_lobby_closed(reason: String) -> void:
 	# Handed across the scene change so the browser can say why we are back.
+	#
+	# **A lost connection after a notice passes on the NOTICE.** A match
+	# cancelled because the server is restarting sends its players here with
+	# that reason, and a few seconds later the server closes their connection -
+	# which arrives as a lost connection and nothing more. The first message is
+	# the one that says why; "lost connection" alone would replace it with a
+	# fact the player cannot do anything with. Offline is what tells the two
+	# apart: every other way of closing a lobby arrives over a live connection.
+	if !Net.is_online() && !_arrival_notice.is_empty():
+		MenuNavigation.pending_notice = _arrival_notice
+		return
 	MenuNavigation.pending_notice = reason
 
 
@@ -139,21 +156,31 @@ func _build_slots() -> void:
 		_slot_list.remove_child(child)
 		child.queue_free()
 
-	for index in range(1, _lobby.max_players + 1):
+	# One row per SEAT, open, closed or taken - not per player the lobby could
+	# hold - so a seat the host closed stays where they closed it.
+	var occupied: PackedInt32Array = _lobby.occupied_seats()
+	for seat in range(1, maxi(_lobby.seat_count, _lobby.max_players) + 1):
 		var slot: LobbySlot = _slot_scene.instantiate() as LobbySlot
 		if slot == null:
 			Log.err("LobbyRoom slot prefab root does not have a LobbySlot script")
 			return
 		_slot_list.add_child(slot)
 		slot.color_chosen.connect(_on_color_chosen)
-		_fill_slot(slot, index)
+		slot.seat_state_chosen.connect(_on_seat_state_chosen.bind(seat))
+		_fill_slot(slot, seat, occupied)
 
 
-func _fill_slot(slot: LobbySlot, index: int) -> void:
-	var player: MatchPlayer = _player_in_slot(index)
+## Members sit in the open seats in join order, so the k-th taken seat holds the
+## player in slot k. See LobbyInfo.occupied_seats.
+func _fill_slot(slot: LobbySlot, seat: int, occupied: PackedInt32Array) -> void:
+	var member: int = occupied.find(seat)
+	var player: MatchPlayer = null if member < 0 else _player_in_slot(member + 1)
 	if player == null:
-		slot.show_open(index)
+		var state: LobbyInfo.SeatState = LobbyInfo.SeatState.CLOSED \
+			if _lobby.closed_seats.has(seat) else LobbyInfo.SeatState.OPEN
+		slot.show_seat(seat, state, _may_edit_seats())
 		return
+	var index: int = seat
 
 	# Two client windows on one machine look identical, so say which is which.
 	var is_own: bool = player.network_id == Net.peer_id()
@@ -183,6 +210,20 @@ func _colors_taken_by_others(player: MatchPlayer) -> Array:
 func _on_color_chosen(color_index: int) -> void:
 	if Lobby.is_in_lobby():
 		Lobby.set_color(color_index)
+
+
+## Whether this machine may open and close the empty seats: the host, until the
+## countdown makes the roster final (D24). The server refuses anybody else anyway;
+## this only decides whether the dropdown is offered.
+func _may_edit_seats() -> bool:
+	return Lobby.current() != null && Lobby.is_host() \
+		&& !_lobby.is_starting && !_lobby.is_in_progress
+
+
+func _on_seat_state_chosen(state: int, seat: int) -> void:
+	var wanted: LobbyInfo.SeatState = LobbyInfo.SeatState.CLOSED \
+		if state == LobbyInfo.SeatState.CLOSED else LobbyInfo.SeatState.OPEN
+	Lobby.set_seat_state(seat, wanted)
 
 
 func _player_in_slot(index: int) -> MatchPlayer:

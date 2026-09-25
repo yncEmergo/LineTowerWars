@@ -181,6 +181,15 @@ func set_color(color_index: int) -> void:
 	request_color.rpc_id(NetworkService.SERVER_PEER_ID, color_index)
 
 
+## The host opening or closing an empty seat. Nothing changes here until the
+## lobby comes back from the server - a refused change snaps back, as a refused
+## colour does.
+func set_seat_state(seat: int, state: LobbyInfo.SeatState) -> void:
+	if !_require_connection():
+		return
+	request_seat_state.rpc_id(NetworkService.SERVER_PEER_ID, seat, int(state))
+
+
 # --- server: requests arriving from clients -------------------------------
 
 ## Sent on connecting, and again whenever this player changes their name. The
@@ -214,7 +223,7 @@ func register_player(display_name: String) -> void:
 
 
 @rpc("any_peer", "reliable")
-func request_create(lobby_name: String, max_players: int) -> void:
+func request_create(lobby_name: String, _max_players: int) -> void:
 	if !multiplayer.is_server():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
@@ -227,7 +236,11 @@ func request_create(lobby_name: String, max_players: int) -> void:
 	lobby.lobby_id = ID_PREFIX + str(_next_lobby_number)
 	_next_lobby_number += 1
 	lobby.lobby_name = LobbyIdentity.sanitise(lobby_name, _max_lobby_name_length())
-	lobby.max_players = _clamp_size(max_players)
+	# **Every lobby gets every seat**, whatever size was asked for: the host
+	# narrows it afterwards by CLOSING seats in the room (request_seat_state).
+	# The argument stays so the rpc keeps its shape; it no longer decides.
+	lobby.seat_count = _clamp_size(_max_seats())
+	lobby.max_players = lobby.seat_count
 	lobby.host_id = peer_id
 	# The defaults, which is a ranked match on whatever GameConfig says. The
 	# host edits this copy; the file it came from is never touched.
@@ -274,6 +287,40 @@ func request_join(lobby_id: String) -> void:
 	_lobby_of_peer[peer_id] = lobby.lobby_id
 	Log.info("Lobby joined", {"id": lobby.lobby_id, "peer": peer_id})
 
+	_push_lobby(lobby)
+	_broadcast_list()
+
+
+## The host opening or closing an empty seat of their lobby. A closed seat can
+## never be filled, so every one closed lowers the lobby's maximum by one - which
+## the browser shows, so it is pushed to everybody.
+##
+## Refused for anybody but the host, and once the countdown is running, for the
+## reason the settings are: the roster becomes final at that moment (D24).
+@rpc("any_peer", "reliable")
+func request_seat_state(seat: int, state: int) -> void:
+	if !multiplayer.is_server():
+		return
+	var peer_id: int = multiplayer.get_remote_sender_id()
+	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
+	if lobby == null:
+		_refuse(peer_id, "Only the host can open or close a slot.")
+		return
+	if lobby.is_starting || lobby.is_in_progress:
+		_refuse(peer_id, "The match is already starting.")
+		return
+
+	var wanted: LobbyInfo.SeatState = LobbyInfo.SeatState.CLOSED \
+		if state == LobbyInfo.SeatState.CLOSED else LobbyInfo.SeatState.OPEN
+	var refusal: String = lobby.set_seat_state(seat, wanted, _min_players())
+	if !refusal.is_empty():
+		_refuse(peer_id, refusal)
+		_push_lobby(lobby)
+		return
+	Log.info("Lobby seat changed", {
+		"id": lobby.lobby_id, "seat": seat, "closed": wanted == LobbyInfo.SeatState.CLOSED,
+		"max_players": lobby.max_players,
+	})
 	_push_lobby(lobby)
 	_broadcast_list()
 
@@ -809,6 +856,12 @@ func _name_of(peer_id: int) -> String:
 		return str(_names_of_peer[peer_id])
 	# A peer that never registered still gets a name rather than a blank row.
 	return "Player %d" % peer_id
+
+
+## The most players a lobby may seat - every lobby is created with this many.
+func _max_seats() -> int:
+	var config: MenuConfig = References.menu_config
+	return 12 if config == null else config.max_players
 
 
 func _clamp_size(requested: int) -> int:

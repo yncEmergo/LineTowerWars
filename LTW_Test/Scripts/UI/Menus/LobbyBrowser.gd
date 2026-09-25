@@ -47,7 +47,6 @@ const DEFAULT_REQUEST_TIMEOUT: float = 8.0
 ## Overlay asking for a name and a player count. Hidden until Create is pressed.
 @export var _create_panel: Control
 @export var _lobby_name_input: LineEdit
-@export var _player_count_spin: SpinBox
 @export var _create_confirm_button: Button
 @export var _create_cancel_button: Button
 
@@ -66,6 +65,11 @@ var _pending_action: String = ""
 ## the case where NOTHING arrives - see MenuConfig.lobby_request_timeout_seconds
 ## for what causes that and why silence is the failure worth naming.
 var _pending_elapsed: float = -1.0
+## Why we are back, when something threw us out - a match cancelled because the
+## server is restarting, a lost connection - rather than the player opening the
+## browser. Shown ABOVE whatever the connection is doing, until the player does
+## something. See _set_status.
+var _notice: String = ""
 
 var _config: MenuConfig:
 	get:
@@ -76,6 +80,12 @@ func _ready() -> void:
 	# Nothing is outstanding yet, and _process only earns its keep while
 	# something is. See _begin_pending.
 	set_process(false)
+	# Why we are back, if we were thrown out of a lobby or a match rather than
+	# having opened the browser ourselves. Taken FIRST, so every status line
+	# written from here on keeps it on screen.
+	_notice = MenuNavigation.take_pending_notice()
+	if !_notice.is_empty():
+		Log.info("Back in the lobby browser", {"why": _notice})
 	if _config == null:
 		Log.err("LobbyBrowser found no MenuConfig on References")
 	_connect_buttons()
@@ -83,12 +93,6 @@ func _ready() -> void:
 	_setup_name_prompt()
 	_connect_network()
 	refresh()
-
-	# Why we are back, if we were thrown out of a lobby rather than having
-	# opened the browser ourselves.
-	var notice: String = MenuNavigation.take_pending_notice()
-	if !notice.is_empty():
-		_set_status(notice)
 
 	# LAST, and only once there is a name to arrive with - which is
 	# _ensure_connected's own answer, so Reconnect goes through the same gate.
@@ -322,13 +326,6 @@ func _setup_create_panel() -> void:
 	if _config == null:
 		return
 
-	if _player_count_spin != null:
-		# Click-only, because the editor inside a SpinBox is a node the .tscn
-		# cannot name. See FocusPolicy.
-		FocusPolicy.click_only(_player_count_spin)
-		_player_count_spin.min_value = _config.min_players
-		_player_count_spin.max_value = _config.max_players
-		_player_count_spin.value = _config.default_lobby_size
 	if _lobby_name_input != null:
 		_lobby_name_input.max_length = _config.max_lobby_name_length
 
@@ -387,6 +384,7 @@ func _update_name_button() -> void:
 func _on_join_pressed() -> void:
 	if _selected == null:
 		return
+	_clear_notice()
 	_begin_pending("join")
 	_set_status("Joining %s..." % _selected.lobby_name)
 	Lobby.join(_selected.lobby_id)
@@ -395,6 +393,7 @@ func _on_join_pressed() -> void:
 ## Refresh while connected is a repaint. Offline it is a retry, which is the
 ## only thing worth doing at that point.
 func _on_refresh_pressed() -> void:
+	_clear_notice()
 	if Net.status() == NetworkService.Status.OFFLINE:
 		_set_status("Connecting to %s..." % _server_text())
 		_ensure_connected()
@@ -412,6 +411,7 @@ func _on_back_pressed() -> void:
 func _on_create_pressed() -> void:
 	if _create_panel == null:
 		return
+	_clear_notice()
 	if _lobby_name_input != null && _config != null:
 		_lobby_name_input.text = _config.default_lobby_name(LobbyIdentity.display_name())
 	_create_panel.show()
@@ -433,7 +433,10 @@ func _on_create_confirmed() -> void:
 
 	_begin_pending("create")
 	_set_status("Creating lobby...")
-	Lobby.create(_entered_lobby_name(LobbyIdentity.display_name()), _entered_player_count())
+	# No size is asked for: every lobby seats the most a match allows, and the
+	# host closes seats in the room instead. The server ignores the number.
+	var seats: int = 12 if _config == null else _config.max_players
+	Lobby.create(_entered_lobby_name(LobbyIdentity.display_name()), seats)
 
 
 func _entered_lobby_name(host_name: String) -> String:
@@ -445,14 +448,6 @@ func _entered_lobby_name(host_name: String) -> String:
 	if _config != null:
 		return _config.default_lobby_name(host_name)
 	return host_name
-
-
-func _entered_player_count() -> int:
-	if _player_count_spin != null:
-		return int(_player_count_spin.value)
-	if _config != null:
-		return _config.default_lobby_size
-	return 2
 
 
 # --- rows -----------------------------------------------------------------
@@ -514,9 +509,29 @@ func _update_buttons() -> void:
 		_refresh_button.disabled = dialling
 
 
+## Writes the status line, under the notice when there is one.
+##
+## **The notice is kept apart on purpose.** It used to be written into this same
+## line, and the browser dials the server the moment it opens, so "Connecting..."
+## replaced it within a frame - a player whose match was cancelled for a restart
+## was told why for as long as it took the lobby room to close, and then never.
 func _set_status(text_value: String) -> void:
-	if _status_label != null:
+	if _status_label == null:
+		return
+	if _notice.is_empty():
 		_status_label.text = text_value
+	elif text_value.is_empty():
+		_status_label.text = _notice
+	else:
+		_status_label.text = "%s\n%s" % [_notice, text_value]
+
+
+## The player has done something, so why they arrived stops being news.
+func _clear_notice() -> void:
+	if _notice.is_empty():
+		return
+	_notice = ""
+	_update_status()
 
 
 func _on_entry_chosen(entry: LobbyListEntry) -> void:

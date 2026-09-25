@@ -19,6 +19,8 @@ extends PanelContainer
 ## what this player really has rather than showing what they clicked.
 
 signal color_chosen(color_index: int)
+## The host chose what this empty seat is: a LobbyInfo.SeatState.
+signal seat_state_chosen(state: int)
 
 @export_group("References")
 @export var _index_label: Label
@@ -32,11 +34,16 @@ signal color_chosen(color_index: int)
 @export var _color_option: OptionButton
 ## The colour itself, on every row. Blank on a seat nobody is sitting in.
 @export var _color_swatch: ColorRect
+## What an EMPTY seat is - open or closed - offered to the host alone, on empty
+## rows alone. A dropdown rather than a checkbox because an AI seat is meant to
+## join the list.
+@export var _seat_option: OptionButton
 
 @export_group("Settings")
 @export var _host_color: Color = Color(1.0, 0.85, 0.35, 1.0)
 @export var _player_color: Color = Color(0.86, 0.88, 0.92, 1.0)
 @export var _open_color: Color = Color(0.45, 0.47, 0.54, 1.0)
+@export var _closed_color: Color = Color(0.3, 0.31, 0.36, 1.0)
 ## What the swatch shows for a seat nobody is sitting in.
 @export var _empty_swatch_color: Color = Color(0.16, 0.17, 0.22, 1.0)
 
@@ -64,6 +71,8 @@ var _writing: bool = false
 func _ready() -> void:
 	if _color_option != null:
 		_color_option.item_selected.connect(_on_color_selected)
+	if _seat_option != null:
+		_seat_option.item_selected.connect(_on_seat_selected)
 
 
 ## Fills the slot in for a player who is in the lobby.
@@ -83,17 +92,28 @@ func show_status(index: int, player_name: String, state: String, highlight: bool
 		)
 	if _state_label != null:
 		_state_label.text = state
+	_show_seat_option(LobbyInfo.SeatState.OPEN, false)
 
 
 ## Fills the slot in as an empty seat nobody has taken.
 func show_open(index: int) -> void:
+	show_seat(index, LobbyInfo.SeatState.OPEN, false)
+
+
+## Fills the slot in as an EMPTY seat: open for somebody to join, or closed by
+## the host so nobody can. `editable` puts the open/closed dropdown on the row,
+## which only the host of the lobby gets.
+func show_seat(index: int, state: LobbyInfo.SeatState, editable: bool) -> void:
 	_set_index(index)
+	var closed: bool = state == LobbyInfo.SeatState.CLOSED
 	if _name_label != null:
-		_name_label.text = "Open slot"
-		_name_label.add_theme_color_override("font_color", _open_color)
+		_name_label.text = "Closed" if closed else "Open slot"
+		var color: Color = _closed_color if closed else _open_color
+		_name_label.add_theme_color_override("font_color", color)
 	if _state_label != null:
 		_state_label.text = "-"
 	show_color(MatchPlayer.NO_COLOR, false, [])
+	_show_seat_option(state, editable)
 
 
 ## Draws this row's colour.
@@ -147,6 +167,28 @@ func _on_color_selected(item: int) -> void:
 	if _writing || _color_option == null:
 		return
 	color_chosen.emit(_color_option.get_item_id(item))
+
+
+## The seat dropdown, on the host's empty rows only. Rebuilt on every draw, like
+## the colour one, so what it shows is always what the server last said.
+func _show_seat_option(state: LobbyInfo.SeatState, editable: bool) -> void:
+	if _seat_option == null:
+		return
+	_seat_option.visible = editable
+	if !editable:
+		return
+	_writing = true
+	_seat_option.clear()
+	_seat_option.add_item("Open", LobbyInfo.SeatState.OPEN)
+	_seat_option.add_item("Closed", LobbyInfo.SeatState.CLOSED)
+	_seat_option.select(_seat_option.get_item_index(state))
+	_writing = false
+
+
+func _on_seat_selected(item: int) -> void:
+	if _writing || _seat_option == null:
+		return
+	seat_state_chosen.emit(_seat_option.get_item_id(item))
 
 
 func _set_index(index: int) -> void:

@@ -18,13 +18,32 @@ extends Resource
 ## through to_dict() / from_dict(). Everything added here must stay serialisable
 ## - see multiplayer.md 7.
 
+## What an empty seat of the room is. Only the host changes it. A seat with a
+## player in it has no state of its own - the player IS its state. AI is meant to
+## join this list, so it is an enum rather than a bool.
+enum SeatState {
+	OPEN,
+	CLOSED,
+}
+
 @export var lobby_id: String = ""
 @export var lobby_name: String = ""
 ## Peer id of whoever created it. The host is only a label: the lobby lives on
 ## the server and nothing technical depends on them, they are simply the one
 ## who may press Start. When they leave, the lobby closes (D23).
 @export var host_id: int = 0
+## How many players may be in it: its seats less the ones the host closed. What
+## the browser shows as the maximum and what "full" is measured against. Kept up
+## to date by set_seat_state, never set on its own once a lobby has seats.
 @export var max_players: int = 2
+## How many seats the room has, open or closed. Every lobby is created with the
+## most a match allows; the host narrows it by CLOSING seats rather than by
+## choosing a size up front.
+@export var seat_count: int = 2
+## The seats the host closed, by seat number from 1. Members sit in the OPEN
+## seats in join order, so their slots stay 1..n and a closed seat is never a
+## gap in the roster a MatchSetup is built from. See occupied_seats.
+@export var closed_seats: PackedInt32Array = PackedInt32Array()
 ## Set once the match has begun, so a running lobby can still be listed but not
 ## joined.
 @export var is_in_progress: bool = false
@@ -50,6 +69,8 @@ static func from_dict(data: Dictionary) -> LobbyInfo:
 	lobby.lobby_name = str(data.get("lobby_name", ""))
 	lobby.host_id = int(data.get("host_id", 0))
 	lobby.max_players = int(data.get("max_players", 2))
+	lobby.seat_count = int(data.get("seat_count", lobby.max_players))
+	lobby.closed_seats = PackedInt32Array(data.get("closed_seats", PackedInt32Array()))
 	lobby.is_in_progress = bool(data.get("is_in_progress", false))
 	lobby.is_starting = bool(data.get("is_starting", false))
 	lobby.ping_ms = int(data.get("ping_ms", -1))
@@ -72,6 +93,8 @@ func to_dict() -> Dictionary:
 		"lobby_name": lobby_name,
 		"host_id": host_id,
 		"max_players": max_players,
+		"seat_count": seat_count,
+		"closed_seats": closed_seats,
 		"is_in_progress": is_in_progress,
 		"is_starting": is_starting,
 		"ping_ms": ping_ms,
@@ -138,6 +161,41 @@ func player_count() -> int:
 
 func is_full() -> bool:
 	return player_count() >= max_players
+
+
+## The seat each member sits in, in member order: the open seats, filled from
+## the top. Closing a seat above somebody moves them down one, which is the same
+## thing a player leaving already does to everybody after them.
+func occupied_seats() -> PackedInt32Array:
+	var seats: PackedInt32Array = PackedInt32Array()
+	var seat: int = 1
+	while seats.size() < members.size() && seat <= seat_count:
+		if !closed_seats.has(seat):
+			seats.append(seat)
+		seat += 1
+	return seats
+
+
+## Opens or closes one EMPTY seat, and says why not when it cannot. Server side.
+##
+## The empty string is success. Refusals are sentences, because they go straight
+## to the host's screen - like every other lobby refusal.
+func set_seat_state(seat: int, state: SeatState, min_players: int) -> String:
+	if seat < 1 || seat > seat_count:
+		return "There is no such slot."
+	if occupied_seats().has(seat):
+		return "A player is in that slot."
+	var closed: bool = state == SeatState.CLOSED
+	if closed == closed_seats.has(seat):
+		return ""
+	if closed && max_players - 1 < min_players:
+		return "A lobby needs room for at least %d players." % min_players
+	if closed:
+		closed_seats.append(seat)
+	else:
+		closed_seats.remove_at(closed_seats.find(seat))
+	max_players = seat_count - closed_seats.size()
+	return ""
 
 
 ## Nobody may join during the countdown (D24), which is why is_starting refuses

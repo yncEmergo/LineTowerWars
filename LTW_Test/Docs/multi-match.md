@@ -163,10 +163,14 @@ process. The move is an identity transfer:
   here.
 
 **Stage (b): a systemd unit per match.**
-- **Mechanism:** a template unit started by the lobby through a narrow permission (a polkit rule or
-  a sudoers line for exactly that unit), each unit with a memory ceiling. Or a pool of pre-started
-  units that need no runtime permission and cost idle memory. Choose when stage (a) has been
-  measured.
+- **Mechanism:** a template unit started by the lobby, each unit with a memory ceiling. There are
+  two ways to allow that:
+  - a polkit rule for exactly that unit, which the lobby uses over D-Bus. **Not sudo**: the
+    service runs with `NoNewPrivileges=yes`, so none of its processes can ever gain privileges,
+    and sudo needs to;
+  - or a pool of pre-started units, which needs no runtime permission but costs idle memory.
+
+  Choose when stage (a) has been measured.
 - **Liveness:** `is_process_running` does not answer for a process that is not a child: on Unix it
   reports a non-child as NOT running. So stage (b) needs another signal, such as the unit's state
   or a heartbeat file.
@@ -207,10 +211,10 @@ process. The move is an identity transfer:
 - **`protocol_version` is bumped.** An older build does not understand the new payload keys, so it
   would sit in a loading screen the lobby no longer serves; the bump refuses it at the door with
   "update the game".
-- **The two client fixes the Findings calls for do NOT need the bump** and can ship in an earlier
-  build:
-  - end a match with a sentence when the server vanishes (crash, out of memory, reboot);
-  - keep the cancel reason on screen after the disconnect.
+- **The two client fixes the Findings called for are DONE** (2026-09-25) and need no bump, so
+  they can ship in an earlier build than this one:
+  - a match ends with a sentence when the server vanishes (crash, out of memory, reboot);
+  - the cancel reason stays on screen after the disconnect.
 
 ---
 
@@ -219,12 +223,13 @@ process. The move is an identity transfer:
 Each phase is done when its proof has RUN. Check the positive control before believing a green
 result (`CLAUDE.md`).
 
-**P0: baseline and live bugs.** DONE 2026-09-25; see the Findings. What is left of it:
-- the service-file edit for D45 (on the box, by hand);
-- `deploy_server.ps1`: skip a restart that changes nothing, which would now cancel matches for
-  nothing, and say how many matches it is about to cancel;
-- a periodic journal line with peers, lobbies and matches, so `-Check` can report it;
-- the two client fixes in §6.
+**P0: baseline and live bugs.** DONE 2026-09-25; see the Findings.
+- Also done: `deploy_server.ps1` no longer restarts when there is nothing to deploy, says how many
+  matches a restart is about to cancel (read from the journal), and can install the D45 drop-in
+  (`-InstallShutdown`).
+- Also done: the two client fixes in §6.
+- Left: running `-InstallShutdown` once, right after the deploy that brings the code for it,
+  and handing out the client build that carries the fixes.
 
 **P1: spikes, all small and all thrown away.**
 - `SceneMultiplayer` authentication carrying a token, with the D29/D31 handshake after it:

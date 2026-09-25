@@ -90,7 +90,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D43 | **A PAUSE is a player order, not a message**, and a resume is a countdown every peer runs. | 2026-09-20 | User's call. Offline the in-match menu simply holds the world while it is open; online it carries a Pause button that anybody may press and anybody may undo. It has to ride the turn stream rather than a broadcast rpc for the same reason D42's countdown does: a hold stops the match clock, so two peers that began holding on different turns would have two different clocks - hashed into every checksum, and therefore a desync with no other symptom. `MatchPause`, a node in both match scenes beside `StartingTech`. No allowance and no cooldown while the game is in testing. The length is `GameConfig.resume_countdown_seconds`; the rule is in `game_rules.md`. |
 | D42 | **A match opens with a GRACE PERIOD: the world held still for a few seconds before anything can happen.** | 2026-09-15 | User's call after playtest 7's laggy openings. The first phase of `StartingTech`'s opening, counted in simulation ticks by the turn stream so every peer releases on the same turn, and ahead of any technology draft or reveal. A tutorial skips it. The length is `GameConfig.start_grace_seconds`; the rule is in `game_rules.md`. |
 | D44 | **Each match runs in its own server process**, handed off from the lobby process. | 2026-09-25 | User's call, over running every match in the one relay process: matches as independent of each other as possible, which is also the shape a server that ever simulates again would need. Built in two stages - match processes first as children of the lobby's service (with `OOMPolicy=continue`, so one running out of memory ends only its own match), then one systemd unit per match, so a lobby crash leaves running matches alone. The move is an identity transfer, not an address change (see D19), so it takes a new client build and a protocol bump, both accepted. A started match's lobby disappears from the browser, and a player whose move fails may retry until the load timeout (D15). Plan: `multi-match.md`. Measurements: `Findings/2026-09-25-one-server-many-matches.md`. Supersedes D19. |
-| D45 | **A deploy CANCELS running matches and tells the players**; it never refuses. | 2026-09-25 | User's call. Before it a deploy froze every running match for good - Godot on Linux runs no code on SIGTERM - and closing the socket cleanly without a word was worse, because every client then played on alone. So the server is asked first, by a FILE (`--shutdown-file`, created by the service's ExecStop): it cancels every match with the reason, gives the players a few seconds to read it, closes each connection with `peer_disconnect_later` so the notice is acknowledged before the close, and quits. See `Net.begin_shutdown`. The server half is built; the service file edit is `server.md`'s. An UNPLANNED death - a crash, out of memory, a reboot - still needs the client-side fix in §11.1. |
+| D45 | **A deploy CANCELS running matches and tells the players**; it never refuses. | 2026-09-25 | User's call. Before it a deploy froze every running match for good - Godot on Linux runs no code on SIGTERM - and closing the socket cleanly without a word was worse, because every client then played on alone. So the server is asked first, by a FILE (`--shutdown-file`, created by the service's ExecStop): it cancels every match with the reason, gives the players a few seconds to read it, closes each connection with `peer_disconnect_later` so the notice is acknowledged before the close, and quits. See `Net.begin_shutdown`. The server half is built; the service file edit is `server.md`'s. An UNPLANNED death - a crash, out of memory, a reboot - is the client's to handle, and it does: see §11.1. |
 | D32 | ~~**The input delay is MEASURED from the live connection**, never authored.~~ **SUPERSEDED by D40 on 2026-09-09.** No client names a turn any more, so there is no per-peer booking to measure: the relay decides which turn an order lands in from when it arrives, and `delay_turns` / `_wire_budget_ms` / `announce_one_way` are deleted. What a peer chooses locally now is its PLAYBACK buffer, which costs only its owner. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Its first reason - the only way to use more than one CPU core, §11.3 - died when the server stopped simulating (§4.2). Reaffirmed by D44 on 2026-09-25 for a different one: independence between matches. |
 | D15 | **Load timeout 60 s**, then start without whoever is missing, provided `min_players` are ready. No area spawns for them. | 2026-08-21 | See §11.2. |
@@ -1285,6 +1285,24 @@ Counting down  | Starting...  | disabled=true  | alpha=0.55
 Running        | In progress  | disabled=true  | alpha=0.55
 ```
 
+**Seats.** **Built 2026-09-25.** A lobby is not given a size when it is created. Every lobby
+seats the most a match allows (`MenuConfig.max_players`), and the HOST narrows it from inside
+the room: an empty seat's row carries a dropdown - on the host's screen only - that sets it
+Open or Closed. A closed seat can never be filled, so each one lowers the lobby's maximum by
+one, and that maximum is what the browser lists.
+
+- **Members sit in the OPEN seats, in join order**, and their slots stay 1..n. A closed seat
+  is never a gap in the roster a `MatchSetup` is built from, so nothing downstream of the lobby
+  knows seats exist. The cost is the one leaving already had: closing or opening a seat above a
+  player moves them down or up a row. See `LobbyInfo.occupied_seats`.
+- **The server decides**, exactly as for colours: `request_seat_state` is refused for anybody
+  but the host, for a seat with a player in it, once the countdown is running (D24), and when it
+  would leave room for fewer players than a match needs. The dropdown draws what came back.
+- **A dropdown rather than a toggle, on purpose:** an AI seat is meant to join Open and Closed
+  there. `LobbyInfo.SeatState` is the list.
+- It added an `@rpc`, so the rpc hash (D31) moved with it: a build from before seats is refused
+  by a server that has them, and the other way round.
+
 **Player colours.** **Built.** Every player has one, chosen from a dropdown on their own row,
 because anything showing several players at once needs them told apart at a glance. What the
 RULE is is `game_rules.md` under Player colours; what follows is where it lives.
@@ -1506,10 +1524,13 @@ Details still open, none of them blocking:
   - **Shut down on purpose (D45):** fixed. The server cancels the match with a reason first,
     and the client leaves it.
 
-  The first two still need the CLIENT fix: on losing the server mid-match, end the match and
-  say why. It changes no rpc, so older builds keep connecting. Given D13 - out is out - that is
-  the right behaviour, and until it exists an unplanned relay death is still the most confusing
-  failure there is.
+  **The first two are handled on the CLIENT** (2026-09-25, `MatchStart._on_server_lost`):
+  losing the server with a match on screen ends the match and returns to the lobby browser,
+  which says why and keeps saying it while it dials again. A kill is noticed only once the
+  link's stretched timeout (D41) runs out, since until then the client cannot tell a dead
+  server from a slow link; a clean close is noticed at once. Given D13 - out is out - ending
+  the match is the whole of the honest answer. It changes no rpc, and it reaches players with
+  the next client build; an older build still behaves as described above.
 
 ### 11.2 The loading screen timeout (D15)
 

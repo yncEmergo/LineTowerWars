@@ -28,7 +28,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="LobbyBrowser" type="Control" node_paths=PackedStringArray("_lobby_list", "_empty_label", "_status_label", "_join_button", "_create_button", "_refresh_button", "_back_button", "_name_button", "_name_prompt", "_create_panel", "_lobby_name_input", "_player_count_spin", "_create_confirm_button", "_create_cancel_button")]
+[node name="LobbyBrowser" type="Control" node_paths=PackedStringArray("_lobby_list", "_empty_label", "_status_label", "_join_button", "_create_button", "_refresh_button", "_back_button", "_name_button", "_name_prompt", "_create_panel", "_lobby_name_input", "_create_confirm_button", "_create_cancel_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -49,7 +49,6 @@ _name_button = NodePath("Margin/Column/Header/NameButton")
 _name_prompt = NodePath("NamePrompt")
 _create_panel = NodePath("CreatePanel")
 _lobby_name_input = NodePath("CreatePanel/Center/Dialog/DialogColumn/NameRow/NameInput")
-_player_count_spin = NodePath("CreatePanel/Center/Dialog/DialogColumn/PlayersRow/PlayersSpin")
 _create_confirm_button = NodePath("CreatePanel/Center/Dialog/DialogColumn/DialogButtons/ConfirmButton")
 _create_cancel_button = NodePath("CreatePanel/Center/Dialog/DialogColumn/DialogButtons/CancelButton")
 _entry_scene = ExtResource("5_entry")
@@ -290,25 +289,6 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 max_length = 32
-focus_behavior_recursive = 2
-focus_mode = 1
-
-[node name="PlayersRow" type="HBoxContainer" parent="CreatePanel/Center/Dialog/DialogColumn"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="PlayersLabel" type="Label" parent="CreatePanel/Center/Dialog/DialogColumn/PlayersRow"]
-custom_minimum_size = Vector2(120, 0)
-layout_mode = 2
-size_flags_vertical = 1
-text = "Players"
-vertical_alignment = 1
-
-[node name="PlayersSpin" type="SpinBox" parent="CreatePanel/Center/Dialog/DialogColumn/PlayersRow"]
-layout_mode = 2
-min_value = 2.0
-max_value = 15.0
-value = 2.0
 focus_behavior_recursive = 2
 focus_mode = 1
 

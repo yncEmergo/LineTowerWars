@@ -42,6 +42,7 @@ var _role: String = ""
 var _elapsed: float = 0.0
 var _started: bool = false
 var _requested: bool = false
+var _seat_closed: bool = false
 var _in_match: bool = false
 var _turns: int = 0
 var _stalls: int = 0
@@ -168,7 +169,16 @@ func _on_lobby_changed(lobby: LobbyInfo) -> void:
 		return
 	Log.warn("PROBE in lobby", {
 		"id": lobby.lobby_id, "players": lobby.player_count(), "host": Lobby.is_host(),
+		"max": lobby.max_players, "seats": lobby.seat_count, "closed": lobby.closed_seats,
 	})
+	# `--close-seat <n>`: the host closes that seat once, as soon as it hosts.
+	# The positive control for seat closing is the "max" above dropping by one
+	# on EVERY machine in the lobby, not just the host's.
+	var close_seat: int = _int_argument("--close-seat", 0)
+	if close_seat > 0 && Lobby.is_host() && !_seat_closed:
+		_seat_closed = true
+		Log.warn("PROBE closing a seat", {"seat": close_seat})
+		Lobby.set_seat_state(close_seat, LobbyInfo.SeatState.CLOSED)
 	# Only the host may start, and only once the second player is really in -
 	# the server refuses a one player match, which is the rule doing its job.
 	if Lobby.is_host() && !_requested && lobby.player_count() >= 2:
@@ -531,5 +541,29 @@ func _finish() -> void:
 		"repair": Lockstep.repair_counts(),
 		"units": 0 if References.match_session == null \
 			else References.match_session.unit_count(),
+		# **Where this machine ended up, and what its status line says there** -
+		# the positive control for a player thrown out of a match being TOLD why.
+		# A lost server or a cancelled match must land in a menu whose status
+		# still carries the reason after the browser has started dialling again.
+		"scene": _scene_name(),
+		"status": _status_text(),
 	})
 	get_tree().quit()
+
+
+func _scene_name() -> String:
+	var scene: Node = get_tree().current_scene
+	return "" if scene == null else String(scene.name)
+
+
+## The status line of whichever menu is on screen, on one line.
+func _status_text() -> String:
+	var scene: Node = get_tree().current_scene
+	var label: Label = null
+	var browser: LobbyBrowser = scene as LobbyBrowser
+	if browser != null:
+		label = browser._status_label
+	var room: LobbyRoom = scene as LobbyRoom
+	if room != null:
+		label = room._status_label
+	return "" if label == null else label.text.replace("\n", " | ")

@@ -62,6 +62,10 @@ signal desync_detected(tick: int, detail: String)
 ## lockstep needs starts using the same path.
 const DESYNC_START_TICK: int = -1
 
+## What a player is told when the server goes away under a running match without
+## saying why. See _on_server_lost.
+const SERVER_LOST_NOTICE: String = "The connection to the server was lost. The match has ended."
+
 ## How far past the relay's silence timeout ENet may keep a quiet link open during
 ## a match, in seconds. See _stretch_link_timeouts.
 const LINK_TIMEOUT_MARGIN_SECONDS: float = 3.0
@@ -123,6 +127,7 @@ func _ready() -> void:
 	Net.peer_left.connect(_on_peer_left)
 	Net.status_changed.connect(_on_network_status_changed)
 	Net.shutdown_started.connect(_on_shutdown_started)
+	Net.disconnected_from_server.connect(_on_server_lost)
 
 
 # --- server: starting a match ---------------------------------------------
@@ -519,6 +524,31 @@ func _on_shutdown_started(reason: String) -> void:
 		"told": told,
 	})
 	_finish_match()
+
+
+## Client: the server went away under a match that is still on screen - killed,
+## crashed, out of memory, or closed without the notice a clean shutdown sends
+## first (D45). The match ENDS here, and the player is told.
+##
+## **Left alone, a lost server was the most confusing failure in the game**, and
+## it had two shapes, both measured (Findings/2026-09-25-one-server-many-matches.md).
+## Killed, the relay just stopped: every client stalled on "Waiting for the server"
+## and stayed there for good. Closed cleanly without a word, every client went
+## offline and played on ALONE, because under lockstep going offline changes
+## nothing about who simulates. There is no reconnect (D13), so nothing a client
+## does from here can bring the match back - ending it and saying so is the whole
+## of the honest answer.
+##
+## Only the MATCH scene is this object's to leave. The menus and the loading
+## screen answer a lost server themselves, and have no MatchSession, which is how
+## they are told apart. A clean shutdown never reaches here with a match up: its
+## notice has already taken the player out before the connection closes.
+func _on_server_lost() -> void:
+	if References.match_session == null:
+		return
+	Log.warn("Lost the server during a match, ending it")
+	MenuNavigation.pending_notice = SERVER_LOST_NOTICE
+	MenuNavigation.to_lobby_browser(self)
 
 
 ## A match with nobody left in it is over. There is no reconnect (D13), so the

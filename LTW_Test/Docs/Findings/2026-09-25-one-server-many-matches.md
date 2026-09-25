@@ -83,6 +83,36 @@ and the first fixes, which landed the same day.
   unit per match to survive a lobby crash. The unit file is not in the repo, so its real settings
   are unknown. *[documented defaults; the unit unread]*
 
+## Read on the box, the same day
+
+The owner ran `deploy_server.ps1 -Facts`, which only reads. What it showed:
+
+- **The service.**
+  - `ltw-server` runs as `ltw`, with `Restart=always` and `NoNewPrivileges=yes`.
+  - It has no `ExecStop`.
+  - Nothing is set for `KillMode`, `OOMPolicy` or the stop timeout, so systemd's defaults apply:
+    `KillMode=control-group`, `OOMPolicy=stop`, and a 90 s stop timeout.
+  - `NoNewPrivileges` means a process of this service can never use `sudo`. A lobby that starts
+    per-match units (B's second stage) has to go through polkit, or use pre-started units.
+- **The machine.**
+  - Ubuntu 26.04.1 with systemd 259.
+  - 2 cores and 3.8 GB, 3.06 GB available at the time, no swap.
+- **Godot on the box is 4.7.2**, where the dev PC is on 4.7.1. That doesn't matter for a relay
+  that simulates nothing, but everything measured on the dev PC's engine should be re-checked on
+  the box's.
+- **Firewall.** The box's own firewall (ufw) is on, and lets in only SSH and UDP 7777. There is
+  no firewall at Hetzner's side (the owner checked the console).
+- **UDP ports.** 7777 is taken by the game. The only others in use belong to system services,
+  Tailscale among them, so a range just above 7777 is free.
+- **Match summaries**, from before the fixes, when the relay still opened the match scene:
+  - Two 2-player matches, one of 26 s and one of 8 minutes.
+  - Whole-process CPU of about 4.2% of one core.
+  - 283 MB resident, 187 MB static.
+  - Worst tick 58–72 ms, no late ticks.
+  - About 3 kB/s sent.
+  - This is the first per-match reading from the target. The figure B needs next is the same
+    line from a relay that opens no match scene.
+
 ## What a deploy did to a running match
 
 - **It froze the match for good.** Godot on Linux installs no SIGTERM handler, so
@@ -191,19 +221,36 @@ Before and after, the same scenarios on the same runner:
 | HEAD clients against the fixed relay | not run | play and agree; a hard kill's drop still reaches the survivor |
 | Shutdown asked for mid-match | not run | both clients "Match cancelled", neither plays on; relay exits by itself 4.2 s later |
 
+### The client half, added the same day
+
+The client needs no protocol change for either of these, so older builds keep connecting:
+
+- **A match on screen ends when the server goes away.** `MatchStart._on_server_lost` takes the
+  client to the lobby browser with "The connection to the server was lost. The match has ended."
+- **The browser keeps a notice above its connection status until the player acts.** Before, it
+  wrote the notice into the same line it immediately overwrote with "Connecting…". A lobby room
+  closed by a lost connection passes on the reason it arrived with, rather than "Lost connection
+  to the server".
+
+Measured with the same runner, the probe now reporting which scene each client ended on and
+what its status line said:
+
+| Scenario | Both clients |
+| --- | --- |
+| Shutdown asked for mid-match | "Match cancelled"; browser status still reads "The server is restarting. The match was cancelled." after dialling again |
+| Relay hard-killed mid-match | Stalled, told 13.3 s and 14.9 s after their last turn - the link's stretched timeout - then the browser with the lost-server sentence; no units left |
+| Relay closed cleanly with no notice (`--quit-after`) | Told within milliseconds; browser with the same sentence; no units left, so no private game |
+| Plain 1v1, for regressions | 526 turns, 0 desyncs |
+
 ## Still open
 
-- **The service file.**
-  - `ExecStart` gains `--shutdown-file`.
-  - `ExecStop` creates that file and waits for the process to exit.
-  - `TimeoutStopSec` bounds the wait.
-  - For B's first stage, `OOMPolicy=continue` is added as well.
-  - This needs `systemctl cat ltw-server` first.
-- **The client half, which the server cannot do.**
-  - End a match when the relay vanishes unexpectedly: a crash, an out-of-memory kill or a reboot,
-    none of which a planned shutdown can cover.
-  - Keep the cancel reason on screen after the disconnect.
-  - Neither changes the rpc hash.
+- **The service file.** Now prepared as `deploy_server.ps1 -InstallShutdown`: a drop-in that
+  adds `--shutdown-file`, an `ExecStop` that creates the file and waits for the process to exit,
+  and a bounded stop timeout.
+  - It runs once, right after the deploy that brings the code for it.
+  - B's first stage adds `OOMPolicy=continue` to the same drop-in.
+- **The client half reaches players only with the next client build.** Until then a hard-killed
+  relay still freezes them.
 - **B itself.** See `multi-match.md`.
 - **On the box:**
   - a match process's boot time and memory (the journal's `Relay match summary` lines already carry
