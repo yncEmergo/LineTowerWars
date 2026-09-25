@@ -11,9 +11,9 @@ reader from rebuilding it out of `.tres` files. A layout that does change is cha
 its generator or `.tres` in the same commit, and the boot check refuses content that breaks
 section 2, so the two cannot drift apart silently.
 
-**Status: written 2026-09-25 as the spec for the hotkey rework.** Everything below is the rule.
-Section 9 lists what the code does not do yet; it shrinks as the work lands and is deleted when
-it is empty. Until then `game_rules.md` still describes the controls the code actually has.
+**Status: written 2026-09-25 as the spec for the hotkey rework, and built the same day.**
+Everything below is the rule and is what the code does. Section 9 lists what is still open; it
+is deleted when it is empty. `game_rules.md` points here for everything about keys.
 
 Related: `game_rules.md` for everything about the controls that is not a key, `Docs/ui.md` for
 what is drawn in front of what, `Scripts/UI/FocusPolicy.gd` for why no key ever moves keyboard
@@ -299,7 +299,11 @@ is empty while the Research Center is open, and 5 and 6, because a grid key can 
 ## 8. Where it lives
 
 - `Scripts/Config/ControlsConfig.gd` and `Resources/Config/controls_config.tres`: both grids'
-  shapes and key positions, the fixed keys, the hold timings
+  shapes and key positions, the passive and trait squares, the fixed keys, the hold timings
+- `Scripts/Input/KeyPosition.gd`: a key as a position - read off a press, stored, and drawn as
+  whatever the player's own keyboard prints there
+- `Scripts/Abilities/CardLayout.gd`: the boot check that holds every card to section 2. It runs
+  from the content walk `Main` starts, once per card
 - `Scripts/Config/HotkeyAction.gd` and `Resources/Config/Hotkeys/`: the commands with a key of
   their own. A new one is a `.tres` added to `hotkey_actions`
 - `Scripts/Config/UserSettings.gd`: what the player bound, in `settings.cfg`
@@ -319,46 +323,12 @@ is empty while the Research Center is open, and 5 and 6, because a grid key can 
   blueprint lists and the send cards. A technology's square is on its own `.tres` in
   `Resources/Tech`
 
-## 9. Not built yet
+**Testing it.** A key a tool injects often carries no physical code, and is then read as the
+position its keycode NAMES - the US QWERTY key of that name. So the bottom left square is
+pressed by sending Z, on any machine. And a headless process cannot ask what a key prints, so
+there every square draws its position's US name instead: check labels in a windowed run.
 
-The rework, as a checklist. Delete each line as it lands and the section when it is empty.
+## 9. Still open
 
-**The grid**
-- [ ] Squares are physical key positions and draw the OS's label for them. The keyboard layout
-  setting goes, and the letter rows in `controls_config.tres` (stored as `null` today, so the
-  script defaults are what really run) become positions
-- [ ] Existing bindings in `settings.cfg` are converted to positions once
-- [ ] `slot_override`, `AUTO_SLOT` and `HotkeyAction.yields_to_card` are removed. Every ability
-  names its square
-- [ ] The boot check enforces section 2: one square per ability and one ability per square,
-  passives only on F/D/S, traits on their own squares, R only for a pressed ability, Sell only
-  on S, Cancel only on C and C free wherever Cancel can appear
-- [ ] The unused `toggle_grid` input action (on G) is deleted from `project.godot`
-
-**The layouts**
-- [ ] Towers: the named passive D to F, Prioritize Air F to E, the Ultimate Harbinger's second
-  passive R to D. Discs: the passive D to F. In ModelGen, then re-run
-- [ ] Core and inactive disc: Sell V to S, Water S to Y. Both then use the ordinary Sell, and the
-  separate Sell resource for these two cards goes. Show Ranges returns to the Core, on V
-- [ ] Creeps: passives get their squares (F/D/S) and traits theirs (Y/X/C). The Huntress's
-  passives are reordered so the shared Skittering comes first
-- [ ] An opponent's unit draws its passives and traits (today its card is empty)
-
-**The keys**
-- [ ] Select Builder defaults to B and no longer yields to the card. Its action bar square names
-  its key in its tooltip
-- [ ] The fixed keys come from one table (section 5). The arrow keys are added to what is refused
-- [ ] Unbound means no key: Sell, Build and Cancel no longer fall back to their square. Red
-  "is unbound!" lines on the Hotkeys page. A row accepts its own square's key to restore it,
-  and shows that key out of the box instead of "-"
-- [ ] Ctrl with a number does nothing while nothing is selected (today it empties the group)
-
-**The Research Center**
-- [ ] Opening it clears the selection; selecting anything closes it; its grid wins every key it
-  covers; a close button (✕) in its top right corner
-- [ ] Closing it without a new selection puts back the previous one
-
-**Elsewhere**
-- [ ] `game_rules.md`: the hotkey paragraphs under Controls and Interface become a pointer here
 - [ ] The tutorial's research lessons assume the selection survives opening the Research
-  Center. Re-check them with `TutorialProbe` once it does not
+  Center, and it no longer does. Re-check them with `TutorialProbe`

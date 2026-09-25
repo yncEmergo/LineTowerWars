@@ -719,70 +719,14 @@ PANEL shows and what a countdown means are gameplay and are the user's.
 - A unit can never be ordered out of its owner's area
   - An order aimed outside it walks the unit as close as it can get, as in WC3,
     rather than being dropped
-- **Hotkeys are being reworked, and `Docs/hotkeys.md` is the spec.** Its last
-  section lists what is not built yet. Until that section is empty, the hotkey
-  lines here and under Interface describe what the code does TODAY, and they
-  move there as the rework lands
-- Holding an ability's hotkey repeats it, ramping up to a capped rate
-  - Opt-in per ability, so leaning on a key can never repeat Sell or Cancel
-- Ability hotkeys are a GRID, WC3 grid style: the key an ability answers to is
-  decided by WHERE IT SITS on the command card, never by its name
-  - Which letter each square answers to is authored in the controls
-    config and written down nowhere else
-  - An ability keeps the key of the square it CLAIMED even when it has to sit
-    on another one, so one ABILITY is always one key. A square it was moved
-    off is then drawing somebody else's letter, which is the only thing that
-    ever separates the two
-  - An ability names the SQUARE it claims rather than a key. Anything claiming
-    no square falls into the first free one
-  - Sell claims the same square on every card that has one
-  - the Cancels - build, sell and upgrade - share a square of their own, so
-    calling something off is one key wherever you are. They are never on a card
-    at the same time as each other, since a building can only be doing one of
-    the three
-  - An empty square leaves its key alone, so the rest of the game's keys keep
-    working while a unit is selected
-  - Passives draw no letter and cannot be pressed
-  - The rows are written for a GERMAN keyboard, and the options screen swaps
-    the one letter an American board wants moved. Nothing else about the grid
-    is a setting: the letters are the game's, learned once
-  - The letters live in Resources/Config/controls_config.tres, one string per
-    row, so relaying the card out never means editing an ability
-- A SHORT AUTHORED LIST of commands answer to a key of their OWN instead, off
-  the grid, and those keys the player may rebind
-  - It is deliberately short and always will be. There are hundreds of
-    abilities and twelve squares, which is the whole reason the grid exists;
-    what earns a key of its own is a command that means the same thing on
-    every card a player ever opens, and so is reached for by NAME rather than
-    by position
-  - a key the grid already carries can never be given to one, in either
-    keyboard layout, so a press never means two things at once. The keys the
-    game answers wherever you are - the control groups, the ones that back out
-    and open the menu - are refused for the same reason
-  - the one exception is a command that YIELDS to the card: it answers only a
-    press the selected unit's card leaves alone, so it may take a grid letter
-    without a press ever meaning two things. Selecting the builder is one - it
-    works on any selection, or none, except one whose card presses that letter
-  - one key, one command: binding a key takes it off whatever held it before,
-    which is then left with no key until it is given one
-  - a command may also be left with NO key, which puts an ability back on the
-    square it sits in and hands it that square's letter again
-  - the Research Center's own key is one of these, and is the only one that is
-    not on a card at all
-- Such a command may claim its square AHEAD of the grid, and whatever wanted
-  that square is pushed to the next free one, counting on from it and wrapping
-  round the card
-  - it has to be able to: its key no longer comes from where it sits, but the
-    square it wants is usually one the grid has already promised somebody else
-  - the pushed ability keeps its key and takes it along to the new square. So
-    a command with a key of its own costs the card a SQUARE, never a key
-  - ONLY the ability that wanted that exact square moves, and only if it is
-    really there. Nothing else on the card is shuffled to make room, and a
-    card that was not using the square notices nothing at all
-  - the card is laid out square by square rather than in card order, so a
-    displaced ability slides its neighbour along in turn instead of leaping
-    over it to the first hole further down
-  - a card with nowhere left to push to is an authoring mistake and says so
+- **Ability hotkeys are a GRID, WC3 grid style**: an ability answers to the key
+  in the PLACE its square has on the keyboard, whatever is printed on it, and
+  never to its name. A short list of commands - Sell, Build, Cancel and the few
+  that are on no card - can be given a key of the player's own
+  - `Docs/hotkeys.md` is the whole of it: every card's layout, what can be
+    rebound and what that does, the Research Center's grid, the keys that never
+    change, and which of two things wanting one key gets it. It is the one
+    document allowed to name keys and squares
 - Holding SHIFT while giving an order CHAINS it behind whatever that unit is
   already doing, instead of replacing it
   - Only the orders that TAKE TIME can be chained, which is Move, Attack and
@@ -989,23 +933,12 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     player learns to skip over
   - A passive draws no letter and cannot be pressed, but it still OCCUPIES the
     square that letter is bound to, so every passive on a card costs a key
-  - **Elemental towers all put their named ability in the SAME square**, so
-    where to read what a tower does is learned once and never moves whichever
-    element or tier is selected. It is a square worth a hotkey and spending it
-    on something unpressable is the price of that
-  - **One square on every tower's card holds SHOW RANGES**, the readout that
-    briefly draws that tower's attack range and its ability radii at once. The
-    same square on every tower, Basic and elemental alike, so the question is
-    asked the same way whatever is selected - see Towers and attacking
-  - **Return to Elemental Core always claims the same square**, whichever
-    element and whichever tier is carrying it, so the way back down is one key
-    across the whole roster rather than a position that shifts with the card
-  - **An UPGRADE takes the best squares on the card, and a BRANCH takes the
-    first two, side by side**, in path order: first path first, second path
-    second. Choosing a path is the most consequential press in the game, so it
-    is the same two squares on every tower that branches, Basic and elemental
-    alike. A tower with one upgrade takes the first square on its own, so the
-    key that moves a tower up its line is the same key at every tier
+  - **Every kind of ability sits on the same square on every card** - the
+    upgrades, a tower's named ability, Sell, Show Ranges, the way back down to a
+    Core - so where to press or read a thing is learned once for the whole
+    roster. Choosing a path is the most consequential press in the game, so a
+    branch is the same two squares on every tower that has one. Every layout is
+    in `Docs/hotkeys.md` section 2
   - Every ability that produces a UNIT shows that unit as its icon: the tower a
     build or an upgrade places, the creep a send buys
     - the icons are PLACEHOLDERS and are generated, one render per unit, from
@@ -1042,31 +975,32 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   builder, one opens the Research Center
   - the builder square shows the builder's own picture and does nothing else -
     it selects, which is presentation, and the card that selection puts on
-    screen is what gives orders. It has a key of its own too, drawn on it, which
-    yields to the selected unit's card
+    screen is what gives orders. It has a key of its own too, drawn on it and
+    named in its tooltip, which means the same thing whatever is selected
   - the Research Center square draws the key that does the same job, so the
     letter a player reads is the letter the screen answers to
   - they are here rather than each beside the thing they reach, because a
     player looks for a button in the row of buttons
-- The RESEARCH CENTER is the one screen that is not about the selection: it
-  belongs to the player
+- The RESEARCH CENTER is the one screen that is not about a unit: it belongs to
+  the player
   - a grid of every technology, laid out exactly as a command card is - the key
     is read off the SQUARE and the square draws the letter it answers to, so
     the shape is learned once for both
   - it is deeper than a card can be, so its bottom rows are the same letters
     with Shift held
-  - it also has ONE key of its own, which opens and closes it and is drawn on
-    the square that does the same job. It is not read off a square, because the
-    screen is not a unit and has no card to sit on, and like the other keys of
-    their own it can be rebound
-  - THE SELECTION ALWAYS WINS A KEY, this one included. A letter the selected
-    unit's card answers stays that unit's, whether the screen is open or shut,
-    so a screen left open can never quietly change what a key does and building
-    and researching never become mutually exclusive. Only what no card claims
-    reaches a square, and with nothing selected every letter is the screen's
-  - so a square whose letter the selection has taken is reached with the mouse
-    for as long as that selection lasts, and Escape closes the screen whatever
-    is selected
+  - it has ONE key of its own, which opens it and is drawn on the action bar
+    square that does the same job, and like the other keys of their own it can
+    be rebound
+  - **IT COUNTS AS THE SELECTION.** Opening it clears whatever was selected,
+    and selecting anything - a unit, a box, a control group, the builder, a
+    click on empty ground - closes it. Closing it any other way puts back what
+    was selected when it opened, so a look at research costs nothing
+    - so the card and this grid are never live at once, and building or
+      sending happens before or after researching, never during it
+  - while it is open its grid owns every key it covers, the keys that mean
+    something everywhere else included - its own key among them, which is why
+    that key opens it and does not close it. Escape, the close button in its
+    top right corner and its action bar square close it
   - a square is lit once it is researched and greyed while it cannot be bought.
     Hovering one says what it would cost, what it leads to, and why it is
     refused when it is
@@ -1206,7 +1140,6 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     worth reading in an opponent's lane too, and half the board in a different
     state would be a second thing to keep track of
   - Local only: it changes what one player sees, never travels to the server
-  - X is no longer available: it is the bottom middle square of the command card
   - Only player cells are drawn, internal half cells are never shown
 - Grid coordinates are labelled in the border outside the buildable area, for orientation
   - Row numbers 1 to 30 run down the left side, 1 at the top

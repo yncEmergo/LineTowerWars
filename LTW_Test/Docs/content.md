@@ -71,6 +71,9 @@ makes those files the authority. Only their PREFABS are generated.
    the stats' `abilities`. A passive is a SHARED resource: one file is every creep of that type
    at once, so it may hold no per-creep state. Per-creep state lives on the creep — that is
    what `CreepMana` and `StatusEffects` are.
+   - **Every one names its `slot`**, and which square is `hotkeys.md` 2.3: a creep's own
+     passives on the passive squares in order, its traits on the bottom row. A shared one has
+     ONE square, so it must be free on every creep it is on. Nothing is placed for you.
 3. **Prefab** — `python Tools/ModelGen/generate.py models` after adding the creep to
    `creep_roster.py`. The prefab stage owns the three numbers measured off the model: health
    bar height, click box and stride length.
@@ -164,6 +167,9 @@ not the game log — `Log.err` from a running game surfaces there with a stack t
   stats resource declares actually exists. The editor does not rewrite a path string when a
   scene moves, which is the price of naming scenes by path, and this is what pays it. It walks
   the whole upgrade chain, so a broken `.tres` in the middle of a line is caught.
+- **`CardLayout.validate()`**, on every card that walk reaches and every menu one opens — every
+  ability on a square of its own, passives and traits on theirs, a command with a key of its
+  own on its own square everywhere, and Cancel's square free on every menu. `hotkeys.md` 2.
 - **The three registries** — `AbilityRegistry`, `UnitTypeRegistry`, `TechRegistry` — every id
   unique within its namespace.
 - **`TechDefinition.validate()`**, over every technology in the folder — the two tower paths a
