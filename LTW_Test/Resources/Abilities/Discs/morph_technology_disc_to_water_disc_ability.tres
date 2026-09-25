@@ -10,6 +10,6 @@ tower_stats = ExtResource("2_water_disc_stats")
 display_name = "Morph into Water Disc"
 description = "Friendly towers around it regenerate mana."
 targeting = 1
-slot = 5
+slot = 8
 required_element = 9
 required_element_techs = 1

@@ -64,10 +64,6 @@ S_SPARKS = "res://Scripts/Components/SparkAnimation3D.gd"
 
 A_ATTACK = "res://Resources/Abilities/attack_ability.tres"
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
-# Sell for a card that spends Sell's usual square on a morph - the Core here,
-# the inactive disc in disc_content. The same order and the same rebindable
-# action, on the last square instead. See CORE_MORPH_SLOTS.
-A_SELL_MORPH_CARD = "res://Resources/Abilities/sell_from_morph_card_ability.tres"
 A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
 A_CANCEL_UPGRADE = "res://Resources/Abilities/cancel_upgrade_ability.tres"
@@ -98,50 +94,48 @@ ARMOR_CHOICE_TOWER = "unholy_ultimate_alchemist"
 # so a branch reads left to right with no gap - see _upgrade_slot.
 BRANCH_SLOTS = (0, 1)
 
-# Which square each element claims on the ELEMENTAL CORE's card.
+# Which square each element claims on the ELEMENTAL CORE's card, and on the
+# inactive disc's, which reads this same table - see disc_content.
 #
 # The Core carries all ten morphs directly rather than behind a submenu, so
-# these ten squares plus Sell are eleven of the twelve and there is no room for
-# anything else - which is why the Core alone drops Attack, Prioritize and Show
-# Ranges off its card. Attack and Prioritize still work; see _card.
+# these ten squares plus Sell and Show Ranges fill the card - which is why the
+# Core alone drops Attack and Prioritize off it. Both still work; see _card.
 #
 # Authored HERE rather than derived from ELEMENT_ORDER, because the order the
 # roster tables are walked in and the order a player reaches for the elements
 # in are two different questions and neither should move the other.
 #
-# The morphs WIN the squares Sell would otherwise take. Sell is keyed by the
-# square it sits on on every other card, so a morph on that square would leave
-# two buttons answering to one key; the Core's Sell is its own resource on the
-# last square instead (A_SELL_MORPH_CARD), and still follows a key the player binds
-# to Sell. The gap in the run is not reserved for anything.
+# Sell keeps ITS square, S, as on every other card in the game, and Water took
+# the bottom left instead. Continuity with every other card won over the
+# source game's layout. Docs/hotkeys.md 2.5 is the whole card.
 CORE_MORPH_SLOTS = {
     "ice": 0, "lightning": 1, "holy": 2, "unholy": 3,
-    "fire": 4, "water": 5, "earth": 6, "arcane": 7,
-    "void": 9, "primal": 10,
+    "fire": 4, "earth": 6, "arcane": 7,
+    "water": 8, "void": 9, "primal": 10,
 }
 
 # Where a tower's named ability sits. ONE square for all eighty of them, so a
 # player learns where to read an elemental tower's rule once.
 #
-# It is a middle-row square rather than the far corner it used to be, which is
-# a deliberate trade: a passive draws no hotkey letter but still OCCUPIES the
-# square that letter is bound to, so this square is spent on something that can
-# never be pressed. It buys the passive a place the eye lands on, next to the
-# upgrades rather than off in the corner behind them, and its icon is the tower
-# itself, which is what makes it readable there.
-PASSIVE_SLOT = 6
+# F, the first of the passive squares, which a creep's passives take in the
+# same order - so "what this unit does" is read in the same place on towers and
+# creeps alike. A passive draws no hotkey letter but still OCCUPIES the square
+# its key is bound to, so the square is spent on something that can never be
+# pressed; its icon is the tower itself, which is what makes it readable there.
+# Docs/hotkeys.md 2.1.
+PASSIVE_SLOT = 7
 
 # Where a tower's SECOND named ability sits, on the one tower that has two.
 #
-# The square the other named abilities that are not the passive take - the
-# armour button and the Beastmaster's link - so every tower's second thing is
-# found in one place. Not the square beside the first passive, which is Sell's
-# on every card. No tower carries two of the three.
-SECOND_PASSIVE_SLOT = 3
+# D, the second passive square, for the reason above. Not R: R is the square of
+# an ability that is PRESSED, and a passive never is.
+SECOND_PASSIVE_SLOT = 6
 
-# Where the armour-type button sits, on the ONE tower that carries it. Its own
-# square rather than a shared one: nothing else in the roster is an active
-# named ability, so there is nothing for it to be consistent with.
+# Where the armour-type button sits, on the ONE tower that carries it.
+#
+# R, which on a tower or a creep card holds the unit's own ability that is
+# PRESSED and nothing else - the Beastmaster's link below and the Phoenix's
+# Dive take it too, so "this unit's ability" is one key in the whole game.
 ARMOR_CHOICE_SLOT = 3
 
 # The Beastmaster line, and the only towers in the roster that carry an ability
@@ -620,11 +614,11 @@ def _card(s, row):
     should read what it DOES before what it costs to replace.
 
     THE ELEMENTAL CORE IS THE EXCEPTION and is the reason this is a branch: it
-    carries all ten morphs directly, which with Sell all but fills the card. So
-    it is the one tower whose Attack, Prioritize and Show Ranges come OFF
-    the card - neither is lost, a right click still orders an attack and the
-    Core still shoots on its own, and a 200g tower that exists to be morphed is
-    not one anybody aims by hand.
+    carries all ten morphs directly, which with Sell and Show Ranges fills the
+    card. So it is the one tower whose Attack and Prioritize come OFF the card -
+    neither is lost, a right click still orders an attack and the Core still
+    shoots on its own, and a 200g tower that exists to be morphed is not one
+    anybody aims by hand.
     """
     card = []
     if row["key"] in ea.ABILITIES:
@@ -640,7 +634,8 @@ def _card(s, row):
         for source, target in er.upgrade_pairs():
             if source == "elemental_core":
                 card.append(s.ext("Resource", upgrade_ability_path(source, target)))
-        card.append(s.ext("Resource", A_SELL_MORPH_CARD))
+        card.append(s.ext("Resource", A_SELL))
+        card.append(s.ext("Resource", A_SHOW_RANGES))
         return card
 
     for source, target in er.upgrade_pairs():

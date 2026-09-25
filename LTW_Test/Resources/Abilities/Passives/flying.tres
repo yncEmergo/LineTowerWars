@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 8
 ability_id = 122
 display_name = "Flying"
 description = "Flies over the maze and can only be hit by towers that target air."

@@ -11,4 +11,4 @@ required_tech_id = 10
 display_name = "Morph into Splasher"
 description = "Throws a wave every fourth attack. Splits into the anti-air paralyzer and the slowing sludge."
 targeting = 1
-slot = 5
+slot = 8

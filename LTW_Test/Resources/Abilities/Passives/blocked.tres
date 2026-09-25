@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 6
 ability_id = 343
 display_name = "Blocked"
 targeting = 0

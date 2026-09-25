@@ -22,6 +22,7 @@ delivery = SubResource("Delivery")
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 rocket = SubResource("Rocket")
 ability_id = 304
 display_name = "Bombardment"

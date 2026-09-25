@@ -9,5 +9,5 @@ ability_id = 71
 display_name = "Prioritize Air"
 description = "Shoot flyers first while any are in range, and fall back to normal targeting when none are. Only towers that can hit both can choose."
 targeting = 1
-slot = 7
+slot = 2
 icon = ExtResource("2_ability_prioritize_air")

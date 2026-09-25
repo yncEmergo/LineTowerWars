@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 ability_id = 342
 display_name = "Stoneskin Fortitude"
 targeting = 0

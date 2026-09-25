@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 10
 ability_id = 125
 display_name = "Attacker"
 description = "Attacks towers instead of walking past them, and takes orders from you.\nIt never advances on its own."

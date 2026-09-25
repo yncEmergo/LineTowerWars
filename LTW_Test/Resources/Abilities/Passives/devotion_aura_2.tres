@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 ability_id = 302
 display_name = "Devotion Aura"
 targeting = 0

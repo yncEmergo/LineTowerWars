@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 6
 ability_id = 337
 display_name = "Abyssal Carapace"
 targeting = 0

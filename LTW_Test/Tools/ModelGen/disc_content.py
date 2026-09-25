@@ -56,9 +56,6 @@ S_DISC_REVERT = "res://Scripts/Abilities/DiscRevertAbility.gd"
 S_DISC = "res://Scripts/Units/Disc.gd"
 
 A_SELL = "res://Resources/Abilities/sell_ability.tres"
-# The inactive disc spends Sell's usual square on a morph, exactly as the
-# Elemental Core does, and takes the same way out of it.
-A_SELL_MORPH_CARD = ec.A_SELL_MORPH_CARD
 A_SHOW_RANGES = "res://Resources/Abilities/show_ranges_ability.tres"
 A_CANCEL_BUILD = "res://Resources/Abilities/cancel_build_ability.tres"
 A_CANCEL_SELL = "res://Resources/Abilities/cancel_sell_ability.tres"
@@ -273,10 +270,10 @@ def _card(s, row):
     replace.
 
     THE INACTIVE DISC IS THE EXCEPTION and is the reason this is a branch. It
-    carries all ten morphs directly, which with Sell all but fills the card -
-    so it has no room for anything else and needs none: it does nothing, so it
-    has no effect to show, no range to draw and nothing to go back to. Its Sell
-    moves off the square the water morph takes, as the Core's does.
+    carries all ten morphs directly, on the Core's own squares, and Sell - and
+    needs nothing else: it does nothing, so it has no effect to show, no range
+    to draw and nothing to go back to. Its Sell is the ordinary one, on the
+    ordinary square, as the Core's is.
     """
     card = []
     if row["passive"] is not None:
@@ -292,7 +289,7 @@ def _card(s, row):
         card.append(s.ext("Resource", A_REVERT))
 
     if row["tier"] == 0:
-        card.append(s.ext("Resource", A_SELL_MORPH_CARD))
+        card.append(s.ext("Resource", A_SELL))
         return card
 
     card.append(s.ext("Resource", A_SELL))

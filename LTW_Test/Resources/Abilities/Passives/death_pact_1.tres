@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 ability_id = 61
 display_name = "Death Pact"
 targeting = 0

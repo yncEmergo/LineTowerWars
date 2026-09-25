@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 6
 ability_id = 329
 display_name = "Wind Rush"
 targeting = 0

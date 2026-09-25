@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 ability_id = 60
 display_name = "Fast Producing"
 targeting = 0

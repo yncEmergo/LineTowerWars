@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 5
 ability_id = 339
 display_name = "Quickness"
 targeting = 0

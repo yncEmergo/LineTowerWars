@@ -8,6 +8,6 @@ script = ExtResource("1_OverchargePassive")
 ability_id = 144
 display_name = "Overcharge"
 targeting = 0
-slot = 6
+slot = 7
 icon = ExtResource("2_shock_particle")
 damage_per_tenth = 2

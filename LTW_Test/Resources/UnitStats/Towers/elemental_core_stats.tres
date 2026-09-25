@@ -14,11 +14,12 @@
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_elemental_core_to_earth_rockfall_ability.tres" id="12_upgrade_elemental_core_to_earth_rockfall_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_elemental_core_to_arcane_apprentice_ability.tres" id="13_upgrade_elemental_core_to_arcane_apprentice_ability"]
 [ext_resource type="Resource" path="res://Resources/Abilities/Towers/upgrade_elemental_core_to_primal_quarry_ability.tres" id="14_upgrade_elemental_core_to_primal_quarry_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/sell_from_morph_card_ability.tres" id="15_sell_from_morph_card_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="16_cancel_build_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="17_cancel_sell_ability"]
-[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="18_cancel_upgrade_ability"]
-[ext_resource type="Texture2D" path="res://2DArt/Icons/elemental_core.png" id="19_elemental_core"]
+[ext_resource type="Resource" path="res://Resources/Abilities/sell_ability.tres" id="15_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/show_ranges_ability.tres" id="16_show_ranges_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_build_ability.tres" id="17_cancel_build_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_sell_ability.tres" id="18_cancel_sell_ability"]
+[ext_resource type="Resource" path="res://Resources/Abilities/cancel_upgrade_ability.tres" id="19_cancel_upgrade_ability"]
+[ext_resource type="Texture2D" path="res://2DArt/Icons/elemental_core.png" id="20_elemental_core"]
 
 [sub_resource type="Resource" id="Delivery"]
 script = ExtResource("4_InstantDelivery")
@@ -37,16 +38,16 @@ delivery = SubResource("Delivery")
 script = ExtResource("1_BuildingStats")
 unit_type_id = 64
 display_name = "Elemental Core"
-icon = ExtResource("19_elemental_core")
+icon = ExtResource("20_elemental_core")
 max_health = 100
 armor_type = 5
 armor = 5
 attack = SubResource("Attack")
-abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_elemental_core_to_fire_fire_pit_ability"), ExtResource("6_upgrade_elemental_core_to_ice_obelisk_ability"), ExtResource("7_upgrade_elemental_core_to_lightning_shock_particle_ability"), ExtResource("8_upgrade_elemental_core_to_holy_light_flies_ability"), ExtResource("9_upgrade_elemental_core_to_void_voidling_ability"), ExtResource("10_upgrade_elemental_core_to_unholy_plague_well_ability"), ExtResource("11_upgrade_elemental_core_to_water_splasher_ability"), ExtResource("12_upgrade_elemental_core_to_earth_rockfall_ability"), ExtResource("13_upgrade_elemental_core_to_arcane_apprentice_ability"), ExtResource("14_upgrade_elemental_core_to_primal_quarry_ability"), ExtResource("15_sell_from_morph_card_ability")])
+abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("5_upgrade_elemental_core_to_fire_fire_pit_ability"), ExtResource("6_upgrade_elemental_core_to_ice_obelisk_ability"), ExtResource("7_upgrade_elemental_core_to_lightning_shock_particle_ability"), ExtResource("8_upgrade_elemental_core_to_holy_light_flies_ability"), ExtResource("9_upgrade_elemental_core_to_void_voidling_ability"), ExtResource("10_upgrade_elemental_core_to_unholy_plague_well_ability"), ExtResource("11_upgrade_elemental_core_to_water_splasher_ability"), ExtResource("12_upgrade_elemental_core_to_earth_rockfall_ability"), ExtResource("13_upgrade_elemental_core_to_arcane_apprentice_ability"), ExtResource("14_upgrade_elemental_core_to_primal_quarry_ability"), ExtResource("15_sell_ability"), ExtResource("16_show_ranges_ability")])
 scene_path = "res://Scenes/Units/Towers/elemental_core.tscn"
 model_scene_path = "res://Scenes/Units/Models/Towers/elemental_core_model.tscn"
-construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("16_cancel_build_ability")])
-selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("17_cancel_sell_ability")])
-upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("18_cancel_upgrade_ability")])
+construction_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("17_cancel_build_ability")])
+selling_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("18_cancel_sell_ability")])
+upgrading_abilities = Array[ExtResource("2_UnitAbility")]([ExtResource("19_cancel_upgrade_ability")])
 gold_cost = 200
 total_gold_cost = 200

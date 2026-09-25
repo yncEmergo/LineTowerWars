@@ -8,6 +8,6 @@ script = ExtResource("1_BurstingLightPassive")
 ability_id = 152
 display_name = "Bursting Light"
 targeting = 0
-slot = 6
+slot = 7
 icon = ExtResource("2_light_flies")
 additional_targets = 4

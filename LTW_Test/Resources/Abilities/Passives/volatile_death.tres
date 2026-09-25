@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_passive")
+slot = 7
 ability_id = 355
 display_name = "Volatile Death"
 targeting = 0
