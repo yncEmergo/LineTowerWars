@@ -29,6 +29,13 @@ const SENTRY_ABILITY: String = "res://Resources/Abilities/Towers/build_lesser_se
 ## a refusal by the list rather than by a missing prerequisite.
 const OFF_LIST_TECH: int = 7
 const SHOW_BLUEPRINTS: String = "res://Resources/Abilities/Blueprints/show_blueprints_ability.tres"
+const GREATER_GLYPH: String = \
+	"res://Resources/UnitStats/Towers/lightning_greater_annihilation_glyph_stats.tres"
+const ULTIMATE_GLYPH_UP: String = "res://Resources/Abilities/Towers/" \
+	+ "upgrade_lightning_greater_annihilation_glyph_to_" \
+	+ "lightning_ultimate_annihilation_glyph_ability.tres"
+const ULTIMATE_FIRELORD_UP: String = "res://Resources/Abilities/Towers/" \
+	+ "upgrade_fire_greater_firelord_to_fire_ultimate_firelord_ability.tres"
 const SPEED: int = 200
 const GIVE_UP_TICKS: int = 20 * 60 * 20
 
@@ -903,6 +910,7 @@ func _play_veteran() -> void:
 		_note("veteran woken: gold %d, income %d, maze value %d" % [
 			vet.gold, vet.income, References.player_manager.value_for(slot)])
 		_check_roster_open(2)
+		_check_ultimate_gate()
 	if _lesson_ticks % 100 == 0:
 		var sender: SendBuilding = _sender(1)
 		var best: SendCreepAbility = null
@@ -945,6 +953,41 @@ func _play_veteran() -> void:
 		_note("veteran: still standing after four minutes, ended by the probe")
 		vet.lives = 0
 		vet.lives_changed.emit(0)
+
+
+## Lesson 22 tells the player an Ultimate needs four technologies, and the
+## tutorial ends holding exactly the four that prove it: Fire and its Firelord
+## path, Lightning and its Glyph path. That is the Ultimate Firelord's set and
+## only half of the Ultimate Annihilation Glyph's, whose partner is Unholy (2).
+## The Glyph's upgrade used to light anyway, because it asked for its own path
+## and nothing more.
+##
+## Asked of the TECHNOLOGY half of the gate rather than of can_execute, because
+## the player need not be holding 30,000 gold here, and a refusal for want of
+## gold would read exactly like the refusal under test.
+func _check_ultimate_gate() -> void:
+	var area: PlayerArea = References.player_manager.area_for(1)
+	var glyph: Building = null
+	for child in area.get_children():
+		var tower: Building = child as Building
+		if tower != null && tower.stats != null && tower.stats.resource_path == GREATER_GLYPH:
+			glyph = tower
+	_check(glyph != null, "ultimate gate: the Greater Glyph of lesson 29 is standing")
+	if glyph == null:
+		return
+	var up_glyph: UpgradeTowerAbility = load(ULTIMATE_GLYPH_UP) as UpgradeTowerAbility
+	var up_fire: UpgradeTowerAbility = load(ULTIMATE_FIRELORD_UP) as UpgradeTowerAbility
+	# The positive control: the same question answered yes for the Ultimate the
+	# same four technologies DO cover, so a no below is the rule and not a gate
+	# that refuses everything.
+	_check(up_fire._owner_has_tech(glyph),
+		"ultimate gate: Fire (2) + Lightning (1) cover the Ultimate Firelord")
+	_check(up_glyph in glyph.current_abilities(),
+		"ultimate gate: the Greater Glyph carries the upgrade to its Ultimate")
+	_check(!up_glyph._owner_has_tech(glyph),
+		"ultimate gate: and do NOT cover the Ultimate Annihilation Glyph")
+	var text: String = up_glyph._tech_requirement_text()
+	_check(text.contains("Alchemist"), "ultimate gate: its card names the partner (%s)" % text)
 
 
 ## Every creep of a tier ACTUALLY open on the player's senders, rather than the

@@ -19,10 +19,12 @@ extends TutorialStep
 ## does not count yet.
 ##
 ## **Naming the technologies matters even where the upgrade itself is gated on
-## them**, because an Ultimate's CROSS requirement is not: the ability that
-## raises a Greater Firelord to the Ultimate asks only for the Firelord path,
-## so a task that waited on the tower alone could be finished without the two
-## technologies it is teaching. See game_rules.md, Technology.
+## them**, because the list is what the Research Center accepts while the task
+## is up and what the brackets count - the gate only refuses, it points at
+## nothing. An Ultimate is gated on all four of its technologies, cross
+## requirement included, so the tower half cannot be finished without them;
+## until that gate existed this list was the only thing that made sure of it.
+## See game_rules.md, Technology.
 
 @export_group("Objective")
 ## The tower type, as a res:// path to its BuildingStats.

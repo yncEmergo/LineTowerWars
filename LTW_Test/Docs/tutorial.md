@@ -301,11 +301,6 @@ message.
 - **No way back in.** Leaving part way starts again from the first lesson
 - **It does not react to mistakes.** A player who runs out of lives is offered a retry and
   nothing more
-- **An Ultimate's CROSS requirement is not enforced by the upgrade itself.** The ability that
-  raises a Greater Firelord to the Ultimate asks only for the Firelord path, not for the two
-  technologies of the other element `game_rules.md` says an Ultimate needs - so the lesson
-  waits on the technologies as well as on the tower rather than on the tower alone. A rule
-  written down and half built, not a tutorial problem
 
 ## 11. Testing it
 
@@ -314,7 +309,10 @@ whole tutorial through the real order road faster than real time. In every teleg
 also TRIES what must be refused - a tower off the list, a cell off the blueprint, an upgrade,
 another creep, a technology off the list, an Ultimate shortcut - and checks nothing happened.
 It checks where the border resolves, how many arrows stand, that explanations and moments hold
-the world and show the right panel, and how the tutorial ends. Against each opponent it plays
+the world and show the right panel, and how the tutorial ends. When the last opponent wakes it
+also checks the four-technology rule the technology lesson teaches: the technologies the
+player ends up with raise a Firelord to the Ultimate and stop the Glyph at the Greater, whose
+partner is Unholy (2). Against each opponent it plays
 for real and notes how the fight goes before ending it; against the first it keeps it standing
 until every moment has fired. `-- lose` runs the player out of lives instead and checks the
 defeat screen. It dispatches on the lesson FILE name, so a lesson renamed or added needs a

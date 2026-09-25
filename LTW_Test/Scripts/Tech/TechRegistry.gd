@@ -28,12 +28,20 @@ var _by_id: Dictionary = {}
 ## Element -> Kind -> TechDefinition, so "the Basic of this element" is a
 ## lookup rather than a scan over everything.
 var _by_element: Dictionary = {}
+## unit_type_id of an Ultimate tower -> the path technology that leads to it.
+## Filled on the first ask rather than at build, for the reason
+## ultimate_stats_path is a path at all: nothing here reads a tower until
+## something needs one.
+var _by_ultimate: Dictionary = {}
+var _by_ultimate_read: bool = false
 
 
 ## Collects everything under one folder. Call once, at boot.
 func build(folder: String) -> void:
 	_by_id.clear()
 	_by_element.clear()
+	_by_ultimate.clear()
+	_by_ultimate_read = false
 	if folder.is_empty():
 		Log.err("TechRegistry was given no folder, the Research Center will be empty")
 		return
@@ -97,6 +105,27 @@ func path_techs() -> Array[TechDefinition]:
 		if tech.is_path():
 			found.append(tech)
 	return found
+
+
+## The path technology whose Ultimate `tower` is, or null for every tower that
+## is not an Ultimate.
+##
+## What makes an Ultimate ask for its whole four-technology requirement
+## (unit_data.md 2.3) rather than for the one path its upgrade names: the
+## answer is read off the path's own ultimate_stats_path, so the cross
+## requirement keeps the single home it has and no upgrade can quote a
+## different partner from the Research Center's.
+##
+## Keyed by unit_type_id, the tower's authored identity, rather than by
+## comparing file paths - an exported build remaps every .tres, and the id
+## survives that where a path is only as good as the loader's spelling of it.
+func path_leading_to(tower: UnitStats) -> TechDefinition:
+	if tower == null || tower.unit_type_id == UnitTypeRegistry.NO_TYPE:
+		return null
+	if !_by_ultimate_read:
+		_by_ultimate_read = true
+		_index_ultimates()
+	return _by_ultimate.get(tower.unit_type_id) as TechDefinition
 
 
 func count() -> int:
@@ -184,6 +213,20 @@ func _index_by_element(tech: TechDefinition) -> void:
 		})
 		return
 	kinds[tech.kind] = tech
+
+
+## Reads the twenty Ultimates once. A cache hit rather than a disk read by the
+## time anything asks: the ability walk at boot has already loaded every tower
+## a card can reach. A path that does not resolve is left out here and reported
+## by TechDefinition.validate, which is the one place that says so.
+func _index_ultimates() -> void:
+	for tech in path_techs():
+		var path: String = tech.ultimate_stats_path
+		if path.is_empty() || !ResourceLoader.exists(path):
+			continue
+		var stats: UnitStats = ResourceLoader.load(path, "") as UnitStats
+		if stats != null && stats.unit_type_id != UnitTypeRegistry.NO_TYPE:
+			_by_ultimate[stats.unit_type_id] = tech
 
 
 # --- the checks -----------------------------------------------------------

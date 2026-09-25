@@ -10,7 +10,10 @@ Three things are here that the Basic roster has no need of:
 
   A TECHNOLOGY GATE. Every elemental upgrade authors `required_tech_id`, which
   TowerOrderAbility checks against the ORDERING PLAYER through TechManager - the
-  same call the Research Center makes, so there is no second copy of the rule
+  same call the Research Center makes, so there is no second copy of the rule.
+  An Ultimate's upgrade authors only its OWN path here: the other element's
+  path it also needs is read off that path technology at runtime, so do not
+  add a second id for it
 
   A NAMED ABILITY. Each tower carries one TowerPassive .tres of its own,
   authored from element_abilities.ABILITIES. It claims the same square on all

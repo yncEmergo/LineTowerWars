@@ -2001,8 +2001,13 @@ The roster, the names, the prices and the twenty cross requirements are in
   - it is one press like the random roll, so the undo button takes the whole
     Ultimate back rather than picking it apart
 - What a technology unlocks is BUILT: the Elemental Core morphs into the
-  elements whose Basic technology their owner has researched, and each path's
-  4,000g upgrade is gated on that path's own technology. See The Elemental Core
+  elements whose Basic technology their owner has researched, each path's
+  4,000g upgrade is gated on that path's own technology, and the upgrade into
+  an ULTIMATE is gated on all four of the Ultimate's. See The Elemental Core
+  - owning a path is never enough on its own for that path's Ultimate. A
+    player holding Fire (2) and Lightning (1) may raise a Firelord to the
+    Ultimate, and a Glyph only as far as the Greater: the Ultimate Annihilation
+    Glyph's partner is Unholy (2)
 - So are the technology DISCS, which are a separate thing from the towers and
   ask for technology in a different unit: a COUNT rather than a named one. See
   Technology discs below

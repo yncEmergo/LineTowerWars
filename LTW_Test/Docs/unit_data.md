@@ -249,9 +249,10 @@ Sell time is the same for every building; only the refund percentage differs.
 resource per technology, `Scripts/Tech/` holds the rules, and the Research Center screen
 sells them. The towers it gates are built too: an elemental upgrade names the technology it
 needs by `tech_id`, and the same `TechManager.owns` call the Research Center makes is what
-refuses it. The prices in 2.2 are mirrored by `game_config.tres` and the cross requirements
-in 2.3 by the path technologies themselves, which is what lets the bijection be checked at
-boot.
+refuses it. An upgrade into an Ultimate is refused until all four technologies in 2.3 are
+owned, read off the path technology rather than authored on the upgrade. The prices in 2.2
+are mirrored by `game_config.tres` and the cross requirements in 2.3 by the path technologies
+themselves, which is what lets the bijection be checked at boot.
 
 ## 2.1 Ten elements, three techs each
 

@@ -36,6 +36,11 @@ extends UnitAbility
 ## The check is the SAME call the Research Center makes, TechManager.owns, so
 ## there is no second copy of the rule. It is asked of the tower's OWNER rather
 ## than of whoever is looking, exactly as affordability is.
+##
+## **An ULTIMATE asks for more than this.** Its upgrade names its own path, and
+## the other three of the four (unit_data.md 2.3) - above all the OTHER
+## element's path - are read off that path technology rather than authored
+## here. See _owner_has_tech.
 @export var required_tech_id: int = 0
 
 
@@ -87,26 +92,57 @@ func model_scene() -> PackedScene:
 
 ## Whether the ordering player has researched what this tower needs.
 ##
+## The technology this order names, and - when the tower is an Ultimate - the
+## whole four-technology requirement of the path it tops. The second half is
+## asked of the TOWER rather than of required_tech_id, so an Ultimate is never
+## put up on its own path alone however its upgrade happens to be authored.
+## Without it, owning a path was enough to raise its Greater into the Ultimate:
+## Fire (2) and Lightning (1) lit the Ultimate Firelord, correctly, and the
+## Ultimate Annihilation Glyph as well, whose partner is Unholy (2).
+##
 ## True when nothing is required, and true when there is no technology manager
 ## at all - a bare test scene must stay usable, the same way _owner_can_afford
 ## passes with no PlayerManager.
 func _owner_has_tech(unit: Unit) -> bool:
-	if required_tech_id == 0:
-		return true
 	var manager: TechManager = References.tech_manager
 	if manager == null || unit == null:
 		return true
-	return manager.owns(unit.owner_player_id, required_tech_id)
+	var player: int = unit.owner_player_id
+	if required_tech_id != 0 && !manager.owns(player, required_tech_id):
+		return false
+	var path: TechDefinition = _ultimate_path()
+	return path == null || manager.owns_ultimate(player, path)
+
+
+## The path technology whose Ultimate this tower is, or null for every other
+## tower - which is all of them bar the twenty at the top of each path.
+func _ultimate_path() -> TechDefinition:
+	var registry: TechRegistry = _tech_registry()
+	return null if registry == null else registry.path_leading_to(tower_stats)
+
+
+func _tech_registry() -> TechRegistry:
+	var session: MatchSession = References.match_session
+	return null if session == null else session.techs()
 
 
 ## What this tower is waiting on, as a line for its tooltip, or empty when it
 ## is not waiting on anything. Named rather than "requires technology", because
 ## a player looking at a greyed square needs to know WHICH one to go and buy.
+##
+## An Ultimate names both PATHS, the way unit_data.md 2.3 writes the table. The
+## two Basics under them go unsaid: neither path can be bought without its own,
+## and the Research Center square says so where it matters.
 func _tech_requirement_text() -> String:
+	var registry: TechRegistry = _tech_registry()
+	var path: TechDefinition = _ultimate_path()
+	if path != null:
+		var cross: TechDefinition = registry.tech_for(path.ultimate_cross_tech_id)
+		if cross != null:
+			return "Requires %s and %s." % [path.display_name, cross.display_name]
+
 	if required_tech_id == 0:
 		return ""
-	var session: MatchSession = References.match_session
-	var registry: TechRegistry = null if session == null else session.techs()
 	var tech: TechDefinition = null if registry == null else registry.tech_for(required_tech_id)
 	if tech == null:
 		return "Requires a technology this build does not contain."

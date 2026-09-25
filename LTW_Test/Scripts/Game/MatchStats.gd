@@ -301,18 +301,8 @@ func _read_ultimates(line: MatchStatLine) -> void:
 		return
 
 	for path: TechDefinition in session.techs().path_techs():
-		if _owns_whole(manager, line.slot, path):
+		if manager.owns_ultimate(line.slot, path):
 			line.ultimates.append(path.ultimate_name)
-
-
-func _owns_whole(manager: TechManager, slot: int, path: TechDefinition) -> bool:
-	var needed: Array[TechDefinition] = manager.ultimate_requirement(path)
-	if needed.is_empty():
-		return false
-	for entry in needed:
-		if !manager.owns(slot, entry.tech_id):
-			return false
-	return true
 
 
 func _line(player_id: int) -> MatchStatLine:

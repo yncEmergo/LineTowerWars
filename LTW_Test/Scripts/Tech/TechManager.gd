@@ -71,6 +71,23 @@ func owns(player_id: int, tech_id: int) -> bool:
 	return tech != null && tech.has(tech_id)
 
 
+## Whether a player owns all four technologies the Ultimate at the end of
+## `path` needs (unit_data.md 2.3). False for a Basic technology, which leads
+## to no Ultimate.
+##
+## What an upgrade INTO an Ultimate asks on top of its own path, and what the
+## end of match screen reads to say which Ultimates a player finished on - one
+## question, so the tower and the scoreboard cannot disagree about it.
+func owns_ultimate(player_id: int, path: TechDefinition) -> bool:
+	var needed: Array[TechDefinition] = ultimate_requirement(path)
+	if needed.is_empty():
+		return false
+	for entry in needed:
+		if !owns(player_id, entry.tech_id):
+			return false
+	return true
+
+
 ## How many of one element three technologies this player owns, 0 to 3.
 ##
 ## The question the technology DISCS ask instead of owns(): an Advanced disc
