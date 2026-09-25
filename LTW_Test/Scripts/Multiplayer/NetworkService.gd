@@ -330,6 +330,15 @@ func move_attempts() -> int:
 	return _move_attempts
 
 
+## Whether a move to a match process is running right now.
+##
+## Asked by the loading screen, which must not leave for the browser while one
+## is: a link that broke during loading is being dialled back with the token the
+## client kept, and the seat is held for D26's hold.
+func is_moving() -> bool:
+	return _moving
+
+
 ## Hangs up, from either end. Safe to call when already offline, because the
 ## caller usually cannot know - a Back button does not care whether the
 ## connection failed a moment ago.

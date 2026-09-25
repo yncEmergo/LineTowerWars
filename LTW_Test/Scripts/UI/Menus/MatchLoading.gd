@@ -294,7 +294,24 @@ func _build_rows() -> void:
 			Log.err("MatchLoading row prefab root does not have a LobbySlot script")
 			return
 		_slot_list.add_child(slot)
-		_fill_row(slot, player, ready_ids.has(player.network_id))
+		_fill_row(slot, player, _is_loaded(player, ready_ids))
+
+
+## Whether a row's player has reported loaded.
+##
+## **A match process answers in SLOTS and a lobby process in PEER IDS** (D44),
+## because the clients of a match process never saw the ids it gave their seats.
+## Read as peer ids only, every row on a handed-off match would say "Loading..."
+## for the whole wait; read as slots only, the in-process path would say it
+## instead. So both are accepted: a peer id is a large number Godot chose at
+## random and a slot is 1 to 12, and the two cannot be confused in practice.
+##
+## The alternative was to key this on whether the announce carried a port, which
+## means one more thing for a screen to be told and to get wrong.
+func _is_loaded(player: MatchPlayer, ready_ids: PackedInt32Array) -> bool:
+	if player.network_id != 0 && ready_ids.has(player.network_id):
+		return true
+	return player.slot > 0 && ready_ids.has(player.slot)
 
 
 func _fill_row(slot: LobbySlot, player: MatchPlayer, is_loaded: bool) -> void:
@@ -312,6 +329,11 @@ func _fill_row(slot: LobbySlot, player: MatchPlayer, is_loaded: bool) -> void:
 
 func _is_local_row(player: MatchPlayer) -> bool:
 	if _offline:
+		return player.slot == _setup.local_slot
+	# The SLOT first, because it is the one thing that survives the move to a
+	# match process: `local_slot` is what the announce said this machine plays,
+	# and the ids in the roster are the lobby's until the go signal replaces them.
+	if _setup.local_slot > 0:
 		return player.slot == _setup.local_slot
 	return player.network_id == Net.peer_id()
 
@@ -332,6 +354,13 @@ func _on_match_cancelled(reason: String) -> void:
 func _on_server_disconnected() -> void:
 	set_process(false)
 	_warmer = null
+	# **A link that broke while loading may not be the end of it** (D44): the
+	# seat is held for D26's hold and MatchStart is already dialling back with
+	# the token it kept. Leaving for the browser here would throw away a match
+	# this machine is still entitled to play.
+	if MatchStart.setup() != null && Net.is_moving():
+		_set_status("Reconnecting to the match...")
+		return
 	MenuNavigation.pending_notice = "Lost connection to the server while loading."
 	MenuNavigation.to_lobby_browser(self)
 

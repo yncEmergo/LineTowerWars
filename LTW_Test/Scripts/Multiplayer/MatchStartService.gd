@@ -149,6 +149,13 @@ var _match_token: PackedByteArray = PackedByteArray()
 ## moment D15 gives up on this player rather than at some later time of the
 ## client's own.
 var _move_deadline: float = 0.0
+## Whether the connection this client is on belongs to a MATCH PROCESS.
+##
+## Outlives the token, which the go signal throws away: a cancel arriving during
+## the match still has to know that this connection is not the lobby's, so that
+## the client hangs up and opens the browser rather than trying to walk back
+## into a room that was erased at the handoff.
+var _handed_off_connection: bool = false
 ## A move that has been decided on but not yet started. See `_try_start_move`.
 var _move_pending: bool = false
 
@@ -488,6 +495,11 @@ func receive_match_start(payload: Dictionary) -> void:
 	# **The door is shut.** From the go signal on, D13 holds unchanged: a token
 	# is dead, nothing may claim a seat again, and a lost connection ends the
 	# match on screen rather than starting another dial.
+	#
+	# The CONNECTION is still a match process's, though, which is what decides
+	# where a later cancel sends this client - so that is remembered separately
+	# from the token being thrown away.
+	_handed_off_connection = _match_port > 0
 	_match_token = PackedByteArray()
 	_match_port = 0
 	_move_deadline = 0.0
@@ -503,13 +515,35 @@ func receive_match_start(payload: Dictionary) -> void:
 @rpc("authority", "reliable")
 func receive_match_cancelled(reason: String) -> void:
 	Log.warn("Match cancelled", reason)
+	# **Was this a MATCH PROCESS telling us, or the lobby?** The answer decides
+	# where this client goes and whether it hangs up first, and the port it was
+	# handed is the only thing that says which.
+	var from_match_process: bool = _match_port > 0 || _handed_off_connection
 	_setup = null
 	_ready_ids = PackedInt32Array()
+	_loaded = false
+	_match_token = PackedByteArray()
+	_match_port = 0
+	_move_deadline = 0.0
+	_move_pending = false
 	match_cancelled.emit(reason)
 	# The reason is handed across the scene change, as every other one is.
 	MenuNavigation.pending_notice = reason
-	# Usually still in the lobby, so that is where this goes back to. If the
-	# lobby went away too, the browser is the only place left.
+
+	if from_match_process:
+		# **Hangs up BEFORE it changes scene, and then opens the BROWSER.**
+		# Without the hang-up the browser opens still connected to the match
+		# process, never dials the lobby, and every Create times out with the
+		# "different code" sentence - because a match process's `Lobby`
+		# endpoints answer nothing. And the lobby this client came from is gone:
+		# it was erased at the handoff, so there is no room to go back to.
+		_handed_off_connection = false
+		Net.leave()
+		MenuNavigation.to_lobby_browser(self)
+		return
+
+	# Today's in-process path: the process that cancelled IS the lobby, which is
+	# why staying connected and going back to the room is right there.
 	var lobby: LobbyInfo = Lobby.current()
 	if lobby == null:
 		MenuNavigation.to_lobby_browser(self)
@@ -860,6 +894,9 @@ func _on_server_lost() -> void:
 	if References.match_session == null:
 		return
 	Log.warn("Lost the server during a match, ending it")
+	# Whatever this connection was, it has gone: the browser dials the lobby
+	# itself on the way in (D20).
+	_handed_off_connection = false
 	MenuNavigation.pending_notice = SERVER_LOST_NOTICE
 	MenuNavigation.to_lobby_browser(self)
 
