@@ -45,6 +45,15 @@ signal countdown_cancelled(reason: String)
 const ID_PREFIX: String = "lobby-"
 
 # --- server state, empty on a client --------------------------------------
+## Whether this process is a MATCH PROCESS rather than a lobby (D44).
+##
+## **A match process keeps this autoload and every other rpc autoload**, because
+## D31's hash walks all of them and one missing endpoint would refuse every
+## client for being on different code. It simply has no lobbies, no browser and
+## no business answering for any - so `_serving()` is false there and every
+## endpoint returns BEFORE it logs, which is also what stops a stranger making a
+## match process write a line per packet.
+var _is_match_process: bool = false
 var _lobbies: Dictionary = {}
 ## peer id -> lobby id, so a leaving peer can be found without scanning.
 var _lobby_of_peer: Dictionary = {}
@@ -76,6 +85,10 @@ func _ready() -> void:
 	# match, and a countdown must not stop because somebody else's match is
 	# waiting on a draft.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var boot: BootConfig = References.boot_config
+	_is_match_process = boot != null && boot.is_match_server()
+	if _is_match_process:
+		Log.info("Lobby endpoints are inert in a match process")
 	# Only ever running while a countdown is, which on a client is never.
 	set_process(false)
 	MatchStart.match_abandoned.connect(_on_match_abandoned)
@@ -204,7 +217,7 @@ func set_seat_state(seat: int, state: LobbyInfo.SeatState) -> void:
 ## client is drawing, and the browser rows carry the host's.
 @rpc("any_peer", "reliable")
 func register_player(display_name: String) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	_names_of_peer[peer_id] = LobbyIdentity.sanitise(display_name)
@@ -224,7 +237,7 @@ func register_player(display_name: String) -> void:
 
 @rpc("any_peer", "reliable")
 func request_create(lobby_name: String, _max_players: int) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 
@@ -257,7 +270,7 @@ func request_create(lobby_name: String, _max_players: int) -> void:
 
 @rpc("any_peer", "reliable")
 func request_join(lobby_id: String) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 
@@ -299,7 +312,7 @@ func request_join(lobby_id: String) -> void:
 ## reason the settings are: the roster becomes final at that moment (D24).
 @rpc("any_peer", "reliable")
 func request_seat_state(seat: int, state: int) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
@@ -334,7 +347,7 @@ func request_seat_state(seat: int, state: int) -> void:
 ## see it move.
 @rpc("any_peer", "reliable")
 func request_color(color_index: int) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 
@@ -368,7 +381,7 @@ func request_color(color_index: int) -> void:
 
 @rpc("any_peer", "reliable")
 func request_leave() -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	_remove_from_lobby(multiplayer.get_remote_sender_id(), "You left the lobby.")
 
@@ -382,7 +395,7 @@ func request_leave() -> void:
 ## other machine.
 @rpc("any_peer", "reliable")
 func request_start() -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
@@ -426,7 +439,7 @@ func _start_refusal() -> String:
 ## still change what everybody is about to play is not a countdown to anything.
 @rpc("any_peer", "reliable")
 func request_settings(payload: Dictionary) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
@@ -455,7 +468,7 @@ func request_settings(payload: Dictionary) -> void:
 
 @rpc("any_peer", "reliable")
 func request_cancel_start() -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
@@ -635,9 +648,18 @@ func _on_match_abandoned(match_id: String) -> void:
 	_broadcast_list()
 
 
+## Whether this process answers for lobbies at all.
+##
+## The server question, plus one more: a MATCH PROCESS is a server, keeps this
+## autoload for D31's sake, and must answer for nothing. Asked before anything
+## is logged, so a stranger cannot make a match process write a line per packet.
+func _serving() -> bool:
+	return multiplayer.is_server() && !_is_match_process
+
+
 ## A peer that vanished is a peer that left, whether it meant to or not (1.9).
 func _on_peer_left(peer_id: int) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	_names_of_peer.erase(peer_id)
 	# While shutting down, every connection is closing at once. Reshuffling the
@@ -652,7 +674,7 @@ func _on_peer_left(peer_id: int) -> void:
 ## _start_refusal), and a countdown already running is stopped with the reason,
 ## so nobody watching it is left counting down to a server that is going away.
 func _on_shutdown_started(reason: String) -> void:
-	if !multiplayer.is_server():
+	if !_serving():
 		return
 	for lobby_id: Variant in _countdowns.keys():
 		var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo

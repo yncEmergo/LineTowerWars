@@ -21,6 +21,13 @@ extends Resource
 ## MenuConfig.game_scene_path, and the two are deliberately different scenes
 ## rather than one scene with half its nodes switched off.
 @export_file("*.tscn") var server_match_scene_path: String = ""
+## A MATCH PROCESS's entry scene: one relay, for one match, which exits when
+## that match ends (D44). Never loaded by a client and never by a lobby.
+##
+## A scene of its own rather than a branch inside the lobby's, because the two
+## roles share nothing but the autoloads: this one opens no lobby list, listens
+## on a port it was handed, and answers only the players whose tokens it holds.
+@export_file("*.tscn") var match_server_scene_path: String = ""
 
 @export_group("Settings")
 ## Launch argument that forces the server, checked alongside the
@@ -34,12 +41,31 @@ extends Resource
 ## complains, so pass it after one:  godot -- --server
 @export var server_argument: String = "--server"
 
+## Launch argument that makes this process a MATCH PROCESS (D44): a dedicated
+## server for exactly one match, spawned by a lobby process.
+##
+## **It deliberately does not CONTAIN `--server`.** `CommandLineUtil.has_flag`
+## matches a whole argument or a `key=` prefix, so the two roles cannot be
+## confused for one another - but it also means that without this being checked
+## in its own right a match process would boot as a CLIENT, walk into the main
+## menu and listen to nothing.
+@export var match_server_argument: String = "--match-server"
+
 
 func validate() -> bool:
 	var complete: bool = true
 	complete = _validate_path(server_scene_path, "server_scene_path") && complete
 	complete = _validate_path(server_match_scene_path, "server_match_scene_path") && complete
+	complete = _validate_path(match_server_scene_path, "match_server_scene_path") && complete
 	return complete
+
+
+## Whether this process is a match process rather than a lobby (D44).
+##
+## Asked before `is_dedicated_server`'s answer is used, because a match process
+## IS a dedicated server and takes a different entry scene.
+func is_match_server() -> bool:
+	return CommandLineUtil.has_flag(match_server_argument)
 
 
 func _validate_path(path: String, field_name: String) -> bool:

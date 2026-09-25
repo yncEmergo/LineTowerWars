@@ -511,6 +511,102 @@ extends Resource
 ## See NetworkService.begin_shutdown.
 @export var shutdown_file_argument: String = "--shutdown-file"
 
+@export_group("Match processes")
+## Whether the LOBBY hands each match off to a process of its own (D44).
+##
+## **False in the shipped file, and that is the point.** Every phase of the
+## multi-match work lands on `main`, and any deploy ships `main` - including a
+## deploy by somebody else - so the handoff is built switched off and turned on
+## in one release commit, together with the protocol bump.
+##
+## `--match-processes` on the LOBBY's command line turns it on for that process,
+## which is what the P2-P4 proofs use. **Only the lobby reads it**: a match
+## process is its own role, reached by `--match-server`, and a CLIENT keys its
+## behaviour on whether the announce carried a port and a token rather than on
+## this. A client that read this instead would misbehave against a server that
+## has it off, which is every server until the release.
+##
+## It does NOT hide a change to the rpc surface. D31's hash and the wire check
+## are compared on every connection whatever this says, so an `@rpc` added or
+## renamed before the release refuses every tester at the next deploy.
+@export var match_processes_enabled: bool = false
+## Turns the above on for one process, e.g.  godot -- --server --match-processes
+@export var match_processes_argument: String = "--match-processes"
+## Names the match file a MATCH PROCESS reads its setup and tokens from, e.g.
+##   godot -- --match-server --match-id m-1 --match-file /run/ltw-server/m-1.match
+@export var match_file_argument: String = "--match-file"
+## Names the match a match process is running, for its log lines and its files.
+@export var match_id_argument: String = "--match-id"
+
+## The port range match processes are given, one each, least recently freed
+## first. Opened once with `ufw allow <first>:<last>/udp`.
+##
+## The cap below is deliberately smaller than this range, so running out of
+## ports is never what a player meets first - they get "The server is full",
+## which is a sentence, rather than a start that silently fails to spawn.
+@export var match_port_first: int = 7800
+@export var match_port_last: int = 7899
+
+## The longest a connection to a MATCH port may take to authenticate.
+##
+## It is the backstop for a client that reads a refusal and does not hang up,
+## and the only thing that closes a connection which never sends a token at all.
+## Both ends set it from this same value.
+@export var match_auth_timeout_seconds: float = 12.0
+
+## Total simultaneous connections ONE match process accepts.
+##
+## Several times its seat count rather than exactly it: an unanswered CONNECT
+## holds an ENet slot silently, for up to ENet's maximum timeout, before any auth
+## runs. Sizing this to the seats would let a handful of dead connections lock a
+## real player out of their own match.
+@export var match_max_peers: int = 32
+
+## How often a match process touches its heartbeat file, and how stale that file
+## may get before the lobby calls the child wedged and kills it.
+##
+## The bound is several periods, so one slow frame is never mistaken for a hang.
+## **It is only judged after READY**: the boot is synchronous and writes no
+## heartbeat, so judging from the spawn would kill slow but healthy boots.
+@export var match_heartbeat_seconds: float = 2.0
+@export var match_heartbeat_stale_seconds: float = 15.0
+
+## The longest the lobby waits for a spawned child to write READY before killing
+## it and cancelling the start. Only the backstop for a hang; set from the boot
+## measurement on the box (P5).
+@export var match_ready_ceiling_seconds: float = 45.0
+
+## How many matches this server will run at once, and how many one HOST address
+## may have loading or running.
+##
+## The cap counts a START from the moment its countdown begins - queued, booting
+## or running - until its child is reaped or its countdown is cancelled, so a
+## queued spawn holds its place and "The server is full" is decided at Start.
+## Set from the load test on the box (P5), not guessed.
+@export var match_cap: int = 8
+@export var match_per_source_limit: int = 2
+
+## What a match process raises its own `/proc/self/oom_score_adj` to (Linux
+## only), so the kernel kills a MATCH before it kills the lobby.
+##
+## `OOMPolicy=continue` keeps the unit up when a child is killed for memory; it
+## does not choose which process dies. The lobby boots to about the size of a
+## match, so without this a slimmer match process would make the LOBBY the
+## largest and therefore the likeliest victim.
+@export var match_oom_score_adj: int = 500
+
+## The longest a shutting-down LOBBY waits for the children it told to stop
+## (D45), before quitting anyway. Checked against the unit's `TimeoutStopSec`.
+@export var match_shutdown_wait_seconds: float = 20.0
+
+## How long a client waits between dials while moving to a match process, and
+## how long one dial is given before it is retried.
+##
+## A dial that gets no answer, and a `SEAT_HELD` refusal, are both retried until
+## the load timeout: a redial legitimately gets `SEAT_HELD` while the server has
+## not yet noticed the dead link it is replacing.
+@export var match_dial_retry_seconds: float = 2.0
+
 @export_group("Shutdown")
 ## Seconds the players of a match cancelled by a shutdown are left reading why,
 ## before their connection is closed.
@@ -604,6 +700,39 @@ func resolved_port() -> int:
 ## server runs on, which is not something a shared resource can know.
 func shutdown_file_path() -> String:
 	return CommandLineUtil.value_for(shutdown_file_argument, "").strip_edges()
+
+
+## Whether THIS LOBBY hands matches off to processes of their own (D44).
+##
+## The authored switch, or the command line for one run. Asked by the lobby and
+## by nothing else: a match process does not consult it - it was told what it is
+## by `--match-server` - and a client keys on the announce instead.
+func match_processes_on() -> bool:
+	if CommandLineUtil.has_flag(match_processes_argument):
+		return true
+	return match_processes_enabled
+
+
+## The match file this process was pointed at, or empty. A match process with no
+## match file exits with `EXIT_BAD_MATCH_FILE` rather than listening.
+func match_file_path() -> String:
+	return CommandLineUtil.value_for(match_file_argument, "").strip_edges()
+
+
+## The id of the match this process is running, or empty.
+func match_id() -> String:
+	return CommandLineUtil.value_for(match_id_argument, "").strip_edges()
+
+
+## Every port a match may be given, in order. The pool the lobby hands out from.
+func match_ports() -> PackedInt32Array:
+	var ports: PackedInt32Array = PackedInt32Array()
+	var first: int = mini(match_port_first, match_port_last)
+	var last: int = maxi(match_port_first, match_port_last)
+	for candidate: int in range(first, last + 1):
+		if candidate >= 1 && candidate <= 65535:
+			ports.append(candidate)
+	return ports
 
 
 ## Reports everything unusable at once rather than one failed connection at a

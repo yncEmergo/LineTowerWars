@@ -29,6 +29,20 @@ extends Node
 ##     --quit-after-ready    die with no goodbye, once the server has counted us
 ##     --ready-delay <s>     report loaded s seconds late, without going quiet
 ##
+## And the MATCH-PROCESS handoff (D44), with `--probe match`, which skips the
+## lobby entirely: it reads a hand-written match file, dials the match port with
+## its seat's token and plays.
+##
+##     --match-port <p>      the port the match process is listening on
+##     --match-file <f>      a COPY of the match file, kept for the probes
+##     --slot <n>            which announced seat this probe claims
+##     --redial-after <s>    drop the link with no goodbye, then claim again
+##     --dead-port-first     dial a closed port once, so a retry must happen
+##     --bad-token           present sixteen bytes that are nobody's seat
+##     --steal-slot <n>      present ANOTHER seat's token, while its owner holds it
+##     --late-dial <s>       wait s seconds before dialling at all, so the go
+##                           signal has already gone out
+##
 ## Does NOTHING when --probe is absent, so the editor, the server and every
 ## other run are unaffected by its presence.
 
@@ -85,6 +99,16 @@ var _reported_late: bool = false
 var _quit_fired: bool = false
 var _real_match_id: String = ""
 var _ready_delay_left: float = -1.0
+## The MATCH-PROCESS scenario's readings (D44). How many times this probe was
+## admitted to a seat, what the go signal says its `network_id` is, and how the
+## move ended - the three things that tell a handoff that worked from one that
+## was never exercised.
+var _claims: int = 0
+var _go_network_id: int = 0
+var _move_reason: String = ""
+var _match_started: bool = false
+var _redial_left: float = -1.0
+var _redialled: bool = false
 
 
 func _ready() -> void:
@@ -114,6 +138,8 @@ func _ready() -> void:
 
 	Net.connected_to_server.connect(_on_connected)
 	Net.connection_failed.connect(_on_connect_failed)
+	Net.move_ended.connect(_on_move_ended)
+	MatchStart.match_cancelled.connect(_on_cancelled)
 	# NOT joined here. References is a NODE in a scene, so it holds nothing at
 	# all while an autoload's _ready runs - Net.join() this early is refused
 	# with "No network configuration" and the probe never leaves the ground.
@@ -139,6 +165,11 @@ func _read_role() -> String:
 # --- getting into a match --------------------------------------------------
 
 func _on_connected() -> void:
+	# The MATCH role's connection is to a match process, which has no lobby and
+	# whose `Lobby` endpoints are inert. Registering there would be a packet sent
+	# to be ignored, and `create` would look like a bug in the log.
+	if _role == "match":
+		return
 	Log.warn("PROBE connected, registering")
 	Lobby.register_player("Probe " + _role)
 	# The host makes the lobby. The joiner waits for it to appear in the list,
@@ -215,6 +246,31 @@ func _on_refused(reason: String) -> void:
 	Log.err("PROBE refused: " + reason)
 
 
+## What the GO SIGNAL says this machine's seat is.
+##
+## **The positive control for the re-key.** A match process gives each seat the
+## id of the connection that actually claimed it, so `go_id` equal to `own_id` is
+## what proves the roster the relay stamps orders against is the one this socket
+## answers to. Different ids mean every order this player sends is about to be
+## stamped with somebody else's slot - which no checksum would catch until the
+## two worlds had already diverged.
+##
+## Read off the roster rather than taken from a signal, because the go signal has
+## no client-side signal of its own: it opens the match scene and that is all.
+func _note_go_roster() -> void:
+	var setup: MatchSetup = MatchStart.setup()
+	if setup == null || _go_network_id != 0:
+		return
+	var mine: MatchPlayer = setup.player_for(setup.local_slot)
+	if mine != null:
+		_go_network_id = mine.network_id
+
+
+func _on_cancelled(reason: String) -> void:
+	_move_reason = reason
+	Log.warn("PROBE match cancelled", {"why": reason})
+
+
 func _on_match_starting(setup: MatchSetup) -> void:
 	Log.warn("PROBE match starting")
 	_in_match = true
@@ -240,7 +296,18 @@ func _on_match_starting(setup: MatchSetup) -> void:
 ## watching for ITSELF in it knows its report actually arrived, which is a far
 ## better moment to die at than "we sent one and hoped".
 func _on_readiness_changed(ready_ids: PackedInt32Array) -> void:
-	if _self_ready || !(multiplayer.get_unique_id() in ready_ids):
+	if _self_ready:
+		return
+	# **A match process sends SLOTS and a lobby process sends PEER IDS**, so what
+	# to look for here depends on which kind of server answered. Looking for the
+	# wrong one does not fail loudly: it simply never matches, and `self_ready`
+	# reads false for a probe the server counted perfectly well - a positive
+	# control that quietly reports the opposite of the truth.
+	var setup: MatchSetup = MatchStart.setup()
+	var mine: int = multiplayer.get_unique_id()
+	if _role == "match":
+		mine = 0 if setup == null else setup.local_slot
+	if mine == 0 || !(mine in ready_ids):
 		return
 	_self_ready = true
 	Log.warn("PROBE counted ready by the server")
@@ -261,6 +328,144 @@ func _hard_exit(why: String) -> void:
 	_quit_fired = true
 	Log.warn("PROBE hard-exiting", {"why": why, "role": _role})
 	OS.kill(OS.get_process_id())
+
+
+# --- the match-process role (D44) ------------------------------------------
+
+## Stands in for the LOBBY's announce, from a file, and then moves.
+##
+## The real road is: the lobby announces a port and this seat's token, the client
+## starts loading and moves at the same time. There is no lobby in this test, so
+## the announce is made locally out of the match file - which is exactly the
+## dictionary the lobby would have sent - and everything after it is the shipping
+## code doing its own job.
+##
+## **The probes read a COPY of the match file.** The match process deletes its
+## own the moment it has read it, so that a token does not sit on disk; a probe
+## started afterwards would find nothing.
+func _drive_match_role(delta: float) -> void:
+	if !_match_started:
+		# `--late-dial <s>` waits past the go signal, so what is under test is a
+		# dial that arrives when the door is already shut.
+		var wait: float = maxf(SETTLE_SECONDS, float(_int_argument("--late-dial", 0)))
+		if _elapsed < wait:
+			return
+		_match_started = true
+		_announce_locally()
+		return
+
+	_advance_redial(delta)
+	# The match role holds its readiness back the same way the lobby roles do.
+	# It is not reached by the shared call in `_process`, which the match branch
+	# returns before.
+	_advance_ready_delay(delta)
+	if !_in_match:
+		if _elapsed > SETTLE_SECONDS * 25.0:
+			Log.err("PROBE never got into the match")
+			_finish()
+		return
+
+	if !_started:
+		_started = true
+		_elapsed = 0.0
+		Log.warn("PROBE playing", {"own_id": multiplayer.get_unique_id()})
+		return
+
+	# Asked every frame until it answers. `_in_match` is set by the ANNOUNCE, so
+	# reading the roster at that moment reads the announced setup, whose ids the
+	# match process deliberately cleared - which is a zero that looks exactly
+	# like a re-key that never happened.
+	_note_go_roster()
+	_drive()
+	if _elapsed >= _play_seconds():
+		_finish()
+
+
+## Plays the announce this probe would have been sent, out of the match file.
+func _announce_locally() -> void:
+	var data: Dictionary = MatchHandoff.read_match_file(_text_argument("--match-file", ""))
+	if data.is_empty():
+		Log.err("PROBE could not read its match file")
+		_finish()
+		return
+	var slot: int = _int_argument("--slot", 0)
+	var tokens: Dictionary = MatchHandoff.tokens_from(data)
+	if !tokens.has(slot):
+		Log.err("PROBE has no token for its slot", {"slot": slot})
+		_finish()
+		return
+
+	var payload: Dictionary = data.get("setup", {})
+	payload["local_slot"] = slot
+	# **The port and this seat's token ride the announce**, exactly as the lobby
+	# will send them in P3. Everything after this is shipping code: MatchStart
+	# starts the move itself, keeps the token for a re-claim, and reports ready
+	# when both the load and the move are done.
+	payload["match_port"] = _int_argument("--match-port", 0)
+	payload["match_token"] = MatchHandoff.token_to_hex(_move_token(tokens, slot))
+	MatchStart.receive_match_starting(payload)
+	Log.warn("PROBE announced to itself", {"slot": slot, "match": payload.get("match_id", "")})
+
+
+## Which token this probe presents, which is its own unless a flag says
+## otherwise.
+func _move_token(tokens: Dictionary, slot: int) -> PackedByteArray:
+	# `--bad-token`: sixteen bytes of the right SHAPE that are nobody's seat, so
+	# the refusal under test is WRONG_TOKEN rather than a length check.
+	if "--bad-token" in OS.get_cmdline_user_args():
+		var forged: PackedByteArray = PackedByteArray()
+		for index: int in range(MatchHandoff.TOKEN_BYTES):
+			forged.append((index * 7 + 3) % 256)
+		return forged
+	# `--steal-slot <n>`: another seat's real token, presented while its owner is
+	# sitting in it. The answer must be SEAT_HELD, and the owner must keep the
+	# seat - never the eviction that "last claim wins" would give.
+	var steal: int = _int_argument("--steal-slot", 0)
+	if steal > 0 && tokens.has(steal):
+		Log.warn("PROBE presenting another seat's token", {"seat": steal})
+		return tokens[steal]
+	return tokens.get(slot, PackedByteArray())
+
+
+## `--redial-after <s>`: closes the link with no goodbye and claims the same seat
+## again, which is the owner's re-claim rule (D26) exercised from the client end.
+##
+## `claims=2` in the result, together with the go signal carrying a DIFFERENT
+## `network_id` from the first admission, is what proves the seat was really
+## re-keyed rather than the first claim simply never having been lost.
+func _advance_redial(delta: float) -> void:
+	if _redial_left <= 0.0:
+		return
+	_redial_left -= delta
+	if _redial_left > 0.0:
+		return
+	_redial_left = -1.0
+	# **Closed with no goodbye**, so the server learns of it from ENet rather
+	# than from `report_leaving` - a deliberate leave makes the seat `left` at
+	# once, which is the opposite of the case under test. MatchStart notices the
+	# connection go and claims the seat again with the token it kept.
+	Log.warn("PROBE dropping its link, the client should claim again")
+	Net.leave()
+
+
+func _on_move_ended(ok: bool, reason: String) -> void:
+	_move_reason = reason
+	if !ok:
+		Log.warn("PROBE move failed", {"why": reason})
+		return
+	_claims += 1
+	Log.warn("PROBE admitted to the match", {"claims": _claims, "id": multiplayer.get_unique_id()})
+	var after: float = float(_int_argument("--redial-after", 0))
+	if after > 0.0 && _claims == 1:
+		_redial_left = after
+
+
+func _text_argument(flag: String, fallback: String) -> String:
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	for index: int in range(args.size()):
+		if args[index] == flag && index + 1 < args.size():
+			return args[index + 1]
+	return fallback
 
 
 ## `--ready-delay <s>`: report loaded that many seconds late, WITHOUT going
@@ -329,6 +534,12 @@ func _process(delta: float) -> void:
 	# network config lives on the LOBBY BROWSER's References - which is exactly
 	# right, since D20 says a client connects when Multiplayer is pressed rather
 	# than at boot.
+	# The MATCH role never goes near a lobby: there is not one. It takes the
+	# place the announce would have, from a file, and moves straight to the port.
+	if _role == "match":
+		_drive_match_role(delta)
+		return
+
 	if !_browsing:
 		# The JOIN probe deliberately dawdles, so the two peers do NOT start
 		# their matches at the same instant. That stagger is what exposed the
@@ -635,6 +846,15 @@ func _finish() -> void:
 		# however clean the rest of the line looks.
 		"self_ready": _self_ready,
 		"reported_late": _reported_late,
+		# **The handoff's positive controls** (D44). `claims` above zero says a
+		# seat was really claimed; `go_id` equal to `own_id` says the re-key ran,
+		# and a run reporting 0 for either never exercised the handoff at all
+		# however clean the rest of the line looks.
+		"claims": _claims,
+		"own_id": multiplayer.get_unique_id(),
+		"go_id": _go_network_id,
+		"move_attempts": Net.move_attempts(),
+		"move_reason": _move_reason,
 		"gave_up": Lockstep.has_given_up(),
 		"lag_s": snappedf(Lockstep.sealed_lag_seconds(), 0.1),
 		# **The positive control for the whole phase.** A run where `sealed` is

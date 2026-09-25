@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Server/MatchServer.gd" id="1_match_server"]
+[ext_resource type="Script" path="res://Scripts/References.gd" id="2_references"]
+[ext_resource type="Resource" path="res://Resources/Config/network_config.tres" id="3_network_config"]
+[ext_resource type="Resource" path="res://Resources/Config/menu_config.tres" id="4_menu_config"]
+[ext_resource type="Resource" path="res://Resources/Config/boot_config.tres" id="5_boot_config"]
+[ext_resource type="Resource" path="res://Resources/Config/game_config.tres" id="6_game_config"]
+
+[node name="MatchServer" type="Node"]
+script = ExtResource("1_match_server")
+
+[node name="References" type="Node" parent="."]
+script = ExtResource("2_references")
+_network_config = ExtResource("3_network_config")
+_menu_config = ExtResource("4_menu_config")
+_boot_config = ExtResource("5_boot_config")
+_game_config = ExtResource("6_game_config")

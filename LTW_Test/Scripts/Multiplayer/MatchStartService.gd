@@ -114,6 +114,44 @@ var _has_reference: bool = false
 ## Whether this match has already been declared diverged. See announce_desync.
 var _desync_announced: bool = false
 
+## **A MATCH PROCESS's seat table, or null in a lobby process** (D44).
+##
+## Non-null only between `begin_seated` and the go signal. While it is set, the
+## gate answers out of it instead of out of `_expected`, because a match process
+## has no announced peer ids to fill `_expected` with: the lobby's ids were
+## chosen by the clients on their lobby connections and mean nothing here.
+##
+## From the go signal on it stays set but is closed, and everything works as it
+## does in a single-process match: `_setup` is the go roster with the new ids
+## and `_expected` holds them.
+var _seats: MatchSeats = null
+
+# --- client state ---------------------------------------------------------
+## Whether this machine has finished loading the match it was announced.
+##
+## Kept rather than acted on once, because the report it owes has TWO
+## preconditions - loaded, and admitted to the match process - and which of them
+## arrives last is not something a client can predict. See `_send_ready`.
+var _loaded: bool = false
+
+## **The match process this client was told to move to, and the secret that says
+## which seat is its own** (D44). Empty unless the announce carried them, which
+## is what keys every client change on the ANNOUNCE rather than on the switch:
+## against today's in-process server there is no port and no token, and
+## everything below is inert.
+##
+## They are kept for the whole loading phase, not just the first dial, because a
+## link that breaks while loading may claim the same seat again inside D26's
+## hold - and a client that had thrown its token away could not.
+var _match_port: int = 0
+var _match_token: PackedByteArray = PackedByteArray()
+## Seconds left to get in. Counted from the ANNOUNCE, so it runs out at the same
+## moment D15 gives up on this player rather than at some later time of the
+## client's own.
+var _move_deadline: float = 0.0
+## A move that has been decided on but not yet started. See `_try_start_move`.
+var _move_pending: bool = false
+
 # --- both sides -----------------------------------------------------------
 var _ready_ids: PackedInt32Array = PackedInt32Array()
 
@@ -125,6 +163,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(false)
 	Net.peer_left.connect(_on_peer_left)
+	Net.move_ended.connect(_on_move_ended)
 	Net.status_changed.connect(_on_network_status_changed)
 	Net.shutdown_started.connect(_on_shutdown_started)
 	Net.disconnected_from_server.connect(_on_server_lost)
@@ -180,6 +219,42 @@ func begin(match_setup: MatchSetup) -> void:
 	set_process(true)
 
 
+## A MATCH PROCESS takes over a match the LOBBY already announced (D44).
+##
+## **`begin()` is deliberately not reused, and neither of its two readings
+## works here.** With every `network_id` cleared it would start at once, because
+## an empty `_expected` is satisfied by an empty `_ready_ids`. With the lobby's
+## ids left in place it would wait for connections that can never arrive, since
+## those ids belonged to other sockets on another process.
+##
+## So this arms the gate and nothing else. The announce has already gone out,
+## from the lobby, carrying this port and each player's own token; who is
+## actually here is decided by the seat table as they arrive.
+func begin_seated(seats: MatchSeats) -> void:
+	if !multiplayer.is_server() || seats == null || seats.setup() == null:
+		Log.err("MatchStart.begin_seated needs a server and a built seat table")
+		return
+
+	_seats = seats
+	_setup = seats.setup()
+	_in_match = true
+	_waiting = true
+	_elapsed = 0.0
+	_expected = PackedInt32Array()
+	_ready_ids = PackedInt32Array()
+	_reported_checksums.clear()
+	_has_reference = false
+	_desync_announced = false
+	_read_server_settings()
+
+	Log.info("Match process waiting for its seats", {
+		"match": _setup.match_id,
+		"seats": _setup.player_count(),
+		"timeout": _timeout_seconds,
+	})
+	set_process(true)
+
+
 # --- client: the loading screen's side ------------------------------------
 
 ## The match this machine is loading, or playing, or null for neither.
@@ -202,6 +277,8 @@ func running_setup() -> MatchSetup:
 ## no screen that shows the list, and it would queue on the same reliable
 ## channel as their seals.
 func has_player(peer_id: int) -> bool:
+	if _seats != null && _waiting:
+		return _seats.has_peer(peer_id)
 	return _in_match && _expected.has(peer_id)
 
 
@@ -214,9 +291,43 @@ func ready_ids() -> PackedInt32Array:
 ## built" - the world is built from the setup that comes back, which is the
 ## point of the gate.
 func report_loaded() -> void:
-	if _setup == null:
+	_loaded = true
+	_send_ready()
+
+
+## **Readiness is a STATE, not an event** (D44).
+##
+## The report is sent when loading finishes AND when the move to the match
+## process is admitted, whichever of the two happens second - and again after a
+## seat is re-claimed inside D26's hold.
+##
+## Sent once, at the end of loading, it is LOST whenever loading beats the move:
+## the rpc goes to whatever connection this client has at that moment, which is
+## the lobby's, or none. On a warm client loading beats the move every match
+## after the first, so "once" would have failed almost always rather than rarely.
+func _send_ready() -> void:
+	if _setup == null || !_loaded || !Net.is_online():
 		return
 	report_ready.rpc_id(NetworkService.SERVER_PEER_ID, _setup.match_id)
+
+
+## The move to the match process ended. Admitted, the report owed from a load
+## that finished first goes now; refused or given up, this client is not in the
+## match and the screens say why.
+func _on_move_ended(ok: bool, reason: String) -> void:
+	if ok:
+		_send_ready()
+		return
+	# Given up on, or refused for a reason no retry can fix. The player is not in
+	# this match, and is told so on the browser rather than left watching a
+	# loading bar that will never move.
+	if _match_port <= 0:
+		return
+	Log.warn("Could not reach the match process", {"why": reason})
+	_match_token = PackedByteArray()
+	_match_port = 0
+	_move_deadline = 0.0
+	receive_match_cancelled(reason)
 
 
 ## The initial-world checksum (2.5), reported by `Main` once it has built.
@@ -274,6 +385,12 @@ func report_leaving() -> void:
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	_deliberate[peer_id] = true
 	Log.info("Player is leaving deliberately", peer_id)
+	# Before the go signal in a match process, a deliberate leave makes the seat
+	# `left` at once (D26): it skips the hold, because the player has said they
+	# are not coming back.
+	if _seats != null && _waiting:
+		_release_seat(peer_id, true)
+		return
 	# Usually the disconnect follows within a frame or two, but a client that
 	# announces and then hangs would otherwise be held for the full grace, so
 	# the drop is resolved here rather than waited for.
@@ -289,6 +406,22 @@ func report_ready(match_id: String) -> void:
 		return
 
 	var peer_id: int = multiplayer.get_remote_sender_id()
+	# In a match process readiness is a flag on the SEAT, not on a peer id: a
+	# seat that is claimed again after a drop reports ready again, on a new
+	# connection, and it is the same seat that becomes ready.
+	if _seats != null:
+		var seated_slot: int = _seats.set_ready(peer_id)
+		if seated_slot == 0:
+			return
+		Log.info("Client loaded", {
+			"peer": peer_id,
+			"slot": seated_slot,
+			"ready": _seats.ready_slots().size(),
+			"of": _setup.player_count(),
+		})
+		_broadcast_readiness()
+		return
+
 	if !_expected.has(peer_id) || _ready_ids.has(peer_id):
 		return
 
@@ -327,6 +460,10 @@ func report_checksum(match_id: String, checksum: int) -> void:
 func receive_match_starting(payload: Dictionary) -> void:
 	_setup = MatchSetup.from_dict(payload)
 	_ready_ids = PackedInt32Array()
+	# A new match, nothing loaded for it yet. Left set from the last one, this
+	# client would report ready for a world it has not built.
+	_loaded = false
+	_begin_move(payload)
 	Log.info("Match starting", {
 		"match": _setup.match_id,
 		"slot": _setup.local_slot,
@@ -348,6 +485,12 @@ func receive_readiness(ready: PackedInt32Array) -> void:
 @rpc("authority", "reliable")
 func receive_match_start(payload: Dictionary) -> void:
 	_setup = MatchSetup.from_dict(payload)
+	# **The door is shut.** From the go signal on, D13 holds unchanged: a token
+	# is dead, nothing may claim a seat again, and a lost connection ends the
+	# match on screen rather than starting another dial.
+	_match_token = PackedByteArray()
+	_match_port = 0
+	_move_deadline = 0.0
 	Log.info("Match start", {
 		"match": _setup.match_id,
 		"slot": _setup.local_slot,
@@ -378,7 +521,19 @@ func receive_match_cancelled(reason: String) -> void:
 
 ## Wall clock, not simulation: this counts while there is no match to tick.
 func _process(delta: float) -> void:
+	# The client's owed move, before every server-side branch below: on a client
+	# none of them are true and this function would switch itself off.
+	if _move_pending:
+		_move_deadline -= delta
+		if _move_deadline <= 0.0:
+			_move_pending = false
+			_on_move_ended(false, "Could not reach the match in time.")
+		else:
+			_try_start_move()
+		return
+
 	_advance_grace(delta)
+	_advance_seat_holds(delta)
 
 	if !_waiting:
 		set_process(_grace.is_empty() == false)
@@ -410,10 +565,33 @@ func _process(delta: float) -> void:
 ## loading - and the match started without them. Asking about the peers
 ## themselves cannot be fooled that way.
 func _everyone_ready() -> bool:
+	# A match process asks its seats instead. Its `_expected` is empty until the
+	# go signal, so the loop below would answer "yes" the instant it started.
+	if _seats != null:
+		return _seats.any_live() && _seats.everyone_in()
 	for peer_id: int in _expected:
 		if !_ready_ids.has(peer_id):
 			return false
 	return true
+
+
+## D26's hold, for the seats of a match process. The lobby-process equivalent is
+## `_advance_grace`, and only ever one of the two is running.
+##
+## A seat whose hold runs out is `left`: nothing may claim it again, and the
+## loading screens are told so the row stops saying somebody is still coming.
+func _advance_seat_holds(delta: float) -> void:
+	if _seats == null || !_waiting:
+		return
+	var expired: PackedInt32Array = _seats.advance_holds(delta)
+	if expired.is_empty():
+		return
+	Log.info("Seats left the match, their hold ran out", {"slots": expired})
+	_broadcast_readiness()
+	# Everybody has gone. Nothing will ever claim again, so there is no reason
+	# to sit here until the load timeout.
+	if !_seats.any_live():
+		_abort("Everybody left before the match started.")
 
 
 ## The one road to a start, from either side of the gate.
@@ -425,7 +603,8 @@ func _everyone_ready() -> bool:
 ## breaks D15's `min_players`. Only the timeout road ever checked. Now every
 ## start is the ready seats renumbered, and every start is checked.
 func _start_from_ready() -> void:
-	if _ready_ids.size() < _min_players:
+	var ready_count: int = _seats.ready_slots().size() if _seats != null else _ready_ids.size()
+	if ready_count < _min_players:
 		_abort("Not enough players finished loading.")
 		return
 	_start_match(_roster_of_ready())
@@ -446,6 +625,24 @@ func _roster_of_ready() -> MatchSetup:
 	# short of a player is still the match that was set up.
 	reduced.settings = _setup.settings
 	var slot: int = 1
+	# **A match process RE-KEYS as it renumbers.** Its seats were announced with
+	# the lobby's ids, which mean nothing on this socket, so every player in the
+	# go roster is given the id of the connection that actually claimed its seat.
+	# It has to happen HERE, before the go signal, because the relay stamps every
+	# order's slot and addresses every seal by `network_id` - and it must never
+	# happen again afterwards, because `network_id` is hashed into every checksum.
+	if _seats != null:
+		for announced_slot: int in _seats.ready_slots():
+			var seated: MatchPlayer = _setup.player_for(announced_slot)
+			if seated == null:
+				continue
+			var reseated: MatchPlayer = MatchPlayer.from_dict(seated.to_dict())
+			reseated.slot = slot
+			reseated.network_id = _seats.peer_of(announced_slot)
+			slot += 1
+			reduced.players.append(reseated)
+		return reduced
+
 	for player in _setup.players:
 		if player == null || !_ready_ids.has(player.network_id):
 			continue
@@ -481,9 +678,18 @@ func _start_match(final_setup: MatchSetup) -> void:
 	# Only the ones still CONNECTED, though: most of what this loop now catches
 	# is a peer inside D26's hold, whose socket has already gone.
 	var live: PackedInt32Array = multiplayer.get_peers()
-	for peer_id: int in _expected:
+	for peer_id: int in _waiting_recipients():
 		if !started.has(peer_id) && peer_id in live:
 			receive_match_cancelled.rpc_id(peer_id, "You did not finish loading in time.")
+	# **The door shuts here.** Every seat outside the go roster becomes `left`,
+	# so a token that turns up a moment later reads TOO_LATE rather than being
+	# admitted into a match that has already begun and hashed its roster.
+	if _seats != null:
+		var started_slots: PackedInt32Array = PackedInt32Array()
+		for player: MatchPlayer in final_setup.players:
+			if player != null:
+				started_slots.append(_seats.slot_of(player.network_id))
+		_seats.close_for_go(started_slots)
 	_expected = started
 	_stretch_link_timeouts(started)
 
@@ -519,10 +725,27 @@ func _abort(reason: String) -> void:
 	# Still-connected peers only, for the same reason `_start_match`'s notice
 	# checks: an aborted gate is full of peers inside D26's hold.
 	var live: PackedInt32Array = multiplayer.get_peers()
-	for peer_id: int in _expected:
+	for peer_id: int in _waiting_recipients():
 		if peer_id in live:
 			receive_match_cancelled.rpc_id(peer_id, reason)
 	_finish_match()
+
+
+## **Who "the players" are, on either kind of server.**
+##
+## In a lobby process that is `_expected`, the peers the match was announced to.
+## In a MATCH process it is the seats claimed at this moment, because nothing
+## fills `_expected` there until the go signal - so every recipient list built
+## from `_expected` alone would be EMPTY, and a D15 abort or a D45 shutdown
+## during loading would reach its players only as a lost connection.
+##
+## That is the whole of the check pass's C3/A1: this one helper is what the
+## abort sentence, the left-behind notice, the shutdown notice and the readiness
+## broadcast all go through.
+func _waiting_recipients() -> PackedInt32Array:
+	if _seats != null && _waiting:
+		return _seats.claimed_peers()
+	return _expected
 
 
 ## Going offline ends any claim this object has about a match, in either role.
@@ -531,8 +754,64 @@ func _abort(reason: String) -> void:
 func _on_network_status_changed(new_status: NetworkService.Status) -> void:
 	if new_status != NetworkService.Status.OFFLINE || _setup == null:
 		return
+	# **A link that breaks while loading is not the end of the match** (D44). The
+	# seat is held for D26's hold and the same token may claim it again, so this
+	# client keeps its setup and dials back rather than forgetting everything -
+	# which is what it used to do, one frame after the socket closed, leaving the
+	# re-claim rule correct on the server and unusable from the client.
+	#
+	# From the go signal on the token is cleared, and D13 holds: out is out.
+	if _can_reclaim():
+		Log.info("Lost the match connection while loading, claiming again", _setup.match_id)
+		Net.move_to(_match_port, _match_token, _move_deadline)
+		return
 	Log.info("Offline, forgetting the match", _setup.match_id)
 	_finish_match()
+
+
+## Whether this client may still dial its match process again.
+##
+## Only while it has a token - so only on the handoff path - and only before the
+## go signal, which is when `receive_match_start` throws the token away.
+func _can_reclaim() -> bool:
+	return _match_port > 0 && !_match_token.is_empty() && _move_deadline > 0.0
+
+
+## Starts the move, if the announce carried a port and a token (D44).
+##
+## **This is the whole of "keyed on the announce".** Without those two keys the
+## payload came from today's in-process server, and this client does exactly what
+## it always did: it stays on the connection it has and loads.
+func _begin_move(payload: Dictionary) -> void:
+	_match_port = int(payload.get("match_port", 0))
+	_match_token = MatchHandoff.token_from_hex(str(payload.get("match_token", "")))
+	if _match_port <= 0 || _match_token.is_empty():
+		_match_port = 0
+		_match_token = PackedByteArray()
+		_move_deadline = 0.0
+		return
+	var menus: MenuConfig = References.menu_config
+	_move_deadline = 60.0 if menus == null else maxf(5.0, menus.load_timeout_seconds)
+	_move_pending = true
+	set_process(true)
+	_try_start_move()
+
+
+## Starts the dial as soon as there is a `NetworkConfig` to start it with.
+##
+## **References belongs to whatever SCENE is loaded**, and the announce arrives
+## during the scene change out of the lobby room: for a frame or two there may be
+## no config at all, and `Net.move_to` would refuse with "this game has no
+## network configuration" - a sentence about the game's own files, shown to a
+## player whose only problem is timing. So the move is owed rather than made, and
+## made on the first frame it can be.
+func _try_start_move() -> void:
+	if !_move_pending:
+		return
+	if References.network_config == null:
+		return
+	_move_pending = false
+	Net.move_to(_match_port, _match_token, _move_deadline)
 
 
 ## The server is shutting down, so the match is CANCELLED - the user's call for
@@ -549,7 +828,7 @@ func _on_shutdown_started(reason: String) -> void:
 	var notice: String = "%s The match was cancelled." % reason
 	var live: PackedInt32Array = multiplayer.get_peers()
 	var told: int = 0
-	for peer_id: int in _expected:
+	for peer_id: int in _waiting_recipients():
 		if peer_id in live:
 			receive_match_cancelled.rpc_id(peer_id, notice)
 			told += 1
@@ -590,6 +869,14 @@ func _on_server_lost() -> void:
 ## the next one, which matters more while testing than anywhere else.
 func _on_peer_left(peer_id: int) -> void:
 	if !multiplayer.is_server() || !_in_match:
+		return
+
+	# A match process that has not started yet answers out of its seat table.
+	# The hold lives on the SEAT (`MatchSeats.release`), not in `_grace`, so that
+	# a seat re-claimed inside it is one object changing state rather than two
+	# mechanisms agreeing about a peer id that has already changed.
+	if _seats != null && _waiting:
+		_release_seat(peer_id, _deliberate.has(peer_id))
 		return
 	# Already gone. A polite leave arrives twice - the goodbye, then the socket
 	# closing - and both describe one player leaving once.
@@ -713,6 +1000,13 @@ func _drop_peer(peer_id: int, reason: String) -> void:
 	_expected = still_here
 
 	var slot: int = _slot_of(peer_id)
+	# **A match process records the departure against its SEAT**, whose numbering
+	# is the announced one rather than the go roster's, and with the relay turn it
+	# happened on. That is what the RESULT is made of, and without it every player
+	# who actually played the match to its end was recorded as having no outcome
+	# at all - the gate's own seat handling only covers departures BEFORE go.
+	if _seats != null:
+		_seats.mark_left(_seats.slot_of(peer_id), _outcome_for(reason), Lockstep.current_turn())
 	Log.info("Player dropped from the match", {
 		"peer": peer_id,
 		"slot": slot,
@@ -749,6 +1043,10 @@ func _finish_match() -> void:
 	_waiting = false
 	_in_match = false
 	_setup = null
+	# Only this reference goes. `MatchServer` created the table and keeps its
+	# own, which is what it reads the seats' outcomes off for the RESULT once
+	# `match_abandoned` reaches it - after this line has run.
+	_seats = null
 	_expected = PackedInt32Array()
 	_ready_ids = PackedInt32Array()
 	_reported_checksums.clear()
@@ -780,6 +1078,44 @@ func _payload_for(source: MatchSetup, peer_id: int) -> Dictionary:
 	return payload
 
 
+## A drop reason, as the RESULT's fixed vocabulary.
+##
+## The log lines read as English on purpose; the RESULT is read by tools, so it
+## takes a small closed set instead. Mapped in one place rather than passing two
+## strings around, which is how the two would drift apart.
+func _outcome_for(reason: String) -> String:
+	match reason:
+		"left the match":
+			return "left"
+		"went silent":
+			return "went_silent"
+		"timed out":
+			return "timed_out"
+	return "disconnected"
+
+
+## Lets a seat go, in a match process that has not started yet.
+##
+## **The release names its peer** (`MatchSeats.release`), which is what stops a
+## superseded connection timing out later and freeing the seat its own
+## replacement is sitting in.
+func _release_seat(peer_id: int, deliberate: bool) -> void:
+	if _seats == null:
+		return
+	var slot: int = _seats.release(peer_id, deliberate, -1)
+	if slot == 0:
+		return
+	_deliberate.erase(peer_id)
+	Log.info("Seat released before the match started", {
+		"peer": peer_id,
+		"slot": slot,
+		"why": "left" if deliberate else "link dropped, holding",
+	})
+	_broadcast_readiness()
+	if !_seats.any_live():
+		_abort("Everybody left before the match started.")
+
+
 ## Takes back a player's readiness and says so, while the gate is still waiting.
 ##
 ## Silent outside the gate, and silent for a player who never reported: both
@@ -807,9 +1143,15 @@ func _clear_readiness(peer_id: int) -> void:
 ## connections in it, and `rpc_id` on a departed peer costs a backtrace each.
 func _broadcast_readiness() -> void:
 	var live: PackedInt32Array = multiplayer.get_peers()
-	for peer_id: int in _expected:
+	# **A match process sends SLOTS, and a lobby process sends peer ids.** The
+	# clients of a match process never saw the ids it gave their seats, so a peer
+	# id would name nothing they could draw a row for. A client reads this as
+	# slots only on a connection it MOVED to, which is what keeps a build from
+	# `main` correct against a server with the switch off.
+	var flags: PackedInt32Array = _seats.ready_flags() if _seats != null else _ready_ids
+	for peer_id: int in _waiting_recipients():
 		if peer_id in live:
-			receive_readiness.rpc_id(peer_id, _ready_ids)
+			receive_readiness.rpc_id(peer_id, flags)
 
 
 ## Read once, while the server's entry scene is still the current one: after
@@ -848,6 +1190,20 @@ func _read_server_settings() -> void:
 ## a client for its one link to the server. Called while References still answers
 ## for the scene that holds the network config - the server's entry scene, a
 ## client's loading screen.
+## One link, stretched as the match's own are (D41).
+##
+## A MATCH PROCESS stretches at the CLAIM rather than at the go signal, because
+## a seat claimed during loading is already a player of this match: left on
+## ENet's default, a loader that goes quiet for a few seconds would be closed out
+## before D26's hold had a chance to start.
+##
+## Public only so `MatchServer` can call it at the moment it admits a seat. The
+## ordering makes that unavoidable: `Net` connects `peer_connected` first, so its
+## `peer_joined` is emitted before any seat has been claimed.
+func stretch_link(peer_id: int) -> void:
+	_stretch_link_timeouts(PackedInt32Array([peer_id]))
+
+
 func _stretch_link_timeouts(peer_ids: PackedInt32Array) -> void:
 	var enet: ENetMultiplayerPeer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
 	if enet == null:

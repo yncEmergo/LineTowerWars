@@ -50,6 +50,17 @@ signal peer_left(peer_id: int)
 ## match is cancelled with the reason, and no new one may start. See
 ## begin_shutdown.
 signal shutdown_started(reason: String)
+## Client side: the move to a MATCH PROCESS ended (D44). `ok` true means this
+## connection is admitted and the match may be loaded against it; false carries
+## the sentence to put on screen.
+##
+## **The move has states of its own, and they are not the connection's.** While
+## one runs, `server_disconnected`, `connection_failed` and
+## `peer_authentication_failed` all come out HERE rather than reaching
+## `disconnected_from_server` or the browser's failure handling - which would
+## drop the setup and send the player back to the menu the moment the old lobby
+## link was replaced by the new one.
+signal move_ended(ok: bool, reason: String)
 
 enum Status {
 	OFFLINE,
@@ -135,6 +146,18 @@ var _closing: Dictionary = {}
 ## version mismatch fills it in, because only that failure has a detail worth
 ## putting in front of a player: which build each end is on.
 var _refusal_detail: String = ""
+# --- the move to a match process (D44), client side ------------------------
+## True from `move_to` until the move ends, one way or the other. While it is
+## set, every failure signal belongs to the MOVE rather than to the connection.
+var _moving: bool = false
+var _move_token: PackedByteArray = PackedByteArray()
+var _move_address: String = ""
+var _move_port: int = 0
+var _move_clock: float = 0.0
+var _move_deadline: float = 0.0
+var _move_retry: float = 0.0
+var _move_attempts: int = 0
+
 ## Server side: the file whose appearance asks for a clean shutdown, or empty
 ## when nothing may ask. See begin_shutdown.
 var _shutdown_file: String = ""
@@ -153,11 +176,20 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	# The client's half of authentication (D44). Connected once, here, and inert
+	# unless a move is running: `auth_callback` is what actually gates a dial,
+	# and it is only ever set for the match port.
+	multiplayer.peer_authenticating.connect(_on_move_authenticating)
+	multiplayer.peer_authentication_failed.connect(_on_move_auth_failed)
 	set_process(false)
 
 
 ## Opens the listen socket. Server only.
-func host(port_override: int = 0) -> Result:
+func host(
+	port_override: int = 0,
+	keep_shutdown_request: bool = false,
+	max_peers_override: int = 0
+) -> Result:
 	if _status != Status.OFFLINE:
 		return _refuse(Result.ALREADY_ONLINE, "host")
 
@@ -168,8 +200,13 @@ func host(port_override: int = 0) -> Result:
 		return _refuse(Result.BAD_CONFIG, "host")
 
 	var port: int = port_override if port_override > 0 else config.resolved_port()
+	# A MATCH PROCESS keeps its own, several times its seat count rather than the
+	# lobby's whole-server figure: an unanswered CONNECT holds an ENet slot
+	# silently until ENet's own timeout, so sizing it to the seats would let a
+	# few dead connections lock a real player out of their own match.
+	var peers: int = max_peers_override if max_peers_override > 0 else config.max_peers
 	var peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
-	var error: Error = peer.create_server(port, config.max_peers)
+	var error: Error = peer.create_server(port, peers)
 	if error != OK:
 		# Almost always the port already being in use - a second server started
 		# without changing it, or the last one not yet released by the OS.
@@ -195,7 +232,7 @@ func host(port_override: int = 0) -> Result:
 	set_process(true)
 	_set_status(Status.HOSTING)
 	Log.info("Listening", {"port": port, "max_peers": config.max_peers})
-	_arm_shutdown_file(config)
+	_arm_shutdown_file(config, keep_shutdown_request)
 	hosting_started.emit()
 	return Result.OK
 
@@ -217,6 +254,12 @@ func join(address_override: String = "", port_override: int = 0) -> Result:
 		return _refuse(Result.BAD_CONFIG, "join")
 
 	_refusal_detail = ""
+	# **The lobby port has no authentication and must not be dialled as though it
+	# had.** The one SceneMultiplayer is shared by every connection this process
+	# makes, so a callback left over from a match dial would gate this one too -
+	# and the old-build refusal (D29) has to reach a client that knows nothing
+	# about auth at all.
+	_clear_move_authentication()
 	# An address named by the caller is an instruction to dial THAT machine, so
 	# it replaces the list rather than joining the front of it.
 	var single: String = address_override.strip_edges()
@@ -229,6 +272,62 @@ func join(address_override: String = "", port_override: int = 0) -> Result:
 	if !_dial_from(0):
 		return _refuse(Result.CLIENT_FAILED, "join")
 	return Result.OK
+
+
+## **Moves this client's ONE connection from the lobby process to the match
+## process that was announced to it** (D44).
+##
+## `token` is the secret the announce carried for this player's seat, and it is
+## the only thing that says which seat is theirs: a peer id is chosen by the
+## client, afresh on every connection, so the lobby's ids mean nothing here.
+##
+## Dials `current_address()` - the address that actually reached the lobby, since
+## the lobby cannot know which of its addresses a given client used - and ends on
+## `move_ended`. It does not block: the answer arrives later.
+##
+## **The new peer is assigned and only THEN is the old one closed.** Godot emits
+## `server_disconnected` for the connection being replaced, and the ordinary
+## handling of that tears down to OFFLINE - which is precisely what makes
+## MatchStart forget the match it is in the middle of loading. So the status goes
+## CONNECTED, CONNECTING, CONNECTED, and never OFFLINE.
+##
+## A dial that gets no answer and a `SEAT_HELD` refusal are RETRIED until
+## `deadline_seconds`: a legitimate redial gets SEAT_HELD for as long as the
+## server has not yet noticed the dead link it is replacing.
+func move_to(port: int, token: PackedByteArray, deadline_seconds: float) -> void:
+	var config: NetworkConfig = _config()
+	if config == null:
+		move_ended.emit(false, "This game has no network configuration.")
+		return
+	if !MatchHandoff.is_valid_token(token):
+		move_ended.emit(false, "This match did not give this game a seat.")
+		return
+
+	_move_token = token
+	_move_port = port
+	# **Collapsed to ONE address.** A retry must dial the address that reached
+	# the lobby, not walk on to the others: the match is on the machine we are
+	# already talking to, and the rest of the list would be a slow way to fail.
+	_move_address = current_address()
+	if _move_address.is_empty():
+		_move_address = config.resolved_address()
+	_move_deadline = maxf(1.0, deadline_seconds)
+	_move_clock = 0.0
+	_move_retry = 0.0
+	_move_attempts = 0
+	_moving = true
+	set_process(true)
+	Log.info("Moving to the match process", {
+		"address": _move_address, "port": port, "deadline": _move_deadline,
+	})
+	_dial_match()
+
+
+## How many dials this move has made. Above one proves a retry actually
+## happened, which is the only way to tell a retry that worked from a first
+## attempt that was never in trouble.
+func move_attempts() -> int:
+	return _move_attempts
 
 
 ## Hangs up, from either end. Safe to call when already offline, because the
@@ -431,6 +530,13 @@ static func describe(result: Result) -> String:
 ## counting on a machine whose match has not started and whose physics tick is
 ## therefore carrying nothing.
 func _process(delta: float) -> void:
+	# A move runs its own clock, whatever the connection's status says. It
+	# deliberately outlives a single attempt: between a failed dial and the next
+	# one the status is anything at all, and the deadline still has to run.
+	if _moving:
+		_tick_move(delta)
+		return
+
 	match _status:
 		Status.CONNECTING:
 			_tick_connect(delta)
@@ -506,11 +612,25 @@ func is_shutting_down() -> bool:
 ##
 ## A file left behind by a process that died before it could remove its own
 ## would otherwise shut the next one down a second after it started.
-func _arm_shutdown_file(config: NetworkConfig) -> void:
+##
+## **A MATCH PROCESS passes `keep_request` and means it** (D44). Its shutdown
+## file is named per match, so it cannot be a leftover from an earlier run - and
+## a D45 request aimed at a child that was still booting arrives as exactly this
+## file, already there when the child gets here. Deleting it as stale would
+## swallow the one request the whole clean-shutdown path exists to deliver, and
+## the match would then play on through a deploy.
+func _arm_shutdown_file(config: NetworkConfig, keep_request: bool = false) -> void:
 	_shutdown_file = config.shutdown_file_path()
 	_shutdown_phase = ShutdownPhase.NONE
 	_shutdown_clock = 0.0
 	if _shutdown_file.is_empty():
+		return
+	if keep_request:
+		if FileAccess.file_exists(_shutdown_file):
+			Log.warn("A shutdown was already asked for before this process listened", {
+				"file": _shutdown_file,
+			})
+		Log.info("A clean shutdown can be asked for", {"file": _shutdown_file})
 		return
 	if FileAccess.file_exists(_shutdown_file):
 		DirAccess.remove_absolute(_shutdown_file)
@@ -611,7 +731,21 @@ func _notification(what: int) -> void:
 
 func _on_connected_to_server() -> void:
 	set_process(false)
+	# **The status goes first, and the order is not cosmetic.** `move_ended`
+	# listeners send rpcs - the readiness report owed by a load that finished
+	# before the move did - and every one of them asks `is_online()` first, which
+	# is FALSE while the status is still CONNECTING. Ending the move before this
+	# line silently threw that report away, and only on the path where the move
+	# took a retry: the match then waited out D15 for a client that had loaded
+	# long ago. It cost a scenario in P2's battery to see.
 	_set_status(Status.CONNECTED)
+	# **A move ends as ADMITTED here.** `connected_to_server` fires on admission,
+	# which under authentication means the token was accepted and a seat is ours.
+	# The version handshake below still runs, exactly as it does on a lobby dial:
+	# it is deliberately NOT folded into the auth message, so a refused build is
+	# refused where an rpc can still reach it.
+	if _moving:
+		_end_move(true, "")
 	Log.info("Connected to the server", {
 		"peer_id": multiplayer.get_unique_id(),
 		"address": current_address(),
@@ -631,6 +765,12 @@ func _on_connected_to_server() -> void:
 ## hosting today, that means the same thing a silence does - not this one - so
 ## it walks on rather than ending the attempt.
 func _on_connection_failed() -> void:
+	# While a move runs, a failed dial is a failed ATTEMPT: it is retried on the
+	# one address the match is on, rather than walking the lobby's candidate list
+	# looking for a machine that is not the one hosting this match.
+	if _moving:
+		_move_attempt_failed("no answer")
+		return
 	if _status != Status.CONNECTING:
 		return
 	Log.info("Refused", {"address": current_address()})
@@ -638,6 +778,11 @@ func _on_connection_failed() -> void:
 
 
 func _on_server_disconnected() -> void:
+	# The LOBBY link closing because we replaced it with a match link is not a
+	# lost server. Left to the ordinary handling it tears down to OFFLINE, which
+	# is exactly what makes MatchStart forget the match being loaded.
+	if _moving:
+		return
 	# A refused build tears itself down and says why; the server hanging up
 	# afterwards is the same event arriving a second time, with less to say.
 	if _status == Status.OFFLINE:
@@ -645,6 +790,144 @@ func _on_server_disconnected() -> void:
 	Log.warn("The server closed the connection")
 	_teardown()
 	disconnected_from_server.emit()
+
+
+# --- the move to a match process (D44) -------------------------------------
+
+## One dial at the match port, with a fresh peer.
+##
+## The new peer is ASSIGNED FIRST and the old one closed after, so this client
+## never passes through OFFLINE - the status it is in is the only thing telling
+## the rest of the game whether it still has a match.
+func _dial_match() -> void:
+	var config: NetworkConfig = _config()
+	if config == null:
+		_end_move(false, "This game has no network configuration.")
+		return
+
+	var scene_multiplayer: SceneMultiplayer = multiplayer as SceneMultiplayer
+	if scene_multiplayer != null:
+		# **Only for a match dial**, and cleared again when the move ends. The
+		# one SceneMultiplayer is shared by every connection this process makes,
+		# so a callback left set here would gate every later LOBBY dial too - and
+		# the lobby port deliberately has no auth at all, because the old-build
+		# refusal has to reach a client that knows nothing about it.
+		scene_multiplayer.auth_callback = _on_move_auth
+		scene_multiplayer.auth_timeout = maxf(1.0, config.match_auth_timeout_seconds)
+
+	var peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
+	var error: Error = peer.create_client(_move_address, _move_port)
+	if error != OK:
+		_move_attempt_failed("could not open a socket")
+		return
+
+	var previous: ENetMultiplayerPeer = _peer
+	_peer = peer
+	multiplayer.multiplayer_peer = peer
+	if previous != null:
+		previous.close()
+	_move_attempts += 1
+	_move_retry = 0.0
+	_set_status(Status.CONNECTING)
+	Log.info("Dialling the match", {
+		"address": _move_address, "port": _move_port, "attempt": _move_attempts,
+	})
+
+
+## The match process's answer during authentication: one byte naming a refusal.
+##
+## A status the client can do something about - the seat still being held by a
+## link the server has not yet given up on - is RETRIED. Everything else ends the
+## move with its own sentence.
+func _on_move_auth(_peer_id: int, data: PackedByteArray) -> void:
+	var refusal: int = MatchHandoff.status_of(data)
+	if refusal == MatchHandoff.AUTH_SEAT_HELD:
+		Log.info("The match still holds this seat, trying again")
+		_move_attempt_failed("seat held")
+		return
+	_end_move(false, MatchHandoff.status_sentence(refusal))
+
+
+## This client's side of the exchange: the token, and then the completion.
+##
+## Both in the same call, which is P1's pattern and is why a refusal has to be
+## decided inside the server's own callback - once this completion has arrived,
+## the server's `send_auth` no longer goes anywhere.
+func _on_move_authenticating(id: int) -> void:
+	if !_moving:
+		return
+	var scene_multiplayer: SceneMultiplayer = multiplayer as SceneMultiplayer
+	if scene_multiplayer == null:
+		return
+	scene_multiplayer.send_auth(id, _move_token)
+	scene_multiplayer.complete_auth(id)
+
+
+## The server refused us, or the auth timeout ran out with nothing decided.
+## Without a status of its own this is indistinguishable from silence, so it is
+## retried like one rather than ending the move on a guess.
+func _on_move_auth_failed(_id: int) -> void:
+	if !_moving:
+		return
+	_move_attempt_failed("authentication failed")
+
+
+## One attempt is over. Another is made after the retry interval, until the
+## deadline the caller set - which is the announce plus the load timeout, so a
+## client that keeps missing runs out at the same moment D15 gives up on it.
+func _move_attempt_failed(why: String) -> void:
+	if !_moving:
+		return
+	Log.info("A move attempt failed", {"why": why, "attempt": _move_attempts})
+	var config: NetworkConfig = _config()
+	_move_retry = 2.0 if config == null else maxf(0.25, config.match_dial_retry_seconds)
+
+
+## Counts the move's clock, and makes the next attempt when one is due.
+func _tick_move(delta: float) -> void:
+	if !_moving:
+		return
+	_move_clock += delta
+	if _move_clock >= _move_deadline:
+		_end_move(false, "Could not reach the match in time.")
+		return
+	if _move_retry <= 0.0:
+		return
+	_move_retry -= delta
+	if _move_retry <= 0.0:
+		_dial_match()
+
+
+## The move is over, one way or the other.
+##
+## **The auth callback is cleared here and nowhere else**, because every road out
+## of a move comes through this function. Left set, the next lobby dial this
+## process makes would try to authenticate against a port that has no auth.
+func _end_move(ok: bool, reason: String) -> void:
+	if !_moving:
+		return
+	_clear_move_authentication()
+	if ok:
+		Log.info("Moved to the match", {"attempts": _move_attempts})
+	else:
+		Log.warn("The move to the match ended", {"why": reason, "attempts": _move_attempts})
+		_teardown()
+	move_ended.emit(ok, reason)
+
+
+## Takes the match dial's authentication back off the shared SceneMultiplayer.
+##
+## Called when a move ends AND before any lobby dial, which are the two ways a
+## stale callback could reach a port that has none. Separate from `_end_move`
+## because `join()` needs it without a move having run at all - a process that
+## was killed mid-move and restarted is not the case; a process that finished a
+## match and went back to the browser is.
+func _clear_move_authentication() -> void:
+	_moving = false
+	_move_token = PackedByteArray()
+	var scene_multiplayer: SceneMultiplayer = multiplayer as SceneMultiplayer
+	if scene_multiplayer != null && !scene_multiplayer.auth_callback.is_null():
+		scene_multiplayer.auth_callback = Callable()
 
 
 ## Fires on a client too, where the first "peer" to appear is the server

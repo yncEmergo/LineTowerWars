@@ -45,7 +45,10 @@ static func is_dedicated_server(config: BootConfig) -> bool:
 		return true
 	if config == null:
 		return false
-	return CommandLineUtil.has_flag(config.server_argument)
+	# A MATCH PROCESS is a dedicated server too, and has to be said separately:
+	# `--match-server` does not match `--server`, so without this line a match
+	# process would boot as a CLIENT and walk into the main menu.
+	return config.is_match_server() || CommandLineUtil.has_flag(config.server_argument)
 
 
 ## Deferred by one idle frame, and it has to be: the tree is still in the middle
@@ -67,8 +70,14 @@ func _dispatch() -> void:
 		config.validate()
 
 	if is_dedicated_server(config):
+		# Before the scene, and for a match process too: the helper holds every
+		# log line for a debugger that never attaches, which on a box running
+		# many match processes is the same leak multiplied by the cap.
 		_drop_editor_helper()
-		_open("server", _server_scene_path(config))
+		if config != null && config.is_match_server():
+			_open("match-server", config.match_server_scene_path)
+		else:
+			_open("server", _server_scene_path(config))
 	else:
 		# Here rather than in the options screen alone, so a player who chose
 		# fullscreen last time gets it before the menu's first frame instead of
