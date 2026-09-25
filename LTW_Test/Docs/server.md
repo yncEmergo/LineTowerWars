@@ -81,6 +81,23 @@ player slot.
 | Godot lives somewhere else | `.\Tools\run_server.ps1 -Godot "C:\path\to\Godot.exe"` |
 | Stop it | `.\Tools\stop_server.ps1` |
 | See what is running, and for how long | `.\Tools\stop_server.ps1 -List` |
+| **Each match in a process of its own** (D44) | `.\Tools\run_server.ps1 -MatchProcesses` |
+
+**`-MatchProcesses` is off by default and that is deliberate.** Without it this server runs one
+match itself, as it always has, and says so at boot:
+
+```
+[server] ... Match processes are OFF, this server runs one match itself (D19)
+```
+
+With it, every match gets a server process of its own and the lobby only hands matches over:
+
+```
+[server] ... Match processes are ON, each match gets a process of its own (D44)
+```
+
+It is a switch rather than the new normal because the whole of D44 has to be able to sit on
+`main` without changing anything for anyone until it is released. See `Docs/multi-match.md`.
 
 `-Windowed` gives you the same log in a window instead of the terminal — occasionally handy,
 but the terminal is the better place for it.
@@ -528,6 +545,52 @@ listening by itself:
 ```
 [server] Match over, everybody has left match-6ab66547-1
 ```
+
+### With `-MatchProcesses`, each match in a process of its own
+
+The same Start reads completely differently. The child boots DURING the countdown, because the
+roster and the rules are already final when the countdown begins:
+
+```
+[server] ... Start countdown { "lobby": lobby-1, "seconds": 5.0 }
+[server] ... Match process spawned { "match": match-...-1, "pid": 34736, "port": 7800 }
+[server] ... Matches running { "count": 1 }
+[server] ... Match process is ready { "match": match-...-1, "port": 7800, "pid": 34736, "seconds": 1.79 }
+[server] ... Handing a match over { "lobby": lobby-1, "match": match-...-1, "port": 7800, "players": 2 }
+```
+
+**`Handing a match over` is the line to look for.** After it, this process knows nothing about
+that match: the players have been told the port and their own seat's secret, they have moved
+their one connection to the child, and the lobby has erased itself from the browser. Everything
+about how the match then goes is in the CHILD's log.
+
+When the child ends, the lobby logs what it did and frees the port:
+
+```
+[server] ... Match result { "match": match-...-1, "ended": all_left, "seats": [...] }
+[server] ... Matches running { "count": 0 }
+```
+
+`ended` is one of `all_left`, `aborted` (D15 gave up on the players), `shutdown` (a deploy), or,
+written by the lobby when the child left no result of its own, `died`, `never_ready`, `killed` or
+`wedged`. **It carries no winner**: under lockstep no server process computes one.
+
+**Where the files are.** Each match gets a handful of files named after it, in
+`/run/ltw-server` on the box and `user://run` on Windows: the match file the child reads and
+deletes at once, a READY file, a heartbeat, a RESULT, and a shutdown file the deploy creates. The
+per-match LOG is kept after a reap; everything else is deleted. On Windows that log is the only
+output a child has, so it is where to look when a match went wrong.
+
+**Several matches at once** each take the next port from the range in `NetworkConfig`
+(`match_port_first` to `match_port_last`), least recently freed first. A Start is refused with
+"The server is full." when the cap or the port range is reached, and one host may only have so
+many at a time. Spawns are serialised - one child boots at a time - so a Start pressed while
+another is booting still begins its countdown and its room reads "Starting the match..." until
+its own child is ready.
+
+**A deploy tells the players of every match** (D45): the lobby creates each announced child's
+shutdown file, each child tells its own players "The server is restarting. The match was
+cancelled." and closes their links, and they land on the lobby browser with the reason on screen.
 
 So the loop is: start the server once, play as many matches as you like against it.
 

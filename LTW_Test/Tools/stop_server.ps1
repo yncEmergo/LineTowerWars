@@ -19,6 +19,11 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 
 $projectName = Split-Path $projectRoot -Leaf
 
+# **`*--server*` matches `--match-server` too, and here that is right** (D44): a
+# match process is a server of this project, and stopping the lobby while its
+# children play on would leave orphans holding ports that the next lobby would
+# then fail to bind. `run_server.ps1` excludes them from its own check, because
+# there the question is the opposite one.
 $servers = @(Get-CimInstance Win32_Process -Filter "Name like '%odot%'" -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -and $_.CommandLine -like "*--server*" -and $_.CommandLine -like "*$projectName*" })
 

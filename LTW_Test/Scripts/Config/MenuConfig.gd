@@ -103,8 +103,13 @@ extends Resource
 ## How long the server holds a match open for a player who has gone quiet
 ## before declaring them gone (D13, and the user's call on 2026-08-23).
 ##
-## This is NOT a reconnect window - out is out - it is a hold against a brief
-## hiccup costing somebody a ranked game. It sits ON TOP of the roughly 5.6 s
+## This is NOT a reconnect window for a match that has BEGUN - out is out - it is
+## a hold against a brief hiccup costing somebody a ranked game.
+##
+## **It IS a re-claim window during LOADING, in a match process** (D44): a seat
+## whose link breaks before the go signal may be claimed again with the same
+## token for this long, and the client keeps its token for exactly that. The
+## distinction is the go signal, not the mechanism - see `MatchSeats`. It sits ON TOP of the roughly 5.6 s
 ## ENet itself takes to notice a hard-killed client, so a real crash resolves
 ## in about fifteen. A DELIBERATE leave skips it entirely, because a client
 ## that says goodbye is telling us it is not coming back.

@@ -405,6 +405,85 @@ and a mid-match hard kill still dropped the peer and reached the survivor (`drop
   runner's summary. A run that quietly started two clients and one that started four read
   identically without it.
 
+## P2, P3 and P4 built and measured, the same day
+
+The handoff exists and plays matches. Measured on this Windows dev PC, on
+loopback, with two harnesses:
+
+- `Tools/run_match_probe.ps1` hand-writes a match file and runs a real match
+  process with real probe clients against it. **No lobby in it at all**, which is
+  the point: testing the child against a lobby that also has to work would not say
+  which half was wrong.
+- `Tools/run_lockstep_probe.ps1 -MatchProcesses` drives the whole road through the
+  real lobby: countdown, spawn, READY, announce, move, claim, re-key, play.
+
+**The positive controls are `claims` and `go_id`.** A run with `claims` at zero
+never claimed a seat, and `go_id` equal to `own_id` is what proves the re-key
+ran - that the roster the relay stamps orders against is the one the client's
+socket answers to. A run can look perfect and have exercised neither.
+
+### The child, alone (P2)
+
+| Scenario | Result |
+| --- | --- |
+| Two seats, hand-written match file | full match, 350 and 358 turns, 0 desyncs, `go_id` = `own_id` on both |
+| A seat dropped mid-load, re-claimed inside D26's hold | `claims=2` with a NEW peer id, re-reported ready, played on; 747 turns |
+| A third seat holding its report back 22 s | the gate waited for it; `Match start` came after its `Client loaded` |
+| A token that is nobody's seat | `WRONG_TOKEN`, its sentence on the client, counted in the RESULT's refusals |
+| Another seat's token, presented while its owner holds it | `SEAT_HELD` seven times, `move_attempts=7`, the owner undisturbed |
+| A token presented after the go signal | `TOO_LATE`, read by the client as "The match started without you." |
+| The port already held by a first match process | exits 65 (`PORT_TAKEN`) in 1.8 s |
+| No seat ever claimed | exits at the 60 s load timeout, writes a RESULT (`aborted`) |
+| A shutdown file planted BEFORE the child listened | honoured, not cleared as stale; exits in 4.2 s (`shutdown`) |
+| A shutdown while the match is running | both clients told, 207 turns played, `shutdown` |
+
+### The whole road, through the lobby (P3, P4)
+
+| Scenario | Result |
+| --- | --- |
+| One handoff | 443 turns, 0 desyncs, `go_id` = `own_id` |
+| Two matches on one lobby process | own ports (7800, then 7801), own children, both clean, first reaped before the second spawned |
+| A peer hard-killed mid-match | survivor ran 640 turns |
+| A third peer browsing while a match runs | match untouched (540 turns); the browser never in one |
+| A deploy (D45) mid-match | both clients on the lobby browser carrying "The server is restarting. The match was cancelled." |
+| A planted desync | caught on both peers by the relay inside the child |
+| The same code with the switch OFF | "Match processes are OFF", 434 turns, no handoff attempted |
+
+Boot-to-READY on this machine: **1.5 to 1.8 s**, consistently, which is what the
+READY ceiling has to be sized against on the box rather than here.
+
+Regression: the tutorial probe plays a whole offline match through the loading
+screen in an isolated copy of HEAD plus these files - 481 passes, 3 failures, and
+those three fail on HEAD too (tutorial pointer borders, nothing to do with this).
+
+### Seven bugs the batteries found
+
+Recorded because each one looked like a pass from outside:
+
+1. **The readiness report was lost whenever the move finished after loading.**
+   `_end_move` ran before the status reached CONNECTED, and `is_online()` is false
+   while CONNECTING - so the rpc was dropped and the match waited out D15 for a
+   client that had loaded long ago. Only reachable on the path where the move took
+   a retry, which is why the plain scenario passed.
+2. **The client forgot its setup the frame its match link closed**, which made the
+   owner's re-claim rule correct on the server and unusable from the client.
+3. **A missing match file exited with a code and no log line at all.**
+4. **A D45 shutdown during loading was recorded as an abort**, blaming the players
+   for a restart.
+5. **A healthy match was killed for being wedged, twice, on two mechanisms** - see
+   the liveness-file trap in `CLAUDE.md`.
+6. **The probe's own re-key control read the ANNOUNCED setup**, whose ids are the
+   lobby's, so it compared a lobby id against a match id, found them different,
+   and would have reported a re-key that never happened.
+7. **`-BlockPort` did not block the port.** A .NET `UdpClient` does not stop ENet
+   binding the same one, so the first `PORT_TAKEN` run "passed" with the child
+   listening happily on a port the harness believed it held. It now holds the port
+   with a real match process.
+
+Numbers 6 and 7 are the same failure in the harness rather than in the code, and
+both are the positive-control rule: the run proved the harness wrong and said
+nothing.
+
 ## Still open
 
 - **The service file.** Now prepared as `deploy_server.ps1 -InstallShutdown`: a drop-in that

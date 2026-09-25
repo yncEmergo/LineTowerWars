@@ -1215,9 +1215,13 @@ func _disconnect_peer(id: int) -> void:
 ## is needed least. Every silent RPC misroute this project has had came through
 ## that gap: a client with a method the server lacks, or the reverse.
 ##
-## Godot addresses an rpc by its INDEX in the method list, not by its name, so
-## one method added anywhere shifts every method after it and calls land on the
-## wrong function. What comes out is an error naming a method nobody called -
+## Godot addresses an rpc by its POSITION IN THE NAME-SORTED LIST of that node's
+## own rpcs, not by its name, so one method added anywhere can shift the ones
+## that sort after it and calls land on the wrong function. (It was written here
+## as "its index in the method list", which is close enough to be believed and
+## wrong in two ways: the ordering is by NAME, and the list is per NODE. D31's
+## row in multiplayer.md has the corrected reading, and the frozen-handshake
+## rule in multi-match.md §3 depends on it.) What comes out is an error naming a method nobody called -
 ## "receive_leak: expected 3 arguments, but called with 1" - which reads like a
 ## bug in that method rather than like "your build differs". Cost most of a day
 ## on 2026-09-04, twice, from two different causes.

@@ -4,12 +4,14 @@
 #   .\Tools\run_server.ps1                 headless on the configured port
 #   .\Tools\run_server.ps1 -Windowed       same, but with the log window
 #   .\Tools\run_server.ps1 -Port 7778      on another port
+#   .\Tools\run_server.ps1 -MatchProcesses each match in a process of its own (D44)
 #
 # Ctrl+C stops it.
 
 param(
     [int]$Port = 0,
     [switch]$Windowed,
+    [switch]$MatchProcesses,
     [string]$Godot = ""
 )
 
@@ -33,9 +35,16 @@ if ([string]::IsNullOrWhiteSpace($exe)) { exit 1 }
 # fails deep inside ENet with "Could not open the server port", which reads like
 # a bug rather than like "one is already running". Two servers on DIFFERENT
 # ports is legitimate, so -Port skips the check.
+#
+# **`--match-server` is excluded, and it has to be** (D44): the flag CONTAINS
+# "--server" as a substring, so a leftover match process would otherwise read as
+# a running lobby and refuse to let one start at all. `stop_server.ps1` matches
+# the loose pattern on purpose, because there it is right to stop both.
 $projectName = Split-Path $projectRoot -Leaf
 $running = @(Get-CimInstance Win32_Process -Filter "Name like '%odot%'" -ErrorAction SilentlyContinue |
-    Where-Object { $_.CommandLine -and $_.CommandLine -like "*--server*" -and $_.CommandLine -like "*$projectName*" })
+    Where-Object { $_.CommandLine -and $_.CommandLine -like "*--server*" -and
+                   $_.CommandLine -notlike "*--match-server*" -and
+                   $_.CommandLine -like "*$projectName*" })
 
 if ($running.Count -gt 0 -and $Port -le 0) {
     Write-Host "A server is already running:" -ForegroundColor Yellow
@@ -52,6 +61,9 @@ $argList = @("--path", $projectRoot)
 if (-not $Windowed) { $argList += "--headless" }
 $argList += @("--", "--server")
 if ($Port -gt 0) { $argList += @("--port", "$Port") }
+# D44: each match in a process of its own. Off by default, because the whole of
+# that work sits on main without changing anything for anyone until it ships.
+if ($MatchProcesses) { $argList += "--match-processes" }
 
 $mode = "headless"
 if ($Windowed) { $mode = "windowed" }

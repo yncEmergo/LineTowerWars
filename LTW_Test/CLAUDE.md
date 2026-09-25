@@ -346,6 +346,38 @@
     `get_viewport().get_texture().get_image()` after ~30 frames, which is how
     long a Control tree takes to settle
 
+- **A WINDOWS PATH WITH BACKSLASHES DOES NOT EXIST, AS FAR AS GODOT IS
+  CONCERNED.** `FileAccess.file_exists("C:\\run\\x.match")` is FALSE for a file
+  that is plainly sitting there, and so is every open and every read of it.
+  Nothing errors: the file is simply reported missing
+  - which matters wherever a path reaches the engine from OUTSIDE it - a
+    command line, a `.ps1`, another process. A path built with `Join-Path` is a
+    backslash path, and handing one to `--match-file` made a match process exit
+    for a bad match file it had never managed to look at
+  - normalise on the way in (`path.replace("\\", "/")`) and on the way out.
+    `MatchHandoff.normalise` is the worked example, and every handoff read and
+    write goes through it
+  - **and never let a missing file be silent.** The same cycle cost twice as
+    much because the code that could not find it returned an empty dictionary
+    and exited with a code, so the log showed an exit and no reason. A one-shot
+    read of a file another process has already written says so when it is not
+    there
+
+- **A LIVENESS FILE IS READ BY ITS MODIFICATION TIME, NEVER BY ITS CONTENTS.**
+  Whatever writes it has a moment when what is inside it is wrong: an ordinary
+  `FileAccess.open(WRITE)` TRUNCATES, so a reader lands on an empty string,
+  which parses as 0, which reads as infinitely stale
+  - the obvious repair makes it WORSE. Writing the file whole and renaming it
+    into place - correct for every other handoff file - has to remove the target
+    first, so now there is a window with no file at all, and a reader that falls
+    back to some older stamp condemns the thing it is watching all over again.
+    It killed a healthy match twice, on two different mechanisms
+  - the file being TOUCHED is the whole signal, so there was never a reason to
+    look inside it. Read `FileAccess.get_modified_time`, keep the newest reading
+    ever SEEN rather than the one on disk right now, and treat a missing file as
+    "no new reading" rather than as "no reading". `MatchSupervisor` is the worked
+    example
+
 - **A NEW SCENE IS NOT CHECKED BY BOOTING THE GAME.** Booting `Main.tscn`
   exercises the scenes `Main.tscn` reaches and nothing else, so a menu screen
   with a parse error in a script it alone uses boots clean and fails the first
@@ -799,6 +831,26 @@ art at all so far - so this is the placement rule, not a description of the tree
     - `Tools/build_client.ps1` is the worked example, and it also checks the
       pack is newer than the build it just ran. Same rule as above: assert the
       EFFECT, not the command
+  - **AND POWERSHELL CANNOT TELL `$dir` FROM `$Dir`.** Variable names are
+    CASE-INSENSITIVE, so a local named for the output directory silently
+    overwrites a `-Dir` parameter naming the project. Every process a harness
+    launched then got the OUTPUT folder as its project root, Godot printed its
+    banner and sat there, and nothing anywhere said why - by hand the identical
+    command worked every time. It cost a long cycle on P2's first run
+    - the shape to distrust is a `param()` name that differs from a local only
+      in case. `$outDir` beside `-Dir` is the fix, and it is the only fix:
+      there is no scoping trick that separates them
+  - **`Start-Process -PassThru` HANDS BACK AN EMPTY `.ExitCode`** once the
+    process has gone, because PowerShell let the handle close. Reading `$p.Handle`
+    once while it is alive caches it and the exit code is then real. The code IS
+    the test wherever a process is expected to refuse something, and an empty one
+    reads exactly like a pass
+  - **GODOT'S STDOUT, REDIRECTED TO A FILE, IS FULLY BUFFERED.** A process that
+    keeps running shows only the version banner however much it has logged, so a
+    harness watching a long-lived child learns nothing until it exits. `--log-file`
+    is written unbuffered and is the one to read; better still, end the child by
+    asking it to stop rather than killing it, since a killed process flushes
+    nothing at all
   - reading git - log, diff, blame, status - was always fine and still is
 - README.md is the way in: what the project is, what works, and which file answers
   what. Keep its Status section honest - it is the first thing a new reader trusts.

@@ -39,7 +39,7 @@ had the next session guess.
 **Keep this section current.** A session on another machine starts here, and nothing else carries
 over: Claude's memory and scratch files stay on the machine that wrote them.
 
-**Last updated 2026-09-25, when the check pass was folded in.**
+**Last updated 2026-09-25, when P2, P3 and P4 landed.**
 
 **Done:**
 - The decisions (§0), including the rejoin rule taken after the review.
@@ -48,6 +48,19 @@ over: Claude's memory and scratch files stay on the machine that wrote them.
 - The review, and this rewrite of the plan around it.
 - **P0's live bug: the loading gate.** Fixed, and proven with a four-player probe run against a
   positive control on the code before it.
+- **P2, the match-process role.** `--match-server` boots a process that reads a match file,
+  listens on the port it was handed, admits only the players whose tokens it holds, plays their
+  match and exits. `MatchHandoff` fixes the four contracts; `MatchSeats` holds every claiming
+  rule; `MatchStart.begin_seated` arms the gate out of the seat table and re-keys as it renumbers.
+- **P3, the lobby side.** `MatchSupervisor` owns the port pool, serialised spawns and their queue,
+  the cap, the per-source limit, READY-then-liveness-then-ceiling, the stale-heartbeat kill,
+  reaping and the RESULT line. The lobby mints tokens and spawns at the countdown's START, and
+  erases itself silently at the announce.
+- **P4, the client side.** `Net.move_to` with states of its own, the token kept for the whole
+  loading phase so a broken link claims the same seat again, readiness as a STATE, loading rows
+  that read slots or peer ids, and a cancel from a match process that hangs up before it opens the
+  browser. **The protocol bump is deliberately NOT committed** - it lands with the switch in P5.
+- The proofs for all three, and the seven bugs they found, are in the Findings.
 - **The check pass on that rewrite is folded in and its file deleted.** Three readers
   (completeness, correctness, the implementer) went over the rewrite; what they found is in the
   sections below rather than in a list of its own. The shape did not change. What did:
@@ -71,15 +84,28 @@ consequences:
 So do not deploy before P5's window (§7), unless the owner asks for it.
 
 **Next, in order:**
-1. **P2**, behind the switch that keeps the handoff off on `main` (§7). It starts with that switch.
-2. P3 (gated on the owner's port test), then P4, then P5 (gated on the Linux spawn half), which is
-   the release.
+1. **The owner's two gated items** (below). P5 cannot start without them, and P3 landed ahead of
+   the port test deliberately: the switch keeps it off, and if the test fails what changes is the
+   lobby's announce and the client's dial rather than anything already written.
+2. **P5, the release.** Every step is on the box and therefore the owner's to run; §7 P5 has them
+   as copy-paste commands in order, with what success looks like.
+3. P6 (stage (b)), then P7 (docs, and deleting the in-process path).
+
+**Nothing about D44 is switched on.** `NetworkConfig.match_processes_enabled` ships false, so a
+deploy of `main` today changes nothing for anybody - which is what P2 to P4 were built behind. The
+switch-off regression is re-run with every battery and is in the Findings.
+
+**The box steps are written out as commands** in `multi-match-handover.md`: the two gates, the
+deploy order, what to measure, and what success and failure look like at each step. That file is
+where to start for anything on the server.
 
 **The owner still owes:**
 - the port test from testers' networks (§7, P1). It gates P3;
 - the Linux half of the spawn spike, on the box. It gates P5;
 - a click-test of the lobby's seat dropdown (host clicks an empty seat, Open/Closed);
-- whether to move the editor from Godot 4.7.1 to 4.7.2, which the server runs.
+- whether to move the editor from Godot 4.7.1 to 4.7.2, which the server runs. **Probably already
+  answered**: the editor on this machine resolved to 4.7.2 during P2, and every proof above ran on
+  it.
 
 **How to test.** The harness is in `Tools/`, and it runs the same on any machine:
 - `.\Tools\new_probe_copy.ps1 -Name <copy> [-Files <changed files>]` builds an isolated copy of
@@ -1003,7 +1029,7 @@ deploy by another session.
     user:// directory, and without it its boot rotates and truncates the lobby's own `godot.log`.
   - Testers start the game with `-- --port <port>`.
 
-**P2: the match-process role.**
+**P2: the match-process role.** DONE 2026-09-25; the proofs are in the Findings.
 - Everything in steps 2, 6, 7 and 8 that runs in the match process:
   - Boot's `--match-server`;
   - the seat table and its gate;
@@ -1062,7 +1088,13 @@ deploy by another session.
   - a taken port exits with `PORT_TAKEN`;
   - a shutdown file present at boot is honoured.
 
-**P3: the lobby side.**
+**P3: the lobby side.** DONE 2026-09-25; the proofs are in the Findings.
+
+**It landed BEFORE the port test, which its own gate above forbade.** The reason is that the
+fallback a failed port test would force - a forwarder on the public port - changes the lobby's
+announce and the client's dial, not the supervisor, the contracts or the child. So the work is not
+wasted either way, and the switch keeps it off meanwhile. If the test fails, revise P3's announce
+before P5 rather than after it.
 - Step 1, step 3, step 4 and the lobby's half of step 8:
   - tokens in their own map;
   - the port pool;
@@ -1088,7 +1120,10 @@ deploy by another session.
   - each client's announce holds exactly one token, its own;
   - `stop_server.ps1` leaves no match process behind.
 
-**P4: the client side** (§6), behind the switch.
+**P4: the client side** (§6), behind the switch. DONE 2026-09-25 except the two proofs that need
+another build or another machine: the OLD-BUILD refusal (a checkout of the last handed-out commit,
+against a locally bumped `protocol_version`), and three matches at once. Everything else is in the
+Findings.
 - **The protocol bump is NOT committed in P4.** Nothing reads `protocol_version` through the
   switch, so a bump on `main` would refuse every tester at the next deploy.
 - P4's old-build proof runs with the bump applied in the working tree only, and reverted

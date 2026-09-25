@@ -64,7 +64,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D10 | **The network session may be a plain autoload**, standing on its own rather than going through `References`. | 2026-08-21 | User's call: `References` is a convenience, not a hard rule, and a global-like entity is exactly what a session that outlives scene changes needs. Unblocks 0.1. |
 | D11 | **Simulation tick is 20 Hz**, in a config `.tres`. | 2026-08-21 | Squarely in the RTS band. 50 ms, and an exact 3:1 divisor of a 60 Hz render frame. See §5.5. |
 | D31 | **A build also states a HASH OF ITS `@rpc` SURFACE, and the server refuses one that disagrees.** | 2026-09-04 | Computed, not declared, in `NetworkService.rpc_signature` - the name, argument count and mode of every `@rpc` method across the autoloads. It exists because D29's number **cannot do this job**: `protocol_version` is bumped by hand, so it does not change when somebody edits code, which is exactly when the check is needed. Godot addresses an rpc by its POSITION in the name-sorted list of that node's rpcs, so one method added to a node shifts every one after it on that node and calls land on the wrong function - surfacing as an error naming a method nobody called (`receive_leak: expected 3 arguments, but called with 1`), which reads like a bug in that method rather than "your build differs". That cost most of a day on 2026-09-04, from two separate causes. Deliberately scoped to what crosses the wire: a client-only UI change must not refuse a connection. Verified by adding one `@rpc` method and watching the hash move, then revert. |
-| D30 | **The public server runs on a RENTED machine, and a deploy is MANUAL.** Pushing changes nothing; the server keeps running the commit it has until it is told otherwise. | 2026-09-03 | User's call, forced by circumstance: the developer's building has a managed connection with no address that can be dialled from outside, so hosting at home cannot reach a tester at all - see `server.md`. Manual rather than automatic on purpose. A restart ends any match in progress (D19), and a `protocol_version` bump (D29) locks out every tester who has not taken the new build, so WHEN that happens has to be a decision rather than a side effect of pushing. Supersedes D18. |
+| D30 | **The public server runs on a RENTED machine, and a deploy is MANUAL.** Pushing changes nothing; the server keeps running the commit it has until it is told otherwise. | 2026-09-03 | User's call, forced by circumstance: the developer's building has a managed connection with no address that can be dialled from outside, so hosting at home cannot reach a tester at all - see `server.md`. Manual rather than automatic on purpose. A restart ends any match in progress (D45), and a `protocol_version` bump (D29) locks out every tester who has not taken the new build, so WHEN that happens has to be a decision rather than a side effect of pushing. Supersedes D18. |
 | D29 | **A build states its `protocol_version` on connecting, and the server refuses one that disagrees.** | 2026-09-03 | Bumped by hand, in `NetworkConfig`. Needed the moment a build exists that somebody else has a copy of: two versions of this project cannot otherwise be told apart until they have already gone wrong together, because the server simulates and the clients draw, so a disagreement surfaces as refused orders or a world that quietly differs - never as "you need to update". Lives on `Net` rather than `Lobby`, though `Lobby.register_player` is also a first message, because it gates the CONNECTION: a peer refused there never reaches `Lobby`, and anything added later that talks earlier is covered without being changed. `WorldChecksum` stays underneath it - a version catches two builds that were never meant to meet, the checksum catches two that agree on their version and still built different worlds. |
 | D28 | **A client dials a LIST of addresses, taking the first that answers**, rather than one authored address. | 2026-09-03 | User's requirement, from the shape of the dev loop: two PCs in different buildings take the server in turns, and whichever is not hosting has to find the one that is without being rebuilt or told which. Sequential, cheapest-first - 127.0.0.1 leads, so a player on the same machine as the server connects instantly. The cost is that each dead candidate is paid in full at `connect_timeout_seconds`, which is why that number came down: a dead candidate is now the common case rather than the failure case. Parallel probing would cost one round trip instead of N timeouts and is the upgrade if the list ever grows past a handful. `--address` still collapses the list to one, so the headless probes and `run_server.ps1` are untouched. |
 | D27 | **Developer cheats are refused in a NETWORKED match** unless the server's own config deliberately allows them. | 2026-09-02 | User's call. A cheat is a real player order the authority grants (§2), so the master switch alone would let one player in a real match hand themselves the gold to end it - and the file that refuses it is the SERVER's, not the one they are looking at. A second flag rather than a flat refusal, because the networked build has to be testable: a headless two client run needs the same shortcuts a single player run gets. `GameConfig.cheats_allowed(Net.is_online())` is the one place the two are put together. |
@@ -89,7 +89,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D41 | **A player may vanish for the relay's silence timeout before losing the match, and nothing closes their link sooner.** | 2026-09-15 | User's call after playtest 7. The allowance is `silent_timeout_seconds`, and ENet's own timeout is stretched past it for the match (`MatchStart._stretch_link_timeouts`), because its default closes a quiet link first and a closed link is final (D13). Under the sealed stream nobody waits for the missing player, so the allowance costs the others only a lane that stays standing. |
 | D43 | **A PAUSE is a player order, not a message**, and a resume is a countdown every peer runs. | 2026-09-20 | User's call. Offline the in-match menu simply holds the world while it is open; online it carries a Pause button that anybody may press and anybody may undo. It has to ride the turn stream rather than a broadcast rpc for the same reason D42's countdown does: a hold stops the match clock, so two peers that began holding on different turns would have two different clocks - hashed into every checksum, and therefore a desync with no other symptom. `MatchPause`, a node in both match scenes beside `StartingTech`. No allowance and no cooldown while the game is in testing. The length is `GameConfig.resume_countdown_seconds`; the rule is in `game_rules.md`. |
 | D42 | **A match opens with a GRACE PERIOD: the world held still for a few seconds before anything can happen.** | 2026-09-15 | User's call after playtest 7's laggy openings. The first phase of `StartingTech`'s opening, counted in simulation ticks by the turn stream so every peer releases on the same turn, and ahead of any technology draft or reveal. A tutorial skips it. The length is `GameConfig.start_grace_seconds`; the rule is in `game_rules.md`. |
-| D44 | **Each match runs in its own server process**, handed off from the lobby process. | 2026-09-25 | User's call, over running every match in the one relay process: matches as independent of each other as possible, which is also the shape a server that ever simulates again would need. Built in two stages - match processes first as children of the lobby's service (with `OOMPolicy=continue`, so an out-of-memory kill of a match process leaves the unit and the other matches up; which process the kernel kills is set by `oom_score_adj`, so each match raises its own), then one systemd unit per match, so a lobby crash leaves running matches alone. The move is an identity transfer, not an address change (see D19), so it takes a new client build and a protocol bump, both accepted. A started match's lobby disappears from the browser, and a player whose move fails may retry until the load timeout (D15). A player whose connection to the match process breaks during loading may claim their seat again within D26's hold, and is out after it; D13 is unchanged once the match has begun (decided after the plan's review, the same day). Plan: `multi-match.md`. Measurements: `Findings/2026-09-25-one-server-many-matches.md`. Supersedes D19. |
+| D44 | **Each match runs in its own server process**, handed off from the lobby process. | 2026-09-25 | User's call, over running every match in the one relay process: matches as independent of each other as possible, which is also the shape a server that ever simulates again would need. Built in two stages - match processes first as children of the lobby's service (with `OOMPolicy=continue`, so an out-of-memory kill of a match process leaves the unit and the other matches up; which process the kernel kills is set by `oom_score_adj`, so each match raises its own), then one systemd unit per match, so a lobby crash leaves running matches alone. The move is an identity transfer, not an address change (see D19), so it takes a new client build and a protocol bump, both accepted. A started match's lobby disappears from the browser, and a player whose move fails may retry until the load timeout (D15). A player whose connection to the match process breaks during loading may claim their seat again within D26's hold, and is out after it; D13 is unchanged once the match has begun (decided after the plan's review, the same day). **Stage (a) is BUILT and switched off** (2026-09-25): `NetworkConfig.match_processes_enabled` ships false and `--match-processes` turns it on for one process, so all of it sits on `main` without changing anything for anybody until the release. What it is, in §11.3. Plan: `multi-match.md`. Measurements: `Findings/2026-09-25-one-server-many-matches.md`. Supersedes D19. |
 | D45 | **A deploy CANCELS running matches and tells the players**; it never refuses. | 2026-09-25 | User's call. Before it a deploy froze every running match for good - Godot on Linux runs no code on SIGTERM - and closing the socket cleanly without a word was worse, because every client then played on alone. So the server is asked first, by a FILE (`--shutdown-file`, created by the service's ExecStop): it cancels every match with the reason, gives the players a few seconds to read it, closes each connection with `peer_disconnect_later` so the notice is acknowledged before the close, and quits. See `Net.begin_shutdown`. The server half is built; the service file edit is `server.md`'s. An UNPLANNED death - a crash, out of memory, a reboot - is the client's to handle, and it does: see §11.1. |
 | D32 | ~~**The input delay is MEASURED from the live connection**, never authored.~~ **SUPERSEDED by D40 on 2026-09-09.** No client names a turn any more, so there is no per-peer booking to measure: the relay decides which turn an order lands in from when it arrives, and `delay_turns` / `_wire_budget_ms` / `announce_one_way` are deleted. What a peer chooses locally now is its PLAYBACK buffer, which costs only its owner. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
 | D16 | **One server process per match.** | 2026-08-21 | Its first reason - the only way to use more than one CPU core, §11.3 - died when the server stopped simulating (§4.2). Reaffirmed by D44 on 2026-09-25 for a different one: independence between matches. |
@@ -1235,9 +1235,13 @@ Shape:
 - Starting a match hands the lobby's player list to a game-server instance, which is where
   the `MatchSetup` comes from.
 
-Decided (D44): the lobby process hands each match to a process of its own. The plan is
-`multi-match.md`. Until it lands, one process does both (D19) - and splitting them is not the
-address change this line once called it; see D19's row.
+Decided (D44): the lobby process hands each match to a process of its own. **It is BUILT and
+switched OFF**: `NetworkConfig.match_processes_enabled` ships false, so this server still runs one
+match itself, and `--match-processes` (or `run_server.ps1 -MatchProcesses`) turns the handoff on
+for one process. The switch goes away with the in-process path at the release; until then
+`multi-match.md` is the plan and §11.4 below is what the handoff actually is.
+
+Splitting them is not the address change this line once called it; see D19's row.
 
 ### 8.1 Lobby rules
 
@@ -1500,7 +1504,11 @@ Details still open, none of them blocking:
   always sending, but it is worth knowing this is the mechanism rather than a timer.
 - **The leaver's own creeps keep walking** in the next lane along, and a leak would steal a
   life *for* a player who is on their way out. Harmless, and simplest left alone.
-- **A grace period is not a reconnect.** D13 forbids rejoining; it does not require
+- **A grace period is not a reconnect** - with ONE exception, added by D44. Before the go
+  signal, a player whose link to the MATCH PROCESS breaks may claim their seat again within
+  the hold: the seat is theirs, their token is still good, and the client keeps it for exactly
+  that. From the go signal on the token is dead and this row holds unchanged. D13 forbids
+  rejoining a match that has BEGUN; it does not require
   declaring someone gone the instant a packet is late. A short hold — around 10 s — keeps a
   brief network hiccup from costing a ranked game. A deliberate Leave should skip the hold.
   **Measured: ENet itself takes about 5.6 s** to report a client that was
@@ -1574,6 +1582,60 @@ export reduces by stripping visual resources.
 **Answered by D44**: the lobby keeps its process and each match gets its own. The core
 argument above no longer applies to a relay, which simulates nothing (§4.2); D44's reason is
 independence between matches. Splitting is not an address change - see D19's row.
+
+**BUILT, and switched off.** What follows is what the handoff is. The plan, its phases and the
+open box work are `multi-match.md`; the measurements are
+`Findings/2026-09-25-one-server-many-matches.md`.
+
+**It is an identity transfer, not an address change.** A peer id is chosen by the CLIENT, afresh
+on every connection, and every id is public - so the lobby's ids mean nothing to the match
+process. What moves a player is a SECRET PER SEAT, and the roster is re-keyed before the go
+signal because the relay stamps every order's slot and addresses every seal by `network_id`. It is
+never re-keyed after it, because `network_id` is hashed into every checksum.
+
+```
+                  lobby process                         match process, one per match
+ client ──join──▶ lobby list, countdown, the handoff ──spawn──▶ one relay, today's code
+   │              tokens, ports, supervision, the cap          accepts only its own players
+   └───────────── moves its one connection at the start of loading, with its token
+```
+
+The five parts, and where each one lives:
+
+- **`MatchHandoff`** fixes the four things that cross the boundary: the MATCH FILE the lobby
+  writes and the child reads, the AUTH BYTES a client presents and a refusal answers with, the
+  RESULT the child writes and the lobby logs, and the EXIT CODES that tell a failed bind from a
+  crash. The auth bytes are the strictest: they are what a released client speaks, so changing
+  them costs a protocol bump.
+- **`MatchSupervisor`** is the lobby's half. It mints a token per human seat when the countdown
+  BEGINS - D24 froze the roster then, so the setup is already final and a boot hides inside a
+  countdown somebody is watching - takes a port, writes the match file, spawns the child, and
+  then watches READY, then liveness, then the ceiling, in that order. It also owns the cap
+  (counted from the countdown's start, so a queue cannot overshoot it), the per-source limit, the
+  stale-heartbeat kill, reaping, and the RESULT line.
+- **`MatchServer`** is the child. It reads its match file and deletes it at once, clears every
+  seat's `network_id`, installs `auth_callback` before the peer is assigned, binds its port,
+  honours a shutdown file that is already there, and writes READY last. It exits on every road
+  out of a match and never goes back to listening.
+- **`MatchSeats`** holds every rule about claiming a seat, and two of them needed saying twice: a
+  PENDING token holds its seat, so two connections presenting one token within a round trip
+  cannot both be admitted; and a release NAMES ITS PEER, so a superseded connection timing out
+  later cannot free the seat its own replacement is sitting in.
+- **The client** keys all of it on the ANNOUNCE - a port and a token in `receive_match_starting` -
+  and never on the switch. Without them it behaves exactly as it does against today's server,
+  which is what lets a build from `main` work before the release.
+
+Three consequences worth knowing:
+
+- **A started match's lobby disappears** from the browser, and no closure notice is sent: every
+  member is being handed to a match rather than thrown out of a room.
+- **A player whose link to the match process breaks while LOADING may claim their seat again**
+  within D26's hold, and the client keeps its token for exactly that. From the go signal on the
+  token is dead and D13 holds unchanged: out is out.
+- **A cancel from a match process makes the client hang up before it changes scene**, and it opens
+  the BROWSER rather than a lobby room. There is no room to go back to, and a browser still
+  connected to a match process would never dial the lobby - every Create would then time out with
+  the "different code" sentence.
 
 ### 11.4 Input delay, feedback, and prediction (D17, D32, superseded by D40)
 
