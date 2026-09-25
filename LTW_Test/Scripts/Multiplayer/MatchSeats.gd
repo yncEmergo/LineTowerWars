@@ -60,6 +60,15 @@ var _seats: Dictionary = {}
 ## peer id -> slot, for a connection that has passed the token check but has not
 ## been admitted yet. **A pending entry takes the seat**; it is not a claim.
 var _pending: Dictionary = {}
+## peer id -> true for a connection that has already been refused once.
+##
+## **One connection gets one attempt**, which the contract has always claimed and
+## the code did not do: nothing was recorded on a refusal, so every later auth
+## packet from the same pending peer was evaluated and answered afresh for the
+## whole auth timeout. Sixteen random bytes are not guessable in that window, so
+## this is about the invariant rather than about the crypto - but the rest of the
+## design leans on "a refused connection is done", so it may as well be true.
+var _refused: Dictionary = {}
 ## Set at the go signal. From then on no token is accepted at all.
 var _closed: bool = false
 ## How long a dropped seat stays claimable (D26).
@@ -76,6 +85,7 @@ func build(setup: MatchSetup, tokens: Dictionary, hold_seconds: float) -> void:
 	_hold_seconds = maxf(0.0, hold_seconds)
 	_seats.clear()
 	_pending.clear()
+	_refused.clear()
 	_closed = false
 	if setup == null:
 		return
@@ -106,17 +116,21 @@ func check_token(peer_id: int, token: PackedByteArray) -> int:
 	# connection that was still PENDING when the signal went out.
 	if _closed:
 		return MatchHandoff.AUTH_TOO_LATE
-	if !MatchHandoff.is_valid_token(token):
+	# One connection claims at most one seat, and gets one attempt at it, so a
+	# second message from a connection that already passed or already failed is
+	# refused rather than reconsidered.
+	if _refused.has(peer_id) || _pending.has(peer_id) || _slot_of_peer(peer_id) != 0:
 		return MatchHandoff.AUTH_WRONG_TOKEN
-	# One connection claims at most one seat, so a second message from a
-	# connection that already passed is refused rather than moving it.
-	if _pending.has(peer_id) || _slot_of_peer(peer_id) != 0:
+	if !MatchHandoff.is_valid_token(token):
+		_refused[peer_id] = true
 		return MatchHandoff.AUTH_WRONG_TOKEN
 
 	var seat: Seat = _seat_for_token(token)
 	if seat == null:
+		_refused[peer_id] = true
 		return MatchHandoff.AUTH_WRONG_TOKEN
 	if seat.state == State.LEFT:
+		_refused[peer_id] = true
 		return MatchHandoff.AUTH_TOO_LATE
 	# **A pending entry TAKES the seat**, which is the whole of C1/C4/I4 from the
 	# plan's check pass. Without it the seat still reads `unclaimed` between this
@@ -147,6 +161,14 @@ func admit(peer_id: int) -> int:
 	# the seat keeps it; the newcomer is the caller's to disconnect.
 	if seat.state == State.CLAIMED:
 		return 0
+	# **`left` is refused HERE as well as in `check_token`, because a seat can
+	# leave between the two.** A pending entry lives for a round trip, and
+	# `advance_holds` never consults `_pending` - so a seat whose D26 hold ran out
+	# in that window was written off, announced as gone to every loading screen,
+	# and then brought back to life by this admission. The gate would then wait
+	# out the whole load timeout for a seat the server had already given up on.
+	if seat.state == State.LEFT:
+		return 0
 
 	seat.state = State.CLAIMED
 	seat.peer_id = peer_id
@@ -167,6 +189,9 @@ func admit(peer_id: int) -> int:
 ## `deliberate` is a player who said they were leaving (D26): out at once. A link
 ## that merely broke gets the hold, inside which the same token may claim again.
 func release(peer_id: int, deliberate: bool, turn: int) -> int:
+	# Whatever else this departure means, the connection is gone and its
+	# one-attempt mark goes with it.
+	_refused.erase(peer_id)
 	if _pending.get(peer_id, 0) != 0:
 		# A pending entry is not a claim. Discarding it frees the seat for the
 		# next attempt and changes no state.

@@ -44,11 +44,16 @@ extends Resource
 ## Launch argument that makes this process a MATCH PROCESS (D44): a dedicated
 ## server for exactly one match, spawned by a lobby process.
 ##
-## **It deliberately does not CONTAIN `--server`.** `CommandLineUtil.has_flag`
-## matches a whole argument or a `key=` prefix, so the two roles cannot be
-## confused for one another - but it also means that without this being checked
-## in its own right a match process would boot as a CLIENT, walk into the main
-## menu and listen to nothing.
+## **It deliberately does not CONTAIN `--server`**, and that is worth stating
+## because it is easy to read the other way round: a substring `--server` needs
+## two consecutive hyphens, and here the `server` is preceded by one
+## (`h-server`). So a pattern looking for `--server` does NOT find this flag -
+## which is what `stop_server.ps1` has to name it separately for.
+##
+## `CommandLineUtil.has_flag` does not care either way: it matches a whole
+## argument or a `key=` prefix, never a substring. But it also means that without
+## this flag being checked in its own right, a match process would boot as a
+## CLIENT, walk into the main menu and listen to nothing.
 @export var match_server_argument: String = "--match-server"
 
 

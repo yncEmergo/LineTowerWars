@@ -33,6 +33,8 @@ extends Node
 ## lobby entirely: it reads a hand-written match file, dials the match port with
 ## its seat's token and plays.
 ##
+##     --lobby <name>        make or join THAT lobby, so two pairs stay apart
+##     --leave-after <s>     leave the lobby s seconds after getting into it
 ##     --match-port <p>      the port the match process is listening on
 ##     --match-file <f>      a COPY of the match file, kept for the probes
 ##     --slot <n>            which announced seat this probe claims
@@ -109,6 +111,9 @@ var _move_reason: String = ""
 var _match_started: bool = false
 var _redial_left: float = -1.0
 var _redialled: bool = false
+## Seconds until this probe leaves its lobby, from `--leave-after`.
+var _leave_left: float = -1.0
+var _joining_done: bool = false
 
 
 func _ready() -> void:
@@ -176,9 +181,34 @@ func _on_connected() -> void:
 	# because a lobby that does not exist yet cannot be joined and the two
 	# processes are started a second apart at best.
 	if _role == "host":
-		Lobby.create("Probe match", _players_wanted())
+		Lobby.create(_lobby_name(), _players_wanted())
 	else:
 		Lobby.lobby_list_changed.connect(_on_lobby_list)
+
+
+## Which lobby this probe makes or looks for, from `--lobby`.
+##
+## **Without it two pairs cannot be told apart**, and that is what made a
+## concurrency test impossible: every join probe takes the first lobby it sees
+## that is not full and not in progress, so a second pair would walk into the
+## first pair's lobby and there would still only be one match.
+func _lobby_name() -> String:
+	return _text_argument("--lobby", "Probe match")
+
+
+## `--leave-after <s>`: leave the lobby that many seconds after this probe got
+## into it. Used to exercise D24's rule that any player leaving cancels a start,
+## in the window AFTER the countdown has reached zero and a child is still
+## booting - which is the window both cancel callers used to miss.
+func _advance_leave(delta: float) -> void:
+	if _leave_left <= 0.0:
+		return
+	_leave_left -= delta
+	if _leave_left > 0.0:
+		return
+	_leave_left = -1.0
+	Log.warn("PROBE leaving the lobby")
+	Lobby.leave()
 
 
 ## How many members the HOST waits for before pressing Start, from `--players`.
@@ -213,6 +243,9 @@ func _on_lobby_list(lobbies: Array[LobbyInfo]) -> void:
 	for lobby: LobbyInfo in lobbies:
 		if lobby == null || lobby.is_in_progress:
 			continue
+		# Its own pair's lobby, when one is named. See `_lobby_name`.
+		if lobby.lobby_name != _lobby_name():
+			continue
 		_joining = true
 		Log.warn("PROBE joining", {"id": lobby.lobby_id})
 		Lobby.join(lobby.lobby_id)
@@ -222,6 +255,11 @@ func _on_lobby_list(lobbies: Array[LobbyInfo]) -> void:
 func _on_lobby_changed(lobby: LobbyInfo) -> void:
 	if lobby == null:
 		return
+	if _leave_left < 0.0 && !_joining_done:
+		_joining_done = true
+		var after: float = float(_int_argument("--leave-after", 0))
+		if after > 0.0:
+			_leave_left = after
 	Log.warn("PROBE in lobby", {
 		"id": lobby.lobby_id, "players": lobby.player_count(), "host": Lobby.is_host(),
 		"max": lobby.max_players, "seats": lobby.seat_count, "closed": lobby.closed_seats,
@@ -567,6 +605,7 @@ func _process(delta: float) -> void:
 		return
 
 	_apply_faults()
+	_advance_leave(delta)
 	# Before every early return below: a held-back report is owed whatever else
 	# this role is doing, and the roles that hold one back are the ones that
 	# otherwise have nothing to do while they wait.

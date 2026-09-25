@@ -158,6 +158,10 @@ var _move_deadline: float = 0.0
 var _handed_off_connection: bool = false
 ## A move that has been decided on but not yet started. See `_try_start_move`.
 var _move_pending: bool = false
+## When this client stops trying to get in, in Unix seconds. Set ONCE, at the
+## announce, so every dial after the first gets what is left rather than a fresh
+## window of its own.
+var _move_expires_at: float = 0.0
 
 # --- both sides -----------------------------------------------------------
 var _ready_ids: PackedInt32Array = PackedInt32Array()
@@ -331,9 +335,17 @@ func _on_move_ended(ok: bool, reason: String) -> void:
 	if _match_port <= 0:
 		return
 	Log.warn("Could not reach the match process", {"why": reason})
+	# **Set BEFORE the port is cleared, because clearing it is what hides where
+	# this client was.** `receive_match_cancelled` decides between "go back to
+	# the lobby room" and "hang up and open the browser" by asking whether a
+	# match process was involved, and the port was the only thing that said so -
+	# zeroed first, every failed move sent the player back into the room the
+	# lobby had already erased, on a connection that was about to be torn down.
+	_handed_off_connection = true
 	_match_token = PackedByteArray()
 	_match_port = 0
 	_move_deadline = 0.0
+	_move_pending = false
 	receive_match_cancelled(reason)
 
 
@@ -584,9 +596,14 @@ func _process(delta: float) -> void:
 	# D15. A client that has not answered in a minute has not been slow, it has
 	# crashed - the scene is a second or two of loading. Everyone else has
 	# waited long enough.
+	# A match process's `_expected` is empty until the go signal, so the
+	# subtraction below read 0 there - on the one path whose whole point is
+	# saying who was left behind. The seat table is the honest source.
+	var waited_for: int = _setup.player_count() if _seats != null else _expected.size()
+	var arrived: int = _seats.ready_slots().size() if _seats != null else _ready_ids.size()
 	Log.warn("Starting without players who never loaded", {
 		"match": _setup.match_id,
-		"missing": _expected.size() - _ready_ids.size(),
+		"missing": waited_for - arrived,
 	})
 	_start_from_ready()
 
@@ -797,10 +814,16 @@ func _on_network_status_changed(new_status: NetworkService.Status) -> void:
 	# From the go signal on the token is cleared, and D13 holds: out is out.
 	if _can_reclaim():
 		Log.info("Lost the match connection while loading, claiming again", _setup.match_id)
-		Net.move_to(_match_port, _match_token, _move_deadline)
+		Net.move_to(_match_port, _match_token, _move_left())
 		return
 	Log.info("Offline, forgetting the match", _setup.match_id)
 	_finish_match()
+
+
+## What is left of the one window, never less than a second so a dial that is
+## about to be made is always given time to fail honestly.
+func _move_left() -> float:
+	return maxf(1.0, _move_expires_at - Time.get_unix_time_from_system())
 
 
 ## Whether this client may still dial its match process again.
@@ -808,7 +831,11 @@ func _on_network_status_changed(new_status: NetworkService.Status) -> void:
 ## Only while it has a token - so only on the handoff path - and only before the
 ## go signal, which is when `receive_match_start` throws the token away.
 func _can_reclaim() -> bool:
-	return _match_port > 0 && !_match_token.is_empty() && _move_deadline > 0.0
+	if _match_port <= 0 || _match_token.is_empty():
+		return false
+	# Out of time is out: the server's own gate gives up at the same moment, so
+	# dialling past it would only put a client on a socket nobody is waiting on.
+	return _move_expires_at > Time.get_unix_time_from_system()
 
 
 ## Starts the move, if the announce carried a port and a token (D44).
@@ -826,6 +853,12 @@ func _begin_move(payload: Dictionary) -> void:
 		return
 	var menus: MenuConfig = References.menu_config
 	_move_deadline = 60.0 if menus == null else maxf(5.0, menus.load_timeout_seconds)
+	# **One window, counted from the ANNOUNCE.** Every dial after the first -
+	# a retry, or a re-claim after the link broke - gets what is LEFT of it.
+	# Handing `_move_deadline` over unchanged each time, which is what this did,
+	# gave a flapping link an unbounded number of fresh full windows, bounded
+	# only by the server's own gate.
+	_move_expires_at = Time.get_unix_time_from_system() + _move_deadline
 	_move_pending = true
 	set_process(true)
 	_try_start_move()
@@ -845,7 +878,7 @@ func _try_start_move() -> void:
 	if References.network_config == null:
 		return
 	_move_pending = false
-	Net.move_to(_match_port, _match_token, _move_deadline)
+	Net.move_to(_match_port, _match_token, _move_left())
 
 
 ## The server is shutting down, so the match is CANCELLED - the user's call for

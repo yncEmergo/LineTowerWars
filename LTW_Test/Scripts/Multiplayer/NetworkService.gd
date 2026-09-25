@@ -231,7 +231,7 @@ func host(
 	# eventually dropped rather than left sitting there looking connected.
 	set_process(true)
 	_set_status(Status.HOSTING)
-	Log.info("Listening", {"port": port, "max_peers": config.max_peers})
+	Log.info("Listening", {"port": port, "max_peers": peers})
 	_arm_shutdown_file(config, keep_shutdown_request)
 	hosting_started.emit()
 	return Result.OK
@@ -918,10 +918,22 @@ func _end_move(ok: bool, reason: String) -> void:
 	_clear_move_authentication()
 	if ok:
 		Log.info("Moved to the match", {"attempts": _move_attempts})
-	else:
-		Log.warn("The move to the match ended", {"why": reason, "attempts": _move_attempts})
+		move_ended.emit(true, reason)
+		return
+
+	# **The listener is told BEFORE anything tears down, and the order is the
+	# whole of it.** `_teardown` sets the status to OFFLINE, MatchStart answers
+	# that by asking whether it may re-claim, and at that moment it still holds
+	# its token and its port - so it started a FRESH dial, which was then
+	# orphaned a line later when `move_ended` finally arrived and took it out of
+	# the match. Net was left mid-move on a match port for a client that had
+	# already navigated away.
+	Log.warn("The move to the match ended", {"why": reason, "attempts": _move_attempts})
+	move_ended.emit(false, reason)
+	# Only if the listener did not hang up itself. MatchStart does, because a
+	# client that failed to get in must not keep a match process's socket.
+	if _status != Status.OFFLINE:
 		_teardown()
-	move_ended.emit(ok, reason)
 
 
 ## Takes the match dial's authentication back off the shared SceneMultiplayer.
@@ -1221,10 +1233,12 @@ func _disconnect_peer(id: int) -> void:
 ## as "its index in the method list", which is close enough to be believed and
 ## wrong in two ways: the ordering is by NAME, and the list is per NODE. D31's
 ## row in multiplayer.md has the corrected reading, and the frozen-handshake
-## rule in multi-match.md §3 depends on it.) What comes out is an error naming a method nobody called -
-## "receive_leak: expected 3 arguments, but called with 1" - which reads like a
-## bug in that method rather than like "your build differs". Cost most of a day
-## on 2026-09-04, twice, from two different causes.
+## rule in multi-match.md §3 depends on it.)
+##
+## What comes out is an error naming a method nobody called - "receive_leak:
+## expected 3 arguments, but called with 1" - which reads like a bug in that
+## method rather than like "your build differs". Cost most of a day on
+## 2026-09-04, twice, from two different causes.
 ##
 ## Computed rather than declared, so nothing has to be remembered. It walks the
 ## AUTOLOADS, which is where every rpc endpoint must live anyway (see

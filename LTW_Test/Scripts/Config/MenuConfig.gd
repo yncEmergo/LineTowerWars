@@ -109,7 +109,9 @@ extends Resource
 ## **It IS a re-claim window during LOADING, in a match process** (D44): a seat
 ## whose link breaks before the go signal may be claimed again with the same
 ## token for this long, and the client keeps its token for exactly that. The
-## distinction is the go signal, not the mechanism - see `MatchSeats`. It sits ON TOP of the roughly 5.6 s
+## distinction is the go signal, not the mechanism. See `MatchSeats`.
+##
+## It sits ON TOP of the roughly 5.6 s
 ## ENet itself takes to notice a hard-killed client, so a real crash resolves
 ## in about fifteen. A DELIBERATE leave skips it entirely, because a client
 ## that says goodbye is telling us it is not coming back.

@@ -43,6 +43,12 @@ enum State {
 ## nothing next to a relay's tick, and it is what decides how fast a start feels.
 const POLL_SECONDS: float = 0.25
 
+## The spawn rate one source may sustain, and over what window. Deliberately
+## generous: it is here to stop a loop, not to stop somebody pressing Start again
+## because the first attempt was cancelled.
+const SPAWN_WINDOW_SECONDS: float = 60.0
+const SPAWNS_PER_WINDOW: int = 6
+
 ## One match, from the moment its countdown began until its child is reaped.
 class Child extends RefCounted:
 	var lobby_id: String = ""
@@ -75,6 +81,8 @@ var _children: Dictionary = {}
 ## is the safer one to take from.
 var _free_ports: Array[int] = []
 var _poll_clock: float = 0.0
+## source key -> the times it last caused a spawn. See `_spawns_too_fast`.
+var _recent_spawns: Dictionary = {}
 var _run_dir: String = ""
 
 var _config: NetworkConfig:
@@ -91,6 +99,7 @@ func _ready() -> void:
 		_free_ports.assign(config.match_ports())
 	_run_dir = _resolve_run_dir()
 	DirAccess.make_dir_recursive_absolute(_run_dir)
+	_make_run_dir_private()
 	Log.info("Match supervisor ready", {
 		"run_dir": _run_dir,
 		"ports": _free_ports.size(),
@@ -103,16 +112,24 @@ func _ready() -> void:
 ## cap counts a START from the moment its countdown began, queued or booting or
 ## running, so a queue can never overshoot it and "the server is full" is decided
 ## at Start rather than after a countdown has already run.
-func refusal(host_address: String) -> String:
+func refusal(host_address: String, lobby_id: String = "") -> String:
 	var config: NetworkConfig = _config
 	if config == null:
 		return "This server has no network configuration."
-	if _free_ports.is_empty():
+	# **A lobby's own start does not count against it.** The countdown re-checks
+	# this at zero, by which time `begin_start` has already inserted the child -
+	# so without excluding it the start that REACHED the cap cancelled itself
+	# after a full countdown and killed its own healthy child, making the
+	# effective cap one less than the authored one.
+	var mine: int = 0 if lobby_id.is_empty() else _count_of_lobby(lobby_id)
+	if _free_ports.is_empty() && mine == 0:
 		return "The server is full."
-	if _children.size() >= maxi(1, config.match_cap):
+	if _children.size() - mine >= maxi(1, config.match_cap):
 		return "The server is full."
-	if _count_for(host_address) >= maxi(1, config.match_per_source_limit):
+	if _count_for(host_address) - mine >= maxi(1, config.match_per_source_limit):
 		return "You already have as many matches running as this server allows."
+	if mine == 0 && _spawns_too_fast(host_address):
+		return "You are starting matches too quickly. Try again in a moment."
 	return ""
 
 
@@ -292,6 +309,11 @@ func _handle_early_exit(child: Child) -> void:
 		_remove_run_files(child)
 		if _spawn(child):
 			return
+		# `_spawn` has already erased the child and said why. Falling through
+		# here ran `_finish` on a child that no longer exists and emitted a
+		# SECOND `child_failed`, so every member got two cancellation notices
+		# for one failure.
+		return
 	Log.err("A match process died before it was ready", {
 		"match": child.match_id, "code": code,
 	})
@@ -410,6 +432,9 @@ func _spawn(child: Child) -> bool:
 	child.pid = pid
 	child.state = State.BOOTING
 	child.booting_for = 0.0
+	var stamps: Array = _recent_spawns.get(_source_key(child.host_address), [])
+	stamps.append(Time.get_unix_time_from_system())
+	_recent_spawns[_source_key(child.host_address)] = stamps
 	Log.info("Match process spawned", {
 		"match": child.match_id, "pid": pid, "port": port,
 	})
@@ -433,6 +458,25 @@ func _resolve_run_dir() -> String:
 	if OS.get_name() == "Linux":
 		return "/run/ltw-server"
 	return ProjectSettings.globalize_path("user://run")
+
+
+## Takes the run directory down to owner-only, on Linux.
+##
+## **Belt and braces against the unit file, deliberately.** The systemd drop-in is
+## supposed to set `RuntimeDirectoryMode=0700`, and the default without it is
+## 0755 - but a drop-in is one reinstall away from being reverted, and what sits
+## in that directory is every seat token of every starting match, in cleartext
+## hex, for as long as a child takes to boot. Any local account could read them
+## and claim any seat. The cost of doing it here as well is one chmod per boot.
+func _make_run_dir_private() -> void:
+	if OS.get_name() != "Linux":
+		return
+	var output: Array = []
+	var code: int = OS.execute("chmod", ["700", _run_dir], output, true)
+	if code != 0:
+		Log.err("Could not make the run directory private", {
+			"dir": _run_dir, "code": code, "output": output,
+		})
 
 
 func _remove_run_files(child: Child) -> void:
@@ -511,14 +555,55 @@ func _booting_child() -> Child:
 	return null
 
 
+## How many starts this source already has.
+##
+## **An address we cannot read shares ONE bucket rather than escaping the
+## limit.** Returning 0 for an empty address made `0 >= limit` false and disabled
+## the limit altogether - silently, and on exactly the path where something had
+## already gone wrong enough that the transport could not say who was asking.
 func _count_for(host_address: String) -> int:
-	if host_address.is_empty():
-		return 0
+	var key: String = _source_key(host_address)
 	var count: int = 0
 	for match_id: String in _children:
-		if _children[match_id].host_address == host_address:
+		if _source_key(_children[match_id].host_address) == key:
 			count += 1
 	return count
+
+
+## How many starts one lobby already holds. Never more than one, but asked as a
+## count so the caller can subtract it without assuming that.
+func _count_of_lobby(lobby_id: String) -> int:
+	var count: int = 0
+	for match_id: String in _children:
+		if _children[match_id].lobby_id == lobby_id:
+			count += 1
+	return count
+
+
+func _source_key(host_address: String) -> String:
+	return "<unknown>" if host_address.is_empty() else host_address
+
+
+## Whether this source has caused too many spawns too recently.
+##
+## **A concurrent cap is not a rate limit**, and the difference is a whole
+## attack: Start then Cancel in a loop spawns and kills a full headless Godot per
+## round trip while never holding more than one child, so every counting check
+## above passes every time. A boot costs whole CPU-seconds - which is the reason
+## spawns are serialised at all - so an unbounded supply of them starves every
+## running match's tick.
+func _spawns_too_fast(host_address: String) -> bool:
+	var key: String = _source_key(host_address)
+	var now: float = Time.get_unix_time_from_system()
+	var recent: Array = []
+	for stamp: float in _recent_spawns.get(key, []):
+		if now - stamp < SPAWN_WINDOW_SECONDS:
+			recent.append(stamp)
+	if recent.is_empty():
+		_recent_spawns.erase(key)
+	else:
+		_recent_spawns[key] = recent
+	return recent.size() >= SPAWNS_PER_WINDOW
 
 
 func _ready_ceiling() -> float:

@@ -346,6 +346,22 @@
     `get_viewport().get_texture().get_image()` after ~30 frames, which is how
     long a Control tree takes to settle
 
+- **`--match-server` DOES NOT CONTAIN `--server`, AND EVERYBODY READS IT AS
+  THOUGH IT DID.** A substring `--server` needs two consecutive hyphens; in
+  `--match-server` the `server` is preceded by one, so any pattern matching
+  `*--server*` misses it entirely
+  - `stop_server.ps1` matched that way, so it stopped a lobby and left its
+    match processes running - orphans holding ports the next lobby then failed
+    to bind. It has to name `--match-server` separately, and now does
+  - **the wrong belief survived a code review in both directions.** A comment
+    saying the flag deliberately does NOT contain `--server` was correct; a
+    reviewer called it "plainly false", it was "corrected" into a falsehood on
+    that word, and only running the query settled it. One line of Python -
+    `'--server' in '--match-server'` - would have settled it at any point
+  - the general form: **a reviewer's confident claim is evidence, not a
+    verdict.** Check it the same way a claim in the code would be checked,
+    especially when it is about a string, a path or an ordering
+
 - **A WINDOWS PATH WITH BACKSLASHES DOES NOT EXIST, AS FAR AS GODOT IS
   CONCERNED.** `FileAccess.file_exists("C:\\run\\x.match")` is FALSE for a file
   that is plainly sitting there, and so is every open and every read of it.
@@ -982,6 +998,29 @@ Real, none blocking. Recorded so they are not rediscovered as surprises.
   the reading, moving it ahead, and capping it. Splitting the unit
   registry out is the obvious cut if it is ever worth making; the other three
   belong together
+- MatchStartService.gd, NetworkService.gd and LobbyService.gd are all over
+  gdlint's public-method ceiling, and D44 is why the first one is
+  - MatchStartService went over (19 to 21) for two methods that had nowhere
+    else to go. `begin_seated` is how a MATCH PROCESS arms the loading gate out
+    of a seat table instead of out of `_expected`, which it never fills before
+    the go signal. `stretch_link` is public only because of an ORDERING: `Net`
+    connects `peer_connected` first, so its `peer_joined` is emitted before any
+    seat has been claimed, and the one place that knows a claim just happened is
+    the match process. The honest cut, if it is ever worth making, is to split
+    the CLIENT half of that class off the server half - they share `_setup` and
+    almost nothing else
+  - NetworkService was already over at 22 and is now further over, for the
+    client's move to a match process: `move_to`, `is_moving`, `move_attempts`
+    and `close_link`. They belong here because this class owns the one
+    ENetMultiplayerPeer the process has, and a move REPLACES it - a mover that
+    lived anywhere else would have to reach inside for `_peer` and `_status`
+  - LobbyService was already at 27 before any of this and gained no public
+    method from it. Recorded here because it was never recorded before, not
+    because D44 moved it
+  - none of the three can be fixed by adding an autoload, which is the usual
+    escape: a new autoload cannot be added while the editor is open, and adding
+    one would change D31's rpc hash and refuse every tester at the next deploy
+
 - LockstepService.gd is over gdlint's public-method ceiling, and for a reason no
   refactor inside it can remove: every @rpc is a public method, an @rpc has to
   live on an autoload, and a new autoload cannot be added while the editor is

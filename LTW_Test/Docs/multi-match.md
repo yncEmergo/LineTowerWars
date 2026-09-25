@@ -48,6 +48,9 @@ over: Claude's memory and scratch files stay on the machine that wrote them.
 - The review, and this rewrite of the plan around it.
 - **P0's live bug: the loading gate.** Fixed, and proven with a four-player probe run against a
   positive control on the code before it.
+- **A review of all of it**, from three angles - correctness, security, and whether the work
+  reports itself honestly. It found sixteen real defects, all now fixed, and one claim that had to
+  be withdrawn rather than repaired: see the Findings.
 - **P2, the match-process role.** `--match-server` boots a process that reads a match file,
   listens on the port it was handed, admits only the players whose tokens it holds, plays their
   match and exits. `MatchHandoff` fixes the four contracts; `MatchSeats` holds every claiming
@@ -84,16 +87,24 @@ consequences:
 So do not deploy before P5's window (§7), unless the owner asks for it.
 
 **Next, in order:**
-1. **The owner's two gated items** (below). P5 cannot start without them, and P3 landed ahead of
+1. **The proofs still unrun**, listed under each phase - now a short list rather than most of
+   two phases. Concurrency, the cap, the hung boot, the taken port and `stop_server` have all been
+   run; what is left needs another build, another machine, or a boot slower than a countdown.
+2. **The owner's two gated items** (below). P5 cannot start without them, and P3 landed ahead of
    the port test deliberately: the switch keeps it off, and if the test fails what changes is the
    lobby's announce and the client's dial rather than anything already written.
-2. **P5, the release.** Every step is on the box and therefore the owner's to run; §7 P5 has them
+3. **P5, the release.** Every step is on the box and therefore the owner's to run; §7 P5 has them
    as copy-paste commands in order, with what success looks like.
-3. P6 (stage (b)), then P7 (docs, and deleting the in-process path).
+4. P6 (stage (b)), then P7 (docs, and deleting the in-process path).
 
 **Nothing about D44 is switched on.** `NetworkConfig.match_processes_enabled` ships false, so a
-deploy of `main` today changes nothing for anybody - which is what P2 to P4 were built behind. The
-switch-off regression is re-run with every battery and is in the Findings.
+deploy of `main` today changes nothing about MATCHES - which is what P2 to P4 were built behind,
+and it is verified rather than asserted: the `@rpc` surface, `wire_config()` and `protocol_version`
+are all byte-identical to the commit before this work. The switch-off regression is re-run with
+every battery and is in the Findings.
+
+**That is not the same as "a deploy costs nothing".** The P0 work above moved D31's rpc hash
+before any of this, so the next deploy still needs its client build handed out the same day.
 
 **The box steps are written out as commands** in `multi-match-handover.md`: the two gates, the
 deploy order, what to measure, and what success and failure look like at each step. That file is
@@ -1088,7 +1099,13 @@ deploy by another session.
   - a taken port exits with `PORT_TAKEN`;
   - a shutdown file present at boot is honoured.
 
-**P3: the lobby side.** DONE 2026-09-25; the proofs are in the Findings.
+**P3: the lobby side.** The CODE is done, 2026-09-25. **Its own six proofs below were NOT run**,
+and saying otherwise was the worst thing in the first write-up of this phase: what was run is a
+different set of seven end-to-end scenarios (the Findings' second table), which exercise the happy
+road, a killed peer, a browsing third peer, a deploy, a desync and the switch being off. So the
+handoff plays matches, and the code that is NOT covered by anything is the interesting half -
+`_handle_early_exit`'s single respawn, `refusal()`'s cap and per-source limit, `_drain_queue`, and
+the READY-ceiling kill. Those are marked below.
 
 **It landed BEFORE the port test, which its own gate above forbade.** The reason is that the
 fallback a failed port test would force - a forwarder on the public port - changes the lobby's
@@ -1113,17 +1130,33 @@ before P5 rather than after it.
 - The code comments in Lobby, NetworkConfig and MatchStart that cite D19 as current are updated
   here.
 - **Prove:**
-  - a spawn that never becomes READY cancels cleanly;
-  - a taken port respawns on the next one;
-  - a member leaving in the spawn window cancels the start and kills the child;
-  - a full server says so;
-  - each client's announce holds exactly one token, its own;
-  - `stop_server.ps1` leaves no match process behind.
+  - a spawn that never becomes READY cancels cleanly - RUN: killed at the ceiling, reaped
+    `never_ready`;
+  - a taken port respawns on the next one - RUN: the same match id came back on the next port;
+  - a member leaving in the spawn window cancels the start and kills the child. **A review found
+    this broken and it is fixed**, but the window only opens when a boot outlasts the countdown,
+    which does not happen on this machine - STILL UNRUN;
+  - a full server says so, and the start that REACHES the cap is not the one refused - RUN, and
+    the second half was a real bug, now fixed;
+  - each client's announce holds exactly one token, its own - STILL UNRUN as a scenario, though
+    the payload structurally carries one field and each client claimed only its own seat;
+  - `stop_server.ps1` leaves no match process behind - RUN, and it **FAILED**: it matched
+    `*--server*`, which does not match `--match-server`. Fixed and re-run.
 
-**P4: the client side** (§6), behind the switch. DONE 2026-09-25 except the two proofs that need
-another build or another machine: the OLD-BUILD refusal (a checkout of the last handed-out commit,
-against a locally bumped `protocol_version`), and three matches at once. Everything else is in the
-Findings.
+**P4: the client side** (§6), behind the switch. The CODE is done, 2026-09-25. **Seven of its
+proofs are still unrun**, not the two first claimed:
+- the OLD-BUILD refusal (needs a checkout of the last handed-out commit and a local bump);
+- ~~three matches at once~~ - **RUN**. `--lobby` was written, `run_concurrent_probe.ps1` added,
+  and three matches played at the same time on three ports with six clean clients. The peak
+  concurrent count is sampled during the run, because by the end everything has been reaped and
+  the count is zero whether they overlapped or not;
+- a desync in one match reaching only ITS players (the desync that was run was a single match);
+- a hard kill of one MATCH PROCESS leaving the others running (what was killed was a peer);
+- a retry that gets in, with `dial_attempts` above one, driven by a flag that does not exist;
+- each failure shape end to end - only the wrong token was exercised;
+- a client held past the load timeout ending in the browser CONNECTED TO THE LOBBY. **A review
+  found this road broken and it is now fixed**: the client was sent back to a lobby room the
+  server had already erased.
 - **The protocol bump is NOT committed in P4.** Nothing reads `protocol_version` through the
   switch, so a bump on `main` would refuse every tester at the next deploy.
 - P4's old-build proof runs with the bump applied in the working tree only, and reverted

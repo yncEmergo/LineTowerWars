@@ -295,6 +295,11 @@ func request_join(lobby_id: String) -> void:
 	if !_serving():
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
+	# The other endpoint a handed-off connection can still reach: its membership
+	# was erased at the handoff, so the usual "you are not in a lobby" guards let
+	# it through. It is on its way out and may not join anything.
+	if _handed_off.has(peer_id):
+		return
 
 	if _lobby_of_peer.has(peer_id):
 		_refuse(peer_id, "You are already in a lobby.")
@@ -435,7 +440,7 @@ func request_start() -> void:
 	if lobby.player_count() < needed:
 		_refuse(peer_id, "%d players are needed to start." % needed)
 		return
-	var refusal: String = _start_refusal(peer_id)
+	var refusal: String = _start_refusal(peer_id, lobby.lobby_id)
 	if !refusal.is_empty():
 		_refuse(peer_id, refusal)
 		return
@@ -445,13 +450,13 @@ func request_start() -> void:
 
 ## Why this SERVER cannot start another match right now, or empty if it can.
 ## Nothing about the lobby asking - only about the process it would run in.
-func _start_refusal(peer_id: int = 0) -> String:
+func _start_refusal(peer_id: int = 0, lobby_id: String = "") -> String:
 	if Net.is_shutting_down():
 		return NetworkService.SHUTDOWN_REASON
 	# With the handoff on, a match costs a PROCESS rather than this one, so what
 	# limits it is the cap, the port pool and the per-source limit (D44).
 	if _supervisor != null:
-		return _supervisor.refusal(_host_address_of(peer_id))
+		return _supervisor.refusal(_host_address_of(peer_id), lobby_id)
 	# D19: one process runs the lobby and the matches, so it can run one match.
 	# Splitting them is an address change (D16), and until then this is a
 	# sentence rather than a second match quietly overwriting the first.
@@ -498,7 +503,12 @@ func request_cancel_start() -> void:
 		return
 	var peer_id: int = multiplayer.get_remote_sender_id()
 	var lobby: LobbyInfo = _lobby_hosted_by(peer_id)
-	if lobby == null || !_countdowns.has(lobby.lobby_id):
+	# **The whole spawn window counts, not just the part with a number on it**
+	# (D24). Once zero has passed the room reads "Starting the match..." while a
+	# child boots, and `_fire_countdown` says in so many words that the host's
+	# button still offers Cancel there - so refusing on `_countdowns` alone made
+	# that button do nothing for up to the READY ceiling.
+	if lobby == null || !_is_starting(lobby.lobby_id):
 		_refuse(peer_id, "There is no countdown to cancel.")
 		return
 	_cancel_countdown(lobby, "The host cancelled the start.")
@@ -597,8 +607,9 @@ func _fire_countdown(lobby: LobbyInfo) -> void:
 	_clear_countdown(lobby)
 
 	# Re-checked rather than assumed: five seconds is long enough for another
-	# lobby's countdown to have fired first.
-	var refusal: String = _start_refusal()
+	# lobby's countdown to have fired first. **Named, so the check does not count
+	# this lobby's own child** - which it has held since the countdown began.
+	var refusal: String = _start_refusal(0, lobby.lobby_id)
 	if !refusal.is_empty():
 		_announce_countdown_cancelled(lobby, refusal)
 		_push_lobby(lobby)
@@ -759,6 +770,13 @@ func _on_child_ready(lobby_id: String, _match_id: String, port: int) -> void:
 
 func _on_child_failed(lobby_id: String, reason: String) -> void:
 	var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo
+	# The match id goes too. Nothing in this process will ever run that match, so
+	# `_on_match_abandoned` can never clear it - left behind, it is one entry per
+	# failed boot for the life of a lobby process.
+	var pending: Dictionary = _pending_starts.get(lobby_id, {})
+	var failed: MatchSetup = pending.get("setup")
+	if failed != null:
+		_lobby_of_match.erase(failed.match_id)
 	_pending_starts.erase(lobby_id)
 	if lobby == null:
 		return
@@ -850,6 +868,15 @@ func _host_address_of(peer_id: int) -> String:
 	if link == null:
 		return ""
 	return str(link.get_remote_address())
+
+
+## Whether a lobby is in its start window at all - counting down, or past zero
+## and waiting for its match process to be ready.
+##
+## **The two are one window as far as D24 is concerned**, and asking only about
+## the first is what let a player leave a starting match without cancelling it.
+func _is_starting(lobby_id: String) -> bool:
+	return _countdowns.has(lobby_id) || _pending_starts.has(lobby_id)
 
 
 ## How long a handed-off connection is left open before the lobby closes it
@@ -973,7 +1000,14 @@ func _remove_from_lobby(peer_id: int, own_reason: String) -> void:
 	# D24: ANY player leaving cancels the countdown, a joiner exactly as much
 	# as the host. That is what makes the roster final by the time the
 	# handshake starts. _cancel_countdown pushes and broadcasts for itself.
-	if _countdowns.has(lobby.lobby_id):
+	#
+	# **`_is_starting` rather than `_countdowns`**, for the window after zero
+	# where a child is still booting. Asked of `_countdowns` alone, a player who
+	# left there did not cancel anything: the match was announced from the roster
+	# frozen at the countdown's start, a seat was announced to a peer that had
+	# gone, and in a 1v1 the survivor watched a loading screen for the whole load
+	# timeout and was then told "Not enough players finished loading."
+	if _is_starting(lobby.lobby_id):
 		_cancel_countdown(lobby, "%s left the lobby." % leaver_name)
 		return
 

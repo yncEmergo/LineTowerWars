@@ -135,6 +135,21 @@ func _note_started() -> void:
 	if started == null:
 		return
 	_started_at = Time.get_unix_time_from_system()
+	# **The door is bolted as well as shut.** `MatchSeats.close_for_go` stops a
+	# token being accepted, but the connection is still made and still holds one
+	# of this process's peer slots for the whole auth timeout, and every packet
+	# from a peer that is still authenticating prints an engine ERROR no script
+	# can cap. With many matches sharing one journald bucket, a flood on one
+	# match's port empties the journal for the whole box.
+	#
+	# ENet honours this at its own CONNECT event, before `_add_peer` and before
+	# any auth runs, so a dial made after go is reset and hears nothing. A
+	# connection that was already PENDING at go still gets TOO_LATE from the
+	# seat table - which is the case the plan cares about, and the only one that
+	# has a player behind it.
+	var scene_multiplayer: SceneMultiplayer = multiplayer as SceneMultiplayer
+	if scene_multiplayer != null:
+		scene_multiplayer.refuse_new_connections = true
 	# **The renumbering is captured HERE, not at the end.** `_finish_match`
 	# clears the running setup BEFORE it emits the signal that makes the RESULT
 	# get written, so asking for it then gives null and every seat records a go
@@ -161,7 +176,12 @@ func _load_match_file(config: NetworkConfig) -> bool:
 		Log.err("A match process was given no --match-file")
 		return false
 
+	# **Deleted before it is judged, not after.** Every return below used to leave
+	# the file sitting there with every seat token in it - a refused boot is
+	# exactly when nobody is watching, and the lobby only cleans up if it is
+	# still alive to do it. Nothing after this point needs the file.
 	var data: Dictionary = MatchHandoff.read_match_file(path)
+	DirAccess.remove_absolute(path)
 	if data.is_empty():
 		return false
 
@@ -191,11 +211,10 @@ func _load_match_file(config: NetworkConfig) -> bool:
 	_seats = MatchSeats.new()
 	_seats.build(setup, MatchHandoff.tokens_from(data), _hold_seconds())
 
-	# The token map is the reason. `/proc/<pid>/cmdline` is readable by every
-	# local user and journald records each writer's command line, which is why
-	# the tokens travel in a file rather than as arguments - and why the file
-	# does not outlive the reading.
-	DirAccess.remove_absolute(path)
+	# The token map is the reason it is a file at all, and the reason it is gone
+	# already: `/proc/<pid>/cmdline` is readable by every local user and journald
+	# records each writer's command line, so the tokens travel in a file - and the
+	# file does not outlive the reading.
 	Log.info("Match process read its match", {
 		"match": _match_id,
 		"seats": setup.player_count(),

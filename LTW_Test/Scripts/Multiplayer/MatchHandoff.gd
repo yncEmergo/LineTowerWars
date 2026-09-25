@@ -127,7 +127,13 @@ static func token_to_hex(token: PackedByteArray) -> String:
 static func token_from_hex(hex: String) -> PackedByteArray:
 	var token: PackedByteArray = PackedByteArray()
 	var text: String = hex.strip_edges().to_lower()
-	if text.length() != TOKEN_BYTES * 2 || !text.is_valid_hex_number(false):
+	# `is_valid_hex_number` accepts a leading SIGN, so the length check alone
+	# would let "-" plus 31 hex digits through and `hex_to_int` would then hand
+	# back a negative byte. The contract here is an empty array for anything
+	# malformed, and a signed token is malformed.
+	if text.length() != TOKEN_BYTES * 2 || text.begins_with("-") || text.begins_with("+"):
+		return token
+	if !text.is_valid_hex_number(false):
 		return token
 	for index: int in range(0, text.length(), 2):
 		token.append(text.substr(index, 2).hex_to_int())

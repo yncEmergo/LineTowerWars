@@ -552,11 +552,11 @@ The same Start reads completely differently. The child boots DURING the countdow
 roster and the rules are already final when the countdown begins:
 
 ```
-[server] ... Start countdown { "lobby": lobby-1, "seconds": 5.0 }
-[server] ... Match process spawned { "match": match-...-1, "pid": 34736, "port": 7800 }
+[server] ... Start countdown { "lobby": lobby-1, "seconds": ... }
+[server] ... Match process spawned { "match": match-...-1, "pid": ..., "port": ... }
 [server] ... Matches running { "count": 1 }
-[server] ... Match process is ready { "match": match-...-1, "port": 7800, "pid": 34736, "seconds": 1.79 }
-[server] ... Handing a match over { "lobby": lobby-1, "match": match-...-1, "port": 7800, "players": 2 }
+[server] ... Match process is ready { "match": match-...-1, "port": ..., "pid": ..., "seconds": ... }
+[server] ... Handing a match over { "lobby": lobby-1, "match": match-...-1, "port": ..., "players": 2 }
 ```
 
 **`Handing a match over` is the line to look for.** After it, this process knows nothing about
@@ -572,8 +572,8 @@ When the child ends, the lobby logs what it did and frees the port:
 ```
 
 `ended` is one of `all_left`, `aborted` (D15 gave up on the players), `shutdown` (a deploy), or,
-written by the lobby when the child left no result of its own, `died`, `never_ready`, `killed` or
-`wedged`. **It carries no winner**: under lockstep no server process computes one.
+written by the lobby when the child left no result of its own, `died`, `never_ready`, `cancelled`
+or `wedged`. **It carries no winner**: under lockstep no server process computes one.
 
 **Where the files are.** Each match gets a handful of files named after it, in
 `/run/ltw-server` on the box and `user://run` on Windows: the match file the child reads and
@@ -587,6 +587,10 @@ output a child has, so it is where to look when a match went wrong.
 many at a time. Spawns are serialised - one child boots at a time - so a Start pressed while
 another is booting still begins its countdown and its room reads "Starting the match..." until
 its own child is ready.
+
+**`stop_server.ps1` stops the match processes too**, and it has to name them
+separately to do it: `--match-server` does not contain `--server` as a substring, so a pattern
+looking for one misses the other. A lobby stopped on its own leaves orphans holding ports.
 
 **A deploy tells the players of every match** (D45): the lobby creates each announced child's
 shutdown file, each child tells its own players "The server is restarting. The match was

@@ -1377,6 +1377,15 @@ func submit_alive(turn: int) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
+	# **The membership check comes BEFORE the first write**, as it already does
+	# in `submit_ready`, `request_seals` and `report_turn_checksum`. Without it a
+	# stranger on the public lobby port could leave two permanent dictionary
+	# entries per connection - reconnecting with a fresh self-chosen id each time
+	# - in the one long-lived process the whole server depends on. These are
+	# cleared at match begin and end, and with match processes ON the lobby
+	# process never runs a match, so nothing there would ever clear them.
+	if _slot_of_peer(sender) == 0:
+		return
 	_last_heard[sender] = _frames
 	# **Clamped, because this arrives UNRELIABLY and can therefore go
 	# BACKWARDS.** Two heartbeats can be reordered by the network, and a lost
@@ -1408,6 +1417,11 @@ func submit_order(payload: Dictionary, seq: int) -> void:
 	if !multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
+	# Membership first, for the same reason as `submit_alive` above: `_seq_seen`
+	# is a per-sender table in a process that may never run a match, and a
+	# stranger must not be able to add a row to it.
+	if _slot_of_peer(sender) == 0:
+		return
 	if seq <= int(_seq_seen.get(sender, 0)):
 		return
 	_seq_seen[sender] = seq

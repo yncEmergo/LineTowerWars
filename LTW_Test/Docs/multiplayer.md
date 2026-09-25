@@ -1239,7 +1239,7 @@ Decided (D44): the lobby process hands each match to a process of its own. **It 
 switched OFF**: `NetworkConfig.match_processes_enabled` ships false, so this server still runs one
 match itself, and `--match-processes` (or `run_server.ps1 -MatchProcesses`) turns the handoff on
 for one process. The switch goes away with the in-process path at the release; until then
-`multi-match.md` is the plan and §11.4 below is what the handoff actually is.
+`multi-match.md` is the plan and §11.3 below is what the handoff actually is.
 
 Splitting them is not the address change this line once called it; see D19's row.
 

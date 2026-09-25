@@ -407,8 +407,11 @@ and a mid-match hard kill still dropped the peer and reached the survivor (`drop
 
 ## P2, P3 and P4 built and measured, the same day
 
-The handoff exists and plays matches. Measured on this Windows dev PC, on
-loopback, with two harnesses:
+The handoff exists and plays matches. Measured on this Windows dev PC **on Godot
+4.7.2** - not the 4.7.1 the earlier sections of this file were taken on - on
+loopback, with two harnesses. Turn counts vary by a few per cent between runs of
+the same scenario, so the ones below are the run they are quoted from and not a
+constant:
 
 - `Tools/run_match_probe.ps1` hand-writes a match file and runs a real match
   process with real probe clients against it. **No lobby in it at all**, which is
@@ -417,10 +420,14 @@ loopback, with two harnesses:
 - `Tools/run_lockstep_probe.ps1 -MatchProcesses` drives the whole road through the
   real lobby: countdown, spawn, READY, announce, move, claim, re-key, play.
 
-**The positive controls are `claims` and `go_id`.** A run with `claims` at zero
-never claimed a seat, and `go_id` equal to `own_id` is what proves the re-key
-ran - that the roster the relay stamps orders against is the one the client's
-socket answers to. A run can look perfect and have exercised neither.
+**The positive controls are `claims` and `go_id`, and they only mean something
+TOGETHER.** A run with `claims` at zero never claimed a seat. `go_id` equal to
+`own_id` says the roster the relay stamps orders against is the one the client's
+socket answers to - but on the in-process path that is true with no re-key at
+all, because there a seat's `network_id` IS the client's own lobby peer id. So it
+implies a re-key only where `claims` is at least one, and the switch-off
+regression below is exactly the row where the control is vacuous. A run can look
+perfect and have exercised neither.
 
 ### The child, alone (P2)
 
@@ -442,7 +449,7 @@ socket answers to. A run can look perfect and have exercised neither.
 | Scenario | Result |
 | --- | --- |
 | One handoff | 443 turns, 0 desyncs, `go_id` = `own_id` |
-| Two matches on one lobby process | own ports (7800, then 7801), own children, both clean, first reaped before the second spawned |
+| Two matches on one lobby process, ONE AFTER THE OTHER | each took the next port, each got its own child, both clean, the first reaped before the second spawned. **This is not concurrency**: the harness waits for "Match over" before starting the second, so two matches have never run at the same time |
 | A peer hard-killed mid-match | survivor ran 640 turns |
 | A third peer browsing while a match runs | match untouched (540 turns); the browser never in one |
 | A deploy (D45) mid-match | both clients on the lobby browser carrying "The server is restarting. The match was cancelled." |
@@ -483,6 +490,110 @@ Recorded because each one looked like a pass from outside:
 Numbers 6 and 7 are the same failure in the harness rather than in the code, and
 both are the positive-control rule: the run proved the harness wrong and said
 nothing.
+
+### What a review then found, the same day
+
+Three independent passes - correctness, security and failure modes, and whether
+the work reports itself honestly - over the whole of P2 to P4. **Sixteen real
+defects**, all fixed in the commit that follows this section, and one claim that
+had to be withdrawn rather than repaired.
+
+The ones worth remembering:
+
+- **A failed move sent the client back to a lobby room the server had already
+  erased**, on a connection that was being torn down. The destination test asked
+  whether a match process was involved by reading the port - and the same
+  function zeroed the port three lines earlier. The shape is worth the note: a
+  flag cleared before the thing that reads it.
+- **`_end_move` tore down before it emitted `move_ended`**, so the status went
+  OFFLINE first, MatchStart answered that by asking whether it could re-claim,
+  found its token still in hand, and started a dial that was orphaned a line
+  later. Two bugs, one ordering.
+- **A pending claim could outlive D26's hold and resurrect a seat**, because
+  `advance_holds` never consults the pending map and `admit` only refused a
+  CLAIMED seat. The gate would then wait out the whole load timeout for a seat
+  it had already announced as gone.
+- **The spawn window after the countdown reached zero was uncovered by both
+  cancel callers.** A player leaving there did not cancel the start, so the match
+  was announced from a roster with a departed player in it; and the host's Cancel
+  did nothing, though the code's own comment said it still worked. That is D24
+  broken, and it sat inside one of P3's unrun proofs.
+- **The cap's re-check at zero counted the very child it was checking**, so the
+  start that reached the cap always cancelled itself after a full countdown and
+  killed its own healthy child. The effective cap was one less than the authored
+  one, and it would have read as "the cap is broken" under the load test that is
+  meant to SET the cap.
+- **`refuse_new_connections` was documented as built, in two places, and did not
+  exist anywhere in the code.** Both the security pass and the honesty pass found
+  it independently.
+- **`submit_alive` and `submit_order` wrote per-sender tables before checking
+  membership**, in the long-lived public-facing process, which the plan's own §4
+  claims they do not. Three permanent dictionary rows per stranger connection.
+- **No spawn-RATE limit.** The cap counts concurrent children, and Start-then-
+  Cancel in a loop never holds more than one - so one client could make the box
+  boot and kill a headless Godot per round trip, which is the exact cost that
+  makes spawns serialised in the first place.
+- **The per-source limit failed OPEN** on an address the transport could not
+  read, rather than sharing one bucket.
+
+### The proofs the review said were missing, then run
+
+The honesty pass was right that P3 was declared done with none of its own proofs
+executed. They were then run, with a stated positive control each, and **two of
+them failed** - which is the whole argument for running a proof rather than
+reasoning about it.
+
+| Proof | Control | Result |
+| --- | --- | --- |
+| Many matches AT ONCE | the peak number of live match processes, sampled during the run | **3 concurrent**, ports 7800/7801/7802, six clients, ~530 turns each, 0 desyncs, `go_id` = `own_id` on all six |
+| A full server says so | the cap lowered to 2 in the copy, three pairs offered | two started, the third host read **"The server is full."** - and the two that started were NOT self-cancelled, which is the cap bug below fixed |
+| The per-source limit | three pairs, all from loopback, limit at its authored value | the third refused with its own sentence; raising the limit in the copy then allowed all three |
+| A child that hangs before READY | the hang verified present in the copy's source before the run | killed at the ceiling, reaped **`ended: never_ready`**, the start cancelled |
+| A taken port respawns | the blocker's own READY file checked before the lobby was allowed to try | the child took 7800, exited, and the lobby **respawned the same match id on 7801** and handed over there |
+| `stop_server.ps1` leaves no match process behind | the count of live match processes before and after | **FAILED, then fixed** - see below |
+
+Two earlier attempts at the last three proved nothing and said so only because
+the controls were there: a `-BlockPort` that did not hold the port, a hang
+shorter than a ceiling a previous script had restored, and a relay launched with
+`--path .` that `stop_server` could not see at all.
+
+### `--match-server` does not contain `--server`
+
+`stop_server.ps1` matched running servers with `*--server*`, which **does not
+match `--match-server`**: a substring needs two consecutive hyphens and there the
+`server` is preceded by one. So it stopped the lobby and left every match process
+running, holding ports the next lobby would fail to bind.
+
+Measured: one match process up, `stop_server.ps1` reports stopping one server,
+one match process still up. After naming `--match-server` separately: two
+"Stopped server" lines and zero match processes left.
+
+**The wrong belief survived review in both directions.** A comment in
+`BootConfig.gd` said the flag deliberately does not contain `--server` - correct.
+The honesty pass called that "plainly false" and it was edited into a falsehood
+on that word alone. Running `'--server' in '--match-server'` settles it in one
+line and should have been the first move. A reviewer's confident claim is
+evidence, not a verdict.
+
+### The one engine question, settled with a positive control
+
+The security pass raised a good one it could not answer: the announce carries
+each player's token by `rpc_id(network_id, …)`, and `network_id` is chosen by the
+CLIENT and published to every browser. If Godot let a second peer DECLARE an id a
+first peer already holds, `rpc_id` could hand a victim's token to an attacker.
+
+Reproduced outside the repo, in a four-line throwaway project, on 4.7.2:
+
+| | |
+| --- | --- |
+| A raw `ENetConnection` declaring a NOVEL id in its connect data | **admitted** - `peers=[victim, 424242]` |
+| The same attacker declaring the VICTIM's id | **rejected** - no join, `peers` unchanged |
+
+The first row is the positive control and it is what makes the second row mean
+anything: the mechanism works, so the refusal is a refusal rather than a broken
+test. **Godot's ENet server rejects a duplicate client-declared peer id**, and
+the announce is therefore a private channel. The residual risk is the one the
+design already accepts: ENet is unencrypted, so an on-path attacker reads it.
 
 ## Still open
 

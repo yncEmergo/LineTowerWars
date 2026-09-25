@@ -255,7 +255,12 @@ if (Test-Path $resultFile) {
 $summary += "MATCH FILE REMOVED BY CHILD: " + (-not (Test-Path $forChild))
 
 foreach ($label in (@('child') + (1..$Seats | ForEach-Object { "seat$_" }))) {
+    # **The child's evidence is read from its --log-file, not from its stdout.**
+    # Godot's stdout redirected to a file is fully BUFFERED, so a child that is
+    # killed rather than asked to stop flushes nothing and every line below would
+    # be silently empty. The log file is written unbuffered.
     $f = Join-Path $outDir "$label.out.txt"
+    if ($label -eq 'child' -and (Test-Path $childLog)) { $f = $childLog }
     if (-not (Test-Path $f)) { continue }
     $text = Read-Shared $f
     $keys = 'PROBE RESULT|PROBE DESYNC|SCRIPT ERROR|ERROR:|Match process|Seat claimed|Seat released|' +

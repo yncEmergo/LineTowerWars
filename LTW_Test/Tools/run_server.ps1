@@ -36,10 +36,12 @@ if ([string]::IsNullOrWhiteSpace($exe)) { exit 1 }
 # a bug rather than like "one is already running". Two servers on DIFFERENT
 # ports is legitimate, so -Port skips the check.
 #
-# **`--match-server` is excluded, and it has to be** (D44): the flag CONTAINS
-# "--server" as a substring, so a leftover match process would otherwise read as
-# a running lobby and refuse to let one start at all. `stop_server.ps1` matches
-# the loose pattern on purpose, because there it is right to stop both.
+# `--match-server` is excluded explicitly (D44). It is belt and braces rather
+# than a fix: `*--server*` does not actually match `--match-server`, because the
+# pattern needs two consecutive hyphens and there the `server` is preceded by
+# one. Said out loud because the opposite was believed for a while and put a
+# false comment in two scripts - see `stop_server.ps1`, where the same mistake
+# was a real bug.
 $projectName = Split-Path $projectRoot -Leaf
 $running = @(Get-CimInstance Win32_Process -Filter "Name like '%odot%'" -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -and $_.CommandLine -like "*--server*" -and
