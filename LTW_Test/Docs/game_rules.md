@@ -714,6 +714,9 @@ PANEL shows and what a countdown means are gameplay and are the user's.
     corner: the first unit's picture, what recalls it, and how many units it
     holds. Clicking one selects the group, and clicking it twice centres the
     camera the way the press does
+    - The square of the group that IS the selection - exactly its units,
+      however they came to be selected - is lit, in the same tint the action
+      bar and the send squares light in while what they select is on screen
     - A group that holds nothing is not drawn at all, so the squares appear
       when the first group is made and go away with the last one
     - They are a GRID rather than one long row, so a build with more groups

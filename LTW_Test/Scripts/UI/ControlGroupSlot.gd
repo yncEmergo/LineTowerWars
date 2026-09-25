@@ -62,6 +62,14 @@ func clear() -> void:
 	tooltip_text = ""
 	if _count_label != null:
 		_count_label.text = ""
+	set_active(false)
+
+
+## Lights the square while its group is what is selected, in the same tint the
+## action bar and the send squares light in - one "this is what is on screen"
+## across every square in the HUD rather than a colour per row.
+func set_active(value: bool) -> void:
+	modulate = HudActionButton.ACTIVE_MODULATE if value else Color.WHITE
 
 
 ## A group holds whatever was selected, so this asks rather than assumes: a

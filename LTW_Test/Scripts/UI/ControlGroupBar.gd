@@ -55,6 +55,9 @@ func _ready() -> void:
 		return
 
 	selection.control_groups().changed.connect(_on_group_changed)
+	# Which square is LIT follows the selection rather than the groups, so the
+	# bar redraws on both - a group recalled, a sender clicked, a box drawn.
+	selection.selection_changed.connect(_on_selection_changed)
 	_build_slots()
 	refresh()
 
@@ -81,6 +84,7 @@ func refresh() -> void:
 		return
 
 	var groups: ControlGroups = selection.control_groups()
+	var selected: Array = selection.get_selection()
 	var any: bool = false
 	for slot: ControlGroupSlot in _slots:
 		var units: Array = groups.recall(slot.group_index)
@@ -88,9 +92,23 @@ func refresh() -> void:
 			slot.clear()
 			continue
 		slot.show_group(units, config.control_group_label(slot.group_index))
+		slot.set_active(_is_selected(units, selected))
 		any = true
 
 	visible = any
+
+
+## Whether a group is what is selected right now: exactly its units, whichever
+## way they were selected - its number, its square, a click, a box. A group the
+## selection only overlaps is not lit, because the square would then claim a
+## selection that is not the group.
+func _is_selected(units: Array, selected: Array) -> bool:
+	if units.size() != selected.size():
+		return false
+	for unit in units:
+		if !selected.has(unit):
+			return false
+	return true
 
 
 ## One square per group the controls define, built once. A build with no
@@ -117,6 +135,10 @@ func _build_slots() -> void:
 
 
 func _on_group_changed(_index: int) -> void:
+	refresh()
+
+
+func _on_selection_changed(_units: Array) -> void:
 	refresh()
 
 
