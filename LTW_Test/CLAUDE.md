@@ -272,19 +272,36 @@
     building its snapshot from the previous tick
   - set BOTH when a node has to be last, and remember that a node whose parent
     is the thing it is timing runs before it by default
-- AN @RPC IS NOT SENT WHEN IT IS CALLED. Godot queues it and flushes at the END
-  OF THE FRAME, so anything that destroys the channel in that same frame throws
-  the packet away. The case that bites is `disconnect_peer(id)` immediately after
-  an `rpc_id` to that peer: it fails on the SENDER with "Unable to send packet on
-  channel 0, max channels: 0", in a server log nobody is watching, while the
-  receiver merely sees the socket close with no reason given
-  - which is the exact silent failure the message was being sent to replace, so
-    it is worth knowing before writing the next one
-  - give the peer a beat before hanging up on it. `NetworkService`'s
-    `REFUSAL_FLUSH_SECONDS` and its `_closing` list are the worked example
-  - `disconnect_peer(id, false)` does NOT save you. The `now = false` flag defers
-    ENet's own disconnect until ITS queue drains, and Godot's rpc has not reached
-    that queue yet
+- **A MESSAGE SENT JUST BEFORE A DISCONNECT IS USUALLY LOST - and not for the
+  reason this line used to give.** It said an @rpc is queued and flushed at the
+  end of the frame. Measured on 4.7.1, it is not: the packet leaves when `rpc_id`
+  is called. It is lost at the RECEIVER, because ENet resets a peer's queues when
+  a disconnect arrives in the same receive pass, and whatever came in with it goes
+  too. `rpc_id` then `disconnect_peer(id, true)` delivered one time in four,
+  `disconnect_peer(id, false)` never, and a flush in between did not help. See
+  Docs/Findings/2026-09-25-one-server-many-matches.md
+  - the receiver sees the socket close with no reason given, which is the exact
+    silent failure the message was being sent to replace
+  - give the peer a beat before hanging up, or better, close with
+    `ENetPacketPeer.peer_disconnect_later()`, which only disconnects once
+    everything already sent has been acknowledged - four in four.
+    `Net.begin_shutdown` is the worked example of that; `REFUSAL_FLUSH_SECONDS`
+    and `_closing` are the worked example of the beat
+  - sending to a peer AFTER its connection has gone is a different failure, and
+    the one that prints "Unable to send packet on channel 0, max channels: 0" on
+    the sender
+
+- **AN EDITOR ADDON'S RUNTIME AUTOLOAD RUNS ON THE DEDICATED SERVER TOO**, because
+  the server runs from a checkout rather than an export, and only an export strips
+  it. godot_ai's `_mcp_game_helper` keeps every log line in memory until an
+  attached editor drains it, which on a server is never: about a kilobyte a line,
+  more per error or refused rpc, and any connected peer can drive it. It ran on the
+  public server until 2026-09-25
+  - `Boot._drop_editor_helper` frees it on the server role. Deleting the line from
+    `project.godot` does not stick: the addon puts it back every time the editor runs
+  - so a new way of starting a server must still go through `Boot`, and a new
+    addon with a runtime autoload needs the same look. The server logs "Editor
+    helper removed" at boot; that line going missing is the symptom
 
 - A MULTIMESH CANNOT BE READ BACK UNDER `--headless`. Its instance data lives
   in the RenderingServer, and the dummy driver a headless run installs accepts

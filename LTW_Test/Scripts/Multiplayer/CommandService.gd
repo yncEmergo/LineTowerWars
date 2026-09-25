@@ -215,14 +215,24 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 		Log.err("submit_server_action refused an action a player owns", action)
 		return
 
+	var command: Command = Command.create_player_action(action)
+	command.player_slot = slot
+
+	# **The relay has no session and needs none.** It opens no match scene (see
+	# MatchSession.begin_relay), and the turn it seals the order into is what
+	# gives the order its moment on every peer - not a tick of its own, which it
+	# never had. So this branch comes before the session is asked for, or every
+	# drop would stop right here and leave the leaver's maze standing on every
+	# peer, silently.
+	if MatchSession.is_relay():
+		Lockstep.inject(command)
+		return
+
 	var session: MatchSession = _session
 	if session == null:
 		Log.err("Commands.submit_server_action with no MatchSession, the order goes nowhere")
 		return
-
-	var command: Command = Command.create_player_action(action)
 	command.tick = session.tick()
-	command.player_slot = slot
 
 	if !Net.is_online():
 		_record_begin(command)
@@ -231,12 +241,7 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 		return
 
 	if MatchSession.is_lockstep():
-		# A relay has no turn clock to book against, so it puts the order
-		# straight onto the wire for a turn it knows nobody has reached.
-		if MatchSession.is_relay():
-			Lockstep.inject(command)
-		else:
-			Lockstep.schedule(command)
+		Lockstep.schedule(command)
 		return
 	_queue(command)
 
@@ -252,6 +257,15 @@ func submit_server_action(action: Command.PlayerAction, slot: int) -> void:
 @rpc("any_peer", "reliable")
 func submit_command(payload: Dictionary) -> void:
 	if !multiplayer.is_server():
+		return
+	# **Refused outright under lockstep, and silently.** This is the replication
+	# road: no lockstep client sends here (its orders go to the relay's
+	# submit_order), so anything arriving is a modified client - and applied, it
+	# reached the server's own match objects, which is how one paused the relay's
+	# scene tree. Nothing is logged because the refusal is the whole answer, and a
+	# log line per packet is exactly what a flood would be sent to buy.
+	var network: NetworkConfig = References.network_config
+	if network != null && network.lockstep_enabled:
 		return
 
 	var command: Command = Command.from_dict(payload)

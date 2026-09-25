@@ -355,6 +355,17 @@ extends Resource
 ## while holding a repeat-on-hold ability down.
 @export var max_pending_orders: int = 128
 
+## How many BYTES of orders one peer may have waiting for the next seal: the same
+## flood guard, measured in size rather than count.
+##
+## **The count alone bounded nothing.** An order is whatever dictionary a client
+## sends, and the relay keeps every accepted one in its seal history for the
+## whole give-up window and sends it to every player of the match. The largest
+## honest order is the layout cheat, which carries a whole maze at twelve bytes a
+## tower - a full build zone is a few kilobytes - so this sits well clear of it
+## while bounding what one modified client can make the relay hold and send.
+@export var max_pending_order_bytes: int = 16384
+
 ## **Whether a peer that has fallen behind runs its engine faster to catch up.**
 ##
 ## Off, a peer's input delay only ever grows: every hiccup it recovers from is
@@ -494,6 +505,21 @@ extends Resource
 @export var address_argument: String = "--address"
 ## Overrides port, e.g.  godot -- --port 7778
 @export var port_argument: String = "--port"
+## Names the file whose appearance asks a SERVER to shut down cleanly, e.g.
+##   godot -- --server --shutdown-file /run/ltw-server/shutdown
+## Without it a server can only be killed, which freezes every running match.
+## See NetworkService.begin_shutdown.
+@export var shutdown_file_argument: String = "--shutdown-file"
+
+@export_group("Shutdown")
+## Seconds the players of a match cancelled by a shutdown are left reading why,
+## before their connection is closed.
+@export var shutdown_notice_seconds: float = 3.0
+## The longest a shutting-down server waits for its connections to close cleanly
+## before it quits anyway. A connection closes cleanly only once everything
+## already sent on it has been acknowledged, so a player on a dead link would
+## otherwise hold the whole shutdown open.
+@export var shutdown_close_seconds: float = 5.0
 
 
 ## Every address to try, in order, command line first.
@@ -573,6 +599,13 @@ func resolved_port() -> int:
 	return CommandLineUtil.int_for(port_argument, port)
 
 
+## The file whose appearance asks this server to shut down cleanly, or empty for
+## none. Only ever from the command line: it names a place on the machine the
+## server runs on, which is not something a shared resource can know.
+func shutdown_file_path() -> String:
+	return CommandLineUtil.value_for(shutdown_file_argument, "").strip_edges()
+
+
 ## Reports everything unusable at once rather than one failed connection at a
 ## time. Called before the peer is created, so a bad number is a message rather
 ## than a silent refusal to connect.
@@ -637,6 +670,12 @@ func validate() -> bool:
 
 	if max_pending_orders < 1:
 		Log.err("NetworkConfig max_pending_orders must be at least one", max_pending_orders)
+		complete = false
+
+	if max_pending_order_bytes < 1:
+		Log.err(
+			"NetworkConfig max_pending_order_bytes must be at least one", max_pending_order_bytes
+		)
 		complete = false
 
 	if seal_repair_every_ms < 1:

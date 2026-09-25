@@ -102,11 +102,7 @@ func begin(match_setup: MatchSetup) -> void:
 	# Read once, here, so it cannot change under a running match. A single
 	# player run is its own authority either way, so the flag only means
 	# anything when there is a network.
-	var network: NetworkConfig = References.network_config
-	# AND online: a single player run has no peers to agree with, and a turn
-	# waiting on orders that will never arrive would hang the match on tick one.
-	# One player is its own authority under either model.
-	_lockstep = network != null && network.lockstep_enabled && Net.is_online()
+	_lockstep = _lockstep_for(References.network_config)
 	_units.clear()
 	_next_unit_id = 1
 	_start_frame = Engine.get_physics_frames()
@@ -783,6 +779,29 @@ static func is_relay() -> bool:
 ## way to send an order. Gameplay code must never ask: it asks `is_authority`.
 static func is_lockstep() -> bool:
 	return _lockstep
+
+
+## Starts a match on the lockstep RELAY, which has no session and no world.
+##
+## **The relay opens no match scene, and it used to open one for this flag
+## alone.** Its match scene built nothing - `Main` returned before the first
+## area - but loading it took a second on the relay's one main thread, and every
+## player of that match sat at turn 0 waiting for the relay's first seal while it
+## did. It also swapped the lobby's own scene out, taking the configs the lobby
+## reads with it. `is_relay()` and `is_lockstep()` still have to answer on the
+## relay, so the one thing a session would have set is set here, by the same
+## rule `begin` uses and at the same moment: when the match starts.
+static func begin_relay() -> void:
+	_lockstep = _lockstep_for(References.network_config)
+
+
+## Whether a match started now would run lockstep, from the network config.
+##
+## AND online: a single player run has no peers to agree with, and a turn
+## waiting on orders that will never arrive would hang the match on tick one.
+## One player is its own authority under either model.
+static func _lockstep_for(network: NetworkConfig) -> bool:
+	return network != null && network.lockstep_enabled && Net.is_online()
 
 
 # --- Unit registry ------------------------------------------------------

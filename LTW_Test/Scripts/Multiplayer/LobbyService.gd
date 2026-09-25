@@ -59,6 +59,9 @@ var _countdowns: Dictionary = {}
 ## the number on screen actually changes rather than fifty times a second.
 var _announced: Dictionary = {}
 var _next_match_number: int = 1
+## When this server process started, in hex. Part of every match id, so one run's
+## matches are told apart from the last run's. See _next_match_id.
+var _boot_stamp: String = ""
 ## match id -> the lobby that started it, so a match that ends can put its
 ## lobby back to something a browser can make sense of.
 var _lobby_of_match: Dictionary = {}
@@ -77,6 +80,7 @@ func _ready() -> void:
 	set_process(false)
 	MatchStart.match_abandoned.connect(_on_match_abandoned)
 	Net.peer_left.connect(_on_peer_left)
+	Net.shutdown_started.connect(_on_shutdown_started)
 	Net.connected_to_server.connect(_on_connected_to_server)
 	Net.disconnected_from_server.connect(_on_lost_server)
 	Net.connection_failed.connect(_on_connection_failed)
@@ -349,14 +353,25 @@ func request_start() -> void:
 	if lobby.player_count() < needed:
 		_refuse(peer_id, "%d players are needed to start." % needed)
 		return
+	var refusal: String = _start_refusal()
+	if !refusal.is_empty():
+		_refuse(peer_id, refusal)
+		return
+
+	_begin_countdown(lobby)
+
+
+## Why this SERVER cannot start another match right now, or empty if it can.
+## Nothing about the lobby asking - only about the process it would run in.
+func _start_refusal() -> String:
+	if Net.is_shutting_down():
+		return NetworkService.SHUTDOWN_REASON
 	# D19: one process runs the lobby and the matches, so it can run one match.
 	# Splitting them is an address change (D16), and until then this is a
 	# sentence rather than a second match quietly overwriting the first.
 	if MatchStart.is_busy():
-		_refuse(peer_id, "The server is already running a match.")
-		return
-
-	_begin_countdown(lobby)
+		return "The server is already running a match."
+	return ""
 
 
 ## The host changing the rules. Refused once the lobby is locked, because the
@@ -466,8 +481,9 @@ func _fire_countdown(lobby: LobbyInfo) -> void:
 
 	# Re-checked rather than assumed: five seconds is long enough for another
 	# lobby's countdown to have fired first.
-	if MatchStart.is_busy():
-		_announce_countdown_cancelled(lobby, "The server is already running a match.")
+	var refusal: String = _start_refusal()
+	if !refusal.is_empty():
+		_announce_countdown_cancelled(lobby, refusal)
 		_push_lobby(lobby)
 		_broadcast_list()
 		return
@@ -522,8 +538,18 @@ func _announce_countdown_cancelled(lobby: LobbyInfo, reason: String) -> void:
 			receive_countdown.rpc_id(player.network_id, -1, reason)
 
 
+## A match id nobody has used before, on this server or on any earlier run of it.
+##
+## **The counter alone restarted at match-1 on every boot**, and restarts are now
+## routine - a deploy cancels whatever is running and starts the process again -
+## so the journal filled with several different match-1s, each with its own
+## summary line, and nothing said which boot a line belonged to. The boot's own
+## clock, in hex, is the part that tells them apart; the counter still orders the
+## matches within one run.
 func _next_match_id() -> String:
-	var id: String = "match-%d" % _next_match_number
+	if _boot_stamp.is_empty():
+		_boot_stamp = "%x" % int(Time.get_unix_time_from_system())
+	var id: String = "match-%s-%d" % [_boot_stamp, _next_match_number]
 	_next_match_number += 1
 	return id
 
@@ -552,6 +578,11 @@ func _on_match_abandoned(match_id: String) -> void:
 		return
 
 	lobby.is_in_progress = false
+	# A server that is shutting down reopens nothing: the players of that match
+	# have just been told it was cancelled, and a lobby pushed to them as open a
+	# moment before their connection closes would say the opposite.
+	if Net.is_shutting_down():
+		return
 	Log.info("Lobby is open again", {"id": lobby.lobby_id, "match": match_id})
 	_push_lobby(lobby)
 	_broadcast_list()
@@ -562,7 +593,24 @@ func _on_peer_left(peer_id: int) -> void:
 	if !multiplayer.is_server():
 		return
 	_names_of_peer.erase(peer_id)
+	# While shutting down, every connection is closing at once. Reshuffling the
+	# lobbies as each one goes would only send the rest a stream of lobby changes
+	# over links that are themselves on the way out.
+	if Net.is_shutting_down():
+		return
 	_remove_from_lobby(peer_id, "")
+
+
+## The server is shutting down: no match may start from here (see
+## _start_refusal), and a countdown already running is stopped with the reason,
+## so nobody watching it is left counting down to a server that is going away.
+func _on_shutdown_started(reason: String) -> void:
+	if !multiplayer.is_server():
+		return
+	for lobby_id: Variant in _countdowns.keys():
+		var lobby: LobbyInfo = _lobbies.get(lobby_id) as LobbyInfo
+		if lobby != null:
+			_cancel_countdown(lobby, reason)
 
 
 ## Takes a peer out of whatever lobby it is in.
@@ -621,10 +669,20 @@ func _close_lobby(lobby: LobbyInfo, reason: String) -> void:
 
 # --- server: pushes out ---------------------------------------------------
 
-## The list goes to everyone. It is a handful of small dictionaries on a cold
-## path, so filtering it per peer would cost more thought than it saves.
+## The list goes to everyone who can see it - every connected peer that is not a
+## player in a match.
+##
+## **Not a bare rpc() any more, for the reason every other broadcast here was
+## already made per peer (D33).** A player in a match has no screen that shows
+## the list, and every rpc to them shares one reliable ordered channel with their
+## seals, so a lobby changing anywhere on the server queued a whole list ahead of
+## their next turn. A player coming out of a match is sent it again then: the
+## match ending pushes it (see _on_match_abandoned), and leaving reconnects.
 func _broadcast_list() -> void:
-	receive_list.rpc(_list_payload())
+	var payload: Array = _list_payload()
+	for peer_id: int in Net.peer_ids():
+		if !MatchStart.has_player(peer_id):
+			receive_list.rpc_id(peer_id, payload)
 
 
 func _push_list_to(peer_id: int) -> void:

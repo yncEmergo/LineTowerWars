@@ -339,6 +339,11 @@ var _seq_seen: Dictionary = {}
 ## How many of those each slot has waiting, so the flood cap is a lookup rather
 ## than a scan of the pile on every order.
 var _pending_count: Dictionary = {}
+## And how many bytes they come to, for the same guard measured in size.
+var _pending_bytes: Dictionary = {}
+## Slots already reported as flooding this match, so a flood is logged once
+## rather than once per seal. See _warn_flood.
+var _flood_warned: Dictionary = {}
 
 ## --- the sealed stream ------------------------------------------------------
 
@@ -1135,9 +1140,8 @@ func _set_held(held: bool) -> void:
 ## holds it and it changes exactly when this needs to fire - no wiring to
 ## forget, and correct on the server and on a client alike.
 func _reset_if_new_match() -> void:
-	var session: MatchSession = References.match_session
-	var id: String = "" if session == null || session.setup() == null \
-		else session.setup().match_id
+	var setup: MatchSetup = _match_setup()
+	var id: String = "" if setup == null else setup.match_id
 	if id == _match_id:
 		return
 
@@ -1145,6 +1149,8 @@ func _reset_if_new_match() -> void:
 	_order_seq = 0
 	_pending_orders.clear()
 	_pending_count.clear()
+	_pending_bytes.clear()
+	_flood_warned.clear()
 	_seq_seen.clear()
 	# **Amendment 8, and its own docstring above says why this list matters.**
 	# A relay hosts one match after another in the same process, so a `_seq_seen`
@@ -1428,13 +1434,19 @@ func submit_order(payload: Dictionary, seq: int) -> void:
 	# repeat-on-hold ability down; anything near the cap is a modified client.
 	var held: int = int(_pending_count.get(slot, 0))
 	if held >= _max_pending_orders():
-		if held == _max_pending_orders():
-			_pending_count[slot] = held + 1
-			Log.warn("Refusing orders, a peer is flooding the seal", {
-				"peer": sender, "slot": slot, "cap": _max_pending_orders(),
-			})
+		_warn_flood(sender, slot, "count", _max_pending_orders())
+		return
+	# **The same guard in bytes, because the count alone bounded nothing**: an
+	# order is whatever dictionary arrives, and this relay keeps each one for the
+	# whole give-up window and sends it to every player. See
+	# NetworkConfig.max_pending_order_bytes for why an honest order never gets near.
+	var size: int = var_to_bytes(payload).size()
+	var spent: int = int(_pending_bytes.get(slot, 0))
+	if spent + size > _max_pending_order_bytes():
+		_warn_flood(sender, slot, "bytes", _max_pending_order_bytes())
 		return
 	_pending_count[slot] = held + 1
+	_pending_bytes[slot] = spent + size
 
 	var order: Dictionary = payload.duplicate()
 	order["slot"] = slot
@@ -1469,6 +1481,7 @@ func _seal_stream() -> void:
 	var pending: Array = _pending_orders
 	_pending_orders = []
 	_pending_count.clear()
+	_pending_bytes.clear()
 	pending.sort_custom(func(first: Array, second: Array) -> bool:
 		if int(first[0]) != int(second[0]):
 			return int(first[0]) < int(second[0])
@@ -1875,10 +1888,10 @@ func _absorb_seal(turn: int, orders: Array) -> void:
 ## Which slot a peer plays, from the setup rather than from anything it said.
 ## 0 for the server itself, which plays none.
 func _slot_of_peer(peer_id: int) -> int:
-	var session: MatchSession = References.match_session
-	if session == null || session.setup() == null:
+	var setup: MatchSetup = _match_setup()
+	if setup == null:
 		return 0
-	for player: MatchPlayer in session.setup().players:
+	for player: MatchPlayer in setup.players:
 		if player != null && player.network_id == peer_id:
 			return player.slot
 	return 0
@@ -1899,8 +1912,7 @@ func _slot_of_peer(peer_id: int) -> int:
 ## player that every turn waited for and never heard from.
 func _match_peers() -> PackedInt32Array:
 	var ids: PackedInt32Array = PackedInt32Array()
-	var session: MatchSession = References.match_session
-	var setup: MatchSetup = null if session == null else session.setup()
+	var setup: MatchSetup = _match_setup()
 	if setup == null:
 		return ids
 	for player: MatchPlayer in setup.players:
@@ -2077,10 +2089,26 @@ func _retention_turns() -> int:
 ## ungated it reported a desync as soon as a tower was built and ended a live
 ## match on 2026-09-04. See NetworkConfig.lockstep_enabled.
 func _is_live() -> bool:
-	if !Net.is_online() || References.match_session == null:
+	if !Net.is_online():
 		return false
 	var config: NetworkConfig = _config()
-	return config != null && config.lockstep_enabled
+	if config == null || !config.lockstep_enabled:
+		return false
+	return _match_setup() != null
+
+
+## The roster of the match this machine is in, or null for none.
+##
+## **Two sources, and the split is the relay having no scene.** A peer reads its
+## own session, as it always has. The relay opens no match scene any more (see
+## MatchSession.begin_relay), so it reads the match MatchStart is running -
+## which is null while that match is still loading, exactly as the session used
+## to be missing until the scene opened at the go signal.
+func _match_setup() -> MatchSetup:
+	if Net.is_server():
+		return MatchStart.running_setup()
+	var session: MatchSession = References.match_session
+	return null if session == null else session.setup()
 
 
 func _areas() -> Array[PlayerArea]:
@@ -2410,3 +2438,22 @@ func _max_sealed_turns() -> int:
 func _max_pending_orders() -> int:
 	var config: NetworkConfig = _config()
 	return 128 if config == null else maxi(1, config.max_pending_orders)
+
+
+func _max_pending_order_bytes() -> int:
+	var config: NetworkConfig = _config()
+	return 16384 if config == null else maxi(1, config.max_pending_order_bytes)
+
+
+## Says a peer is flooding the seal, once per slot per match.
+##
+## **Once, because on the relay the log line is the expensive part.** It used to
+## be once per seal, so a flooder refused every turn bought a warning every tick -
+## two stack captures and a write each, on the one thread that seals every turn.
+func _warn_flood(sender: int, slot: int, measure: String, cap: int) -> void:
+	if _flood_warned.has(slot):
+		return
+	_flood_warned[slot] = true
+	Log.warn("Refusing orders, a peer is flooding the seal", {
+		"peer": sender, "slot": slot, "by": measure, "cap": cap, "match": _match_id,
+	})

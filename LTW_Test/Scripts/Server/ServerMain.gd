@@ -75,6 +75,15 @@ func _cap_frame_rate() -> void:
 func log_line(text: String) -> void:
 	Log.info("[server] %s" % text)
 
+	# **Headless, there is nobody to show the view to, and it is not free.** This
+	# scene now stays up for the whole life of a lockstep relay rather than being
+	# swapped out for each match, so every connect and disconnect lands on the
+	# same main thread that seals every match's turns - and re-laying a 500-line
+	# RichTextLabel measured 12-13 ms a time on the dev PC, a quarter of a tick,
+	# for a window that does not exist. stdout above is the whole of the log.
+	if DisplayServer.get_name() == "headless":
+		return
+
 	_lines.append("[%s] %s" % [Time.get_time_string_from_system(), text])
 	if _lines.size() > _max_lines:
 		_lines = _lines.slice(_lines.size() - _max_lines)

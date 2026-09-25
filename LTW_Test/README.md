@@ -12,7 +12,9 @@ Pre-alpha. The **1v1 prototype milestone is met** - 1v1 and up to 4-player free-
 matches have been played end to end over the network, on two physical machines against a
 rented server. The work now is making the netcode good rather than making it work.
 
-**It is networked and playable.** A dedicated server hosts lobbies and relays the match; two
+**It is networked and playable.** A dedicated server hosts lobbies and relays the match - one
+match at a time for now; every match in a process of its own is decided and planned in
+[multi-match.md](Docs/multi-match.md). Two
 clients join, build, send creeps at each other, steal lives and finish with a placement. A
 player who disconnects has their maze erased on the same turn on every machine, and the match
 carries on without them; a divergence between two games is detected and ends the match for

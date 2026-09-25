@@ -37,6 +37,7 @@ running and ready to test against. `.\Tools\stop_server.ps1 -List` is how you ch
 Starting the LTW dedicated server (headless). Ctrl+C to stop.
 
 Godot Engine v4.7.x.stable.official.<hash> - https://godotengine.org
+[Boot] Editor helper removed from the dedicated server { "node": _mcp_game_helper }
 [Boot] Boot dispatching { "role": server, "scene": res://Scenes/Server/server_main.tscn, ... }
 [server] Server process started
 [server] Process id: 26628
@@ -50,6 +51,12 @@ Before that line it is not accepting anything.
 
 `"role": server` on the Boot line is the other one to check — if it says `client`, the server
 argument did not arrive and you are looking at a game, not a server.
+
+`Editor helper removed` is the godot_ai editor addon being taken back out of the server. Its
+runtime helper keeps every log line in memory until an editor drains it, and a server never has
+one attached. **If that line ever goes missing**, the addon has renamed its helper and the
+server is holding its whole log in memory again - see `Boot._drop_editor_helper` and
+`Findings/2026-09-25-one-server-many-matches.md`.
 
 Then, as clients come and go:
 
@@ -324,19 +331,27 @@ A fresh checkout has no imported-asset cache, so the deploy re-runs `--import` b
 restarting. Skipping that is the `Identifier ... not declared` failure `CLAUDE.md` warns about,
 which on a server reads as the service crash-looping.
 
-**Never stop it while somebody is playing.** Benchmarking wants the box to itself and so
-stops the service, and doing that mid-match does NOT end the match: `Net.is_online()` goes
-false on every client, `MatchSession.is_authority()` is `!Net.is_online() || Net.is_server()`,
-and so **each client silently becomes its own authority and carries on playing a private
-game**. It looks exactly like a replication bug. `-Check` and `-Log` are safe; check for
-connected peers, or ask, before stopping anything. The underlying design gap is recorded in
-`multiplayer.md` §11.1.
+**A stop or restart is meant to CANCEL running matches and tell the players (D45)**, and the
+server half of that is built: started with `--shutdown-file <path>`, it watches for that file,
+and when the file appears it cancels every match with the reason, gives the players a few
+seconds to read it, closes each connection cleanly and quits. **The service file does not ask
+for it yet** - it needs `--shutdown-file` on its command line and an `ExecStop=` that creates
+the file and waits for the process to exit. That edit is made by hand on the box, once, and
+the exact lines are written here when it has been.
+
+**Until then, never stop it while somebody is playing.** Godot on Linux runs no code on SIGTERM,
+so a stop kills the relay mid-sentence and every client of a running match FREEZES on "Waiting
+for the server" for good - measured, not assumed; `Findings/2026-09-25-one-server-many-matches.md`.
+(The "private game" this paragraph used to describe is what a clean close WITHOUT a notice
+does, which nothing here does any more.) `-Check` and `-Log` are safe; check for connected
+peers, or ask, before stopping anything.
 
 ### What it does not do
 
 There is no account system and no password. Anybody holding the address can connect, which is
 fine for a closed test among people you know and is a real question the day a build is public.
-It also still runs one match at a time, exactly as a local server does.
+It also still runs one match at a time, exactly as a local server does. One process per match
+is decided (D44) and planned in `multi-match.md`.
 
 ## Settings
 
@@ -354,7 +369,7 @@ is refused by the server with a message naming both builds, rather than being le
 desync. Bump it whenever two builds stop being able to play together — the property's own
 comment says what counts.
 
-Three more the SERVER itself reads, all in the same resource:
+What the SERVER itself reads, all in the same resource:
 
 - `server_max_fps` caps the idle loop. A server with no clients and no match was burning about
   a quarter of a core on nothing, because the engine spins as fast as it is allowed to.
@@ -366,6 +381,12 @@ Three more the SERVER itself reads, all in the same resource:
   socket is fine and whose game has stopped. Without it every other player waits for ever.
 - `jitter_margin_ms` is head room on the input delay, and it is **0** — measured, not assumed.
   See `Findings/2026-09-05-lockstep-review-2-response.md` for the numbers.
+- `max_pending_orders` and `max_pending_order_bytes` are the flood guard on what one player may
+  put into a single turn, by count and by size. Neither is a gameplay limit: the largest honest
+  order, the layout cheat's whole maze, sits far below the byte budget.
+- `shutdown_notice_seconds` and `shutdown_close_seconds` are the clean shutdown's two waits: how
+  long the players of a cancelled match get to read why, and the most it waits for their
+  connections to close before quitting anyway.
 
 **The server simulates nothing.** It relays orders, stamps which slot each came from, compares
 the world checksums peers report, and speaks for a player who has left so the rest are not
@@ -457,17 +478,22 @@ or unplugged takes ENet about 5.6 s to give up on. See `multiplayer.md` §14.1.
 ## Matches
 
 The server hosts lobbies and runs matches. When a lobby's host presses Start, the five second
-countdown runs **on the server**, and when it fires the process opens the match scene:
+countdown runs **on the server**, and when it fires the match is announced to its players. The
+relay opens no match scene of its own - it builds no world:
 
 ```
 [server] ... Start countdown { "lobby": lobby-1, "seconds": 5.0 }
-[server] ... Match starting { "lobby": lobby-1, "match": match-1, "players": 2, ... }
-[server] ... Match announced { "match": match-1, "players": 2, "timeout": 60.0 }
+[server] ... Match starting { "lobby": lobby-1, "match": match-6ab66547-1, "players": 2, ... }
+[server] ... Match announced { "match": match-6ab66547-1, "players": 2, "timeout": 60.0 }
 [server] ... Client loaded { "peer": ..., "ready": 2, "of": 2 }
-[server] ... Match start { "match": match-1, "players": 2 }
-[server] ... Match ready { "players": 2, "local_slot": 0, ... }
+[server] ... Match start { "match": match-6ab66547-1, "players": 2 }
+[server] ... Relay match ready, simulating nothing { "match": match-6ab66547-1, "players": 2, ... }
 [server] ... Initial world agrees { "peer": ..., "sum": 2178113725 }
 ```
+
+A match id is `match-<boot>-<n>`: the process's start time in hex, then a counter. The first
+part is what tells one run's matches from the last run's in the journal, now that a deploy
+restarts the process with matches in it.
 
 **`Initial world agrees` is the line to look for.** It means that client built the same world
 the server did. `Initial world DIFFERS from the server` is a real bug and is logged as an
@@ -479,8 +505,7 @@ the host's screen. When the last player of a match disconnects, the process goes
 listening by itself:
 
 ```
-[server] Match over, everybody has left match-1
-[server] Back from a match, still listening on port 7777
+[server] Match over, everybody has left match-6ab66547-1
 ```
 
 So the loop is: start the server once, play as many matches as you like against it.
@@ -522,6 +547,7 @@ process, lobby included, and the CPU and memory fields read `-1` anywhere but Li
 `A seal is too large for one packet` warning naming the turn. See `RelayMatchStats`. Either way the match carries on and their lives drain away through ordinary leaks -
 that is the rule (D14), not a bug.
 
-**While a match is running there is no status line and no log view** — the window, if you ran
-it with `-Windowed`, belongs to the match scene. Everything still goes to stdout, which is
-where you are reading it anyway.
+**The status line stays up through a match**, since the relay never leaves its entry scene. The
+log view in a `-Windowed` server fills as it always did; a headless one keeps no view at all,
+because redrawing one cost a quarter of a tick per connection on the thread that seals every
+turn. Everything goes to stdout either way, which is where you are reading it anyway.

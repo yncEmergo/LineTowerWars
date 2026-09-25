@@ -75,7 +75,7 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D22 | **Lobby membership reuses `MatchPlayer`.** A lobby seat is a slot, a display name and a peer id — exactly a `MatchPlayer`. | 2026-08-21 | So a lobby is a proto-`MatchSetup` and pressing Start wraps the list rather than converting it. One serialisable player type, not two. |
 | D21 | **One `Lobby` autoload on both sides**, branching on `multiplayer.is_server()`, rather than a separate `LobbyService` and `LobbyClient`. | 2026-08-21 | Godot routes an `@rpc` by NODE PATH: the receiver must sit at the same path on both machines or the call silently goes nowhere. One autoload makes the paths match by construction, and supersedes the separate service/client shape this file originally sketched. |
 | D20 | **A client connects when Multiplayer is pressed**, not at boot. | 2026-08-21 | The lobby browser needs a live list, so the connection's lifetime is the browser's. Single player never opens a socket, and the browser is where every failure state in 1.8 already belongs. |
-| D19 | **One process runs the lobby and the match** for now. | 2026-08-21 | Splitting them later is an address change, so it is safe to defer. Does not conflict with D16: still one process per match once matches are spawned separately. |
+| D19 | ~~**One process runs the lobby and the match** for now.~~ **SUPERSEDED by D44 on 2026-09-25.** | 2026-08-21 | Splitting them later was called an address change, and it is not one: a peer id is chosen afresh by the client on every connection and is the only thing tying a connection to a player, so moving a player to another process is an identity transfer - a seat token, a re-keyed roster, a client build. See `Findings/2026-09-25-one-server-many-matches.md`. |
 | D18 | **Dev server runs locally in the office**, on the user's own PC for the first tests. | 2026-08-21 | Same code path as anywhere else; the address is one line in `NetworkConfig`. |
 | D17 | **Feedback, never prediction.** Presentation may answer the INTENT at once; nothing may guess the RESULT. | 2026-08-21, restated 2026-09-04 | Was "prediction later, as an experiment". Under lockstep it is not an experiment that is waiting, it is a contradiction: prediction means simulating ahead of the turn, which is the one thing the model exists to forbid. The line is unchanged and now permanent - a marker, a ghost, a ring, a highlight and a sound are true the moment the player asks; spending gold, occupying a cell and starting a build are not. See §11.4. |
 | D33 | **A turn waits for the MATCH ROSTER, never for the transport's peer list.** | 2026-09-05 | `multiplayer.get_peers()` answers "who is connected to this process"; every caller wanted "who is in this match". `server_relay` defaults to true and D20 connects a player when they press Multiplayer, so anyone opening the menu joined both players' expectation sets and froze the match permanently. The two were the same number in every test ever run - one server, exactly the players - which is why no test could have caught it. |
@@ -89,8 +89,10 @@ outlived it are in `CLAUDE.md`, and the rest is in the git history.*
 | D41 | **A player may vanish for the relay's silence timeout before losing the match, and nothing closes their link sooner.** | 2026-09-15 | User's call after playtest 7. The allowance is `silent_timeout_seconds`, and ENet's own timeout is stretched past it for the match (`MatchStart._stretch_link_timeouts`), because its default closes a quiet link first and a closed link is final (D13). Under the sealed stream nobody waits for the missing player, so the allowance costs the others only a lane that stays standing. |
 | D43 | **A PAUSE is a player order, not a message**, and a resume is a countdown every peer runs. | 2026-09-20 | User's call. Offline the in-match menu simply holds the world while it is open; online it carries a Pause button that anybody may press and anybody may undo. It has to ride the turn stream rather than a broadcast rpc for the same reason D42's countdown does: a hold stops the match clock, so two peers that began holding on different turns would have two different clocks - hashed into every checksum, and therefore a desync with no other symptom. `MatchPause`, a node in both match scenes beside `StartingTech`. No allowance and no cooldown while the game is in testing. The length is `GameConfig.resume_countdown_seconds`; the rule is in `game_rules.md`. |
 | D42 | **A match opens with a GRACE PERIOD: the world held still for a few seconds before anything can happen.** | 2026-09-15 | User's call after playtest 7's laggy openings. The first phase of `StartingTech`'s opening, counted in simulation ticks by the turn stream so every peer releases on the same turn, and ahead of any technology draft or reveal. A tutorial skips it. The length is `GameConfig.start_grace_seconds`; the rule is in `game_rules.md`. |
+| D44 | **Each match runs in its own server process**, handed off from the lobby process. | 2026-09-25 | User's call, over running every match in the one relay process: matches as independent of each other as possible, which is also the shape a server that ever simulates again would need. Built in two stages - match processes first as children of the lobby's service (with `OOMPolicy=continue`, so one running out of memory ends only its own match), then one systemd unit per match, so a lobby crash leaves running matches alone. The move is an identity transfer, not an address change (see D19), so it takes a new client build and a protocol bump, both accepted. A started match's lobby disappears from the browser, and a player whose move fails may retry until the load timeout (D15). Plan: `multi-match.md`. Measurements: `Findings/2026-09-25-one-server-many-matches.md`. Supersedes D19. |
+| D45 | **A deploy CANCELS running matches and tells the players**; it never refuses. | 2026-09-25 | User's call. Before it a deploy froze every running match for good - Godot on Linux runs no code on SIGTERM - and closing the socket cleanly without a word was worse, because every client then played on alone. So the server is asked first, by a FILE (`--shutdown-file`, created by the service's ExecStop): it cancels every match with the reason, gives the players a few seconds to read it, closes each connection with `peer_disconnect_later` so the notice is acknowledged before the close, and quits. See `Net.begin_shutdown`. The server half is built; the service file edit is `server.md`'s. An UNPLANNED death - a crash, out of memory, a reboot - still needs the client-side fix in §11.1. |
 | D32 | ~~**The input delay is MEASURED from the live connection**, never authored.~~ **SUPERSEDED by D40 on 2026-09-09.** No client names a turn any more, so there is no per-peer booking to measure: the relay decides which turn an order lands in from when it arrives, and `delay_turns` / `_wire_budget_ms` / `announce_one_way` are deleted. What a peer chooses locally now is its PLAYBACK buffer, which costs only its owner. | 2026-09-04 | It is a LIVENESS parameter, not a correctness one: it decides which turn an order is booked into and has no say in what that turn does, so it may differ between peers and change mid-match with no risk of divergence. That is what makes measuring it safe. See §11.4. |
-| D16 | **One server process per match.** | 2026-08-21 | Also the only way to use more than one CPU core — see §11.3. |
+| D16 | **One server process per match.** | 2026-08-21 | Its first reason - the only way to use more than one CPU core, §11.3 - died when the server stopped simulating (§4.2). Reaffirmed by D44 on 2026-09-25 for a different one: independence between matches. |
 | D15 | **Load timeout 60 s**, then start without whoever is missing, provided `min_players` are ready. No area spawns for them. | 2026-08-21 | See §11.2. |
 | D14 | **A disconnect erases that player's maze.** The match continues; their lives drain away through normal life steal until they are eliminated normally. | 2026-08-21 | Reuses life steal, elimination and ring-closing exactly as `game_rules.md` already defines them — see §11.1. |
 | D13 | **No reconnect. Out is out.** A player who disconnects is gone for that match. | 2026-08-21 | User's call. Simplifies a lot — see §11.1. Does not rule out a short grace period before declaring someone gone, which is a different thing. |
@@ -105,9 +107,6 @@ is described as built in §2.
   income, value, placement - but `game_rules.md` never placed it, so the layout is a
   placeholder. What a player is CALLED there is settled: ordinarily the display name, and in
   an ANONYMOUS match their colour, which is a lobby setting (§8.2).
-- **Whether one server process should host more than one match.** It hosts one, refuses a
-  second with a sentence, and frees itself when that one empties - D19 doing its job until
-  D16 splits them. Nothing is blocked on it.
 
 ---
 
@@ -116,7 +115,7 @@ is described as built in §2.
 Boot scene is `Scenes/Boot/boot.tscn`, which dispatches on role and is never seen.
 
 ```
-boot  ──dedicated_server tag / --server──▶  server_main  (──▶ server_match, later)
+boot  ──dedicated_server tag / --server──▶  server_main  (──▶ server_match, replication only)
    │
    └──otherwise──▶  main_menu
 
@@ -127,9 +126,13 @@ main_menu  ──Multiplayer──▶  lobby_browser  ──Create Lobby──�
 						Start ──▶ 5 s countdown ──▶ match_loading ──▶ Main.tscn
 ```
 
-The server's own two scenes swap the same way, and BOTH ways: `server_main` opens
-`server_match` when a match starts, and comes back to `server_main` when the last player of
-it leaves.
+**A lockstep relay opens no match scene at all.** `server_main` stays up for the whole life
+of the process, and a running match's roster is `MatchStart.running_setup()`. The relay used
+to swap to `server_match` for every match only to hold a `MatchSession`, and that load stalled
+every player at turn 0 for about a second and took the lobby's configs away for the length of
+the match - see `Findings/2026-09-25-one-server-many-matches.md`. Only the replication path
+(`lockstep_enabled` off), where the server really simulates, still swaps to `server_match` for
+a match and back to `server_main` when its last player leaves.
 
 | File | Role |
 | --- | --- |
@@ -164,7 +167,7 @@ it leaves.
 | `Scripts/Multiplayer/MatchSetup.gd` + `MatchPlayer.gd` | Who is in a match, which slot is local, the RNG seed. Flat and serialisable. |
 | `Scripts/Game/MatchSession.gd` | This match: the setup, the seeded RNG, the unit-id registry, the tick counter, the ability registry. A scene node, held by `References`. |
 | `Scripts/Abilities/AbilityRegistry.gd` | Every ability a command can name, built by walking the content graph. |
-| `Scenes/Server/server_match.tscn` | A match with no camera, HUD or effects. Proves the simulation stands alone, and IS the scene the server opens for a match. |
+| `Scenes/Server/server_match.tscn` | A match with no camera, HUD or effects. Proves the simulation stands alone, and is the scene the server opens for a match on the replication path. A lockstep relay opens none. |
 | `Scripts/Config/MenuConfig.gd` + `Resources/Config/menu_config.tres` | Scene paths, player counts, title, countdown and load timeout. |
 | `Scripts/Config/ContentConfig.gd` + `Resources/Config/content_config.tres` | Where the content this build contains lives. Only the abilities folder so far, scanned so orphans still get ids (D12). |
 
@@ -276,12 +279,20 @@ Net.is_online() -> bool                      # CONNECTED or HOSTING
 Net.is_server() -> bool                      # HOSTING only; false while offline
 Net.peer_id() -> int                         # 0 while offline
 Net.peer_ids() -> PackedInt32Array           # server side; empty on a client
+Net.begin_shutdown() -> void                 # server; cancel, tell, close, quit (D45)
+Net.is_shutting_down() -> bool               # server; nothing new may begin once true
 NetworkService.describe(result) -> String    # static; a Result as a showable sentence
 NetworkService.SERVER_PEER_ID                # 1
 ```
 Signals: `status_changed(Status)`, `hosting_started()`, `connected_to_server()`,
 `connection_failed(Result)`, `disconnected_from_server()`, `peer_joined(int)`,
-`peer_left(int)`.
+`peer_left(int)`, `shutdown_started(reason)` - the last server side, for whatever owns players
+to tell them before the connections close.
+
+**The server hears only from its clients, and its clients only from it.** `host()` turns
+`SceneMultiplayer.server_relay` off, which Godot leaves on: with it on, every connection on
+the server was announced to every client, and one client's packets were FORWARDED to the
+others - a lobby browser could push traffic onto the channel every match's seals ride.
 `Result` is `OK, ALREADY_ONLINE, NO_CONFIG, BAD_CONFIG, HOST_FAILED, CLIENT_FAILED, REFUSED,
 TIMED_OUT`.
 
@@ -358,6 +369,8 @@ countdown ran out" and "the match exists on every machine", and nothing beyond i
 MatchStart.is_busy() -> bool                 # server: a match is running in this process
 MatchStart.begin(setup: MatchSetup) -> void  # server: announce it and start waiting
 MatchStart.setup() -> MatchSetup             # the match being loaded or played, or null
+MatchStart.running_setup() -> MatchSetup     # server: the match being RUN, null while loading
+MatchStart.has_player(peer_id) -> bool       # server: a player of the match loading or running
 MatchStart.ready_ids() -> PackedInt32Array   # who has finished loading
 MatchStart.report_loaded() -> void           # said by the loading screen
 MatchStart.report_world_checksum(sum: int)   # said by Main, both roles, 2.5
@@ -416,10 +429,13 @@ one bug the first end-to-end run found.
    the way. **And a loaded scene is still not a compiled one**: `ShaderWarmup` draws all of it
    once in the match scene itself, and a peer only tells the relay it is ready after that. See
    `Findings/2026-09-10-playtest-7.md` for what skipping it cost.
-3. **The server comes back.** When the last player of a match disconnects, the process
-   returns to `server_main.tscn` and the lobby is unlocked. Without it, one match per server
-   process meant one match per *run*, which is unbearable while testing. `ServerMain` no
-   longer assumes it is running for the first time.
+3. **The server comes back.** When the last player of a match disconnects, the match is over
+   and the lobby is unlocked. Without it, one match per server process meant one match per
+   *run*, which is unbearable while testing. Under lockstep there is no scene to come back
+   FROM - the relay never leaves `server_main` - and a new match is recognised by its match
+   id, which is what `LockstepService._reset_if_new_match` keys on. Only the replication path
+   still returns from `server_match.tscn`, which is why `ServerMain` does not assume it is
+   running for the first time.
 4. **A match id travels with every answer.** `report_ready` and `report_checksum` both carry
    it, so a late answer about a match that is already over cannot count towards the next one.
 
@@ -1124,7 +1140,11 @@ re-import is not optional: a clean checkout has no imported-asset cache and no s
 table, which on a server shows up as the service crash-looping rather than as an error anyone
 reads.
 
-**Restarting ends any match in progress.** One process holds the lobby and the match (D19) and
+**A deploy cancels any match in progress, and says so (D45)** - once the service file creates
+the shutdown file on stop, which is `server.md`'s. Until then a restart does not end a match,
+it FREEZES it: Godot on Linux runs no code on SIGTERM, so the relay dies without a goodbye and
+every client sits on "Waiting for the server". What follows is the older reasoning, still true
+of a crash. **Restarting ends any match in progress.** One process holds the lobby and the match (D19) and
 every bit of match state is in memory, so deploying during a playtest disconnects everybody at
 once. There is no drain-and-swap and no reconnect (D13) to soften it. Deploy between sessions.
 
@@ -1215,7 +1235,9 @@ Shape:
 - Starting a match hands the lobby's player list to a game-server instance, which is where
   the `MatchSetup` comes from.
 
-Decided (D19): one process does both for now. Splitting later is an address change.
+Decided (D44): the lobby process hands each match to a process of its own. The plan is
+`multi-match.md`. Until it lands, one process does both (D19) - and splitting them is not the
+address change this line once called it; see D19's row.
 
 ### 8.1 Lobby rules
 
@@ -1472,13 +1494,22 @@ Details still open, none of them blocking:
   merely desirable: the two cases are already distinguishable by how fast they arrive.
 - **Whether the towers are refunded, recycled or simply deleted** when the maze is erased.
   Deletion is simplest and nobody is left to receive gold.
-- **A client that loses the SERVER does not stop.** `MatchSession.is_authority()` is
-  `!Net.is_online() || Net.is_server()`, so the moment the connection drops, `Net.is_online()`
-  goes false and every client **silently becomes its own authority and carries on playing a
-  private game**. It looks exactly like a replication bug, and it was found by stopping the
-  service under a live match while benchmarking. Given D13 - out is out - a client that loses
-  the server should stop and say so. This is the most confusing possible failure mode and it
-  is not fixed.
+- **A client that loses the SERVER does not stop, and HOW it fails depends on how the server
+  went.** Measured on 2026-09-25 (`Findings/2026-09-25-one-server-many-matches.md`), and the
+  explanation this line used to give was the replication-era formula, older than lockstep:
+  - **Killed** - a crash, SIGTERM, out of memory: every client stalls at once, notices the
+    server is gone only when ENet's stretched timeout runs out, and then sits on "Waiting for
+    the server" for good, with Leave as the only way out.
+  - **Closed cleanly without a word:** every client goes offline and plays on ALONE - a private
+    game. Under lockstep `is_authority()` reads a static set at match start, so going offline
+    changes nothing, and the order road takes its offline branch and applies orders locally.
+  - **Shut down on purpose (D45):** fixed. The server cancels the match with a reason first,
+    and the client leaves it.
+
+  The first two still need the CLIENT fix: on losing the server mid-match, end the match and
+  say why. It changes no rpc, so older builds keep connecting. Given D13 - out is out - that is
+  the right behaviour, and until it exists an unplanned relay death is still the most confusing
+  failure there is.
 
 ### 11.2 The loading screen timeout (D15)
 
@@ -1519,8 +1550,9 @@ tick (§5.5) instead of a hand-rolled scheduler stepping every match in turn.
 Cost is startup time and baseline memory per match, both of which the dedicated-server
 export reduces by stripping visual resources.
 
-Still open: whether the lobby lives in its own process or shares one with a match. For the
-prototype, one process doing both is simplest, and splitting later is an address change.
+**Answered by D44**: the lobby keeps its process and each match gets its own. The core
+argument above no longer applies to a relay, which simulates nothing (§4.2); D44's reason is
+independence between matches. Splitting is not an address change - see D19's row.
 
 ### 11.4 Input delay, feedback, and prediction (D17, D32, superseded by D40)
 
@@ -1767,7 +1799,7 @@ Not oversights. Each one is a choice with a reason, and none is blocking.
 | **Rubble replication** | A destroyed tower blocks its cells for a few seconds, and only the authority knows a tower was destroyed rather than sold - the snapshot says a unit is gone, never why. So a client's build ghost can read green over a cell the server refuses for those seconds. | It is a handful of cells for a handful of seconds, and the server refuses the placement anyway, so the cost is one misleading ghost rather than a wrong world. A phase B spawn/despawn event carries the reason for free. |
 | **An end screen** | The match decides itself and stops; players leave through the in-game menu. | Deliberately the smallest thing that works. |
 | **Player colours on the units themselves** | A colour reaches the minimap and the player table. Nothing in the 3D world is tinted by it, so two players' towers look identical in a lane. | The colour is chosen, replicated and read through one call (§8.1), so this is a materials question rather than a networking one - and it collides with the tower visual language, which spends colour on the ELEMENTS. `game_rules.md` under Presentation is where that has to be settled first. |
-| **More than one match per process** | One process hosts one match, refuses a second with a sentence, and frees itself when that one empties - D19 doing its job until D16 splits them. | Splitting is an address change, so it is safe to defer. |
+| **More than one match at a time** | One process hosts one match, refuses a second with a sentence, and frees itself when that one empties. | Decided (D44): each match in a process of its own, handed off from the lobby. Planned in `multi-match.md`; not built. |
 
 ### Small open work
 

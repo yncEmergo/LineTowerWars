@@ -17,6 +17,10 @@ extends Control
 ## real scene arrives is the menu's own background instead of the engine's
 ## default clear colour.
 
+## The autoload name the godot_ai addon registers its runtime helper under. See
+## _drop_editor_helper.
+const EDITOR_HELPER_NAME: String = "_mcp_game_helper"
+
 var _config: BootConfig:
 	get:
 		return References.boot_config
@@ -63,6 +67,7 @@ func _dispatch() -> void:
 		config.validate()
 
 	if is_dedicated_server(config):
+		_drop_editor_helper()
 		_open("server", _server_scene_path(config))
 	else:
 		# Here rather than in the options screen alone, so a player who chose
@@ -79,6 +84,28 @@ func _dispatch() -> void:
 		var entry: String = _client_scene_path()
 		_prewarm_menus(entry)
 		_open("client", entry)
+
+
+## Takes the godot_ai addon's runtime helper out of a dedicated server.
+##
+## **It is an editor tool, and on a server it is a memory leak anybody can
+## drive.** The helper ferries this process's log to an attached editor and holds
+## every line until one drains it - but it only drains while a debugger is
+## attached, and a server under systemd never has one. So every log line, and
+## every rpc the engine refuses from any connected peer, was kept for the life of
+## the process: about a kilobyte a line and four to six per refusal, on a box
+## with no swap. See Findings/2026-09-25-one-server-many-matches.md.
+##
+## Removed here, at runtime, because the addon puts its autoload back into
+## project.godot every time the editor runs, so deleting the line would not
+## stick. Freeing the node runs its own _exit_tree, which detaches the logger.
+## Exports never had it: the addon strips it from them itself.
+func _drop_editor_helper() -> void:
+	var helper: Node = get_tree().root.get_node_or_null(EDITOR_HELPER_NAME)
+	if helper == null:
+		return
+	helper.queue_free()
+	Log.info("Editor helper removed from the dedicated server", {"node": EDITOR_HELPER_NAME})
 
 
 ## Every OTHER menu screen, loaded on a worker thread while this one opens the

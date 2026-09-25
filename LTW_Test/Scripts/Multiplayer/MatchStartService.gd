@@ -122,6 +122,7 @@ func _ready() -> void:
 	set_process(false)
 	Net.peer_left.connect(_on_peer_left)
 	Net.status_changed.connect(_on_network_status_changed)
+	Net.shutdown_started.connect(_on_shutdown_started)
 
 
 # --- server: starting a match ---------------------------------------------
@@ -181,6 +182,24 @@ func setup() -> MatchSetup:
 	return _setup
 
 
+## Server: the match this process is RUNNING - started, not merely announced -
+## or null. The lockstep relay reads its roster from here, because it opens no
+## match scene and so has no session to read it from. Always null on a client,
+## whose own match is setup().
+func running_setup() -> MatchSetup:
+	if !_in_match || _waiting:
+		return null
+	return _setup
+
+
+## Server: whether a peer is a player of the match this process is loading or
+## running. What the lobby asks before pushing its list: a player in a match has
+## no screen that shows the list, and it would queue on the same reliable
+## channel as their seals.
+func has_player(peer_id: int) -> bool:
+	return _in_match && _expected.has(peer_id)
+
+
 ## Who has finished loading, by peer id. What the loading screen lists.
 func ready_ids() -> PackedInt32Array:
 	return _ready_ids
@@ -202,8 +221,9 @@ func report_loaded() -> void:
 ## Offline, or in a match nobody else is in, it does nothing at all.
 ##
 ## **A lockstep relay never reaches this**, because it never builds a world to
-## hash - `Main` returns before the call. The reference is then the first peer
-## to report and the rest are compared against it; see _compare_checksums.
+## hash - it opens no match scene at all (see MatchSession.begin_relay). The
+## reference is then the first peer to report and the rest are compared against
+## it; see _compare_checksums.
 func report_world_checksum(checksum: int) -> void:
 	if _setup == null || !Net.is_online():
 		return
@@ -432,8 +452,23 @@ func _start_match(final_setup: MatchSetup) -> void:
 	_expected = started
 	_stretch_link_timeouts(started)
 
-	# The server builds the same world from the same setup, headless (2.3). Its
-	# own copy plays no slot, which is what local_slot 0 means.
+	# **A lockstep relay opens no match scene.** It builds no world, so the scene
+	# it used to open held nothing but a MatchSession for the roster - and loading
+	# it on this one main thread held every player of the match at turn 0 for
+	# about a second, while swapping out the entry scene took the lobby's configs
+	# with it for the length of the match. The roster is running_setup() instead.
+	if _is_lockstep_relay():
+		MatchSession.begin_relay()
+		Log.info("Relay match ready, simulating nothing", {
+			"match": final_setup.match_id,
+			"players": final_setup.player_count(),
+			"seed": final_setup.rng_seed,
+		})
+		return
+
+	# Replication: the server builds the same world from the same setup,
+	# headless (2.3), and simulates it. Its own copy plays no slot, which is what
+	# local_slot 0 means.
 	var server_view: MatchSetup = MatchSetup.from_dict(final_setup.to_dict())
 	server_view.local_slot = 0
 	_match_scene_open = true
@@ -458,6 +493,31 @@ func _on_network_status_changed(new_status: NetworkService.Status) -> void:
 	if new_status != NetworkService.Status.OFFLINE || _setup == null:
 		return
 	Log.info("Offline, forgetting the match", _setup.match_id)
+	_finish_match()
+
+
+## The server is shutting down, so the match is CANCELLED - the user's call for
+## what a deploy does to a running match - and every player still connected is
+## told why before their connection closes. A match that is only loading is
+## cancelled the same way. See NetworkService.begin_shutdown.
+##
+## receive_match_cancelled already takes a client out of a match from anywhere,
+## mid-match included, and shows the reason, so this needs nothing new on the
+## wire and no new client build.
+func _on_shutdown_started(reason: String) -> void:
+	if !multiplayer.is_server() || !_in_match:
+		return
+	var notice: String = "%s The match was cancelled." % reason
+	var live: PackedInt32Array = multiplayer.get_peers()
+	var told: int = 0
+	for peer_id: int in _expected:
+		if peer_id in live:
+			receive_match_cancelled.rpc_id(peer_id, notice)
+			told += 1
+	Log.info("Match cancelled, the server is shutting down", {
+		"match": "" if _setup == null else _setup.match_id,
+		"told": told,
+	})
 	_finish_match()
 
 
@@ -586,6 +646,13 @@ func _drop_peer(peer_id: int, reason: String) -> void:
 		return
 	Log.info("Match over, everybody has left", "" if _setup == null else _setup.match_id)
 	_finish_match()
+
+
+## Whether this server is a lockstep relay, asked of the config rather than of a
+## session - the relay has none. See MatchSession.begin_relay.
+func _is_lockstep_relay() -> bool:
+	var network: NetworkConfig = References.network_config
+	return network != null && network.lockstep_enabled
 
 
 func _slot_of(peer_id: int) -> int:

@@ -45,6 +45,11 @@ signal disconnected_from_server()
 ## wire, and 1.6 makes it their player id.
 signal peer_joined(peer_id: int)
 signal peer_left(peer_id: int)
+## Server side: this server has been asked to shut down, and in a few seconds
+## every connection closes. Whatever owns players tells them now - a running
+## match is cancelled with the reason, and no new one may start. See
+## begin_shutdown.
+signal shutdown_started(reason: String)
 
 enum Status {
 	OFFLINE,
@@ -65,9 +70,23 @@ enum Result {
 	VERSION_MISMATCH,
 }
 
+## How far a requested shutdown has got. See begin_shutdown.
+enum ShutdownPhase {
+	NONE,
+	NOTICE,
+	CLOSING,
+}
+
 ## The server is always peer 1 in Godot's high-level multiplayer. Named so the
 ## number stops being a magic 1 scattered through rpc_id calls.
 const SERVER_PEER_ID: int = 1
+
+## What a player is told when the server shuts down under them.
+const SHUTDOWN_REASON: String = "The server is restarting."
+
+## How often the shutdown file is looked for, in seconds. A deploy waits on this,
+## so it is short; a file test once a second is nothing.
+const SHUTDOWN_POLL_SECONDS: float = 1.0
 
 ## What round_trip_ms answers when there is no link to read: offline, no such
 ## peer, or a peer this machine has no direct connection to. **Negative on
@@ -78,17 +97,20 @@ const UNKNOWN_RTT: int = -1
 
 ## How long the server waits after refusing a build before hanging up on it.
 ##
-## It exists because **an rpc is not sent when it is called.** Godot queues it
-## and flushes at the end of the frame, so disconnecting the peer in the same
-## frame destroys the channels the queued packet still has to go out on, and it
-## dies at flush time with "Unable to send packet on channel 0, max channels: 0"
-## - on the SERVER, where nobody is looking, while the client simply sees the
-## connection close with no reason given. Which is precisely the silent failure
-## this whole handshake was built to replace.
+## It exists because **a message followed at once by a disconnect is usually
+## lost**, and the reason is not the one first written here. Measured on 4.7.1
+## (Findings/2026-09-25-one-server-many-matches.md): the rpc LEAVES when it is
+## called - ENetMultiplayerPeer flushes after every packet - and is lost at the
+## RECEIVER, because a disconnect arriving in the same receive pass makes ENet
+## reset that peer's queues, throwing away what came in with it. So flushing
+## first does not help; waiting does, and so does peer_disconnect_later, which
+## only disconnects once everything sent has been acknowledged (see
+## begin_shutdown). Lost, the refusal is the silent failure this whole handshake
+## was built to replace: the client sees the connection close, no reason given.
 ##
-## One frame would be enough. A second is used because the cost of being wrong
-## about that is the same silent failure, and the cost of waiting is a socket
-## held open a moment longer for a peer that is already leaving.
+## A second is used because the cost of being wrong is that same silent failure,
+## and the cost of waiting is a socket held open a moment longer for a peer that
+## is already leaving.
 const REFUSAL_FLUSH_SECONDS: float = 1.0
 
 var _status: Status = Status.OFFLINE
@@ -113,6 +135,12 @@ var _closing: Dictionary = {}
 ## version mismatch fills it in, because only that failure has a detail worth
 ## putting in front of a player: which build each end is on.
 var _refusal_detail: String = ""
+## Server side: the file whose appearance asks for a clean shutdown, or empty
+## when nothing may ask. See begin_shutdown.
+var _shutdown_file: String = ""
+var _shutdown_phase: ShutdownPhase = ShutdownPhase.NONE
+## Seconds into the current shutdown phase, or since the file was last looked for.
+var _shutdown_clock: float = 0.0
 
 
 func _ready() -> void:
@@ -149,12 +177,25 @@ func host(port_override: int = 0) -> Result:
 		return _refuse(Result.HOST_FAILED, "host")
 
 	_peer = peer
+	# **A client hears from the server and from nobody else.** SceneMultiplayer's
+	# server_relay defaults to true, which does two things this game never wants:
+	# it announces every connection on the server to every client, and it
+	# FORWARDS one client's packets to the others. So a peer sitting in the lobby
+	# browser could push traffic onto the reliable channel every match's seals
+	# ride, and every client paid a log line for every connection anywhere on the
+	# server. No client here talks to another - every rpc a client sends goes to
+	# SERVER_PEER_ID - so nothing is lost. Set before the peer is assigned, since
+	# changing it with peers connected is undefined.
+	var scene_multiplayer: SceneMultiplayer = multiplayer as SceneMultiplayer
+	if scene_multiplayer != null:
+		scene_multiplayer.server_relay = false
 	multiplayer.multiplayer_peer = peer
 	# Running from here on, so a peer that connects and then says nothing is
 	# eventually dropped rather than left sitting there looking connected.
 	set_process(true)
 	_set_status(Status.HOSTING)
 	Log.info("Listening", {"port": port, "max_peers": config.max_peers})
+	_arm_shutdown_file(config)
 	hosting_started.emit()
 	return Result.OK
 
@@ -395,6 +436,7 @@ func _process(delta: float) -> void:
 			_tick_connect(delta)
 		Status.HOSTING:
 			_tick_handshakes(delta)
+			_tick_shutdown(delta)
 		_:
 			set_process(false)
 
@@ -430,6 +472,117 @@ func _tick_handshakes(delta: float) -> void:
 			continue
 		_closing.erase(peer_id)
 		_disconnect_peer(peer_id)
+
+
+# --- server: a clean shutdown ---------------------------------------------
+
+## Starts a clean shutdown: tell every player, close every connection, quit.
+## Server only. Asked for by the shutdown file - see _tick_shutdown.
+##
+## **Before this existed a server could only be killed, and a kill froze every
+## running match for good.** Godot on Linux runs no code on SIGTERM, so a deploy's
+## `systemctl restart` ended the process mid-sentence: no goodbye went out, every
+## client stalled on "Waiting for the server", and nothing ever told them why.
+## Closing the socket cleanly WITHOUT a word was worse still - every client went
+## offline, became its own authority, and played on alone. So the players are
+## told FIRST, and only then are the connections closed.
+func begin_shutdown() -> void:
+	if _status != Status.HOSTING || _shutdown_phase != ShutdownPhase.NONE:
+		return
+	_shutdown_phase = ShutdownPhase.NOTICE
+	_shutdown_clock = 0.0
+	Log.info("Shutting down cleanly, telling every player", {
+		"connected": multiplayer.get_peers().size(),
+	})
+	shutdown_started.emit(SHUTDOWN_REASON)
+
+
+## Whether a clean shutdown is under way. Once it is, nothing new may begin.
+func is_shutting_down() -> bool:
+	return _shutdown_phase != ShutdownPhase.NONE
+
+
+## Remembers where a shutdown may be asked for, and clears a stale request.
+##
+## A file left behind by a process that died before it could remove its own
+## would otherwise shut the next one down a second after it started.
+func _arm_shutdown_file(config: NetworkConfig) -> void:
+	_shutdown_file = config.shutdown_file_path()
+	_shutdown_phase = ShutdownPhase.NONE
+	_shutdown_clock = 0.0
+	if _shutdown_file.is_empty():
+		return
+	if FileAccess.file_exists(_shutdown_file):
+		DirAccess.remove_absolute(_shutdown_file)
+		Log.warn("Removed a shutdown request left over from an earlier run", {
+			"file": _shutdown_file,
+		})
+	Log.info("A clean shutdown can be asked for", {"file": _shutdown_file})
+
+
+## The three steps of a clean shutdown, one per frame of work.
+##
+## **A file rather than a signal**, because the signal is exactly what Godot
+## cannot catch here. The service's ExecStop creates the file and waits for this
+## process to exit, which it then does:
+##
+## 1. NOTICE. shutdown_started goes out, and whatever owns players tells them - a
+##    running match is cancelled with the reason, a countdown is stopped, no new
+##    match may start. They get shutdown_notice_seconds to read it.
+## 2. CLOSING. Every connection is closed with peer_disconnect_later, which ENet
+##    only completes once everything already sent on it has been ACKNOWLEDGED.
+##    A plain disconnect_peer delivered the notice once in four tries.
+## 3. Quit, once every connection has closed or shutdown_close_seconds has passed.
+func _tick_shutdown(delta: float) -> void:
+	match _shutdown_phase:
+		ShutdownPhase.NONE:
+			if _shutdown_file.is_empty():
+				return
+			_shutdown_clock += delta
+			if _shutdown_clock < SHUTDOWN_POLL_SECONDS:
+				return
+			_shutdown_clock = 0.0
+			if FileAccess.file_exists(_shutdown_file):
+				begin_shutdown()
+		ShutdownPhase.NOTICE:
+			_shutdown_clock += delta
+			if _shutdown_clock >= _shutdown_notice_seconds():
+				_close_every_link()
+		ShutdownPhase.CLOSING:
+			_shutdown_clock += delta
+			if multiplayer.get_peers().is_empty() \
+					|| _shutdown_clock >= _shutdown_close_seconds():
+				_finish_shutdown()
+
+
+func _close_every_link() -> void:
+	_shutdown_phase = ShutdownPhase.CLOSING
+	_shutdown_clock = 0.0
+	for peer_id: int in multiplayer.get_peers():
+		var link: ENetPacketPeer = _peer.get_peer(peer_id)
+		if link != null:
+			link.peer_disconnect_later()
+
+
+func _finish_shutdown() -> void:
+	var still_open: int = multiplayer.get_peers().size()
+	if !_shutdown_file.is_empty() && FileAccess.file_exists(_shutdown_file):
+		DirAccess.remove_absolute(_shutdown_file)
+	if still_open == 0:
+		Log.info("Shut down cleanly, every player was told")
+	else:
+		Log.warn("Shutting down with connections still open", {"open": still_open})
+	get_tree().quit()
+
+
+func _shutdown_notice_seconds() -> float:
+	var config: NetworkConfig = _config()
+	return 3.0 if config == null else maxf(0.0, config.shutdown_notice_seconds)
+
+
+func _shutdown_close_seconds() -> float:
+	var config: NetworkConfig = _config()
+	return 5.0 if config == null else maxf(0.5, config.shutdown_close_seconds)
 
 
 ## Hanging up politely on the way out, so other players see somebody leave at
