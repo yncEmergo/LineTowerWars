@@ -697,6 +697,13 @@ PANEL shows and what a countdown means are gameplay and are the user's.
   - The same number twice inside the double click window also centres the camera
     on the group's first unit
   - Units that die or are sold drop out of every group they were in
+  - **A match starts with the four send buildings on groups 1 to 4**, one tier
+    each in tier order, so a send is a number and a letter from the first
+    second. They are ordinary groups from then on, and taking a number over
+    for something else is the usual Control press
+    - An option turns it off, for a player who wants those numbers for
+      something else. It takes effect from the next match, so turning it off
+      never empties a group mid-match
   - The mouse's SIDE BUTTONS carry a group each as well, past the numbered
     ones, and answer to everything a number does: control held to assign, the
     button alone to recall, twice to centre. They are under the thumb already

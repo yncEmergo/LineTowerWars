@@ -94,6 +94,10 @@ const DEFAULT_SHADOWS_ENABLED: bool = true
 ## actually hold something, so a player who never makes one never sees it, and
 ## a player who does has no reason to be told twice that they made it.
 const DEFAULT_SHOW_CONTROL_GROUPS: bool = true
+## The send buildings start a match on control groups 1 to 4 by default. A
+## send is then a number and a letter from the first second, and a player who
+## wants the numbers for something else turns it off once.
+const DEFAULT_SENDER_GROUPS: bool = true
 
 ## How the game window is presented.
 ##
@@ -150,6 +154,9 @@ static var edge_panning: bool = DEFAULT_EDGE_PANNING
 ## groups exist, which is the only reason it is a setting: on, it hides itself
 ## whenever there is nothing to say.
 static var show_control_groups: bool = DEFAULT_SHOW_CONTROL_GROUPS
+## Whether a match starts with this player's send buildings on control groups
+## 1 to 4, tier by tier. Read once, as the match starts - see SelectionController.
+static var sender_groups: bool = DEFAULT_SENDER_GROUPS
 static var audio_muted: bool = DEFAULT_AUDIO_MUTED
 
 ## Linear 0-1 per channel, indexed by AudioChannel. Read through volume().
@@ -201,6 +208,8 @@ static func load_from_disk() -> void:
 		DEFAULT_EDGE_PANNING))
 	show_control_groups = bool(file.get_value(SECTION_GAMEPLAY,
 		"show_control_groups", DEFAULT_SHOW_CONTROL_GROUPS))
+	sender_groups = bool(file.get_value(SECTION_GAMEPLAY, "sender_groups",
+		DEFAULT_SENDER_GROUPS))
 	audio_muted = bool(file.get_value(SECTION_AUDIO, "muted", DEFAULT_AUDIO_MUTED))
 
 	for channel: int in range(AUDIO_KEYS.size()):
@@ -259,6 +268,7 @@ static func save_to_disk() -> void:
 	file.set_value(SECTION_GAMEPLAY, "health_bar_display", int(health_bar_display))
 	file.set_value(SECTION_GAMEPLAY, "edge_panning", edge_panning)
 	file.set_value(SECTION_GAMEPLAY, "show_control_groups", show_control_groups)
+	file.set_value(SECTION_GAMEPLAY, "sender_groups", sender_groups)
 	file.set_value(SECTION_AUDIO, "muted", audio_muted)
 	for channel: int in range(AUDIO_KEYS.size()):
 		file.set_value(SECTION_AUDIO, AUDIO_KEYS[channel], _volumes[channel])
@@ -369,6 +379,16 @@ static func set_show_control_groups(value: bool) -> void:
 	if value == show_control_groups:
 		return
 	show_control_groups = value
+	save_to_disk()
+
+
+## Takes effect from the next match: the groups are filled as a match starts,
+## and turning this off mid-match must not take away groups the player has
+## been using since.
+static func set_sender_groups(value: bool) -> void:
+	if value == sender_groups:
+		return
+	sender_groups = value
 	save_to_disk()
 
 

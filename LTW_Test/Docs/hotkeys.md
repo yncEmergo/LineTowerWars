@@ -260,7 +260,7 @@ boot check read it, so no key can be answered somewhere and forgotten here.
 | the grid keys | the command card, section 1 | `UnitPanel` |
 | Escape | backs out of one thing, section 6 | whatever is on top |
 | F10 | opens and closes the game menu | `GameMenu` |
-| 1 to 9 | control groups: recall, twice to centre the camera, with Ctrl to assign | `SelectionController` |
+| 1 to 9 | control groups: recall, twice to centre the camera, with Ctrl to assign. The send buildings start on 1 to 4, tier by tier, unless an option says not to | `SelectionController` |
 | Mouse 4 and 5 | two more control groups, unless the setting hands them back | `SelectionController` |
 | Arrow keys | pan the camera | `RTSCamera` |
 | Shift, Ctrl, Alt, Meta, CapsLock | nothing on their own. Shift queues an order and adds to a selection | - |

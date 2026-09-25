@@ -107,6 +107,55 @@ func _ready() -> void:
 	if session != null:
 		session.unit_replaced.connect(_on_unit_replaced)
 
+	# DEFERRED rather than on the tick, and it has to be: this node is ready
+	# before Main has built the areas, and a match opens PAUSED for its grace
+	# period, which stops this node's tick while a deferred call still runs.
+	# The tick stays as the fallback for a world that arrives later than that.
+	_try_sender_groups.call_deferred()
+
+
+## The fallback for _try_sender_groups, for as long as it has not happened.
+func _physics_process(_delta: float) -> void:
+	_try_sender_groups()
+
+
+## Fills the default control groups once the world has the local player's send
+## buildings, and then stops asking for the rest of the match.
+func _try_sender_groups() -> void:
+	if is_physics_processing() && _assign_sender_groups():
+		set_physics_process(false)
+
+
+## Puts the local player's send buildings on the first control groups - tier 1
+## on group 1, and on - when the player has that option on, so a send is a
+## number and a letter from the first second of a match. See game_rules.md,
+## Controls.
+##
+## Answers whether it is DONE, either way - a machine playing nobody, or a
+## player with the option off, stops asking at once.
+func _assign_sender_groups() -> bool:
+	if !UserSettings.sender_groups:
+		return true
+	var manager: PlayerManager = References.player_manager
+	if manager == null:
+		return false
+	var local: int = manager.local_player_id()
+	if local <= 0:
+		return true
+	var area: PlayerArea = manager.area_for(local)
+	if area == null || area.send_buildings().is_empty():
+		return false
+
+	var assigned: int = 0
+	for sender: SendBuilding in area.send_buildings():
+		var group: int = sender.send_tier
+		if group < 1 || (_controls_config != null && group > _controls_config.control_group_count):
+			continue
+		_control_groups.assign(group, [sender])
+		assigned += 1
+	Log.info("Send buildings put on control groups", {"groups": assigned})
+	return true
+
 
 ## The current selection. Read by CommandController when issuing orders.
 func get_selection() -> Array:

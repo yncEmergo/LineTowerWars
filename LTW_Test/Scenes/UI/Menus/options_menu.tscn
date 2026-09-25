@@ -28,7 +28,7 @@ corner_radius_bottom_left = 5
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_health_bars"]
 
-[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_page_scroll", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_edge_panning_button", "_volume_list", "_mute_button", "_hotkey_list", "_hotkey_message", "_unbound_label", "_reset_hotkeys_button", "_back_button")]
+[node name="OptionsMenu" type="Control" unique_id=844255460 node_paths=PackedStringArray("_tab_row", "_page_stack", "_page_scroll", "_window_mode_row", "_shadows_button", "_health_bar_row", "_control_groups_button", "_sender_groups_button", "_edge_panning_button", "_volume_list", "_mute_button", "_hotkey_list", "_hotkey_message", "_unbound_label", "_reset_hotkeys_button", "_back_button")]
 visible = false
 process_mode = 3
 layout_mode = 3
@@ -47,6 +47,7 @@ _window_mode_row = NodePath("Layout/Column/PageStack/PageScroll/Pages/VideoPage/
 _shadows_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/VideoPage/ShadowsSetting/ShadowsButton")
 _health_bar_row = NodePath("Layout/Column/PageStack/PageScroll/Pages/GameplayPage/HealthBarSetting/Choices")
 _control_groups_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/GameplayPage/ControlGroupSetting/ControlGroupsButton")
+_sender_groups_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/GameplayPage/SenderGroupSetting/SenderGroupsButton")
 _edge_panning_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/GameplayPage/EdgePanningSetting/EdgePanningButton")
 _volume_list = NodePath("Layout/Column/PageStack/PageScroll/Pages/AudioPage/VolumeList")
 _mute_button = NodePath("Layout/Column/PageStack/PageScroll/Pages/AudioPage/MuteSetting/MuteButton")
@@ -331,6 +332,28 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
 theme_override_font_sizes/font_size = 10
 text = "The squares in the top left corner, one per control group you have made. Left on, they appear only once a group holds something. The number keys still recall a group either way."
+autowrap_mode = 3
+
+[node name="SenderGroupSetting" type="HBoxContainer" parent="Layout/Column/PageStack/PageScroll/Pages/GameplayPage"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/GameplayPage/SenderGroupSetting"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Default Control Groups"
+
+[node name="SenderGroupsButton" type="CheckButton" parent="Layout/Column/PageStack/PageScroll/Pages/GameplayPage/SenderGroupSetting"]
+layout_mode = 2
+size_flags_vertical = 4
+button_pressed = true
+
+[node name="SenderGroupHintLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/GameplayPage"]
+custom_minimum_size = Vector2(532, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.47, 0.54, 1)
+theme_override_font_sizes/font_size = 10
+text = "Starts every match with your four send buildings on control groups 1 to 4, one tier each. Takes effect from the next match."
 autowrap_mode = 3
 
 [node name="CameraLabel" type="Label" parent="Layout/Column/PageStack/PageScroll/Pages/GameplayPage" unique_id=1840875904]

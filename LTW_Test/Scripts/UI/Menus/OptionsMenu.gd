@@ -51,6 +51,9 @@ signal closed
 ## The row of control group squares in the top left corner. Off hides it even
 ## while groups exist - left on it hides itself whenever they are all empty.
 @export var _control_groups_button: BaseButton
+## Whether a match starts with the send buildings on control groups 1 to 4.
+## Takes effect from the next match - see UserSettings.set_sender_groups.
+@export var _sender_groups_button: BaseButton
 ## Panning the camera by pushing the cursor against a screen edge. How wide
 ## that strip is stays authored on CameraConfig; only the switch is here.
 @export var _edge_panning_button: BaseButton
@@ -97,6 +100,8 @@ func _ready() -> void:
 		_shadows_button.toggled.connect(_on_shadows_toggled)
 	if _control_groups_button != null:
 		_control_groups_button.toggled.connect(_on_control_groups_toggled)
+	if _sender_groups_button != null:
+		_sender_groups_button.toggled.connect(_on_sender_groups_toggled)
 	if _edge_panning_button != null:
 		_edge_panning_button.toggled.connect(_on_edge_panning_toggled)
 	if _mute_button != null:
@@ -154,6 +159,8 @@ func _sync_from_settings() -> void:
 	_press_in_row(_health_bar_row, int(UserSettings.health_bar_display))
 	if _control_groups_button != null:
 		_control_groups_button.set_pressed_no_signal(UserSettings.show_control_groups)
+	if _sender_groups_button != null:
+		_sender_groups_button.set_pressed_no_signal(UserSettings.sender_groups)
 	if _edge_panning_button != null:
 		_edge_panning_button.set_pressed_no_signal(UserSettings.edge_panning)
 	if _mute_button != null:
@@ -259,6 +266,12 @@ func _on_health_bar_pressed(index: int) -> void:
 func _on_control_groups_toggled(pressed: bool) -> void:
 	UserSettings.set_show_control_groups(pressed)
 	get_tree().call_group(ControlGroupBar.GROUP, "refresh")
+
+
+## Nothing live to tell: the groups are filled as a match starts, so this takes
+## effect from the next one and never empties a group mid-match.
+func _on_sender_groups_toggled(pressed: bool) -> void:
+	UserSettings.set_sender_groups(pressed)
 
 
 ## No live camera to tell: RTSCamera reads the setting every tick it looks at
