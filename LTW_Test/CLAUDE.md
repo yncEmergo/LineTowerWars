@@ -791,6 +791,10 @@ art at all so far - so this is the placement rule, not a description of the tree
   must never be hand-edited, how to pick the next id, and what refuses bad
   content at boot. Read it before authoring content; it carries no rules and no
   numbers, only the steps.
+- hotkeys.md is the KEYS: the grid of physical key positions, where every kind
+  of ability sits on a card, which commands can be rebound and what that does,
+  the Research Center's grid, and what a key press reaches first. Read it
+  before touching input, a command card's layout or the Hotkeys page.
 - multiplayer.md is what the networked build is and where each part of it lives -
   and, in a short list at its end, what is still open. There is no separate plan
   document any more: open work that will not fit in a few lines is a Finding or a
@@ -835,6 +839,11 @@ art at all so far - so this is the placement rule, not a description of the tree
   - this covers generated content too: where ModelGen writes the slot, THAT
     line is the authority and a hand edit to its output is overwritten on the
     next run. Change the generator
+  - **Docs/hotkeys.md is the ONE exception**, granted 2026-09-25. It carries
+    the grid and every card layout on purpose, because the squares are tied to
+    physical keyboards rather than tuned. A layout change goes there and into
+    its generator or .tres in the same commit, and the boot check refuses
+    content that breaks it. Nowhere else
 
 # Known weaknesses
 Real, none blocking. Recorded so they are not rediscovered as surprises.

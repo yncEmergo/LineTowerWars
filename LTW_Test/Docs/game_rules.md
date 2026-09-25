@@ -719,6 +719,10 @@ PANEL shows and what a countdown means are gameplay and are the user's.
 - A unit can never be ordered out of its owner's area
   - An order aimed outside it walks the unit as close as it can get, as in WC3,
     rather than being dropped
+- **Hotkeys are being reworked, and `Docs/hotkeys.md` is the spec.** Its last
+  section lists what is not built yet. Until that section is empty, the hotkey
+  lines here and under Interface describe what the code does TODAY, and they
+  move there as the rework lands
 - Holding an ability's hotkey repeats it, ramping up to a capped rate
   - Opt-in per ability, so leaning on a key can never repeat Sell or Cancel
 - Ability hotkeys are a GRID, WC3 grid style: the key an ability answers to is
