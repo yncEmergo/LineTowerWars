@@ -266,13 +266,107 @@ with `OS.create_process`:
 The 111 ms is a two-script project. The real server boots in about 1.6 s here, and the box will
 be slower.
 
+## What the plan's review found, the same night
+
+The plan for B (`multi-match.md`) was reviewed from six angles, each finding checked by a second
+pass that tried to refute it. None was refuted outright: some were judged plausible rather than
+confirmed, several were corrected in part, and the second pass found a few the first had missed.
+The engine and systemd facts below were found along the way. Each one is either measured on 4.7.1
+(Windows, headless, in throwaway projects), or read from source: Godot's master branch for most
+engine files (4.7 where a copy was saved), which can differ from 4.7.1 in detail, and systemd's man
+pages and source. The Linux process facts were read, not run. What the plan does about each is in
+the plan.
+
+**A live bug in today's single process** (read from the code):
+- MatchStart's loading gate compares COUNTS: `_ready_ids.size() >= _expected.size()`.
+- `_drop_peer` prunes `_expected` and never `_ready_ids`.
+- Take a player who reports ready and then drops. After D26's hold, the count passes while
+  another player is still loading, and `_start_match(_setup)` starts the whole setup, the dropped
+  player included.
+- A player dropped BEFORE reporting ready is started with too, which breaks D15.
+- The relay's silence check removes that player later. So the area exists for a while rather than
+  for the whole match, but it should never have existed.
+
+**Boot:** `is_dedicated_server` matches `--server` exactly, or `--server=`. A process started with
+`--match-server` alone would take the CLIENT branch and keep the godot_ai helper.
+
+**Authentication** (measured, then read in `scene_multiplayer.cpp`):
+- The callback runs for EVERY auth message from a peer that is still pending, including after the
+  server has already called `complete_auth`. One peer drove it 2001 times in one run.
+- `peer_connected` and `connected_to_server` fire only when BOTH ends have completed.
+- A peer that passed the server's check but left before completing its own side raises only
+  `peer_authentication_failed` on the server, never `peer_disconnected`.
+- `SceneMultiplayer.disconnect_peer` blocks signals around its own removal, so code that hangs up
+  that way must clean up after itself. A close through ENet (`ENetMultiplayerPeer.disconnect_peer`,
+  `peer_disconnect_later`) still raises the signals, on a later poll.
+- A refusal sent with `send_auth`:
+  - followed at once by `disconnect_peer`, arrived 0 times in 6;
+  - with the CLIENT hanging up after reading it, arrived 6 times in 6;
+  - followed by `peer_disconnect_later()` on the server, arrived in the one run that tried it.
+  It is the message-before-disconnect trap again, reached through auth.
+- Every non-auth packet from a pending peer prints an engine ERROR (`ERR_CONTINUE`). A flood with
+  no token produced 11,475 such lines in about 10 s, and ran 0 of 66,150 rpcs. The legitimate
+  client's rpc ran (the positive control).
+- A client that still has `auth_callback` set, dialling a server without one, fails at
+  `auth_timeout`, with engine errors on both ends. The one SceneMultiplayer is reused for every
+  connection, and nothing clears the callback.
+
+**rpc numbering** (measured, two throwaway builds):
+- Godot addresses an rpc by its position in the NAME-SORTED list of that node's rpcs.
+- When `Net` gained an rpc that sorts before `state_protocol_version`, an old client's handshake
+  landed on `refuse_protocol_version`. When the new name sorted after it, the old client got its
+  sentence as before.
+- So `Net`'s handshake rpcs are frozen, and D31's row is corrected to say "position in the
+  name-sorted list".
+
+**ENet** (measured, then read in `thirdparty/enet`):
+- A half-open CONNECT, one that is never answered, holds a slot until ENet's maximum timeout,
+  before any auth runs. A legitimate client got into a full server only at 31.66 s.
+- A CONNECT over `max_peers` is ignored, with no reply.
+- ENet binds without `SO_REUSEADDR`, so a taken port fails to bind.
+- ENet carries every peer of one socket over one UDP flow, so a firewall limit that counts
+  connections (connlimit) counts one.
+
+**Processes** (Windows measured; Linux read in `os_unix.cpp`):
+- On Linux, `create_process` is fork, then `setsid()`, then `execvp`. A failed exec returns OK to
+  the parent, and the child dies with raw status 9.
+- Godot sets FD_CLOEXEC on every socket and file, so a child never holds the lobby's port.
+- On Windows, a child made by `create_process` has no console and inherits no handles. Nothing it
+  prints reached the parent's streams.
+- Every process of the project writes `user://logs/godot.log`, and each boot rotates it and
+  truncates it. A child's boot took over the parent's file mid-run. `--log-file` avoids it.
+- `OS.kill` on Linux is SIGKILL followed by a blocking `waitpid`, and it never updates Godot's
+  process table. A later `is_process_running` on that pid prints "not a child" and returns false,
+  and `get_process_exit_code` returns 0. Windows answers -1 instead.
+- A death by signal reads as the raw wait status: 9 for SIGKILL, 6 or 134 for an abort. An
+  ordinary `quit(9)` reads the same as SIGKILL.
+- `is_process_running` on a pid that is not a child prints an engine error on every call.
+
+**systemd** (read in the man pages and the source):
+- `OOMPolicy=continue` decides what happens to the unit after an out-of-memory kill. It does NOT
+  choose the victim. The kernel picks by badness, mostly size. Raising a process's own
+  `oom_score_adj` needs no privilege.
+- `ExecStop` runs after a crash too, with `$MAINPID` unset.
+- `RuntimeDirectory` is 0755 by default, and it is removed on EVERY stop, including an automatic
+  restart, unless `RuntimeDirectoryPreserve=` says otherwise.
+- With the default `RestartMode`, a crash-restart of a unit try-restarts every unit that is
+  `PartOf=` it.
+- `systemctl start` on a unit that is already active succeeds silently.
+- journald's stdout stream re-reads its sender when the PID changes, so a forked child's lines
+  carry the child's own `_PID` (journald v249 and later; the box runs v259). The last lines a child
+  writes before it exits may lack it. The rate-limit bucket is per unit.
+- polkit's `manage-units` action also authorises TRANSIENT units, which carry their own `User=`
+  and `ExecStart=`.
+- `NoNewPrivileges` does not block a D-Bus call that polkit checks.
+
 ## Still open
 
 - **The service file.** Now prepared as `deploy_server.ps1 -InstallShutdown`: a drop-in that
   adds `--shutdown-file`, an `ExecStop` that creates the file and waits for the process to exit,
   and a bounded stop timeout.
   - It runs once, right after the deploy that brings the code for it.
-  - B's first stage adds `OOMPolicy=continue` to the same drop-in.
+  - B's first stage adds `OOMPolicy=continue`, `RuntimeDirectoryMode=0700` and the log rate
+    limit lines to the same drop-in, and re-runs it before the switch is turned on.
 - **The client half reaches players only with the next client build.** Until then a hard-killed
   relay still freezes them.
 - **B itself.** See `multi-match.md`.

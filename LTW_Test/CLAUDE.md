@@ -586,6 +586,12 @@
     - it is NOT in `[autoload]`, so it does nothing at all unless the line is
       added for a run. Add it, run, remove it, and check `project.godot` is
       byte-identical afterwards
+    - **the runner does that for you, in a copy:** `Tools/new_probe_copy.ps1`
+      makes an isolated copy of HEAD (plus only the working-tree files named)
+      with the probe switched on through an `override.cfg`, and
+      `Tools/run_lockstep_probe.ps1` plays one scenario in it on loopback;
+      `Tools/probe_table.py` tabulates the runs. A copy is also what keeps a run
+      independent of another session's half-finished edits in the shared tree
     - the scenarios worth re-running, all of which it can now drive: a plain 1v1,
       a peer hard-killed mid-match, a THIRD peer connecting mid-match (the one no
       obvious topology contains), a deliberately planted desync, a peer given a
